@@ -1813,7 +1813,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-    protected VXUser createServiceConfigUser(String userName){
+    public VXUser createServiceConfigUser(String userName){
         if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
                 logger.error("User Name: "+userName);
                 throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);

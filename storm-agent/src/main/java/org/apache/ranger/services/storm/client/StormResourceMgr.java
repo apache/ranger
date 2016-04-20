@@ -75,14 +75,17 @@ public class StormResourceMgr {
                 String url 		= configs.get("nimbus.url");
                 String username = configs.get("username");
                 String password = configs.get("password");
-                resultList = getStormResources(url, username, password,StromTopologyName,StormTopologyList) ;
+                String lookupPrincipal = configs.get("lookupprincipal");
+                String lookupKeytab = configs.get("lookupkeytab");
+                String nameRules = configs.get("namerules");
+                resultList = getStormResources(url, username, password,lookupPrincipal, lookupKeytab, nameRules, StromTopologyName,StormTopologyList) ;
         }
         return resultList ;
     }
 
-    public static List<String> getStormResources(String url, String username, String password,String topologyName, List<String> StormTopologyList) {
+    public static List<String> getStormResources(String url, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String topologyName, List<String> StormTopologyList) {
     	List<String> topologyList	  = null;
-        final StormClient stormClient = StormConnectionMgr.getStormClient(url, username, password);
+        final StormClient stormClient = StormConnectionMgr.getStormClient(url, username, password, lookupPrincipal, lookupKeytab, nameRules);
 	    if (stormClient == null) {
 		    LOG.error("Storm Client is null");
 		    return new ArrayList<String>();

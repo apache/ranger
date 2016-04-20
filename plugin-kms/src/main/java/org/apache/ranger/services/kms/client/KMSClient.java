@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.security.auth.Subject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.ProviderUtils;
@@ -64,11 +66,18 @@ public class KMSClient {
 	String provider;
 	String username;
 	String password;
+	String lookupPrincipal;
+	String lookupKeytab;
+	String nameRules;
 
-	public KMSClient(String provider, String username, String password) {
+	public KMSClient(String provider, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
 		this.provider = provider;
 		this.username = username;
 		this.password = password;
+		this.lookupPrincipal = lookupPrincipal;
+		this.lookupKeytab = lookupKeytab;
+		this.nameRules = nameRules;
+		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Kms Client is build with url [" + provider + "] user: ["
 					+ username + "]");
@@ -164,9 +173,18 @@ public class KMSClient {
 					String shortName = new HadoopKerberosName(username).getShortName();
 					uri = uri.concat("?doAs="+shortName);
 					Subject sub = new Subject();
-					if (username.contains("@")) {
+					if(!StringUtils.isEmpty(lookupPrincipal) && !StringUtils.isEmpty(lookupKeytab) && lookupPrincipal.contains("@")){
+						if(StringUtils.isEmpty(nameRules)){
+							nameRules = "DEFAULT";
+						}
+						LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
+						sub = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
+					}
+					else if (username.contains("@")) {
+						LOG.info("Init Login: using username/password");
 						sub = SecureClientLogin.loginUserWithPassword(username, password);						
 					} else {
+						LOG.info("Init Login: security not enabled, using username");
 						sub = SecureClientLogin.login(username);						
 					}
 					final WebResource webResource = client.resource(uri);
@@ -324,7 +342,11 @@ public class KMSClient {
 			String kmsUrl = configs.get("provider");
 			String kmsUserName = configs.get("username");
 			String kmsPassWord = configs.get("password");
-			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord);
+			String lookupPrincipal = configs.get("lookupprincipal");
+			String lookupKeytab = configs.get("lookupkeytab");
+			String nameRules = configs.get("namerules");
+			
+			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord, lookupPrincipal, lookupKeytab, nameRules);
 
 		}
 		return kmsClient;

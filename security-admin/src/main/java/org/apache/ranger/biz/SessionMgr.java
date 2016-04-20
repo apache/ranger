@@ -77,6 +77,9 @@ public class SessionMgr {
 	RangerDaoManager daoManager;
 
 	@Autowired
+	XUserMgr xUserMgr;
+
+	@Autowired
 	AuthSessionService authSessionService;
 
 	@Autowired
@@ -118,6 +121,8 @@ public class SessionMgr {
 		}
 
 		if (newSessionCreation) {
+
+			getSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
 			// Need to build the UserSession
 			XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 			if (gjUser == null) {
@@ -157,6 +162,9 @@ public class SessionMgr {
 			userSession = new UserSessionBase();
 			userSession.setXXPortalUser(gjUser);
 			userSession.setXXAuthSession(gjAuthSession);
+			if(httpRequest.getAttribute("spnegoEnabled") != null && (boolean)httpRequest.getAttribute("spnegoEnabled")){
+				userSession.setSpnegoEnabled(true);
+			}
 
 			resetUserSessionForProfiles(userSession);
 			resetUserModulePermission(userSession);
@@ -178,6 +186,17 @@ public class SessionMgr {
 		}
 
 		return userSession;
+	}
+
+	private void getSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
+
+		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+		if (gjUser == null && request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")) {
+			if(logger.isDebugEnabled()){
+				logger.debug("User : "+currentLoginId+" doesn't exist in Ranger DB So creating user as it's spnego authenticated");
+			}
+			xUserMgr.createServiceConfigUser(currentLoginId);
+		}
 	}
 
 	public void resetUserModulePermission(UserSessionBase userSession) {

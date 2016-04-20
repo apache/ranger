@@ -36,8 +36,11 @@ public abstract class BaseClient {
 	private static final Log LOG = LogFactory.getLog(BaseClient.class) ;
 
 
-  private String serviceName ;
-  private String defaultConfigFile ;
+	private static final String DEFAULT_NAME_RULE = "DEFAULT";
+
+
+	private String serviceName ;
+  	private String defaultConfigFile ;
 	private Subject loginSubject ;
 	private HadoopConfigHolder configHolder;
 	
@@ -50,7 +53,7 @@ public abstract class BaseClient {
 	public BaseClient(String serivceName, Map<String,String> connectionProperties, String defaultConfigFile) {
 		this.serviceName = serivceName ;
 		this.connectionProperties = connectionProperties ;
-    this.defaultConfigFile = defaultConfigFile ;
+		this.defaultConfigFile = defaultConfigFile ;
 		init() ;
 		login() ;
 	}
@@ -73,38 +76,57 @@ public abstract class BaseClient {
 				+ "resource names. Check xa_portal.log for more info.";
 		try {
 			//Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
-			String userName = configHolder.getUserName() ;
-			if (userName == null) {
-				String msgDesc = "Unable to find login username for hadoop environment, ["
+			 String lookupPrincipal = SecureClientLogin.getPrincipal(configHolder.getLookupPrincipal(), java.net.InetAddress.getLocalHost().getCanonicalHostName());
+			 String lookupKeytab = configHolder.getLookupKeytab();
+			 String nameRules = configHolder.getNameRules();
+			 if(StringUtils.isEmpty(nameRules)){
+				 if(LOG.isDebugEnabled()){
+					 LOG.debug("Name is empty. Setting Name Rule as 'DEFAULT'");
+				 }
+				 nameRules = DEFAULT_NAME_RULE;
+			 }
+			 String userName = configHolder.getUserName() ;
+			 if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){				
+				 if (userName == null) {
+					 String msgDesc = "Unable to find login username for hadoop environment, ["
 						+ serviceName + "]";
-				HadoopException hdpException = new HadoopException(msgDesc);
-				hdpException.generateResponseDataMap(false, msgDesc + errMsg, msgDesc + errMsg,
+					 HadoopException hdpException = new HadoopException(msgDesc);
+					 hdpException.generateResponseDataMap(false, msgDesc + errMsg, msgDesc + errMsg,
 						null, null);
 
-				throw hdpException;
-			}
-			String keyTabFile = configHolder.getKeyTabFile() ;
-			if (keyTabFile != null) {
-				if ( configHolder.isKerberosAuthentication() ) {
-					LOG.info("Init Login: security enabled, using username/keytab");
-					loginSubject = SecureClientLogin.loginUserFromKeytab(userName, keyTabFile) ;
-				}
-				else {
-					LOG.info("Init Login: using username");
-					loginSubject = SecureClientLogin.login(userName) ;
-				}
-			}
-			else {
-				String password = configHolder.getPassword() ;
-				if ( configHolder.isKerberosAuthentication() ) {
-					LOG.info("Init Login: using username/password");
-					loginSubject = SecureClientLogin.loginUserWithPassword(userName, password) ;
-				}
-				else {
-					LOG.info("Init Login: security not enabled, using username");
-					loginSubject = SecureClientLogin.login(userName) ;
-				}
-			}
+					 throw hdpException;
+				 }
+				 String keyTabFile = configHolder.getKeyTabFile() ;
+				 if (keyTabFile != null) {
+					 if ( configHolder.isKerberosAuthentication() ) {
+						 LOG.info("Init Login: security enabled, using username/keytab");
+						 loginSubject = SecureClientLogin.loginUserFromKeytab(userName, keyTabFile, nameRules) ;
+					 }
+					 else {
+						 LOG.info("Init Login: using username");
+						 loginSubject = SecureClientLogin.login(userName) ;
+					 }
+				 }
+				 else {
+					 String password = configHolder.getPassword() ;
+					 if ( configHolder.isKerberosAuthentication() ) {
+						 LOG.info("Init Login: using username/password");
+						 loginSubject = SecureClientLogin.loginUserWithPassword(userName, password) ;
+					 }
+					 else {
+						 LOG.info("Init Login: security not enabled, using username");
+						 loginSubject = SecureClientLogin.login(userName) ;
+					 }
+				 }
+			 }else{
+				 if ( configHolder.isKerberosAuthentication() ) {
+					 LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
+					 loginSubject = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules) ;
+				 }else{
+					 LOG.info("Init Login: security not enabled, using username");
+					 loginSubject = SecureClientLogin.login(userName);					 
+				 }
+			 }
 		} catch (IOException ioe) {
 			String msgDesc = "Unable to login to Hadoop environment ["
 					+ serviceName + "]";

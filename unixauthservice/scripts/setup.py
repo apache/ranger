@@ -86,6 +86,8 @@ SYNC_LDAP_BIND_PASSWORD_KEY  = 'ranger.usersync.ldap.ldapbindpassword'
 credUpdateClassName =  'org.apache.ranger.credentialapi.buildks'
 #credUpdateClassName =  'com.hortonworks.credentialapi.buildks'
 ENV_LOGDIR_FILE = 'ranger-usersync-env-logdir.sh'
+hadoopConfFileName = 'core-site.xml'
+ENV_HADOOP_CONF_FILE = "ranger-usersync-env-hadoopconfdir.sh"
 
 
 RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
@@ -307,18 +309,31 @@ def createJavaKeystoreForSSL(fn,passwd):
 		sys.exit(1)
 	return ret
 
-def write_env_files(log_path):
-        final_path = "{0}/{1}".format(confBaseDirName,ENV_LOGDIR_FILE)
+def write_env_files(exp_var_name, log_path, file_name):
+        final_path = "{0}/{1}".format(confBaseDirName,file_name)
         if not os.path.isfile(final_path):
-                print "Creating %s file" % ENV_LOGDIR_FILE
+                print "Creating %s file" % file_name
         f = open(final_path, "w")
-        f.write("export logdir={0}".format(log_path))
+        f.write("export {0}={1}".format(exp_var_name,log_path))
         f.close()
 
 def main():
 
 	populate_global_dict()
 	logFolderName = globalDict['logdir']
+	hadoop_conf = globalDict['hadoop_conf']
+
+        hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
+	usersync_conf_full_path = os.path.join(usersyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+        if not isfile(hadoop_conf_full_path):
+                print "WARN: core-site.xml file not found in provided hadoop conf path..."
+                f = open(usersync_conf_full_path, "w")
+                f.write("<configuration></configuration>")
+                f.close()
+        else:
+                if os.path.islink(usersync_conf_full_path):
+                        os.remove(usersync_conf_full_path)
+
 	if logFolderName.lower() == "$pwd" or logFolderName == "" :
                 logFolderName = os.path.join(os.getcwd(),"logs")
 	ugsyncLogFolderName = logFolderName
@@ -485,8 +500,14 @@ def main():
 	else:
 		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
 
-	write_env_files(logFolderName);
+        write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
+        write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
         os.chown(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),0755)
+        os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
+        os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+
+	if isfile(hadoop_conf_full_path):
+        	os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
 
 main()

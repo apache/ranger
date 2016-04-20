@@ -19,6 +19,7 @@
 
 package org.apache.ranger.services.kms.client;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 
@@ -26,16 +27,18 @@ public class KMSConnectionMgr {
 
 	public static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
     
-	public static KMSClient getKMSClient(final String kmsURL, String userName, String password) {
+	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
 		KMSClient kmsClient = null;
         if (kmsURL == null || kmsURL.isEmpty()) {
         	LOG.error("Can not create KMSClient: kmsURL is empty");
-        } else if (userName == null || userName.isEmpty()) {
-        	LOG.error("Can not create KMSClient: kmsuserName is empty");
-        } else if (password == null || password.isEmpty()) {
-        	LOG.error("Can not create KMSClient: kmsPassWord is empty");
+        } else if(StringUtils.isEmpty(lookupPrincipal)){ 
+        	if(userName == null || userName.isEmpty()) {
+        		LOG.error("Can not create KMSClient: kmsuserName is empty");
+        	} else if (password == null || password.isEmpty()) {
+        		LOG.error("Can not create KMSClient: kmsPassWord is empty");
+        	}
         } else {
-            kmsClient =  new KMSClient(kmsURL, userName, password);
+            kmsClient =  new KMSClient(kmsURL, userName, password, lookupPrincipal, lookupKeytab, nameRules);
         }
         return kmsClient;
     }

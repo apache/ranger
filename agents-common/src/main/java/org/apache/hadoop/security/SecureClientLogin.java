@@ -18,6 +18,7 @@
  */
 package org.apache.hadoop.security;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.HashMap;
@@ -31,17 +32,36 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
-
+import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.util.StringUtils;
 
 public class SecureClientLogin {
+	private static final Log LOG = LogFactory.getLog(SecureClientLogin.class);
+	public static final String HOSTNAME_PATTERN = "_HOST";
 
 	public synchronized static Subject loginUserFromKeytab(String user, String path) throws IOException {
 		try {
 			Subject subject = new Subject();
 			SecureClientLoginConfiguration loginConf = new SecureClientLoginConfiguration(true, user, path);
 			LoginContext login = new LoginContext("hadoop-keytab-kerberos", subject, null, loginConf);
+			subject.getPrincipals().add(new User(user, AuthenticationMethod.KERBEROS, login));
+			login.login();
+			return login.getSubject();
+		} catch (LoginException le) {
+			throw new IOException("Login failure for " + user + " from keytab " + path, le);
+		}
+	}
+	
+	public synchronized static Subject loginUserFromKeytab(String user, String path, String nameRules) throws IOException {
+		try {
+			Subject subject = new Subject();
+			SecureClientLoginConfiguration loginConf = new SecureClientLoginConfiguration(true, user, path);
+			LoginContext login = new LoginContext("hadoop-keytab-kerberos", subject, null, loginConf);
+			KerberosName.setRules(nameRules);
 			subject.getPrincipals().add(new User(user, AuthenticationMethod.KERBEROS, login));
 			login.login();
 			return login.getSubject();
@@ -90,7 +110,54 @@ public class SecureClientLogin {
 	public static Principal createUserPrincipal(String aLoginName) {
 		return new User(aLoginName) ;
 	}
-
+	
+	public static boolean isKerberosCredentialExists(String principal, String keytabPath){
+		boolean isValid = false;
+		if (keytabPath != null && !keytabPath.isEmpty()) {			
+			File keytabFile = new File(keytabPath);
+			if (!keytabFile.exists()) {
+				LOG.warn(keytabPath + " doesn't exist.");
+			} else if (!keytabFile.canRead()) {
+				LOG.warn("Unable to read " + keytabPath + " Please check the file access permissions for user");
+			}else{
+				isValid = true;
+			}
+		} else {
+			LOG.warn("Can't find keyTab Path : "+keytabPath); 
+		}
+		if (!(principal != null && !principal.isEmpty() && isValid)) {
+			isValid = false;
+			LOG.warn("Can't find principal : "+principal);
+		}
+		return isValid;
+	}
+	
+	public static String getPrincipal(String principalConfig, String hostName) throws IOException {
+		String[] components = getComponents(principalConfig);
+		if (components == null || components.length != 3 || !components[1].equals(HOSTNAME_PATTERN)) {
+			return principalConfig;
+		} else {
+			if (hostName == null) {
+				throw new IOException("Can't replace " + HOSTNAME_PATTERN + " pattern since client ranger.service.host is null");
+			}
+			return replacePattern(components, hostName);
+		}
+	}
+		  
+	private static String[] getComponents(String principalConfig) {
+		if (principalConfig == null)
+			return null;
+		return principalConfig.split("[/@]");
+	}
+		  
+	private static String replacePattern(String[] components, String hostname)
+			throws IOException {
+		String fqdn = hostname;
+		if (fqdn == null || fqdn.isEmpty() || fqdn.equals("0.0.0.0")) {
+			fqdn = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+		}
+		return components[0] + "/" + StringUtils.toLowerCase(fqdn) + "@" + components[2];
+	}
 }
 
 class SecureClientLoginConfiguration extends javax.security.auth.login.Configuration {

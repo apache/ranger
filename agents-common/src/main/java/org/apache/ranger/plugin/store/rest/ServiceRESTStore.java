@@ -19,13 +19,16 @@
 
 package org.apache.ranger.plugin.store.rest;
 
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -67,6 +70,7 @@ public class ServiceRESTStore extends AbstractServiceStore {
 	public final String REST_URL_POLICY_GET_FOR_SERVICE         = "/service/plugins/policies/service/";
 	public final String REST_URL_POLICY_GET_FOR_SERVICE_BY_NAME = "/service/plugins/policies/service/name/";
 	public final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
+	public final String REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED = "/service/plugins/secure/policies/download/";
 
 	public static final String REST_MIME_TYPE_JSON = "application/json" ;
 	
@@ -572,15 +576,26 @@ public class ServiceRESTStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(final String serviceName, final Long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
 		}
 
 		ServicePolicies ret = null;
-
-		WebResource    webResource = createWebResource(REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName + "/" + lastKnownVersion);
-		ClientResponse response    = webResource.accept(REST_MIME_TYPE_JSON).get(ClientResponse.class);
+		ClientResponse response = null;
+		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
+			LOG.info("Checking Service policy if updated as user : "+ MiscUtil.getUGILoginUser());
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName + "/" + lastKnownVersion);
+					return secureWebResource.accept(REST_MIME_TYPE_JSON).get(ClientResponse.class);
+				};
+			};
+			response = MiscUtil.getUGILoginUser().doAs(action);
+		} else {
+			WebResource  webResource = createWebResource(REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName + "/" + lastKnownVersion);
+			response = webResource.accept(REST_MIME_TYPE_JSON).get(ClientResponse.class);
+		}
 
 		if(response != null && response.getStatus() == 200) {
 			ret = response.getEntity(ServicePolicies.class);

@@ -233,4 +233,42 @@
 		<value>Mozilla,chrome</value>
 	</property>
 	<!-- SSO Properties Ends-->
+	<!-- Kerberos Properties starts-->	
+	<property>
+		<name>ranger.admin.kerberos.token.valid.seconds</name>
+		<value>30</value>
+	</property>
+	<property>
+		<name>ranger.admin.kerberos.cookie.domain</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.admin.kerberos.cookie.path</name>
+		<value>/</value>
+	</property>
+	<property>
+		<name>ranger.admin.kerberos.principal</name>
+		<value>rangeradmin/_HOST@REALM</value>
+	</property>
+	<property>
+		<name>ranger.admin.kerberos.keytab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.spnego.kerberos.principal</name>
+		<value>HTTP/_HOST@REALM</value>
+	</property>
+	<property>
+		<name>ranger.spnego.kerberos.keytab</name>
+		<value></value>
+	</property>	
+	<property>
+		<name>ranger.lookup.kerberos.principal</name>
+		<value>rangerlookup/_HOST@REALM</value>
+	</property>
+	<property>
+		<name>ranger.lookup.kerberos.keytab</name>
+		<value></value>
+	</property>
+	<!-- Kerberos Properties ENDs-->
 </configuration>

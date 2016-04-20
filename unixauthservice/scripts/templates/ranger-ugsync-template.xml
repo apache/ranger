@@ -185,4 +185,12 @@
 		<name>ranger.usersync.ldap.referral</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.usersync.kerberos.principal</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.kerberos.keytab</name>
+		<value></value>
+	</property>
 </configuration>

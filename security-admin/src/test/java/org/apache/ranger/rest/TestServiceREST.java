@@ -499,7 +499,6 @@ public class TestServiceREST {
 				dbRangerService.getUpdatedBy());
 
 		Mockito.verify(validatorFactory).getServiceValidator(svcStore);
-		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(svcStore).createService(rangerService);
 	}
 

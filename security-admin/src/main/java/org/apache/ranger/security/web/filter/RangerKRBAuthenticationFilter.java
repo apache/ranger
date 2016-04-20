@@ -1,0 +1,569 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.ranger.security.web.filter;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.EventListener;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.FilterRegistration;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.SessionCookieConfig;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.FilterRegistration.Dynamic;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.ranger.biz.UserMgr;
+import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.security.handler.RangerAuthenticationProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+
+public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
+	Logger LOG = LoggerFactory.getLogger(RangerKRBAuthenticationFilter.class);
+	
+	@Autowired
+	UserMgr userMgr;
+
+	static final String NAME_RULES = "hadoop.security.auth_to_local";
+	static final String TOKEN_VALID = "ranger.admin.kerberos.token.valid.seconds";
+	static final String COOKIE_DOMAIN = "ranger.admin.kerberos.cookie.domain";
+	static final String COOKIE_PATH = "ranger.admin.kerberos.cookie.path";
+	static final String PRINCIPAL = "ranger.spnego.kerberos.principal";
+	static final String KEYTAB = "ranger.spnego.kerberos.keytab";
+	static final String NAME_RULES_PARAM = "kerberos.name.rules";
+	static final String TOKEN_VALID_PARAM = "token.validity";
+	static final String COOKIE_DOMAIN_PARAM = "cookie.domain";
+	static final String COOKIE_PATH_PARAM = "cookie.path";
+	static final String PRINCIPAL_PARAM = "kerberos.principal";
+	static final String KEYTAB_PARAM = "kerberos.keytab";
+	static final String AUTH_TYPE = "type";
+	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
+	static final String AUTH_COOKIE_NAME = "hadoop.auth";
+	static final String HOST_NAME = "ranger.service.host";
+
+	private static final String KERBEROS_TYPE = "kerberos";
+
+	public RangerKRBAuthenticationFilter() {
+		try {
+			init(null);
+		} catch (ServletException e) {
+			LOG.error("Error while initializing Filter : "+e.getMessage());
+		}
+	}
+
+	@Override
+	public void init(FilterConfig conf) throws ServletException {
+		final FilterConfig globalConf = conf;
+		final Map<String, String> params = new HashMap<String, String>();
+		params.put(AUTH_TYPE, PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "simple"));
+		params.put(NAME_RULES_PARAM, PropertiesUtil.getProperty(NAME_RULES, "DEFAULT"));
+		params.put(TOKEN_VALID_PARAM, PropertiesUtil.getProperty(TOKEN_VALID,"30"));
+		params.put(COOKIE_DOMAIN_PARAM, PropertiesUtil.getProperty(COOKIE_DOMAIN, PropertiesUtil.getProperty(HOST_NAME, "localhost")));
+		params.put(COOKIE_PATH_PARAM, PropertiesUtil.getProperty(COOKIE_PATH, "/"));
+		try {
+			params.put(PRINCIPAL_PARAM, SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL,""), PropertiesUtil.getProperty(HOST_NAME)));
+		} catch (IOException ignored) {
+            // do nothing
+		}
+		params.put(KEYTAB_PARAM, PropertiesUtil.getProperty(KEYTAB,""));
+
+		FilterConfig myConf = new FilterConfig() {
+			@Override
+			public ServletContext getServletContext() {
+				if (globalConf != null) {
+					return globalConf.getServletContext();
+				} else {
+					return noContext;
+				}
+			}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public Enumeration<String> getInitParameterNames() {
+				return new IteratorEnumeration(params.keySet().iterator());
+			}
+
+			@Override
+			public String getInitParameter(String param) {
+				return params.get(param);
+			}
+
+			@Override
+			public String getFilterName() {
+				return "KerberosFilter";
+			}
+		};
+		super.init(myConf);
+	}
+
+	@Override
+	protected void doFilter(FilterChain filterChain,
+			HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		String userName = null;
+		boolean checkCookie = response.containsHeader("Set-Cookie");
+		if(checkCookie){
+			Collection<String> authUserName = response.getHeaders("Set-Cookie");
+			if(authUserName != null){
+				Iterator<String> i = authUserName.iterator();
+				while(i.hasNext()){
+					String cookie = i.next();
+					if(!StringUtils.isEmpty(cookie)){
+						if(cookie.toLowerCase().startsWith(AUTH_COOKIE_NAME.toLowerCase()) && cookie.contains("u=")){
+							String[] split = cookie.split(";");
+							if(split != null){
+								for(String s : split){
+									if(!StringUtils.isEmpty(s) && s.toLowerCase().startsWith(AUTH_COOKIE_NAME.toLowerCase())){
+										int ustr = s.indexOf("u=");
+										if(ustr != -1){
+											int andStr = s.indexOf("&", ustr);
+											if(andStr != -1){
+												try{
+													userName = s.substring(ustr+2, andStr);
+												}catch(Exception e){
+													userName = null;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}			
+				}
+			}
+		}
+		if((isSpnegoEnable(authType) && (!StringUtils.isEmpty(userName)))){
+			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+			if(existingAuth == null || !existingAuth.isAuthenticated()){
+				//--------------------------- To Create Ranger Session --------------------------------------
+				String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
+				//if we get the userName from the token then log into ranger using the same user
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, "",grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+				WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
+				((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+				RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
+				Authentication authentication = authenticationProvider.authenticate(finalAuthentication);
+				authentication = getGrantedAuthority(authentication);
+				SecurityContextHolder.getContext().setAuthentication(authentication);	
+				request.setAttribute("spnegoEnabled", true);
+				LOG.info("Logged into Ranger as = "+userName);
+				filterChain.doFilter(request, response);
+			}else{
+				try{
+					super.doFilter(filterChain, request, response);
+				}catch(Exception e){
+					LOG.error("Error RangerKRBAuthenticationFilter : "+e.getMessage());
+				}
+			}
+		}else{
+			filterChain.doFilter(request, response);
+		}
+	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain filterChain) throws IOException, ServletException {
+		String authtype = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		HttpServletRequest httpRequest = (HttpServletRequest)request;
+		if(isSpnegoEnable(authtype)){
+			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+			String userName = null;
+			Cookie[] cookie = httpRequest.getCookies();
+			if(cookie != null){
+				for(Cookie c : cookie){
+					String cname = c.getName();
+					if(cname != null && cname.equalsIgnoreCase("u"))
+					{
+						int ustr = cname.indexOf("u=");
+						if(ustr != -1){
+							int andStr = cname.indexOf("&", ustr);
+							if(andStr != -1){
+								userName = cname.substring(ustr+2, andStr);
+							}
+						}
+					}else if(cname != null && cname.equalsIgnoreCase(AUTH_COOKIE_NAME)){
+						int ustr = cname.indexOf("u=");
+						if(ustr != -1){
+							int andStr = cname.indexOf("&", ustr);
+							if(andStr != -1){
+								userName = cname.substring(ustr+2, andStr);
+							}
+						}
+					}			
+				}	
+			}
+			if((existingAuth == null || !existingAuth.isAuthenticated()) && (!StringUtils.isEmpty(userName))){ 
+				//--------------------------- To Create Ranger Session --------------------------------------			
+				String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
+				//if we get the userName from the token then log into ranger using the same user
+				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+				final UserDetails principal = new User(userName, "",grantedAuths);
+				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+				WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
+				((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+				RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
+				Authentication authentication = authenticationProvider.authenticate(finalAuthentication);
+				authentication = getGrantedAuthority(authentication);
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+				request.setAttribute("spnegoEnabled", true);
+				LOG.info("Logged into Ranger as = "+userName);
+			}else{
+				try{
+					super.doFilter(request, response, filterChain);
+				}catch(Exception e){
+					LOG.error("Error RangerKRBAuthenticationFilter : "+e.getMessage());
+				}				
+			}	
+		}else{
+			filterChain.doFilter(request, response);
+		}
+	}
+	
+	private boolean isSpnegoEnable(String authType){
+		String principal = PropertiesUtil.getProperty(PRINCIPAL);
+		String keytabPath = PropertiesUtil.getProperty(KEYTAB); 
+		return ((!StringUtils.isEmpty(authType)) && authType.equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(principal, keytabPath));
+	}
+	
+	private Authentication getGrantedAuthority(Authentication authentication) {
+		UsernamePasswordAuthenticationToken result=null;
+		if(authentication!=null && authentication.isAuthenticated()){
+			final List<GrantedAuthority> grantedAuths=getAuthorities(authentication.getName().toString());
+			final UserDetails userDetails = new User(authentication.getName().toString(), authentication.getCredentials().toString(),grantedAuths);
+			result = new UsernamePasswordAuthenticationToken(userDetails,authentication.getCredentials(),grantedAuths);
+			result.setDetails(authentication.getDetails());
+			return result;
+		}
+		return authentication;
+	}
+	
+	private List<GrantedAuthority> getAuthorities(String username) {
+		Collection<String> roleList=userMgr.getRolesByLoginId(username);
+		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+		for(String role:roleList){
+			grantedAuths.add(new SimpleGrantedAuthority(role));
+		}
+		return grantedAuths;
+	}
+
+	protected static ServletContext noContext = new ServletContext() {
+
+		@Override
+		public void setSessionTrackingModes(
+				Set<SessionTrackingMode> sessionTrackingModes) {
+		}
+
+		@Override
+		public boolean setInitParameter(String name, String value) {
+			return false;
+		}
+
+		@Override
+		public void setAttribute(String name, Object object) {
+		}
+
+		@Override
+		public void removeAttribute(String name) {
+		}
+
+		@Override
+		public void log(String message, Throwable throwable) {
+		}
+
+		@Override
+		public void log(Exception exception, String msg) {
+		}
+
+		@Override
+		public void log(String msg) {
+		}
+
+		@Override
+		public String getVirtualServerName() {
+			return null;
+		}
+
+		@Override
+		public SessionCookieConfig getSessionCookieConfig() {
+			return null;
+		}
+
+		@Override
+		public Enumeration<Servlet> getServlets() {
+			return null;
+		}
+
+		@Override
+		public Map<String, ? extends ServletRegistration> getServletRegistrations() {
+			return null;
+		}
+
+		@Override
+		public ServletRegistration getServletRegistration(String servletName) {
+			return null;
+		}
+
+		@Override
+		public Enumeration<String> getServletNames() {
+			return null;
+		}
+
+		@Override
+		public String getServletContextName() {
+			return null;
+		}
+
+		@Override
+		public Servlet getServlet(String name) throws ServletException {
+			return null;
+		}
+
+		@Override
+		public String getServerInfo() {
+			return null;
+		}
+
+		@Override
+		public Set<String> getResourcePaths(String path) {
+			return null;
+		}
+
+		@Override
+		public InputStream getResourceAsStream(String path) {
+			return null;
+		}
+
+		@Override
+		public URL getResource(String path) throws MalformedURLException {
+			return null;
+		}
+
+		@Override
+		public RequestDispatcher getRequestDispatcher(String path) {
+			return null;
+		}
+
+		@Override
+		public String getRealPath(String path) {
+			return null;
+		}
+
+		@Override
+		public RequestDispatcher getNamedDispatcher(String name) {
+			return null;
+		}
+
+		@Override
+		public int getMinorVersion() {
+			return 0;
+		}
+
+		@Override
+		public String getMimeType(String file) {
+			return null;
+		}
+
+		@Override
+		public int getMajorVersion() {
+			return 0;
+		}
+
+		@Override
+		public JspConfigDescriptor getJspConfigDescriptor() {
+			return null;
+		}
+
+		@Override
+		public Enumeration<String> getInitParameterNames() {
+			return null;
+		}
+
+		@Override
+		public String getInitParameter(String name) {
+			return null;
+		}
+
+		@Override
+		public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
+			return null;
+		}
+
+		@Override
+		public FilterRegistration getFilterRegistration(String filterName) {
+			return null;
+		}
+
+		@Override
+		public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
+			return null;
+		}
+
+		@Override
+		public int getEffectiveMinorVersion() {
+			return 0;
+		}
+
+		@Override
+		public int getEffectiveMajorVersion() {
+			return 0;
+		}
+
+		@Override
+		public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
+			return null;
+		}
+
+		@Override
+		public String getContextPath() {
+			return null;
+		}
+
+		@Override
+		public ServletContext getContext(String uripath) {
+			return null;
+		}
+
+		@Override
+		public ClassLoader getClassLoader() {
+			return null;
+		}
+
+		@Override
+		public Enumeration<String> getAttributeNames() {
+			return null;
+		}
+
+		@Override
+		public Object getAttribute(String name) {
+			return null;
+		}
+
+		@Override
+		public void declareRoles(String... roleNames) {
+		}
+
+		@Override
+		public <T extends Servlet> T createServlet(Class<T> clazz)
+				throws ServletException {
+			return null;
+		}
+
+		@Override
+		public <T extends EventListener> T createListener(Class<T> clazz)
+				throws ServletException {
+			return null;
+		}
+
+		@Override
+		public <T extends Filter> T createFilter(Class<T> clazz)
+				throws ServletException {
+			return null;
+		}
+
+		@Override
+		public javax.servlet.ServletRegistration.Dynamic addServlet(
+				String servletName, Class<? extends Servlet> servletClass) {
+			return null;
+		}
+
+		@Override
+		public javax.servlet.ServletRegistration.Dynamic addServlet(
+				String servletName, Servlet servlet) {
+			return null;
+		}
+
+		@Override
+		public javax.servlet.ServletRegistration.Dynamic addServlet(
+				String servletName, String className) {
+			return null;
+		}
+
+		@Override
+		public void addListener(Class<? extends EventListener> listenerClass) {
+		}
+
+		@Override
+		public <T extends EventListener> void addListener(T t) {
+		}
+
+		@Override
+		public void addListener(String className) {
+		}
+
+		@Override
+		public Dynamic addFilter(String filterName,
+				Class<? extends Filter> filterClass) {
+			return null;
+		}
+
+		@Override
+		public Dynamic addFilter(String filterName, Filter filter) {
+			return null;
+		}
+
+		@Override
+		public Dynamic addFilter(String filterName, String className) {
+			return null;
+		}
+	};
+
+}

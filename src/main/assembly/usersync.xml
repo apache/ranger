@@ -53,6 +53,7 @@
 					<include>org.apache.htrace:htrace-core</include>
 					<include>commons-httpclient:commons-httpclient</include>
 					<include>commons-codec:commons-codec</include>
+					<include>org.apache.ranger:ranger-plugins-common</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>

@@ -49,6 +49,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PasswordUtils;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.SortField;
@@ -87,6 +88,7 @@ public class KmsKeyMgr {
 	private static final String KMS_USERNAME 			= "username";
 	private static Map<String, String> providerList = new HashMap<String, String>(); 
 	private static int nextProvider = 0;
+	static final String NAME_RULES = "hadoop.security.auth_to_local";
 	
 	@Autowired
 	ServiceDBStore svcStore;	
@@ -526,8 +528,11 @@ public class KmsKeyMgr {
 	private Subject getSubjectForKerberos(String provider) throws Exception{
 		String userName = getKMSUserName(provider); 
 	    String password = getKMSPassword(provider);
-	    if (KerberosName.getRules() == null) {
+	    String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+	    if (StringUtils.isEmpty(nameRules)) {
         	KerberosName.setRules("DEFAULT") ;
+    	}else{
+    		KerberosName.setRules(nameRules);
     	}
 	    Subject sub = new Subject();
 	    if (userName.contains("@")) {

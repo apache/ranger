@@ -47,7 +47,7 @@ if [ "${action}" == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf"
+	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*"
 
     if [ -f $pidf ]; then
             PID=`cat $pidf`

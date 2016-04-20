@@ -80,6 +80,25 @@ TAG_SOURCE_ATLAS = 'atlas'
 TAG_SOURCE_ATLASREST = 'atlasrest'
 TAG_SOURCE_FILE = 'file'
 
+hadoopConfFileName = 'core-site.xml'
+ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
+globalDict = {}
+
+RANGER_TAGSYNC_HOME = os.getenv("RANGER_TAGSYNC_HOME")
+if RANGER_TAGSYNC_HOME is None:
+    RANGER_TAGSYNC_HOME = os.getcwd()
+
+def populate_global_dict():
+    global globalDict
+    read_config_file = open(os.path.join(RANGER_TAGSYNC_HOME,'install.properties'))
+    for each_line in read_config_file.read().split('\n') :
+        if len(each_line) == 0 : continue
+        if re.search('=', each_line):
+            key , value = each_line.strip().split("=",1)
+            key = key.strip()
+            value = value.strip()
+            globalDict[key] = value
+
 def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
     archiveFileName = "." + basename(originalFileName) + "." + (strftime("%d%m%Y%H%M%S", localtime()))
@@ -258,10 +277,31 @@ def initializeInitD():
 			os.remove(ubinScriptName)
 		os.symlink(localScriptName,ubinScriptName)
 
+def write_env_files(exp_var_name, log_path, file_name):
+        final_path = "{0}/{1}".format(confBaseDirName,file_name)
+        if not os.path.isfile(final_path):
+                print "Creating %s file" % file_name
+        f = open(final_path, "w")
+        f.write("export {0}={1}".format(exp_var_name,log_path))
+        f.close()
 
 def main():
 
 	print "\nINFO: Installing ranger-tagsync .....\n"
+
+	populate_global_dict()
+	hadoop_conf = globalDict['hadoop_conf']
+
+	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
+        tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+        if not isfile(hadoop_conf_full_path):
+                print "WARN: core-site.xml file not found in provided hadoop conf path..."
+		f = open(tagsync_conf_full_path, "w")
+                f.write("<configuration></configuration>")
+                f.close()
+	else:
+	        if os.path.islink(tagsync_conf_full_path):
+        	        os.remove(tagsync_conf_full_path)
 
 	dirList = [ rangerBaseDirName, tagsyncBaseDirFullName, confFolderName ]
 	for dir in dirList:
@@ -388,6 +428,13 @@ def main():
 				fn = join(root,obj)
 				os.chown(fn, ownerId, groupId)
 				os.chmod(fn, 0755)
+
+	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
+	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
+        os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+
+	if isfile(hadoop_conf_full_path):
+	        os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
 
 	print "\nINFO: Completed ranger-tagsync installation.....\n"
 

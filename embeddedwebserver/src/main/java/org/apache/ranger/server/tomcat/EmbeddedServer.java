@@ -20,7 +20,9 @@
 package org.apache.ranger.server.tomcat;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
@@ -35,6 +37,10 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
+import org.apache.hadoop.security.SecureClientLogin;
+
+import javax.security.auth.Subject;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -46,10 +52,18 @@ public class EmbeddedServer {
 			.getName());
 	
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-site.xml";
+	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
 	
 	private static final String DEFAULT_WEBAPPS_ROOT_FOLDER = "webapps";
 	
 	private static String configFile = DEFAULT_CONFIG_FILENAME;
+	
+	private static final String AUTH_TYPE_KERBEROS = "kerberos";
+    private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
+    private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
+    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
+
+	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	
 	private Properties serverConfigProperties = new Properties();
 
@@ -61,14 +75,15 @@ public class EmbeddedServer {
 		if (args.length > 0) {
 			configFile = args[0];
 		}
-		loadRangerSiteConfig();
+		loadConfig(CORE_SITE_CONFIG_FILENAME);
+		loadConfig(configFile);		
 	}
 	
 	public static int DEFAULT_SHUTDOWN_PORT = 6185;
 	public static String DEFAULT_SHUTDOWN_COMMAND = "SHUTDOWN";
 	
 	public void start() {
-		Tomcat server = new Tomcat();
+		final Tomcat server = new Tomcat();
 
 		String logDir =  null;
 		logDir = getConfig("logdir");
@@ -198,16 +213,55 @@ public class EmbeddedServer {
 			LOG.severe("Tomcat Server failed to start webapp:" + lce.toString());
 			lce.printStackTrace();
 		}
-				
+		
+		String keytab = getConfig(ADMIN_USER_KEYTAB);
+//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
+		String principal = null;
 		try {
-			server.start(); 
-			server.getServer().await();
-			shutdownServer();
-			
-		} catch (LifecycleException e) {
-			LOG.severe("Tomcat Server failed to start:" + e.toString());
-			e.printStackTrace(); 
-		} 
+			principal = SecureClientLogin.getPrincipal(getConfig(ADMIN_USER_PRINCIPAL), hostName);
+		} catch (IOException ignored) {
+			 // do nothing
+		}
+		String nameRules = getConfig(ADMIN_NAME_RULES);
+		if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
+			try{
+				LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+				Subject.doAs(sub, new PrivilegedAction<Void>() {
+					@Override
+					public Void run() {
+						try{
+							LOG.info("Starting Server using kerberos crendential");
+							server.start();
+							server.getServer().await();
+							shutdownServer();
+						}catch (LifecycleException e) {
+							LOG.severe("Tomcat Server failed to start:" + e.toString());
+							e.printStackTrace();
+						}catch (Exception e) {
+							LOG.severe("Tomcat Server failed to start:" + e.toString());
+							e.printStackTrace();
+						}
+						return null;
+					}
+				});
+			}catch(Exception e){
+				LOG.severe("Tomcat Server failed to start:" + e.toString());
+				e.printStackTrace();
+			}
+		}else{
+			try{                 
+				server.start(); 
+				server.getServer().await();
+				shutdownServer();
+			} catch (LifecycleException e) {
+				LOG.severe("Tomcat Server failed to start:" + e.toString());
+				e.printStackTrace(); 
+			} catch (Exception e) {
+				LOG.severe("Tomcat Server failed to start:" + e.toString());
+				e.printStackTrace(); 
+			}
+		}
 	}
 
 	private String getKeystoreFile() {
@@ -310,8 +364,8 @@ public class EmbeddedServer {
 	}
 
 
-	public void loadRangerSiteConfig() {
-		String path = getResourceFileName(configFile);
+	public void loadConfig(String configFileName) {
+		String path = getResourceFileName(configFileName);
 		try {
 			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
 					.newInstance();

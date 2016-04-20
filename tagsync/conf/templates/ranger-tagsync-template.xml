@@ -70,4 +70,13 @@
 	<property>
 		<name>ranger.tagsync.source.atlas.custom.resource.mappers</name>
 		<value></value>
-	</property></configuration>
+	</property>	
+	<property>
+		<name>ranger.tagsync.kerberos.keytab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.kerberos.principal</name>
+		<value></value>
+	</property>	
+</configuration>

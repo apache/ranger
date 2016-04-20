@@ -40,6 +40,7 @@ public class UserSessionBase implements Serializable {
 	private RangerUserPermission rangerUserPermission;
 	int clientTimeOffsetInMinute = 0;
 	private Boolean isSSOEnabled;
+	private Boolean isSpnegoEnabled = false;
 
 	public Long getUserId() {
 		if (xXPortalUser != null) {
@@ -135,6 +136,14 @@ public class UserSessionBase implements Serializable {
 
 	public void setSSOEnabled(Boolean isSSOEnabled) {
 		this.isSSOEnabled = isSSOEnabled;
+	}
+
+	public Boolean isSpnegoEnabled() {
+		return isSpnegoEnabled;
+	}
+
+	public void setSpnegoEnabled(Boolean isSpnegoEnabled) {
+		this.isSpnegoEnabled = isSpnegoEnabled;
 	}
 
 	public static class RangerUserPermission implements Serializable {

@@ -35,6 +35,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -252,18 +254,26 @@ public class HdfsClient extends BaseClient {
 
   public static void validateConnectionConfigs(Map<String, String> configs)
       throws IllegalArgumentException {
+	  String lookupPrincipal=null;
+	  try{
+		  lookupPrincipal = SecureClientLogin.getPrincipal(configs.get("lookupprincipal"), java.net.InetAddress.getLocalHost().getCanonicalHostName());
+	  }catch(Exception e){	
+		  //do nothing
+	  }
+	  String lookupKeytab = configs.get("lookupkeytab");
+	  if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){
+		  // username
+		  String username = configs.get("username") ;
+		  if ((username == null || username.isEmpty()))  {
+			  throw new IllegalArgumentException("Value for username not specified");
+		  }
 
-    // username
-    String username = configs.get("username") ;
-    if ((username == null || username.isEmpty()))  {
-      throw new IllegalArgumentException("Value for username not specified");
-    }
-
-    // password
-    String password = configs.get("password") ;
-    if ((password == null || password.isEmpty()))  {
-      throw new IllegalArgumentException("Value for password not specified");
-    }
+		  // password
+		  String password = configs.get("password") ;
+		  if ((password == null || password.isEmpty()))  {
+			  throw new IllegalArgumentException("Value for password not specified");
+		  }
+	  }
 
     // hadoop.security.authentication
     String authentication = configs.get("hadoop.security.authentication") ;

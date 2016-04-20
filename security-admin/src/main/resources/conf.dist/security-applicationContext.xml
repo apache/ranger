@@ -36,6 +36,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http pattern="/scripts/**" security="none" />
 	<security:http pattern="/libs/**" security="none" />
 	<security:http pattern="/images/**" security="none" />
+	<security:http pattern="/templates/**" security="none" />
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
@@ -48,7 +49,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/**" access="isAuthenticated()"/>       
 		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" /> 
-		
+		<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
@@ -89,7 +90,10 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
 
-	<beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
+	<beans:bean id="krbAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerKRBAuthenticationFilter">
+    </beans:bean>
+
+    <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
     </beans:bean>
 	
 	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>

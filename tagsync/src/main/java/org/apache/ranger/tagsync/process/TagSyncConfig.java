@@ -21,12 +21,16 @@ package org.apache.ranger.tagsync.process;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Properties;
+
+//import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 
 public class TagSyncConfig extends Configuration {
@@ -76,8 +80,23 @@ public class TagSyncConfig extends Configuration {
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 2000;
 
+	private static final String AUTH_TYPE = "hadoop.security.authentication";
+	private static final String NAME_RULES = "hadoop.security.auth_to_local";
+	private static final String TAGSYNC_KERBEROS_PRICIPAL = "ranger.tagsync.kerberos.principal";
+	private static final String TAGSYNC_KERBEROS_KEYTAB = "ranger.tagsync.kerberos.keytab";
+
+	private static final String CORE_SITE_FILE = "core-site.xml";
+	private static String LOCAL_HOSTNAME = "unknown" ;
 	private Properties props;
 
+	static {
+		try {
+			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			LOCAL_HOSTNAME = "unknown" ;
+		} 
+	}
+	
 	public static TagSyncConfig getInstance() {
 		TagSyncConfig newConfig = new TagSyncConfig();
 		return newConfig;
@@ -289,6 +308,29 @@ public class TagSyncConfig extends Configuration {
 	static public String getCustomAtlasResourceMappers(Properties prop) {
 		return prop.getProperty(TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP);
 	}
+	
+	static public String getAuthenticationType(Properties prop){
+		return prop.getProperty(AUTH_TYPE, "simple");
+	}
+	
+	static public String getNameRules(Properties prop){
+		return prop.getProperty(NAME_RULES, "DEFAULT");
+	}
+	
+	static public String getKerberosPrincipal(Properties prop){
+//		return prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL);
+		String principal = null;
+		try {
+			return SecureClientLogin.getPrincipal(prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL, ""), LOCAL_HOSTNAME);
+		} catch (IOException ignored) {
+			 // do nothing
+		}
+		return principal;
+	}
+	
+	static public String getKerberosKeytab(Properties prop){
+		return prop.getProperty(TAGSYNC_KERBEROS_KEYTAB, "");
+	}
 
 	static public long getTagAdminConnectionCheckInterval(Properties prop) {
 		long ret = DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL;
@@ -310,8 +352,9 @@ public class TagSyncConfig extends Configuration {
 
 	private void init() {
 
+		readConfigFile(CORE_SITE_FILE);
 		readConfigFile(DEFAULT_CONFIG_FILE);
-		readConfigFile(CONFIG_FILE);
+		readConfigFile(CONFIG_FILE);		
 
 		props = getProps();
 

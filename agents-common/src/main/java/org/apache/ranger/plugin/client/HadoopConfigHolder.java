@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.SecureClientLogin;
 
 public class HadoopConfigHolder  {
 	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class) ;
@@ -40,7 +41,11 @@ public class HadoopConfigHolder  {
 	public static final String RANGER_LOGIN_USER_NAME_PROP = "username" ;
 	public static final String RANGER_LOGIN_KEYTAB_FILE_PROP = "keytabfile" ;
 	public static final String RANGER_LOGIN_PASSWORD = "password" ;
+	public static final String RANGER_LOOKUP_PRINCIPAL = "lookupprincipal";
+	public static final String RANGER_LOOKUP_KEYTAB = "lookupkeytab";
+	public static final String RANGER_NAME_RULES = "namerules";
 	public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
+	public static final String HADOOP_NAME_RULES = "hadoop.security.auth_to_local";
 	public static final String HADOOP_SECURITY_AUTHENTICATION_METHOD = "kerberos";
 	public static final String HADOOP_RPC_PROTECTION = "hadoop.rpc.protection";
 	
@@ -53,11 +58,14 @@ public class HadoopConfigHolder  {
 	
 	
 	private String datasourceName ;
-  private String defaultConfigFile ;
+	private String defaultConfigFile ;
 	private String userName ;
 	private String keyTabFile ;
 	private String password ;
 	private boolean isKerberosAuth ;
+	private String lookupPrincipal;
+	private String lookupKeytab;
+	private String nameRules;
 	
 	private Map<String,String>  connectionProperties;
 
@@ -270,14 +278,17 @@ public class HadoopConfigHolder  {
 			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP) ;
 			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP) ;
 			password = prop.getProperty(RANGER_LOGIN_PASSWORD) ;
-
+			lookupPrincipal = prop.getProperty(RANGER_LOOKUP_PRINCIPAL);
+			lookupKeytab = prop.getProperty(RANGER_LOOKUP_KEYTAB);
+			nameRules = prop.getProperty(RANGER_NAME_RULES);
+			
 			String hadoopSecurityAuthenticationn =  getHadoopSecurityAuthentication();
 
 			if ( hadoopSecurityAuthenticationn != null) {
 				isKerberosAuth = ( hadoopSecurityAuthenticationn.equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD));
 			}
 			else {
-				isKerberosAuth = (userName != null) && (userName.indexOf("@") > -1) ;
+				isKerberosAuth = (((userName != null) && (userName.indexOf("@") > -1)) || (SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)));
 			}
 		}
 	}
@@ -367,7 +378,7 @@ public class HadoopConfigHolder  {
 
 		return ret;
 	}
-
+	
 	public String getUserName() {
 		return userName;
 	}
@@ -382,6 +393,18 @@ public class HadoopConfigHolder  {
 
 	public boolean isKerberosAuthentication() {
 		return isKerberosAuth;
+	}
+	
+	public String getLookupPrincipal(){
+		return lookupPrincipal;
+	}
+
+	public String getLookupKeytab(){
+		return lookupKeytab;
+	}
+
+	public String getNameRules(){
+		return nameRules;
 	}
 
   public Set<String> getRangerInternalPropertyKeys() {

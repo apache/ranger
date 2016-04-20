@@ -56,6 +56,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.AbstractBaseResourceService;
 import org.apache.ranger.view.VXDataObject;
@@ -1537,6 +1538,27 @@ public class RangerBizUtil {
 					"User session is not created",
 					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 		}
+	}
+	
+	public boolean isUserAllowed(RangerService rangerService, String cfgNameAllowedUsers) {
+		Map<String, String> map = rangerService.getConfigs();
+		String user = null;
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if(userSession != null){
+			user = userSession.getLoginId();
+		}
+		if (map != null && map.containsKey(cfgNameAllowedUsers)) {
+			String userNames = map.get(cfgNameAllowedUsers);
+			String[] userList = userNames.split(",");
+			if(userList != null){
+				for (String u : userList) {
+					if (u.equals("*") || (user != null && u.equalsIgnoreCase(user))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 }

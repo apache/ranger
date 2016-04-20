@@ -91,8 +91,9 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 				<!-- <value>classpath:xa_system.properties</value> -->
 				<!-- <value>classpath:xa_custom.properties</value> -->
 				<!-- <value>classpath:xa_ldap.properties</value> -->
+				<value>classpath:core-site.xml</value>
 				<value>classpath:ranger-admin-default-site.xml</value>
-				<value>classpath:ranger-admin-site.xml</value>
+				<value>classpath:ranger-admin-site.xml</value>				
 			</list>
 		</property>
 		<property name="propertiesPersister" ref="xmlPropertyConfigurer" />

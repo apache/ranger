@@ -117,6 +117,17 @@ sso_cookiename=$(get_prop 'sso_cookiename' $PROPFILE)
 sso_query_param_originalurl=$(get_prop 'sso_query_param_originalurl' $PROPFILE)
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 
+spnego_principal=$(get_prop 'spnego_principal' $PROPFILE)
+spnego_keytab=$(get_prop 'spnego_keytab' $PROPFILE)
+token_valid=$(get_prop 'token_valid' $PROPFILE)
+cookie_domain=$(get_prop 'cookie_domain' $PROPFILE)
+cookie_path=$(get_prop 'cookie_path' $PROPFILE)
+admin_principal=$(get_prop 'admin_principal' $PROPFILE)
+admin_keytab=$(get_prop 'admin_keytab' $PROPFILE)
+lookup_principal=$(get_prop 'lookup_principal' $PROPFILE)
+lookup_keytab=$(get_prop 'lookup_keytab' $PROPFILE)
+hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
+
 DB_HOST="${db_host}"
 
 check_ret_status(){
@@ -355,6 +366,69 @@ update_properties() {
 	else
 		log "[E] $to_file_default does not exists" ; exit 1;
     fi
+
+	if [ "${spnego_principal}" != "" ]
+	then
+               propertyName=ranger.spnego.kerberos.principal
+               newPropertyValue="${spnego_principal}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+	
+	if [ "${spnego_keytab}" != "" ]
+	then
+               propertyName=ranger.spnego.kerberos.keytab
+               newPropertyValue="${spnego_keytab}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${token_valid}" != "" ]
+	then
+               propertyName=ranger.admin.kerberos.token.valid.seconds
+               newPropertyValue="${token_valid}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+	
+	if [ "${cookie_domain}" != "" ]
+	then
+               propertyName=ranger.admin.kerberos.cookie.domain
+               newPropertyValue="${cookie_domain}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${cookie_path}" != "" ]
+	then
+               propertyName=ranger.admin.kerberos.cookie.path
+               newPropertyValue="${cookie_path}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${admin_principal}" != "" ]
+	then
+               propertyName=ranger.admin.kerberos.principal
+               newPropertyValue="${admin_principal}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+	
+	if [ "${admin_keytab}" != "" ]
+	then
+               propertyName=ranger.admin.kerberos.keytab
+               newPropertyValue="${admin_keytab}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${lookup_principal}" != "" ]
+	then            
+               propertyName=ranger.lookup.kerberos.principal
+               newPropertyValue="${lookup_principal}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${lookup_keytab}" != "" ]
+	then
+               propertyName=ranger.lookup.kerberos.keytab
+               newPropertyValue="${lookup_keytab}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
@@ -965,8 +1039,27 @@ setup_install_files(){
 	    mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	    cp ${WEBAPP_ROOT}/WEB-INF/classes/conf.dist/* ${WEBAPP_ROOT}/WEB-INF/classes/conf
 	fi
+
+        echo "export RANGER_HADOOP_CONF_DIR=${hadoop_conf}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-hadoopconfdir.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-hadoopconfdir.sh
+	
+	hadoop_conf_file=${hadoop_conf}/core-site.xml
+        ranger_hadoop_conf_file=${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+
 	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
+		if [ "${hadoop_conf}" == "" ]
+		then
+			log "[WARN] Property hadoop_conf not found. Creating blank core-site.xml."
+			echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+		else
+			if [ -f ${hadoop_conf_file} ]; then
+                                ln -sf ${hadoop_conf_file} ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                        else
+                                log "[WARN] core-site.xml file not found in provided hadoop_conf path. Creating blank core-site.xml"
+				echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                        fi
+		fi
 	fi
 
 	if [ ! -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then

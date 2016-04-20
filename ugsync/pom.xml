@@ -141,6 +141,11 @@
       <artifactId>commons-io</artifactId>
       <version>${commons.io.version}</version>
     </dependency>
+    <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+    </dependency>
     </dependencies>
 
     <build>

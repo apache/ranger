@@ -20,15 +20,22 @@
 package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -53,6 +60,7 @@ import java.util.List;
 public class TagREST {
 
     private static final Log LOG = LogFactory.getLog(TagREST.class);
+    private static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -62,6 +70,12 @@ public class TagREST {
 
 	@Autowired
 	TagDBStore tagStore;
+	
+	@Autowired
+	RangerDaoManager daoManager;
+	
+	@Autowired
+	RangerBizUtil bizUtil;
 
     TagValidator validator;
 
@@ -1105,6 +1119,72 @@ public class TagREST {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+        }
+
+        return ret;
+    }
+    
+    @GET
+    @Path(TagRESTConstants.TAGS_SECURE_DOWNLOAD + "{serviceName}")
+    @Produces({ "application/json", "application/xml" })
+    public ServiceTags getSecureServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
+                                                   @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion, @QueryParam("pluginId") String pluginId) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+        }
+
+		ServiceTags ret      = null;
+		int         httpCode = HttpServletResponse.SC_OK;
+		String      logMsg   = null;
+		boolean isAllowed = false;
+		boolean isAdmin = bizUtil.isAdmin();
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+
+        try {
+        	XXService xService = daoManager.getXXService().findByName(serviceName);
+        	XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+        	RangerService rangerService = svcStore.getServiceByName(serviceName);
+        	
+        	if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+        		if (isKeyAdmin) {
+        			isAllowed = true;
+        		}else {
+        			isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+        		}
+        	}else{
+        		if (isAdmin) {
+        			isAllowed = true;
+        		}else{
+        			isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+        		}
+        	}
+        	if (isAllowed) {
+	            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+	
+				if(ret == null) {
+					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+					logMsg   = "No change since last update";
+				} else {
+					httpCode = HttpServletResponse.SC_OK;
+					logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
+				}
+			}else{
+				// do nothing
+			}
+        } catch(Exception excp) {
+            LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ") failed", excp);
+
+			httpCode = HttpServletResponse.SC_BAD_REQUEST;
+			logMsg   = excp.getMessage();
+        }
+
+		if(httpCode != HttpServletResponse.SC_OK) {
+			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+		}
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
         }
 
         return ret;

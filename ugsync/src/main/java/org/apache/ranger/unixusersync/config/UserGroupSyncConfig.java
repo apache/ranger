@@ -53,6 +53,8 @@ public class UserGroupSyncConfig  {
 
 	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default-site.xml" ;
 	
+	private static final String CORE_SITE_CONFIG_FILE = "core-site.xml";
+	
 	public static final String  UGSYNC_ENABLED_PROP = "ranger.usersync.enabled" ;
 	
 	public static final String  UGSYNC_PM_URL_PROP = 	"ranger.usersync.policymanager.baseURL" ;
@@ -235,8 +237,9 @@ public class UserGroupSyncConfig  {
 	}
 
 	private void init() {
+		readConfigFile(CORE_SITE_CONFIG_FILE);
 		readConfigFile(CONFIG_FILE);
-		readConfigFile(DEFAULT_CONFIG_FILE);
+		readConfigFile(DEFAULT_CONFIG_FILE);		
 	}
 
 	private void readConfigFile(String fileName) {

@@ -63,5 +63,20 @@
             <artifactId>ecj</artifactId>
             <version>P20140317-1600</version>
         </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>	
+	<dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-plugins-audit</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

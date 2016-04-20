@@ -26,17 +26,19 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-
+import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
+
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Properties;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -51,11 +53,18 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
 
+	private static final String AUTH_TYPE_KERBEROS = "kerberos";
+
 	private long rangerAdminConnectionCheckInterval;
 
 	private RangerRESTClient tagRESTClient = null;
 
 	private BlockingQueue<UploadWorkItem> uploadWorkItems;
+	
+	private String authenticationType;	
+	private String principal;
+	private String keytab;
+	private String nameRules;
 
 	private Thread myThread = null;
 
@@ -72,6 +81,10 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		String userName = TagSyncConfig.getTagAdminUserName(properties);
 		String password = TagSyncConfig.getTagAdminPassword(properties);
 		rangerAdminConnectionCheckInterval = TagSyncConfig.getTagAdminConnectionCheckInterval(properties);
+		authenticationType = TagSyncConfig.getAuthenticationType(properties);
+		nameRules = TagSyncConfig.getNameRules(properties);
+		principal = TagSyncConfig.getKerberosPrincipal(properties);
+		keytab = TagSyncConfig.getKerberosKeytab(properties);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("restUrl=" + restUrl);
@@ -82,7 +95,9 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 		if (StringUtils.isNotBlank(restUrl)) {
 			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
-			tagRESTClient.setBasicAuthInfo(userName, password);
+			if(!(!StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))){
+				tagRESTClient.setBasicAuthInfo(userName, password);
+			}
 			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
 
 			ret = true;
@@ -119,6 +134,35 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 	}
 
 	private ServiceTags doUpload(ServiceTags serviceTags) throws Exception {
+			if(!StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+				try{
+					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
+					}
+					final ServiceTags serviceTag = serviceTags;
+					ServiceTags ret = Subject.doAs(sub, new PrivilegedAction<ServiceTags>() {
+						@Override
+						public ServiceTags run() {
+							try{
+								return uploadServiceTags(serviceTag);
+							}catch (Exception e) {
+								LOG.error("Upload of service-tags failed with message ", e);
+						    }
+							return null;
+						}
+					});
+					return ret;
+				}catch(Exception e){
+					LOG.error("Upload of service-tags failed with message ", e);
+				}
+				return null;
+			}else{
+				return uploadServiceTags(serviceTags);
+			}
+	}
+	
+	private ServiceTags uploadServiceTags(ServiceTags serviceTags) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> doUpload()");
 		}

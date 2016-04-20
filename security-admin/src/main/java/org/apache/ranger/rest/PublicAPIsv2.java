@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+
 import java.util.List;
 
 @Path("public/v2")
@@ -187,15 +188,15 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public List<RangerService> searchServices(@Context HttpServletRequest request) {
 		return serviceREST.getServices(request).getServices();
 	}
 
 	@POST
 	@Path("/api/service/")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	@Produces({ "application/json", "application/xml" })
 	public RangerService createService(RangerService service) {
 		return serviceREST.createService(service);

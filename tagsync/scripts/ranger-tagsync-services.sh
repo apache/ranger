@@ -59,7 +59,7 @@ if [ "${action}" == "START" ]; then
 		chmod 777 $logdir
 	fi
 
-	cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
+	cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*:${RANGER_TAGSYNC_HADOOP_CONF_DIR}/*"
 
     if [ -f $pidf ]; then
             PID=`cat $pidf`

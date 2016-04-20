@@ -28,10 +28,13 @@ import java.text.SimpleDateFormat;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.*;
 import org.apache.ranger.db.*;
@@ -96,6 +99,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
 	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
+	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
+	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
+	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
+	
+	private static final String KERBEROS_TYPE = "kerberos";
 
 	@Autowired
 	RangerServiceDefService serviceDefService;
@@ -1267,7 +1275,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXUser = xUserService.populateViewBean(xxUser);
 				} else {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
-					if (usb != null && !usb.isUserAdmin()) {
+					if (usb != null && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
@@ -2273,6 +2281,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			List<String> users = new ArrayList<String>();
 			users.add(vXUser.getName());
+			VXUser vXLookupUser = getLookupUser();
+			if(vXLookupUser != null){
+				users.add(vXLookupUser.getName());
+			}
+			UserSessionBase usb = ContextUtil.getCurrentUserSession();
+			if (usb != null && usb.isSpnegoEnabled()) {
+				users.add(usb.getLoginId());
+			}
 			policyItem.setUsers(users);
 
 			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
@@ -2291,6 +2307,39 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		policy = createPolicy(policy);
 	}
+	
+	private VXUser getLookupUser() {
+		VXUser vXUser = null;
+		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
+		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
+		if(!StringUtils.isEmpty(authType) && authType.equalsIgnoreCase(KERBEROS_TYPE)){
+			if(SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
+				KerberosName krbName = new KerberosName(lookupPrincipal);
+				String lookupUser=null;
+				try {
+					lookupUser = krbName.getShortName();
+				} catch (IOException e) {
+					throw restErrorUtil.createRESTException("Please provide proper value of lookup user principal : "+ lookupPrincipal, MessageEnums.INVALID_INPUT_DATA);
+				}               
+				
+				if(LOG.isDebugEnabled()){
+					LOG.debug("Checking for Lookup User : "+lookupUser);
+				}
+				if(!StringUtils.isEmpty(lookupUser)){
+					XXUser xxUser = daoMgr.getXXUser().findByUserName(lookupUser);
+					if (xxUser != null) {
+						vXUser = xUserService.populateViewBean(xxUser);
+					} else {
+						vXUser = xUserMgr.createServiceConfigUser(lookupUser);
+						LOG.info("Creating Lookup User : "+vXUser.getName());
+					}
+				}
+			}
+		}
+		return vXUser;
+	}
+
 
 	Map<String, RangerPolicyResource> createDefaultPolicyResource(List<RangerResourceDef> resourceHierarchy) throws Exception {
 		Map<String, RangerPolicyResource> resourceMap = new HashMap<>();

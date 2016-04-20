@@ -52,12 +52,14 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXService;
@@ -108,6 +110,8 @@ public class ServiceREST {
 	final static public String PARAM_SERVICE_NAME     = "serviceName";
 	final static public String PARAM_POLICY_NAME      = "policyName";
 	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
+	private static final String Allowed_User_List_For_Download = "policy.download.auth.users";
+	private static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -441,14 +445,16 @@ public class ServiceREST {
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.CREATE);
 
-			bizUtil.hasAdminPermissions("Services");
+			UserSessionBase session = ContextUtil.getCurrentUserSession();
+			if(session != null && !session.isSpnegoEnabled()){
+				bizUtil.hasAdminPermissions("Services");
 
-			// TODO: As of now we are allowing SYS_ADMIN to create all the
-			// services including KMS
+				// TODO: As of now we are allowing SYS_ADMIN to create all the
+				// services including KMS
 
-			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
-			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
-
+				XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
+				bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+			}
 			ret = svcStore.createService(service);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -911,6 +917,119 @@ public class ServiceREST {
 
 		return ret;
 	}
+	
+	@POST
+	@Path("/secure/services/grant/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse secureGrantAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + ")");
+		}
+		RESTResponse     ret  = new RESTResponse();
+		RangerPerfTracer perf = null;
+		boolean isAllowed = false;
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.scureGrantAccess(serviceName=" + serviceName + ")");
+				}
+				String               userName   = grantRequest.getGrantor();
+				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
+				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+	
+				if(!isAdmin) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+				}
+				// New Code
+				XXService xService = daoManager.getXXService().findByName(serviceName);
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				RangerService rangerService = svcStore.getServiceByName(serviceName);
+				
+				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					if (isKeyAdmin) {
+						isAllowed = true;
+					}else {
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+					}
+				}else{
+					if (isAdmin) {
+						isAllowed = true;
+					}
+					else{
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+					}
+				}
+				// New Code
+				if (isAllowed) {
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+	
+					if(policy != null) {
+						boolean policyUpdated = false;
+						policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
+	
+						if(policyUpdated) {
+							svcStore.updatePolicy(policy);
+						} else {
+							LOG.error("processSecureGrantRequest processing failed");
+							throw new Exception("processSecureGrantRequest processing failed");
+						}
+					} else {
+						policy = new RangerPolicy();
+						policy.setService(serviceName);
+						policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
+						policy.setDescription("created by grant");
+						policy.setIsAuditEnabled(grantRequest.getEnableAudit());
+						policy.setCreatedBy(userName);
+			
+						Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+						Set<String>                       resourceNames   = resource.getKeys();
+			
+						if(! CollectionUtils.isEmpty(resourceNames)) {
+							for(String resourceName : resourceNames) {
+								RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+								policyResource.setIsRecursive(grantRequest.getIsRecursive());
+		
+								policyResources.put(resourceName, policyResource);
+							}
+						}
+						policy.setResources(policyResources);
+	
+						RangerPolicyItem policyItem = new RangerPolicyItem();
+	
+						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
+						policyItem.getUsers().addAll(grantRequest.getUsers());
+						policyItem.getGroups().addAll(grantRequest.getGroups());
+	
+						for(String accessType : grantRequest.getAccessTypes()) {
+							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+						}
+	
+						policy.getPolicyItems().add(policyItem);
+	
+						svcStore.createPolicy(policy);
+					}
+				}else{
+					LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed as User doesn't have permission to grant Policy");
+				}
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch(Throwable excp) {
+				LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
+	
+				throw restErrorUtil.createRESTException(excp.getMessage());
+			} finally {
+				RangerPerfTracer.log(perf);
+			}
+	
+			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
+		}
+		return ret;
+	}	
 
 	@POST
 	@Path("/services/revoke/{serviceName}")
@@ -975,6 +1094,86 @@ public class ServiceREST {
 		return ret;
 	}
 
+	@POST
+	@Path("/secure/services/revoke/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse secureRevokeAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest revokeRequest, @Context HttpServletRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.secureRevokeAccess(" + serviceName + ", " + revokeRequest + ")");
+		}
+		RESTResponse     ret  = new RESTResponse();
+		RangerPerfTracer perf = null;
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
+			try {
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.secureRevokeAccess(serviceName=" + serviceName + ")");
+				}
+				String               userName   = revokeRequest.getGrantor();
+				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
+				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+				boolean isAllowed = false;
+				boolean isKeyAdmin = bizUtil.isKeyAdmin();
+				if(!isAdmin) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+				}
+	
+				XXService xService = daoManager.getXXService().findByName(serviceName);
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				RangerService rangerService = svcStore.getServiceByName(serviceName);
+				
+				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					if (isKeyAdmin) {
+						isAllowed = true;
+					}else {
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+					}
+				}else{
+					if (isAdmin) {
+						isAllowed = true;
+					}
+					else{
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+					}
+				}
+				// New Code
+				if (isAllowed) {
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+					
+					if(policy != null) {
+						boolean policyUpdated = false;
+						policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
+	
+						if(policyUpdated) {
+							svcStore.updatePolicy(policy);
+						} else {
+							LOG.error("processSecureRevokeRequest processing failed");
+							throw new Exception("processSecureRevokeRequest processing failed");
+						}
+					} else {
+						// nothing to revoke!
+					}
+				}else{
+					LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed as User doesn't have permission to revoke Policy");
+				}
+			} catch(WebApplicationException excp) {
+				throw excp;
+			} catch(Throwable excp) {
+				LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
+	
+				throw restErrorUtil.createRESTException(excp.getMessage());
+			} finally {
+				RangerPerfTracer.log(perf);
+			}
+	
+			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.secureRevokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);
+		}
+		return ret;
+	}	
+	
 	@POST
 	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
@@ -1558,7 +1757,6 @@ public class ServiceREST {
 				logMsg   = excp.getMessage();
 			} finally {
 				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, request);
-
 				RangerPerfTracer.log(perf);
 			}
 	
@@ -1574,6 +1772,86 @@ public class ServiceREST {
    
 		return ret;
 	}
+	
+	@GET
+	@Path("/secure/policies/download/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName,@QueryParam("lastKnownVersion") Long lastKnownVersion,@QueryParam("pluginId") String pluginId,@Context HttpServletRequest request) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("+ serviceName + ", " + lastKnownVersion + ")");
+		}
+		ServicePolicies ret = null;
+		int httpCode = HttpServletResponse.SC_OK;
+		String logMsg = null;
+		RangerPerfTracer perf = null;
+		boolean isAllowed = false;
+		boolean isAdmin = bizUtil.isAdmin();
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+		
+		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+			if (lastKnownVersion == null) {
+				lastKnownVersion = Long.valueOf(-1);
+			}
+			try {
+				if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getSecureServicePoliciesIfUpdated(serviceName="+ serviceName + ",lastKnownVersion="+ lastKnownVersion + ")");
+				}
+				XXService xService = daoManager.getXXService().findByName(serviceName);
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				RangerService rangerService = svcStore.getServiceByName(serviceName);
+				
+				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					if (isKeyAdmin) {
+						isAllowed = true;
+					}else {
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+						if(!isAllowed){
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						}	
+					}
+				}else{
+					if (isAdmin) {
+						isAllowed = true;
+					}
+					else{
+						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+						if(!isAllowed){
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						}	
+					}
+				}
+				if (isAllowed) {
+					ret = svcStore.getServicePoliciesIfUpdated(serviceName,lastKnownVersion);
+					if (ret == null) {
+						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+						logMsg = "No change since last update";
+					} else {
+						httpCode = HttpServletResponse.SC_OK;
+						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+					}
+				} else {
+					LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed as User doesn't have permission to download Policy");
+					httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+					logMsg = "User doesn't have permission to download policy";
+				}
+			} catch (Throwable excp) {
+				LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
+				httpCode = HttpServletResponse.SC_BAD_REQUEST;
+				logMsg = excp.getMessage();
+			} finally {
+				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, request);
+				RangerPerfTracer.log(perf);
+			}
+			if (httpCode != HttpServletResponse.SC_OK) {
+				boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+				throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+		}
+		return ret;
+	}		
 
 	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, int httpRespCode, HttpServletRequest request) {
 		try {

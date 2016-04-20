@@ -33,7 +33,9 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.KrbPasswordSaverLoginModule;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
@@ -62,12 +64,18 @@ public class StormClient {
 	String stormUIUrl;
 	String userName;
 	String password;
+	String lookupPrincipal;
+	String lookupKeytab;
+	String nameRules;
 
-	public StormClient(String aStormUIUrl, String aUserName, String aPassword) {
+	public StormClient(String aStormUIUrl, String aUserName, String aPassword, String lookupPrincipal, String lookupKeytab, String nameRules) {
 		
 		this.stormUIUrl = aStormUIUrl;
 		this.userName = aUserName ;
 		this.password = aPassword;
+		this.lookupPrincipal = lookupPrincipal;
+		this.lookupKeytab = lookupKeytab;
+		this.nameRules = nameRules;
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Storm Client is build with url [" + aStormUIUrl + "] user: [" + aUserName + "], password: [" + "" + "]");
@@ -173,7 +181,7 @@ public class StormClient {
 		} ;
 		
 		try {
-			ret = executeUnderKerberos(this.userName, this.password, topologyListGetter) ;
+			ret = executeUnderKerberos(this.userName, this.password, this.lookupPrincipal, this.lookupKeytab, this.nameRules, topologyListGetter) ;
 		} catch (IOException e) {
 			LOG.error("Unable to get Topology list from [" + stormUIUrl + "]", e) ;
 		}
@@ -181,7 +189,7 @@ public class StormClient {
 		return ret;
 	}
 	
-	public static <T> T executeUnderKerberos(String userName, String password,
+	public static <T> T executeUnderKerberos(String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules,
 			PrivilegedAction<T> action) throws IOException {
 		
 		final String errMsg = errMessage;
@@ -247,20 +255,28 @@ public class StormClient {
 		LoginContext loginContext = null;
 
 		try {
-		    subject = new Subject();
-			LOG.debug("executeUnderKerberos():user=" + userName + ",pass=");
-			LOG.debug("executeUnderKerberos():Creating config..");
-			MySecureClientLoginConfiguration loginConf = new MySecureClientLoginConfiguration(
-					userName, password);
-			LOG.debug("executeUnderKerberos():Creating Context..");
-			loginContext = new LoginContext("hadoop-keytab-kerberos", subject,
-					null, loginConf);
-			
-			LOG.debug("executeUnderKerberos():Logging in..");
-			loginContext.login();
-
-			Subject loginSubj = loginContext.getSubject();
-
+			Subject loginSubj = null;
+			if(!StringUtils.isEmpty(lookupPrincipal) && !StringUtils.isEmpty(lookupKeytab)){
+				LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
+				if(StringUtils.isEmpty(nameRules)){
+					nameRules = "DEFAULT";
+				}
+				loginSubj = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
+			}else{
+			    subject = new Subject();
+				LOG.debug("executeUnderKerberos():user=" + userName + ",pass=");
+				LOG.debug("executeUnderKerberos():Creating config..");
+				MySecureClientLoginConfiguration loginConf = new MySecureClientLoginConfiguration(
+						userName, password);
+				LOG.debug("executeUnderKerberos():Creating Context..");
+				loginContext = new LoginContext("hadoop-keytab-kerberos", subject,
+						null, loginConf);
+				
+				LOG.debug("executeUnderKerberos():Logging in..");
+				loginContext.login();
+				LOG.info("Init Login: using username/password");
+				loginSubj = loginContext.getSubject();
+			}
 			if (loginSubj != null) {
 				ret = Subject.doAs(loginSubj, action);
 			}
@@ -344,8 +360,11 @@ public class StormClient {
 			String stormUrl = configs.get("nimbus.url");
 			String stormAdminUser = configs.get("username");
 			String stormAdminPassword = configs.get("password");
+			String lookupPrincipal = configs.get("lookupprincipal");
+			String lookupKeytab = configs.get("lookupkeytab");
+			String nameRules = configs.get("namerules");
 			stormClient = new StormClient(stormUrl, stormAdminUser,
-					stormAdminPassword);
+					stormAdminPassword, lookupPrincipal, lookupKeytab, nameRules);
 		}
 		return stormClient;
 	}

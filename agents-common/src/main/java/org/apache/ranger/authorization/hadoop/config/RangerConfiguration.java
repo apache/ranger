@@ -55,6 +55,7 @@ public class RangerConfiguration extends Configuration {
 	public boolean addAdminResources() {
 		String defaultCfg = "ranger-admin-default-site.xml";
 		String addlCfg = "ranger-admin-site.xml";
+		String coreCfg = "core-site.xml";
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> addAdminResources()");
@@ -66,6 +67,10 @@ public class RangerConfiguration extends Configuration {
 		}
 
 		if (! addResourceIfReadable(addlCfg)) {
+			ret = false;
+		}
+		
+		if(! addResourceIfReadable(coreCfg)){
 			ret = false;
 		}
 

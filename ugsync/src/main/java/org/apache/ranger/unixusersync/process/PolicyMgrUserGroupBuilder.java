@@ -22,9 +22,11 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
+import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,8 +40,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.security.auth.Subject;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -69,6 +73,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class) ;
 	
+	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";	
+	private String AUTH_KERBEROS = "kerberos";
+	private static final String PRINCIPAL = "ranger.usersync.kerberos.principal";
+	private static final String KEYTAB = "ranger.usersync.kerberos.keytab";
+	private static final String NAME_RULE = "hadoop.security.auth_to_local";
+	
 	public static final String PM_USER_LIST_URI  = "/service/xusers/users/" ;				// GET
 	private static final String PM_ADD_USER_URI  = "/service/xusers/users/" ;				// POST
 	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo" ;	// POST
@@ -84,6 +94,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default" ;			// POST
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
+	
 	private static String LOCAL_HOSTNAME = "unknown" ;
 	private String recordsToPullPerCall = "1000" ;
 	private boolean isMockRun = false ;
@@ -108,11 +119,14 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private HostnameVerifier hv =  null ;
 
 	private SSLContext sslContext = null ;
-
+	private String authenticationType = null;
+	String principal;
+	String keytab;
+	String nameRules;
 	
 	static {
 		try {
-			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getHostName();
+			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
 		} catch (UnknownHostException e) {
 			LOCAL_HOSTNAME = "unknown" ;
 		} 
@@ -148,18 +162,56 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		trustStoreFilepwd = config.getSSLTrustStorePathPassword() ;
 		keyStoreType = KeyStore.getDefaultType() ;
 		trustStoreType = KeyStore.getDefaultType() ;
-		
+		authenticationType = config.getProperty(AUTHENTICATION_TYPE,"simple");
+		try {
+			principal = SecureClientLogin.getPrincipal(config.getProperty(PRINCIPAL,""), LOCAL_HOSTNAME);
+		} catch (IOException ignored) {
+			 // do nothing
+		}
+		keytab = config.getProperty(KEYTAB,"");
+		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
 		buildUserGroupInfo() ;
 	}
 	
 	private void buildUserGroupInfo() throws Throwable {
-		buildGroupList(); 
-		buildUserList();
-		buildUserGroupLinkList() ;
-		rebuildUserGroupMap() ;
-		if (LOG.isDebugEnabled()) {
-			this.print(); 
-		}
+		if(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("==> Kerberos Environment : Principal is " + principal + " and Keytab is " + keytab);
+			}
+		}		
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+			try {
+				LOG.info("Using principal = " + principal + " and keytab = " + keytab);
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);				
+				Subject.doAs(sub, new PrivilegedAction<Void>() {
+					@Override
+					public Void run() {
+						try {
+							buildGroupList(); 
+							buildUserList();
+							buildUserGroupLinkList() ;
+							rebuildUserGroupMap() ;
+							if (LOG.isDebugEnabled()) {
+							//	this.print(); 
+							}
+						} catch (Exception e) {
+							LOG.error("Failed to build Group List : ", e);
+						}
+						return null;
+					}
+				});
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
+			}
+		} else {
+			buildGroupList(); 
+			buildUserList();
+			buildUserGroupLinkList() ;
+			rebuildUserGroupMap() ;
+			if (LOG.isDebugEnabled()) {
+				this.print(); 
+			}
+		}	
 	}
 	
 	private String getURL(String uri) {
@@ -341,46 +393,46 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 	}
 	
-	
 	private void buildGroupList() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList");
+		}		
+		Client c = getClient() ;
 		
-	    Client c = getClient() ;
-	    
-	    int totalCount = 100 ;
-	    int retrievedCount = 0 ;
-	    
-	    while (retrievedCount < totalCount) {
-	    	
-		    WebResource r = c.resource(getURL(PM_GROUP_LIST_URI))
-		    					.queryParam("pageSize", recordsToPullPerCall)
-		    					.queryParam("startIndex", String.valueOf(retrievedCount)) ;
+		int totalCount = 100 ;
+		int retrievedCount = 0 ;
+		 	    
+		while (retrievedCount < totalCount) {
+			WebResource r = c.resource(getURL(PM_GROUP_LIST_URI))
+					.queryParam("pageSize", recordsToPullPerCall)
+					.queryParam("startIndex", String.valueOf(retrievedCount)) ;
+			
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		    
-		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-		    
-		    LOG.debug("RESPONSE: [" + response + "]") ;
+		LOG.debug("RESPONSE: [" + response + "]") ;
 		    		    
-		    Gson gson = new GsonBuilder().create() ;
-	
-		    GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class) ;
-		    
-		    totalCount = groupList.getTotalCount() ;
-		    
-		    if (groupList.getXgroupInfoList() != null) {
-		    	xgroupList.addAll(groupList.getXgroupInfoList()) ;
-		    	retrievedCount = xgroupList.size() ;
+		Gson gson = new GsonBuilder().create() ;
 
-		    	for(XGroupInfo g : groupList.getXgroupInfoList()) {
-		    		LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: " + g.getDescription()) ;
-			    }
-		    }
-	    }
+		GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class) ;
+				    
+		totalCount = groupList.getTotalCount() ;
+		
+			if (groupList.getXgroupInfoList() != null) {
+				xgroupList.addAll(groupList.getXgroupInfoList());
+				retrievedCount = xgroupList.size();
 
+				for (XGroupInfo g : groupList.getXgroupInfoList()) {
+					LOG.debug("GROUP:  Id:" + g.getId() + ", Name: "+ g.getName() + ", Description: "+ g.getDescription());
+				}
+			}
+		}
 	}
-
 	
 	private void buildUserList() {
-		
-	    Client c = getClient() ;	
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserList");
+		}
+		Client c = getClient() ;	
 	    
 	    int totalCount = 100 ;
 	    int retrievedCount = 0 ;
@@ -410,12 +462,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			    }
 		    }
 	    }
-	    
 	}
 	
-	
 	private void buildUserGroupLinkList() {
-
+		if(LOG.isDebugEnabled()) {
+	 		LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserGroupLinkList");
+	 	}
 		Client c = getClient() ;
 	    
 	    int totalCount = 100 ;
@@ -446,14 +498,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			    }
 		    }
 	    }
-
 	}
-	
-	
+
 	private UserGroupInfo addUserGroupInfo(String userName, List<String> groups){
-	
+		if(LOG.isDebugEnabled()) {
+	 		LOG.debug("==> PolicyMgrUserGroupBuilder.addUserGroupInfo " + userName + " and groups");
+	 	}
 		UserGroupInfo ret = null;
-		
 		XUserInfo user = null;
 		
 		LOG.debug("INFO: addPMXAUser(" + userName + ")" ) ;
@@ -467,7 +518,32 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (! isMockRun ) { 
 			addXUserGroupInfo(user, groups) ;
 		}
-		
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final UserGroupInfo result = ret;
+				ret = Subject.doAs(sub, new PrivilegedAction<UserGroupInfo>() {
+					@Override
+					public UserGroupInfo run() {
+						try {
+							return getUsergroupInfo(result);
+						} catch (Exception e) {
+							LOG.error("Failed to add User Group Info : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return null;
+		}else{
+			return getUsergroupInfo(ret);
+		}
+	}
+
+	private UserGroupInfo getUsergroupInfo(UserGroupInfo ret) {
 		Client c = getClient();
 		
 		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
@@ -495,13 +571,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			}
 		}
 		
-		return ret;	
+		return ret;
 	}
 
-	private void addUserGroupInfo(UserGroupInfo usergroupInfo){
-
-		UserGroupInfo ret = null;
-
+	private void getUserGroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo) {
 		Client c = getClient();
 
 		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
@@ -528,6 +601,35 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				addGroupToList(xGroupInfo);
 				addUserGroupInfoToList(xUserInfo,xGroupInfo);
 			}
+		}
+	}
+	
+	private void addUserGroupInfo(UserGroupInfo usergroupInfo){
+		if(LOG.isDebugEnabled()) {
+	 		LOG.debug("==> PolicyMgrUserGroupBuilder.addUserGroupInfo");
+	 	}
+		UserGroupInfo ret = null;
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final UserGroupInfo result = ret;
+				final UserGroupInfo ugInfo = usergroupInfo;
+				Subject.doAs(sub, new PrivilegedAction<Void>() {
+					@Override
+					public Void run() {
+						try {
+							getUserGroupInfo(result, ugInfo);
+						} catch (Exception e) {
+							LOG.error("Failed to add User Group Info : ", e);
+						}
+						return null;
+					}
+				});
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
+			}
+		} else {
+			getUserGroupInfo(ret, usergroupInfo);
 		}
 	}
 
@@ -609,11 +711,31 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	
-	private void delXUserGroupInfo(XUserInfo aUserInfo, List<String> aGroupList) {
+	private void delXUserGroupInfo(final XUserInfo aUserInfo, List<String> aGroupList) {
 		for(String groupName : aGroupList) {
-			XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+			final XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
 			if (group != null) {
-				delXUserGroupInfo(aUserInfo, group) ;
+				if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+					try {
+						LOG.info("Using principal = " + principal + " and keytab = " + keytab);
+						Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+						Subject.doAs(sub, new PrivilegedAction<Void>() {
+							@Override
+							public Void run() {
+								try {
+									delXUserGroupInfo(aUserInfo, group);
+								} catch (Exception e) {
+									LOG.error("Failed to build Group List : ", e);
+								}
+								return null;
+							}
+						});
+					} catch (Exception e) {
+						LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
+					}
+				} else {
+					delXUserGroupInfo(aUserInfo, group);
+				}
 			}
 		}
 	}
@@ -650,19 +772,44 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	}
 	
-
 	private MUserInfo addMUser(String aUserName) {
-		
-		MUserInfo ret = null ;
-		
-		MUserInfo userInfo = new MUserInfo() ;
+		MUserInfo ret = null;
+		MUserInfo userInfo = new MUserInfo();
 
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
 		userInfo.setLastName(aUserName);
 		userInfo.setEmailAddress(aUserName + "@" + LOCAL_HOSTNAME);
-	
-	    Client c = getClient() ;
+
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final MUserInfo result = ret;
+				final MUserInfo userInfoFinal = userInfo;
+				ret = Subject.doAs(sub, new PrivilegedAction<MUserInfo>() {
+					@Override
+					public MUserInfo run() {
+						try {
+							return getMUser(userInfoFinal, result);
+						} catch (Exception e) {
+							LOG.error("Failed to add User : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return null;
+		} else {
+			return getMUser(userInfo, ret);
+		}
+	}
+
+
+	private MUserInfo getMUser(MUserInfo userInfo, MUserInfo ret) {		
+		Client c = getClient() ;
 	    
 	    WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI)) ;
 	    
@@ -679,10 +826,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	    LOG.debug("MUser Creation successful " + ret);
 		
 		return ret ;
-		
-
 	}
-	
 
 	private synchronized Client getClient() {
 		
@@ -771,16 +915,18 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		    cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 		    ret = Client.create(cc);	
 		}
-		if(ret!=null){
-			 String username = config.getPolicyMgrUserName();
-			 String password = config.getPolicyMgrPassword();
-			 if(username==null||password==null||username.trim().isEmpty()||password.trim().isEmpty()){
-				 username=config.getDefaultPolicyMgrUserName();
-				 password=config.getDefaultPolicyMgrPassword();
-			 }
-			 if(username!=null && password!=null){
-				 ret.addFilter(new HTTPBasicAuthFilter(username, password));
-			 }
+		if(!(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))){
+			if(ret!=null){
+				 String username = config.getPolicyMgrUserName();
+				 String password = config.getPolicyMgrPassword();
+				 if(username==null||password==null||username.trim().isEmpty()||password.trim().isEmpty()){
+					 username=config.getDefaultPolicyMgrUserName();
+					 password=config.getDefaultPolicyMgrPassword();
+				 }
+				 if(username!=null && password!=null){
+					 ret.addFilter(new HTTPBasicAuthFilter(username, password));
+				 }
+			}
 		}
 		return ret ;
 	}
@@ -832,7 +978,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 	}
 	
-	private XGroupInfo addGroupInfo(String groupName){
+	private XGroupInfo addGroupInfo(final String groupName){
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
 		
@@ -840,6 +986,34 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (! isMockRun) {
 			group = addXGroupInfo(groupName) ;
 		}
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
+			try {
+				LOG.info("Using principal = " + principal + " and keytab = " + keytab);
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final XGroupInfo groupInfo = group;
+				ret = Subject.doAs(sub, new PrivilegedAction<XGroupInfo>() {
+					@Override
+					public XGroupInfo run() {
+						try {
+							return getAddedGroupInfo(groupInfo);
+						} catch (Exception e) {
+							LOG.error("Failed to build Group List : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : ", e);
+			}
+			return null;
+		} else {
+			return getAddedGroupInfo(group);
+		}	
+	}
+
+	private XGroupInfo getAddedGroupInfo(XGroupInfo group){	
+		XGroupInfo ret = null;
 		
 		Client c = getClient();
 		

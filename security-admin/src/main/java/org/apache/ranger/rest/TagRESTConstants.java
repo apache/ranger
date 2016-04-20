@@ -34,6 +34,7 @@ public class TagRESTConstants {
 	static final String TAGTYPES_RESOURCE        = "/types/";
 	static final String TAGTYPES_LOOKUP_RESOURCE = "/types/lookup/";
 	static final String TAGS_DOWNLOAD            = "/download/";
+	static final String TAGS_SECURE_DOWNLOAD            = "/secure/download/";
 
 	public static final String SERVICE_NAME_PARAM           = "serviceName";
 	public static final String LAST_KNOWN_TAG_VERSION_PARAM = "lastKnownVersion";

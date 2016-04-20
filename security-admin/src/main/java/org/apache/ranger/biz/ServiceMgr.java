@@ -33,8 +33,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.TimedExecutor;
+import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -55,6 +57,13 @@ public class ServiceMgr {
 
 	private static final Log LOG = LogFactory.getLog(ServiceMgr.class);
 	
+	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
+	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
+	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
+	private static final String KERBEROS_TYPE = "kerberos";
+	static final String NAME_RULES = "hadoop.security.auth_to_local";
+	static final String HOST_NAME = "ranger.service.host";
+	
 	@Autowired
 	RangerServiceService rangerSvcService;
 	
@@ -72,11 +81,24 @@ public class ServiceMgr {
 		
 		RangerService service = svcDBStore.getServiceByName(serviceName);
 		
+		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE); 
+		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
+		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
+		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+		
+		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
+			if(service != null && service.getConfigs() != null){
+				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+			}
+		}
+		
 		Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
 		service.setConfigs(newConfigs);
 		
 		RangerBaseService svc = getRangerServiceByService(service, svcStore);
-
+		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.lookupResource for Service: (" + svc + "Context: " + context + ")");
 		}
@@ -100,6 +122,19 @@ public class ServiceMgr {
 	
 	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		VXResponse        ret = new VXResponse();
+		
+		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE); 
+		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
+		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
+		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+		
+		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
+			if(service != null && service.getConfigs() != null){
+				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+			}
+		}
 		
 		Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
 		service.setConfigs(newConfigs);
