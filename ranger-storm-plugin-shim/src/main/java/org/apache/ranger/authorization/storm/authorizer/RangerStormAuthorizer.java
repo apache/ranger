@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 
-import backtype.storm.security.auth.IAuthorizer;
-import backtype.storm.security.auth.ReqContext;
+import org.apache.storm.security.auth.IAuthorizer;
+import org.apache.storm.security.auth.ReqContext;
 
 public class RangerStormAuthorizer implements IAuthorizer {
 	private static final Logger LOG  = LoggerFactory.getLogger(RangerStormAuthorizer.class);

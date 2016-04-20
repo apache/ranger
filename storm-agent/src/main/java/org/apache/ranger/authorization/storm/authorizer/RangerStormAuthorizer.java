@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-import backtype.storm.Config;
-import backtype.storm.security.auth.IAuthorizer;
-import backtype.storm.security.auth.ReqContext;
+import org.apache.storm.Config;
+import org.apache.storm.security.auth.IAuthorizer;
+import org.apache.storm.security.auth.ReqContext;
 
 public class RangerStormAuthorizer implements IAuthorizer {
 
