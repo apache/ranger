@@ -38,6 +38,7 @@ import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -90,7 +91,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
 			throw new IOException("Master Key Jceks does not exists");
 		}
-		if(conf.get(HSM_ENABLED).equalsIgnoreCase("false")){
+		if(StringUtils.isEmpty(conf.get(HSM_ENABLED)) || conf.get(HSM_ENABLED).equalsIgnoreCase("false")){
 			rangerMasterKey = new RangerMasterKey(daoManager);
 		}else{
 			rangerMasterKey = new RangerHSM(conf);
