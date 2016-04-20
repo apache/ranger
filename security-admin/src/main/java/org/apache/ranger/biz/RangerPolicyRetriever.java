@@ -381,7 +381,7 @@ public class RangerPolicyRetriever {
 					if(xDataMaskDef != null) {
 						ret = xDataMaskDef.getName();
 
-						resourceDefs.put(dataMaskDefId,  ret);
+						dataMasks.put(dataMaskDefId,  ret);
 					}
 				}
 			}
