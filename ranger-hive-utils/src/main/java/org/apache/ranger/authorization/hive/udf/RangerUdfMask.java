@@ -21,12 +21,12 @@ package org.apache.ranger.authorization.hive.udf;
 
 import java.sql.Date;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.serde2.io.ShortWritable;
+import org.apache.hadoop.hive.serde2.objectinspector.ConstantObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableConstantIntObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableConstantStringObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.LongWritable;
 
 
 public class RangerUdfMask extends RangerBaseUdf {
@@ -43,69 +43,86 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 	final static int MASKED_DAY_COMPONENT_VAL    = 1;
 	final static int MASKED_MONTH_COMPONENT_VAL  = 0;
 	final static int MASKED_YEAR_COMPONENT_VAL   = 0;
-	final static int UNMASKED_DATE_COMPONENT_VAL = -1;
+	final static int UNMASKED_VAL                = -1;
 
-	int maskedUpperChar   = MASKED_UPPERCASE;
-	int maskedLowerChar   = MASKED_LOWERCASE;
-	int maskedDigitChar   = MASKED_NUMBER;
-	int maskedOtherChar   = MASKED_OTHER_CHAR;
-	int maskedNumber      = MASKED_NUMBER;
-	int maskedDayValue    = MASKED_DAY_COMPONENT_VAL;
-	int maskedMonthValue  = MASKED_MONTH_COMPONENT_VAL;
-	int maskedYearValue   = MASKED_YEAR_COMPONENT_VAL;
+	int maskedUpperChar  = MASKED_UPPERCASE;
+	int maskedLowerChar  = MASKED_LOWERCASE;
+	int maskedDigitChar  = MASKED_NUMBER;
+	int maskedOtherChar  = MASKED_OTHER_CHAR;
+	int maskedNumber     = MASKED_NUMBER;
+	int maskedDayValue   = MASKED_DAY_COMPONENT_VAL;
+	int maskedMonthValue = MASKED_MONTH_COMPONENT_VAL;
+	int maskedYearValue  = MASKED_YEAR_COMPONENT_VAL;
 
 	public MaskTransformer() {
 	}
 
 	@Override
 	public void init(ObjectInspector[] arguments, int startIdx) {
-		maskedUpperChar  = getCharArg(arguments, startIdx + 0, MASKED_UPPERCASE);
-		maskedLowerChar  = getCharArg(arguments, startIdx + 1, MASKED_LOWERCASE);
-		maskedDigitChar  = getCharArg(arguments, startIdx + 2, MASKED_NUMBER);
-		maskedOtherChar  = getCharArg(arguments, startIdx + 3, MASKED_OTHER_CHAR);
-		maskedNumber     = getCharArg(arguments, startIdx + 4, MASKED_NUMBER);
-		maskedDayValue   = getIntArg(arguments, startIdx + 5, MASKED_DAY_COMPONENT_VAL);
-		maskedMonthValue = getIntArg(arguments, startIdx + 6, MASKED_MONTH_COMPONENT_VAL);
-		maskedYearValue  = getIntArg(arguments, startIdx + 7, MASKED_YEAR_COMPONENT_VAL);
+		int idx = startIdx;
+
+		maskedUpperChar  = getCharArg(arguments, idx++, MASKED_UPPERCASE);
+		maskedLowerChar  = getCharArg(arguments, idx++, MASKED_LOWERCASE);
+		maskedDigitChar  = getCharArg(arguments, idx++, MASKED_NUMBER);
+		maskedOtherChar  = getCharArg(arguments, idx++, MASKED_OTHER_CHAR);
+		maskedNumber     = getCharArg(arguments, idx++, MASKED_NUMBER);
+		maskedDayValue   = getIntArg(arguments, idx++, MASKED_DAY_COMPONENT_VAL);
+		maskedMonthValue = getIntArg(arguments, idx++, MASKED_MONTH_COMPONENT_VAL);
+		maskedYearValue  = getIntArg(arguments, idx++, MASKED_YEAR_COMPONENT_VAL);
 	}
 
 	@Override
 	String transform(String value) {
-		return maskString(value, maskedUpperChar, maskedLowerChar, maskedDigitChar, maskedOtherChar, 0, value.length());
+		return maskString(value, 0, value.length());
+	}
+
+	@Override
+	Byte transform(Byte value) {
+		String strValue = value.toString();
+
+		return toByte(Long.parseLong(maskNumber(strValue, 0, strValue.length())));
 	}
 
 	@Override
 	Short transform(Short value) {
 		String strValue = value.toString();
 
-		return Short.parseShort(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+		return toShort(Long.parseLong(maskNumber(strValue, 0, strValue.length())));
 	}
 
 	@Override
 	Integer transform(Integer value) {
 		String strValue = value.toString();
 
-		return Integer.parseInt(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+		return toInteger(Long.parseLong(maskNumber(strValue, 0, strValue.length())));
 	}
 
 	@Override
 	Long transform(Long value) {
 		String strValue = value.toString();
 
-		return Long.parseLong(maskNumber(strValue, maskedDigitChar, 0, strValue.length()));
+		return Long.parseLong(maskNumber(strValue, 0, strValue.length()));
 	}
 
 	@Override
 	Date transform(Date value) {
-		return maskDate(value, maskedDayValue, maskedMonthValue, maskedYearValue);
+		return maskDate(value);
 	}
 
 
-	String maskString(String val, int replaceUpperChar, int replaceLowerChar, int replaceDigitChar, int replaceOtherChar, int startIdx, int endIdx) {
-		StringBuffer strBuf = new StringBuffer(val.length());
+	String maskString(String val, int startIdx, int endIdx) {
+		StringBuilder strBuf = new StringBuilder(val.length());
 
 		if(startIdx < 0) {
 			startIdx = 0;
+		}
+
+		if(endIdx < 0) {
+			endIdx = 0;
+		}
+
+		if(startIdx > val.length()) {
+			startIdx = val.length();
 		}
 
 		if(endIdx > val.length()) {
@@ -121,26 +138,26 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 
 			switch(Character.getType(c)) {
 				case Character.UPPERCASE_LETTER:
-					if(replaceUpperChar != -1) {
-						c = replaceUpperChar;
+					if(maskedUpperChar != UNMASKED_VAL) {
+						c = maskedUpperChar;
 					}
 					break;
 
 				case Character.LOWERCASE_LETTER:
-					if(replaceLowerChar != -1) {
-						c = replaceLowerChar;
+					if(maskedLowerChar != UNMASKED_VAL) {
+						c = maskedLowerChar;
 					}
 					break;
 
 				case Character.DECIMAL_DIGIT_NUMBER:
-					if(replaceDigitChar != -1) {
-						c = replaceDigitChar;
+					if(maskedDigitChar != UNMASKED_VAL) {
+						c = maskedDigitChar;
 					}
 					break;
 
 				default:
-					if(replaceOtherChar != -1) {
-						c = replaceOtherChar;
+					if(maskedOtherChar != UNMASKED_VAL) {
+						c = maskedOtherChar;
 					}
 					break;
 			}
@@ -155,12 +172,20 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 		return strBuf.toString();
 	}
 
-	String maskNumber(String val, int replaceDigit, int startIdx, int endIdx) {
-		if(replaceDigit != -1) {
-			StringBuffer strBuf = new StringBuffer(val.length());
+	String maskNumber(String val, int startIdx, int endIdx) {
+		if(maskedNumber != UNMASKED_VAL) {
+			StringBuilder strBuf = new StringBuilder(val.length());
 
 			if (startIdx < 0) {
 				startIdx = 0;
+			}
+
+			if (endIdx < 0) {
+				endIdx = 0;
+			}
+
+			if (startIdx > val.length()) {
+				startIdx = val.length();
 			}
 
 			if (endIdx > val.length()) {
@@ -176,8 +201,8 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 
 				switch (Character.getType(c)) {
 					case Character.DECIMAL_DIGIT_NUMBER:
-						c = replaceDigit;
-					break;
+						c = maskedNumber;
+						break;
 				}
 
 				strBuf.appendCodePoint(c);
@@ -193,39 +218,79 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 		return val;
 	}
 
-	Date maskDate(Date value, int maskedDay, int maskedMonth, int maskedYear) {
-		int year  = maskedYear  == UNMASKED_DATE_COMPONENT_VAL ? value.getYear()  : MASKED_YEAR_COMPONENT_VAL;
-		int month = maskedMonth == UNMASKED_DATE_COMPONENT_VAL ? value.getMonth() : MASKED_MONTH_COMPONENT_VAL;
-		int day   = maskedDay   == UNMASKED_DATE_COMPONENT_VAL ? value.getDate()  : MASKED_DAY_COMPONENT_VAL;
+	Date maskDate(Date value) {
+		int year  = maskedYearValue  == UNMASKED_VAL ? value.getYear()  : maskedYearValue;
+		int month = maskedMonthValue == UNMASKED_VAL ? value.getMonth() : maskedMonthValue;
+		int day   = maskedDayValue   == UNMASKED_VAL ? value.getDate()  : maskedDayValue;
 
 		return new Date(year, month, day);
 	}
 
-	String getStringArg(ObjectInspector[] arguments, int index, String defaultValue) {
-		String ret = defaultValue;
-
-		ObjectInspector arg = (arguments != null && arguments.length > index) ? arguments[index] : null;
-
-		if (arg != null) {
-			if (arg instanceof WritableConstantStringObjectInspector) {
-				Text value = ((WritableConstantStringObjectInspector) arg).getWritableConstantValue();
-
-				if (value != null && value.getLength() > 0) {
-					ret = value.toString();
-				}
-			}
+	Byte toByte(long value) {
+		if(value < Byte.MIN_VALUE) {
+			return Byte.MIN_VALUE;
+		} else if(value > Byte.MAX_VALUE) {
+			return Byte.MAX_VALUE;
+		} else {
+			return (byte)value;
 		}
+	}
 
-		return ret;
+	Short toShort(long value) {
+		if(value < Short.MIN_VALUE) {
+			return Short.MIN_VALUE;
+		} else if(value > Short.MAX_VALUE) {
+			return Short.MAX_VALUE;
+		} else {
+			return (short)value;
+		}
+	}
+
+	Integer toInteger(long value) {
+		if(value < Integer.MIN_VALUE) {
+			return Integer.MIN_VALUE;
+		} else if(value > Integer.MAX_VALUE) {
+			return Integer.MAX_VALUE;
+		} else {
+			return (int)value;
+		}
 	}
 
 	int getCharArg(ObjectInspector[] arguments, int index, int defaultValue) {
 		int ret = defaultValue;
 
-		String value = getStringArg(arguments, index, null);
+		ObjectInspector arg = (arguments != null && arguments.length > index) ? arguments[index] : null;
 
-		if (StringUtils.isNotEmpty(value)) {
-			ret = value.charAt(0);
+		if (arg != null) {
+			if(arg instanceof WritableConstantIntObjectInspector) {
+				IntWritable value = ((WritableConstantIntObjectInspector)arg).getWritableConstantValue();
+
+				if(value != null) {
+					ret = value.get();
+				}
+			} else if(arg instanceof WritableConstantLongObjectInspector) {
+				LongWritable value = ((WritableConstantLongObjectInspector)arg).getWritableConstantValue();
+
+				if(value != null) {
+					ret = (int)value.get();
+				}
+			} else if(arg instanceof WritableConstantShortObjectInspector) {
+				ShortWritable value = ((WritableConstantShortObjectInspector)arg).getWritableConstantValue();
+
+				if(value != null) {
+					ret = value.get();
+				}
+			} else if(arg instanceof ConstantObjectInspector) {
+				Object value = ((ConstantObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null) {
+					String strValue = value.toString();
+
+					if (strValue != null && strValue.length() > 0) {
+						ret = strValue.charAt(0);
+					}
+				}
+			}
 		}
 
 		return ret;
@@ -237,21 +302,33 @@ class MaskTransformer extends RangerBaseUdf.RangerTransformer {
 		ObjectInspector arg = (arguments != null && arguments.length > index) ? arguments[index] : null;
 
 		if (arg != null) {
-			if (arg instanceof WritableConstantStringObjectInspector) {
-				Text value = ((WritableConstantStringObjectInspector) arg).getWritableConstantValue();
+			if (arg instanceof WritableConstantIntObjectInspector) {
+				IntWritable value = ((WritableConstantIntObjectInspector) arg).getWritableConstantValue();
 
 				if (value != null) {
-					try {
-						ret = Integer.parseInt(value.toString());
-					} catch(NumberFormatException excp) {
-						// ignored; defaultValue will be returned
-					}
-				}
-			} else if(arg instanceof WritableConstantIntObjectInspector) {
-				IntWritable value = ((WritableConstantIntObjectInspector)arg).getWritableConstantValue();
-
-				if(value != null) {
 					ret = value.get();
+				}
+			} else if (arg instanceof WritableConstantLongObjectInspector) {
+				LongWritable value = ((WritableConstantLongObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null) {
+					ret = (int) value.get();
+				}
+			} else if (arg instanceof WritableConstantShortObjectInspector) {
+				ShortWritable value = ((WritableConstantShortObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null) {
+					ret = value.get();
+				}
+			} else if (arg instanceof ConstantObjectInspector) {
+				Object value = ((ConstantObjectInspector) arg).getWritableConstantValue();
+
+				if (value != null) {
+					String strValue = value.toString();
+
+					if (strValue != null && strValue.length() > 0) {
+						ret = Integer.parseInt(value.toString());
+					}
 				}
 			}
 		}

@@ -43,27 +43,34 @@ class MaskFirstNTransformer extends MaskTransformer {
 
     @Override
     String transform(String value) {
-        return maskString(value, maskedUpperChar, maskedLowerChar, maskedDigitChar, maskedOtherChar, 0, charCount);
+        return maskString(value, 0, charCount);
+    }
+
+    @Override
+    Byte transform(Byte value) {
+        String strValue = value.toString();
+
+        return toByte(Long.parseLong(maskNumber(strValue, 0, charCount)));
     }
 
     @Override
     Short transform(Short value) {
         String strValue = value.toString();
 
-        return Short.parseShort(maskNumber(strValue, maskedDigitChar, 0, charCount));
+        return toShort(Long.parseLong(maskNumber(strValue, 0, charCount)));
     }
 
     @Override
     Integer transform(Integer value) {
         String strValue = value.toString();
 
-        return Integer.parseInt(maskNumber(strValue, maskedDigitChar, 0, charCount));
+        return toInteger(Long.parseLong(maskNumber(strValue, 0, charCount)));
     }
 
     @Override
     Long transform(Long value) {
         String strValue = value.toString();
 
-        return Long.parseLong(maskNumber(strValue, maskedDigitChar, 0, charCount));
+        return Long.parseLong(maskNumber(strValue, 0, charCount));
     }
 }

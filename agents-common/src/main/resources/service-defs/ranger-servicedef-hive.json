@@ -253,7 +253,7 @@
 				"name": "MASK",
 				"label": "Mask",
 				"description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
-				"transformer": "rangerUdfMask({col})",
+				"transformer": "default.mask({col})",
 				"dataMaskOptions": {
 				}
 			},
@@ -262,21 +262,21 @@
 				"name": "MASK_SHOW_LAST_4",
 				"label": "Partial mask: show last 4",
 				"description": "Show last 4 characters; replace rest with 'x'",
-				"transformer": "rangerUdfMaskShowLastN({col}, 4, 'x', 'x', 'x', -1, '1')"
+				"transformer": "default.mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"
 			},
 			{
 				"itemId": 3,
 				"name": "MASK_SHOW_FIRST_4",
 				"label": "Partial mask: show first 4",
 				"description": "Show first 4 characters; replace rest with 'x'",
-				"transformer": "rangerUdfMaskShowFirstN({col}, 4, 'x', 'x', 'x', -1, '1')"
+				"transformer": "default.mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"
 			},
 			{
 				"itemId": 4,
 				"name": "MASK_HASH",
 				"label": "Hash",
 				"description": "Hash the value",
-				"transformer": "rangerUdfMaskHash({col})"
+				"transformer": "default.mask_hash({col})"
 			},
 			{
 				"itemId": 5,
@@ -295,46 +295,42 @@
 				"name": "MASK_DATE_DAY",
 				"label": "Date: mask day",
 				"description": "Date: mask day",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', 1, -1, -1)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', 1, -1, -1)"
 			},
 			{
 				"itemId": 8,
 				"name": "MASK_DATE_MONTH",
 				"label": "Date: mask month",
 				"description": "Date: mask month",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', -1, 0, -1)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', -1, 0, -1)"
 			},
 			{
 				"itemId": 9,
 				"name": "MASK_DATE_YEAR",
 				"label": "Date: mask year",
 				"description": "Date: mask year",
-				"transformer": "rangerUdfMask",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', -1, -1, 0)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', -1, -1, 0)"
 			},
 			{
 				"itemId": 10,
 				"name": "MASK_DATE_SHOW_DAY",
 				"label": "Date: show only day",
 				"description": "Date: show only day",
-				"transformer": "rangerUdfMask",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', -1, 0, 0)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', -1, 0, 0)"
 			},
 			{
 				"itemId": 11,
 				"name": "MASK_DATE_SHOW_MONTH",
 				"label": "Date: show only month",
 				"description": "Date: show only month",
-				"transformer": "rangerUdfMask",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', 1, -1, 0)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', 1, -1, 0)"
 			},
 			{
 				"itemId": 12,
 				"name": "MASK_DATE_SHOW_YEAR",
 				"label": "Date: show only year",
 				"description": "Date: show only year",
-				"transformer": "rangerUdfMask",
-				"transformer": "rangerUdfMask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
+				"transformer": "default.mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
 			}
 		]
 	},

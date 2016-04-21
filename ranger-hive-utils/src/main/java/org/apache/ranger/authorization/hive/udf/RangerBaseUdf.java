@@ -22,14 +22,13 @@ package org.apache.ranger.authorization.hive.udf;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.common.type.HiveChar;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF.DeferredObject;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
-import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
-import org.apache.hadoop.hive.serde2.io.ShortWritable;
+import org.apache.hadoop.hive.serde2.io.*;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
@@ -70,17 +69,7 @@ public abstract class RangerBaseUdf extends GenericUDF {
 
 	@Override
 	public Object evaluate(DeferredObject[] arguments) throws HiveException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerBaseUdf.evaluate(arguments.length=" + arguments.length + ")");
-		}
-
-		Object ret = transformerAdapter.getTransformedWritable(arguments[0]);
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerBaseUdf.evaluate(arguments.length=" + arguments.length + "): ret=" + ret);
-		}
-
-		return ret;
+		return transformerAdapter.getTransformedWritable(arguments[0]);
 	}
 
 	@Override
@@ -89,16 +78,10 @@ public abstract class RangerBaseUdf extends GenericUDF {
 	}
 
 	static abstract class RangerTransformer {
-		static final Short   SHORT_0   = Short.valueOf((short)0);
-		static final Integer INTEGER_0 = Integer.valueOf((int)0);
-		static final Long    LONG_0    = Long.valueOf((long)0);
-		static final Date    DATE_0    = new Date(0);
-		static final String  STRING_0  = new String("0");
-
-
 		abstract void    init(ObjectInspector[] arguments, int startIdx);
 
 		abstract String  transform(String value);
+		abstract Byte    transform(Byte value);
 		abstract Short   transform(Short value);
 		abstract Integer transform(Integer value);
 		abstract Long    transform(Long value);
@@ -128,6 +111,14 @@ abstract class RangerTransformerAdapter {
 				ret = new HiveVarcharTransformerAdapter((HiveVarcharObjectInspector)columnType, transformer);
 				break;
 
+			case CHAR:
+				ret = new HiveCharTransformerAdapter((HiveCharObjectInspector)columnType, transformer);
+				break;
+
+			case BYTE:
+				ret = new ByteTransformerAdapter((ByteObjectInspector)columnType, transformer);
+				break;
+
 			case SHORT:
 				ret = new ShortTransformerAdapter((ShortObjectInspector)columnType, transformer);
 				break;
@@ -153,9 +144,40 @@ abstract class RangerTransformerAdapter {
 	}
 }
 
+class ByteTransformerAdapter extends RangerTransformerAdapter {
+	final ByteObjectInspector columnType;
+	final ByteWritable        writable;
+
+	public ByteTransformerAdapter(ByteObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
+		this(columnType, transformer, new ByteWritable());
+	}
+
+	public ByteTransformerAdapter(ByteObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer, ByteWritable writable) {
+		super(transformer);
+
+		this.columnType = columnType;
+		this.writable   = writable;
+	}
+
+	@Override
+	public Object getTransformedWritable(DeferredObject object) throws HiveException {
+		Byte value = (Byte)columnType.getPrimitiveJavaObject(object.get());
+
+		if(value != null) {
+			Byte transformedValue = transformer.transform(value);
+
+			writable.set(transformedValue);
+
+			return writable;
+		}
+
+		return null;
+	}
+}
+
 class DateTransformerAdapter extends RangerTransformerAdapter {
 	final DateObjectInspector columnType;
-	final DateWritable writable;
+	final DateWritable        writable;
 
 	public DateTransformerAdapter(DateObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new DateWritable());
@@ -184,9 +206,40 @@ class DateTransformerAdapter extends RangerTransformerAdapter {
 	}
 }
 
+class HiveCharTransformerAdapter extends RangerTransformerAdapter {
+	final HiveCharObjectInspector columnType;
+	final HiveCharWritable        writable;
+
+	public HiveCharTransformerAdapter(HiveCharObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
+		this(columnType, transformer, new HiveCharWritable());
+	}
+
+	public HiveCharTransformerAdapter(HiveCharObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer, HiveCharWritable writable) {
+		super(transformer);
+
+		this.columnType = columnType;
+		this.writable   = writable;
+	}
+
+	@Override
+	public Object getTransformedWritable(DeferredObject object) throws HiveException {
+		HiveChar value = columnType.getPrimitiveJavaObject(object.get());
+
+		if(value != null) {
+			String transformedValue = transformer.transform(value.getValue());
+
+			writable.set(transformedValue);
+
+			return writable;
+		}
+
+		return null;
+	}
+}
+
 class HiveVarcharTransformerAdapter extends RangerTransformerAdapter {
 	final HiveVarcharObjectInspector columnType;
-	final HiveVarcharWritable writable;
+	final HiveVarcharWritable        writable;
 
 	public HiveVarcharTransformerAdapter(HiveVarcharObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new HiveVarcharWritable());
@@ -217,7 +270,7 @@ class HiveVarcharTransformerAdapter extends RangerTransformerAdapter {
 
 class IntegerTransformerAdapter extends RangerTransformerAdapter {
 	final IntObjectInspector columnType;
-	final IntWritable writable;
+	final IntWritable        writable;
 
 	public IntegerTransformerAdapter(IntObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new IntWritable());
@@ -248,7 +301,7 @@ class IntegerTransformerAdapter extends RangerTransformerAdapter {
 
 class LongTransformerAdapter extends RangerTransformerAdapter {
 	final LongObjectInspector columnType;
-	final LongWritable writable;
+	final LongWritable        writable;
 
 	public LongTransformerAdapter(LongObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new LongWritable());
@@ -288,13 +341,13 @@ class NoTransformAdapter extends RangerTransformerAdapter {
 
 	@Override
 	public Object getTransformedWritable(DeferredObject object) throws HiveException {
-		return columnType.getPrimitiveWritableObject(object);
+		return columnType.getPrimitiveWritableObject(object.get());
 	}
 }
 
 class ShortTransformerAdapter extends RangerTransformerAdapter {
 	final ShortObjectInspector columnType;
-	final ShortWritable writable;
+	final ShortWritable        writable;
 
 	public ShortTransformerAdapter(ShortObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new ShortWritable());
@@ -325,7 +378,7 @@ class ShortTransformerAdapter extends RangerTransformerAdapter {
 
 class StringTransformerAdapter extends RangerTransformerAdapter {
 	final StringObjectInspector columnType;
-	final Text writable;
+	final Text                  writable;
 
 	public StringTransformerAdapter(StringObjectInspector columnType, RangerBaseUdf.RangerTransformer transformer) {
 		this(columnType, transformer, new Text());

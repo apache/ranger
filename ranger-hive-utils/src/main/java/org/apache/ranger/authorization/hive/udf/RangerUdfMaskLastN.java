@@ -18,6 +18,7 @@
 
 package org.apache.ranger.authorization.hive.udf;
 
+import org.apache.hadoop.hive.ql.udf.generic.*;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 
@@ -43,27 +44,34 @@ class MaskLastNTransformer extends MaskTransformer {
 
     @Override
     String transform(String value) {
-        return maskString(value, maskedUpperChar, maskedLowerChar, maskedDigitChar, maskedOtherChar, value.length() - charCount, value.length());
+        return maskString(value, value.length() - charCount, value.length());
+    }
+
+    @Override
+    Byte transform(Byte value) {
+        String strValue = value.toString();
+
+        return toByte(Long.parseLong(maskNumber(strValue, strValue.length() - charCount, strValue.length())));
     }
 
     @Override
     Short transform(Short value) {
         String strValue = value.toString();
 
-        return Short.parseShort(maskNumber(strValue, maskedDigitChar, strValue.length() - charCount, strValue.length()));
+        return toShort(Long.parseLong(maskNumber(strValue, strValue.length() - charCount, strValue.length())));
     }
 
     @Override
     Integer transform(Integer value) {
         String strValue = value.toString();
 
-        return Integer.parseInt(maskNumber(strValue, maskedDigitChar, strValue.length() - charCount, strValue.length()));
+        return toInteger(Long.parseLong(maskNumber(strValue, strValue.length() - charCount, strValue.length())));
     }
 
     @Override
     Long transform(Long value) {
         String strValue = value.toString();
 
-        return Long.parseLong(maskNumber(strValue, maskedDigitChar, strValue.length() - charCount, strValue.length()));
+        return Long.parseLong(maskNumber(strValue, strValue.length() - charCount, strValue.length()));
     }
 }

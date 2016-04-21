@@ -28,7 +28,7 @@ public class RangerUdfMaskShowLastN extends RangerBaseUdf {
 }
 
 class MaskShowLastNTransformer extends MaskTransformer {
-    int charCount;
+    int charCount = 4;
 
     public MaskShowLastNTransformer() {
         super();
@@ -43,27 +43,34 @@ class MaskShowLastNTransformer extends MaskTransformer {
 
     @Override
     String transform(String value) {
-        return maskString(value, maskedUpperChar, maskedLowerChar, maskedDigitChar, maskedOtherChar, 0, value.length() - charCount);
+        return maskString(value, 0, value.length() - charCount);
+    }
+
+    @Override
+    Byte transform(Byte value) {
+        String strValue = value.toString();
+
+        return toByte(Long.parseLong(maskNumber(strValue, 0, strValue.length() - charCount)));
     }
 
     @Override
     Short transform(Short value) {
         String strValue = value.toString();
 
-        return Short.parseShort(maskNumber(strValue, maskedDigitChar, 0, strValue.length() - charCount));
+        return toShort(Long.parseLong(maskNumber(strValue, 0, strValue.length() - charCount)));
     }
 
     @Override
     Integer transform(Integer value) {
         String strValue = value.toString();
 
-        return Integer.parseInt(maskNumber(strValue, maskedDigitChar, 0, strValue.length() - charCount));
+        return toInteger(Long.parseLong(maskNumber(strValue, 0, strValue.length() - charCount)));
     }
 
     @Override
     Long transform(Long value) {
         String strValue = value.toString();
 
-        return Long.parseLong(maskNumber(strValue, maskedDigitChar, 0, strValue.length() - charCount));
+        return Long.parseLong(maskNumber(strValue, 0, strValue.length() - charCount));
     }
 }

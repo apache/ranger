@@ -41,6 +41,11 @@ class MaskHashTransformer extends RangerBaseUdf.RangerTransformer {
     }
 
     @Override
+    Byte transform(Byte value) {
+        return value;
+    }
+
+    @Override
     Short transform(Short value) {
         return value;
     }
