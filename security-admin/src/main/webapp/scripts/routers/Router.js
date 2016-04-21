@@ -56,7 +56,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
 			
 			"!/service/:serviceId/policies/:policyType"			: "policyManageAction",
-			"!/service/:serviceId/policies/create/:policyType"	: "RangerPolicyCreateByTypeAction",
+			"!/service/:serviceId/policies/create/:policyType"	: "RangerPolicyCreateAction",
 			"!/service/:serviceId/policies/:id/edit"			: "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/

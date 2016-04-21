@@ -290,7 +290,7 @@ define(function(require) {
 			   collection : rangerPolicyList
 		   }));
 	   },
-	   RangerPolicyCreateByTypeAction :function(serviceId, policyType){
+	   RangerPolicyCreateAction :function(serviceId, policyType){
     	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 
 		   var view 			= require('views/policies/RangerPolicyCreate');

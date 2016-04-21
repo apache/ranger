@@ -1075,19 +1075,23 @@ define(function(require) {
 			
 			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
-			//TODO Temporary fix for tag based policies : need to come from server
-//			userModuleNames.push('Tag Based Policies')
 			//add by default permission module to admin user
 			if (SessionMgr.isSystemAdmin()){
 				userModuleNames.push('Permissions')
 			}
-			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName');
-			var moduleNames = _.union(userModuleNames, groupModuleNames);
+			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName'),
+			moduleNames = _.union(userModuleNames, groupModuleNames),
+			tagBasedPolicyStr = 'Tag Based Policies', resourceBasedPolicyStr = 'Resource Based Policies';
 			
 			_.each(XAGlobals.ListOfModuleActions,function(val,key){
 				if(!_.isArray(val)){
 					_.each(val,function(val1,key1){
-						if($.inArray(key1,moduleNames) < 0){
+						if($.inArray(key1,moduleNames) < 0 ){
+							//we are using same controller actions for resource and tag based service and policies creation/updation/listing page
+							if( key1 == tagBasedPolicyStr && $.inArray(resourceBasedPolicyStr, moduleNames) >= 0 
+									|| key1 == resourceBasedPolicyStr && $.inArray(tagBasedPolicyStr, moduleNames) >= 0){
+								return;
+							}
 							denyModulesObj = val1.concat(denyModulesObj)
 						}
 					});
