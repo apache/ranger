@@ -292,17 +292,6 @@ def main():
 	populate_global_dict()
 	hadoop_conf = globalDict['hadoop_conf']
 
-	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
-        tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
-        if not isfile(hadoop_conf_full_path):
-                print "WARN: core-site.xml file not found in provided hadoop conf path..."
-		f = open(tagsync_conf_full_path, "w")
-                f.write("<configuration></configuration>")
-                f.close()
-	else:
-	        if os.path.islink(tagsync_conf_full_path):
-        	        os.remove(tagsync_conf_full_path)
-
 	dirList = [ rangerBaseDirName, tagsyncBaseDirFullName, confFolderName ]
 	for dir in dirList:
 		if (not os.path.isdir(dir)):
@@ -384,14 +373,14 @@ def main():
 		groupName = mergeProps[unixGroupProp]
 
 	try:
+		groupId = grp.getgrnam(groupName).gr_gid
+	except KeyError, e:
+		groupId = createGroup(groupName)
+
+	try:
 		ownerId = pwd.getpwnam(ownerName).pw_uid
 	except KeyError, e:
 		ownerId = createUser(ownerName, groupName)
-
-	try:
-		groupId = grp.getgrnam(groupName).gr_gid
-	except KeyError, e:
-		groupId = createGroup(groupId)
 
 	os.chown(logFolderName,ownerId,groupId)
 	os.chown(tagsyncLogFolderName,ownerId,groupId)
@@ -432,6 +421,19 @@ def main():
 	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+
+	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
+        tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+        if not isfile(hadoop_conf_full_path):
+                print "WARN: core-site.xml file not found in provided hadoop conf path..."
+		f = open(tagsync_conf_full_path, "w")
+                f.write("<configuration></configuration>")
+                f.close()
+		os.chown(tagsync_conf_full_path,ownerId,groupId)
+		os.chmod(tagsync_conf_full_path,0750)
+	else:
+	        if os.path.islink(tagsync_conf_full_path):
+        	        os.remove(tagsync_conf_full_path)
 
 	if isfile(hadoop_conf_full_path):
 	        os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)

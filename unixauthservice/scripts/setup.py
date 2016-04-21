@@ -49,7 +49,7 @@ defaultCertFileName = 'unixauthservice.jks'
 outputFileName = 'ranger-ugsync-site.xml'
 installPropFileName = 'install.properties'
 defaultSiteXMLFileName = 'ranger-ugsync-default.xml'
-log4jFileName          = 'log4j.xml'
+log4jFileName          = 'log4j.properties'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-ugsync-template.xml'
 initdProgramName = 'ranger-usersync'
@@ -323,17 +323,6 @@ def main():
 	logFolderName = globalDict['logdir']
 	hadoop_conf = globalDict['hadoop_conf']
 
-        hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
-	usersync_conf_full_path = os.path.join(usersyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
-        if not isfile(hadoop_conf_full_path):
-                print "WARN: core-site.xml file not found in provided hadoop conf path..."
-                f = open(usersync_conf_full_path, "w")
-                f.write("<configuration></configuration>")
-                f.close()
-        else:
-                if os.path.islink(usersync_conf_full_path):
-                        os.remove(usersync_conf_full_path)
-
 	if logFolderName.lower() == "$pwd" or logFolderName == "" :
                 logFolderName = os.path.join(os.getcwd(),"logs")
 	ugsyncLogFolderName = logFolderName
@@ -424,14 +413,14 @@ def main():
 		groupName = mergeProps[unixGroupProp]
 
 	try:
+		groupId = grp.getgrnam(groupName).gr_gid
+	except KeyError, e:
+		groupId = createGroup(groupName)
+
+	try:
 		ownerId = pwd.getpwnam(ownerName).pw_uid
 	except KeyError, e:
 		ownerId = createUser(ownerName, groupName)
-
-	try:
-		groupId = grp.getgrnam(groupName).gr_gid
-	except KeyError, e:
-		groupId = createGroup(groupId)
 
 	os.chown(logFolderName,ownerId,groupId)
 	os.chown(ugsyncLogFolderName,ownerId,groupId)
@@ -506,6 +495,19 @@ def main():
         os.chmod(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),0755)
         os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+
+        hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
+	usersync_conf_full_path = os.path.join(usersyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+        if not isfile(hadoop_conf_full_path):
+                print "WARN: core-site.xml file not found in provided hadoop conf path..."
+                f = open(usersync_conf_full_path, "w")
+                f.write("<configuration></configuration>")
+                f.close()
+		os.chown(usersync_conf_full_path,ownerId,groupId)
+		os.chmod(usersync_conf_full_path,0750)
+        else:
+                if os.path.islink(usersync_conf_full_path):
+                        os.remove(usersync_conf_full_path)
 
 	if isfile(hadoop_conf_full_path):
         	os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
