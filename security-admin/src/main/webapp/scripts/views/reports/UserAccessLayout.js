@@ -75,7 +75,9 @@ define(function(require) {'use strict';
 			btnShowMoreUsers 	: '[data-id="showMoreUsers"]',
 			btnShowLessUsers 	: '[data-id="showLessUsers"]',
 			componentType       : '[data-id="component"]',
-			downloadReport      : '[data-id="downloadReport"]'
+			downloadReport      : '[data-id="downloadReport"]',
+			downloadBtn         : '[data-js="downloadBtn"]',
+			policyType          : '[data-id="policyType"]'
 		},
 
 		/** ui events hash */
@@ -88,7 +90,7 @@ define(function(require) {'use strict';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			events['click ' + this.ui.btnShowMoreUsers]  = 'onShowMoreUsers';
 			events['click ' + this.ui.btnShowLessUsers]  = 'onShowLessUsers';
-			events['click ' + this.ui.downloadReport] = 'onDownload';
+			events['click ' + this.ui.downloadBtn] = 'onDownload';
 			return events;
 		},
 
@@ -133,7 +135,7 @@ define(function(require) {'use strict';
 		onRender : function() {
 			this.initializePlugins();
 			this.setupGroupAutoComplete();
-			this.onComponentSelect();
+			this.renderComponentAndPolicyTypeSelect();
 			//Show policies listing for each service and GET policies for each service
 			_.each(this.policyCollList, function(obj,i){
 				this.renderTable(obj.collName, obj.serviceDefName);
@@ -141,11 +143,11 @@ define(function(require) {'use strict';
 			},this);
 			this.modifyTableForSubcolumns();
 			this.$el.find('[data-js="policyName"]').focus()
-			var url_string = XAUtil.getBaseUrl();
-			if(url_string.slice(-1) == "/") {
-				url_string = url_string.slice(0,-1);
+			var urlString = XAUtil.getBaseUrl();
+			if(urlString.slice(-1) == "/") {
+				urlString = urlString.slice(0,-1);
 			}
-			this.previousSearchUrl = url_string+"/service/plugins/policies/downloadExcel?";
+			this.previousSearchUrl = urlString+"/service/plugins/policies/downloadExcel?";
 		},
 		
 		getResourceLists: function(collName, serviceDefName){
@@ -217,66 +219,55 @@ define(function(require) {'use strict';
 					drag : false,
 					sortable : false
 				},
-			permissions: {
-				label: 'Permissions',
-				cell : Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell' }),
+				permissions: {
+					label: 'Permissions',
+					cell : Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell' }),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
 						fromRaw: function(rawValue,model){
-							if(model.get("policyItems").length != 0) {
-							    var htmlStr = '';
-								var accessStr = '';
-								var grpStr = '';
-								var userStr = '';
-								_.each(model.get("policyItems"),function(policyItem){
-									if(_.isEmpty(policyItem.groups)){
-										grpStr = '--';
-										_.map(policyItem.users,function(el){
-											userStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+el+'</span>';
-											});
-										accessStr = '';
-										_.each(policyItem.accesses,function(obj2){
-											accessStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+obj2.type+'</span>';
-									});
-									}
-									else if(_.isEmpty(policyItem.users)) {
-										userStr = '--';
-										_.map(policyItem.groups,function(el){
-											grpStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+el+'</span>';
-											});
-										accessStr = '';
-										_.each(policyItem.accesses,function(obj2){
-											accessStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+obj2.type+'</span>';
-											});
-									}
-									else{
-										_.map(policyItem.users,function(el){
-											userStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+el+'</span>';
+							var itemList = [], policyType = model.get("policyType");
+							if (XAUtil.isMaskingPolicy(policyType)) {
+								itemList = model.get("dataMaskPolicyItems");
+							} else if (XAUtil.isRowFilterPolicy(policyType)) {
+								itemList = model.get("rowFilterPolicyItems");
+							}else{// by default it is access
+								itemList = model.get("policyItems");
+							}
+							if(itemList.length > 0) {
+							    var htmlStr = '', accessStr = '', grpStr = '', userStr = '';
+							    var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
+								_.each(itemList,function(policyItem){
+									if(!_.isUndefined(policyItem.groups) || !_.isUndefined(policyItem.users) &&
+											!_.isUndefined(policyItem.accesses)){
+										var maxItem = policyItem.groups.length > policyItem.users.length ? policyItem.groups :  policyItem.users;
+										maxItem = policyItem.accesses.length > maxItem.length ? policyItem.accesses : maxItem; 
+										
+										_.each(maxItem,function(item, i){
+											if(!_.isUndefined(policyItem.users[i])){
+												userStr += startSpanEle + policyItem.users[i] + endSpanEle;
+											}
+											if(!_.isUndefined(policyItem.groups[i])){
+												grpStr += startSpanEle + policyItem.groups[i] + endSpanEle;
+											}
+											if(!_.isUndefined(policyItem.accesses[i])){
+												accessStr += startSpanEle + policyItem.accesses[i].type + endSpanEle;
+											}
 										});
-										_.map(policyItem.groups,function(el){
-											grpStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+el+'</span>';
-										});
-										accessStr = '';
-										_.each(policyItem.accesses,function(obj2){
-											accessStr+='<span class="label label-info cellWidth-1 float-left-margin-2" style="">'+obj2.type+'</span>';
-										});
+										
 									}
-									htmlStr+='<tr style="height:60px"><td style ="width:80px">'+grpStr+'</td>\
-									<td style="width:80px">'+(userStr)+'</td>\
-									<td style="width:150px">'+accessStr+'</td></tr>';
-									accessStr = '';
-									grpStr = '';
-									userStr = '';
-									});
+									htmlStr += '<tr style="height:60px"><td style ="width:80px">'+grpStr+'</td>\
+												<td style="width:80px">'+(userStr)+'</td>\
+												<td style="width:150px">'+accessStr+'</td></tr>';
+									accessStr = '', grpStr = '', userStr = '';
+								});
 								return htmlStr;
-								}
-							else {
+							} else {
 								return '---';
 							}
 						}
 					}),
-				editable: false,
-				sortable: false,
-				click: false
+					editable: false,
+					sortable: false,
+					click: false
 				},
 				resources:
 				{
@@ -284,31 +275,37 @@ define(function(require) {'use strict';
 					cell: 'Html',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
-							var strVal = '';
-							var res = model.get('resources');
-							_.each(res,function(res_obj,key){
+							var strVal = '', names = '';
+							var resource = model.get('resources');
+							_.each(resource,function(resourceObj,key){
 								strVal += "<b>"+key+":</b>";
-								_.map(res_obj.values,function(ob){
-									strVal +="<span title='"+ob+"'>"+ ob+"</span>" + ",";
+								strVal += "<span title='";
+								names = '';
+								_.map(resourceObj.values,function(resourceVal){
+									names += resourceVal+",";
 								});
-								strVal = strVal.slice(0,-1);
+								names = names.slice(0,-1);
+								strVal += names + "'>"+names +"</span>";
 								strVal = strVal+ "<br />";
 							});
 							return strVal;
 							}
 					}),
-			editable: false,
-			sortable: false,
-			click: false
-					}
+					editable: false,
+					sortable: false,
+					click: false
+				}
 			};
 
 			return coll.constructor.getTableCols(cols, coll);
 		},
-		/* components */
-	onComponentSelect: function(){
+		/* add 'component' and 'policy type' select */
+	renderComponentAndPolicyTypeSelect: function(){
 		var that = this;
 		var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}; });
+		var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
+			return {'id': m.value,'text': m.label};
+		});
 		this.ui.componentType.select2({
 			multiple: true,
 			closeOnSelect: true,
@@ -318,6 +315,15 @@ define(function(require) {'use strict';
 		    allowClear: true,
 		    data: options
 		});
+		this.ui.policyType.select2({
+			closeOnSelect: true,
+			placeholder: 'Select policy type',
+			maximumSelectionSize : 1,
+			width: '220px',
+			allowClear: true,
+			data: policyTypes
+
+		});
 	},
 	modifyTableForSubcolumns : function(){
 		this.$el.find(".permissions").html('<tr><th colspan="3">Permissions</th></tr>\
@@ -325,76 +331,39 @@ define(function(require) {'use strict';
 							<th style="width:150px">Accesses</th></tr>');
 	},
 	onDownload: function(e){
+		var that = this, url = '';
 		if(!this.allowDownload){
 			XAUtil.alertPopup({
 				msg :"No policies found to download!",
 			});
 			return;
 		}
-		var rangerPolicyList = new RangerPolicyList();
-		var that = this;
-		var url = '';
-		var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
-		if(groups == "") {
-			groups = undefined;
-		}
-		var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
-		var rxName = this.ui.resourceName.val() || undefined;
-		var policyName = this.ui.policyName.val() || undefined;
-		var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName};
-		var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
-		_.each(that.policyCollList, function(obj,i){
-			var coll = that[obj.collName];
-		},this);
-		var btn = $(e.currentTarget);
-		if(!this.searchedFlag) {
-			var url_string = XAUtil.getBaseUrl();
-			if(url_string.slice(-1) == "/") {
-				url_string = url_string.slice(0,-1);
-			}
-			url = url_string + that.getDownloadExcelUrl(this,component,params);
-			this.previousSearchUrl = url;
-		 }
-		else {
+		if(this.searchedFlag) {
 			url =  this.previousSearchUrl;
 		}
-		$('<a href="'+url+'" download hidden>').appendTo('body').get(0).click();
+		this.ui.downloadReport.attr("href",url)[0].click();
 
 	},
 	getDownloadExcelUrl: function(that,component,params){
-		var queryParams = {};
-		var data = {};
-		var comp_str = '';
+		var compString = '', url = '/service/plugins/policies/downloadExcel?';
 		if(!_.isUndefined(component)) {
 			_.each(component,function(comp){
-				comp_str = comp_str + comp + '_';
+				compString = compString + comp + '_';
 				});
 		}
-		if (comp_str != '') {
-			comp_str = comp_str.slice(0,-1);
+		if (!_.isEmpty(compString)) {
+			compString = compString.slice(0,-1);
 		}
-		queryParams = that['hdfsPolicyList'].queryParams;
-		_.map(params, function(value, key) {
-			if (!_.isUndefined(value)) {
-				data[key] = value;
+		_.each(params, function(val, paramName){
+			if(_.isUndefined(val) || _.isEmpty(val)) {
+				delete params[paramName];
 			}
 		});
-		if(!_.isUndefined(queryParams.group)) {
-			data.group = queryParams.group;
+		var str = jQuery.param( params );
+		url = url + str;
+		if(!_.isEmpty(compString)) {
+			url = url + "&serviceType=" + compString;
 		}
-		if(!_.isUndefined(queryParams.user)) {
-			data.user = queryParams.user;
-		}
-		if(!_.isUndefined(queryParams.polResource)) {
-			data.polResource = queryParams.polResource;
-		}
-		if(!_.isUndefined(queryParams.policyNamePartial)) {
-			data.policyNamePartial = queryParams.policyNamePartial;
-		}
-		var policyList;
-		var url = '/service/plugins/policies/downloadExcel?';
-		var str = jQuery.param( data );
-		url = url + str + "&serviceType="+comp_str;
 		return url;
 	},
 		/** on render callback */
@@ -539,26 +508,18 @@ define(function(require) {'use strict';
 			
 		},
 		onSearch : function(e){
-			var that = this, type;
+			var that = this, url = '', urlString = XAUtil.getBaseUrl();
 			//Get search values
 			var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
 			var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
-			var rxName = this.ui.resourceName.val() || undefined;
-			var policyName = this.ui.policyName.val() || undefined;
-			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName};
+			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val();
+			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType};
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
+
 			var compFlag = false;
-			var showTabs = false;
-			if(_.isUndefined(users) && _.isUndefined(rxName) && _.isUndefined(policyName) && (groups==""))	{
-				showTabs = false;
-			}
-			else {
-				showTabs = true;
-			}
 			if(!_.isUndefined(component)) {
 				compFlag = true;
-			}
-			else {
+			} else {
 				compFlag = false;
 			}
 			that.$el.find('[data-compHeader]').show();
@@ -580,11 +541,11 @@ define(function(require) {'use strict';
 							that.getResourceLists(obj.collName, obj.serviceDefName);
 							that.$el.find('[data-compHeader="'+comp+'"]').show();
 							that.$el.find('[data-comp="'+comp+'"]').show();
-							}
-						});
-					},this);
-				}
-			else { // show all tables if no search component values selected
+						}
+					});
+				},this);
+			} else {
+				// show all tables if no search component values selected
 				that.$el.find('[data-compHeader]').show();
 				that.$el.find('[data-comp]').show();
 				_.each(this.policyCollList, function(obj,i){
@@ -597,28 +558,21 @@ define(function(require) {'use strict';
 					coll.state = this.defaultPageState;
 					coll.queryParams = $.extend(coll.queryParams, params);
 					this.getResourceLists(obj.collName, obj.serviceDefName);
-					},this);
-				}
-					var rangerPolicyList = new RangerPolicyList();
-					var url = '';
-					if (groups == "") {
-						groups = undefined;
-					}
-					params = {
-						group : groups,
-						user : users,
-						polResource : rxName,
-						policyNamePartial : policyName
-					};
-					var url_string = XAUtil.getBaseUrl();
-					if(url_string.slice(-1) == "/") {
-						url_string = url_string.slice(0,-1);
-					}
-					url = url_string
-							+ this.getDownloadExcelUrl(this, component,
-									params);
-					this.previousSearchUrl = url;
-					this.searchedFlag = true;
+				},this);
+			}
+			params = {
+				group : groups,
+				user : users,
+				polResource : rxName,
+				policyNamePartial : policyName,
+				policyType: policyType
+			};
+			if(urlString.slice(-1) == "/") {
+				urlString = urlString.slice(0,-1);
+			}
+			url = urlString	+ this.getDownloadExcelUrl(this, component,	params);
+			this.previousSearchUrl = url;
+			this.searchedFlag = true;
         },
 		autocompleteFilter	: function(e){
 			var $el = $(e.currentTarget);
@@ -629,7 +583,7 @@ define(function(require) {'use strict';
 				this.setupGroupAutoComplete();
 				this.ui.userName.select2('destroy');
 				this.ui.userName.val('').hide();
-			}else{
+			} else {
 				this.ui.userGroup.select2('destroy');
 				this.ui.userGroup.val('').hide();
 				this.ui.userName.show();
@@ -645,17 +599,17 @@ define(function(require) {'use strict';
 					pos = that.rHiveTableList.$el.offsetParent().position().top - 100;
 					scroll =true;	
 				}
-			}else if(elem.attr('data-js') == this.ui.gotoHbase.attr('data-js')){
+			} else if(elem.attr('data-js') == this.ui.gotoHbase.attr('data-js')){
 				if(that.rHbaseTableList.$el.parent('.wrap').is(':visible')){
 					pos = that.rHbaseTableList.$el.offsetParent().position().top - 100;
 					scroll = true;
 				}
-			}else if(elem.attr('data-js') == this.ui.gotoKnox.attr('data-js')){
+			} else if(elem.attr('data-js') == this.ui.gotoKnox.attr('data-js')){
 				if(that.rKnoxTableList.$el.parent('.wrap').is(':visible')){
 					pos = that.rKnoxTableList.$el.offsetParent().position().top - 100;
 					scroll = true;
 				}
-			}else if(elem.attr('data-js') == this.ui.gotoStorm.attr('data-js')){
+			} else if(elem.attr('data-js') == this.ui.gotoStorm.attr('data-js')){
 				if(that.rStormTableList.$el.parent('.wrap').is(':visible')){
 					pos = that.rStormTableList.$el.offsetParent().position().top - 100;
 					scroll = true;

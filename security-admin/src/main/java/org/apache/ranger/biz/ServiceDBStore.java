@@ -2948,7 +2948,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		cell.setCellValue(policyStatus);
 		cell = row.createCell(3);
-		List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+		int policyType=policy.getPolicyType();
+		List<RangerPolicyItem> policyItems=new ArrayList<RangerPolicyItem>();
+		List<RangerPolicyItem> policyItems0=new ArrayList<RangerPolicyItem>();
+		List<RangerDataMaskPolicyItem> policyItems1=new ArrayList<RangerDataMaskPolicyItem>();
+		List<RangerRowFilterPolicyItem> policyItems2=new ArrayList<RangerRowFilterPolicyItem>();
+		switch (policyType) {
+		case 0:
+			policyItems0 = policy.getPolicyItems();
+			policyItems.addAll(policyItems0);
+			break;
+		case 1:
+			policyItems1 = policy.getDataMaskPolicyItems();
+			policyItems.addAll(policyItems1);
+			break;
+		case 2:
+			policyItems2 = policy.getRowFilterPolicyItems();
+			policyItems.addAll(policyItems2);
+			break;
+		}
+
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
 		String groupNames = "";

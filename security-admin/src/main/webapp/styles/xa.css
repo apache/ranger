@@ -1912,3 +1912,9 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
   text-align: left !important;
   width: 200px
 }
+.control-label-align {
+	width: 80px !important;
+}
+.controls-margin {
+	margin-left: 90px !important;
+}
