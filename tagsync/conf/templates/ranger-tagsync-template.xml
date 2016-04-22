@@ -24,53 +24,57 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.rest.url</name>
+		<name>ranger.tagsync.dest.ranger.endpoint</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.filesource.modtime.check.interval</name>
+		<name>ranger.tagsync.dest.ranger.ssl.config.filename</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.atlasrestsource.download.interval</name>
+		<name>ranger.tagsync.source.atlas</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
+		<name>ranger.tagsync.source.atlasrest</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.filesource.filename</name>
+		<name>ranger.tagsync.source.atlasrest.endpoint</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.source.impl.class</name>
+		<name>ranger.tagsync.source.atlasrest.download.interval.millis</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.keystore</name>
+		<name>ranger.tagsync.source.file</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.alias</name>
+		<name>ranger.tagsync.source.file.filename</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.password</name>
+		<name>ranger.tagsync.source.file.check.interval.millis</name>
 		<value></value>
 	</property>
 	<property>
-	<name>ranger.tagsync.atlas.to.service.mapping</name>
+		<name>ranger.tagsync.source.none</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.atlasrestsource.endpoint</name>
+		<name>ranger.tagsync.atlas.to.ranger.service.mapping</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.tagsync.source.atlas.custom.resource.mappers</name>
+		<name>ranger.tagsync.atlas.custom.resource.mappers</name>
 		<value></value>
-	</property>	
+	</property>
+	<property>
+		<name>ranger.tagsync.keystore.filename</name>
+		<value></value>
+	</property>
 	<property>
 		<name>ranger.tagsync.kerberos.keytab</name>
 		<value></value>
@@ -78,5 +82,9 @@
 	<property>
 		<name>ranger.tagsync.kerberos.principal</name>
 		<value></value>
-	</property>	
+	</property>
+	<property>
+		<name>hadoop_conf</name>
+		<value></value>
+	</property>
 </configuration>

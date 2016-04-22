@@ -68,17 +68,22 @@ logFolderPermMode = 0777
 rootOwnerId = 0
 initPrefixList = ['S99', 'K00']
 
-TAG_SOURCE_KEY  = 'TAG_SOURCE'
-TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY = 'TAGSYNC_ATLAS_KAFKA_ENDPOINTS'
-TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY = 'TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT'
-TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAGSYNC_ATLAS_CONSUMER_GROUP'
+TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY = 'TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS'
+TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ZOOKEEPER_CONNECT'
+TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID'
 TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING = 'ranger.tagsync.atlas.to.service.mapping'
 TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING = 'ranger.tagsync.atlas.'
 TAGSYNC_ATLAS_CLUSTER_IDENTIFIER = '.instance.'
 TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING = '.ranger.service'
-TAG_SOURCE_ATLAS = 'atlas'
-TAG_SOURCE_ATLASREST = 'atlasrest'
-TAG_SOURCE_FILE = 'file'
+
+TAG_SOURCE_ATLAS_ENABLED_KEY = 'TAG_SOURCE_ATLAS_ENABLED'
+TAG_SOURCE_ATLAS_ENABLED = 'ranger.tagsync.source.atlas'
+
+TAG_SOURCE_ATLASREST_ENABLED_KEY = 'TAG_SOURCE_ATLASREST_ENABLED'
+TAG_SOURCE_ATLASREST_ENABLED = 'ranger.tagsync.source.atlasrest'
+
+TAG_SOURCE_FILE_ENABLED_KEY = 'TAG_SOURCE_FILE_ENABLED'
+TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
 
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
@@ -218,13 +223,19 @@ def convertInstallPropsToXML(props):
 		else:
 			print "Direct Key not found:%s" % (k)
 
-	ret['ranger.tagsync.sink.impl.class'] = 'org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink'
-
-	if (TAG_SOURCE_KEY in ret):
-		ret['ranger.tagsync.source.impl.class'] = ret[TAG_SOURCE_KEY]
-		del ret[TAG_SOURCE_KEY]
-
 	atlasOutFile.close()
+
+	if (TAG_SOURCE_ATLAS_ENABLED_KEY in ret):
+		ret[TAG_SOURCE_ATLAS_ENABLED] = ret[TAG_SOURCE_ATLAS_ENABLED_KEY]
+		del ret[TAG_SOURCE_ATLAS_ENABLED_KEY]
+
+	if (TAG_SOURCE_ATLASREST_ENABLED_KEY in ret):
+		ret[TAG_SOURCE_ATLASREST_ENABLED] = ret[TAG_SOURCE_ATLASREST_ENABLED_KEY]
+		del ret[TAG_SOURCE_ATLASREST_ENABLED_KEY]
+
+	if (TAG_SOURCE_FILE_ENABLED_KEY in ret):
+		ret[TAG_SOURCE_FILE_ENABLED] = ret[TAG_SOURCE_FILE_ENABLED_KEY]
+		del ret[TAG_SOURCE_FILE_ENABLED_KEY]
 
 	return ret
 
@@ -333,18 +344,6 @@ def main():
 	fn = join(installTemplateDirName,templateFileName)
 	outfn = join(confFolderName, outputFileName)
 
-	atlasOutFn = join(confFolderName, atlasApplicationPropFileName)
-
-	atlasOutFile = file(atlasOutFn, "a")
-
-	atlasOutFile.write("atlas.notification.embedded=false" + "\n")
-	atlasOutFile.write("atlas.kafka.acks=1" + "\n")
-	atlasOutFile.write("atlas.kafka.data=${sys:atlas.home}/data/kafka" + "\n")
-	atlasOutFile.write("atlas.kafka.hook.group.id=atlas" + "\n")
-
-	atlasOutFile.close()
-
-
 	if ( os.path.isdir(logFolderName) ):
 		logStat = os.stat(logFolderName)
 		logStat.st_uid
@@ -389,15 +388,14 @@ def main():
 
 	initializeInitD()
 
-	tagsyncKSPath = mergeProps['ranger.tagsync.tagadmin.keystore']
+	tagsyncKSPath = mergeProps['ranger.tagsync.keystore.filename']
 
 	if (tagsyncKSPath == ''):
-		mergeProps['ranger.tagsync.tagadmin.password'] = 'rangertagsync'
+		mergeProps['ranger.tagsync.dest.ranger.password'] = 'rangertagsync'
 
 	else:
 		tagadminPasswd = 'rangertagsync'
 		tagadminAlias = 'tagadmin.user.password'
-		mergeProps['ranger.tagsync.tagadmin.alias'] = tagadminAlias
 		updatePropertyInJCKSFile(tagsyncKSPath,tagadminAlias,tagadminPasswd)
 		os.chown(tagsyncKSPath,ownerId,groupId)
 

@@ -46,7 +46,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	private long lastModifiedTimeInMillis = -1L;
 
 	private Gson gsonBuilder;
-	private Properties properties;
 	private long fileModTimeCheckIntervalInMs;
 
 	private Thread myThread = null;
@@ -99,11 +98,13 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 			LOG.debug("==> FileTagSource.initialize()");
 		}
 
+		Properties properties;
+
 		if (props == null || MapUtils.isEmpty(props)) {
 			LOG.error("No properties specified for FileTagSource initialization");
-			this.properties = new Properties();
+			properties = new Properties();
 		} else {
-			this.properties = props;
+			properties = props;
 		}
 
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();

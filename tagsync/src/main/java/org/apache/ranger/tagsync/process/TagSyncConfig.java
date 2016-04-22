@@ -30,63 +30,58 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Properties;
 
-//import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 
 public class TagSyncConfig extends Configuration {
 	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class) ;
 
-	public static final String CONFIG_FILE = "ranger-tagsync-site.xml";
+	private static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 
-	public static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
+	private static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
+
+	private static final String CORE_SITE_FILE = "core-site.xml";
 
 	public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled" ;
 
 	public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir" ;
 
-	private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.tagadmin.rest.url";
+	private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.dest.ranger.endpoint";
 
-	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.tagadmin.rest.ssl.config.file";
+	private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.dest.ranger.ssl.config.filename";
 
-	public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.filesource.filename";
+	private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.dest.ranger.impl.class";
 
-	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.filesource.modtime.check.interval";
+	private static final String TAGSYNC_DEST_RANGER_PASSWORD_ALIAS = "tagadmin.user.password";
 
-	private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP = "ranger.tagsync.atlasrestsource.download.interval";
+	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.dest.ranger.password";
 
-	private static final String TAGSYNC_SOURCE_CLASS_PROP = "ranger.tagsync.source.impl.class";
+	private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.dest.ranger.connection.check.interval";
 
-	private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.sink.impl.class";
+	private static final String TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP = "ranger.tagsync.atlas.custom.resource.mappers";
 
-	private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.atlasrestsource.endpoint";
+	private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.source.atlasrest.endpoint";
 
-	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
+	private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP = "ranger.tagsync.source.atlasrest.download.interval.millis";
 
-	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
+	public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.source.file.filename";
 
-	public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
+	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.source.file.check.interval.millis";
 
-	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.tagadmin.keystore";
-	private static final String TAGSYNC_TAGADMIN_ALIAS_PROP = "ranger.tagsync.tagadmin.alias";
-	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.tagadmin.password";
+	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
+
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
-	private static final String TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP = "ranger.tagsync.source.atlas.custom.resource.mappers";
-
-	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
-
-	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
-
-	private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.tagadmin.connection.check.interval";
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 2000;
+	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
+	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 
 	private static final String AUTH_TYPE = "hadoop.security.authentication";
 	private static final String NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String TAGSYNC_KERBEROS_PRICIPAL = "ranger.tagsync.kerberos.principal";
 	private static final String TAGSYNC_KERBEROS_KEYTAB = "ranger.tagsync.kerberos.keytab";
 
-	private static final String CORE_SITE_FILE = "core-site.xml";
 	private static String LOCAL_HOSTNAME = "unknown" ;
+
 	private Properties props;
 
 	static {
@@ -98,8 +93,7 @@ public class TagSyncConfig extends Configuration {
 	}
 	
 	public static TagSyncConfig getInstance() {
-		TagSyncConfig newConfig = new TagSyncConfig();
-		return newConfig;
+		return new TagSyncConfig();
 	}
 
 	public Properties getProperties() {
@@ -195,8 +189,7 @@ public class TagSyncConfig extends Configuration {
 	}
 
 	static public String getTagSyncLogdir(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_LOGDIR_PROP);
-		return val;
+		return prop.getProperty(TAGSYNC_LOGDIR_PROP);
 	}
 
 	static public long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
@@ -225,47 +218,28 @@ public class TagSyncConfig extends Configuration {
 		return ret;
 	}
 
-	static public String getTagSourceClassName(String sourceName) {
-		if (StringUtils.equalsIgnoreCase(sourceName, "atlas")) {
-			return "org.apache.ranger.tagsync.source.atlas.AtlasTagSource";
-		} else if (StringUtils.equalsIgnoreCase(sourceName, "file")) {
-			return "org.apache.ranger.tagsync.source.file.FileTagSource";
-		} else if (StringUtils.equalsIgnoreCase(sourceName, "atlasrest")) {
-			return "org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource";
-		} else
-			return sourceName;
-	}
-
-	static public String getTagSource(Properties prop) {
-		return prop.getProperty(TAGSYNC_SOURCE_CLASS_PROP);
-	}
-
 	static public String getTagSinkClassName(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_SINK_CLASS_PROP);
-		if (StringUtils.equalsIgnoreCase(val, "tagadmin")) {
+		if (StringUtils.equalsIgnoreCase(val, "ranger")) {
 			return "org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink";
 		} else
 			return val;
 	}
 
 	static public String getTagAdminRESTUrl(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
-		return val;
+		return prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
 	}
 
 	static public String getTagAdminRESTSslConfigFile(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
-		return val;
+		return prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
 	}
 
 	static public String getTagSourceFileName(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
-		return val;
+		return prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
 	}
 
 	static public String getAtlasEndpoint(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
-		return val;
+		return prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
 	}
 
 	static public String getTagAdminPassword(Properties prop) {
@@ -277,18 +251,16 @@ public class TagSyncConfig extends Configuration {
 				return password;
 			}
 		}
-		if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_KEYSTORE_PROP) && prop.containsKey(TAGSYNC_TAGADMIN_ALIAS_PROP)) {
+		if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_KEYSTORE_PROP)) {
 			String path = prop.getProperty(TAGSYNC_TAGADMIN_KEYSTORE_PROP);
-			String alias = prop.getProperty(TAGSYNC_TAGADMIN_ALIAS_PROP, "tagadmin.user.password");
-			if (path != null && alias != null) {
-				if (!path.trim().isEmpty() && !alias.trim().isEmpty()) {
+			if (path != null) {
+				if (!path.trim().isEmpty()) {
 					try {
-						password = CredentialReader.getDecryptedString(path.trim(), alias.trim());
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_DEST_RANGER_PASSWORD_ALIAS);
 					} catch (Exception ex) {
 						password = null;
 					}
 					if (password != null && !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")) {
-						prop.setProperty(TAGSYNC_TAGADMIN_PASSWORD_PROP, password);
 						return password;
 					}
 				}
@@ -321,7 +293,7 @@ public class TagSyncConfig extends Configuration {
 //		return prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL);
 		String principal = null;
 		try {
-			return SecureClientLogin.getPrincipal(prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL, ""), LOCAL_HOSTNAME);
+			principal = SecureClientLogin.getPrincipal(prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL, ""), LOCAL_HOSTNAME);
 		} catch (IOException ignored) {
 			 // do nothing
 		}

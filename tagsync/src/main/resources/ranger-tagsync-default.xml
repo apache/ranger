@@ -14,8 +14,6 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
-<!-- Put site-specific property overrides in this file. -->
-
 <configuration>
 	<property>
 		<name>ranger.tagsync.enabled</name>
@@ -26,38 +24,17 @@
 		<value>log</value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.rest.url</name>
+		<name>ranger.tagsync.dest.ranger.impl.class</name>
+		<value>ranger</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.endpoint</name>
+		<value>http://localhost:6080</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.password</name>
 		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
-		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.filesource.modtime.check.interval</name>
-		<value>60000</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.filesource.filename</name>
-		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.source.impl.class</name>
-		<value></value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.sink.impl.class</name>
-		<value>tagadmin</value>
-		<description></description>
-	</property>
-	<property>
-		<name>ranger.tagsync.atlasrestsource.download.interval</name>
-		<value>600000</value>
-		<description></description>
 	</property>
 </configuration>

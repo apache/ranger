@@ -24,7 +24,6 @@ import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.util.Properties;
 import java.util.List;
@@ -33,6 +32,11 @@ import java.util.Map;
 public abstract class AtlasResourceMapper {
 	private static final Log LOG = LogFactory.getLog(AtlasResourceMapper.class);
 
+	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX = "ranger.tagsync.atlas.";
+
+	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX = ".ranger.service";
+
+	protected static final String TAGSYNC_ATLAS_CLUSTER_IDENTIFIER = ".instance.";
 	protected Properties properties;
 
 	public AtlasResourceMapper() {
@@ -48,9 +52,9 @@ public abstract class AtlasResourceMapper {
 
 
 	protected String getRangerServiceName(String componentName, String atlasInstanceName) {
-		String propName = TagSyncConfig.TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX + componentName
-				+ ".instance." + atlasInstanceName
-				+ TagSyncConfig.TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX;
+		String propName = TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX + componentName
+				+ TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + atlasInstanceName
+				+ TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX;
 
 		return properties.getProperty(propName);
 	}

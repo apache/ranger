@@ -35,6 +35,9 @@ public class TagSynchronizer {
 	private List<TagSource> tagSources;
 	private Properties properties = null;
 
+	private static final String TAGSYNC_SOURCE_BASE = "ranger.tagsync.source.";
+	private static final String PROP_CLASS_NAME = "class";
+
 	private final Object shutdownNotifier = new Object();
 	private volatile boolean isShutdownInProgress = false;
 
@@ -90,29 +93,22 @@ public class TagSynchronizer {
 
 		boolean ret = false;
 
-		String tagSourceNames = TagSyncConfig.getTagSource(properties);
+		LOG.info("Initializing TAG source and sink");
 
-		if (StringUtils.isNotBlank(tagSourceNames)) {
+		tagSink = initializeTagSink(properties);
 
-			LOG.info("Initializing TAG source and sink");
+		if (tagSink != null) {
 
-			tagSink = initializeTagSink(properties);
+			tagSources = initializeTagSources(properties);
 
-			if (tagSink != null) {
-
-				tagSources = initializeTagSources(tagSourceNames, properties);
-
-				for (TagSource tagSource : tagSources) {
-					tagSource.setTagSink(tagSink);
-				}
-				ret = true;
+			for (TagSource tagSource : tagSources) {
+				tagSource.setTagSink(tagSink);
 			}
-		} else {
-			LOG.error("'ranger.tagsync.source.impl.class' value is not specified or is empty!");
+			ret = true;
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initialize(" + tagSourceNames + ") : " + ret);
+			LOG.debug("<== TagSynchronizer.initialize() : " + ret);
 		}
 
 		return ret;
@@ -184,7 +180,6 @@ public class TagSynchronizer {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagSynchronizer.initializeTagSink()");
 		}
-
 		TagSink ret = null;
 
 		try {
@@ -200,7 +195,6 @@ public class TagSynchronizer {
 
 			if (!ret.initialize(properties)) {
 				LOG.error("Failed to initialize TAG sink " + tagSinkClassName);
-
 				ret = null;
 			}
 		} catch (Throwable t) {
@@ -209,58 +203,127 @@ public class TagSynchronizer {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initializeTagSink()");
+			LOG.debug("<== TagSynchronizer.initializeTagSink(), result:" + (ret == null ? "false" : "true"));
 		}
 		return ret;
 	}
 
-	static public List<TagSource> initializeTagSources(String tagSourceNames, Properties properties) {
+	static public List<TagSource> initializeTagSources(Properties properties) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagSynchronizer.initializeTagSources(" + tagSourceNames + ")");
+			LOG.debug("==> TagSynchronizer.initializeTagSources()");
 		}
 
 		List<TagSource> ret = new ArrayList<TagSource>();
 
-		String[] tagSourcesArray = tagSourceNames.split(",");
+		List<String> tagSourceNameList = new ArrayList<String>();
 
-		List<String> tagSourceList = Arrays.asList(tagSourcesArray);
-
-		try {
-			for (String tagSourceName : tagSourceList) {
-
-				String tagSourceClassName = TagSyncConfig.getTagSourceClassName(tagSourceName.trim());
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("tagSourceClassName=" + tagSourceClassName);
-				}
-
-				if (!StringUtils.equalsIgnoreCase(tagSourceClassName, TagSource.TAG_SOURCE_NONE)) {
-					@SuppressWarnings("unchecked")
-					Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(tagSourceClassName);
-					TagSource tagSource = tagSourceClass.newInstance();
-
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Created instance of " + tagSourceClassName);
-					}
-
-					if (!tagSource.initialize(properties)) {
-						LOG.error("Failed to initialize TAG source " + tagSourceClassName);
-
-						ret.clear();
-						break;
-					}
-					ret.add(tagSource);
-				}
+		for (Object propNameObj : properties.keySet()) {
+			String propName = propNameObj.toString();
+			if (!propName.startsWith(TAGSYNC_SOURCE_BASE)) {
+				continue;
 			}
-
-		} catch (Throwable t) {
-			LOG.error("Failed to initialize TAG sources. Error details: ", t);
-			ret.clear();
+			String tagSourceName = propName.substring(TAGSYNC_SOURCE_BASE.length());
+			List<String> splits = toArray(tagSourceName, ".");
+			if (splits.size() > 1) {
+				continue;
+			}
+			String value = properties.getProperty(propName);
+			if (value.equalsIgnoreCase("enable")
+					|| value.equalsIgnoreCase("enabled")
+					|| value.equalsIgnoreCase("true")) {
+				tagSourceNameList.add(tagSourceName);
+				LOG.info("Tag source " + propName + " is set to "
+						+ value);
+			}
 		}
 
+		List<String> initializedTagSourceNameList = new ArrayList<String>();
+
+		for (String tagSourceName : tagSourceNameList) {
+			String tagSourcePropPrefix = TAGSYNC_SOURCE_BASE + tagSourceName;
+			TagSource tagSource = getTagSourceFromConfig(properties,
+					tagSourcePropPrefix, tagSourceName);
+
+			if (tagSource != null) {
+				try {
+					if (!tagSource.initialize(properties)) {
+						LOG.error("Failed to initialize TAG source " + tagSourceName);
+						ret.clear();
+						break;
+					} else {
+						ret.add(tagSource);
+						initializedTagSourceNameList.add(tagSourceName);
+					}
+				} catch(Exception exception) {
+					LOG.error("tag-source:" + tagSourceName + " initialization failed with ", exception);
+					ret.clear();
+					break;
+				}
+			}
+		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initializeTagSources(" + tagSourceNames + ")");
+			LOG.debug("<== TagSynchronizer.initializeTagSources(" + initializedTagSourceNameList + ")");
+		}
+		return ret;
+	}
+
+	static private TagSource getTagSourceFromConfig(Properties props,
+													String propPrefix, String tagSourceName) {
+		TagSource tagSource = null;
+		String className = getStringProperty(props, propPrefix + "."
+				+ PROP_CLASS_NAME);
+		if (StringUtils.isBlank(className)) {
+			if (tagSourceName.equals("file")) {
+				className = "org.apache.ranger.tagsync.source.file.FileTagSource";
+			} else if (tagSourceName.equalsIgnoreCase("atlas")) {
+				className = "org.apache.ranger.tagsync.source.atlas.AtlasTagSource";
+			} else if (tagSourceName.equals("atlasrest")) {
+				className = "org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource";
+			} else if (!tagSourceName.equalsIgnoreCase(TagSource.TAG_SOURCE_NONE)) {
+				LOG.error("tagSource name doesn't have any class associated with it. tagSourceName="
+						+ tagSourceName + ", propertyPrefix=" + propPrefix);
+			}
+		}
+		if (StringUtils.isNotBlank(className)) {
+			try {
+				@SuppressWarnings("unchecked")
+				Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(className);
+
+				tagSource = tagSourceClass.newInstance();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Created instance of " + className);
+				}
+			} catch (Exception e) {
+				LOG.fatal("Can't instantiate tagSource class for tagSourceName="
+						+ tagSourceName + ", className=" + className
+						+ ", propertyPrefix=" + propPrefix, e);
+			}
+		}
+		return tagSource;
+	}
+
+	private static String getStringProperty(Properties props, String propName) {
+		String ret = null;
+
+		if (props != null && propName != null) {
+			String val = props.getProperty(propName);
+			if (val != null) {
+				ret = val;
+			}
 		}
 
 		return ret;
+	}
+
+	private static List<String> toArray(String destListStr, String delim) {
+		List<String> list = new ArrayList<String>();
+		if (destListStr != null && !destListStr.isEmpty()) {
+			StringTokenizer tokenizer = new StringTokenizer(destListStr,
+					delim.trim());
+			while (tokenizer.hasMoreTokens()) {
+				list.add(tokenizer.nextToken());
+			}
+		}
+		return list;
 	}
 }

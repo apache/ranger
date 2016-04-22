@@ -19,35 +19,77 @@
 <configuration>
 	<property>
 		<name>ranger.tagsync.enabled</name>
-		<value>true</value>
+		<value />
 	</property>
 	<property>
 		<name>ranger.tagsync.logdir</name>
 		<value>log</value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.rest.url</name>
-		<value>localhost:6080</value>
-		<description></description>
+		<name>ranger.tagsync.dest.ranger.endpoint</name>
+		<value>http://localhost:6080</value>
 	</property>
 	<property>
-		<name>ranger.tagsync.tagadmin.rest.ssl.config.file</name>
-		<value></value>
-		<description></description>
+		<name>ranger.tagsync.dest.ranger.ssl.config.filename</name>
+		<value />
 	</property>
 	<property>
-		<name>ranger.tagsync.filesource.modtime.check.interval</name>
-		<value>60000</value>
-		<description></description>
+		<name>ranger.tagsync.source.atlas</name>
+		<value>false</value>
 	</property>
 	<property>
-		<name>ranger.tagsync.filesource.filename</name>
+		<name>ranger.tagsync.source.atlasrest</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.endpoint</name>
+		<value>http://localhost:21000</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.download.interval.millis</name>
+		<value>900000</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.file</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.file.filename</name>
 		<value>/etc/ranger/data/tags.json</value>
-		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.source.impl.class</name>
-		<value>File</value>
-		<description></description>
+		<name>ranger.tagsync.source.file.check.interval.millis</name>
+		<value>60000</value>
 	</property>
+	<property>
+		<name>ranger.tagsync.source.none</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.atlas.to.ranger.service.mapping</name>
+		<value />
+	</property>
+	<property>
+		<name>ranger.tagsync.atlas.custom.resource.mappers</name>
+		<value />
+	</property>
+	<property>
+		<name>ranger.tagsync.keystore.filename</name>
+		<value>/etc/ranger/tagsync/conf/rangertagsync.jceks</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.kerberos.keytab</name>
+		<value />
+	</property>
+	<property>
+		<name>ranger.tagsync.kerberos.principal</name>
+		<value />
+	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.password</name>
+		<value>rangertagsync</value>
+	</property>
+
+	
+
 </configuration>

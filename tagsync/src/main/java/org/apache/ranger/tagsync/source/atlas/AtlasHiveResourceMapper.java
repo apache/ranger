@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.tagsync.process.TagSyncConfig;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -48,11 +47,13 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE = "name";
 
-	static protected final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
+	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
 
-	private static String clusterDelimiter = "@";
+	public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
 
-	private static String qualifiedNameDelimiter = "\\.";
+	public static final String clusterDelimiter = "@";
+
+	public static final String qualifiedNameDelimiter = "\\.";
 
 	public static final String[] supportedEntityTypes = { ENTITY_TYPE_HIVE_DB, ENTITY_TYPE_HIVE_TABLE, ENTITY_TYPE_HIVE_COLUMN };
 
@@ -139,7 +140,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 		String ret = getRangerServiceName(COMPONENT_NAME, clusterName);
 
 		if (StringUtils.isBlank(ret)) {
-			ret = clusterName + TagSyncConfig.TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR + COMPONENT_NAME;
+			ret = clusterName + TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR + COMPONENT_NAME;
 		}
 		return ret;
 	}

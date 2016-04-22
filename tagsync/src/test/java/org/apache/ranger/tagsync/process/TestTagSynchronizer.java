@@ -60,43 +60,18 @@ public class TestTagSynchronizer {
 
 		System.out.println("testTagSynchronizer() called");
 
-		//tagSynchronizer.run();
-
-		tagSynchronizer.shutdown("From testTagSynchronizer: time=up");
-
-		System.out.println("Exiting test");
-
-
-	}
-
-	@Test
-	public void testTagDownload() {
-
-		boolean initDone = true;
-
-		/* For tagSynchronizer.initialize() to succeed, edit ranger-tagsync-site.xml file to contain correct
-		values of the following properties:
-			ranger.tagsync.tagadmin.rest.url, ranger.tagsync.tagadmin.password
-
-		For example:
-			<property>
-				<name>ranger.tagsync.tagadmin.rest.url</name>
-				<value>http://tagsync-test:6080</value>
-			</property>
-			<property>
-				<name>ranger.tagsync.tagadmin.password</name>
-				<value>rangertagsync</value>
-			</property>
-		*/
-
-
-//		initDone = tagSynchronizer.initialize(null);
+		boolean initDone = tagSynchronizer.initialize();
 
 		System.out.println("TagSynchronizer initialization result=" + initDone);
 
+		if (initDone) {
+			tagSynchronizer.shutdown("From testTagSynchronizer: time=up");
+		}
+
+		System.out.println("Exiting test");
+
 		assert(initDone);
 
-		System.out.println("Exiting testTagDownload()");
 	}
 
 	@Test

@@ -109,7 +109,7 @@ def main():
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	globalDict=import_properties_from_xml(CFG_FILE,globalDict)
-	TAGSYNC_KEYSTORE_FILENAME=globalDict['ranger.tagsync.tagadmin.keystore']
+	TAGSYNC_KEYSTORE_FILENAME=globalDict['ranger.tagsync.keystore.filename']
 	log("[I] TAGSYNC_KEYSTORE_FILENAME:" + str(TAGSYNC_KEYSTORE_FILENAME),"info")
 	TAGSYNC_TAGADMIN_ALIAS="tagadmin.user.password"
 	TAGSYNC_TAGADMIN_PASSWORD = ''
@@ -120,7 +120,7 @@ def main():
 	while TAGSYNC_TAGADMIN_PASSWORD == "":
 		TAGSYNC_TAGADMIN_PASSWORD=getpass.getpass("Enter tagadmin user password:")
 
-	if TAGSYNC_KEYSTORE_FILENAME != "" or TAGSYNC_TAGADMIN_ALIAS != "" or TAGSYNC_TAGADMIN_USERNAME != "" or TAGSYNC_TAGADMIN_PASSWORD != "":
+	if TAGSYNC_KEYSTORE_FILENAME != "" or TAGSYNC_TAGADMIN_USERNAME != "" or TAGSYNC_TAGADMIN_PASSWORD != "":
 		log("[I] Storing tagadmin tagsync password in credential store:","info")
 		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,TAGSYNC_TAGADMIN_ALIAS,TAGSYNC_TAGADMIN_PASSWORD,TAGSYNC_KEYSTORE_FILENAME)
 		ret=subprocess.call(shlex.split(cmd))
@@ -129,8 +129,7 @@ def main():
 			ret=subprocess.call(shlex.split(cmd))
 			if ret == 0:
 				if os.path.isfile(CFG_FILE):
-					write_properties_to_xml(CFG_FILE,"ranger.tagsync.tagadmin.keystore",TAGSYNC_KEYSTORE_FILENAME)
-					write_properties_to_xml(CFG_FILE,"ranger.tagsync.tagadmin.alias", TAGSYNC_TAGADMIN_ALIAS)
+					write_properties_to_xml(CFG_FILE,"ranger.tagsync.keystore.filename",TAGSYNC_KEYSTORE_FILENAME)
 				else:
 					log("[E] Required file not found: ["+CFG_FILE+"]","error")
 			else:
