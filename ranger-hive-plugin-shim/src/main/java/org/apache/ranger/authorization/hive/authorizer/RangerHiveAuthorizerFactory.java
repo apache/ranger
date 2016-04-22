@@ -74,7 +74,7 @@ public class RangerHiveAuthorizerFactory implements HiveAuthorizerFactory {
 
 		} catch (Exception e) {
             // check what need to be done
-           LOG.error("Error Enabling RangerHivePluing", e);
+           LOG.error("Error Enabling RangerHivePlugin", e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
