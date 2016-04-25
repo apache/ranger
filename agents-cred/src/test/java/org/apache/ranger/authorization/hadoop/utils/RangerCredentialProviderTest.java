@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -34,19 +35,26 @@ import org.junit.Test;
 
 public class RangerCredentialProviderTest {
 	
-	private final File ksFile =  new File(System.getProperty("user.home")+"/testkeystore.jceks") ;
-	private final String keystoreFile = ksFile.toURI().getPath();
-	private String[] argsCreate = {"create", "TestCredential001", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-	private String[] argsDelete = {"delete", "TestCredential001", "-provider", "jceks://file@/" + keystoreFile};
-	private String url = "jceks://file@/" + keystoreFile;
+	private final File ksFile;
+	private final String keystoreFile;
+	private final String[] argsCreate;
+	private final String[] argsDelete;
+	private final String url;
 	RangerCredentialProvider cp = null;
 	List<CredentialProvider> providers = null;
 	
 	
-	public RangerCredentialProviderTest() {
+	public RangerCredentialProviderTest() throws IOException {
+		ksFile = File.createTempFile("testkeystore", "jceks");
+		keystoreFile = ksFile.toURI().getPath();
+		url = "jceks://file@/" + keystoreFile;
+		
 		if ( isCredentialShellInteractiveEnabled() ) {
 			argsCreate = new String[] {"create", "TestCredential001", "-f",  "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
 			argsDelete = new String[] {"delete", "TestCredential001", "-f" , "-provider", "jceks://file@/" + keystoreFile};
+		} else {
+			argsCreate = new String[] {"create", "TestCredential001", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
+			argsDelete = new String[] {"delete", "TestCredential001", "-provider", "jceks://file@/" + keystoreFile};
 		}
 	}
 	
@@ -87,7 +95,14 @@ public class RangerCredentialProviderTest {
 		assertEquals(0,ret);
 		System.out.println("(1) Number of active Threads : " + Thread.activeCount() ) ;
 		listThreads() ;
-	} 
+	}
+	
+	@After
+	public void cleanup() throws Exception {
+		if (ksFile != null && ksFile.exists()) {
+			ksFile.delete() ;
+		}
+	}
 	
 	@Test
 	public void testCredentialProvider() {

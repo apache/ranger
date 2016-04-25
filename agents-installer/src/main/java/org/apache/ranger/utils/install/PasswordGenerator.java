@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.utils.install;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -83,7 +84,7 @@ public class PasswordGenerator {
  				
 		int len = getPasswordLength() ;
 		
-		Random random = new Random() ;
+		SecureRandom random = new SecureRandom() ;
 		
 		int setSz = all.size();
 		

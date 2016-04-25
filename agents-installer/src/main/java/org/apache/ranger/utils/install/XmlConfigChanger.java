@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -166,6 +167,7 @@ public class XmlConfigChanger {
 		loadInstallProperties() ;
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance() ;
+		factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 		DocumentBuilder builder = factory.newDocumentBuilder() ;
 		doc = builder.parse(inpFile) ;
 		

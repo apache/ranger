@@ -28,24 +28,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 
-public class RangerCredentialProvider {
+public final class RangerCredentialProvider {
 
   private static Log LOG = LogFactory.getLog(RangerCredentialProvider.class);
 
-  private static volatile RangerCredentialProvider  me = null;
-
+  private static final RangerCredentialProvider CRED_PROVIDER = new RangerCredentialProvider(); 
+  
+  protected RangerCredentialProvider() {
+	  // 
+  }
   
   public static RangerCredentialProvider getInstance()  {
-      RangerCredentialProvider result = me;
-	  if ( result == null) {
-		  synchronized(RangerCredentialProvider.class) {
-			  result = me;
-			  if ( result == null){
-				  me = result = new RangerCredentialProvider();
-			  }
-		  }
-	  }
-	return result;
+	  return CRED_PROVIDER;
   }
   
   public char[] getCredentialString(String url, String alias)  {
