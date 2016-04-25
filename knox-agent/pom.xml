@@ -53,14 +53,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-integration</artifactId>
-        </dependency>
         <!-- TO DEBUG JERSEY2 code: Comment the two jackson depedencies to debug jersey2 code.  Their presence prevents jersy2 connections to work. -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>

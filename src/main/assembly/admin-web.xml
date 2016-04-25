@@ -236,7 +236,6 @@
                     <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging</include>
                     <include>com.google.guava:guava</include>
-                    <include>org.hamcrest:hamcrest-all</include>
                     <include>org.slf4j:slf4j-api</include>
                     <include>org.apache.hadoop:hadoop-common</include>
                     <include>org.apache.hadoop:hadoop-auth</include>

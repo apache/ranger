@@ -71,7 +71,6 @@
 							</include>
 							<include>commons-logging:commons-logging</include>
 							<include>com.google.guava:guava:jar:${guava.version}</include>
-							<include>org.hamcrest:hamcrest-all</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
 							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}
 							</include>

@@ -163,11 +163,6 @@
             <version>${google.guava.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>${hamcrest.all.version}</version>
-        </dependency>
-        <dependency>
             <groupId>net.htmlparser.jericho</groupId>
             <artifactId>jericho-html</artifactId>
             <version>${jericho.html.version}</version>
@@ -271,13 +266,6 @@
             <artifactId>log4jdbc</artifactId>
             <version>${googlecode.log4jdbc.version}</version>
         </dependency>
-        <!--
-                <dependency>
-                    <groupId>mysql</groupId>
-                    <artifactId>mysql-connector-java</artifactId>
-                    <version>${mysql-connector-java.version}</version>
-                </dependency>
-                -->
         <dependency>
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
