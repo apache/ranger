@@ -134,7 +134,7 @@
 		<commons.math.version>2.2</commons.math.version>
 		<commons.net.version>3.3</commons.net.version>
 		<commons.pool.version>1.6</commons.pool.version>
-		<eclipse.jpa.version>2.5.2-M1</eclipse.jpa.version>
+		<eclipse.jpa.version>2.5.2</eclipse.jpa.version>
 		<googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
 		<google.guava.version>17.0</google.guava.version>
 		<gson.version>2.2.4</gson.version>
