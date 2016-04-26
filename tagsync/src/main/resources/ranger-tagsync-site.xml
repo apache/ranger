@@ -82,7 +82,7 @@
 		<value />
 	</property>
 	<property>
-		<name>ranger.tagsync.dest.ranger.password</name>
+		<name>ranger.tagsync.dest.ranger.username</name>
 		<value>rangertagsync</value>
 	</property>
 

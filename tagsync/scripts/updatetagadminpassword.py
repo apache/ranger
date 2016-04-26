@@ -113,9 +113,13 @@ def main():
 	log("[I] TAGSYNC_KEYSTORE_FILENAME:" + str(TAGSYNC_KEYSTORE_FILENAME),"info")
 	TAGSYNC_TAGADMIN_ALIAS="tagadmin.user.password"
 	TAGSYNC_TAGADMIN_PASSWORD = ''
-	TAGSYNC_TAGADMIN_USERNAME = 'rangertagsync'
+	TAGSYNC_TAGADMIN_USERNAME = ''
 	unix_user = "ranger"
 	unix_group = "ranger"
+
+	while TAGSYNC_TAGADMIN_USERNAME == "":
+		print "Enter tagadmin user name:"
+		TAGSYNC_TAGADMIN_USERNAME=raw_input()
 
 	while TAGSYNC_TAGADMIN_PASSWORD == "":
 		TAGSYNC_TAGADMIN_PASSWORD=getpass.getpass("Enter tagadmin user password:")
@@ -129,6 +133,7 @@ def main():
 			ret=subprocess.call(shlex.split(cmd))
 			if ret == 0:
 				if os.path.isfile(CFG_FILE):
+					write_properties_to_xml(CFG_FILE,"ranger.tagsync.dest.ranger.username",TAGSYNC_TAGADMIN_USERNAME)
 					write_properties_to_xml(CFG_FILE,"ranger.tagsync.keystore.filename",TAGSYNC_KEYSTORE_FILENAME)
 				else:
 					log("[E] Required file not found: ["+CFG_FILE+"]","error")

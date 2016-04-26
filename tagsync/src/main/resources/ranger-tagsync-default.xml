@@ -34,7 +34,7 @@
 		<description></description>
 	</property>
 	<property>
-		<name>ranger.tagsync.dest.ranger.password</name>
-		<value></value>
+		<name>ranger.tagsync.dest.ranger.username</name>
+		<value>rangertagsync</value>
 	</property>
 </configuration>

@@ -390,6 +390,9 @@ def main():
 
 	tagsyncKSPath = mergeProps['ranger.tagsync.keystore.filename']
 
+	if ('ranger.tagsync.dest.ranger.username' not in mergeProps):
+		mergeProps['ranger.tagsync.dest.ranger.username'] = 'rangertagsync'
+
 	if (tagsyncKSPath == ''):
 		mergeProps['ranger.tagsync.dest.ranger.password'] = 'rangertagsync'
 

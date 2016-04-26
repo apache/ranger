@@ -83,4 +83,8 @@
 		<name>hadoop_conf</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.username</name>
+		<value></value>
+	</property>
 </configuration>

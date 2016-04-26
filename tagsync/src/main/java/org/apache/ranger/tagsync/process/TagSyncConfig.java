@@ -53,6 +53,8 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_DEST_RANGER_PASSWORD_ALIAS = "tagadmin.user.password";
 
+	private static final String TAGSYNC_TAGADMIN_USERNAME_PROP = "ranger.tagsync.dest.ranger.username";
+
 	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.dest.ranger.password";
 
 	private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.dest.ranger.connection.check.interval";
@@ -270,7 +272,14 @@ public class TagSyncConfig extends Configuration {
 	}
 
 	static public String getTagAdminUserName(Properties prop) {
-		return DEFAULT_TAGADMIN_USERNAME;
+		String userName=null;
+		if(prop!=null && prop.containsKey(TAGSYNC_TAGADMIN_USERNAME_PROP)){
+			userName=prop.getProperty(TAGSYNC_TAGADMIN_USERNAME_PROP);
+		}
+		if(StringUtils.isBlank(userName)){
+			userName=DEFAULT_TAGADMIN_USERNAME;
+		}
+		return userName;
 	}
 
 	static public String getAtlasSslConfigFileName(Properties prop) {
