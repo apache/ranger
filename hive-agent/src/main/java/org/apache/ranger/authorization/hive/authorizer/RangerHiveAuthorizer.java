@@ -1051,7 +1051,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if(ss != null) {
 			ret.setClientIPAddress(ss.getUserIpAddress());
 			ret.setSessionId(ss.getSessionId());
-			ret.setRequestData(ss.getCmd());
+			ret.setRequestData(ss.getConf().getQueryString());
 		}
 
 		HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
