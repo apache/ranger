@@ -18,59 +18,231 @@
 
 package org.apache.ranger.authorization.hive.udf;
 
+import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 
+@Description(name = "mask_show_first_n",
+             value = "masks all but first n characters of the value",
+             extended = "Examples:\n "
+                      + "  mask_show_first_n(ccn, 8)\n "
+                      + "  mask_show_first_n(ccn, 8, 'x', 'x', 'x')\n "
+                      + "Arguments:\n "
+                      + "  mask_show_first_n(value, charCount, upperChar, lowerChar, digitChar, otherChar, numberChar)\n "
+                      + "    value      - value to mask. Supported types: TINYINT, SMALLINT, INT, BIGINT, STRING, VARCHAR, CHAR\n "
+                      + "    charCount  - number of characters. Default value: 4\n "
+                      + "    upperChar  - character to replace upper-case characters with. Specify -1 to retain original character. Default value: 'X'\n "
+                      + "    lowerChar  - character to replace lower-case characters with. Specify -1 to retain original character. Default value: 'x'\n "
+                      + "    digitChar  - character to replace digit characters with. Specify -1 to retain original character. Default value: 'n'\n "
+                      + "    otherChar  - character to replace all other characters with. Specify -1 to retain original character. Default value: -1\n "
+                      + "    numberChar - character to replace digits in a number with. Valid values: 0-9. Default value: '1'\n "
+            )
 public class RangerUdfMaskShowFirstN extends RangerBaseUdf {
-    public RangerUdfMaskShowFirstN() {
-        super(new MaskShowFirstNTransformer());
-    }
+  public static final String UDF_NAME = "mask_show_first_n";
+
+  public RangerUdfMaskShowFirstN() {
+    super(new MaskShowFirstNTransformer(), UDF_NAME);
+  }
 }
 
 class MaskShowFirstNTransformer extends MaskTransformer {
-    int charCount = 4;
+  int charCount = 4;
 
-    public MaskShowFirstNTransformer() {
-        super();
+  public MaskShowFirstNTransformer() {
+    super();
+  }
+
+  @Override
+  public void init(ObjectInspector[] arguments, int argsStartIdx) {
+    super.init(arguments, argsStartIdx + 1); // first argument is charCount, which is consumed here
+
+    charCount = getIntArg(arguments, argsStartIdx, 4);
+
+    if(charCount < 0) {
+      charCount = 0;
+    }
+  }
+
+  @Override
+  String transform(final String value) {
+    if(value.length() <= charCount) {
+      return value;
     }
 
-    @Override
-    public void init(ObjectInspector[] arguments, int argsStartIdx) {
-        super.init(arguments, argsStartIdx + 1); // first argument is charCount, which is consumed here
+    final StringBuilder ret = new StringBuilder(value.length());
 
-        charCount = getIntArg(arguments, argsStartIdx, 4);
+    for(int i = 0; i < charCount; i++) {
+      ret.appendCodePoint(value.charAt(i));
     }
 
-    @Override
-    String transform(String value) {
-        return maskString(value, charCount, value.length());
+    for(int i = charCount; i < value.length(); i++) {
+      ret.appendCodePoint(transformChar(value.charAt(i)));
     }
 
-    @Override
-    Byte transform(Byte value) {
-        String strValue = value.toString();
+    return ret.toString();
+  }
 
-        return toByte(Long.parseLong(maskNumber(strValue, charCount, strValue.length())));
+  @Override
+  Byte transform(final Byte value) {
+    byte val = value;
+
+    if(value < 0) {
+      val *= -1;
     }
 
-    @Override
-    Short transform(Short value) {
-        String strValue = value.toString();
-
-        return toShort(Long.parseLong(maskNumber(strValue, charCount, strValue.length())));
+    // count number of digits in the value
+    int digitCount = 0;
+    for(byte v = val; v != 0; v /= 10) {
+      digitCount++;
     }
 
-    @Override
-    Integer transform(Integer value) {
-        String strValue = value.toString();
+    // number of digits to mask from the end
+    final int maskCount = digitCount - charCount;
 
-        return toInteger(Long.parseLong(maskNumber(strValue, charCount, strValue.length())));
+    if(maskCount <= 0) {
+      return value;
     }
 
-    @Override
-    Long transform(Long value) {
-        String strValue = value.toString();
+    byte ret = 0;
+    int  pos = 1;
+    for(int i = 0; val != 0; i++) {
+      if(i < maskCount) { // mask this digit
+        ret += (maskedNumber * pos);
+      } else { //retain this digit
+        ret += ((val % 10) * pos);
+      }
 
-        return Long.parseLong(maskNumber(strValue, charCount, strValue.length()));
+      val /= 10;
+      pos *= 10;
     }
+
+    if(value < 0) {
+      ret *= -1;
+    }
+
+    return ret;
+  }
+
+  @Override
+  Short transform(final Short value) {
+    short val = value;
+
+    if(value < 0) {
+      val *= -1;
+    }
+
+    // count number of digits in the value
+    int digitCount = 0;
+    for(short v = val; v != 0; v /= 10) {
+      digitCount++;
+    }
+
+    // number of digits to mask from the end
+    final int maskCount = digitCount - charCount;
+
+    if(maskCount <= 0) {
+      return value;
+    }
+
+    short ret = 0;
+    int   pos = 1;
+    for(int i = 0; val != 0; i++) {
+      if(i < maskCount) { // mask this digit
+        ret += (maskedNumber * pos);
+      } else { // retain this digit
+        ret += ((val % 10) * pos);
+      }
+
+      val /= 10;
+      pos *= 10;
+    }
+
+    if(value < 0) {
+      ret *= -1;
+    }
+
+    return ret;
+  }
+
+  @Override
+  Integer transform(final Integer value) {
+    int val = value;
+
+    if(value < 0) {
+      val *= -1;
+    }
+
+    // count number of digits in the value
+    int digitCount = 0;
+    for(int v = val; v != 0; v /= 10) {
+      digitCount++;
+    }
+
+    // number of digits to mask from the end
+    final int maskCount = digitCount - charCount;
+
+    if(maskCount <= 0) {
+      return value;
+    }
+
+    int ret = 0;
+    int pos = 1;
+    for(int i = 0; val != 0; i++) {
+      if(i < maskCount) { // mask this digit
+        ret += maskedNumber * pos;
+      } else { // retain this digit
+        ret += ((val % 10) * pos);
+      }
+
+      val /= 10;
+      pos *= 10;
+    }
+
+    if(value < 0) {
+      ret *= -1;
+    }
+
+    return ret;
+  }
+
+  @Override
+  Long transform(final Long value) {
+    long val = value;
+
+    if(value < 0) {
+      val *= -1;
+    }
+
+    // count number of digits in the value
+    int digitCount = 0;
+    for(long v = val; v != 0; v /= 10) {
+      digitCount++;
+    }
+
+    // number of digits to mask from the end
+    final int maskCount = digitCount - charCount;
+
+    if(maskCount <= 0) {
+      return value;
+    }
+
+    long ret = 0;
+    long pos = 1;
+    for(int i = 0; val != 0; i++) {
+      if(i < maskCount) { // mask this digit
+        ret += (maskedNumber * pos);
+      } else { // retain this digit
+        ret += ((val % 10) * pos);
+      }
+
+      val /= 10;
+      pos *= 10;
+    }
+
+    if(value < 0) {
+      ret *= -1;
+    }
+
+    return ret;
+  }
 }

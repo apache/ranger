@@ -21,47 +21,57 @@ package org.apache.ranger.authorization.hive.udf;
 import java.sql.Date;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 
+@Description(name = "mask_hash",
+             value = "returns hash of the given value",
+             extended = "Examples:\n "
+                      + "  mask_hash(value)\n "
+                      + "Arguments:\n "
+                      + "  value - value to mask. Supported types: STRING, VARCHAR, CHAR"
+            )
 public class RangerUdfMaskHash extends RangerBaseUdf {
-    public RangerUdfMaskHash() {
-        super(new MaskHashTransformer());
-    }
+  public static final String UDF_NAME = "mask_hash";
+
+  public RangerUdfMaskHash() {
+    super(new MaskHashTransformer(), UDF_NAME);
+  }
 }
 
-class MaskHashTransformer extends RangerBaseUdf.RangerTransformer {
-    @Override
-    public void init(ObjectInspector[] arguments, int startIdx) {
-    }
+class MaskHashTransformer extends AbstractTransformer {
+  @Override
+  public void init(ObjectInspector[] arguments, int startIdx) {
+  }
 
-    @Override
-    String transform(String value) {
-        return DigestUtils.md5Hex(value);
-    }
+  @Override
+  String transform(final String value) {
+    return DigestUtils.md5Hex(value);
+  }
 
-    @Override
-    Byte transform(Byte value) {
-        return value;
-    }
+  @Override
+  Byte transform(final Byte value) {
+    return null;
+  }
 
-    @Override
-    Short transform(Short value) {
-        return value;
-    }
+  @Override
+  Short transform(final Short value) {
+    return null;
+  }
 
-    @Override
-    Integer transform(Integer value) {
-        return value;
-    }
+  @Override
+  Integer transform(final Integer value) {
+    return null;
+  }
 
-    @Override
-    Long transform(Long value) {
-        return value;
-    }
+  @Override
+  Long transform(final Long value) {
+    return null;
+  }
 
-    @Override
-    Date transform(Date value) {
-        return value;
-    }
+  @Override
+  Date transform(final Date value) {
+    return null;
+  }
 }
