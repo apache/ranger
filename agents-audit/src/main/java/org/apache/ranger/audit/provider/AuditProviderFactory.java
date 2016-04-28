@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.DBAuditDestination;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.destination.HDFSAuditDestination;
@@ -63,6 +64,8 @@ public class AuditProviderFactory {
 
 	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
 	public static final int AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT = 5 * 1000;
+
+	private static final int RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY = 30;
 
 	private static AuditProviderFactory sFactory;
 
@@ -448,7 +451,7 @@ public class AuditProviderFactory {
 	private void installJvmSutdownHook(Properties props) {
 		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
 		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
-		Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
+		ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
 	}
 
 	private static class RangerAsyncAuditCleanup implements Runnable {
