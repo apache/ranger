@@ -265,7 +265,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	// Insert or Updating Mapping permissions depending upon roles
-	private void createOrUpdateUserPermisson(VXPortalUser portalUser, Long moduleId, boolean isCreate) {
+	public void createOrUpdateUserPermisson(VXPortalUser portalUser, Long moduleId, boolean isCreate) {
 		VXUserPermission vXUserPermission;
 		XXUserPermission xUserPermission = daoManager.getXXUserPermission().findByModuleIdAndPortalUserId(portalUser.getId(), moduleId);
 		if (xUserPermission == null) {
