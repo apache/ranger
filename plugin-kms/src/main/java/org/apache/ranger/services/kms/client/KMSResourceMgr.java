@@ -75,14 +75,15 @@ public class KMSResourceMgr {
                 String lookupPrincipal = configs.get("lookupprincipal");
                 String lookupKeytab = configs.get("lookupkeytab");
                 String nameRules = configs.get("namerules");
-                resultList = getKMSResource(url, username, password, lookupPrincipal, lookupKeytab, nameRules, kmsKeyName,kmsKeyList) ;
+                String authType = configs.get("authtype");
+                resultList = getKMSResource(url, username, password, lookupPrincipal, lookupKeytab, nameRules, authType, kmsKeyName,kmsKeyList) ;
         }
         return resultList ;
     }
 
-    public static List<String> getKMSResource(String url, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String kmsKeyName, List<String> kmsKeyList) {
+    public static List<String> getKMSResource(String url, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String authType, String kmsKeyName, List<String> kmsKeyList) {
     	List<String> topologyList = null;
-        final KMSClient KMSClient = KMSConnectionMgr.getKMSClient(url, username, password, lookupPrincipal, lookupKeytab, nameRules);
+        final KMSClient KMSClient = KMSConnectionMgr.getKMSClient(url, username, password, lookupPrincipal, lookupKeytab, nameRules, authType);
         synchronized(KMSClient){
         	topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
         }

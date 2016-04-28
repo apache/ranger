@@ -89,6 +89,10 @@ HSM_ENABLED=$(get_prop 'HSM_ENABLED' $PROPFILE)
 HSM_PARTITION_NAME=$(get_prop 'HSM_PARTITION_NAME' $PROPFILE)
 HSM_PARTITION_PASSWORD=$(get_prop 'HSM_PARTITION_PASSWORD' $PROPFILE)
 
+kms_principal=$(get_prop 'kms_principal' $PROPFILE)
+kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
+hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
+
 DB_HOST="${db_host}"
 
 check_ret_status(){
@@ -589,6 +593,22 @@ update_properties() {
         newPropertyValue="${KMS_BLACKLIST_DECRYPT_EEK}"
         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
+	########### KERBEROS CONFIG ############
+
+	if [ "${kms_principal}" != "" ]
+	then
+		propertyName=ranger.ks.kerberos.principal
+        	newPropertyValue="${kms_principal}"
+	        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+	fi
+
+	if [ "${kms_keytab}" != "" ]
+	then
+		propertyName=ranger.ks.kerberos.keytab
+        	newPropertyValue="${kms_keytab}"
+	        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+	fi
+
 	########### HSM CONFIG #################
        
        
@@ -658,6 +678,28 @@ setup_install_files(){
 	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
 		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
+
+	echo "export RANGER_HADOOP_CONF_DIR=${hadoop_conf}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-hadoopconfdir.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-hadoopconfdir.sh
+
+        hadoop_conf_file=${hadoop_conf}/core-site.xml
+        ranger_hadoop_conf_file=${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+
+        if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/conf ]; then
+                chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/conf
+                if [ "${hadoop_conf}" == "" ]
+                then
+                        log "[WARN] Property hadoop_conf not found. Creating blank core-site.xml."
+                        echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                else
+                        if [ -f ${hadoop_conf_file} ]; then
+                                ln -sf ${hadoop_conf_file} ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                        else
+                                log "[WARN] core-site.xml file not found in provided hadoop_conf path. Creating blank core-site.xml"
+                                echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                        fi
+                fi
+        fi
 
 	if [ -d /etc/init.d ]; then
 	    log "[I] Setting up init.d"

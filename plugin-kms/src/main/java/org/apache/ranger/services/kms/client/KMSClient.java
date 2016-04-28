@@ -62,6 +62,8 @@ public class KMSClient {
 	private static final String errMessage = " You can still save the repository and start creating "
 			+ "policies, but you would not be able to use autocomplete for "
 			+ "resource names. Check xa_portal.log for more info.";
+	
+	private static final String AUTH_TYPE_KERBEROS = "kerberos";
 
 	String provider;
 	String username;
@@ -69,14 +71,16 @@ public class KMSClient {
 	String lookupPrincipal;
 	String lookupKeytab;
 	String nameRules;
+	String authType;
 
-	public KMSClient(String provider, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
+	public KMSClient(String provider, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String authType) {
 		this.provider = provider;
 		this.username = username;
 		this.password = password;
 		this.lookupPrincipal = lookupPrincipal;
 		this.lookupKeytab = lookupKeytab;
 		this.nameRules = nameRules;
+		this.authType = authType;
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Kms Client is build with url [" + provider + "] user: ["
@@ -155,46 +159,48 @@ public class KMSClient {
 			String uri = providers[i] + (providers[i].endsWith("/") ? KMS_LIST_API_ENDPOINT : ("/" + KMS_LIST_API_ENDPOINT));
 			Client client = null;
 			ClientResponse response = null;
-			boolean isKerberose = false;
+			boolean isKerberos = false;
 			try {
 				ClientConfig cc = new DefaultClientConfig();
 				cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 				client = Client.create(cc);
-				
-				if(username.contains("@")){
-					isKerberose = true;
+							
+				if(authType != null && authType.equalsIgnoreCase(AUTH_TYPE_KERBEROS)){
+					isKerberos = true;
 				}
 				
-				if(!isKerberose){
+				Subject sub = new Subject();
+				if(!isKerberos){
 					uri = uri.concat("?user.name="+username);
 					WebResource webResource = client.resource(uri);
 					response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-				}else{
-					String shortName = new HadoopKerberosName(username).getShortName();
-					uri = uri.concat("?doAs="+shortName);
-					Subject sub = new Subject();
-					if(!StringUtils.isEmpty(lookupPrincipal) && !StringUtils.isEmpty(lookupKeytab) && lookupPrincipal.contains("@")){
+					LOG.info("Init Login: security not enabled, using username");
+					sub = SecureClientLogin.login(username);					
+				}else{										
+					if(!StringUtils.isEmpty(lookupPrincipal) && !StringUtils.isEmpty(lookupKeytab)){
+						LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
 						if(StringUtils.isEmpty(nameRules)){
 							nameRules = "DEFAULT";
 						}
-						LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
+						String shortName = new HadoopKerberosName(lookupPrincipal).getShortName();
+						uri = uri.concat("?doAs="+shortName);						
 						sub = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
 					}
-					else if (username.contains("@")) {
+					else{
 						LOG.info("Init Login: using username/password");
+						String shortName = new HadoopKerberosName(username).getShortName();
+						uri = uri.concat("?doAs="+shortName);
 						sub = SecureClientLogin.loginUserWithPassword(username, password);						
-					} else {
-						LOG.info("Init Login: security not enabled, using username");
-						sub = SecureClientLogin.login(username);						
-					}
-					final WebResource webResource = client.resource(uri);
-					response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
-						@Override
-						public ClientResponse run() {
-							return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-						}
-					});
+					} 
 				}
+				final WebResource webResource = client.resource(uri);
+				response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
+					@Override
+					public ClientResponse run() {
+						return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+					}
+				});
+				
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("getKeyList():calling " + uri);
 				}
@@ -345,8 +351,9 @@ public class KMSClient {
 			String lookupPrincipal = configs.get("lookupprincipal");
 			String lookupKeytab = configs.get("lookupkeytab");
 			String nameRules = configs.get("namerules");
+			String authType = configs.get("authtype");
 			
-			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord, lookupPrincipal, lookupKeytab, nameRules);
+			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord, lookupPrincipal, lookupKeytab, nameRules, authType);
 
 		}
 		return kmsClient;

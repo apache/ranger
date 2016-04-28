@@ -63,7 +63,7 @@ public class KMSAuthenticationFilter
         props.setProperty(name, value);
       }
     }
-    String authType = props.getProperty(AUTH_TYPE);
+    String authType = props.getProperty(AUTH_TYPE,"simple");
     if (authType.equals(PseudoAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
           PseudoDelegationTokenAuthenticationHandler.class.getName());

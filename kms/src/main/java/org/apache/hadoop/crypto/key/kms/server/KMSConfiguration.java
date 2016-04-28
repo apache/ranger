@@ -104,7 +104,7 @@ public class KMSConfiguration {
   }
 
   public static Configuration getACLsConf() {
-    return getConfiguration(false, KMS_ACLS_XML);
+    return getConfiguration(true, KMS_ACLS_XML);
   }
 
   public static boolean isACLsFileNewer(long time) {

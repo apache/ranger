@@ -33,12 +33,6 @@
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
-  
-  <!-- <servlet>
-    <servlet-name>RangerKMSStartUp</servlet-name>
-    <servlet-class>org.apache.ranger.kms.biz.RangerKMSStartUp</servlet-class>    
-    <load-on-startup>2</load-on-startup>
-  </servlet> -->
 
   <servlet>
     <servlet-name>jmx-servlet</servlet-name>

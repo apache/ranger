@@ -89,7 +89,9 @@ public class KmsKeyMgr {
 	private static Map<String, String> providerList = new HashMap<String, String>(); 
 	private static int nextProvider = 0;
 	static final String NAME_RULES = "hadoop.security.auth_to_local";
-	
+	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";	
+	private static final String KERBEROS_TYPE = "kerberos";
+    
 	@Autowired
 	ServiceDBStore svcStore;	
 	
@@ -116,7 +118,7 @@ public class KmsKeyMgr {
 		String connProvider = null;
 		boolean isKerberos=false;
 		try {
-			isKerberos = checkKerberos(repoName);
+			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + repoName + ") failed", e1);
 		} 
@@ -212,7 +214,7 @@ public class KmsKeyMgr {
 		VXKmsKey ret = null;
 		boolean isKerberos=false;
 		try {
-			isKerberos = checkKerberos(provider);
+			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
@@ -264,7 +266,7 @@ public class KmsKeyMgr {
 		}
 		boolean isKerberos=false;
 		try {
-			isKerberos = checkKerberos(provider);
+			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
@@ -314,7 +316,7 @@ public class KmsKeyMgr {
 		VXKmsKey ret = null;
 		boolean isKerberos=false;
 		try {
-			isKerberos = checkKerberos(provider);
+			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
@@ -365,7 +367,7 @@ public class KmsKeyMgr {
 		}
 		boolean isKerberos=false;
 		try {
-			isKerberos = checkKerberos(provider);
+			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
@@ -526,17 +528,17 @@ public class KmsKeyMgr {
 	}
 	
 	private Subject getSubjectForKerberos(String provider) throws Exception{
-		String userName = getKMSUserName(provider); 
-	    String password = getKMSPassword(provider);
-	    String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+		String userName = getKMSUserName(provider);
+		String password = getKMSPassword(provider);
+		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
 	    if (StringUtils.isEmpty(nameRules)) {
         	KerberosName.setRules("DEFAULT") ;
     	}else{
     		KerberosName.setRules(nameRules);
     	}
 	    Subject sub = new Subject();
-	    if (userName.contains("@")) {
-			sub = SecureClientLogin.loginUserWithPassword(userName, password);
+	    if (checkKerberos()) {
+	    		sub = SecureClientLogin.loginUserWithPassword(userName, password);	    
 		} else {
 			sub = SecureClientLogin.login(userName);
 		}
@@ -557,12 +559,12 @@ public class KmsKeyMgr {
 		return rangerService.getConfigs().get(KMS_USERNAME);
 	}
 
-	private boolean checkKerberos(String provider) throws Exception {
-		String userName = getKMSUserName(provider);
-		if(userName.contains("@")){
+	private boolean checkKerberos() throws Exception {
+		if(PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "simple").equalsIgnoreCase(KERBEROS_TYPE)){
 			return true;
+		}else{
+			return false;
 		}
-		return false;
 	}
 
 	private synchronized Client getClient() {

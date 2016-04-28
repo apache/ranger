@@ -91,7 +91,9 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ClientResponse response = null;
 		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
-			LOG.info("Checking Service policy if updated as user : " + MiscUtil.getUGILoginUser());
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("Checking Service policy if updated as user : " + MiscUtil.getUGILoginUser());
+			}
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName)
@@ -102,7 +104,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			};				
 			response = MiscUtil.getUGILoginUser().doAs(action);
 		}else{
-			 WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName)
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("Checking Service policy if updated with old api call");
+			}
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName)
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);

@@ -104,6 +104,7 @@
 		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
+		    		<include>org.apache.ranger:ranger-plugins-common</include>
 	            </includes>
             </dependencySet>
         </dependencySets>

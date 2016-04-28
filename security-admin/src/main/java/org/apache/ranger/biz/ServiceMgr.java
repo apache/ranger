@@ -91,6 +91,7 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
 			}
 		}
 		
@@ -133,6 +134,7 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
 			}
 		}
 		

@@ -44,6 +44,7 @@ public class HadoopConfigHolder  {
 	public static final String RANGER_LOOKUP_PRINCIPAL = "lookupprincipal";
 	public static final String RANGER_LOOKUP_KEYTAB = "lookupkeytab";
 	public static final String RANGER_NAME_RULES = "namerules";
+	public static final String RANGER_AUTH_TYPE = "authtype";
 	public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
 	public static final String HADOOP_NAME_RULES = "hadoop.security.auth_to_local";
 	public static final String HADOOP_SECURITY_AUTHENTICATION_METHOD = "kerberos";
@@ -66,6 +67,7 @@ public class HadoopConfigHolder  {
 	private String lookupPrincipal;
 	private String lookupKeytab;
 	private String nameRules;
+	private String authType;
 	
 	private Map<String,String>  connectionProperties;
 
@@ -281,6 +283,7 @@ public class HadoopConfigHolder  {
 			lookupPrincipal = prop.getProperty(RANGER_LOOKUP_PRINCIPAL);
 			lookupKeytab = prop.getProperty(RANGER_LOOKUP_KEYTAB);
 			nameRules = prop.getProperty(RANGER_NAME_RULES);
+			authType = prop.getProperty(RANGER_AUTH_TYPE, "simple");
 			
 			String hadoopSecurityAuthenticationn =  getHadoopSecurityAuthentication();
 
@@ -405,6 +408,10 @@ public class HadoopConfigHolder  {
 
 	public String getNameRules(){
 		return nameRules;
+	}
+	
+	public String getAuthType(){
+		return authType;
 	}
 
   public Set<String> getRangerInternalPropertyKeys() {

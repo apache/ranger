@@ -19,13 +19,14 @@
 
 package org.apache.ranger.authorization.kms.authorizer;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
@@ -35,6 +36,7 @@ import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyACLs;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyOpType;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -51,6 +53,11 @@ import com.google.common.collect.Sets;
 
 public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizer.class);
+
+	  private static final String KMS_USER_PRINCIPAL = "ranger.ks.kerberos.principal";
+	  private static final String KMS_USER_KEYTAB = "ranger.ks.kerberos.keytab";
+
+	  private static final String KMS_NAME_RULES = "hadoop.security.auth_to_local";
 
 	  private static final String UNAUTHORIZED_MSG_WITH_KEY =
 	      "User:%s not allowed to do '%s' on '%s'";
@@ -93,37 +100,39 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	   */
 	  public static final String KEYTAB = TYPE + ".keytab";
 
-	  /**
-	   * Constant for the configuration property that indicates the Kerberos name
-	   * rules for the Kerberos principals.
-	   */
-	  public static final String NAME_RULES = TYPE + ".name.rules";
-
 	  RangerKmsAuthorizer(Configuration conf) {
 		  LOG.info("RangerKmsAuthorizer(conf)...");
-		  authWithKerberos();
 		  if (conf == null) {
 		      conf = loadACLs();		      
 		  }
+		  authWithKerberos(conf);
 		  setKMSACLs(conf);	
 		  init(conf);
-		  
 	  }
 
-	  /**
-	 * 
-	 */
-	private void authWithKerberos() {
-		//Let's if we can create the login user UGI
-		Configuration kconf = new Configuration();		
-		kconf.addResource("kms-site.xml");
-		String keytab =  kconf.get("hadoop.kms.authentication.kerberos.keytab");
-		String principal = kconf.get("hadoop.kms.authentication.kerberos.principal");
-	    String nameRules = kconf.get(NAME_RULES);
-		MiscUtil.authWithKerberos(keytab, principal, nameRules);
-	}
+	  private void authWithKerberos(Configuration conf) {
+		  String localHostName = null;
+		  try {
+			  localHostName = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+		  } catch (UnknownHostException e1) {
+			  LOG.warn("Error getting local host name : "+e1.getMessage());
+		  }
 
-	public RangerKmsAuthorizer() {		  
+		  String principal = null;
+	      try {
+	    	  principal = SecureClientLogin.getPrincipal(conf.get(KMS_USER_PRINCIPAL), localHostName);
+	      } catch (IOException e1) {
+	    	  LOG.warn("Error getting "+KMS_USER_PRINCIPAL+" : "+e1.getMessage());
+	      }
+	      String keytab = conf.get(KMS_USER_KEYTAB);
+	      String nameRules = conf.get(KMS_NAME_RULES);
+	      if(LOG.isDebugEnabled()){
+	    	  LOG.debug("Ranger KMS Principal : "+principal+", Keytab : "+keytab+", NameRule : "+nameRules);
+	      }
+	      MiscUtil.authWithKerberos(keytab, principal, nameRules);
+	  }
+
+	  public RangerKmsAuthorizer() {
 	    this(null);
 	  }
 	  
