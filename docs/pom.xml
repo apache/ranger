@@ -302,6 +302,92 @@
     </developers>
     <contributors>
         <contributor>
+          	<name>Abhay Kulkarni</name>
+          	<organization>Hortonworks Inc.,</organization>
+        </contributor>
+        <contributor>
+          	<name>Aneela Saleem</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Ankita Sinha</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Arshad Mohammad</name>
+          	<organization>Huawei</organization>
+        </contributor>
+        <contributor>
+          	<name>Ashish Singh</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Bennet Daniel</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Bolke de Bruin</name>
+          	<organization>ING</organization>
+        </contributor>
+        <contributor>
+          	<name>Bryan Bende</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Deepak Sharma</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Edward Zhang</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Hanish Bansal</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Jim Halfpenny</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Mack Hendricks</name>
+          	<organization>Hortonworks Inc.,</organization>
+        </contributor>
+        <contributor>
+          	<name>Mani Raman</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Mehul Parikh</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Mugdha Varadkar</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Pradeep Agrawal</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Rich Haase</name>
+          	<organization>Pandora</organization>
+        </contributor>
+        <contributor>
+          	<name>Sailaja Polavarapu</name>
+          	<organization>Hortonworks Inc.,</organization>
+        </contributor>
+        <contributor>
+          	<name>Sree Vaddi</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Tushar Dudhatra</name>
+          	<organization>&nbsp;</organization>
+        </contributor>
+        <contributor>
+          	<name>Varun Rao</name>
+          	<organization>Accenture</organization>
         </contributor>
     </contributors>
     <organization>
