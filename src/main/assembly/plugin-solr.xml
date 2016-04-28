@@ -43,6 +43,7 @@
 						<outputDirectory>/lib/ranger-solr-plugin-impl</outputDirectory>
 						<unpack>false</unpack>
 						<includes>
+							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
 							<include>com.google.code.gson:gson</include>
 							<include>org.eclipse.persistence:eclipselink</include>
 							<include>org.eclipse.persistence:javax.persistence</include>
