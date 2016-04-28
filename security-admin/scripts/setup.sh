@@ -68,6 +68,7 @@ audit_db_user=''
 audit_db_password=''
 policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
 policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
+policymgr_supportedcomponents=$(get_prop 'policymgr_supportedcomponents' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 authentication_method=$(get_prop 'authentication_method' $PROPFILE)
@@ -607,6 +608,10 @@ update_properties() {
 
 	propertyName=ranger.service.http.enabled
 	newPropertyValue="${policymgr_http_enabled}"
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+	propertyName=ranger.supportedcomponents
+	newPropertyValue="${policymgr_supportedcomponents}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 	propertyName=ranger.jpa.jdbc.user

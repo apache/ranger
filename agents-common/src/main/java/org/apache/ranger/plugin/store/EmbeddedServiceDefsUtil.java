@@ -21,7 +21,10 @@ package org.apache.ranger.plugin.store;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
@@ -43,6 +46,10 @@ public class EmbeddedServiceDefsUtil {
 	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
 
 
+	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
+	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr";
+	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
+	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
@@ -99,6 +106,7 @@ public class EmbeddedServiceDefsUtil {
 
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
+			supportedServiceDefs =getSupportedServiceDef();
 			/*
 			 * Maintaining the following service-def create-order is critical for the 
 			 * the legacy service-defs (HDFS/HBase/Hive/Knox/Storm) to be assigned IDs
@@ -172,10 +180,10 @@ public class EmbeddedServiceDefsUtil {
 		}
 
 		RangerServiceDef ret = null;
-
+		boolean createServiceDef = (CollectionUtils.isEmpty(supportedServiceDefs) || supportedServiceDefs.contains(serviceDefName));
 		try {
 			ret = store.getServiceDefByName(serviceDefName);
-			if(ret == null && createEmbeddedServiceDefs) {
+			if(ret == null && createEmbeddedServiceDefs && createServiceDef) {
 				ret = loadEmbeddedServiceDef(serviceDefName);
 
 				LOG.info("creating embedded service-def " + serviceDefName);
@@ -219,5 +227,28 @@ public class EmbeddedServiceDefsUtil {
 		}
 
 		return ret;
+	}
+
+	private Set<String> getSupportedServiceDef(){
+		Set<String> supportedServiceDef =new HashSet<String>();
+		try{
+			String ranger_supportedcomponents=RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
+			if(StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)){
+				ranger_supportedcomponents=DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
+			}
+			String[] supportedComponents=ranger_supportedcomponents.split(",");
+			if(supportedComponents!=null && supportedComponents.length>0){
+				for(String element:supportedComponents){
+					if(!StringUtils.isBlank(element)){
+						element=element.toLowerCase();
+						if(!supportedServiceDef.contains(element)){
+							supportedServiceDef.add(element);
+						}
+					}
+				}
+			}
+		}catch(Exception ex){
+		}
+		return supportedServiceDef;
 	}
 }

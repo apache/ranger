@@ -463,4 +463,8 @@
 		<value>rangerlogger</value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.supportedcomponents</name>
+		<value></value>
+	</property>
 </configuration>

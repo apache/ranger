@@ -271,4 +271,8 @@
 		<value></value>
 	</property>
 	<!-- Kerberos Properties ENDs-->
+	<property>
+		<name>ranger.supportedcomponents</name>
+		<value></value>
+	</property>
 </configuration>
