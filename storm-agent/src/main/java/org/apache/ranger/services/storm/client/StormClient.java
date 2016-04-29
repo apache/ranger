@@ -59,7 +59,7 @@ public class StormClient {
 	
 	private static final String errMessage =  " You can still save the repository and start creating "
 											  + "policies, but you would not be able to use autocomplete for "
-											  + "resource names. Check xa_portal.log for more info.";
+											  + "resource names. Check ranger_admin.log for more info.";
 
 	String stormUIUrl;
 	String userName;

@@ -29,7 +29,7 @@
 	</appender>
 
 	<appender name="sql_appender" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="file" value="${logdir}/xa_portal_sql_db_patch.log" />
+		<param name="file" value="${logdir}/ranger_admin_sql_db_patch.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">

@@ -28,7 +28,7 @@
 	</appender>
 	<!--
 	<appender name="daily_rolling_file" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="file" value="/xa_portal.log" />
+		<param name="file" value="/ranger_admin.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">
@@ -36,7 +36,7 @@
 		</layout>
 	</appender>
 	<appender name="sql_daily_rolling_file" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="file" value="xa_portal_sql.log" />
+		<param name="file" value="ranger_admin_sql.log" />
 		<param name="datePattern" value="'.'yyyy-MM-dd" />
 		<param name="append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">

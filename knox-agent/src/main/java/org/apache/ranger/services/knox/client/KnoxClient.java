@@ -69,7 +69,7 @@ public class KnoxClient {
 		List<String> topologyList = new ArrayList<String>();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if ( topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
 			topologyNameMatching = "";
 		}
@@ -160,7 +160,7 @@ public class KnoxClient {
 		List<String> serviceList = new ArrayList<String>();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if ( serviceNameMatching == null ||  serviceNameMatching.trim().isEmpty()) {
 			serviceNameMatching = "";
 		}
@@ -280,7 +280,7 @@ public class KnoxClient {
 
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 
@@ -313,7 +313,7 @@ public class KnoxClient {
 		}
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if ( configs != null && !configs.isEmpty()) {
 			String knoxUrl = configs.get("knox.url");
 			String knoxAdminUser = configs.get("username");
@@ -337,7 +337,7 @@ public class KnoxClient {
 		List<String> resultList = new ArrayList<String>();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 
 		try {
 			if (knoxClient == null) {

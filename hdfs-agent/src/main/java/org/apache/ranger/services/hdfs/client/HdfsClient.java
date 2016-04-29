@@ -68,7 +68,7 @@ public class HdfsClient extends BaseClient {
 		List<String> fileList = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		try {
 			String dirPrefix = (baseDir.endsWith("/") ? baseDir : (baseDir + "/")) ;
 			String filterRegEx = null;
@@ -242,7 +242,7 @@ public class HdfsClient extends BaseClient {
 			testconnMsg = "Unable to retrieve any files using given parameters, "
 				+ "You can still save the repository and start creating policies, "
 				+ "but you would not be able to use autocomplete for resource names. "
-				+ "Check xa_portal.log for more info. ";
+				+ "Check ranger_admin.log for more info. ";
       String additionalMsg = (validateConfigsMsg != null)  ?
         validateConfigsMsg : testconnMsg;
 			generateResponseDataMap(connectivityStatus, testconnMsg, additionalMsg,

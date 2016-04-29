@@ -121,7 +121,7 @@ public class TimedExecutor {
 		String msgDesc = "Unable to retrieve any files using given parameters, "
 				+ "You can still save the repository and start creating policies, "
 				+ "but you would not be able to use autocomplete for resource names. "
-				+ "Check xa_portal.log for more info. ";
+				+ "Check ranger_admin.log for more info. ";
 		HadoopException hpe = new HadoopException(e.getMessage(), e);
 		hpe.generateResponseDataMap(false, hpe.getMessage(e), msgDesc, null, null);
 		return hpe;

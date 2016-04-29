@@ -96,7 +96,7 @@ public class HBaseClient extends BaseClient {
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		boolean connectivityStatus = false;
 
 		HBaseClient connectionObj = new HBaseClient(dataSource,
@@ -127,7 +127,7 @@ public class HBaseClient extends BaseClient {
 		subj = getLoginSubject();
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if (subj != null) {
 			try {
 
@@ -232,7 +232,7 @@ public class HBaseClient extends BaseClient {
 		List<String> ret = null ;
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		
 		subj = getLoginSubject();
 		
@@ -334,7 +334,7 @@ public class HBaseClient extends BaseClient {
 		List<String> ret = null ;
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		
 		subj = getLoginSubject();
 		if (subj != null) {

@@ -109,7 +109,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if (con != null) {
 			Statement stat =  null ;
 			ResultSet rs = null ;
@@ -191,7 +191,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if (con != null) {
 			Statement stat =  null ;
 			ResultSet rs = null ;
@@ -304,7 +304,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		List<String> ret = new ArrayList<String>() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		if (con != null) {
 			
 			String columnNameMatchingRegEx = null ;
@@ -443,7 +443,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		String url =  prop.getProperty("jdbc.url") ;	
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 	
 		if (driverClassName != null) {
 			try {
@@ -627,7 +627,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		boolean connectivityStatus = false;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		List<String> testResult = null;
 		try {
 			connectionObj = new HiveClient(serviceName,	connectionProperties);

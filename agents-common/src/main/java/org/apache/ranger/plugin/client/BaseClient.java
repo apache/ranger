@@ -73,7 +73,7 @@ public abstract class BaseClient {
 		ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check xa_portal.log for more info.";
+				+ "resource names. Check ranger_admin.log for more info.";
 		try {
 			//Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
 			 String lookupPrincipal = SecureClientLogin.getPrincipal(configHolder.getLookupPrincipal(), java.net.InetAddress.getLocalHost().getCanonicalHostName());
