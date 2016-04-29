@@ -498,6 +498,13 @@ public class TestServiceDBStore {
 		serviceConfigDefObj.setType("1");
 		svcConfDefList.add(serviceConfigDefObj);
 
+		Mockito.when(
+				serviceDefService.populateRangerServiceConfigDefToXX(
+						Mockito.any(RangerServiceConfigDef.class), Mockito.any(XXServiceConfigDef.class), Mockito.any(XXServiceDef.class),
+						Mockito.eq(RangerServiceDefService.OPERATION_CREATE_CONTEXT))).thenReturn(serviceConfigDefObj);
+		Mockito.when(xServiceConfigDefDao.create(serviceConfigDefObj))
+				.thenReturn(serviceConfigDefObj);
+
 		List<XXResourceDef> resDefList = new ArrayList<XXResourceDef>();
 		XXResourceDef resourceDef = new XXResourceDef();
 		resourceDef.setAddedByUserId(Id);
