@@ -321,7 +321,7 @@
 
 	<!-- XXAccessTypeDef -->
 	<named-query name="XXAccessTypeDef.findByServiceDefId">
-		<query>select obj from XXAccessTypeDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXAccessTypeDef obj where obj.defId = :serviceDefId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXAccessTypeDef.findByNameAndServiceId">
@@ -331,7 +331,7 @@
 
 	<!-- XXPolicyConditionDef -->
 	<named-query name="XXPolicyConditionDef.findByServiceDefId">
-		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndName">
@@ -367,7 +367,7 @@
 
 	<!-- XXDataMaskTypeDef -->
 	<named-query name="XXDataMaskTypeDef.findByServiceDefId">
-		<query>select obj from XXDataMaskTypeDef obj where obj.defId = :serviceDefId</query>
+		<query>select obj from XXDataMaskTypeDef obj where obj.defId = :serviceDefId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXDataMaskTypeDef.findByNameAndServiceId">

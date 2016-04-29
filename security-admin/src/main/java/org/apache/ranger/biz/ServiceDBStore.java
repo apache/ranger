@@ -537,13 +537,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXEnumDef> xxEnums = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
 
 		XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
-		for (RangerServiceConfigDef config : configs) {
+		for (int i = 0; i < configs.size(); i++) {
+			RangerServiceConfigDef config = configs.get(i);
 			boolean found = false;
 			for (XXServiceConfigDef xConfig : xxConfigs) {
 				if (config.getItemId() != null && config.getItemId().equals(xConfig.getItemId())) {
 					found = true;
 					xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+					xConfig.setOrder(i);
 					xConfig = xxServiceConfigDao.update(xConfig);
 					config = serviceDefService.populateXXToRangerServiceConfigDef(xConfig);
 					break;
@@ -553,6 +555,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				XXServiceConfigDef xConfig = new XXServiceConfigDef();
 				xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
 						RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+				xConfig.setOrder(i);
 				xConfig = xxServiceConfigDao.create(xConfig);
 				config = serviceDefService.populateXXToRangerServiceConfigDef(xConfig);
 			}
@@ -614,13 +617,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXAccessTypeDefDao xxATDDao = daoMgr.getXXAccessTypeDef();
-		for (RangerAccessTypeDef access : accessTypes) {
+		for(int i = 0; i < accessTypes.size(); i++) {
+			RangerAccessTypeDef access = accessTypes.get(i);
 			boolean found = false;
 			for (XXAccessTypeDef xAccess : xxAccessTypes) {
 				if (access.getItemId() != null && access.getItemId().equals(xAccess.getItemId())) {
 					found = true;
 					xAccess = serviceDefService.populateRangerAccessTypeDefToXX(access, xAccess, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+					xAccess.setOrder(i);
 					xAccess = xxATDDao.update(xAccess);
 
 					Collection<String> impliedGrants = access.getImpliedGrants();
@@ -664,6 +669,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				XXAccessTypeDef xAccessType = new XXAccessTypeDef();
 				xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(access, xAccessType, createdSvcDef,
 						RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+				xAccessType.setOrder(i);
 				xAccessType = xxATDDao.create(xAccessType);
 
 				Collection<String> impliedGrants = access.getImpliedGrants();
@@ -698,13 +704,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXPolicyConditionDefDao xxPolCondDao = daoMgr.getXXPolicyConditionDef();
-		for (RangerPolicyConditionDef condition : policyConditions) {
+		for (int i = 0; i < policyConditions.size(); i++) {
+			RangerPolicyConditionDef condition = policyConditions.get(i);
 			boolean found = false;
 			for (XXPolicyConditionDef xCondition : xxPolicyConditions) {
 				if (condition.getItemId() != null && condition.getItemId().equals(xCondition.getItemId())) {
 					found = true;
 					xCondition = serviceDefService.populateRangerPolicyConditionDefToXX(condition, xCondition,
 							createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+					xCondition.setOrder(i);
 					xCondition = xxPolCondDao.update(xCondition);
 					condition = serviceDefService.populateXXToRangerPolicyConditionDef(xCondition);
 					break;
@@ -714,6 +722,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				XXPolicyConditionDef xCondition = new XXPolicyConditionDef();
 				xCondition = serviceDefService.populateRangerPolicyConditionDefToXX(condition, xCondition,
 						createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+				xCondition.setOrder(i);
 				xCondition = xxPolCondDao.create(xCondition);
 				condition = serviceDefService.populateXXToRangerPolicyConditionDef(xCondition);
 			}
@@ -742,13 +751,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
-		for (RangerContextEnricherDef context : contextEnrichers) {
+		for (int i = 0; i < contextEnrichers.size(); i++) {
+			RangerContextEnricherDef context = contextEnrichers.get(i);
 			boolean found = false;
 			for (XXContextEnricherDef xContext : xxContextEnrichers) {
 				if (context.getItemId() != null && context.getItemId().equals(xContext.getItemId())) {
 					found = true;
 					xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+					xContext.setOrder(i);
 					xContext = xxContextEnricherDao.update(xContext);
 					context = serviceDefService.populateXXToRangerContextEnricherDef(xContext);
 					break;
@@ -758,6 +769,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				XXContextEnricherDef xContext = new XXContextEnricherDef();
 				xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef,
 						RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+				xContext.setOrder(i);
 				xContext = xxContextEnricherDao.create(xContext);
 				context = serviceDefService.populateXXToRangerContextEnricherDef(xContext);
 			}
@@ -789,13 +801,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 					List<XXEnumElementDef> xxEnumEleDefs = xEnumEleDao.findByEnumDefId(xEnumDef.getId());
 					List<RangerEnumElementDef> enumEleDefs = enumDef.getElements();
 
-					for (RangerEnumElementDef eleDef : enumEleDefs) {
+					for (int i = 0; i < enumEleDefs.size(); i++) {
+						RangerEnumElementDef eleDef = enumEleDefs.get(i);
 						boolean foundEle = false;
 						for (XXEnumElementDef xEleDef : xxEnumEleDefs) {
 							if (eleDef.getItemId() != null && eleDef.getItemId().equals(xEleDef.getItemId())) {
 								foundEle = true;
 								xEleDef = serviceDefService.populateRangerEnumElementDefToXX(eleDef, xEleDef, xEnumDef,
 										RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+								xEleDef.setOrder(i);
 								xEleDef = xEnumEleDao.update(xEleDef);
 								break;
 							}
@@ -804,6 +818,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							XXEnumElementDef xElement = new XXEnumElementDef();
 							xElement = serviceDefService.populateRangerEnumElementDefToXX(eleDef, xElement, xEnumDef,
 									RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+							xElement.setOrder(i);
 							xElement = xEnumEleDao.create(xElement);
 						}
 					}
@@ -868,7 +883,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXResourceDef>         xxResourceDefs       = xxResDefDao.findByServiceDefId(serviceDefId);
 
 		// create or update dataMasks
-		for (RangerDataMaskTypeDef dataMask : dataMasks) {
+		for(int i = 0; i < dataMasks.size(); i++) {
+			RangerDataMaskTypeDef dataMask = dataMasks.get(i);
 			boolean found = false;
 			for (XXDataMaskTypeDef xxDataMask : xxDataMaskTypes) {
 				if (xxDataMask.getItemId() != null && xxDataMask.getItemId().equals(dataMask.getItemId())) {
@@ -879,6 +895,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					found = true;
 					xxDataMask = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xxDataMask, createdSvcDef,
 							RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+					xxDataMask.setOrder(i);
 					xxDataMask = dataMaskTypeDao.update(xxDataMask);
 					dataMask = serviceDefService.populateXXToRangerDataMaskTypeDef(xxDataMask);
 					break;
@@ -892,6 +909,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				XXDataMaskTypeDef xxDataMask = new XXDataMaskTypeDef();
 				xxDataMask = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xxDataMask, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+				xxDataMask.setOrder(i);
 				xxDataMask = dataMaskTypeDao.create(xxDataMask);
 			}
 		}
@@ -917,7 +935,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for(RangerAccessTypeDef accessType : dataMaskAccessTypes) {
 			if(! isAccessTypeInList(accessType.getName(), xxAccessTypeDefs)) {
 				throw restErrorUtil.createRESTException("accessType with name: "
-						+ accessType.getName() + " does not exists", MessageEnums.DATA_NOT_FOUND);
+						+ accessType.getName() + " does not exist", MessageEnums.DATA_NOT_FOUND);
 			}
 		}
 
