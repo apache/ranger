@@ -54,13 +54,7 @@
                     3. After the above build command execution, you should see the following TAR files in the target folder:
                 </p>
                 <source>
-        ranger-%version-number%-admin.tar.gz
-        ranger-%version-number%-usersync.tar.gz
-        ranger-%version-number%-hdfs-plugin.tar.gz
-        ranger-%version-number%-hive-plugin.tar.gz
-        ranger-%version-number%-hbase-plugin.tar.gz
-        ranger-%version-number%-knox-plugin.tar.gz
-        ranger-%version-number%-storm-plugin.tar.gz
+        ranger-%version-number%-%module-name%.tar.gz
                 </source>
             <!-- in addition to XHTML, any number of subsections can be within a section -->
         </subsection>
@@ -92,59 +86,32 @@
             <p>
                 4.  Create a TAR source file using the following command:
                 <source>
-        $ tar zcf %relDir%/ranger-%version-number%.tar.gz \
-        --exclude="./.git" --exclude="./.gitignore" --exclude="./.settings/*" \
-        --exclude="./.classpath" --exclude="./.project" --exclude="./winpkg/*" \
-        --exclude="./hdfs-agent/dependency-reduced-pom.xml"  .
+        $ ant -f release-build.xml -Dranger-release-version=%version-number%
                 </source>
             </p>
             <p>
-               5. To create a prefix folder as ranger-%version-number%, do the following commands:
-                   <source>
-        $ mkdir %relDir%/%tempFolderName%
-        $ cd %relDir%/%tempFolderName%
-        $ mkdir ranger-%version-number%
-        $ cd ranger-%version-number%
-        $ tar xf %relDir%/ranger-%version-number%.tar.gz
-        $ find . -name '.DS_Store' -exec rm -f {} \;   # required if run on MacOS
-        $ cd %relDir%/%tempFolderName%
-        $ rm %relDir%/ranger-%version-number%.tar.gz
-        $ tar zcf %relDir%/ranger-%version-number%.tar.gz ./ranger-%version-number%
-                </source>
-            </p>
-            <p>
-                6. To create a signature for the %relDir%/ranger-%version-number%.tar.gz, do the following commands:
-                    <source>   $ gpg --armor --output %relDir%/ranger-%version-number%.tar.gz.asc --detach-sig  %relDir%/ranger-%version-number%.tar.gz
-</source>
-        </p>
-            
-            <p>
-               7. To create MD5/SHA hash for the %relDir%/ranger-%version-number%.tar.gz, do the following commands:
-            <source>  $ gpg --print-mds %relDir%/ranger-%version-number%.tar.gz > %relDir%/ranger-%version-number%.tar.gz.mds</source>
-            </p>
-            <p>
-               8. Now, the following files are ready to be published for release:
+               5. Now, the following files are ready to be published for release:
                 <source>
-        %relDir%/ranger-%version-number%.tar.gz
-        %relDir%/ranger-%version-number%.tar.gz.asc
-        %relDir%/ranger-%version-number%.tar.gz.mds
+        ./target/apache-ranger-incubating-%version-number%.tar.gz
+        ./target/apache-ranger-incubating-%version-number%.tar.gz.asc
+        ./target/apache-ranger-incubating-%version-number%.tar.gz.mds
                 </source>
             </p>
             </subsection>
 
         <subsection name = "Verifying Build (also called as a Release)">
             <p>
-                1. Download the release source file, ranger-%build-version%.tar.gz  (from URL provided in the release email)
+                1. Download the release source file, apache-ranger-incubating-%version-number%.tar.gz  (from URL provided in the release email)
            
-            <ul>2. Download the PGP signature for, ranger-%build-version%.tar.gz which usaully named as ranger-%build-version%.tar.gz.asc(from URL provided in the release email)</ul>
+            <ul>2. Download the PGP signature for, apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.asc (from URL provided in the release email)</ul>
             <ul>3. Execute the following command to verify the release </ul>
         </p>
-        <source> $ gpg --verify ranger-%build-version%.tar.gz.asc ranger-%build-version%.tar.gz </source>
+        <source> $ gpg --verify apache-ranger-incubating-%version-number%.tar.gz.asc apache-ranger-incubating-%version-number%.tar.gz </source>
         
         <p>
-            4. Download MD5/SHA hash for ranger-%build-version%.tar.gz which usaully named as ranger-%build-version%.tar.gz.mds (from URL provided in the release email)
-            <source>$ gpg --print-mds ranger-%build-version%.tar.gz </source>
-            Compare MD5, SHA hash generated from the above command and the signature available in the ranger-%build-version%.tar.gz.mds.
+            4. Download MD5/SHA hash for apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.mds (from URL provided in the release email)
+            <source>$ gpg --print-mds apache-ranger-incubating-%version-number%.tar.gz </source>
+            Compare MD5, SHA hash generated from the above command and the signature available in the apache-ranger-incubating-%version-number%.tar.gz.mds.
         </p>
 
         </subsection>
