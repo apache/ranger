@@ -103,11 +103,15 @@
             <p>
                 1. Download the release source file, apache-ranger-incubating-%version-number%.tar.gz  (from URL provided in the release email)
            
-            <ul>2. Download the PGP signature for, apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.asc (from URL provided in the release email)</ul>
-            <ul>3. Execute the following command to verify the release </ul>
-        </p>
+			</p>
+			<p>
+            	2. Download the PGP signature for, apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.asc (from URL provided in the release email)
+			</p>
+			<p>
+            	3. Execute the following command to verify the release
         <source> $ gpg --verify apache-ranger-incubating-%version-number%.tar.gz.asc apache-ranger-incubating-%version-number%.tar.gz </source>
         
+			</p>
         <p>
             4. Download MD5/SHA hash for apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.mds (from URL provided in the release email)
             <source>$ gpg --print-mds apache-ranger-incubating-%version-number%.tar.gz </source>
