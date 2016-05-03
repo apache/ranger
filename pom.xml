@@ -509,7 +509,6 @@
                         <exclude>**/.classpath/**</exclude>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
-                        <exclude>**/bin/**</exclude>
                         <exclude>**/CHANGES</exclude>
                         <exclude>**/ISSUES</exclude>
                         <exclude>**/patchprocess/**</exclude>
