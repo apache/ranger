@@ -35,8 +35,8 @@ The current stable release is Apache Ranger 0.5.2:
 </p>
 <p>
 <a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz">apache-ranger-incubating-0.5.2.tar.gz</a>
-(<a href="http://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.asc">PGP</a>)
-(<a href="http://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.mds">Digests</a>)
+(<a href="https://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/incubator/ranger/0.5.2-incubating/apache-ranger-incubating-0.5.2.tar.gz.mds">Digests</a>)
 </p>
 </li>
 <li>
@@ -45,11 +45,34 @@ The older branch release is Apache Ranger 0.4.0:
 </p>
 <p>
 <a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz">ranger-0.4.0-incubating.tar.gz</a>
-(<a href="http://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.asc">PGP</a>)
-(<a href="http://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.mds">Digests</a>)
+(<a href="https://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.mds">Digests</a>)
 </p>
 </li>
 </ul>
+</subsection>
+<subsection name="Verifying Releases">
+<p>
+When downloading from a mirror please check the SHA1/MD5 checksums as well
+as verifying the OpenPGP compatible signature available from the main Apache
+site. The <a href="https://www.apache.org/dist/incubator/ranger/KEYS">KEYS</a>
+file contains the public keys used for signing the release. It is recommended
+that a web of trust is used to confirm the identity of these keys.
+</p>
+<p>
+You can check the OpenPGP compatible signature with GnuPG via:
+<ul>
+<li>gpg --import KEYS</li>
+<li>gpg --verify apache-ranger-*.tar.gz.asc</li>
+</ul>
+</p>
+<p>
+The digests are stored in the file called 'apache-ranger-*.tar.gz.mds'. You can verify the digests by using a tool like md5sum or sha1sum as follows:
+<ul>
+<li>md5sum apache-ranger-*.tar.gz (and compare output to the relevant digest in apache-ranger-*.tar.gz.mds)</li>
+<li>sha1sum apache-ranger-*.tar.gz (and compare output to the relevant digest in apache-ranger-*.tar.gz.mds)</li>
+</ul>
+</p>
 </subsection>
 <subsection name="Archive of old releases">
 <p>
