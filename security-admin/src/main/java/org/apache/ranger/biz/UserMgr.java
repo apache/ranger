@@ -1118,13 +1118,6 @@ public class UserMgr {
 
 	public VXPortalUser createUser(VXPortalUser userProfile) {
 		checkAdminAccess();
-		String emailAddress = userProfile.getEmailAddress();
-		if (!stringUtil.isEmpty(emailAddress)) {
-			if(!stringUtil.validateEmail(emailAddress)){
-				logger.info("Invalid email address:" + emailAddress);
-				throw restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA);
-			}
-		}
 		XXPortalUser xXPortalUser = this.createUser(userProfile,
 				RangerCommonEnums.STATUS_ENABLED);
 		return mapXXPortalUserVXPortalUser(xXPortalUser);
@@ -1146,10 +1139,6 @@ public class UserMgr {
 			xXPortalUser = this.findByLoginId(loginId);
 			if (xXPortalUser == null) {
 				if (!stringUtil.isEmpty(emailAddress)) {
-					if(!stringUtil.validateEmail(emailAddress)){
-						logger.info("Invalid email address:" + emailAddress);
-						throw restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA);
-					}
 					xXPortalUser = this.findByEmailAddress(emailAddress);
 					if (xXPortalUser == null) {
 						xXPortalUser = this.createUser(userProfile,
