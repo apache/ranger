@@ -73,7 +73,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 
-	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 2000;
+	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
 	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 
