@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 
 public interface RangerAccessResource {
 	String RESOURCE_SEP = "/";
+	String RESOURCE_NAME_VAL_SEP = "=";
 
 	String getOwnerUser();
 
@@ -41,6 +42,8 @@ public interface RangerAccessResource {
 	String getLeafName();
 
 	String getAsString();
+
+	String getCacheKey();
 
 	Map<String, String> getAsMap();
 

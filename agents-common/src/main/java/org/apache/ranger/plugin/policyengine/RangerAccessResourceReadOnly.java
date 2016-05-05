@@ -64,6 +64,8 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
 	public String getAsString() { return source.getAsString(); }
 
+	public String getCacheKey() { return source.getCacheKey(); }
+
 	public Map<String, String> getAsMap() { return map; }
 
 	public RangerAccessResource getReadOnlyCopy() { return this; }

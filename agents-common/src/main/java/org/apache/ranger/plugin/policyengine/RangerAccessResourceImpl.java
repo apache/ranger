@@ -34,6 +34,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	private String              ownerUser        = null;
 	private Map<String, String> elements         = null;
 	private String              stringifiedValue = null;
+	private String              stringifiedCacheKeyValue = null;
 	private String              leafName         = null;
 	private RangerServiceDef    serviceDef       = null;
 
@@ -106,13 +107,13 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 		}
 
 		// reset, so that these will be computed again with updated elements
-		stringifiedValue = leafName = null;
+		stringifiedValue = stringifiedCacheKeyValue = leafName = null;
 	}
 
 	@Override
 	public void setServiceDef(final RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
-		this.stringifiedValue = this.leafName = null;
+		this.stringifiedValue = this.stringifiedCacheKeyValue = this.leafName = null;
 	}
 
 	@Override
@@ -167,6 +168,35 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 
 				if(sb.length() > 0) {
 					ret = stringifiedValue = sb.toString();
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	@Override
+	public String getCacheKey() {
+		String ret = stringifiedCacheKeyValue;
+
+		if(ret == null) {
+			if(serviceDef != null && serviceDef.getResources() != null) {
+				StringBuilder sb = new StringBuilder();
+
+				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+					if(resourceDef == null || !exists(resourceDef.getName())) {
+						continue;
+					}
+
+					if(sb.length() > 0) {
+						sb.append(RESOURCE_SEP);
+					}
+
+					sb.append(resourceDef.getName()).append(RESOURCE_NAME_VAL_SEP).append(getValue(resourceDef.getName()));
+				}
+
+				if(sb.length() > 0) {
+					ret = stringifiedCacheKeyValue = sb.toString();
 				}
 			}
 		}
