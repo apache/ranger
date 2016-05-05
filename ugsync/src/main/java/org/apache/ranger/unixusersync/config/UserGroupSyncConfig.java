@@ -69,8 +69,9 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun" ;
 	
 	public static final String UGSYNC_SOURCE_FILE_PROC =	"ranger.usersync.filesource.file";
-	
-	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiterer";
+
+	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiter";
+	public static final String UGSYNC_SOURCE_FILE_DELIMITERER = "ranger.usersync.filesource.text.delimiterer";
 	
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file" ;
 
@@ -344,6 +345,10 @@ public class UserGroupSyncConfig  {
 	
 	public String getUserSyncFileSourceDelimiter(){
 		String val = prop.getProperty(UGSYNC_SOURCE_FILE_DELIMITER) ;
+		if (val == null) {
+			val = prop.getProperty(UGSYNC_SOURCE_FILE_DELIMITERER);
+		}
+
 		if ( val == null) {
 			val = DEFAULT_USER_GROUP_TEXTFILE_DELIMITER;
 		}
