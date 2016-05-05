@@ -20,6 +20,7 @@
 package org.apache.ranger.usergroupsync;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.apache.directory.server.annotations.CreateLdapConnectionPool;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
@@ -39,7 +40,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.directory.server.core.annotations.CreateIndex;
-import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
 
 @RunWith(FrameworkRunner.class)
 @CreateDS(name = "classDS",
@@ -482,6 +482,38 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		ldapBuilder.updateSink(sink);
 		assertEquals(1, sink.getTotalUsers());
 		assertEquals(3, sink.getTotalGroups());
+	}
+
+	@Test
+	public void testUpdateSinkWithUserGroupMapping() throws Throwable {
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+
+		config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
+		config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME, "s/[=]/_/g");
+
+		ldapBuilder.init();
+		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(10, sink.getTotalGroups());
+
+		// no user should have an = character because of the mapping
+		for (String user : sink.getAllUsers()) {
+			assertFalse(user.contains("="));
+		}
+
+		// no group should have an = character because of the mapping
+		for (String group : sink.getAllGroups()) {
+			assertFalse(group.contains("="));
+		}
 	}
 
 	@After

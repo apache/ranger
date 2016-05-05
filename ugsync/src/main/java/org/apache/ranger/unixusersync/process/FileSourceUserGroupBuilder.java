@@ -32,6 +32,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
@@ -39,11 +40,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
-public class FileSourceUserGroupBuilder  implements UserGroupSource {
+public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	private static final Logger LOG = Logger.getLogger(FileSourceUserGroupBuilder.class) ;
 
 	private Map<String,List<String>> user2GroupListMap     = new HashMap<String,List<String>>();
-	private UserGroupSyncConfig      config                = UserGroupSyncConfig.getInstance();
 	private String                   userGroupFilename     = null;
 	private long                     usergroupFileModified = 0 ;
 
@@ -66,6 +66,10 @@ public class FileSourceUserGroupBuilder  implements UserGroupSource {
 		if ( LOG.isDebugEnabled()) {
 			filesourceUGBuilder.print(); 
 		}
+	}
+
+	public FileSourceUserGroupBuilder() {
+		super();
 	}
 	
 	@Override
@@ -91,8 +95,21 @@ public class FileSourceUserGroupBuilder  implements UserGroupSource {
 		buildUserGroupInfo();
 
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-		    String       user   = entry.getKey();
+		    String user = entry.getKey();
+
+			if (userNameRegExInst != null) {
+				user = userNameRegExInst.transform(user);
+			}
+
 		    List<String> groups = entry.getValue();
+
+			if (groupNameRegExInst != null) {
+				List<String> mappedGroups = new ArrayList<>();
+				for (String group : groups) {
+					mappedGroups.add(groupNameRegExInst.transform(group));
+				}
+				groups = mappedGroups;
+			}
 
 		    sink.addOrUpdateUser(user, groups);
 		}

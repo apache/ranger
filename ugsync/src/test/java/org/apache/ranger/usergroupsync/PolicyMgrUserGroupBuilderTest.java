@@ -26,32 +26,29 @@ import java.util.Set;
 import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
 
 public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
-        private static int totalUsers = 0;
-        //private static int totalGroups = 0;
         private Set<String> allGroups;
+        private Set<String> allUsers;
 
         @Override
         public void init() throws Throwable {
-                // TODO Auto-generated method stub
-                totalUsers = 0;
                 allGroups = new HashSet<>();
+                allUsers = new HashSet<>();
         }
 
         @Override
         public void addOrUpdateUser(String user, List<String> groups) {
-                totalUsers++;
                 allGroups.addAll(groups);
+                allUsers.add(user);
                 //System.out.println("Username: " + user + " and associated groups: " + groups);
         }
         
         @Override
         public void addOrUpdateGroup(String group) {
-                //totalGroups++;
                 allGroups.add(group);
         }
 
         public int getTotalUsers() {
-                return totalUsers;
+                return allUsers.size();
         }
 
         public int getTotalGroups() {
@@ -59,4 +56,11 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 return allGroups.size();
         }
 
+        public Set<String> getAllGroups() {
+                return allGroups;
+        }
+
+        public Set<String> getAllUsers() {
+                return allUsers;
+        }
 }

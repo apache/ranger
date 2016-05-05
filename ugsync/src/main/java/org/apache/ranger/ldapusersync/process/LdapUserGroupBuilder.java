@@ -47,17 +47,14 @@ import javax.naming.ldap.StartTlsResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.usergroupsync.Mapper;
+import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.apache.ranger.usergroupsync.UserGroupSource;
 
-public class LdapUserGroupBuilder implements UserGroupSource {
+public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	
 	private static final Logger LOG = Logger.getLogger(LdapUserGroupBuilder.class);
 	
 	private static final int PAGE_SIZE = 500;
-	
-	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
   private String ldapUrl;
   private String ldapBindDn;
@@ -100,9 +97,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private boolean groupNameLowerCaseFlag = false ;
 
   private boolean  groupUserMapSyncEnabled = false;
-  
-  Mapper userNameRegExInst = null;
-  Mapper groupNameRegExInst = null;
+
   private Map<String, UserInfo> userGroupMap;
   
 	public static void main(String[] args) throws Throwable {
@@ -111,6 +106,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	}
 	
 	public LdapUserGroupBuilder() {
+		super();
 		LOG.info("LdapUserGroupBuilder created") ;
 		
 		String userNameCaseConversion = config.getUserNameCaseConversion() ;
@@ -132,41 +128,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		    groupNameCaseConversionFlag = true ;
 		    groupNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion) ;
 		}
-		
-		String mappingUserNameHandler = config.getUserSyncMappingUserNameHandler();
-		try {
-			if (mappingUserNameHandler != null) {
-				Class<Mapper> regExClass = (Class<Mapper>)Class.forName(mappingUserNameHandler);
-				userNameRegExInst = regExClass.newInstance();
-				if (userNameRegExInst != null) {
-					userNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_USERNAME);
-				} else {
-					LOG.error("RegEx handler instance for username is null!");
-				}
-			}
-		} catch (ClassNotFoundException cne) {
-			LOG.error("Failed to load " + mappingUserNameHandler + " " + cne);
-		} catch (Throwable te) {
-			LOG.error("Failed to instantiate " + mappingUserNameHandler + " " + te);
-		}
-
-		String mappingGroupNameHandler = config.getUserSyncMappingGroupNameHandler();
-		try {
-			if (mappingGroupNameHandler != null) {
-				Class<Mapper> regExClass = (Class<Mapper>)Class.forName(mappingGroupNameHandler);
-				groupNameRegExInst = regExClass.newInstance();
-				if (groupNameRegExInst != null) {
-					groupNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME);
-				} else {
-					LOG.error("RegEx handler instance for groupname is null!");
-				}
-			}
-		} catch (ClassNotFoundException cne) {
-			LOG.error("Failed to load " + mappingGroupNameHandler + " " + cne);
-		} catch (Throwable te) {
-			LOG.error("Failed to instantiate " + mappingGroupNameHandler + " " + te);
-		}
-		
 	}
 
 	@Override
