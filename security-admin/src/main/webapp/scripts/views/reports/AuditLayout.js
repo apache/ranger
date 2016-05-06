@@ -293,6 +293,7 @@ define(function(require) {
 						switch (facet) {
 							case 'Service Name':
 								var serviceList 	= new RangerServiceList();
+								serviceList.setPageSize(100);
 								serviceList.fetch().done(function(){
 									callback(serviceList.map(function(model){return model.get('name');}));
 								});

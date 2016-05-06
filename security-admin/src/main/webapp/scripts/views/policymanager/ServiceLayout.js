@@ -98,6 +98,7 @@ define(function(require){
 		},
 
 		initializeServices : function(){
+			this.services.setPageSize(100);
 			this.services.fetch({
 			   cache : false,
 			   async : false

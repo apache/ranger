@@ -173,13 +173,11 @@ define(function(require) {
 					} else {
 						that.model.unset(name+'Name');
 					}
-					that.toggleAddButton(e);
 					return;
 				}
 				if(!_.isUndefined(e.added)){
 					var nameList = _.map($(e.currentTarget).select2("data"), function(obj){return obj.text});
 					that.model.set(name+'Name',nameList.toString());
-					that.toggleAddButton(e);
 				}
 			});
 		},
@@ -520,7 +518,6 @@ define(function(require) {
 		evDelete : function(){
 			var that = this;
 			this.collection.remove(this.model);
-			this.toggleAddButton();
 		},
 		evClickTD : function(e){
 			var $el = $(e.currentTarget);
@@ -551,34 +548,6 @@ define(function(require) {
 				permList = _.map(this.model.attributes._vPermList,function(obj){return obj.permType;});
 			perms = _.map(perms,function(obj){return obj.permType;});
 			XAUtil.checkDirtyField(permList, perms, this.$el);
-		},
-		toggleAddButton : function(e){
-			var grpTemp = [], usrTemp = [];
-			this.collection.each(function(m){
-				if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
-					grpTemp.push.apply(grpTemp, m.get('groupName').split(','));
-				}
-				if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
-					usrTemp.push.apply(usrTemp, m.get('userName').split(','));
-				}	
-			});
-			if(!_.isUndefined(e)){
-				if( !_.isUndefined(e.added)){
-					if((grpTemp.length ) == this.groupList.length && ((usrTemp.length) == this.userList.length)){
-						$('[data-action="addGroup"]').hide();
-					} else {
-						$('[data-action="addGroup"]').show();
-					}
-				} 
-				if(!_.isUndefined(e.removed))
-					$('[data-action="addGroup"]').show();
-			} else {
-				if((grpTemp.length ) == this.groupList.length && ((usrTemp.length) == this.userList.length)){
-					$('[data-action="addGroup"]').hide();
-				} else {
-					$('[data-action="addGroup"]').show();
-				}
-			}
 		},
 		policyCondtionChange :function(e){
 			if(!_.isEmpty($(e.currentTarget).val()) && !_.isEmpty(this.policyConditions)){
@@ -717,29 +686,12 @@ define(function(require) {
 				this.collection.add(new Backbone.Model());
 		},
 		onRender : function(){
+			this.makePolicyItemSortable();
 		},
 
 		addNew : function(){
 			var that =this;
 			this.collection.add(new Backbone.Model());
-		},
-		toggleAddButton : function(){
-			var groupNames=[], userNames=[];
-			this.collection.each(function(m){
-				if(!_.isUndefined(m.get('groupName'))){
-					var temp = m.get('groupName').split(',');
-					groupNames.push.apply(groupNames,temp);
-				}
-				if(!_.isUndefined(m.get('userName'))){
-					var temp = m.get('userName').split(',');
-					userNames.push.apply(userNames,temp);
-				}
-			});
-			if(groupNames.length == this.groupList.length && userNames.length == this.userList.length ){
-				this.$('button[data-action="addGroup"]').hide();
-			} else {
-				this.$('button[data-action="addGroup"]').show();
-			}
 		},
 		getPermHeaders : function(){
 			var permList = [];
@@ -780,6 +732,22 @@ define(function(require) {
 					this.accessTypes =  _.map(rowFilterDef.accessTypes, function(m){return _.findWhere(this.accessTypes, {'name' : m.name });}, this);
 				}
 			}
+		},
+		makePolicyItemSortable : function(){
+			var that = this, draggedModel;
+			this.$el.find(".js-formInput" ).sortable({
+				placeholder: "ui-state-highlight",
+				start : function(event, ui){
+					var row = ui.item[0].rowIndex - 1;
+					draggedModel = that.collection.at(row);
+				},
+				stop : function(event, ui){
+					var row = ui.item[0].rowIndex -1;
+					that.collection.remove(draggedModel, { silent : true});
+					that.collection.add(draggedModel ,{ at: row, silent : true });
+					that.$el.find(ui.item[0]).addClass("dirtyField");
+				},
+			});
 		}
 	});
 

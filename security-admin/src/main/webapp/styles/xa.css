@@ -1918,3 +1918,22 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
 .controls-margin {
 	margin-left: 90px !important;
 }
+.permissionItemSortable > tr > td:first-child {
+  padding-left: 20px;
+  position: relative;
+}
+.permissionItemSortable > tr:not(.ui-state-highlight) > td:first-child:after {
+  content: '';
+  position: absolute;
+   box-sizing: border-box;
+   left: 5px;
+   top: 10%;
+   height: 80%;
+   width: 6px;
+   border: 2px dotted rgba(0,0,0,0.25);
+   background: transparent;
+   cursor: move;
+}
+.permissionItemSortable > tr:hover > td:first-child:after {
+  border-color: rgba(0,0,0,0.5);
+}
