@@ -91,6 +91,9 @@ public class KmsKeyMgr {
 	static final String NAME_RULES = "hadoop.security.auth_to_local";
 	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";	
 	private static final String KERBEROS_TYPE = "kerberos";
+    private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
+    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
+    static final String HOST_NAME = "ranger.service.host";
     
 	@Autowired
 	ServiceDBStore svcStore;	
@@ -537,8 +540,13 @@ public class KmsKeyMgr {
     		KerberosName.setRules(nameRules);
     	}
 	    Subject sub = new Subject();
+	    String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 	    if (checkKerberos()) {
-	    		sub = SecureClientLogin.loginUserWithPassword(userName, password);	    
+	    	if(SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB))){
+	    		sub = SecureClientLogin.loginUserFromKeytab(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB), nameRules);
+	    	}else{
+	    		sub = SecureClientLogin.loginUserWithPassword(userName, password);
+	    	}
 		} else {
 			sub = SecureClientLogin.login(userName);
 		}

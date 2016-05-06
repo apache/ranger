@@ -43,6 +43,8 @@ public class HadoopConfigHolder  {
 	public static final String RANGER_LOGIN_PASSWORD = "password" ;
 	public static final String RANGER_LOOKUP_PRINCIPAL = "lookupprincipal";
 	public static final String RANGER_LOOKUP_KEYTAB = "lookupkeytab";
+	public static final String RANGER_PRINCIPAL = "rangerprincipal";
+	public static final String RANGER_KEYTAB = "rangerkeytab";
 	public static final String RANGER_NAME_RULES = "namerules";
 	public static final String RANGER_AUTH_TYPE = "authtype";
 	public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";

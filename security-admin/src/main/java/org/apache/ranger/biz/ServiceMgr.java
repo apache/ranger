@@ -59,6 +59,8 @@ public class ServiceMgr {
 	
 	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
 	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
+    private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
+    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
 	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
 	private static final String KERBEROS_TYPE = "kerberos";
 	static final String NAME_RULES = "hadoop.security.auth_to_local";
@@ -85,13 +87,23 @@ public class ServiceMgr {
 		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
+		String rangerkeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
 		
 		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
-				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
+			}
+		}
+		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
+			if(service != null && service.getConfigs() != null){
+				service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_KEYTAB, rangerkeytab);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
 			}
 		}
 		
@@ -128,6 +140,8 @@ public class ServiceMgr {
 		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
+		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
+		String rangerkeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
 		
 		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 			if(service != null && service.getConfigs() != null){
@@ -135,6 +149,14 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
+			}
+		}
+		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
+			if(service != null && service.getConfigs() != null){
+				service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_KEYTAB, rangerkeytab);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
 			}
 		}
 		

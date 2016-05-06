@@ -68,17 +68,17 @@ public class KMSClient {
 	String provider;
 	String username;
 	String password;
-	String lookupPrincipal;
-	String lookupKeytab;
+	String rangerPrincipal;
+	String rangerKeytab;
 	String nameRules;
 	String authType;
 
-	public KMSClient(String provider, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String authType) {
+	public KMSClient(String provider, String username, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType) {
 		this.provider = provider;
 		this.username = username;
 		this.password = password;
-		this.lookupPrincipal = lookupPrincipal;
-		this.lookupKeytab = lookupKeytab;
+		this.rangerPrincipal = rangerPrincipal;
+		this.rangerKeytab = rangerKeytab;
 		this.nameRules = nameRules;
 		this.authType = authType;
 		
@@ -177,14 +177,14 @@ public class KMSClient {
 					LOG.info("Init Login: security not enabled, using username");
 					sub = SecureClientLogin.login(username);					
 				}else{										
-					if(!StringUtils.isEmpty(lookupPrincipal) && !StringUtils.isEmpty(lookupKeytab)){
-						LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
+					if(!StringUtils.isEmpty(rangerPrincipal) && !StringUtils.isEmpty(rangerKeytab)){
+						LOG.info("Init Lookup Login: security enabled, using rangerPrincipal/rangerKeytab");
 						if(StringUtils.isEmpty(nameRules)){
 							nameRules = "DEFAULT";
 						}
-						String shortName = new HadoopKerberosName(lookupPrincipal).getShortName();
+						String shortName = new HadoopKerberosName(rangerPrincipal).getShortName();
 						uri = uri.concat("?doAs="+shortName);						
-						sub = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
+						sub = SecureClientLogin.loginUserFromKeytab(rangerPrincipal, rangerKeytab, nameRules);
 					}
 					else{
 						LOG.info("Init Login: using username/password");
@@ -348,12 +348,12 @@ public class KMSClient {
 			String kmsUrl = configs.get("provider");
 			String kmsUserName = configs.get("username");
 			String kmsPassWord = configs.get("password");
-			String lookupPrincipal = configs.get("lookupprincipal");
-			String lookupKeytab = configs.get("lookupkeytab");
+			String rangerPrincipal = configs.get("rangerprincipal");
+			String rangerKeytab = configs.get("rangerkeytab");
 			String nameRules = configs.get("namerules");
 			String authType = configs.get("authtype");
 			
-			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord, lookupPrincipal, lookupKeytab, nameRules, authType);
+			kmsClient = new KMSClient(kmsUrl, kmsUserName, kmsPassWord, rangerPrincipal, rangerKeytab, nameRules, authType);
 
 		}
 		return kmsClient;

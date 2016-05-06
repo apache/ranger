@@ -174,5 +174,19 @@
   	<name>hadoop.kms.security.authorization.manager</name>
   	<value>org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer</value>
   </property>
-
+  
+  <property>
+  	<name>hadoop.kms.proxyuser.rangeradmin.groups</name>
+  	<value>*</value>
+  </property>
+  
+  <property>
+  	<name>hadoop.kms.proxyuser.rangeradmin.hosts</name>
+  	<value>*</value>
+  </property>
+  
+  <property>
+  	<name>hadoop.kms.proxyuser.rangeradmin.users</name>
+  	<value>*</value>
+  </property>
 </configuration>

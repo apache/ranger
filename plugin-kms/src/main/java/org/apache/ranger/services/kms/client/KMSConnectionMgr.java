@@ -27,19 +27,19 @@ public class KMSConnectionMgr {
 
 	public static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
     
-	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String authType) {
+	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType) {
 		KMSClient kmsClient = null;
         if (kmsURL == null || kmsURL.isEmpty()) {
         	LOG.error("Can not create KMSClient: kmsURL is empty");
-        } else if(StringUtils.isEmpty(lookupPrincipal)){ 
+        } else if(StringUtils.isEmpty(rangerPrincipal)){ 
         	if(userName == null || userName.isEmpty()) {
         		LOG.error("Can not create KMSClient: kmsuserName is empty");
         	} else if (password == null || password.isEmpty()) {
         		LOG.error("Can not create KMSClient: kmsPassWord is empty");
         	}
-        	kmsClient =  new KMSClient(kmsURL, userName, password, lookupPrincipal, lookupKeytab, nameRules, authType);
+        	kmsClient =  new KMSClient(kmsURL, userName, password, rangerPrincipal, rangerKeytab, nameRules, authType);
         } else {
-            kmsClient =  new KMSClient(kmsURL, userName, password, lookupPrincipal, lookupKeytab, nameRules, authType);
+            kmsClient =  new KMSClient(kmsURL, userName, password, rangerPrincipal, rangerKeytab, nameRules, authType);
         }
         return kmsClient;
     }

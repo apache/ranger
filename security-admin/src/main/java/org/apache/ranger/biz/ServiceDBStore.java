@@ -99,9 +99,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
 	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
+	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
+    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
 	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
 	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
 	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
+	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	
 	private static final String KERBEROS_TYPE = "kerberos";
 
@@ -153,8 +156,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Autowired
     RangerFactory factory;
-
-    
+        
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
 	
@@ -2294,6 +2296,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy, int num) throws Exception {
+		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
+		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
+		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
+		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
+		
 		RangerPolicy policy = new RangerPolicy();
 		String policyName=createdService.getName()+"-"+num+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
 		
@@ -2312,13 +2320,44 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			List<String> users = new ArrayList<String>();
 			users.add(vXUser.getName());
-			VXUser vXLookupUser = getLookupUser();
-			if(vXLookupUser != null){
+			VXUser vXLookupUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
+			
+			XXService xService = daoMgr.getXXService().findByName(createdService.getName());
+			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+			if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)){
+				VXUser vXAdminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
+				if(vXAdminUser != null){
+					users.add(vXAdminUser.getName());
+				}	
+			}else if(vXLookupUser != null){
 				users.add(vXLookupUser.getName());
+			}else{
+				// do nothing
 			}
-			UserSessionBase usb = ContextUtil.getCurrentUserSession();
-			if (usb != null && usb.isSpnegoEnabled()) {
-				users.add(usb.getLoginId());
+			
+			RangerService rangerService = getServiceByName(createdService.getName());
+			if (rangerService != null){
+				Map<String, String> map = rangerService.getConfigs();
+				if (map != null && map.containsKey(AMBARI_SERVICE_CHECK_USER)){
+					String userNames = map.get(AMBARI_SERVICE_CHECK_USER);
+					String[] userList = userNames.split(",");
+					if(userList != null){
+						for (String userName : userList) {
+							if(!StringUtils.isEmpty(userName)){
+								XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+								if (xxUser != null) {
+									vXUser = xUserService.populateViewBean(xxUser);
+								} else {
+									vXUser = xUserMgr.createServiceConfigUser(userName);
+									LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
+								}
+								if(vXUser != null){
+									users.add(vXUser.getName());
+								}
+							}
+						}
+					}
+				}
 			}
 			policyItem.setUsers(users);
 
@@ -2339,11 +2378,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy = createPolicy(policy);
 	}
 	
-	private VXUser getLookupUser() {
+	private VXUser getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {
 		VXUser vXUser = null;
-		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
-		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
-		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 		if(!StringUtils.isEmpty(authType) && authType.equalsIgnoreCase(KERBEROS_TYPE)){
 			if(SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 				KerberosName krbName = new KerberosName(lookupPrincipal);

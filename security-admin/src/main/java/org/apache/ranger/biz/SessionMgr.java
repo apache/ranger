@@ -31,11 +31,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
@@ -152,8 +154,20 @@ public class SessionMgr {
 				if (session.getAttribute("auditLoginId") == null) {
 					synchronized (session) {
 						if (session.getAttribute("auditLoginId") == null) {
-							gjAuthSession = storeAuthSession(gjAuthSession);
-							session.setAttribute("auditLoginId", gjAuthSession.getId());
+							boolean isDownloadLogEnabled = PropertiesUtil.getBooleanProperty("ranger.downloadpolicy.session.log.enabled", false);
+							if (isDownloadLogEnabled){
+								gjAuthSession = storeAuthSession(gjAuthSession);
+								session.setAttribute("auditLoginId", gjAuthSession.getId());
+							}
+							else if (!StringUtils.isEmpty(httpRequest.getRequestURI()) && !(httpRequest.getRequestURI().contains("/secure/policies/download/") || httpRequest.getRequestURI().contains("/secure/download/"))){
+								gjAuthSession = storeAuthSession(gjAuthSession);
+								session.setAttribute("auditLoginId", gjAuthSession.getId());
+							}else if (StringUtils.isEmpty(httpRequest.getRequestURI())){
+								gjAuthSession = storeAuthSession(gjAuthSession);
+								session.setAttribute("auditLoginId", gjAuthSession.getId());
+							}else{
+								//do not log the details for download policy and tag
+							}														
 						}
 					}
 				}
