@@ -188,7 +188,7 @@ public class AtlasTagSource extends AbstractTagSource {
 
 							ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
 							if (serviceTags == null) {
-								LOG.error("Failed to create ServiceTags for notification :" + getPrintableEntityNotification(notification));
+								LOG.error("No ServiceTags built for notification :" + getPrintableEntityNotification(notification));
 							} else {
 								updateSink(serviceTags);
 							}

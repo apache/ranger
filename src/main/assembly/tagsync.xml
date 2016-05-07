@@ -34,48 +34,41 @@
    			<dependencySet>
      			<outputDirectory>/lib</outputDirectory>
 				<includes>
-					<include>com.google.code.gson:gson</include>
-					<include>com.sun.jersey:jersey-bundle</include>
-					<include>log4j:log4j</include>
-					<include>commons-cli:commons-cli</include>
-					<include>commons-collections:commons-collections</include>
-					<include>commons-configuration:commons-configuration</include>
-					<include>commons-lang:commons-lang</include>
-					<include>commons-logging:commons-logging</include>
-					<include>com.google.guava:guava</include>
+					<include>com.google.code.gson:gson:jar:${gson.version}</include>
+					<include>com.google.guava:guava:jar:${google.guava.version}</include>
+					<include>com.google.inject:guice:jar:${guice.version}</include>
+					<include>com.google.inject.extensions:guice-multibindings:jar:${guice.version}</include>
+					<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+					<include>com.thoughtworks.paranamer:paranamer:jar:${paranamer.version}</include>
+					<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-typesystem:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-client:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
 					<include>org.apache.hadoop:hadoop-auth</include>
-					<include>org.slf4j:slf4j-api</include>
 					<include>org.apache.hadoop:hadoop-common</include>
-					<include>org.apache.commons:commons-csv</include>
-					<include>commons-io:commons-io:jar:${commons.io.version}</include>
-					<include>org.apache.htrace:htrace-core</include>
-					<include>org.codehaus.jackson:jackson-core-asl</include>
-					<include>org.codehaus.jackson:jackson-jaxrs</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl</include>
-					<include>org.codehaus.jackson:jackson-xc</include>
-					<include>org.apache.atlas:atlas-notification</include>
-					<include>org.apache.atlas:atlas-typesystem</include>
-					<include>org.apache.atlas:atlas-client</include>
-					<include>org.apache.atlas:atlas-common</include>
-					<include>com.google.inject:guice</include>
-					<include>com.google.inject.extensions:guice-multibindings</include>
-					<include>org.codehaus.jettison:jettison</include>
-					<include>aopalliance:aopalliance</include>
-					<include>javax.inject:javax.inject</include>
-					<include>org.apache.kafka:kafka_2.10</include>
-					<include>org.apache.kafka:kafka-clients</include>
-					<include>com.yammer.metrics:metrics-core</include>
-					<include>org.json4s:json4s-native_2.10</include>
-					<include>org.json4s:json4s-core_2.10</include>
-					<include>org.json4s:json4s-ast_2.10</include>
-					<include>com.thoughtworks.paranamer:paranamer</include>
-					<include>org.scala-lang:scala-library</include>
-					<include>org.scala-lang:scalap</include>
-					<include>org.scala-lang:scala-compiler</include>
-					<include>org.scala-lang:scala-reflect</include>
-					<include>com.101tec:zkclient</include>
-					<include>org.apache.zookeeper:zookeeper</include>
+					<include>org.apache.kafka:kafka_2.10:jar:${kafka.version}</include>
+					<include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
+					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.apache.ranger:ranger-plugins-common</include>
+					<include>org.apache.ranger:ranger-util</include>
+					<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
+					<include>org.json4s:json4s-native_2.10:jar:${json.version}</include>
+					<include>org.json4s:json4s-core_2.10:jar:${json.version}</include>
+					<include>org.json4s:json4s-ast_2.10:jar:${json.version}</include>
+					<include>org.scala-lang:scala-library:jar:${scala.version}</include>
+					<include>org.scala-lang:scalap:jar:${scala.version}</include>
+					<include>org.scala-lang:scala-compiler:jar:${scala.version}</include>
+					<include>org.scala-lang:scala-reflect:jar:${scala.version}</include>
+					<include>org.slf4j:slf4j-api</include>
+					<include>aopalliance:aopalliance:jar:${aopalliance.version}</include>
+					<include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
+					<include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
+					<include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+					<include>commons-io:commons-io:jar:${commons.io.version}</include>
+					<include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
+					<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+					<include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
+					<include>log4j:log4j:jar:${log4j.version}</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>
@@ -83,33 +76,10 @@
         <outputDirectory>/dist</outputDirectory>
      </binaries>
      <includes>
-	<include>org.apache.ranger:ranger-tagsync</include>
+		<include>org.apache.ranger:ranger-tagsync</include>
      </includes>
     </moduleSet>
-    <moduleSet>
-     <binaries>
-        <includeDependencies>false</includeDependencies>
-        <unpack>false</unpack>
-	    <directoryMode>755</directoryMode>
-	    <fileMode>644</fileMode>
-  		<dependencySets>
-   			<dependencySet>
-     			<outputDirectory>/lib</outputDirectory>
-				<includes>
-					<include>org.apache.ranger:credentialbuilder</include>
-					<include>org.apache.ranger:ranger-util</include>
-				</includes>
-				<unpack>false</unpack>
-  			</dependencySet>
-  		</dependencySets>
-        <outputDirectory>/lib</outputDirectory>
-     </binaries>
-     <includes>
-	<include>org.apache.ranger:credentialbuilder</include>
-	<include>org.apache.ranger:ranger-util</include>
-     </includes>
-    </moduleSet>
-  </moduleSets> 	
+  </moduleSets>
   <fileSets>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
