@@ -779,7 +779,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
 		userInfo.setLastName(aUserName);
-		userInfo.setEmailAddress(aUserName + "@" + LOCAL_HOSTNAME);
 
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 			try {

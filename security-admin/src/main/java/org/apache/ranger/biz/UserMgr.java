@@ -210,8 +210,7 @@ public class UserMgr {
 		// emailAddress
 		String emailAddress = userProfile.getEmailAddress();
 		if (stringUtil.isEmpty(emailAddress)) {
-			String randomString = guidUtil.genGUID();
-			userProfile.setEmailAddress(randomString);
+			userProfile.setEmailAddress(null);
 			updateUser = true;
 		} else {
 			if (stringUtil.validateEmail(emailAddress)) {
@@ -1153,8 +1152,7 @@ public class UserMgr {
 										MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 					}
 				} else {
-					String randomEmail = guidUtil.genGUID();
-					userProfile.setEmailAddress(randomEmail);
+					userProfile.setEmailAddress(null);
 					xXPortalUser = this.createUser(userProfile,
 							RangerCommonEnums.STATUS_ENABLED);
 				}
