@@ -19,12 +19,19 @@
 
 package org.apache.ranger.biz;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -36,9 +43,67 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.common.*;
-import org.apache.ranger.db.*;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PasswordUtils;
+import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerFactory;
+import org.apache.ranger.common.RangerServicePoliciesCache;
+import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXAccessTypeDefDao;
+import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
+import org.apache.ranger.db.XXContextEnricherDefDao;
+import org.apache.ranger.db.XXDataMaskTypeDefDao;
+import org.apache.ranger.db.XXEnumDefDao;
+import org.apache.ranger.db.XXEnumElementDefDao;
+import org.apache.ranger.db.XXPolicyConditionDefDao;
+import org.apache.ranger.db.XXPolicyItemAccessDao;
+import org.apache.ranger.db.XXPolicyItemConditionDao;
+import org.apache.ranger.db.XXPolicyItemDao;
+import org.apache.ranger.db.XXPolicyItemDataMaskInfoDao;
+import org.apache.ranger.db.XXPolicyItemGroupPermDao;
+import org.apache.ranger.db.XXPolicyItemRowFilterInfoDao;
+import org.apache.ranger.db.XXPolicyItemUserPermDao;
+import org.apache.ranger.db.XXPolicyResourceDao;
+import org.apache.ranger.db.XXPolicyResourceMapDao;
+import org.apache.ranger.db.XXResourceDefDao;
+import org.apache.ranger.db.XXServiceConfigDefDao;
+import org.apache.ranger.db.XXServiceConfigMapDao;
+import org.apache.ranger.db.XXServiceDao;
+import org.apache.ranger.db.XXServiceVersionInfoDao;
+import org.apache.ranger.entity.XXAccessTypeDef;
+import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.apache.ranger.entity.XXContextEnricherDef;
+import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXDataHist;
+import org.apache.ranger.entity.XXDataMaskTypeDef;
+import org.apache.ranger.entity.XXEnumDef;
+import org.apache.ranger.entity.XXEnumElementDef;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXPolicyConditionDef;
+import org.apache.ranger.entity.XXPolicyItem;
+import org.apache.ranger.entity.XXPolicyItemAccess;
+import org.apache.ranger.entity.XXPolicyItemCondition;
+import org.apache.ranger.entity.XXPolicyItemDataMaskInfo;
+import org.apache.ranger.entity.XXPolicyItemGroupPerm;
+import org.apache.ranger.entity.XXPolicyItemRowFilterInfo;
+import org.apache.ranger.entity.XXPolicyItemUserPerm;
+import org.apache.ranger.entity.XXPolicyResource;
+import org.apache.ranger.entity.XXPolicyResourceMap;
+import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceConfigDef;
+import org.apache.ranger.entity.XXServiceConfigMap;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
@@ -63,7 +128,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
-import org.apache.ranger.plugin.store.*;
+import org.apache.ranger.plugin.store.AbstractServiceStore;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.RangerAuditFields;
@@ -156,7 +224,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Autowired
     RangerFactory factory;
-        
+
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
 	
@@ -2190,10 +2258,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		} else {
 			// we need to create one policy for each resource hierarchy
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			int i = 1;
 			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
-				createDefaultPolicy(createdService, vXUser, aHierarchy, i);
-				i++;
+				createDefaultPolicy(createdService, vXUser, aHierarchy);
 			}
 		}
 	}
@@ -2234,7 +2300,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			String tagType = "EXPIRES_ON";
 
-			String policyName = createdService.getName() + "-" + tagType;
+			String policyName = tagType;
 
 			RangerPolicy policy = new RangerPolicy();
 
@@ -2242,7 +2308,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			policy.setVersion(1L);
 			policy.setName(policyName);
 			policy.setService(createdService.getName());
-			policy.setDescription(tagType + " Policy for TAG Service: " + createdService.getName());
+			policy.setDescription("Policy for data with " + tagType + " tag");
 			policy.setIsAuditEnabled(true);
 
 			Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
@@ -2297,21 +2363,37 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy, int num) throws Exception {
+	private String buildPolicyName(List<RangerResourceDef> resourceHierarchy) {
+		String ret = "all";
+		if (CollectionUtils.isNotEmpty(resourceHierarchy)) {
+			int resourceDefCount = 0;
+			for (RangerResourceDef resourceDef : resourceHierarchy) {
+				if (resourceDefCount > 0) {
+					ret += ", ";
+				} else {
+					ret += " - ";
+				}
+				ret += resourceDef.getName();
+				resourceDefCount++;
+			}
+		}
+		return ret;
+	}
+
+	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy) throws Exception {
 		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
 		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
 		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
 		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
-		
 		RangerPolicy policy = new RangerPolicy();
-		String policyName=createdService.getName()+"-"+num+"-"+DateUtil.dateToString(DateUtil.getUTCDate(),"yyyyMMddHHmmss");
-		
+		String policyName=buildPolicyName(resourceHierarchy);
+
 		policy.setIsEnabled(true);
 		policy.setVersion(1L);
 		policy.setName(policyName);
 		policy.setService(createdService.getName());
-		policy.setDescription("Default Policy for Service: " + createdService.getName());
+		policy.setDescription("Policy for " + policyName);
 		policy.setIsAuditEnabled(true);
 		
 		policy.setResources(createDefaultPolicyResource(resourceHierarchy));
