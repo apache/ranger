@@ -502,7 +502,7 @@ public class RangerKrbFilter implements Filter {
             Collection<String> headerNames = httpResponse.getHeaderNames();
             for(String headerName : headerNames){
                 String value = httpResponse.getHeader(headerName);
-                if(headerName.equalsIgnoreCase("Set-Cookie") && value.startsWith("JSESSIONID")){
+                if(headerName.equalsIgnoreCase("Set-Cookie") && value.startsWith("RANGERADMINSESSIONID")){
                     chk = false;
                     break;
                 }

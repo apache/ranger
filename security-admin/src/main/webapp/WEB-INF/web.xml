@@ -80,8 +80,9 @@
     <session-timeout>60</session-timeout>
     <tracking-mode>COOKIE</tracking-mode>
     <cookie-config>
+    	<name>RANGERADMINSESSIONID</name>
         <http-only>true</http-only>
-    </cookie-config>	
+    </cookie-config>
   </session-config>
   <error-page>
     <error-code>500</error-code>
@@ -91,4 +92,5 @@
     <error-code>404</error-code>
     <location>/public/error404.jsp</location>
   </error-page>
+  	
 </web-app>

@@ -54,7 +54,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
 		<security:access-denied-handler error-page="/public/failedLogin.jsp?access_denied=1"/>
-		<security:logout delete-cookies="JSESSIONID,xa_rmc" logout-url="/logout.html" success-handler-ref="customLogoutSuccessHandler" />
+		<security:logout delete-cookies="RANGERADMINSESSIONID,xa_rmc" logout-url="/logout.html" success-handler-ref="customLogoutSuccessHandler" />
 		<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
 	</security:http>
 
