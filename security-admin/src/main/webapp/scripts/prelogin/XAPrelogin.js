@@ -45,7 +45,8 @@ function doLogin() {
 	}
 
 	var regexEmail = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-	var regexPlain = /^([a-zA-Z0-9_\.\-\+@/ ])+$/;
+	var regexPlain = /^[a-z0-9][a-z0-9,._\-'+/@= ]+$/i;
+	
 	if(!regexPlain.test(userName)){
 		if(!regexEmail.test(userName)){
 			$('#errorBox .errorMsg').text("Invalid username.");

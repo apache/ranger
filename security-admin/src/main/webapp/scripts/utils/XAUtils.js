@@ -598,9 +598,9 @@ define(function(require) {
 				_.each(policyItems, function(obj) {
 					var groupNames = null, userNames = null;
 					if (!_.isEmpty(obj.groups))
-						groupNames = obj.groups.join(',');
+						groupNames = obj.groups;
 					if (!_.isEmpty(obj.users))
-						userNames = obj.users.join(',');
+						userNames = obj.users;
 					var m = new Backbone.Model({
 						groupName : groupNames,
 						userName : userNames,

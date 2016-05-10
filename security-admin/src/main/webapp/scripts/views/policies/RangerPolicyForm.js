@@ -406,10 +406,10 @@ define(function(require){
 					var RangerPolicyItem=Backbone.Model.extend()
 					var policyItem = new RangerPolicyItem();
 					if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
-						policyItem.set("groups",m.get("groupName").split(','));
+						policyItem.set("groups",m.get("groupName"));
 					}
 					if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
-						policyItem.set("users",m.get("userName").split(','));
+						policyItem.set("users",m.get("userName"));
 					}
 					if(!(_.isUndefined(m.get('conditions')) && _.isEmpty(m.get('conditions')))){
 						var RangerPolicyItemConditionList = Backbone.Collection.extend();

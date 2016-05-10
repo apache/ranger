@@ -63,8 +63,8 @@ define(function(require){
 				name : {
 					type		: 'Text',
 					title		: localization.tt("lbl.userName") +' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-z0-9][a-z0-9,._\-'+/@]+$/i,message :"Name should start with alpha/numeric letters and can have special characters ,.+_'-/@"}],
-					editorAttrs :{'maxlength': 32}
+					validators  : ['required',{type:'regexp',regexp:/^[a-z0-9][a-z0-9,._\-'+/@= ]+$/i,message :"Name should start with alpha/numeric letters and can have special characters ,.+_'-/@= and space"}],
+					editorAttrs :{'maxlength': 255}
 				},
 				password : {
 					type		: 'Password',
