@@ -34,12 +34,14 @@
    			<dependencySet>
      			<outputDirectory>/lib</outputDirectory>
 				<includes>
+					<include>com.101tec:zkclient</include>
 					<include>com.google.code.gson:gson:jar:${gson.version}</include>
 					<include>com.google.guava:guava:jar:${google.guava.version}</include>
 					<include>com.google.inject:guice:jar:${guice.version}</include>
 					<include>com.google.inject.extensions:guice-multibindings:jar:${guice.version}</include>
 					<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
 					<include>com.thoughtworks.paranamer:paranamer:jar:${paranamer.version}</include>
+					<include>com.yammer.metrics:metrics-core</include>
 					<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-typesystem:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-client:jar:${atlas.version}</include>
@@ -51,6 +53,11 @@
 					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.apache.ranger:ranger-plugins-common</include>
 					<include>org.apache.ranger:ranger-util</include>
+					<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+					<include>org.codehaus.jackson:jackson-core-asl</include>
+					<include>org.codehaus.jackson:jackson-jaxrs</include>
+					<include>org.codehaus.jackson:jackson-mapper-asl</include>
+					<include>org.codehaus.jackson:jackson-xc</include>
 					<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 					<include>org.json4s:json4s-native_2.10:jar:${json.version}</include>
 					<include>org.json4s:json4s-core_2.10:jar:${json.version}</include>
