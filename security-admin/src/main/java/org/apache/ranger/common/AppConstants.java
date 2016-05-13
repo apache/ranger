@@ -592,11 +592,12 @@ public class AppConstants extends RangerCommonEnums {
 	 * CLASS_TYPE_XA_SERVICE_VERSION_INFO is an element of enum ClassTypes. Its value is "CLASS_TYPE_XA_SERVICE_VERSION_INFO".
 	 */
 	public static final int CLASS_TYPE_XA_SERVICE_VERSION_INFO = 1052;
-
+	public static final int CLASS_TYPE_XA_ACCESS_AUDIT_V4 = 1053;
+	public static final int CLASS_TYPE_XA_ACCESS_AUDIT_V5 = 1054;
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1052;
+	public static final int ClassTypes_MAX = 1054;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder
@@ -961,6 +962,12 @@ public class AppConstants extends RangerCommonEnums {
 		if( elementValue == 1052 ) {
 			return "XA Service Version Info"; //CLASS_TYPE_XA_SERVICE_VERSION_INFO
 		}
+		if( elementValue == 1053 ) {
+			return "Access Audit V4"; //CLASS_TYPE_XA_ACCESS_AUDIT_V4
+		}
+		if( elementValue == 1054 ) {
+			return "Access Audit V5"; //CLASS_TYPE_XA_ACCESS_AUDIT_V5
+		}
 		return null;
 	}
 
@@ -1173,6 +1180,15 @@ public class AppConstants extends RangerCommonEnums {
 		if ("ORACLE".equalsIgnoreCase(label)) {
 			return DB_FLAVOR_ORACLE; // DB_FLAVOR_ORACLE
 		}
+		if ("POSTGRES".equalsIgnoreCase(label)) {
+			return DB_FLAVOR_POSTGRES; // DB_FLAVOR_POSTGRES
+		}
+		if ("MSSQL".equalsIgnoreCase(label)) {
+			return DB_FLAVOR_SQLSERVER; // DB_FLAVOR_MSSQL
+		}
+		if ("SQLA".equalsIgnoreCase(label)) {
+			return DB_FLAVOR_SQLANYWHERE; // DB_FLAVOR_SQLANYWHERE
+		}
 		return DB_FLAVOR_UNKNOWN;
 	}
 
@@ -1185,6 +1201,15 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if (elementValue == DB_FLAVOR_ORACLE) {
 			return "ORACLE"; // ORACLE
+		}
+		if (elementValue == DB_FLAVOR_POSTGRES) {
+			return "POSTGRES"; // POSTGRES
+		}
+		if (elementValue == DB_FLAVOR_SQLSERVER) {
+			return "MSSQL"; // MSSQL
+		}
+		if (elementValue == DB_FLAVOR_SQLANYWHERE) {
+			return "SQLA"; // SQLA
 		}
 		return null;
 	}

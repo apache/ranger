@@ -66,7 +66,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="dataSource" ref="loggingDataSource" />
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
-				<property name="databasePlatform" value="${ranger.jpa.audit.jdbc.dialect}" />
+				<property name="databasePlatform" value="${ranger.jpa.jdbc.dialect}" />
 				<property name="showSql" value="${ranger.jpa.showsql}" />
 				<property name="generateDdl" value="false" />
 			</bean>
@@ -174,7 +174,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 	
 	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass">
-			<value>${ranger.jpa.audit.jdbc.driver}</value>
+			<value>${ranger.jpa.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
 			<value>${ranger.jpa.audit.jdbc.url}</value>

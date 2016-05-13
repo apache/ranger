@@ -29,11 +29,18 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ranger.common.AppConstants;
+
 @Entity
-@Table(name="xa_access_audit")
 @XmlRootElement
-public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializable {
+@Table(name = "xa_access_audit")
+public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
+
+	@Override
+	public int getMyClassType() {
+		return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT_V5;
+	}
 
 	@Column(name="SEQ_NUM")
 	protected long sequenceNumber;
@@ -64,21 +71,6 @@ public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializ
 		this.eventDuration = eventDuration;
 	}
 
-	@Column(name="tags")
-	protected String tags;
-	
-	/**
-	 * @return the tags
-	 */
-	public String getTags() {
-		return tags;
-	}
-	/**
-	 * @param tags the tags to set
-	 */
-	public void setTags(String tags) {
-		this.tags = tags;
-	}
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -89,24 +81,6 @@ public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializ
 		str += "sequenceNumber={" + sequenceNumber + "}";
 		str += "eventCount={" + eventCount + "}";
 		str += "eventDuration={" + eventDuration + "}";
-		str += "tags={" + tags + "}";
 		return str;
 	}
-
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		if ( !super.equals(obj) ) {
-			return false;
-		}
-		XXAccessAudit other = (XXAccessAudit) obj;
-		if ((this.tags == null && other.tags != null) || (this.tags != null && !this.tags.equals(other.tags))) {
-			return false;
-		}
-		return true;
-	}
-
 }

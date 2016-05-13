@@ -72,6 +72,7 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
 
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
+	private static final String DEFAULT_TAGADMIN_PASSWORD = "rangertagsync";
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
 	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
@@ -267,6 +268,9 @@ public class TagSyncConfig extends Configuration {
 					}
 				}
 			}
+		}
+		if(StringUtils.isBlank(password)){
+			return DEFAULT_TAGADMIN_PASSWORD;
 		}
 		return null;
 	}

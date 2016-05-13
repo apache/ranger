@@ -29,9 +29,14 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessAudit;
+import org.apache.ranger.entity.XXAccessAuditBase;
+import org.apache.ranger.entity.XXAccessAuditV4;
+import org.apache.ranger.entity.XXAccessAuditV5;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.util.CLIUtil;
@@ -41,6 +46,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Component
 public class DbToSolrMigrationUtil extends BaseLoader {
@@ -86,9 +92,11 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 	}
 
 	public void migrateAuditDbLogsToSolr() {
+		System.out.println("Migration process is started..");
 		long maxXXAccessAuditID = daoManager.getXXAccessAudit().getMaxIdOfXXAccessAudit();
 		if(maxXXAccessAuditID==0){
 			logger.info("Access Audit log does not exist.");
+			System.out.println("Access Audit log does not exist in db.");
 			return;
 		}
 		long maxMigratedID=0;
@@ -103,8 +111,21 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 		}
 		if(maxMigratedID>=maxXXAccessAuditID){
 			logger.info("No more DB Audit logs to migrate. Last migrated audit log ID: " + maxMigratedID);
+			System.out.println("No more DB Audit logs to migrate. Last migrated audit log ID: " + maxMigratedID);
 			return;
 		}
+		String db_flavor=AppConstants.getLabelFor_DatabaseFlavor(RangerBizUtil.getDBFlavor());
+		logger.info("DB flavor: " + db_flavor);
+		List<String> columnList=daoManager.getXXAccessAudit().getColumnNames(db_flavor);
+		int auditTableVersion=4;
+		if(columnList!=null){
+			if(columnList.contains("tags")){
+				auditTableVersion=6;
+			}else if(columnList.contains("seq_num") && columnList.contains("event_count") && columnList.contains("event_dur_ms")){
+				auditTableVersion=5;
+			}
+		}
+		logger.info("Columns Name:"+columnList);
 		long maxRowsPerBatch=10000;
 		//To ceil the actual division result i.e noOfBatches=maxXXAccessAuditID/maxRowsPerBatch
 		long noOfBatches=((maxXXAccessAuditID-maxMigratedID)+maxRowsPerBatch-1)/maxRowsPerBatch;
@@ -112,21 +133,72 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 		long rangeEnd=maxXXAccessAuditID-maxMigratedID<=maxRowsPerBatch ? maxXXAccessAuditID : rangeStart+maxRowsPerBatch;
 		long startTimeInMS=0;
 		long timeTaken=0;
-		List<XXAccessAudit> xXAccessAuditList=null;
+		long lastMigratedID=0;
+		long totalMigratedLogs=0;
 		for(long index=1;index<=noOfBatches;index++){
 			logger.info("Batch "+ index+" of total "+noOfBatches);
+			System.out.println("Processing batch "+ index+" of total "+noOfBatches);
 			startTimeInMS=System.currentTimeMillis();
 			//rangeStart and rangeEnd both exclusive, if we add +1 in maxRange
-			xXAccessAuditList=daoManager.getXXAccessAudit().getByIdRange(rangeStart,rangeEnd+1);
-			for(XXAccessAudit xXAccessAudit:xXAccessAuditList){
-				if(xXAccessAudit!=null){
-					try {
-						send2solr(xXAccessAudit);
-					} catch (Throwable e) {
-						logger.error("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.", e);
-						writeMigrationStatusFile(xXAccessAudit.getId(),CHECK_FILE_NAME);
-						logger.info("Stopping migration process!");
-						return;
+			if(auditTableVersion==4){
+				List<XXAccessAuditV4> xXAccessAuditV4List=daoManager.getXXAccessAudit().getByIdRangeV4(rangeStart,rangeEnd+1);
+				if(!CollectionUtils.isEmpty(xXAccessAuditV4List)){
+					for(XXAccessAuditV4 xXAccessAudit:xXAccessAuditV4List){
+						if(xXAccessAudit!=null){
+							try {
+								send2solr(xXAccessAudit);
+								lastMigratedID=xXAccessAudit.getId();
+								totalMigratedLogs++;
+							} catch (Throwable e) {
+								logger.error("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.", e);
+								writeMigrationStatusFile(lastMigratedID,CHECK_FILE_NAME);
+								logger.info("Stopping migration process!");
+								System.out.println("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.");
+								System.out.println("Migration process failed, Please refer ranger_db_patch.log file.");
+								return;
+							}
+						}
+					}
+				}
+			}else if(auditTableVersion==5){
+				List<XXAccessAuditV5>  xXAccessAuditV5List=daoManager.getXXAccessAudit().getByIdRangeV5(rangeStart,rangeEnd+1);
+				if(!CollectionUtils.isEmpty(xXAccessAuditV5List)){
+					for(XXAccessAuditV5 xXAccessAudit:xXAccessAuditV5List){
+						if(xXAccessAudit!=null){
+							try {
+								send2solr(xXAccessAudit);
+								lastMigratedID=xXAccessAudit.getId();
+								totalMigratedLogs++;
+							} catch (Throwable e) {
+								logger.error("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.", e);
+								writeMigrationStatusFile(lastMigratedID,CHECK_FILE_NAME);
+								logger.info("Stopping migration process!");
+								System.out.println("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.");
+								System.out.println("Migration process failed, Please refer ranger_db_patch.log file.");
+								return;
+							}
+						}
+					}
+				}
+			}
+			else if(auditTableVersion==6){
+				List<XXAccessAudit> xXAccessAuditV6List=daoManager.getXXAccessAudit().getByIdRangeV6(rangeStart,rangeEnd+1);
+				if(!CollectionUtils.isEmpty(xXAccessAuditV6List)){
+					for(XXAccessAudit xXAccessAudit:xXAccessAuditV6List){
+						if(xXAccessAudit!=null){
+							try {
+								send2solr(xXAccessAudit);
+								lastMigratedID=xXAccessAudit.getId();
+								totalMigratedLogs++;
+							} catch (Throwable e) {
+								logger.error("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.", e);
+								writeMigrationStatusFile(lastMigratedID,CHECK_FILE_NAME);
+								logger.info("Stopping migration process!");
+								System.out.println("Error while writing audit log id '"+xXAccessAudit.getId()+"' to Solr.");
+								System.out.println("Migration process failed, Please refer ranger_db_patch.log file.");
+								return;
+							}
+						}
 					}
 				}
 			}
@@ -140,12 +212,48 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 			rangeStart=rangeEnd;
 			rangeEnd=rangeEnd+maxRowsPerBatch;
 		}
-		
+		if(totalMigratedLogs>0){
+			System.out.println("Total Number of Migrated Audit logs:"+totalMigratedLogs);
+			logger.info("Total Number of Migrated Audit logs:"+totalMigratedLogs);
+		}
+		System.out.println("Migration process finished!!");
+	}
+
+	public void send2solr(XXAccessAuditV4 xXAccessAudit) throws Throwable {
+		SolrInputDocument document = new SolrInputDocument();
+		toSolrDocument(xXAccessAudit,document);
+		UpdateResponse response = solrServer.add(document);
+		if (response.getStatus() != 0) {
+			logger.info("Response=" + response.toString() + ", status= "
+					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
+			throw new Exception("Failed to send audit event ID=" + xXAccessAudit.getId());
+		}
+	}
+
+	public void send2solr(XXAccessAuditV5 xXAccessAudit) throws Throwable {
+		SolrInputDocument document = new SolrInputDocument();
+		toSolrDocument(xXAccessAudit,document);
+		UpdateResponse response = solrServer.add(document);
+		if (response.getStatus() != 0) {
+			logger.info("Response=" + response.toString() + ", status= "
+					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
+			throw new Exception("Failed to send audit event ID=" + xXAccessAudit.getId());
+		}
 	}
 
 	public void send2solr(XXAccessAudit xXAccessAudit) throws Throwable {
-		boolean uidIsString = true;
 		SolrInputDocument document = new SolrInputDocument();
+		toSolrDocument(xXAccessAudit,document);
+		UpdateResponse response = solrServer.add(document);
+		if (response.getStatus() != 0) {
+			logger.info("Response=" + response.toString() + ", status= "
+					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
+			throw new Exception("Failed to send audit event ID=" + xXAccessAudit.getId());
+		}
+	}
+
+	private void toSolrDocument(XXAccessAuditBase xXAccessAudit,  SolrInputDocument document) {
+		// add v4 fields
 		document.addField("id", xXAccessAudit.getId());
 		document.addField("access", xXAccessAudit.getAccessType());
 		document.addField("enforcer", xXAccessAudit.getAclEnforcer());
@@ -164,12 +272,8 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 		document.addField("reason", xXAccessAudit.getResultReason());
 		document.addField("action", xXAccessAudit.getAction());
 		document.addField("evtTime", DateUtil.getLocalDateForUTCDate(xXAccessAudit.getEventTime()));
-		document.addField("seq_num", xXAccessAudit.getSequenceNumber());
-		document.addField("event_count", xXAccessAudit.getEventCount());
-		document.addField("event_dur_ms", xXAccessAudit.getEventDuration());
-		document.addField("tags", xXAccessAudit.getTags());
-		//If ID is not set, then we should add it.
 		SolrInputField idField = document.getField("id");
+		boolean uidIsString = true;
 		if( idField == null) {
 			Object uid = null;
 			if(uidIsString) {
@@ -177,15 +281,24 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 			}
 			document.setField("id", uid);
 		}
-
-		UpdateResponse response = solrServer.add(document);
-		if (response.getStatus() != 0) {
-			logger.info("Response=" + response.toString() + ", status= "
-					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
-			throw new Exception("Failed to send audit event ID=" + xXAccessAudit.getId());
-		}
 	}
 
+	private void toSolrDocument(XXAccessAuditV5 xXAccessAudit,  SolrInputDocument document) {
+		toSolrDocument((XXAccessAuditBase)xXAccessAudit, document);
+		// add v5 fields
+		document.addField("seq_num", xXAccessAudit.getSequenceNumber());
+		document.addField("event_count", xXAccessAudit.getEventCount());
+		document.addField("event_dur_ms", xXAccessAudit.getEventDuration());
+	}
+
+	private void toSolrDocument(XXAccessAudit xXAccessAudit,SolrInputDocument document) {
+		toSolrDocument((XXAccessAuditBase)xXAccessAudit, document);
+		// add v6 fields
+		document.addField("seq_num", xXAccessAudit.getSequenceNumber());
+		document.addField("event_count", xXAccessAudit.getEventCount());
+		document.addField("event_dur_ms", xXAccessAudit.getEventDuration());
+		document.addField("tags", xXAccessAudit.getTags());
+	}
 	private Long readMigrationStatusFile(String aFileName) throws IOException {
 		Long migratedDbID=0L;
 		Path path = Paths.get(aFileName);

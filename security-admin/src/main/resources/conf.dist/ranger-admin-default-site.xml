@@ -107,15 +107,6 @@
 		<name>ranger.mail.listener.enable</name>
 		<value>false</value>
 	</property>
-<!-- #Hibernate/JPA settings -->
-	<property>
-		<name>ranger.jpa.showsql</name>
-		<value>false</value>
-	</property>
-
-
-
-
 <!-- #Second Level Cache -->
 	<property>
 		<name>ranger.second_level_cache</name>

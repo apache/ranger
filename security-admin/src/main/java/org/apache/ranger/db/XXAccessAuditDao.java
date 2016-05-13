@@ -25,6 +25,8 @@ import javax.persistence.NoResultException;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessAudit;
+import org.apache.ranger.entity.XXAccessAuditV4;
+import org.apache.ranger.entity.XXAccessAuditV5;
 
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
 	private static Logger logger = Logger.getLogger(XXAccessAuditDao.class);
@@ -46,11 +48,61 @@ public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
 		}
 		return maxXXAccessAuditID;
 	}
-	public List<XXAccessAudit> getByIdRange(long idFrom,long idTo){
+
+	@SuppressWarnings("unchecked")
+	public List<String> getColumnNames(String db_flavor){
+		List<String> columnList=new ArrayList<String>();
+		String sqlStr=null;
+		if("MYSQL".equalsIgnoreCase(db_flavor)){
+			sqlStr="SELECT lower(column_name) FROM information_schema.columns WHERE table_schema=database() AND table_name = 'xa_access_audit'";
+		}else if("ORACLE".equalsIgnoreCase(db_flavor)){
+			sqlStr="SELECT lower(column_name) FROM user_tab_cols WHERE table_name = upper('XA_ACCESS_AUDIT')";
+		}else if("POSTGRES".equalsIgnoreCase(db_flavor)){
+			sqlStr="SELECT lower(attname) FROM pg_attribute WHERE attrelid IN(SELECT oid FROM pg_class WHERE relname='xa_access_audit')";
+		}else if("MSSQL".equalsIgnoreCase(db_flavor)){
+			sqlStr="SELECT lower(column_name) FROM INFORMATION_SCHEMA.columns WHERE table_name = 'xa_access_audit'";
+		}else if("SQLA".equalsIgnoreCase(db_flavor)){
+			sqlStr="SELECT lower(cname) FROM SYS.SYSCOLUMNS WHERE tname = 'xa_access_audit'";
+		}else{
+			return columnList;
+		}
+		try {
+			columnList=getEntityManager().createNativeQuery(sqlStr).getResultList();
+		} catch (NoResultException e) {
+		}
+		return columnList;
+	}
+	public List<XXAccessAuditV4> getByIdRangeV4(long idFrom,long idTo){
+		//idFrom and idTo both exclusive
+		List<XXAccessAuditV4> xXAccessAuditList = new ArrayList<XXAccessAuditV4>();
+		try {
+			xXAccessAuditList= getEntityManager().createNamedQuery("XXAccessAuditV4.getByIdRangeV4", XXAccessAuditV4.class)
+				.setParameter("idFrom", idFrom)
+				.setParameter("idTo", idTo)
+				.getResultList();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}
+		return xXAccessAuditList;
+	}
+	public List<XXAccessAuditV5> getByIdRangeV5(long idFrom,long idTo){
+		//idFrom and idTo both exclusive
+		List<XXAccessAuditV5> xXAccessAuditList = new ArrayList<XXAccessAuditV5>();
+		try {
+			xXAccessAuditList= getEntityManager().createNamedQuery("XXAccessAuditV5.getByIdRangeV5", XXAccessAuditV5.class)
+				.setParameter("idFrom", idFrom)
+				.setParameter("idTo", idTo)
+				.getResultList();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}
+		return xXAccessAuditList;
+	}
+	public List<XXAccessAudit> getByIdRangeV6(long idFrom,long idTo){
 		//idFrom and idTo both exclusive
 		List<XXAccessAudit> xXAccessAuditList = new ArrayList<XXAccessAudit>();
 		try {
-			xXAccessAuditList= getEntityManager().createNamedQuery("XXAccessAudit.getByIdRange", tClass)
+			xXAccessAuditList= getEntityManager().createNamedQuery("XXAccessAudit.getByIdRangeV6", XXAccessAudit.class)
 				.setParameter("idFrom", idFrom)
 				.setParameter("idTo", idTo)
 				.getResultList();

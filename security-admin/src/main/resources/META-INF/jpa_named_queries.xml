@@ -1012,7 +1012,13 @@
 	<named-query name="XXAccessAudit.getMaxIdOfXXAccessAudit">
 		<query>select max(obj.id) from XXAccessAudit obj</query>
 	</named-query>
-	<named-query name="XXAccessAudit.getByIdRange">
+	<named-query name="XXAccessAuditV4.getByIdRangeV4">
+		<query>select obj from XXAccessAuditV4 obj WHERE obj.id &gt; :idFrom AND obj.id &lt; :idTo</query>
+    </named-query>
+    <named-query name="XXAccessAuditV5.getByIdRangeV5">
+		<query>select obj from XXAccessAuditV5 obj WHERE obj.id &gt; :idFrom AND obj.id &lt; :idTo</query>
+    </named-query>
+    <named-query name="XXAccessAudit.getByIdRangeV6">
 		<query>select obj from XXAccessAudit obj WHERE obj.id &gt; :idFrom AND obj.id &lt; :idTo</query>
     </named-query>
 	<named-query name="XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime">

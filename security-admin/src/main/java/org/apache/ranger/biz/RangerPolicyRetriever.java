@@ -490,7 +490,7 @@ public class RangerPolicyRetriever {
 					ret.setVersion(xPolicy.getVersion());
 					ret.setService(service == null ? null : service.getName());
 					ret.setName(xPolicy.getName());
-					ret.setPolicyType(xPolicy.getPolicyType());
+					ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
 					ret.setDescription(xPolicy.getDescription());
 					ret.setResourceSignature(xPolicy.getResourceSignature());
 					ret.setIsAuditEnabled(xPolicy.getIsAuditEnabled());
