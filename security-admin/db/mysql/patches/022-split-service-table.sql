@@ -19,11 +19,11 @@ CREATE TABLE `x_service_version_info` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `service_id` bigint(20) NOT NULL,
 `policy_version` bigint(20) NOT NULL DEFAULT 0,
-`policy_update_time` datetime DEFAULT NULL,
+`policy_update_time` datetime NULL DEFAULT NULL,
 `tag_version` bigint(20) NOT NULL DEFAULT 0,
-`tag_update_time` datetime DEFAULT NULL,
+`tag_update_time` datetime NULL DEFAULT NULL,
 primary key (`id`),
-CONSTRAINT `x_service_version_info_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`) 
+CONSTRAINT `x_service_version_info_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`) 
 );
 CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(service_id);
 

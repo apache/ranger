@@ -14,23 +14,16 @@
 -- limitations under the License.
 
 /
-DROP SEQUENCE IF EXISTS x_service_version_info_seq;
-
-CREATE SEQUENCE x_service_version_info_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
-DROP TABLE IF EXISTS `x_service_version_info`;
-
-CREATE TABLE `x_service_version_info` (
+CREATE SEQUENCE X_SERVICE_VERSION_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE TABLE x_service_version_info(
 id NUMBER(20) NOT NULL,
 service_id NUMBER(20) NOT NULL,
-policy_version NUMBER(20) NOT NULL DEFAULT 0,
+policy_version NUMBER(20) DEFAULT 0 NOT NULL,
 policy_update_time DATE DEFAULT NULL NULL,
-tag_version NUMBER(20) NOT NULL DEFAULT 0,
+tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service(id) 
+CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)
 );
-CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(service_id);
-
+CREATE INDEX x_svc_ver_info_IDX_service_id ON x_service_version_info(service_id);
 commit;
-
