@@ -70,22 +70,24 @@
 		<value />
 	</property>
 	<property>
-		<name>ranger.tagsync.keystore.filename</name>
-		<value>/etc/ranger/tagsync/conf/rangertagsync.jceks</value>
+		<name>ranger.tagsync.kerberos.principal</name>
+		<value />
 	</property>
 	<property>
 		<name>ranger.tagsync.kerberos.keytab</name>
 		<value />
 	</property>
 	<property>
-		<name>ranger.tagsync.kerberos.principal</name>
-		<value />
-	</property>
-	<property>
 		<name>ranger.tagsync.dest.ranger.username</name>
 		<value>rangertagsync</value>
 	</property>
-
-	
+	<property>
+		<name>ranger.tagsync.keystore.filename</name>
+		<value>/etc/ranger/tagsync/conf/rangertagsync.jceks</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.keystore.filename</name>
+		<value>/etc/ranger/tagsync/conf/atlasuser.jceks</value>
+	</property>
 
 </configuration>

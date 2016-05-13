@@ -87,4 +87,20 @@
 		<name>ranger.tagsync.dest.ranger.username</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.username</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.keystore.filename</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.atlasrest.ssl.config.filename</name>
+		<value></value>
+	</property>
 </configuration>

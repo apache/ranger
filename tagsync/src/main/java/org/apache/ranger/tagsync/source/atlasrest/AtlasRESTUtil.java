@@ -28,13 +28,20 @@ import org.apache.atlas.typesystem.json.InstanceSerialization;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.tagsync.source.atlas.AtlasEntityWithTraits;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapperUtil;
 
-import java.util.*;
+import javax.security.auth.Subject;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 public class AtlasRESTUtil {
@@ -58,23 +65,26 @@ public class AtlasRESTUtil {
 
 	private final Gson gson = new Gson();
 
-	private RangerRESTClient atlasRESTClient;
+	private final RangerRESTClient atlasRESTClient;
+	private final String principal;
+	private final String keytab;
+	private final String nameRules;
+	private final boolean kerberized;
 
-	public AtlasRESTUtil(String atlasEndpoint) {
+	public AtlasRESTUtil(RangerRESTClient atlasRESTClient, boolean kerberized, String authenticationType, String principal, String keytab, String nameRules) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> AtlasRESTUtil(" + atlasEndpoint + ")");
+			LOG.debug("==> AtlasRESTUtil()");
 		}
 
-		if (!atlasEndpoint.endsWith("/")) {
-			atlasEndpoint += "/";
-		}
+		this.kerberized = kerberized;
 
-		// This uses RangerRESTClient to invoke REST APIs on Atlas. It will work only if scheme of URL is http
-		atlasRESTClient = new RangerRESTClient();
-		atlasRESTClient.setUrl(atlasEndpoint);
+		this.atlasRESTClient = atlasRESTClient;
+		this.principal = principal;
+		this.keytab = keytab;
+		this.nameRules = nameRules;
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== AtlasRESTUtil(" + atlasEndpoint + ")");
+			LOG.debug("<== AtlasRESTUtil()");
 		}
 	}
 
@@ -231,7 +241,7 @@ public class AtlasRESTUtil {
 		return ret;
 	}
 
-	private Map<String, Object> atlasAPI(String endpoint) {
+	private Map<String, Object> atlasAPI(final String endpoint) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> atlasAPI(" + endpoint + ")");
@@ -239,7 +249,49 @@ public class AtlasRESTUtil {
 		Map<String, Object> ret = new HashMap<String, Object>();
 
 		try {
-			WebResource webResource = atlasRESTClient.getResource(endpoint);
+			if (kerberized) {
+				LOG.debug("Using kerberos authentication");
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
+				}
+				ret = Subject.doAs(sub, new PrivilegedAction<Map<String, Object>>() {
+					@Override
+					public Map<String, Object> run() {
+						try{
+							return executeAtlasAPI(endpoint);
+						}catch (Exception e) {
+							LOG.error("Atlas API failed with message : ", e);
+						}
+						return null;
+					}
+				});
+			} else {
+				LOG.debug("Using basic authentication");
+				ret = executeAtlasAPI(endpoint);
+			}
+		} catch (Exception exception) {
+			LOG.error("Exception when fetching Atlas objects.", exception);
+			ret = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== atlasAPI(" + endpoint + ")");
+		}
+		return ret;
+	}
+
+	private Map<String, Object> executeAtlasAPI(final String endpoint) {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> executeAtlasAPI(" + endpoint + ")");
+		}
+
+		Map<String, Object> ret = new HashMap<String, Object>();
+
+		try {
+			final WebResource webResource = atlasRESTClient.getResource(endpoint);
+
 			ClientResponse response = webResource.accept(REST_MIME_TYPE_JSON).type(REST_MIME_TYPE_JSON).get(ClientResponse.class);
 
 			if (response != null && response.getStatus() == 200) {
@@ -255,8 +307,9 @@ public class AtlasRESTUtil {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== atlasAPI(" + endpoint + ")");
+			LOG.debug("<== executeAtlasAPI(" + endpoint + ")");
 		}
+
 		return ret;
 	}
 

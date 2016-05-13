@@ -109,32 +109,61 @@ def main():
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	globalDict=import_properties_from_xml(CFG_FILE,globalDict)
-	TAGSYNC_KEYSTORE_FILENAME=globalDict['ranger.tagsync.keystore.filename']
-	log("[I] TAGSYNC_KEYSTORE_FILENAME:" + str(TAGSYNC_KEYSTORE_FILENAME),"info")
-	TAGSYNC_TAGADMIN_ALIAS="tagadmin.user.password"
-	TAGSYNC_TAGADMIN_PASSWORD = ''
-	TAGSYNC_TAGADMIN_USERNAME = ''
+
+	ENDPOINT=''
+	KEYSTORE_FILENAME=''
+	KEYSTORE_FILENAME_PROMPT=''
+	ALIAS = ''
+	USERNAME=''
+	PASSWORD=''
+	USERNAME_PROPERTY_NAME=''
+	FILENAME_PROPERTY_NAME=''
+
+	while ENDPOINT == "" or not (ENDPOINT == "ATLAS" or ENDPOINT == "RANGER"):
+		print "Enter Destination NAME (Ranger/Atlas):"
+		ENDPOINT=raw_input()
+		ENDPOINT = ENDPOINT.upper()
+
+	if ENDPOINT == "ATLAS":
+		USERNAME_PROPERTY_NAME='ranger.tagsync.source.atlasrest.username'
+		FILENAME_PROPERTY_NAME='ranger.tagsync.source.atlasrest.keystore.filename'
+		ALIAS="atlas.user.password"
+		KEYSTORE_FILENAME_PROMPT='RANGER_TAGSYNC_ATLAS_KEYSTORE_FILENAME'
+
+	elif ENDPOINT == "RANGER":
+		USERNAME_PROPERTY_NAME='ranger.tagsync.dest.ranger.username'
+		FILENAME_PROPERTY_NAME='ranger.tagsync.keystore.filename'
+		ALIAS="tagadmin.user.password"
+		KEYSTORE_FILENAME_PROMPT='RANGER_TAGSYNC_RANGER_KEYSTORE_FILENAME'
+
+	else:
+		log("[E] Unsupported ENDPOINT[" + ENDPOINT + "]")
+		return
+
+	KEYSTORE_FILENAME = globalDict[FILENAME_PROPERTY_NAME]
+
+	log("[I] " + KEYSTORE_FILENAME_PROMPT + ":" + str(KEYSTORE_FILENAME),"info")
 	unix_user = "ranger"
 	unix_group = "ranger"
 
-	while TAGSYNC_TAGADMIN_USERNAME == "":
-		print "Enter tagadmin user name:"
-		TAGSYNC_TAGADMIN_USERNAME=raw_input()
+	while USERNAME == "":
+		print "Enter " + ENDPOINT + " user name:"
+		USERNAME=raw_input()
 
-	while TAGSYNC_TAGADMIN_PASSWORD == "":
-		TAGSYNC_TAGADMIN_PASSWORD=getpass.getpass("Enter tagadmin user password:")
+	while PASSWORD == "":
+		PASSWORD=getpass.getpass("Enter " + ENDPOINT + " user password:")
 
-	if TAGSYNC_KEYSTORE_FILENAME != "" or TAGSYNC_TAGADMIN_USERNAME != "" or TAGSYNC_TAGADMIN_PASSWORD != "":
-		log("[I] Storing tagadmin tagsync password in credential store:","info")
-		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,TAGSYNC_TAGADMIN_ALIAS,TAGSYNC_TAGADMIN_PASSWORD,TAGSYNC_KEYSTORE_FILENAME)
+	if KEYSTORE_FILENAME != "" or USERNAME != "" or PASSWORD != "":
+		log("[I] Storing " + ENDPOINT + " tagsync password in credential store:","info")
+		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,ALIAS,PASSWORD,KEYSTORE_FILENAME)
 		ret=subprocess.call(shlex.split(cmd))
 		if ret == 0:
-			cmd="chown %s:%s %s" %(unix_user,unix_group,TAGSYNC_KEYSTORE_FILENAME)
+			cmd="chown %s:%s %s" %(unix_user,unix_group,KEYSTORE_FILENAME)
 			ret=subprocess.call(shlex.split(cmd))
 			if ret == 0:
 				if os.path.isfile(CFG_FILE):
-					write_properties_to_xml(CFG_FILE,"ranger.tagsync.dest.ranger.username",TAGSYNC_TAGADMIN_USERNAME)
-					write_properties_to_xml(CFG_FILE,"ranger.tagsync.keystore.filename",TAGSYNC_KEYSTORE_FILENAME)
+					write_properties_to_xml(CFG_FILE,USERNAME_PROPERTY_NAME,USERNAME)
+					write_properties_to_xml(CFG_FILE,FILENAME_PROPERTY_NAME,KEYSTORE_FILENAME)
 				else:
 					log("[E] Required file not found: ["+CFG_FILE+"]","error")
 			else:

@@ -71,7 +71,12 @@ initPrefixList = ['S99', 'K00']
 TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY = 'TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS'
 TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ZOOKEEPER_CONNECT'
 TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID'
-TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING = 'ranger.tagsync.atlas.to.service.mapping'
+
+TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME'
+TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL'
+TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL_KEY = 'TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL'
+TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY = 'TAG_SOURCE_ATLAS_KERBEROS_KEYTAB'
+TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING = 'ranger.tagsync.atlas.to.ranger.service.mapping'
 TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING = 'ranger.tagsync.atlas.'
 TAGSYNC_ATLAS_CLUSTER_IDENTIFIER = '.instance.'
 TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING = '.ranger.service'
@@ -88,6 +93,7 @@ TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
 globalDict = {}
+configure_security = False
 
 RANGER_TAGSYNC_HOME = os.getenv("RANGER_TAGSYNC_HOME")
 if RANGER_TAGSYNC_HOME is None:
@@ -209,6 +215,9 @@ def convertInstallPropsToXML(props):
 
 	atlasOutFile = file(atlasOutFn, "w")
 
+	atlas_principal = ''
+	atlas_keytab = ''
+
 	for k,v in props.iteritems():
 		if (k in directKeyMap.keys()):
 			newKey = directKeyMap[k]
@@ -218,10 +227,27 @@ def convertInstallPropsToXML(props):
 				atlasOutFile.write(newKey + "=" + v + "\n")
 			elif (k == TAGSYNC_ATLAS_CONSUMER_GROUP_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
+			elif (configure_security and k == TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY):
+				atlasOutFile.write(newKey + "=" + v + "\n")
+			elif (configure_security and k == TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY):
+				atlasOutFile.write(newKey + "=" + v + "\n")
+			elif (configure_security and k == TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL_KEY):
+				atlas_principal = v
+			elif (configure_security and k == TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY):
+				atlas_keytab = v
 			else:
 				ret[newKey] = v
 		else:
-			print "Direct Key not found:%s" % (k)
+			print "INFO: Direct Key not found:%s" % (k)
+
+	if (configure_security):
+		atlasOutFile.write("atlas.jaas.KafkaClient.loginModuleName = com.sun.security.auth.module.Krb5LoginModule" + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.loginModuleControlFlag = required" + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.option.useKeyTab = true" + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.option.storeKey = true" + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.option.serviceName = kafka" + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.option.keyTab = " + atlas_keytab + "\n")
+		atlasOutFile.write("atlas.jaas.KafkaClient.option.principal = " + atlas_principal + "\n")
 
 	atlasOutFile.close()
 
@@ -291,16 +317,27 @@ def initializeInitD():
 def write_env_files(exp_var_name, log_path, file_name):
         final_path = "{0}/{1}".format(confBaseDirName,file_name)
         if not os.path.isfile(final_path):
-                print "Creating %s file" % file_name
+                print "INFO: Creating %s file" % file_name
         f = open(final_path, "w")
         f.write("export {0}={1}".format(exp_var_name,log_path))
         f.close()
 
 def main():
 
+	global configure_security
+
 	print "\nINFO: Installing ranger-tagsync .....\n"
 
 	populate_global_dict()
+
+
+	kerberize = globalDict['is_secure']
+	if kerberize != "":
+		kerberize = kerberize.lower()
+		if kerberize == "true" or kerberize == "enabled" or kerberize == "yes":
+			configure_security = True
+
+
 	hadoop_conf = globalDict['hadoop_conf']
 
 	dirList = [ rangerBaseDirName, tagsyncBaseDirFullName, confFolderName ]
@@ -393,14 +430,27 @@ def main():
 	if ('ranger.tagsync.dest.ranger.username' not in mergeProps):
 		mergeProps['ranger.tagsync.dest.ranger.username'] = 'rangertagsync'
 
-	if (tagsyncKSPath == ''):
-		mergeProps['ranger.tagsync.dest.ranger.password'] = 'rangertagsync'
-
-	else:
+	if (tagsyncKSPath != ''):
 		tagadminPasswd = 'rangertagsync'
 		tagadminAlias = 'tagadmin.user.password'
 		updatePropertyInJCKSFile(tagsyncKSPath,tagadminAlias,tagadminPasswd)
 		os.chown(tagsyncKSPath,ownerId,groupId)
+
+	tagsyncAtlasKSPath = mergeProps['ranger.tagsync.source.atlasrest.keystore.filename']
+
+	if ('ranger.tagsync.source.atlasrest.username' not in mergeProps):
+		mergeProps['ranger.tagsync.source.atlasrest.username'] = 'admin'
+
+	if (tagsyncAtlasKSPath != ''):
+		if ('ranger.tagsync.source.atlasrest.password' not in mergeProps):
+			atlasPasswd = 'admin'
+		else:
+			atlasPasswd = mergeProps['ranger.tagsync.source.atlasrest.password']
+			mergeProps.pop('ranger.tagsync.source.atlasrest.password')
+
+		atlasAlias = 'atlas.user.password'
+		updatePropertyInJCKSFile(tagsyncAtlasKSPath,atlasAlias,atlasPasswd)
+		os.chown(tagsyncAtlasKSPath,ownerId,groupId)
 
 	writeXMLUsingProperties(fn, mergeProps, outfn)
 
@@ -419,25 +469,26 @@ def main():
 				os.chown(fn, ownerId, groupId)
 				os.chmod(fn, 0755)
 
-	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
+	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE)
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
-        os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
 
 	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
-        tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
-        if not isfile(hadoop_conf_full_path):
-                print "WARN: core-site.xml file not found in provided hadoop conf path..."
+	tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+
+	if not isfile(hadoop_conf_full_path):
+		print "WARN: core-site.xml file not found in provided hadoop conf path..."
 		f = open(tagsync_conf_full_path, "w")
-                f.write("<configuration></configuration>")
-                f.close()
+		f.write("<configuration></configuration>")
+		f.close()
 		os.chown(tagsync_conf_full_path,ownerId,groupId)
 		os.chmod(tagsync_conf_full_path,0750)
 	else:
-	        if os.path.islink(tagsync_conf_full_path):
-        	        os.remove(tagsync_conf_full_path)
+		if os.path.islink(tagsync_conf_full_path):
+			os.remove(tagsync_conf_full_path)
 
-	if isfile(hadoop_conf_full_path):
-	        os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
+	if isfile(hadoop_conf_full_path) and not isfile(tagsync_conf_full_path):
+			os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
 
 	print "\nINFO: Completed ranger-tagsync installation.....\n"
 

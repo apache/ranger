@@ -24,7 +24,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
@@ -52,10 +56,13 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.dest.ranger.impl.class";
 
 	private static final String TAGSYNC_DEST_RANGER_PASSWORD_ALIAS = "tagadmin.user.password";
+	private static final String TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS = "atlas.user.password";
 
 	private static final String TAGSYNC_TAGADMIN_USERNAME_PROP = "ranger.tagsync.dest.ranger.username";
+	private static final String TAGSYNC_ATLASREST_USERNAME_PROP = "ranger.tagsync.source.atlasrest.username";
 
 	private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP = "ranger.tagsync.dest.ranger.password";
+	private static final String TAGSYNC_ATLASREST_PASSWORD_PROP = "ranger.tagsync.source.atlasrest.password";
 
 	private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.dest.ranger.connection.check.interval";
 
@@ -65,17 +72,22 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP = "ranger.tagsync.source.atlasrest.download.interval.millis";
 
+	private static final String TAGSYNC_ATLAS_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.source.atlasrest.ssl.config.filename";
+
 	public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.source.file.filename";
 
 	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.source.file.check.interval.millis";
 
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
+	private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP = "ranger.tagsync.source.atlasrest.keystore.filename";
 
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 	private static final String DEFAULT_TAGADMIN_PASSWORD = "rangertagsync";
+	private static final String DEFAULT_ATLASREST_USERNAME = "admin";
+	private static final String DEFAULT_ATLASREST_PASSWORD = "admin";
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
-	private static final long DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL = 900000;
+	private static final long DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 
 	private static final String AUTH_TYPE = "hadoop.security.authentication";
@@ -210,7 +222,7 @@ public class TagSyncConfig extends Configuration {
 
 	static public long getTagSourceAtlasDownloadIntervalInMillis(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP);
-		long ret = DEFAULT_TAGSYNC_REST_SOURCE_DOWNLOAD_INTERVAL;
+		long ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL;
 		if (StringUtils.isNotBlank(val)) {
 			try {
 				ret = Long.valueOf(val);
@@ -231,18 +243,6 @@ public class TagSyncConfig extends Configuration {
 
 	static public String getTagAdminRESTUrl(Properties prop) {
 		return prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
-	}
-
-	static public String getTagAdminRESTSslConfigFile(Properties prop) {
-		return prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
-	}
-
-	static public String getTagSourceFileName(Properties prop) {
-		return prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
-	}
-
-	static public String getAtlasEndpoint(Properties prop) {
-		return prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
 	}
 
 	static public String getTagAdminPassword(Properties prop) {
@@ -286,8 +286,61 @@ public class TagSyncConfig extends Configuration {
 		return userName;
 	}
 
-	static public String getAtlasSslConfigFileName(Properties prop) {
-		return "";
+	static public String getTagAdminRESTSslConfigFile(Properties prop) {
+		return prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
+	}
+
+	static public String getTagSourceFileName(Properties prop) {
+		return prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
+	}
+
+	static public String getAtlasRESTEndpoint(Properties prop) {
+		return prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
+	}
+
+	static public String getAtlasRESTPassword(Properties prop) {
+		//update credential from keystore
+		String password = null;
+		if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_PASSWORD_PROP)) {
+			password = prop.getProperty(TAGSYNC_ATLASREST_PASSWORD_PROP);
+			if (password != null && !password.isEmpty()) {
+				return password;
+			}
+		}
+		if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_KEYSTORE_PROP)) {
+			String path = prop.getProperty(TAGSYNC_ATLASREST_KEYSTORE_PROP);
+			if (path != null) {
+				if (!path.trim().isEmpty()) {
+					try {
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS);
+					} catch (Exception ex) {
+						password = null;
+					}
+					if (password != null && !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")) {
+						return password;
+					}
+				}
+			}
+		}
+		if(StringUtils.isBlank(password)){
+			return DEFAULT_ATLASREST_PASSWORD;
+		}
+		return null;
+	}
+
+	static public String getAtlasRESTUserName(Properties prop) {
+		String userName=null;
+		if(prop!=null && prop.containsKey(TAGSYNC_ATLASREST_USERNAME_PROP)){
+			userName=prop.getProperty(TAGSYNC_ATLASREST_USERNAME_PROP);
+		}
+		if(StringUtils.isBlank(userName)){
+			userName=DEFAULT_ATLASREST_USERNAME;
+		}
+		return userName;
+	}
+
+	static public String getAtlasRESTSslConfigFile(Properties prop) {
+		return prop.getProperty(TAGSYNC_ATLAS_REST_SSL_CONFIG_FILE_PROP);
 	}
 
 	static public String getCustomAtlasResourceMappers(Properties prop) {
@@ -339,7 +392,7 @@ public class TagSyncConfig extends Configuration {
 
 		readConfigFile(CORE_SITE_FILE);
 		readConfigFile(DEFAULT_CONFIG_FILE);
-		readConfigFile(CONFIG_FILE);		
+		readConfigFile(CONFIG_FILE);
 
 		props = getProps();
 

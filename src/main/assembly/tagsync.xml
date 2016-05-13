@@ -93,9 +93,6 @@
 	    	<fileMode>644</fileMode>
 		<outputDirectory>/conf.dist</outputDirectory>
 		<directory>tagsync/conf.dist</directory>
-		<excludes>
-			<exclude>etc</exclude>
-		</excludes>
 	</fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
