@@ -235,9 +235,13 @@ This product includes jQuery UI Tag-it! (http://aehlke.github.com/tag-it/ - MIT 
 This product includes bootbox.js v3.3.0 (http://bootboxjs.com/ - MIT license), Copyright © 2011-2014 by Nick Payne.  
 This product includes moment.js (http://moment.js - MIT license), Copyright © 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors.  
 This product includes Globalize (http://github.com/jquery/globalize - MIT license), Copyright Software Freedom Conservancy, Inc.
-This product includes RequireJS 2.1.8 (http://github.com/jrburke/requirejs - New BSD or MIT licensed), Copyright © 2010-2012, The Dojo Foundation All Rights Reserved.  
+This product includes RequireJS 2.1.8 (http://github.com/jrburke/requirejs - New BSD or MIT licensed), Copyright © 2010-2012, The Dojo Foundation All Rights Reserved.
 This product includes Handlebars.js (http://handlebarsjs.com/ - MIT license), Copyright © 2011-2014 by Yehuda Katz.  
-
+This product includes Font Awesome 3.2.1 (http://fontawesome.io/ - MIT licence) by Dave Gandy
+This product includes Qunit(https://qunitjs.com/ - MIT license) Copyright (c) 2011 John Resig, Jörn Zaefferer
+This product includes jQuery Migrate-v1.1.1 (https://plugins.jquery.com/migrate/ - MIT license) Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
+This product includes bootstrap v2.3.2 (http://getbootstrap.com/ - MIT License) Copyright 2013 Twitter, Inc.
+This product includes Block UI v1.1.1 (https://github.com/dreamerslab/jquery.msg/ - MIT License) Copyright 2011, Ben Lin.
 
 All rights reserved.
 
@@ -314,4 +318,15 @@ This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datep
 This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.  
 This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
 This product includes bootstrap-notify v1.0 (http://goodybag.github.io/bootstrap-notify/ - Apache License - 2.0), Copyright 2012 Goodybag, Inc.
-.  
+This product includes Open Sans font (http://www.opensans.com/ - Apache License - 2.0), © 2016 OpenSans.com 
+
+-----------------------------------------------------------------------
+ BSD license
+-----------------------------------------------------------------------
+This product includes jsDump v1.0.0(http://flesler.blogspot.com -BSD licence) Copyright (c) 2008 Ariel Flesler.
+
+
+-----------------------------------------------------------------------
+ MPL license
+-----------------------------------------------------------------------
+This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://sciactive.com/pnotify/- MPL), Copyright © 2009-2012 Hunter Perrin.

@@ -5,9 +5,3 @@ This product includes software developed at The Apache Software
 Foundation (http://www.apache.org/).
 
 
-This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datepicker - Apache License - 2.0), Copyright 2012 Stefan Petre.  
-This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.  
-This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
-This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://sciactive.com/pnotify/- MPL), Copyright © 2009-2012 Hunter Perrin.
-This product includes VisualSearch.js 0.4.0 (http://documentcloud.github.com/visualsearch), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
-This product includes Require.js Handlebars Plugin (https://github.com/SlexAxton/require-handlebars-plugin - WTFPL + requirejs + handlebars), Copyright © 2011-2014 by Yehuda Katz.
