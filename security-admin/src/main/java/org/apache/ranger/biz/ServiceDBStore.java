@@ -230,6 +230,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	public static final String HIDDEN_PASSWORD_STR = "*****";
 	public static final String CONFIG_KEY_PASSWORD = "password";
+	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
+	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
+	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
 
 	private ServicePredicateUtil predicateUtil = null;
 
@@ -2259,7 +2262,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			// we need to create one policy for each resource hierarchy
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
 			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
-				createDefaultPolicy(createdService, vXUser, aHierarchy);
+				RangerPolicy policy = new RangerPolicy();
+				createDefaultPolicy(policy, createdService, vXUser, aHierarchy);
+				policy = createPolicy(policy);
 			}
 		}
 	}
@@ -2380,13 +2385,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	private void createDefaultPolicy(XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy) throws Exception {
-		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
-		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
-		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
-		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
-		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
-		RangerPolicy policy = new RangerPolicy();
+	void createDefaultPolicy(RangerPolicy policy, XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy) throws Exception {
+
 		String policyName=buildPolicyName(resourceHierarchy);
 
 		policy.setIsEnabled(true);
@@ -2395,73 +2395,130 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setService(createdService.getName());
 		policy.setDescription("Policy for " + policyName);
 		policy.setIsAuditEnabled(true);
-		
+
 		policy.setResources(createDefaultPolicyResource(resourceHierarchy));
-		
+
 		if (vXUser != null) {
 			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-			RangerPolicyItem policyItem = new RangerPolicyItem();
+			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
+			//Create Default policy item for the service user
+			RangerPolicyItem policyItem = createDefaultPolicyItem(createdService, vXUser, accessTypeDefs);
+			policyItems.add(policyItem);
+			// For KMS add default policies for HDFS & HIVE users.
+			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(createdService.getType());
+			if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				List<XXAccessTypeDef> hdfsAccessTypeDefs = new ArrayList<XXAccessTypeDef>();
+				List<XXAccessTypeDef> hiveAccessTypeDefs = new ArrayList<XXAccessTypeDef>();
+				for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
+					if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
+						hdfsAccessTypeDefs.add(accessTypeDef);
+						hiveAccessTypeDefs.add(accessTypeDef);
+					} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GENERATE_EEK)) {
+						hdfsAccessTypeDefs.add(accessTypeDef);
+					} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_DECRYPT_EEK)) {
+						hiveAccessTypeDefs.add(accessTypeDef);
+					}
+				}
 
-			List<String> users = new ArrayList<String>();
-			users.add(vXUser.getName());
-			VXUser vXLookupUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
-			
-			XXService xService = daoMgr.getXXService().findByName(createdService.getName());
-			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
-			if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)){
-				VXUser vXAdminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
-				if(vXAdminUser != null){
-					users.add(vXAdminUser.getName());
-				}	
-			}else if(vXLookupUser != null){
-				users.add(vXLookupUser.getName());
-			}else{
-				// do nothing
+				String hdfsUser = PropertiesUtil.getProperty("ranger.kms.service.user.hdfs", "hdfs");
+				if (hdfsUser != null && !hdfsUser.isEmpty()) {
+					XXUser xxUser = daoMgr.getXXUser().findByUserName(hdfsUser);
+					if (xxUser != null) {
+						vXUser = xUserService.populateViewBean(xxUser);
+					} else {
+						vXUser = xUserMgr.createServiceConfigUser(hdfsUser);
+					}
+					if (vXUser != null) {
+						LOG.info("Creating default KMS policy item for " + hdfsUser);
+						policyItem = createDefaultPolicyItem(createdService, vXUser, hdfsAccessTypeDefs);
+						policyItems.add(policyItem);
+					}
+				}
+
+				String hiveUser = PropertiesUtil.getProperty("ranger.kms.service.user.hive", "hive");
+				if (hiveUser != null && !hiveUser.isEmpty()) {
+					XXUser xxUser = daoMgr.getXXUser().findByUserName(hiveUser);
+					if (xxUser != null) {
+						vXUser = xUserService.populateViewBean(xxUser);
+					} else {
+						vXUser = xUserMgr.createServiceConfigUser(hiveUser);
+					}
+					if (vXUser != null) {
+						LOG.info("Creating default KMS policy item for " + hiveUser);
+						policyItem = createDefaultPolicyItem(createdService, vXUser, hiveAccessTypeDefs);
+						policyItems.add(policyItem);
+					}
+				}
 			}
-			
-			RangerService rangerService = getServiceByName(createdService.getName());
-			if (rangerService != null){
-				Map<String, String> map = rangerService.getConfigs();
-				if (map != null && map.containsKey(AMBARI_SERVICE_CHECK_USER)){
-					String userNames = map.get(AMBARI_SERVICE_CHECK_USER);
-					String[] userList = userNames.split(",");
-					if(userList != null){
-						for (String userName : userList) {
-							if(!StringUtils.isEmpty(userName)){
-								XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
-								if (xxUser != null) {
-									vXUser = xUserService.populateViewBean(xxUser);
-								} else {
-									vXUser = xUserMgr.createServiceConfigUser(userName);
-									LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
-								}
-								if(vXUser != null){
-									users.add(vXUser.getName());
-								}
+			policy.setPolicyItems(policyItems);
+		}
+	}
+
+	private RangerPolicyItem createDefaultPolicyItem(XXService createdService, VXUser vXUser, List<XXAccessTypeDef> accessTypeDefs) throws Exception {
+		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
+		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
+		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
+		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
+
+		RangerPolicyItem policyItem = new RangerPolicyItem();
+
+		List<String> users = new ArrayList<String>();
+		users.add(vXUser.getName());
+		VXUser vXLookupUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
+
+		XXService xService = daoMgr.getXXService().findByName(createdService.getName());
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+		if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)){
+			VXUser vXAdminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
+			if(vXAdminUser != null){
+				users.add(vXAdminUser.getName());
+			}	
+		}else if(vXLookupUser != null){
+			users.add(vXLookupUser.getName());
+		}else{
+			// do nothing
+		}
+
+		RangerService rangerService = getServiceByName(createdService.getName());
+		if (rangerService != null){
+			Map<String, String> map = rangerService.getConfigs();
+			if (map != null && map.containsKey(AMBARI_SERVICE_CHECK_USER)){
+				String userNames = map.get(AMBARI_SERVICE_CHECK_USER);
+				String[] userList = userNames.split(",");
+				if(userList != null){
+					for (String userName : userList) {
+						if(!StringUtils.isEmpty(userName)){
+							XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+							if (xxUser != null) {
+								vXUser = xUserService.populateViewBean(xxUser);
+							} else {
+								vXUser = xUserMgr.createServiceConfigUser(userName);
+								LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
+							}
+							if(vXUser != null){
+								users.add(vXUser.getName());
 							}
 						}
 					}
 				}
 			}
-			policyItem.setUsers(users);
-
-			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
-			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-			for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
-				RangerPolicyItemAccess access = new RangerPolicyItemAccess();
-				access.setType(accessTypeDef.getName());
-				access.setIsAllowed(true);
-				accesses.add(access);
-			}
-			policyItem.setAccesses(accesses);
-
-			policyItem.setDelegateAdmin(true);
-			policyItems.add(policyItem);
-			policy.setPolicyItems(policyItems);
 		}
-		policy = createPolicy(policy);
+		policyItem.setUsers(users);
+
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+		for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
+			RangerPolicyItemAccess access = new RangerPolicyItemAccess();
+			access.setType(accessTypeDef.getName());
+			access.setIsAllowed(true);
+			accesses.add(access);
+		}
+		policyItem.setAccesses(accesses);
+
+		policyItem.setDelegateAdmin(true);
+		return policyItem;
 	}
-	
+
 	private VXUser getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {
 		VXUser vXUser = null;
 		if(!StringUtils.isEmpty(authType) && authType.equalsIgnoreCase(KERBEROS_TYPE)){

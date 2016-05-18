@@ -279,4 +279,13 @@
 		<name>ranger.downloadpolicy.session.log.enabled</name>
 		<value>false</value>
 	</property>
+	<!-- Service user for KMS -->
+    <property>
+    	<name>ranger.kms.service.user.hdfs</name>
+        <value>hdfs</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.hive</name>
+        <value>hive</value>
+    </property>
 </configuration>
