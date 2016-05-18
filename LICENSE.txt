@@ -325,8 +325,3 @@ This product includes Open Sans font (http://www.opensans.com/ - Apache License 
 -----------------------------------------------------------------------
 This product includes jsDump v1.0.0(http://flesler.blogspot.com -BSD licence) Copyright (c) 2008 Ariel Flesler.
 
-
------------------------------------------------------------------------
- MPL license
------------------------------------------------------------------------
-This product includes jQuery Pines Notify (pnotify) Plugin 1.2.0 (http://sciactive.com/pnotify/- MPL), Copyright © 2009-2012 Hunter Perrin.
