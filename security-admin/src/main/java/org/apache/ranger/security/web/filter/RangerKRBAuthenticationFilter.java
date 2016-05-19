@@ -69,6 +69,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
 public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
@@ -224,6 +225,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		String authtype = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
 		HttpServletRequest httpRequest = (HttpServletRequest)request;
 		if(isSpnegoEnable(authtype)){
+			KerberosName.setRules(PropertiesUtil.getProperty(NAME_RULES, "DEFAULT"));
 			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
 			String userName = null;
 			Cookie[] cookie = httpRequest.getCookies();

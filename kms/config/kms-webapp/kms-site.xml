@@ -176,17 +176,17 @@
   </property>
   
   <property>
-  	<name>hadoop.kms.proxyuser.rangeradmin.groups</name>
+  	<name>hadoop.kms.proxyuser.ranger.groups</name>
   	<value>*</value>
   </property>
   
   <property>
-  	<name>hadoop.kms.proxyuser.rangeradmin.hosts</name>
+  	<name>hadoop.kms.proxyuser.ranger.hosts</name>
   	<value>*</value>
   </property>
   
   <property>
-  	<name>hadoop.kms.proxyuser.rangeradmin.users</name>
+  	<name>hadoop.kms.proxyuser.ranger.users</name>
   	<value>*</value>
   </property>
 </configuration>

@@ -412,7 +412,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 
 	public SSOAuthenticationProperties getJwtProperties() {
 		String providerUrl = PropertiesUtil.getProperty(JWT_AUTH_PROVIDER_URL);
-		if (providerUrl != null) {
+		if (providerUrl != null && PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false)) {
 			String publicKeyPath = PropertiesUtil.getProperty(JWT_PUBLIC_KEY);
 			if (publicKeyPath == null) {
 				LOG.error("Public key pem not specified for SSO auth provider {}. SSO auth will be disabled.",providerUrl);

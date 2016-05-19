@@ -69,6 +69,7 @@ public class RangerHSM implements RangerKMSMKI {
             logger.debug("Loading HSM tokenlabel : "+partitionName);
             myStore = KeyStore.getInstance("Luna");    
             myStore.load(is1, passwd.toCharArray());
+            if(myStore == null){ logger.error("Luna not found. Please verify the Ranger KMS HSM configuration setup."); }
         } catch (KeyStoreException kse) {
         	logger.error("Unable to create keystore object : "+kse.getMessage());            
         } catch (NoSuchAlgorithmException nsae) {
@@ -82,7 +83,7 @@ public class RangerHSM implements RangerKMSMKI {
         
 	@Override
 	public boolean generateMasterKey(String password) throws Throwable {
-		if(myStore.size() < 1){			
+		if(myStore != null && myStore.size() < 1){
 			KeyGenerator keyGen = null;
 			SecretKey aesKey = null;
 			try {
@@ -103,28 +104,32 @@ public class RangerHSM implements RangerKMSMKI {
 
 	@Override
 	public String getMasterKey(String password) throws Throwable {
-		try {
-			logger.debug("Searching for Ranger Master Key in Luna Keystore");
-            boolean result = myStore.containsAlias(alias);
-            if (result == true) {
-                logger.debug("Ranger Master Key is present in Keystore");
-                SecretKey key = (SecretKey)myStore.getKey(alias, password.toCharArray());
-                String masterKey = Base64.encode(key.getEncoded()) ;
-                return masterKey;                                                                                                                  
-            }
-         } catch (Exception e) {
-            logger.error("getMasterKey : Exception searching for Ranger Master Key - "  + e.getMessage());
-        }
+		if(myStore != null){
+			try {
+				logger.debug("Searching for Ranger Master Key in Luna Keystore");
+	            boolean result = myStore.containsAlias(alias);
+	            if (result == true) {
+	                logger.debug("Ranger Master Key is present in Keystore");
+	                SecretKey key = (SecretKey)myStore.getKey(alias, password.toCharArray());
+	                String masterKey = Base64.encode(key.getEncoded()) ;
+	                return masterKey;
+	            }
+	         } catch (Exception e) {
+	            logger.error("getMasterKey : Exception searching for Ranger Master Key - "  + e.getMessage());
+	         }
+		}
 		return null;
 	}
 	
 	public boolean setMasterKey(String password, byte[] key){
-		try {
-			Key aesKey = new SecretKeySpec(key, MK_CIPHER);
-			myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
-			return true;
-		} catch (KeyStoreException e) {
-            logger.error("setMasterKey : Exception while setting Master Key - "  + e.getMessage());
+		if(myStore != null){
+			try {
+				Key aesKey = new SecretKeySpec(key, MK_CIPHER);
+				myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
+				return true;
+			} catch (KeyStoreException e) {
+	            logger.error("setMasterKey : Exception while setting Master Key - "  + e.getMessage());
+			}
 		}
 		return false;
 	}

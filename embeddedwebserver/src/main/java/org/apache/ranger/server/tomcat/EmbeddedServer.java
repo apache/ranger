@@ -214,40 +214,54 @@ public class EmbeddedServer {
 			lce.printStackTrace();
 		}
 		
-		String keytab = getConfig(ADMIN_USER_KEYTAB);
-//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
-		String principal = null;
-		try {
-			principal = SecureClientLogin.getPrincipal(getConfig(ADMIN_USER_PRINCIPAL), hostName);
-		} catch (IOException ignored) {
-			 // do nothing
-		}
-		String nameRules = getConfig(ADMIN_NAME_RULES);
-		if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
-			try{
-				LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
-				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
-				Subject.doAs(sub, new PrivilegedAction<Void>() {
-					@Override
-					public Void run() {
-						try{
-							LOG.info("Starting Server using kerberos crendential");
-							server.start();
-							server.getServer().await();
-							shutdownServer();
-						}catch (LifecycleException e) {
-							LOG.severe("Tomcat Server failed to start:" + e.toString());
-							e.printStackTrace();
-						}catch (Exception e) {
-							LOG.severe("Tomcat Server failed to start:" + e.toString());
-							e.printStackTrace();
+		if(getConfig("logdir") != null){
+			String keytab = getConfig(ADMIN_USER_KEYTAB);
+	//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
+			String principal = null;
+			try {
+				principal = SecureClientLogin.getPrincipal(getConfig(ADMIN_USER_PRINCIPAL), hostName);
+			} catch (IOException ignored) {
+				 // do nothing
+			}
+			String nameRules = getConfig(ADMIN_NAME_RULES);
+			if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
+				try{
+					LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
+					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+					Subject.doAs(sub, new PrivilegedAction<Void>() {
+						@Override
+						public Void run() {
+							try{
+								LOG.info("Starting Server using kerberos crendential");
+								server.start();
+								server.getServer().await();
+								shutdownServer();
+							}catch (LifecycleException e) {
+								LOG.severe("Tomcat Server failed to start:" + e.toString());
+								e.printStackTrace();
+							}catch (Exception e) {
+								LOG.severe("Tomcat Server failed to start:" + e.toString());
+								e.printStackTrace();
+							}
+							return null;
 						}
-						return null;
-					}
-				});
-			}catch(Exception e){
-				LOG.severe("Tomcat Server failed to start:" + e.toString());
-				e.printStackTrace();
+					});
+				}catch(Exception e){
+					LOG.severe("Tomcat Server failed to start:" + e.toString());
+					e.printStackTrace();
+				}
+			}else{
+				try{                 
+					server.start(); 
+					server.getServer().await();
+					shutdownServer();
+				} catch (LifecycleException e) {
+					LOG.severe("Tomcat Server failed to start:" + e.toString());
+					e.printStackTrace(); 
+				} catch (Exception e) {
+					LOG.severe("Tomcat Server failed to start:" + e.toString());
+					e.printStackTrace(); 
+				}
 			}
 		}else{
 			try{                 
