@@ -1337,12 +1337,12 @@ public class ServiceUtil {
 			service = svcStore.getServiceByName(serviceName);
 		} catch (Exception e) {
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
-			throw restErrorUtil.createRESTException("Serivce:" + serviceName + " not found",  
+			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",  
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(service==null){
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
-			throw restErrorUtil.createRESTException("Serivce:" + serviceName + " not found",
+			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(!service.getIsEnabled()){
