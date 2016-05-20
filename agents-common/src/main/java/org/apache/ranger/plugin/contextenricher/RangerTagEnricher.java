@@ -423,7 +423,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					}
 				}
 			} else {
-				LOG.warn("cache file does not exist or not readble '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
+				LOG.warn("cache file does not exist or not readable '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
 			}
 
 			if (LOG.isDebugEnabled()) {
