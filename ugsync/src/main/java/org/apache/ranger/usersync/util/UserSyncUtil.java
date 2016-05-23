@@ -19,18 +19,18 @@
 
 package org.apache.ranger.usersync.util;
 
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.util.URIUtil;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public class UserSyncUtil {
 
-	public static String encodeURIParam(String s) throws URIException {
+	public static String encodeURIParam(String s) throws UnsupportedEncodingException {
 
 		String ret = null;
 
 		try {
-			ret = URIUtil.encodeQuery(s);
-		} catch (URIException e) {
+			ret = URLEncoder.encode(s, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
 			throw e;
 		}
 

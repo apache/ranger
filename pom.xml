@@ -140,7 +140,6 @@
         <commons.configuration.version>1.10</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
-        <commons.httpclient.version>3.1</commons.httpclient.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.logging.version>1.2</commons.logging.version>
@@ -164,7 +163,7 @@
         <hbase.version>1.1.3</hbase.version>
         <hive.version>2.1.0-SNAPSHOT</hive.version>
         <htrace-core.version>3.1.0-incubating</htrace-core.version>
-		<httpcomponents.httpclient.version>4.5.1</httpcomponents.httpclient.version>
+		<httpcomponents.httpclient.version>4.3.6</httpcomponents.httpclient.version>
 		<httpcomponents.httpcore.version>4.4.3</httpcomponents.httpcore.version>
 		<httpcomponents.httpmime.version>4.5.1</httpcomponents.httpmime.version>
         <jackson.version>1.9.13</jackson.version>
