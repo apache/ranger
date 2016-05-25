@@ -47,7 +47,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas";
+	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -61,7 +61,6 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME = "kafka";
 	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
-	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -75,7 +74,6 @@ public class EmbeddedServiceDefsUtil {
 	public static final String KAFKA_IMPL_CLASS_NAME = "org.apache.ranger.services.kafka.RangerServiceKafka";
 	public static final String SOLR_IMPL_CLASS_NAME  = "org.apache.ranger.services.solr.RangerServiceSolr";
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
-	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
@@ -90,7 +88,6 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef kafkaServiceDef = null;
 	private RangerServiceDef solrServiceDef  = null;
 	private RangerServiceDef nifiServiceDef  = null;
-	private RangerServiceDef atlasServiceDef  = null;
 
 	private RangerServiceDef tagServiceDef = null;
 
@@ -128,7 +125,6 @@ public class EmbeddedServiceDefsUtil {
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
-			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME); 
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 
@@ -180,10 +176,6 @@ public class EmbeddedServiceDefsUtil {
 	public long getNiFiServiceDefId() {
 		return getId(nifiServiceDef);
 	}
-
-    public long getAtlasServiceDefId() {
-        return getId(atlasServiceDef); 
-    } 
 
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 

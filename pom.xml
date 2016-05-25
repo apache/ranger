@@ -104,11 +104,9 @@
         <module>ranger-storm-plugin-shim</module>
         <module>ranger-kafka-plugin-shim</module>
         <module>ranger-solr-plugin-shim</module>
-        <module>ranger-atlas-plugin-shim</module>
         <module>ranger-hive-utils</module>
         <module>ranger-examples</module>
         <module>ranger-tools</module>
-        <module>plugin-atlas</module>
   </modules>
     <properties>
         <javac.source.version>1.7</javac.source.version>
@@ -164,7 +162,6 @@
         <hamcrest.all.version>1.3</hamcrest.all.version>
         <hbase.version>1.1.3</hbase.version>
         <hive.version>2.1.0-SNAPSHOT</hive.version>
-	<atlas.version>0.7-incubating-SNAPSHOT</atlas.version>
         <htrace-core.version>3.1.0-incubating</htrace-core.version>
 		<httpcomponents.httpclient.version>4.3.6</httpcomponents.httpclient.version>
 		<httpcomponents.httpcore.version>4.4.3</httpcomponents.httpcore.version>
@@ -404,7 +401,6 @@
                             <descriptor>src/main/assembly/kms.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                            <descriptor>src/main/assembly/atlas-agent.xml</descriptor>
                         </descriptors>
                     </configuration>
                 </plugin>
@@ -521,7 +517,6 @@
                         <exclude>**/.classpath/**</exclude>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
-                        <exclude>**/bin/**</exclude>
                         <exclude>**/CHANGES</exclude>
                         <exclude>**/ISSUES</exclude>
                         <exclude>**/patchprocess/**</exclude>
