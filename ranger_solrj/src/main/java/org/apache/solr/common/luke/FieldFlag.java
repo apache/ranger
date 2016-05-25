@@ -1,4 +1,3 @@
-package org.apache.solr.common.luke;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,6 +15,7 @@ package org.apache.solr.common.luke;
  * limitations under the License.
  */
 
+package org.apache.solr.common.luke;
 
 /**
  *

@@ -1,4 +1,3 @@
-package org.apache.solr.common.params;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -16,6 +15,8 @@ package org.apache.solr.common.params;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package org.apache.solr.common.params;
 
 import java.util.Locale;
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.services.hdfs;
+package org.apache.ranger.services.hdfs;
 
 import java.io.IOException;
 import java.io.InputStream;
