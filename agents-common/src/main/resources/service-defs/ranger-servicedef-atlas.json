@@ -1,0 +1,207 @@
+{
+	"id":11,
+	"name": "atlas",
+	"implClass": "org.apache.ranger.services.atlas.RangerServiceAtlas",
+	"label": "Atlas Metadata Server",
+	"description": "Atlas Metadata Server",
+	"resources": 
+	[
+		{
+			"itemId": 1,
+			"name": "entity",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Entity",
+			"description": "Entity"
+		},
+
+		{
+			"itemId": 2,
+			"name": "type",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Type",
+			"description": "Type"
+		},
+
+		{
+			"itemId": 3,
+			"name": "operation",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Operations",
+			"description": "Admin Operations"
+		},
+
+		{
+			"itemId": 4,
+			"name": "taxonomy",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Taxonomy",
+			"description": "Taxonomy"
+		},
+
+		{
+			"itemId": 5,
+			"name": "term",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Term",
+			"description": "Term"
+		}
+
+
+	],
+
+	"accessTypes": 
+	[
+		{
+			"itemId": 1,
+			"name": "read",
+			"label": "read"
+		},
+
+		{
+			"itemId": 2,
+			"name": "create",
+			"label": "create"
+		},
+
+		{
+			"itemId": 3,
+			"name": "update",
+			"label": "update"
+		},
+
+		{
+			"itemId": 4,
+			"name": "delete",
+			"label": "delete"
+		},
+
+
+		{
+			"itemId": 5,
+			"name": "all",
+			"label": "All",
+			"impliedGrants":
+			[
+				"read",
+				"create",
+				"update",
+				"delete"
+			]
+		}
+	],
+
+	"configs": 
+	[
+		{
+			"itemId": 1,
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"itemId": 2,
+			"name": "password",
+			"type": "password",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"itemId": 3,
+			"name": "atlas.rest.address",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"defaultValue": "http://localhost:21000"
+		},
+
+		{
+			"itemId": 4,
+			"name": "commonNameForCertificate",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
+		}
+	],
+
+	"enums": 
+	[
+		
+	],
+
+	"contextEnrichers": 
+	[
+	],
+
+	"policyConditions": 
+	[
+	]
+}

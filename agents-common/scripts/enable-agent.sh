@@ -184,6 +184,8 @@ elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/libs
 elif [ "${HCOMPONENT_NAME}" = "storm" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/extlib-daemon
+elif [ "${HCOMPONENT_NAME}" = "atlas" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/server/webapp/atlas/WEB-INF/lib
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -713,6 +715,37 @@ then
 	fi
 fi
 
+#Update Properties to File
+#$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
+updatePropertyToFile(){
+	sed -i 's@^'$1'=[^ ]*$@'$1'='$2'@g' $3
+	validate=$(sed '/^\#/d' $3 | grep "^$1"  | tail -n 1 | cut -d "=" -f2-) # for validation
+	if test -z "$validate" ; then log "[E] '$1' not found in $3 file while Updating....!!"; exit 1; fi
+	echo "Property $1 updated successfully with : '$2'"
+}
+
+if [ "${HCOMPONENT_NAME}" = "atlas" ]
+then
+	if [ "${action}" = "enable" ]
+	then
+		authName="org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer"
+	else
+		authName="org.apache.atlas.authorize.SimpleAtlasAuthorizer"
+	fi
+
+	dt=`date '+%Y%m%d%H%M%S'`
+	fn=`ls ${HCOMPONENT_CONF_DIR}/atlas-application.properties 2> /dev/null`
+    if [ -f "${fn}" ]
+    then
+        dn=`dirname ${fn}`
+        bn=`basename ${fn}`
+        bf=${dn}/.${bn}.${dt}
+        echo "backup of ${fn} to ${bf} ..."
+        cp ${fn} ${bf}
+        echo "Updating properties file: [${fn}] ... "
+        updatePropertyToFile atlas.authorizer.impl $authName ${fn}
+    fi
+fi
 #
 # Set notice to restart the ${HCOMPONENT_NAME}
 #
