@@ -1,5 +1,3 @@
-package org.apache.ranger.services.hdfs;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.ranger.services.hdfs;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.ranger.services.hdfs;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
