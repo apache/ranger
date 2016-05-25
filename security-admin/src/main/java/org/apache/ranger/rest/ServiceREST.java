@@ -56,6 +56,7 @@ import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -114,6 +115,11 @@ public class ServiceREST {
 	private static final String Allowed_User_List_For_Download = "policy.download.auth.users";
 	private static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
+	public static final String isCSRF_ENABLED = "ranger.rest-csrf.enabled";
+	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
+	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
+	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
+	
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
@@ -2248,7 +2254,23 @@ public class ServiceREST {
 	public String checkSSO() {
 		return String.valueOf(bizUtil.isSSOEnabled());
 	}
+	
+	@GET
+	@Path("/csrfconf")
+	@Produces({ "application/json"})
+	public HashMap<String, Object> getCSRFProperties() {
+		return getCSRFPropertiesMap();
+	}
 
+	private HashMap<String, Object> getCSRFPropertiesMap() {
+		HashMap<String, Object> map = new HashMap<String, Object>();  
+		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, false));
+		map.put(CUSTOM_HEADER_PARAM, PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM));
+		map.put(BROWSER_USER_AGENT_PARAM, PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM));
+		map.put(CUSTOM_METHODS_TO_IGNORE_PARAM, PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM));
+		return map;
+	}
+	
 	boolean isAdminUserWithNoFilterParams(SearchFilter filter) {
 		return (filter == null || MapUtils.isEmpty(filter.getParams())) &&
 			   (bizUtil.isAdmin() || bizUtil.isKeyAdmin());

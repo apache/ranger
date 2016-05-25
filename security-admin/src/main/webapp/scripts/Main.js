@@ -24,10 +24,11 @@
 	'routers/Router',
 	'controllers/Controller',
 	'modules/XAOverrides',
+	'modules/RestCsrf',
 	'utils/XAUtils',
 	'hbs!tmpl/common/loading_tmpl'
 ],
-function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides, XAUtils, loadingHTML ) {
+function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,RestCSRF, XAUtils, loadingHTML ) {
     'use strict';
 
     var controller = new AppController();
