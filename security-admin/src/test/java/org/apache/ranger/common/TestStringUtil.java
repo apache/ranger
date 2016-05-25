@@ -128,7 +128,7 @@ public class TestStringUtil {
 	
 	@Test
 	public void testValidateEmailId(){
-		String email="jitendra.sonkar@freestoneinfotech.com";				
+		String email="rangerqa@apache.org";
 		boolean value=stringUtil.validateEmail(email);
 		Assert.assertTrue(email.length() < 128);
 		Assert.assertTrue(value);

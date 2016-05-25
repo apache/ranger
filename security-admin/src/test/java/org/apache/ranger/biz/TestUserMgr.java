@@ -282,8 +282,14 @@ public class TestUserMgr {
 	}
 
 	@Test
-	public void test16GetEmailAddress() {
+	public void test16ChangeEmailAddress() {
 		setup();
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
+		XXGroupPermissionDao xGroupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
+		XXModuleDefDao xModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		XXModuleDef xModuleDef = Mockito.mock(XXModuleDef.class);
 		VXPortalUser userProfile = userProfile();
 
 		XXPortalUser user = new XXPortalUser();
@@ -291,23 +297,79 @@ public class TestUserMgr {
 		user.setFirstName(userProfile.getFirstName());
 		user.setLastName(userProfile.getLastName());
 		user.setLoginId(userProfile.getLoginId());
-		user.setPassword(userProfile.getPassword());
+		String encryptedPwd = userMgr.encrypt(userProfile.getLoginId(),userProfile.getPassword());
+		user.setPassword(encryptedPwd);
 		user.setUserSource(userProfile.getUserSource());
 		user.setPublicScreenName(userProfile.getPublicScreenName());
 		user.setId(userProfile.getId());
 
 		VXPasswordChange changeEmail = new VXPasswordChange();
-		changeEmail.setEmailAddress(user.getEmailAddress());
+		changeEmail.setEmailAddress("testuser@test.com");
 		changeEmail.setId(user.getId());
 		changeEmail.setLoginId(user.getLoginId());
+		changeEmail.setOldPassword(userProfile.getPassword());
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						"serverMsg.userMgrEmailChange",
-						MessageEnums.OPER_NO_PERMISSION, null, null, ""
-								+ changeEmail)).thenThrow(
-				new WebApplicationException());
-		thrown.expect(WebApplicationException.class);
+		XXPortalUserRole XXPortalUserRole = new XXPortalUserRole();
+		XXPortalUserRole.setId(userId);
+		XXPortalUserRole.setUserRole("ROLE_USER");
+		List<XXPortalUserRole> list = new ArrayList<XXPortalUserRole>();
+		list.add(XXPortalUserRole);
+
+		List<XXUserPermission> xUserPermissionsList = new ArrayList<XXUserPermission>();
+		XXUserPermission xUserPermissionObj = new XXUserPermission();
+		xUserPermissionObj.setAddedByUserId(userId);
+		xUserPermissionObj.setCreateTime(new Date());
+		xUserPermissionObj.setId(userId);
+		xUserPermissionObj.setIsAllowed(1);
+		xUserPermissionObj.setModuleId(1L);
+		xUserPermissionObj.setUpdatedByUserId(userId);
+		xUserPermissionObj.setUpdateTime(new Date());
+		xUserPermissionObj.setUserId(userId);
+		xUserPermissionsList.add(xUserPermissionObj);
+
+		List<XXGroupPermission> xGroupPermissionList = new ArrayList<XXGroupPermission>();
+		XXGroupPermission xGroupPermissionObj = new XXGroupPermission();
+		xGroupPermissionObj.setAddedByUserId(userId);
+		xGroupPermissionObj.setCreateTime(new Date());
+		xGroupPermissionObj.setId(userId);
+		xGroupPermissionObj.setIsAllowed(1);
+		xGroupPermissionObj.setModuleId(1L);
+		xGroupPermissionObj.setUpdatedByUserId(userId);
+		xGroupPermissionObj.setUpdateTime(new Date());
+		xGroupPermissionObj.setGroupId(userId);
+		xGroupPermissionList.add(xGroupPermissionObj);
+
+		VXUserPermission userPermission = new VXUserPermission();
+		userPermission.setId(1L);
+		userPermission.setIsAllowed(1);
+		userPermission.setModuleId(1L);
+		userPermission.setUserId(userId);
+		userPermission.setUserName("xyz");
+		userPermission.setOwner("admin");
+
+		VXGroupPermission groupPermission = new VXGroupPermission();
+		groupPermission.setId(1L);
+		groupPermission.setIsAllowed(1);
+		groupPermission.setModuleId(1L);
+		groupPermission.setGroupId(userId);
+		groupPermission.setGroupName("xyz");
+		groupPermission.setOwner("admin");
+
+		Mockito.when(stringUtil.validateEmail(Mockito.anyString())).thenReturn(true);
+		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
+		Mockito.when(stringUtil.normalizeEmail(Mockito.anyString())).thenReturn(changeEmail.getEmailAddress());
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+		Mockito.when(userDao.update(user)).thenReturn(user);
+		Mockito.when(roleDao.findByParentId(Mockito.anyLong())).thenReturn(list);
+		Mockito.when(daoManager.getXXUserPermission()).thenReturn(xUserPermissionDao);
+		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(xGroupPermissionDao);
+		Mockito.when(xUserPermissionDao.findByUserPermissionIdAndIsAllowed(userProfile.getId())).thenReturn(xUserPermissionsList);
+		Mockito.when(xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId())).thenReturn(xGroupPermissionList);
+		Mockito.when(xGroupPermissionService.populateViewBean(xGroupPermissionObj)).thenReturn(groupPermission);
+		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
+		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong())).thenReturn(xModuleDef);
 
 		VXPortalUser dbVXPortalUser = userMgr.changeEmailAddress(user,
 				changeEmail);
@@ -319,53 +381,6 @@ public class TestUserMgr {
 				dbVXPortalUser.getLoginId());
 		Assert.assertEquals(changeEmail.getEmailAddress(),
 				dbVXPortalUser.getEmailAddress());
-
-		Mockito.verify(restErrorUtil).createRESTException(
-				"serverMsg.userMgrEmailChange",
-				MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
-	}
-
-	@Test
-	public void test17ValidateEmailAddress() {
-		setup();
-		VXPortalUser userProfile = userProfile();
-
-		XXPortalUser user = new XXPortalUser();
-		user.setFirstName(userProfile.getFirstName());
-		user.setLastName(userProfile.getLastName());
-		user.setLoginId(userProfile.getLoginId());
-		user.setPassword(userProfile.getPassword());
-		user.setUserSource(userProfile.getUserSource());
-		user.setPublicScreenName(userProfile.getPublicScreenName());
-		user.setId(userProfile.getId());
-
-		VXPasswordChange changeEmail = new VXPasswordChange();
-		changeEmail.setId(user.getId());
-		changeEmail.setLoginId(user.getLoginId());
-
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						"serverMsg.userMgrInvalidEmail",
-						MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-						"emailAddress", changeEmail.toString())).thenThrow(
-				new WebApplicationException());
-		thrown.expect(WebApplicationException.class);
-
-		VXPortalUser dbVXPortalUser = userMgr.changeEmailAddress(user,
-				changeEmail);
-		Assert.assertNotNull(dbVXPortalUser);
-		Assert.assertEquals(userId, dbVXPortalUser.getId());
-		Assert.assertEquals(userProfile.getLastName(),
-				dbVXPortalUser.getLastName());
-		Assert.assertEquals(changeEmail.getLoginId(),
-				dbVXPortalUser.getLoginId());
-		Assert.assertEquals(changeEmail.getEmailAddress(),
-				dbVXPortalUser.getEmailAddress());
-
-		Mockito.verify(restErrorUtil).createRESTException(
-				"serverMsg.userMgrInvalidEmail",
-				MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-				"emailAddress", changeEmail.toString());
 	}
 
 	@Test

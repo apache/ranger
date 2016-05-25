@@ -107,11 +107,7 @@ public class AuditProviderFactory {
 		LOG.info("AuditProviderFactory: initializing..");
 
 		if (mInitDone) {
-			LOG.warn(
-					"AuditProviderFactory.init(): already initialized! Will try to re-initialize",
-					new Exception());
-
-			// return;
+			LOG.warn("AuditProviderFactory.init(): already initialized! Will try to re-initialize");
 		}
 		mInitDone = true;
 		componentAppType = appType;

@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.persistence.Query;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -468,11 +469,11 @@ public class UserMgr {
 	public VXPortalUser changeEmailAddress(XXPortalUser gjUser,
 			VXPasswordChange changeEmail) {
 		checkAccess(gjUser);
-		if (gjUser.getEmailAddress() != null) {
+		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
 			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrEmailChange",
-					MessageEnums.OPER_NO_PERMISSION, null, null, ""
-							+ changeEmail);
+					"serverMsg.userMgrInvalidEmail",
+					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
+					"emailAddress", changeEmail.toString());
 		}
 
 		String encryptedOldPwd = encrypt(gjUser.getLoginId(),
@@ -500,9 +501,6 @@ public class UserMgr {
 		// Normalize email. Make it lower case
 		gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail
 				.getEmailAddress()));
-
-		// loginId
-		gjUser.setLoginId(gjUser.getEmailAddress());
 
 		String saltEncodedpasswd = encrypt(gjUser.getLoginId(),
 				changeEmail.getOldPassword());

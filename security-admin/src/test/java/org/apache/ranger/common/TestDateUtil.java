@@ -71,12 +71,5 @@ public class TestDateUtil {
 		Assert.assertEquals(currentDate.getDate(),date.getDate());
 		Assert.assertEquals(currentDate.getMinutes(),mins);
 	}
-	
-	@Ignore("test to be reviewed")
-	@Test
-	public void testGetUTCDate1(){
-		Date date=new Date();
-		Date userdate=DateUtil.getUTCDate();
-		Assert.assertEquals(userdate.getDate(),date.getDate());
-	}
+
 }
