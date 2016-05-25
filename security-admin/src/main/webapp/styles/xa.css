@@ -1468,13 +1468,6 @@ ul.tabs > li > a {
 .diff-right .data li {
   min-width: 16.5em;
 }
-.diff-list > ol {
-  display: initial;
-  min-width: 250px;
-}
-.diff .diff-left{
-  min-width: 16.5em;
-}
 
 .change {
   background-color: #ffd;

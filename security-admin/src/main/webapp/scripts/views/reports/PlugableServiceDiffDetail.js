@@ -59,11 +59,6 @@ define(function(require){
 					oldDenyPolicyItems : this.oldDenyPolicyItems,
 					newDenyExceptionPolicyItems : this.newDenyExceptionPolicyItems,
 					oldDenyExceptionPolicyItems : this.oldDenyExceptionPolicyItems,
-					newMaskPolicyItems: this.newMaskPolicyItems,
-					newRowFilterPolicyItems: this.newRowFilterPolicyItems,
-					oldMaskPolicyItems: this.oldMaskPolicyItems,
-					oldRowFilterPolicyItems: this.oldRowFilterPolicyItems,
-
         		};
         },
     	/** ui selector cache */
@@ -154,7 +149,6 @@ define(function(require){
 				this.highLightElement($(ol).find('.groupname'), $(newOl[i]).find('.groupname'));
 				this.highLightElement($(ol).find('.perm'), $(newOl[i]).find('.perm'));
 				this.highLightElement($(ol).find('.condition'), $(newOl[i]).find('.condition'));
-				this.highLightElement($(ol).find('.maskingAndRow'), $(newOl[i]).find('.maskingAndRow'));
 				
 			},this);
 		},
@@ -198,8 +192,6 @@ define(function(require){
 			this.newAllowExceptionPolicyItems = null, this.oldAllowExceptionPolicyItems = null,
 			this.newDenyPolicyItems = null, this.oldDenyPolicyItems = null,
 			this.newDenyExceptionPolicyItems = null, this.oldDenyExceptionPolicyItems = null;
-			this.newMaskPolicyItems = null, this.newRowFilterPolicyItems = null,
-			this.oldMaskPolicyItems = null, this.oldRowFilterPolicyItems = null;
 			var policyStatus = this.collection.findWhere({'attributeName':'Policy Status'})
 			if(!_.isUndefined(policyStatus)){
 				if(!_.isEmpty(policyStatus.get('previousValue'))){
@@ -245,22 +237,6 @@ define(function(require){
 				if(!_.isEmpty(perms)){
 					this.newDenyExceptionPolicyItems = perms.newPerms;
 					this.oldDenyExceptionPolicyItems = perms.oldPerms;
-				}
-			}
-			var policyItems = this.collection.findWhere({'attributeName':'Masked Policy Items'});
-			if(!_.isUndefined(policyItems)){
-				var perms = this.getPolicyItems('Masked Policy Items');
-				if(!_.isEmpty(perms)){
-					this.newMaskPolicyItems = perms.newPerms;
-					this.oldMaskPolicyItems = perms.oldPerms;
-				}
-			}
-			var policyItems = this.collection.findWhere({'attributeName':'Row level filter Policy Items'});
-			if(!_.isUndefined(policyItems)){
-				var perms = this.getPolicyItems('Row level filter Policy Items');
-				if(!_.isEmpty(perms)){
-					this.newRowFilterPolicyItems = perms.newPerms;
-					this.oldRowFilterPolicyItems = perms.oldPerms;
 				}
 			}
 		},
@@ -318,7 +294,7 @@ define(function(require){
 			}
 		},
 		getPolicyItems : function(itemType) {
-			var items = {},that = this;
+			var items = {};
 			var newPolicyItems=[], oldPolicyItems =[];
 			var policyItems = this.collection.findWhere({'attributeName': itemType });
 			this.collection.remove(policyItems);
@@ -342,49 +318,15 @@ define(function(require){
 					}
 				});
 			}
-			if(itemType === 'Masked Policy Items') {
-				for(var i = 0; i < newPolicyItems.length ; i++){
-					var maskingType = newPolicyItems[i].dataMaskInfo.dataMaskType;
-					var dataMaskDefs = that.rangerServiceDefModel.get('dataMaskDef');
-					_.each(dataMaskDefs.maskTypes,function(maskType){
-						if(maskType.name === maskingType) {
-							newPolicyItems[i].dataMaskInfo.dataMaskType = maskType.label;
-						}
-					});
-				};
-
-				for(var i = 0; i < oldPolicyItems.length ; i++){
-					var maskingType = oldPolicyItems[i].dataMaskInfo.dataMaskType;
-					var dataMaskDefs = that.rangerServiceDefModel.get('dataMaskDef');
-					_.each(dataMaskDefs.maskTypes,function(maskType){
-						if(maskType.name === maskingType) {
-							oldPolicyItems[i].dataMaskInfo.dataMaskType = maskType.label;
-						}
-					});
-				};
-			}
-
 //			this.oldPermList =[], this.newPermList =[]
 			if(this.action == "update"){
-				//return this.setOldeNewPermList(newPolicyItems, oldPolicyItems);
-				return this.setOldNewPermDiff(newPolicyItems, oldPolicyItems);
+				return this.setOldeNewPermList(newPolicyItems, oldPolicyItems);
 			} else {
 				
 				return {'oldPerms' : oldPolicyItems, 'newPerms' : newPolicyItems};
 //				this.oldPermList = this.oldPolicyItems;
 //				this.newPermList = this.newPolicyItems; 
 			}
-		},
-		setOldNewPermDiff: function(newPolicyItems, oldPolicyItems){
-			var oldPerms = [], newPerms = [];
-			var len = oldPolicyItems.length > newPolicyItems.length ? oldPolicyItems.length : newPolicyItems.length;
-			for(var i = 0; i < len ; i++) {
-				if (JSON.stringify(newPolicyItems[i]) != JSON.stringify(oldPolicyItems[i])) {
-					oldPerms.push(oldPolicyItems[i]);
-					newPerms.push(newPolicyItems[i]);
-				}
-			}
-			return {'newPerms': newPerms, 'oldPerms': oldPerms};
 		},
 		setOldeNewPermList : function(newPolicyItems, oldPolicyItems) {
 			var found = false, oldPerms = [], newPerms = [];

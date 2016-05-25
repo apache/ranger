@@ -70,8 +70,8 @@
 {{#if oldPolicyItems}}
 	<h5>Allow PolicyItems :</h5>
 	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
+		<div class="diff-left" data-id="diff">
+			<h3>old Value</h3>
 				{{#each oldPolicyItems}}
 					<ol class="unstyled data">
 						{{#if this.permissions}}
@@ -113,7 +113,7 @@
 					</ol><br/>
 			{{/each}}
 		</div>
-		<div class="diff-right diff-list" data-id="diff">
+		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newPolicyItems}}
 				<ol class="unstyled data">
@@ -162,8 +162,8 @@
 {{#if oldAllowExceptionPolicyItems}}
 	<h5>Allow Exception PolicyItems :</h5>
 	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
+		<div class="diff-left" data-id="diff">
+			<h3>old Value</h3>
 				{{#each oldAllowExceptionPolicyItems}}
 					<ol class="unstyled data">
 						{{#if this.permissions}}
@@ -205,7 +205,7 @@
 					</ol><br/>
 			{{/each}}
 		</div>
-		<div class="diff-right diff-list" data-id="diff">
+		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newAllowExceptionPolicyItems}}
 				<ol class="unstyled data">
@@ -255,8 +255,8 @@
 {{#if oldDenyPolicyItems}}
 	<h5>Deny PolicyItems :</h5>
 	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
+		<div class="diff-left" data-id="diff">
+			<h3>old Value</h3>
 				{{#each oldDenyPolicyItems}}
 					<ol class="unstyled data">
 						{{#if this.permissions}}
@@ -298,7 +298,7 @@
 					</ol><br/>
 			{{/each}}
 		</div>
-		<div class="diff-right diff-list" data-id="diff">
+		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newDenyPolicyItems}}
 				<ol class="unstyled data">
@@ -349,8 +349,8 @@
 {{#if oldDenyExceptionPolicyItems}}
 	<h5>Deny Exception PolicyItems :</h5>
 	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
+		<div class="diff-left" data-id="diff">
+			<h3>old Value</h3>
 				{{#each oldDenyExceptionPolicyItems}}
 					<ol class="unstyled data">
 						{{#if this.permissions}}
@@ -392,7 +392,7 @@
 					</ol><br/>
 			{{/each}}
 		</div>
-		<div class="diff-right diff-list" data-id="diff">
+		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newDenyExceptionPolicyItems}}
 				<ol class="unstyled data">
@@ -438,180 +438,5 @@
 	</div>
 	{{/if}}
 	
-<!-- Masking Policy Items -->
-{{#if oldMaskPolicyItems}}
-	<h5>Masking Policy Items :</h5>
-	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
-				{{#each oldMaskPolicyItems}}
-					<ol class="unstyled data">
-						{{#if this.accesses}}
-							<li class="change-row"><i>Groups</i>:
-								{{#if_eq this.groups compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.groups}}
-											<span class="groupname">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Users</i>:
-								{{#if_eq this.users compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.users}}
-											<span class="username">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Accesses</i>:
-								{{#each this.accesses}}
-									<span class="perm">{{this.type}}</span> <span>,</span>
-								{{/each}}
-							</li>
-							{{#if this.dataMaskInfo}}
-							<li class="change-row">
-							<i>Data Mask Types</i>:
-							<span class="maskingAndRow">{{this.dataMaskInfo.dataMaskType}}</span> <span>,</span>
-							</li>
-							{{/if}}
-						{{else}}
-							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}
-					</ol><br/>
-			{{/each}}
-		</div>
-		<div class="diff-right diff-list" data-id="diff">
-			<h3>New Value</h3>
-			{{#each newMaskPolicyItems}}
-				<ol class="unstyled data">
-				{{#if this.accesses}}
-							<li class="change-row"><i>Groups</i>:
-								{{#if_eq this.groups compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.groups}}
-											<span class="groupname">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Users</i>:
-								{{#if_eq this.users compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.users}}
-											<span class="username">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Accesses</i>:
-								{{#each this.accesses}}
-									<span class="perm">{{this.type}}</span> <span>,</span>
-								{{/each}}
-							</li>
-							{{#if this.dataMaskInfo}}
-							<li class="change-row">
-							<i>Data Mask Types</i>:
-							<span class="maskingAndRow">{{this.dataMaskInfo.dataMaskType}}</span> <span>,</span>
-							</li>
-							{{/if}}
-
-				{{else}}
-						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}
-				</ol><br/>
-			{{/each}}
-		</div>
-	</div>
-	{{/if}}
-
-<!--  Row filter Policy Items-->
-{{#if oldRowFilterPolicyItems}}
-	<h5>Row Level Filter Policy Items :</h5>
-	<div class="diff diff-perms">
-		<div class="diff-left diff-list" data-id="diff">
-			<h3>Old Value</h3>
-				{{#each oldRowFilterPolicyItems}}
-					<ol class="unstyled data">
-						{{#if this.accesses}}
-							<li class="change-row"><i>Groups</i>:
-								{{#if_eq this.groups compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.groups}}
-											<span class="groupname">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Users</i>:
-								{{#if_eq this.users compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.users}}
-											<span class="username">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Accesses</i>:
-								{{#each this.accesses}}
-									<span class="perm">{{this.type}}</span> <span>,</span>
-								{{/each}}
-							</li>
-							{{#if this.rowFilterInfo}}
-							<li class="change-row">
-							<i>Row Level Filter</i>:
-							<span class="maskingAndRow">{{this.rowFilterInfo.filterExpr}}</span> <span>,</span>
-							</li>
-							{{/if}}
-						{{else}}
-							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}
-					</ol><br/>
-			{{/each}}
-		</div>
-		<div class="diff-right diff-list" data-id="diff">
-			<h3>New Value</h3>
-			{{#each newRowFilterPolicyItems}}
-				<ol class="unstyled data">
-				{{#if this.accesses}}
-							<li class="change-row"><i>Groups</i>:
-								{{#if_eq this.groups compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.groups}}
-											<span class="groupname">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Users</i>:
-								{{#if_eq this.users compare=0}}
-									&lt;empty&gt;
-								{{else}}
-									{{#each this.users}}
-											<span class="username">{{this}}</span><span>,</span>
-									{{/each}}
-								{{/if_eq}}
-							</li>
-							<li class="change-row"><i>Accesses</i>:
-								{{#each this.accesses}}
-									<span class="perm">{{this.type}}</span> <span>,</span>
-								{{/each}}
-							</li>
-							{{#if this.rowFilterInfo}}
-							<li class="change-row">
-							<i>Row Level Filter</i>:
-							<span class="maskingAndRow">{{this.rowFilterInfo.filterExpr}}</span> <span>,</span>
-							</li>
-							{{/if}}
-
-				{{else}}
-						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}
-				</ol><br/>
-			{{/each}}
-		</div>
-	</div>
-	{{/if}}
 
 </div>
