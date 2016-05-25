@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1524,6 +1525,41 @@ public class ServiceREST {
 			RangerPerfTracer.log(perf);
 		}
 
+	}
+
+	@GET
+	@Path("/policies/csv")
+	@Produces("text/csv")
+	public void getPoliciesInCsv(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPoliciesInCsv()");
+		}
+		RangerPerfTracer perf = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPoliciesInCsv()");
+			}
+			List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+			if (filter != null) {
+				filter.setStartIndex(0);
+				filter.setMaxRows(Integer.MAX_VALUE);
+				policies = svcStore.getPoliciesForReports(filter);
+			}
+			svcStore.getPoliciesInCSV(policies, response);
+
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("Error while downloading policy report", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
 	}
 
 

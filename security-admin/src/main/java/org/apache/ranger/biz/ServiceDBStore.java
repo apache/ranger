@@ -27,13 +27,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringTokenizer;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -1974,6 +1980,36 @@ public class ServiceDBStore extends AbstractServiceStore {
 		writeExcel(policies, excelFileName, response);
 	}
 
+	public void getPoliciesInCSV(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
+				}
+				InputStream in=null;
+				ServletOutputStream out=null;
+				String CSVFileName=null;
+				try {
+					String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+					CSVFileName = "Ranger_Policies_" + timeStamp + ".csv";
+					out = response.getOutputStream();
+					StringBuffer sb = writeCSV(policies, CSVFileName, response);
+					in = new ByteArrayInputStream(sb.toString().getBytes());
+					byte[] outputByte = new byte[sb.length()];
+					while (in.read(outputByte, 0, sb.length()) != -1) {
+						out.write(outputByte, 0, sb.length());
+					}
+			}
+				catch (Exception e) {
+					 LOG.error("Error while generating report file " + CSVFileName, e);
+					 e.printStackTrace();
+
+				}
+				finally {
+					in.close();
+					out.flush();
+					out.close();
+				}
+			}
+
 	public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPaginatedPolicies(+ " + filter + ")");
@@ -3090,19 +3126,42 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		return false;
 	}
+
 	private void writeExcel(List<RangerPolicy> policies, String excelFileName, HttpServletResponse response)
 			throws IOException {
-		Workbook workbook=null;
-		OutputStream outStream =null;
-		try{
+		Workbook workbook = null;
+		OutputStream outStream = null;
+		try {
 			workbook = new HSSFWorkbook();
 			Sheet sheet = workbook.createSheet();
 			createHeaderRow(sheet);
 			int rowCount = 0;
-			if (!CollectionUtils.isEmpty(policies)){
+			if (!CollectionUtils.isEmpty(policies)) {
 				for (RangerPolicy policy : policies) {
-					Row row = sheet.createRow(++rowCount);
-					writeBook(policy, row);
+					long serviceType = daoMgr.getXXService().findByName(policy.getService()).getType();
+					List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+					List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
+					List<RangerDataMaskPolicyItem> dataMaskPolicyItems = policy.getDataMaskPolicyItems();
+
+					if (CollectionUtils.isNotEmpty(policyItems)) {
+						for (RangerPolicyItem policyItem : policyItems) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, policyItem, null, null, row);
+						}
+					} else if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
+						for (RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, null, dataMaskPolicyItem, null, row);
+						}
+					} else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
+						for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, null, null, rowFilterPolicyItem, row);
+						}
+					} else if (serviceType == 100) {
+						Row row = sheet.createRow(++rowCount);
+						writeBookForTag(policy, row);
+					}
 				}
 			}
 			ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
@@ -3112,36 +3171,351 @@ public class ServiceDBStore extends AbstractServiceStore {
 			response.setContentLength(outArray.length);
 			response.setHeader("Expires:", "0");
 			response.setHeader("Content-Disposition", "attachment; filename=" + excelFileName);
-			outStream=response.getOutputStream();
+			outStream = response.getOutputStream();
 			outStream.write(outArray);
 			outStream.flush();
-		}catch(IOException ex){
+		} catch (IOException ex) {
 			LOG.error("Failed to create report file " + excelFileName, ex);
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			LOG.error("Error while generating report file " + excelFileName, ex);
-		}finally{
-			if(outStream!=null){
+		} finally {
+			if (outStream != null) {
 				outStream.close();
 			}
-			if(workbook!=null){
+			if (workbook != null) {
 				workbook.close();
 			}
 		}
 	}
 
-	private void writeBook(RangerPolicy policy, Row row) {
+	private StringBuffer writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
+		response.setContentType("text/csv");
+		final String COMMA_DELIMITER = "|";
+		final String LINE_SEPARATOR = "\n";
+		final String FILE_HEADER = "ID|Name|Resources|Groups|Users|Accesses|Service Type|Status";
+		StringBuffer csvBuffer = new StringBuffer();
+		csvBuffer.append(FILE_HEADER);
+		csvBuffer.append(LINE_SEPARATOR);
+		for (RangerPolicy policy : policies) {
+			String policyStatus = "";
+			String policyName = "";
+			String ServiceType = "";
+			Long serviceTypeId = null;
+			List<String> groups = new ArrayList<String>();
+			List<String> users = new ArrayList<String>();
+			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+			String groupNames = "";
+			String userNames = "";
+			String accessType = "";
+			String resValue = "";
+			String resourceKeyVal = "";
+			String resKey = "";
+			policyName = policy.getName();
+			policyName=policyName.replace("|", "");
+			Long policyId = policy.getId();
+
+			if (policy.getIsEnabled()) {
+				policyStatus = "Enabled";
+			} else {
+				policyStatus = "Disabled";
+			}
+			XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
+
+			if (xxservice != null) {
+				serviceTypeId = xxservice.getType();
+				XXServiceDef xxservDef = daoMgr.getXXServiceDef().getById(serviceTypeId);
+				if (xxservDef != null) {
+					ServiceType = xxservDef.getName();
+				}
+			}
+			int policyType = policy.getPolicyType();
+			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
+			List<RangerPolicyItem> policyItems0 = new ArrayList<RangerPolicyItem>();
+			List<RangerDataMaskPolicyItem> policyItems1 = new ArrayList<RangerDataMaskPolicyItem>();
+			List<RangerRowFilterPolicyItem> policyItems2 = new ArrayList<RangerRowFilterPolicyItem>();
+			switch (policyType) {
+			case 0:
+				policyItems0 = policy.getPolicyItems();
+				policyItems.addAll(policyItems0);
+				break;
+			case 1:
+				policyItems1 = policy.getDataMaskPolicyItems();
+				policyItems.addAll(policyItems1);
+				break;
+			case 2:
+				policyItems2 = policy.getRowFilterPolicyItems();
+				policyItems.addAll(policyItems2);
+				break;
+			}
+
+			if (serviceTypeId == 100) {
+				Map<String, RangerPolicyResource> resources = policy.getResources();
+
+				if (resources != null) {
+					for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
+						resKey = resource.getKey();
+						RangerPolicyResource policyResource = resource.getValue();
+						List<String> resvalueList = policyResource.getValues();
+						resValue = resvalueList.toString();
+						resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
+						resourceKeyVal = resourceKeyVal.replace("|", "");
+					}
+				}
+
+				if (!CollectionUtils.isEmpty(policyItems)) {
+					for (RangerPolicyItem policyItem : policyItems) {
+						groupNames = "";
+						userNames = "";
+						accessType = "";
+						groups = null;
+						users = null;
+						accesses = null;
+						groups = policyItem.getGroups();
+						accesses = policyItem.getAccesses();
+						users = policyItem.getUsers();
+
+						for (RangerPolicyItemAccess access : accesses) {
+							accessType = accessType + access.getType().replace("#", "").replace("|","") + "#";
+						}
+						accessType = accessType.substring(0, accessType.lastIndexOf("#"));
+						if (CollectionUtils.isNotEmpty(groups)) {
+							for (String group : groups){
+								group=group.replace("|", "");
+								group=group.replace("#", "");
+								groupNames=groupNames+group+ "#";
+							}
+							groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
+						}
+
+						if (CollectionUtils.isNotEmpty(users)) {
+							for (String user : users){
+								user=user.replace("|", "");
+								user=user.replace("#", "");
+								userNames=userNames +user + "#";
+							}
+							userNames=userNames.substring(0,userNames.lastIndexOf("#"));
+						}
+
+						csvBuffer.append(policyId);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(policyName);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(resourceKeyVal);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(groupNames);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(userNames);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(accessType);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(ServiceType);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(policyStatus);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(LINE_SEPARATOR);
+
+					}
+				} else {
+					csvBuffer.append(policyId);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(policyName);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(resourceKeyVal);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(groupNames);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(userNames);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(accessType);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(ServiceType);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(policyStatus);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(LINE_SEPARATOR);
+				}
+			}
+
+			else {
+				Map<String, RangerPolicyResource> resources = policy.getResources();
+				if (resources != null) {
+					for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
+						resKey = resource.getKey();
+						RangerPolicyResource policyResource = resource.getValue();
+						List<String> resvalueList = policyResource.getValues();
+						resValue = resvalueList.toString();
+						resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
+						resourceKeyVal = resourceKeyVal.replace("|", "");
+					}
+				}
+
+				for (RangerPolicyItem policyItem : policyItems) {
+					groups = null;
+					users = null;
+					accesses = null;
+					groupNames = "";
+					userNames = "";
+					accessType = "";
+					groups = policyItem.getGroups();
+					users = policyItem.getUsers();
+					accesses = policyItem.getAccesses();
+
+					if (CollectionUtils.isNotEmpty(accesses)) {
+						for (RangerPolicyItemAccess access : accesses) {
+							accessType = accessType + access.getType().replace("#", "").replace("|","") + "#";
+						}
+						accessType = accessType.substring(0, accessType.lastIndexOf("#"));
+					}
+					if (CollectionUtils.isNotEmpty(groups)) {
+						for (String group : groups){
+							group=group.replace("|", "");
+							group=group.replace("#", "");
+							groupNames=groupNames+group+ "#";
+						}
+						groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
+					}
+					if (CollectionUtils.isNotEmpty(users)) {
+						for (String user : users){
+							user=user.replace("|", "");
+							user=user.replace("#", "");
+							userNames=userNames +user + "#";
+						}
+						userNames=userNames.substring(0,userNames.lastIndexOf("#"));
+					}
+					csvBuffer.append(policyId);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(policyName);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(resourceKeyVal);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(groupNames);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(userNames);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(accessType);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(ServiceType);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(policyStatus);
+					csvBuffer.append(COMMA_DELIMITER);
+					csvBuffer.append(LINE_SEPARATOR);
+				}
+			}
+		}
+		response.setHeader("Content-Disposition", "attachment; filename=" + cSVFileName);
+		return csvBuffer;
+	}
+
+	private void writeBookForPolicyItems(RangerPolicy policy, RangerPolicyItem policyItem,
+			RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row) {
+		List<String> groups = new ArrayList<String>();
+		List<String> users = new ArrayList<String>();
+		String groupNames = "";
+		String userNames = "";
+		String accessType = "";
 		String policyStatus = "";
 		Cell cell = row.createCell(0);
 		cell.setCellValue(policy.getId());
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
 		cell = row.createCell(1);
 		cell.setCellValue(policy.getName());
 		cell = row.createCell(2);
+		String resValue = "";
+		String resourceKeyVal = "";
+		String resKey = "";
+		Map<String, RangerPolicyResource> resources = policy.getResources();
+		if (resources != null) {
+			for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
+				resKey = resource.getKey();
+				RangerPolicyResource policyResource = resource.getValue();
+				List<String> resvalueList = policyResource.getValues();
+				resValue = resvalueList.toString();
+				resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
+			}
+
+			cell.setCellValue(resourceKeyVal);
+			if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
+				groups = policyItem.getGroups();
+				users = policyItem.getUsers();
+				accesses = policyItem.getAccesses();
+			} else if (dataMaskPolicyItem != null && policyItem == null && rowFilterPolicyItem == null) {
+				groups = dataMaskPolicyItem.getGroups();
+				users = dataMaskPolicyItem.getUsers();
+				accesses = dataMaskPolicyItem.getAccesses();
+			} else if (rowFilterPolicyItem != null && policyItem == null && dataMaskPolicyItem == null) {
+				groups = rowFilterPolicyItem.getGroups();
+				users = rowFilterPolicyItem.getUsers();
+				accesses = rowFilterPolicyItem.getAccesses();
+			}
+			if (CollectionUtils.isNotEmpty(accesses)) {
+				for (RangerPolicyItemAccess access : accesses) {
+					accessType = accessType + access.getType();
+					accessType = accessType + " ,";
+				}
+				accessType = accessType.substring(0, accessType.lastIndexOf(","));
+			}
+			if (CollectionUtils.isNotEmpty(groups)) {
+				groupNames = groupNames + groups.toString();
+				StringTokenizer groupToken = new StringTokenizer(groupNames, "[]");
+				groupNames = groupToken.nextToken().toString();
+			}
+			if (CollectionUtils.isNotEmpty(users)) {
+				userNames = userNames + users.toString();
+				StringTokenizer userToken = new StringTokenizer(userNames, "[]");
+				userNames = userToken.nextToken().toString();
+			}
+			cell = row.createCell(3);
+			cell.setCellValue(groupNames);
+			cell = row.createCell(4);
+			cell.setCellValue(userNames);
+			cell = row.createCell(5);
+			cell.setCellValue(accessType.trim());
+			cell = row.createCell(6);
+			XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
+			String ServiceType = "";
+			if (xxservice != null) {
+				Long ServiceId = xxservice.getType();
+				XXServiceDef xxservDef = daoMgr.getXXServiceDef().getById(ServiceId);
+				if (xxservDef != null) {
+					ServiceType = xxservDef.getName();
+				}
+			}
+			cell.setCellValue(ServiceType);
+			cell = row.createCell(7);
+
+		}
 		if (policy.getIsEnabled()) {
 			policyStatus = "Enabled";
 		} else {
 			policyStatus = "Disabled";
 		}
 		cell.setCellValue(policyStatus);
+	}
+
+	private void writeBookForTag(RangerPolicy policy, Row row) {
+		String policyStatus = "";
+		Cell cell = row.createCell(0);
+		cell.setCellValue(policy.getId());
+		cell = row.createCell(1);
+		cell.setCellValue(policy.getName());
+		cell = row.createCell(2);
+		String resValue = "";
+		String resourceKeyVal = "";
+		String resKey = "";
+		String groupNames = "";
+		String userNames = "";
+		String accessType = "";
+		Map<String, RangerPolicyResource> resources = policy.getResources();
+		if (resources!=null) {
+			for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
+				resKey = resource.getKey();
+				RangerPolicyResource policyResource = resource.getValue();
+				List<String> resvalueList = policyResource.getValues();
+				resValue = resvalueList.toString();
+				resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
+			}
+		}
+		cell.setCellValue(resourceKeyVal);
 		cell = row.createCell(3);
 		int policyType=policy.getPolicyType();
 		List<RangerPolicyItem> policyItems=new ArrayList<RangerPolicyItem>();
@@ -3165,18 +3539,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
-		String groupNames = "";
-		String userNames = "";
-		String accessType = "";
+
 		if (!CollectionUtils.isEmpty(policyItems)) {
 			for (RangerPolicyItem policyItem : policyItems) {
+				groupNames = "";
+				userNames = "";
+				accessType = "";
 				groups = policyItem.getGroups();
 				List<RangerPolicyItemAccess> accesses = policyItem.getAccesses();
-				accessType = accessType + "[";
 				for (RangerPolicyItemAccess access : accesses) {
-					accessType = accessType + access.getType() + " ";
+					accessType = accessType + access.getType() + " ,";
 				}
-				accessType = accessType + "] ";
+				accessType = accessType.substring(0,accessType.lastIndexOf(","));
 				if (!groups.isEmpty()) {
 					groupNames = groupNames + groups.toString();
 				}
@@ -3190,6 +3564,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		cell = row.createCell(4);
 		cell.setCellValue(userNames);
 		cell = row.createCell(5);
+		cell.setCellValue(accessType.trim());
+		cell = row.createCell(6);
 		XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
 		String ServiceType = "";
 		if (xxservice != null) {
@@ -3200,24 +3576,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		cell.setCellValue(ServiceType);
-		cell = row.createCell(6);
-		cell.setCellValue(accessType.trim());
 		cell = row.createCell(7);
-		String resValue = "";
-		String resourceKeyVal = "";
-		String resKey = "";
-		Map<String, RangerPolicyResource> resources = policy.getResources();
-		if (resources!=null) {
-			for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
-				resKey = resource.getKey();
-				RangerPolicyResource policyResource = resource.getValue();
-				List<String> resvalueList = policyResource.getValues();
-				resValue = resvalueList.toString();
-				resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
-			}
+		if (policy.getIsEnabled()) {
+			policyStatus = "Enabled";
+		} else {
+			policyStatus = "Disabled";
 		}
-		cell.setCellValue(resourceKeyVal);
+		cell.setCellValue(policyStatus);
 	}
+
 
 	private void createHeaderRow(Sheet sheet) {
 		CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
@@ -3236,9 +3603,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		cellNAME.setCellStyle(cellStyle);
 		cellNAME.setCellValue("Name");
 
-		Cell cellStatus = row.createCell(2);
-		cellStatus.setCellStyle(cellStyle);
-		cellStatus.setCellValue("Status");
+		Cell cellResources = row.createCell(2);
+		cellResources.setCellStyle(cellStyle);
+		cellResources.setCellValue("Resources");
 
 		Cell cellGroups = row.createCell(3);
 		cellGroups.setCellStyle(cellStyle);
@@ -3248,16 +3615,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 		cellUsers.setCellStyle(cellStyle);
 		cellUsers.setCellValue("Users");
 
-		Cell cellServiceType = row.createCell(5);
-		cellServiceType.setCellStyle(cellStyle);
-		cellServiceType.setCellValue("Service Type");
-
-		Cell cellAccesses = row.createCell(6);
+		Cell cellAccesses = row.createCell(5);
 		cellAccesses.setCellStyle(cellStyle);
 		cellAccesses.setCellValue("Accesses");
 
-		Cell cellResources = row.createCell(7);
-		cellResources.setCellStyle(cellStyle);
-		cellResources.setCellValue("Resources");
+		Cell cellServiceType = row.createCell(6);
+		cellServiceType.setCellStyle(cellStyle);
+		cellServiceType.setCellValue("Service Type");
+
+		Cell cellStatus = row.createCell(7);
+		cellStatus.setCellStyle(cellStyle);
+		cellStatus.setCellValue("Status");
 	}
 }

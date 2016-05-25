@@ -96,10 +96,18 @@
 	</div>
 	<div class="row-fluid">
 	<span>
-		<button type="button" class="btn btn-primary btn-small btn-right" data-js="downloadBtn" title="Download all below policies" name="downloadPolicy">
-								<i class="icon-download-alt"></i>
-										Download
+		<div class="btn-group btn-right">
+			<button type="button" data-name="downloadFormatBtn" class="btn btn-primary dropdown-toggle" title="Download all below policies" data-toggle="dropdown">
+				<i class="icon-download-alt"></i>
+				<span>Download</span>
+				<span class="caret"> </span>
 			</button>
+			<ul class="dropdown-menu download-list">
+				<li><a data-id="xlsFormat" class="downloadFormat" href="javascript:void(0)">Excel file</a></li>
+				<li role="separator" class="divider"></li>
+				<li><a data-id="csvFormat" class="downloadFormat" href="javascript:void(0)">CSV file</a></li>
+			</ul>
+		</div>
 	</span>
 	<a href="javascript:void(0)" data-id="downloadReport"></a>
 	 </div>

@@ -76,7 +76,6 @@ define(function(require) {'use strict';
 			btnShowLessUsers 	: '[data-id="showLessUsers"]',
 			componentType       : '[data-id="component"]',
 			downloadReport      : '[data-id="downloadReport"]',
-			downloadBtn         : '[data-js="downloadBtn"]',
 			policyType          : '[data-id="policyType"]'
 		},
 
@@ -90,7 +89,7 @@ define(function(require) {'use strict';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			events['click ' + this.ui.btnShowMoreUsers]  = 'onShowMoreUsers';
 			events['click ' + this.ui.btnShowLessUsers]  = 'onShowLessUsers';
-			events['click ' + this.ui.downloadBtn] = 'onDownload';
+			events['click .downloadFormat'] = 'setDownloadFormatFilter';
 			return events;
 		},
 
@@ -103,7 +102,7 @@ define(function(require) {'use strict';
 			_.extend(this, _.pick(options, 'groupList','userList'));
 			this.bindEvents();
 			this.previousSearchUrl = '';
-			this.searchedFlag = true;
+			this.searchedFlag = false;
 			this.allowDownload = false;
 		},
 		initializeRequiredData : function() {
@@ -206,18 +205,51 @@ define(function(require) {'use strict';
 					editable: false,
 					sortable : false
 				},
-				isEnabled:{
-					label:localization.tt('lbl.status'),
-					cell :"html",
-					editable:false,
+				resources:
+				{
+					label: 'Resources',
+					cell: 'Html',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
-							return rawValue ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
+						fromRaw: function (rawValue,model) {
+							var strVal = '', names = '';
+							var resource = model.get('resources');
+							_.each(resource,function(resourceObj,key){
+								strVal += "<b>"+key+":</b>";
+								strVal += "<span title='";
+								names = '';
+								_.map(resourceObj.values,function(resourceVal){
+									names += resourceVal+",";
+								});
+								names = names.slice(0,-1);
+								strVal += names + "'>"+names +"</span>";
+								strVal = strVal+ "<br />";
+							});
+							return strVal;
+							}
+					}),
+					editable: false,
+					sortable: false,
+					click: false
+				},
+				policyType: {
+					label: 'Policy Type',
+					cell: Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell'}),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
+						fromRaw: function(rawValue,model){
+							var policyType = model.get("policyType");
+							var startLbl = '<label class="label label-ranger" style="float:inherit;">';
+							if (XAUtil.isMaskingPolicy(policyType)) {
+								return startLbl + XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.label + '</label>';
+							} else if (XAUtil.isRowFilterPolicy(policyType)) {
+								return startLbl + XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.label + '</label>';
+							}else{// by default it is access
+								return startLbl + XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.label + '</label>';
+							}
 						}
 					}),
-					click : false,
-					drag : false,
-					sortable : false
+					editable: false,
+					sortable: false,
+					click: false
 				},
 				permissions: {
 					label: 'Permissions',
@@ -254,9 +286,9 @@ define(function(require) {'use strict';
 										});
 										
 									}
-									htmlStr += '<tr style="height:60px"><td style ="width:80px">'+grpStr+'</td>\
-												<td style="width:80px">'+(userStr)+'</td>\
-												<td style="width:150px">'+accessStr+'</td></tr>';
+									htmlStr += '<tr style="height:60px"><td class="report-user-group">'+grpStr+'</td>\
+												<td class="report-user-group">'+(userStr)+'</td>\
+												<td class="report-access">'+accessStr+'</td></tr>';
 									accessStr = '', grpStr = '', userStr = '';
 								});
 								return htmlStr;
@@ -269,32 +301,20 @@ define(function(require) {'use strict';
 					sortable: false,
 					click: false
 				},
-				resources:
-				{
-					label: 'Resources',
-					cell: 'Html',
+				isEnabled:{
+					label:localization.tt('lbl.status'),
+					cell :"html",
+					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue,model) {
-							var strVal = '', names = '';
-							var resource = model.get('resources');
-							_.each(resource,function(resourceObj,key){
-								strVal += "<b>"+key+":</b>";
-								strVal += "<span title='";
-								names = '';
-								_.map(resourceObj.values,function(resourceVal){
-									names += resourceVal+",";
-								});
-								names = names.slice(0,-1);
-								strVal += names + "'>"+names +"</span>";
-								strVal = strVal+ "<br />";
-							});
-							return strVal;
-							}
+						fromRaw: function (rawValue) {
+							return rawValue ? '<label class="label label-success" style="float:inherit;">Enabled</label>' : '<label class="label label-important" style="float:inherit;">Disabled</label>';
+						}
 					}),
-					editable: false,
-					sortable: false,
-					click: false
+					click : false,
+					drag : false,
+					sortable : false
 				}
+
 			};
 
 			return coll.constructor.getTableCols(cols, coll);
@@ -327,7 +347,7 @@ define(function(require) {'use strict';
 	},
 	modifyTableForSubcolumns : function(){
 		this.$el.find(".permissions").html('<tr><th colspan="3">Permissions</th></tr>\
-							<tr><th style="width:80px">Groups</th><th style="width:80px">Users</th>\
+							<tr><th style="width:80px;max-width:80px;">Groups</th><th style="width:80px;max-width:80px;">Users</th>\
 							<th style="width:150px">Accesses</th></tr>');
 	},
 	onDownload: function(e){
@@ -338,14 +358,28 @@ define(function(require) {'use strict';
 			});
 			return;
 		}
-		if(this.searchedFlag) {
+		if(!this.searchedFlag) {
 			url =  this.previousSearchUrl;
+		} else if (this.searchedFlag && this.updatedUrl) {
+			var urlString = XAUtil.getBaseUrl();
+			if(urlString.slice(-1) === "/") {
+				urlString = urlString.slice(0,-1);
+			}
+			url = url + urlString;
+			if (e === "xlsFormat") {
+					url = url + '/service/plugins/policies/downloadExcel?';
+			} else {
+					url = url + '/service/plugins/policies/csv?';
+			}
+			url = url + this.searchedParamsString + this.searchedComponentString;
+			this.previousSearchUrl = url;
+			this.searchedFlag = true;
 		}
 		this.ui.downloadReport.attr("href",url)[0].click();
-
 	},
-	getDownloadExcelUrl: function(that,component,params){
-		var compString = '', url = '/service/plugins/policies/downloadExcel?';
+	setDownloadReportUrl: function(that,component,params){
+
+		var compString = '', url = '';
 		if(!_.isUndefined(component)) {
 			_.each(component,function(comp){
 				compString = compString + comp + '_';
@@ -360,11 +394,10 @@ define(function(require) {'use strict';
 			}
 		});
 		var str = jQuery.param( params );
-		url = url + str;
-		if(!_.isEmpty(compString)) {
-			url = url + "&serviceType=" + compString;
-		}
-		return url;
+		this.searchedComponentString = "&serviceType=" + compString;
+		this.searchedParamsString = str;
+		this.updatedUrl = true;
+
 	},
 		/** on render callback */
 		setupGroupAutoComplete : function(){
@@ -567,11 +600,8 @@ define(function(require) {'use strict';
 				policyNamePartial : policyName,
 				policyType: policyType
 			};
-			if(urlString.slice(-1) == "/") {
-				urlString = urlString.slice(0,-1);
-			}
-			url = urlString	+ this.getDownloadExcelUrl(this, component,	params);
-			this.previousSearchUrl = url;
+
+			this.setDownloadReportUrl(this,component,params);
 			this.searchedFlag = true;
         },
 		autocompleteFilter	: function(e){
@@ -590,6 +620,28 @@ define(function(require) {'use strict';
 				this.setupUserAutoComplete();
 				$button.text('Username');
 			}
+		},
+		setDownloadFormatFilter : function(e){
+			var that = this;
+			var el = $(e.currentTarget);
+			if(el.data('id') === "xlsFormat") {
+				if(!that.searchedFlag) {
+					var urlString = XAUtil.getBaseUrl();
+					if(urlString.slice(-1) === "/") {
+						urlString = urlString.slice(0,-1);
+					}
+				}
+				this.previousSearchUrl = urlString + "/service/plugins/policies/downloadExcel?";
+			} else {
+				if(!that.searchedFlag) {
+					var urlString = XAUtil.getBaseUrl();
+					if(urlString.slice(-1) === "/") {
+						urlString = urlString.slice(0,-1);
+					}
+					this.previousSearchUrl = urlString + "/service/plugins/policies/csv?";
+				}
+			}
+			this.onDownload(el.data('id'));
 		},
 		gotoTable : function(e){
 			var that = this, elem = $(e.currentTarget),pos;

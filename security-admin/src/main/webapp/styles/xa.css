@@ -1915,10 +1915,6 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
     margin-top: -2px;
     font-size: 11px;
 }
-.backgrid > tbody > tr > td:nth-child(5) {
-  text-align: left !important;
-  width: 200px
-}
 .control-label-align {
 	width: 80px !important;
 }
@@ -1943,4 +1939,49 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
 }
 .permissionItemSortable > tr:hover > td:first-child:after {
   border-color: rgba(0,0,0,0.5);
+}
+.download-list {
+  min-width: 100px;
+  max-width: 120px;
+}
+.hdfs-table table.backgrid thead th:nth-child(1){
+  width: 60px;
+  max-width: 60px
+}
+.hdfs-table table.backgrid thead th:nth-child(2) {
+  /*width: 300px;*/
+  width: 25%;
+}
+.hdfs-table table.backgrid thead th:nth-child(3){
+  width:200px;
+}
+.hdfs-table table.backgrid thead th:nth-child(4){
+  width:100px;
+}
+.hdfs-table table.backgrid tbody td:nth-child(4){
+  width:100px;
+  text-align: center;
+}
+.hdfs-table table.backgrid tbody tr td:nth-child(3){
+ text-align: left !important;
+ max-width: 200px;
+}
+.hdfs-table table.backgrid tbody tr td:nth-child(6){
+  text-align: center;
+  width: 100px
+}
+.hdfs-table table.backgrid thead th:nth-child(6){
+  text-align: center;
+  width: 100px;
+}
+.hdfs-table table.backgrid thead th:nth-child(5) tr{
+  border-left-style: hidden;
+}
+.report-access{
+  width:100%;
+  border-right:1px solid #DDD;
+}
+.report-user-group{
+  width:80px;
+  min-width:80px;
 }

@@ -63,8 +63,6 @@ define(function(require){
     		btnSave		: '[data-id="save"]',
     		btnShowHide		: '[data-action="showHide"]',
 			visibilityDropdown		: '[data-id="visibilityDropdown"]',
-			activeStatusDropdown		: '[data-id="activeStatusDropdown"]',
-			activeStatusDiv		:'[data-id="activeStatusDiv"]',
 			addNewBtnDiv	: '[data-id="addNewBtnDiv"]',
 			deleteUser: '[data-id="deleteUserGroup"]'
     	},
@@ -77,7 +75,6 @@ define(function(require){
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			events['click ' + this.ui.btnSave]  = 'onSave';
 			events['click ' + this.ui.visibilityDropdown +' li a']  = 'onVisibilityChange';
-			events['click ' + this.ui.activeStatusDropdown +' li a']  = 'onStatusChange';
 			events['click ' + this.ui.deleteUser] = 'onDeleteUser';
 			return events;
 		},
@@ -168,38 +165,6 @@ define(function(require){
                 });
 			}
 		},
-		onStatusChange : function(e){
-			var that = this;
-			var status = $(e.currentTarget).attr('data-id') == 'Enable' ? true : false;
-			var updateMap = {};
-			var collection = this.showUsers ? this.collection : this.groupList;
-
-			_.each(collection.selected, function(s){
-				if( s.get('status') != status ){
-					s.set('status', status);
-					s.toServerStatus();
-					updateMap[s.get('id')] = s.get('status');
-				}
-			});
-
-			var clearCache = function(coll){
-                _.each(Backbone.fetchCache._cache, function(url, val){
-                   var urlStr = coll.url;
-                   if((val.indexOf(urlStr) != -1)){
-                       Backbone.fetchCache.clearItem(val);
-                   }
-                });
-                coll.fetch({reset: true, cache : false});
-			}
-			if(this.showUsers){
-				collection.setStatus(updateMap, {
-					success : function(){
-						that.chgFlags = [];
-						clearCache(collection);
-					}
-				});
-			}
-		},
 		renderUserTab : function(){
 			var that = this;
 			if(_.isUndefined(this.collection)){
@@ -217,7 +182,6 @@ define(function(require){
 				if(!_.isString(that.ui.addNewGroup)){
 					that.ui.addNewGroup.hide();
 					that.ui.addNewUser.show();
-					that.ui.activeStatusDiv.show();
 				}
 				that.$('.wrap-header').text('User List');
 				that.checkRoleKeyAdmin();
@@ -237,7 +201,6 @@ define(function(require){
 			}).done(function(){
 				that.ui.addNewUser.hide();
 				that.ui.addNewGroup.show();
-				that.ui.activeStatusDiv.hide();
 				that.$('.wrap-header').text('Group List');
 				that.$('ul').find('[data-js="groups"]').addClass('active');
 				that.$('ul').find('[data-js="users"]').removeClass();
@@ -364,25 +327,7 @@ define(function(require){
 					}),
 					editable:false,
 					sortable:false
-				},
-				status : {
-					label	: localization.tt("lbl.status"),
-					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue)){
-								if(rawValue)
-									return '<span class="label label-success">'+XAEnums.ActiveStatus.STATUS_ENABLED.label+'</span>';
-								else
-									return '<span class="label label-green">'+XAEnums.ActiveStatus.STATUS_DISABLED.label+'</span>';
-							}else
-								return '--';
-						}
-					}),
-					editable:false,
-					sortable:false
-				},
-				
+				}
 			};
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},

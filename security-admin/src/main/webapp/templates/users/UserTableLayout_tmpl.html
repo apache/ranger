@@ -33,8 +33,6 @@
 			{{#isSystemAdmin .}}
 				<a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
 			{{/isSystemAdmin}}
-			<a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
-			<a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
       <div class="btn-group btn-right">
         <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
           {{tt 'btn.setVisibility'}}
@@ -45,16 +43,8 @@
           <li><a href="javascript:void(0);" data-id="hidden">{{tt 'lbl.VisibilityStatus_IS_HIDDEN'}}</a></li>
         </ul>
       </div>
-      <div class="btn-group btn-right" data-id="activeStatusDiv">
-        <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
-          {{tt 'btn.setStatus'}}
-          <span class="caret"></span>
-        </a>
-        <ul class="dropdown-menu" data-id="activeStatusDropdown">
-          <li><a href="javascript:void(0);" data-id="Enable">{{tt 'lbl.ActiveStatus_STATUS_ENABLED'}}</a></li>
-          <li><a href="javascript:void(0);" data-id="Disable">{{tt 'lbl.ActiveStatus_STATUS_DISABLED'}}</a></li>
-        </ul>
-      </div>
+      <a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
+      <a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
 		</div>
 		<div data-id="r_tableList" class="clickable">
           <b class="_prevNav"></b>
