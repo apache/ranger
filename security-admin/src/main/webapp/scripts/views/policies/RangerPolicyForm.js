@@ -53,9 +53,17 @@ define(function(require){
 		* @constructs
 		*/
 		templateData : function(){
-			var obj = XAUtil.enumElementByValue(XAEnums.RangerPolicyType, this.model.get('policyType')) 
+			var policyType = XAUtil.enumElementByValue(XAEnums.RangerPolicyType, this.model.get('policyType')), conditionType;
+			if (XAUtil.isMaskingPolicy(policyType.value)) {
+				conditionType = 'Mask';
+			} else if (XAUtil.isRowFilterPolicy(policyType.value)) {
+				conditionType = 'Row Filter';
+			} else {
+				conditionType = 'Allow';
+			}
 			return { 'id' : this.model.id,
-					'policyType' : obj.label
+					'policyType' : policyType.label,
+					'conditionType' : conditionType
 				};
 		},
 		initialize: function(options) {

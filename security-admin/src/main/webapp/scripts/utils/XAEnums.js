@@ -167,8 +167,9 @@ define(function(require) {
 		CLASS_TYPE_RESPONSE:{value:11, label:'Response', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RESPONSE', modelName:'VXResponse', type:'vXResponse', tt: 'lbl.ClassTypes_CLASS_TYPE_RESPONSE'},
 		CLASS_TYPE_XA_ASSET:{value:1000, label:'Asset', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_ASSET', modelName:'VXAsset', type:'vXAsset', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_ASSET'},
 		CLASS_TYPE_XA_RESOURCE:{value:1001, label:'Resource', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_RESOURCE', modelName:'VXResource', type:'vXResource', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_RESOURCE'},
-		CLASS_TYPE_XA_GROUP:{value:1002, label:'XA Group', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_GROUP', modelName:'VXGroup', type:'vXGroup', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_GROUP'},
-		CLASS_TYPE_XA_USER:{value:1003, label:'XA User', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_USER', modelName:'VXUser', type:'vXUser', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_USER'},
+		CLASS_TYPE_XA_GROUP:{value:1002, label:'Ranger Group', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_GROUP', modelName:'VXGroup', type:'vXGroup', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_GROUP'},
+		CLASS_TYPE_XA_USER:{value:1003, label:'Ranger User', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_USER', modelName:'VXUser', type:'vXUser', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_USER'},
+	
 		CLASS_TYPE_XA_GROUP_USER:{value:1004, label:'XA Group of Users', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_GROUP_USER', modelName:'VXGroupUser', type:'vXGroupUser', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_GROUP_USER'},
 		CLASS_TYPE_XA_GROUP_GROUP:{value:1005, label:'XA Group of groups', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_GROUP_GROUP', modelName:'VXGroupGroup', type:'vXGroupGroup', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_GROUP_GROUP'},
 		CLASS_TYPE_XA_PERM_MAP:{value:1006, label:'XA permissions for resource', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_PERM_MAP', modelName:'VXPermMap', type:'vXPermMap', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_PERM_MAP'},
@@ -180,7 +181,7 @@ define(function(require) {
 		CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE:{value:1012, label:'Transaction log attribute', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE'},
 		CLASS_TYPE_RANGER_POLICY:{value:1020, label:'Ranger Policy', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_POLICY', modelName:'VXRangerPolicy', type:'vXResource', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_POLICY'},
 		CLASS_TYPE_RANGER_SERVICE:{value:1030, label:'Ranger Service', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_SERVICE', modelName:'VXRangerService', type:'vXRangerService', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_SERVICE'},
-		
+	
 	});
 
 	XAEnums.DataType = mergeParams(XAEnums.DataType, {

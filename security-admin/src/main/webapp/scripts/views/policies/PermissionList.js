@@ -256,6 +256,10 @@ define(function(require) {
 			var that = this;
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+			//set default access type 'select' for add new masking & row filter policies
+			if(!XAUtil.isAccessPolicy(this.rangerPolicyType) && !_.contains(this.permsIds,'select')) {
+				this.permsIds.push('select');
+			}
 			//create x-editable for permissions
 			this.ui.addPerms.editable({
 			    emptytext : 'Add Permissions',

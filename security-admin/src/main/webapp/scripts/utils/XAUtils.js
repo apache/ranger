@@ -467,7 +467,7 @@ define(function(require) {
 	};
 	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups) {
 		var showMoreLess = false, groupArr = [], items = [];
-		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems']
+		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems','rowFilterPolicyItems']
 		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
 		_.each(itemList, function(item){
 		    if(!_.isUndefined(model.get(item)) && !_.isEmpty(model.get(item))) {
