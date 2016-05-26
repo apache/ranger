@@ -29,19 +29,19 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testUsernameNotSpecified() throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     HdfsClient.validateConnectionConfigs(configs);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testPasswordNotSpecified() throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     HdfsClient.validateConnectionConfigs(configs);
   }
   @Test(expected = IllegalArgumentException.class)
   public void testAuthenticationNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     HdfsClient.validateConnectionConfigs(configs);
@@ -49,7 +49,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testFsDefaultNameNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -58,7 +58,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testProxyProviderNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -69,7 +69,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
 	public void testNnElementsNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -82,7 +82,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
 	public void testNn1UrlNn2UrlNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -96,7 +96,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
 	public void testNn1UrlNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -111,7 +111,7 @@ public class HdfsClientTest {
 
   @Test(expected = IllegalArgumentException.class)
 	public void testNn2UrlNotSpecified()  throws IllegalArgumentException {
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -132,7 +132,7 @@ public class HdfsClientTest {
     // hadoop.security.authentication: simple
     // fs.default.name: hdfs://node-2.example.com:8020
 
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
@@ -152,7 +152,7 @@ public class HdfsClientTest {
     // dfs.namenode.rpc-address.hwqe-1425428405.nn2: node-2.example.com:8020
     // dfs.namenode.rpc-address.hwqe-1425428405.nn1:  node-1.example.com:8020
 
-    Map configs = new HashMap<String, String>();
+    Map<String, String> configs = new HashMap<String, String>();
     configs.put("username", "hdfsuser");
     configs.put("password", "hdfsuser");
     configs.put("hadoop.security.authentication", "simple");
