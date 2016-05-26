@@ -76,6 +76,8 @@ SavedRequestAwareAuthenticationSuccessHandler {
 	    HttpServletResponse response, Authentication authentication)
     throws ServletException, IOException {
     	
+	RangerSessionFixationProtectionStrategy rangerSessionFixationProtectionStrategy=new RangerSessionFixationProtectionStrategy();
+	rangerSessionFixationProtectionStrategy.onAuthentication(authentication, request, response);
     	WebAuthenticationDetails details = (WebAuthenticationDetails) authentication
     		.getDetails();
     	String remoteAddress = details != null ? details.getRemoteAddress()
