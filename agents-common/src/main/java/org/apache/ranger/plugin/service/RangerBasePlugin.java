@@ -292,7 +292,7 @@ public class RangerBasePlugin {
 
 		if(StringUtils.isEmpty(policySourceImpl)) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("Value for property[%s] was null or empty. Unxpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
+				LOG.debug(String.format("Value for property[%s] was null or empty. Unexpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
