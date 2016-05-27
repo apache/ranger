@@ -51,7 +51,7 @@ public class RangerAuthorizer implements IAuthorizer {
 
     public boolean authorize(String fileName, String accessType, String user, Set<String> userGroups) {
         RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
-        resource.setValue("path", fileName); // "path" must be a valud resource name in servicedef JSON
+        resource.setValue("path", fileName); // "path" must be a value resource name in servicedef JSON
 
         RangerAccessRequest request = new RangerAccessRequestImpl(resource, accessType, user, userGroups);
 
