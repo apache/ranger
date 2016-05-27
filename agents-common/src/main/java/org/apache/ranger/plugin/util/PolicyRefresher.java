@@ -44,7 +44,8 @@ public class PolicyRefresher extends Thread {
 	private final String            serviceType;
 	private final String            serviceName;
 	private final RangerAdminClient rangerAdmin;
-	private final String            cacheFile;
+	private final String            cacheFileName;
+	private final String            cacheDir;
 	private final Gson              gson;
 
 	private long 	pollingIntervalMs   = 30 * 1000;
@@ -71,7 +72,8 @@ public class PolicyRefresher extends Thread {
 		cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
 		cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
 
-		this.cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
+		this.cacheFileName = cacheFilename;
+		this.cacheDir = cacheDir;
 
 		Gson gson = null;
 		try {
@@ -254,7 +256,7 @@ public class PolicyRefresher extends Thread {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadFromCache()");
 		}
 
-		File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+		File cacheFile = cacheDir == null ? null : new File(cacheDir + File.separator + cacheFileName);
 
     	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
     		Reader reader = null;
@@ -301,8 +303,22 @@ public class PolicyRefresher extends Thread {
 		}
 
 		if(policies != null) {
-	    	File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
-
+			File cacheFile = null;
+			if (cacheDir != null) {
+				// Create the cacheDir if it doesn't already exist
+				File cacheDirTmp = new File(cacheDir);
+				if (cacheDirTmp.exists()) {
+					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+				} else {
+					try {
+						cacheDirTmp.mkdirs();
+						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+					} catch (SecurityException ex) {
+						LOG.error("Cannot create cache directory", ex);
+					}
+				}
+			}
+			
 	    	if(cacheFile != null) {
 				Writer writer = null;
 	
