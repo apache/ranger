@@ -206,11 +206,6 @@ define(function(require) {
 					this.ui.visualSearch.parents('.well').show();
 					this.renderBigDataTable();
 					this.modifyTableForSubcolumns();
-					if(this.accessAuditList.length <= 0){
-						this.accessAuditList.fetch({
-							cache : false
-						});
-					}
 					this.addSearchForBigDataTab();
 					this.listenTo(this.accessAuditList, "request", that.updateLastRefresh)
 					break;

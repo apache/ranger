@@ -75,17 +75,13 @@ define(function(require) {
 		   var view					= require('views/reports/AuditLayout');
 		   var VXAccessAuditList 	= require('collections/VXAccessAuditList');
 		   var accessAuditList 		= new VXAccessAuditList();
+		   var XAUtil				= require('utils/XAUtils');
+		   var localization			= require('utils/XALangSupport');
 		   _.extend(accessAuditList.queryParams,{ 'sortBy'  :  'eventTime' });
 		   App.rContent.show(new view({
 			   accessAuditList : accessAuditList,
 			   tab :tab
 		   }));
-		   if(tab == 'bigData'){
-			  accessAuditList.fetch({
-				 cache : false,
-				 async:true
-			   });
-		   }
 	   },
 	   loginSessionDetail : function(type, id){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Audit.value });

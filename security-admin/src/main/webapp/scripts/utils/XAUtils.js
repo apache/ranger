@@ -699,7 +699,7 @@ define(function(require) {
 	};
 	XAUtils.addVisualSearch = function(searchOpt, serverAttrName, collection,
 			pluginAttr) {
-		var visualSearch;
+		var visualSearch, that = this;
 		var search = function(searchCollection, serverAttrName, searchOpt,
 				collection) {
 			var params = {};
@@ -726,7 +726,10 @@ define(function(require) {
 			collection.state.currentPage = collection.state.firstPage;
 			collection.fetch({
 				reset : true,
-				cache : false
+				cache : false,
+				error : function(coll, response, options) {
+					that.notifyError('Error', localization.tt('msg.errorLoadingAuditLogs'));
+				}
 			// data : params,
 			});
 		};
