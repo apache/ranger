@@ -98,6 +98,8 @@ import org.apache.ranger.view.VXUserGroupInfo;
 import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -1815,6 +1817,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     public VXUser createServiceConfigUser(String userName){
         if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
                 logger.error("User Name: "+userName);

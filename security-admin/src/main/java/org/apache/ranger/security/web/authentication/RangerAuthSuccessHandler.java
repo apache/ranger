@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.entity.XXAuthSession;
@@ -54,6 +55,9 @@ SavedRequestAwareAuthenticationSuccessHandler {
     
     @Autowired
     JSONUtil jsonUtil;
+
+	@Autowired
+	XUserMgr xUserMgr;
 
     public RangerAuthSuccessHandler() {
 	super();
@@ -85,6 +89,11 @@ SavedRequestAwareAuthenticationSuccessHandler {
     	String sessionId = details != null ? details.getSessionId() : "";
     	
     	boolean isValidUser = sessionMgr.isValidXAUser(authentication.getName());
+    	String rangerAuthenticationMethod=PropertiesUtil.getProperty("ranger.authentication.method","NONE");
+    	if(!isValidUser && !"NONE".equalsIgnoreCase(rangerAuthenticationMethod)){
+    		xUserMgr.createServiceConfigUser(authentication.getName());
+    		isValidUser = sessionMgr.isValidXAUser(authentication.getName());
+    	}
     	
     	response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Cache-Control", "no-cache");
