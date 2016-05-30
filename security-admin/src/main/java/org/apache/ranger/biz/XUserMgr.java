@@ -895,6 +895,8 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public void deleteXModuleDefPermission(Long id, boolean force) {
+		daoManager.getXXUserPermission().deleteByModuleId(id);
+		daoManager.getXXGroupPermission().deleteByModuleId(id);
 		xModuleDefService.deleteResource(id);
 	}
 

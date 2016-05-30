@@ -670,7 +670,11 @@
 		 </query>
 	</named-query>
 
-	<!-- XXUserPermission -->
+	<named-query name="XXUserPermission.deleteByModuleId">
+		<query>DELETE FROM XXUserPermission obj WHERE obj.moduleId=:moduleId</query>
+	</named-query>
+
+	<!-- XXGroupPermission -->
 	<named-query name="XXGroupPermission.findByGroupId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.groupId=:groupId
@@ -705,6 +709,10 @@
 	<named-query name="XXGroupPermission.findByModuleIdAndGroupId">
 		<query>SELECT obj FROM XXGroupPermission obj WHERE obj.moduleId = :moduleId AND obj.groupId =:groupId
 		</query>
+	</named-query>
+
+	<named-query name="XXGroupPermission.deleteByModuleId">
+		<query>DELETE FROM XXGroupPermission obj WHERE obj.moduleId=:moduleId</query>
 	</named-query>
 	
 	<named-query name="XXPortalUser.findByUserName">

@@ -113,5 +113,19 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		}
 		return null;
 	}
+	public void deleteByModuleId(Long moduleId) {
+		if (moduleId != null) {
+			try {
+				getEntityManager()
+					.createNamedQuery("XXGroupPermission.deleteByModuleId", XXGroupPermission.class)
+					.setParameter("moduleId", moduleId)
+					.executeUpdate();
+			} catch (Exception e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("ModuleId not provided.");
+		}
+	}
 
 }

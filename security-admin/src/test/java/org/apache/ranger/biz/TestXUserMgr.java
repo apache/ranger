@@ -52,7 +52,6 @@ import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -72,7 +71,6 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
-import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
@@ -80,7 +78,6 @@ import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXModuleDef;
-import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXStringList;
@@ -93,7 +90,6 @@ import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -1036,7 +1032,13 @@ public class TestXUserMgr {
 
 	@Test
 	public void test34deleteXModuleDefPermission() {
-
+		Long moduleId=Long.valueOf(1);
+		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
+		XXGroupPermissionDao xGroupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
+		Mockito.when(daoManager.getXXUserPermission()).thenReturn(xUserPermissionDao);
+		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(xGroupPermissionDao);
+		Mockito.doNothing().when(xUserPermissionDao).deleteByModuleId(moduleId);
+		Mockito.doNothing().when(xGroupPermissionDao).deleteByModuleId(moduleId);
 		Mockito.when(xModuleDefService.deleteResource(1L)).thenReturn(true);
 		xUserMgr.deleteXModuleDefPermission(1L, true);
 		Mockito.verify(xModuleDefService).deleteResource(1L);
