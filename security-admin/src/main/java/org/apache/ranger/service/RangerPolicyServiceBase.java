@@ -95,7 +95,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 					+ "Service Not Found : " + vObj.getName(), MessageEnums.INVALID_INPUT_DATA);
 		}
 		xObj.setService(xService.getId());
-		xObj.setName(vObj.getName());
+		xObj.setName(StringUtils.trim(vObj.getName()));
 		xObj.setPolicyType(vObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : vObj.getPolicyType());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setResourceSignature(vObj.getResourceSignature());
@@ -112,7 +112,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setService(xService.getName());
-		vObj.setName(xObj.getName());
+		vObj.setName(StringUtils.trim(xObj.getName()));
 		vObj.setPolicyType(xObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xObj.getPolicyType());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setResourceSignature(xObj.getResourceSignature());

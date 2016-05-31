@@ -19,9 +19,11 @@ package org.apache.ranger.patch;
 
 import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXModuleDef;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.biz.XUserMgr;
@@ -32,9 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PatchTagModulePersmission_J10005 extends BaseLoader {
+public class PatchTagModulePermission_J10005 extends BaseLoader {
 	private static Logger logger = Logger
-			.getLogger(PatchTagModulePersmission_J10005.class);
+			.getLogger(PatchTagModulePermission_J10005.class);
 
 	@Autowired
 	XUserMgr xUserMgr;
@@ -48,8 +50,8 @@ public class PatchTagModulePersmission_J10005 extends BaseLoader {
 	public static void main(String[] args) {
 		logger.info("main()");
 		try {
-			PatchTagModulePersmission_J10005 loader = (PatchTagModulePersmission_J10005) CLIUtil
-					.getBean(PatchTagModulePersmission_J10005.class);
+			PatchTagModulePermission_J10005 loader = (PatchTagModulePermission_J10005) CLIUtil
+					.getBean(PatchTagModulePermission_J10005.class);
 
 			loader.init();
 			while (loader.isMoreToProcess()) {
@@ -72,6 +74,7 @@ public class PatchTagModulePersmission_J10005 extends BaseLoader {
 	public void execLoad() {
 		logger.info("==> PermissionPatch.execLoad()");
 		assignPermissionOnTagModuleToAdminUsers();
+		trimPolicyName();
 		logger.info("<== PermissionPatch.execLoad()");
 	}
 
@@ -100,4 +103,26 @@ public class PatchTagModulePersmission_J10005 extends BaseLoader {
 	public void printStats() {
 	}
 
+	private void trimPolicyName(){
+		List<XXPolicy> policies=daoManager.getXXPolicy().getAll();
+		if(!CollectionUtils.isEmpty(policies)){
+			String policyName=null;
+			for(XXPolicy xXPolicy:policies){
+				try{
+					if(xXPolicy!=null){
+						policyName=xXPolicy.getName();
+						if(!StringUtils.isEmpty(policyName)){
+							if(policyName.startsWith(" ") || policyName.endsWith(" ")){
+								xXPolicy.setName(StringUtils.trim(policyName));
+								daoManager.getXXPolicy().update(xXPolicy);
+							}
+						}
+					}
+				}catch(Exception ex){
+					logger.info("Error during policy update:"+xXPolicy.toString());
+					logger.error(ex);
+				}
+			}
+		}
+	}
 }

@@ -26,6 +26,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -489,7 +490,7 @@ public class RangerPolicyRetriever {
 					ret.setUpdateTime(xPolicy.getUpdateTime());
 					ret.setVersion(xPolicy.getVersion());
 					ret.setService(service == null ? null : service.getName());
-					ret.setName(xPolicy.getName());
+					ret.setName(StringUtils.trim(xPolicy.getName()));
 					ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
 					ret.setDescription(xPolicy.getDescription());
 					ret.setResourceSignature(xPolicy.getResourceSignature());

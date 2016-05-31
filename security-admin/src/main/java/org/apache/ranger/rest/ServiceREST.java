@@ -1207,7 +1207,7 @@ public class ServiceREST {
 				}
 
 				if(StringUtils.isNotEmpty(policyName)) {
-					policy.setName(policyName);
+					policy.setName(StringUtils.trim(policyName));
 				}
 
 				if(Boolean.valueOf(updateIfExists)) {

@@ -362,7 +362,7 @@ public class PublicAPIsv2 {
 			policy.setGuid(oldPolicy.getGuid());
 		}
 		if(StringUtils.isEmpty(policy.getName())) {
-			policy.setName(oldPolicy.getName());
+			policy.setName(StringUtils.trim(oldPolicy.getName()));
 		}
 
 		return serviceREST.updatePolicy(policy);

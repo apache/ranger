@@ -91,7 +91,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		VXPolicy vXPolicy = new VXPolicy();
 		vXPolicy = super.mapBaseAttributesToPublicObject(vXResource, vXPolicy);
 
-		vXPolicy.setPolicyName(vXResource.getPolicyName());
+		vXPolicy.setPolicyName(StringUtils.trim(vXResource.getPolicyName()));
 		vXPolicy.setResourceName(vXResource.getName());
 		vXPolicy.setDescription(vXResource.getDescription());
 		vXPolicy.setRepositoryName(vXResource.getAssetName());
@@ -153,7 +153,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		vXResource = super.mapBaseAttributesToXAObject(vXPolicy, vXResource);
 
 		vXResource.setName(vXPolicy.getResourceName());
-		vXResource.setPolicyName(vXPolicy.getPolicyName());
+		vXResource.setPolicyName(StringUtils.trim(vXPolicy.getPolicyName()));
 		vXResource.setDescription(vXPolicy.getDescription());
 		vXResource.setResourceType(getResourceType(vXPolicy));
 

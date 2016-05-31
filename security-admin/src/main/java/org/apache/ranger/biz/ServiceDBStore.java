@@ -2347,7 +2347,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			policy.setIsEnabled(true);
 			policy.setVersion(1L);
-			policy.setName(policyName);
+			policy.setName(StringUtils.trim(policyName));
 			policy.setService(createdService.getName());
 			policy.setDescription("Policy for data with " + tagType + " tag");
 			policy.setIsAuditEnabled(true);
@@ -2427,7 +2427,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		policy.setIsEnabled(true);
 		policy.setVersion(1L);
-		policy.setName(policyName);
+		policy.setName(StringUtils.trim(policyName));
 		policy.setService(createdService.getName());
 		policy.setDescription("Policy for " + policyName);
 		policy.setIsAuditEnabled(true);

@@ -226,7 +226,7 @@ public class ServiceUtil {
 			ret.setService(resource.getAssetName());
 		}
 
-		ret.setName(resource.getPolicyName());
+		ret.setName(StringUtils.trim(resource.getPolicyName()));
 		ret.setDescription(resource.getDescription());
 		ret.setIsEnabled(resource.getResourceStatus() == RangerCommonEnums.STATUS_ENABLED);
 		ret.setIsAuditEnabled(resource.getAuditList() != null && resource.getAuditList().size() > 0);
@@ -797,7 +797,7 @@ public class ServiceUtil {
 
 		rangerObjectToDataObject(policy, ret);
 
-		ret.setPolicyName(policy.getName());
+		ret.setPolicyName(StringUtils.trim(policy.getName()));
 		ret.setDescription(policy.getDescription());
 		ret.setRepositoryName(policy.getService());
 		ret.setIsEnabled(policy.getIsEnabled() ? true : false);
@@ -1004,7 +1004,7 @@ public class ServiceUtil {
 		ret = (RangerPolicy) dataObjectToRangerObject(vXPolicy, ret);
 
 		ret.setService(service.getName());
-		ret.setName(vXPolicy.getPolicyName());
+		ret.setName(StringUtils.trim(vXPolicy.getPolicyName()));
 		ret.setDescription(vXPolicy.getDescription());
 		ret.setIsEnabled(vXPolicy.getIsEnabled() == true);
 		ret.setIsAuditEnabled(vXPolicy.getIsAuditEnabled());
