@@ -385,6 +385,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			for (int ou=0; ou<userSearchBase.length; ou++) {
 				byte[] cookie = null;
 				int counter = 0;
+				try {
 				do {
 					userSearchResultEnum = ldapContext
 							.search(userSearchBase[ou], extendedUserSearchFilter,
@@ -559,7 +560,11 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 				} while (cookie != null);
 				LOG.info("LDAPUserGroupBuilder.getUsers() completed with user count: "
 						+ counter);
-
+				} catch (Throwable t) {
+					LOG.error("LDAPUserGroupBuilder.getUsers() failed with exception: " + t);
+					LOG.info("LDAPUserGroupBuilder.getUsers() user count: "
+							+ counter);
+				}
 			}
 
 		} finally {
@@ -586,114 +591,119 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			for (int ou=0; ou<groupSearchBase.length; ou++) {
 				byte[] cookie = null;
 				int counter = 0;
-				do {
-					if (!groupSearchFirstEnabled) {
-						if (userInfo == null) {
-							// Should never reach this.
-							LOG.error("No user information provided for group search!");
-							return;
+				try {
+					do {
+						if (!groupSearchFirstEnabled) {
+							if (userInfo == null) {
+								// Should never reach this.
+								LOG.error("No user information provided for group search!");
+								return;
+							}
+							groupSearchResultEnum = ldapContext
+									.search(groupSearchBase[ou], extendedGroupSearchFilter,
+											new Object[]{userInfo.getUserFullName(), userInfo.getUserName()},
+											groupSearchControls);
+						} else {
+							// If group based search is enabled, then first retrieve all the groups based on the group configuration. 
+							groupSearchResultEnum = ldapContext
+									.search(groupSearchBase[ou], extendedAllGroupsSearchFilter,
+											groupSearchControls);
 						}
-						groupSearchResultEnum = ldapContext
-								.search(groupSearchBase[ou], extendedGroupSearchFilter,
-										new Object[]{userInfo.getUserFullName(), userInfo.getUserName()},
-										groupSearchControls);
-					} else {
-						// If group based search is enabled, then first retrieve all the groups based on the group configuration. 
-						groupSearchResultEnum = ldapContext
-								.search(groupSearchBase[ou], extendedAllGroupsSearchFilter,
-										groupSearchControls);
-					}
-					while (groupSearchResultEnum.hasMore()) {
-						final SearchResult groupEntry = groupSearchResultEnum.next();
-						if (groupEntry != null) {
-							counter++;
-							Attribute groupNameAttr = groupEntry.getAttributes().get(groupNameAttribute);
-							if (groupNameAttr == null) {
-								if (LOG.isInfoEnabled())  {
-									LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
-											", skipping sync");
-								}
-								continue;
-							}
-							String gName = (String) groupNameAttr.get();
-							if (groupNameCaseConversionFlag) {
-								if (groupNameLowerCaseFlag) {
-									gName = gName.toLowerCase();
-								} else {
-									gName = gName.toUpperCase();
-								}
-							}
-							if (groupNameRegExInst != null) {
-								gName = groupNameRegExInst.transform(gName);
-							}
-							if (!groupSearchFirstEnabled) {
-								//computedGroups.add(gName);
-								if (LOG.isInfoEnabled())  {
-									LOG.info("computed groups for user: " + userInfo.getUserName() +", groups: " + gName);
-								}
-								userInfo.addGroup(gName);
-							} else {
-								// If group based search is enabled, then
-								// update the group name to ranger admin
-								// check for group members and populate userInfo object with user's full name and group mapping
-								Attribute groupMemberAttr = groupEntry.getAttributes().get(groupMemberAttributeName);
-								LOG.debug("Update Ranger admin with " + gName);
-								sink.addOrUpdateGroup(gName);
-								int userCount = 0;
-								if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
-									LOG.info("No members available for " + gName);
+						while (groupSearchResultEnum.hasMore()) {
+							final SearchResult groupEntry = groupSearchResultEnum.next();
+							if (groupEntry != null) {
+								counter++;
+								Attribute groupNameAttr = groupEntry.getAttributes().get(groupNameAttribute);
+								if (groupNameAttr == null) {
+									if (LOG.isInfoEnabled())  {
+										LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
+												", skipping sync");
+									}
 									continue;
 								}
-								NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
-								while (userEnum.hasMore()) {
-									String originalUserFullName = (String) userEnum.next();
-									if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
+								String gName = (String) groupNameAttr.get();
+								if (groupNameCaseConversionFlag) {
+									if (groupNameLowerCaseFlag) {
+										gName = gName.toLowerCase();
+									} else {
+										gName = gName.toUpperCase();
+									}
+								}
+								if (groupNameRegExInst != null) {
+									gName = groupNameRegExInst.transform(gName);
+								}
+								if (!groupSearchFirstEnabled) {
+									//computedGroups.add(gName);
+									if (LOG.isInfoEnabled())  {
+										LOG.info("computed groups for user: " + userInfo.getUserName() +", groups: " + gName);
+									}
+									userInfo.addGroup(gName);
+								} else {
+									// If group based search is enabled, then
+									// update the group name to ranger admin
+									// check for group members and populate userInfo object with user's full name and group mapping
+									Attribute groupMemberAttr = groupEntry.getAttributes().get(groupMemberAttributeName);
+									LOG.debug("Update Ranger admin with " + gName);
+									sink.addOrUpdateGroup(gName);
+									int userCount = 0;
+									if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
+										LOG.info("No members available for " + gName);
 										continue;
 									}
-									String userFullName = originalUserFullName.toLowerCase();
-									userCount++;
-									if (!userGroupMap.containsKey(userFullName)) {
-										userInfo = new UserInfo(userFullName, originalUserFullName); // Preserving the original full name for later
-										userGroupMap.put(userFullName, userInfo);
-									} else {
-										userInfo = userGroupMap.get(userFullName);
+									NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
+									while (userEnum.hasMore()) {
+										String originalUserFullName = (String) userEnum.next();
+										if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
+											continue;
+										}
+										String userFullName = originalUserFullName.toLowerCase();
+										userCount++;
+										if (!userGroupMap.containsKey(userFullName)) {
+											userInfo = new UserInfo(userFullName, originalUserFullName); // Preserving the original full name for later
+											userGroupMap.put(userFullName, userInfo);
+										} else {
+											userInfo = userGroupMap.get(userFullName);
+										}
+										LOG.info("Adding " + gName + " to user " + userInfo.getUserFullName());
+										userInfo.addGroup(gName);
 									}
-									LOG.info("Adding " + gName + " to user " + userInfo.getUserFullName());
-									userInfo.addGroup(gName);
+									LOG.info("No. of members in the group " + gName + " = " + userCount);
 								}
-								LOG.info("No. of members in the group " + gName + " = " + userCount);
 							}
 						}
-					}
-					// Examine the paged results control response
-					Control[] controls = ldapContext.getResponseControls();
-					if (controls != null) {
-						for (int i = 0; i < controls.length; i++) {
-							if (controls[i] instanceof PagedResultsResponseControl) {
-								PagedResultsResponseControl prrc =
-										(PagedResultsResponseControl)controls[i];
-								total = prrc.getResultSize();
-								if (total != 0) {
-									LOG.debug("END-OF-PAGE total : " + total);
-								} else {
-									LOG.debug("END-OF-PAGE total : unknown");
+						// Examine the paged results control response
+						Control[] controls = ldapContext.getResponseControls();
+						if (controls != null) {
+							for (int i = 0; i < controls.length; i++) {
+								if (controls[i] instanceof PagedResultsResponseControl) {
+									PagedResultsResponseControl prrc =
+											(PagedResultsResponseControl)controls[i];
+									total = prrc.getResultSize();
+									if (total != 0) {
+										LOG.debug("END-OF-PAGE total : " + total);
+									} else {
+										LOG.debug("END-OF-PAGE total : unknown");
+									}
+									cookie = prrc.getCookie();
 								}
-								cookie = prrc.getCookie();
 							}
+						} else {
+							LOG.debug("No controls were sent from the server");
 						}
-					} else {
-						LOG.debug("No controls were sent from the server");
-					}
-					// Re-activate paged results
-					if (pagedResultsEnabled)   {
-						ldapContext.setRequestControls(new Control[]{
-								new PagedResultsControl(PAGE_SIZE, cookie, Control.CRITICAL) });
-					}
-				} while (cookie != null);
-				LOG.info("LDAPUserGroupBuilder.getGroups() completed with group count: "
-						+ counter);
+						// Re-activate paged results
+						if (pagedResultsEnabled)   {
+							ldapContext.setRequestControls(new Control[]{
+									new PagedResultsControl(PAGE_SIZE, cookie, Control.CRITICAL) });
+						}
+					} while (cookie != null);
+					LOG.info("LDAPUserGroupBuilder.getGroups() completed with group count: "
+							+ counter);
+				} catch (Throwable t) {
+					LOG.error("LDAPUserGroupBuilder.getGroups() failed with exception: " + t);
+					LOG.info("LDAPUserGroupBuilder.getGroups() group count: "
+							+ counter);
+				}
 			}
-
 
 		} finally {
 			if (groupSearchResultEnum != null) {

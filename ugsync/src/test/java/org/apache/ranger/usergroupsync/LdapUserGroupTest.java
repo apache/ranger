@@ -515,6 +515,44 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 			assertFalse(group.contains("="));
 		}
 	}
+	
+	@Test
+	public void testGBWithInvalidOU() throws Throwable {
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com;");
+		config.setUserSearchFilter("cn=User*");
+		config.setGroupSearchBase("OU=HdpGroup1,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=*Group10");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchFirstEnabled(true);
+		config.setUserSearchEnabled(false);
+		ldapBuilder.init();
+		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(1, sink.getTotalUsers());
+		assertEquals(1, sink.getTotalGroups());
+	}
+	
+	@Test
+	public void testMultipleOUInvalidOU() throws Throwable {
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com;ou=HadoopUsers1,DC=ranger,DC=qe,DC=hortonworks,DC=com;ou=BusinessUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("cn=*");
+		config.setGroupSearchBase("OU=HdpGroups,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups1,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=*");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+		ldapBuilder.init();
+		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(110, sink.getTotalUsers());
+		assertEquals(0, sink.getTotalGroups());
+	}
 
 	@After
 	public void shutdown() throws Exception {
