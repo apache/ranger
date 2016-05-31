@@ -29,7 +29,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -82,32 +86,15 @@ public class RangerServicePoliciesCache {
 		}
 	}
 
-	public ServicePolicies getServicePolicies(String serviceName) {
-
-		ServicePolicies ret = null;
-
-		if (useServicePoliciesCache && StringUtils.isNotBlank(serviceName)) {
-			ServicePoliciesWrapper cachedServicePoliciesWrapper = null;
-			synchronized (this) {
-				cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
-			}
-			if (cachedServicePoliciesWrapper != null) {
-				ret = cachedServicePoliciesWrapper.getServicePolicies();
-			}
-		}
-
-		return ret;
-	}
-
-	public ServicePolicies getServicePolicies(String serviceName, ServiceStore serviceStore) throws Exception {
+	public ServicePolicies getServicePolicies(String serviceName, Long serviceId, ServiceStore serviceStore) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServicePoliciesCache.getServicePolicies(" + serviceName + ")");
+			LOG.debug("==> RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + ")");
 		}
 
 		ServicePolicies ret = null;
 
-		if (StringUtils.isNotBlank(serviceName)) {
+		if (StringUtils.isNotBlank(serviceName) && serviceId != null) {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("useServicePoliciesCache=" + useServicePoliciesCache);
@@ -131,8 +118,20 @@ public class RangerServicePoliciesCache {
 				synchronized (this) {
 					servicePoliciesWrapper = servicePoliciesMap.get(serviceName);
 
+					if (servicePoliciesWrapper != null) {
+						if (!serviceId.equals(servicePoliciesWrapper.getServiceId())) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Service [" + serviceName + "] changed service-id from " + servicePoliciesWrapper.getServiceId()
+										+ " to " + serviceId);
+								LOG.debug("Recreating servicePoliciesWrapper for serviceName [" + serviceName + "]");
+							}
+							servicePoliciesMap.remove(serviceName);
+							servicePoliciesWrapper = null;
+						}
+					}
+
 					if (servicePoliciesWrapper == null) {
-						servicePoliciesWrapper = new ServicePoliciesWrapper();
+						servicePoliciesWrapper = new ServicePoliciesWrapper(serviceId);
 						servicePoliciesMap.put(serviceName, servicePoliciesWrapper);
 					}
 				}
@@ -153,26 +152,30 @@ public class RangerServicePoliciesCache {
 			ret = servicePolicies;
 
 		} else {
-			LOG.error("getServicePolicies() failed to get policies as serviceName is null or blank!");
+			LOG.error("getServicePolicies() failed to get policies as serviceName is null or blank and/or serviceId is null!");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServicePoliciesCache.getServicePolicies(" + serviceName + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 
 		return ret;
 	}
 
 	private class ServicePoliciesWrapper {
+		final Long serviceId;
 		ServicePolicies servicePolicies;
 		Date updateTime = null;
 		long longestDbLoadTimeInMs = -1;
 
 		ReentrantLock lock = new ReentrantLock();
 
-		ServicePoliciesWrapper() {
+		ServicePoliciesWrapper(Long serviceId) {
+			this.serviceId = serviceId;
 			servicePolicies = null;
 		}
+
+		Long getServiceId() { return serviceId; }
 
 		ServicePolicies getServicePolicies() {
 			return servicePolicies;
@@ -216,7 +219,6 @@ public class RangerServicePoliciesCache {
 			}
 
 			Long servicePolicyVersionInDb = serviceStore.getServicePolicyVersion(serviceName);
-
 
 			if (servicePolicies == null || servicePolicyVersionInDb == null || !servicePolicyVersionInDb.equals(servicePolicies.getPolicyVersion())) {
 				if (LOG.isDebugEnabled()) {

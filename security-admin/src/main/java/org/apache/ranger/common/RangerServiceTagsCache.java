@@ -30,7 +30,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -83,32 +86,15 @@ public class RangerServiceTagsCache {
 		}
 	}
 
-	public ServiceTags getServiceTags(String serviceName) {
-
-		ServiceTags ret = null;
-
-		if (useServiceTagsCache && StringUtils.isNotBlank(serviceName)) {
-			ServiceTagsWrapper cachedServiceTagsWrapper = null;
-			synchronized (this) {
-				cachedServiceTagsWrapper = serviceTagsMap.get(serviceName);
-			}
-			if (cachedServiceTagsWrapper != null) {
-				ret = cachedServiceTagsWrapper.getServiceTags();
-			}
-		}
-
-		return ret;
-	}
-
-	public ServiceTags getServiceTags(String serviceName, TagStore tagStore) throws Exception {
+	public ServiceTags getServiceTags(String serviceName, Long serviceId, TagStore tagStore) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTagsCache.getServiceTags(" + serviceName + ")");
+			LOG.debug("==> RangerServiceTagsCache.getServiceTags(" + serviceName + ", " + serviceId + ")");
 		}
 
 		ServiceTags ret = null;
 
-		if (StringUtils.isNotBlank(serviceName)) {
+		if (StringUtils.isNotBlank(serviceName) && serviceId != null) {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("useServiceTagsCache=" + useServiceTagsCache);
@@ -132,8 +118,19 @@ public class RangerServiceTagsCache {
 				synchronized (this) {
 					serviceTagsWrapper = serviceTagsMap.get(serviceName);
 
+					if (serviceTagsWrapper != null) {
+						if (!serviceId.equals(serviceTagsWrapper.getServiceId())) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Service [" + serviceName + "] changed service-id from " + serviceTagsWrapper.getServiceId()
+										+ " to " + serviceId);
+								LOG.debug("Recreating serviceTagsWrapper for serviceName [" + serviceName + "]");
+							}
+							serviceTagsMap.remove(serviceName);
+							serviceTagsWrapper = null;
+						}
+					}
 					if (serviceTagsWrapper == null) {
-						serviceTagsWrapper = new ServiceTagsWrapper();
+						serviceTagsWrapper = new ServiceTagsWrapper(serviceId);
 						serviceTagsMap.put(serviceName, serviceTagsWrapper);
 					}
 				}
@@ -154,26 +151,30 @@ public class RangerServiceTagsCache {
 			ret = serviceTags;
 
 		} else {
-			LOG.error("getServiceTags() failed to get tags as serviceName is null or blank!");
+			LOG.error("getServiceTags() failed to get tags as serviceName is null or blank and/or serviceId is null!");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTagsCache.getServiceTags(" + serviceName + "): count=" + ((ret == null || ret.getTags() == null) ? 0 : ret.getTags().size()));
+			LOG.debug("<== RangerServiceTagsCache.getServiceTags(" + serviceName + ", " + serviceId + "): count=" + ((ret == null || ret.getTags() == null) ? 0 : ret.getTags().size()));
 		}
 
 		return ret;
 	}
 
 	private class ServiceTagsWrapper {
+		final Long serviceId;
 		ServiceTags serviceTags;
 		Date updateTime = null;
 		long longestDbLoadTimeInMs = -1;
 
 		ReentrantLock lock = new ReentrantLock();
 
-		ServiceTagsWrapper() {
+		ServiceTagsWrapper(Long serviceId) {
+			this.serviceId = serviceId;
 			serviceTags = null;
 		}
+
+		Long getServiceId() { return serviceId; }
 
 		ServiceTags getServiceTags() {
 			return serviceTags;

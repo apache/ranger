@@ -917,7 +917,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		if (lastKnownVersion == null || serviceVersionInfoDbObj == null || serviceVersionInfoDbObj.getTagVersion() == null || !lastKnownVersion.equals(serviceVersionInfoDbObj.getTagVersion())) {
-			ret = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, this);
+			ret = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, xxService.getId(), this);
 		}
 
 		if (ret != null && lastKnownVersion != null && lastKnownVersion.equals(ret.getTagVersion())) {
