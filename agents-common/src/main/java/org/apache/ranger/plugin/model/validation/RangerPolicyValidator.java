@@ -251,12 +251,24 @@ public class RangerPolicyValidator extends RangerValidator {
 			RangerServiceDef serviceDef       = null;
 			int              policyItemsCount = 0;
 
-			if(CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
-				policyItemsCount += policy.getPolicyItems().size();
-			}
-
-			if(CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
-				policyItemsCount += policy.getDenyPolicyItems().size();
+			int policyType=policy.getPolicyType();
+			switch (policyType) {
+			case RangerPolicy.POLICY_TYPE_DATAMASK:
+				if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems()))
+					policyItemsCount += policy.getDataMaskPolicyItems().size();
+				break;
+			case RangerPolicy.POLICY_TYPE_ROWFILTER:
+				if (CollectionUtils.isNotEmpty(policy.getRowFilterPolicyItems()))
+					policyItemsCount += policy.getRowFilterPolicyItems().size();
+				break;
+			default:
+				if (CollectionUtils.isNotEmpty(policy.getPolicyItems())){
+					policyItemsCount += policy.getPolicyItems().size();
+				}
+				if(CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
+					policyItemsCount += policy.getDenyPolicyItems().size();
+				}
+				break;
 			}
 
 			if (policyItemsCount == 0 && !isAuditEnabled) {

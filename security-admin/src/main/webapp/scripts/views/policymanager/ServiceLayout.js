@@ -114,12 +114,20 @@ define(function(require){
 					msg :'Are you sure want to delete ?',
 					callback : function(){
 						XAUtil.blockUI();
-						model.destroy({success: function(model, response) {
-							XAUtil.blockUI('unblock');
-							that.services.remove(model.get('id'));
-							XAUtil.notifySuccess('Success', 'Service deleted successfully');
-							that.render();
-						}});
+						model.destroy({
+							success: function(model, response) {
+								XAUtil.blockUI('unblock');
+								that.services.remove(model.get('id'));
+								XAUtil.notifySuccess('Success', 'Service deleted successfully');
+								that.render();
+							},
+							error :function(model, response) {
+								XAUtil.blockUI('unblock');
+								if(!_.isUndefined(response) && !_.isUndefined(response.responseJSON) && !_.isUndefined(response.responseJSON.msgDesc)){
+									XAUtil.notifyError('Error', response.responseJSON.msgDesc);
+								}
+							}
+						});
 					}
 				});
 			}

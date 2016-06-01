@@ -22,6 +22,7 @@ package org.apache.ranger.rest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -549,6 +550,24 @@ public class ServiceREST {
 			// services including KMS
 
 			XXService service = daoManager.getXXService().getById(id);
+			EmbeddedServiceDefsUtil embeddedServiceDefsUtil = EmbeddedServiceDefsUtil.instance();
+			if (service.getType().equals(embeddedServiceDefsUtil.getTagServiceDefId())){
+				List<XXService> referringServices=daoManager.getXXService().findByTagServiceId(id);
+				if(!CollectionUtils.isEmpty(referringServices)){
+					Set<String> referringServiceNames=new HashSet<String>();
+					for(XXService xXService:referringServices){
+						referringServiceNames.add(xXService.getName());
+						if(referringServiceNames.size()>=10){
+							break;
+						}
+					}
+					if(referringServices.size()<=10){
+						throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: "+referringServiceNames,MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+					}else{
+						throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: "+referringServiceNames+" and more..",MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+					}
+				}
+			}
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
