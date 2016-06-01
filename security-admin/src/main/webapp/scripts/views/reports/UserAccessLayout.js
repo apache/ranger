@@ -28,6 +28,7 @@ define(function(require) {'use strict';
 	var XATableLayout		= require('views/common/XATableLayout');
 	var localization		= require('utils/XALangSupport');
 	var XAGlobals			= require('utils/XAGlobals');
+	var CustomSubgrid 		= require('views/common/CustomSubgrid');
 	
 	var RangerService		= require('models/RangerService');
 	var RangerServiceDefList= require('collections/RangerServiceDefList');
@@ -76,7 +77,9 @@ define(function(require) {'use strict';
 			btnShowLessUsers 	: '[data-id="showLessUsers"]',
 			componentType       : '[data-id="component"]',
 			downloadReport      : '[data-id="downloadReport"]',
-			policyType          : '[data-id="policyType"]'
+			policyType          : '[data-id="policyType"]',
+			btnShowMoreAccess 	: '[data-id="showMoreAccess"]',
+			btnShowLessAccess 	: '[data-id="showLessAccess"]'
 		},
 
 		/** ui events hash */
@@ -90,6 +93,8 @@ define(function(require) {'use strict';
 			events['click ' + this.ui.btnShowMoreUsers]  = 'onShowMoreUsers';
 			events['click ' + this.ui.btnShowLessUsers]  = 'onShowLessUsers';
 			events['click .downloadFormat'] = 'setDownloadFormatFilter';
+			events['click ' + this.ui.btnShowMoreAccess] = 'onShowMorePermissions';
+			events['click ' + this.ui.btnShowLessAccess] = 'onShowLessPermissions';
 			return events;
 		},
 
@@ -140,7 +145,6 @@ define(function(require) {'use strict';
 				this.renderTable(obj.collName, obj.serviceDefName);
 				this.getResourceLists(obj.collName,obj.serviceDefName);
 			},this);
-			this.modifyTableForSubcolumns();
 			this.$el.find('[data-js="policyName"]').focus()
 			var urlString = XAUtil.getBaseUrl();
 			if(urlString.slice(-1) == "/") {
@@ -163,13 +167,26 @@ define(function(require) {'use strict';
 				XAUtil.blockUI('unblock');
 				if(coll.length >= 1 && !that.allowDownload)
 					that.allowDownload = true;
-				
+				_.each(that[collName].models,function(model,ind){
+					if (XAUtil.isMaskingPolicy(model.get('policyType'))) {
+						//'<name>Collection' must be same as subgrid custom column name
+						model.attributes.allowCollection = model.get('dataMaskPolicyItems');
+					} else if (XAUtil.isRowFilterPolicy(model.get('policyType'))) {
+						model.attributes.allowCollection = model.get('rowFilterPolicyItems');
+					} else {
+						model.attributes.allowCollection = model.get('policyItems');
+					}
+					model.attributes.denyCollection  = model.get('denyPolicyItems');
+					model.attributes.denyExcludeCollection    = model.get('denyExceptions');
+					model.attributes.allowExcludeCollection = model.get('allowExceptions');
+				});
+
 			});
 		},
 		renderTable : function(collName,serviceDefName){
 			var that = this, tableRegion  = this[collName+'Table'];
 			tableRegion.show(new XATableLayout({
-				columns: this.getColumns(this[collName],collName,serviceDefName),
+				columns: this.getSubgridColumns(this[collName],collName,serviceDefName),
 				collection: this[collName],
 				includeFilter : false,
 				scrollToTop : false,
@@ -181,17 +198,110 @@ define(function(require) {'use strict';
 			}));
 		
 		},
-		getColumns : function(coll,collName,serviceDefName){
+		getSubgridColumns:function(coll,collName,serviceDefName){
 			var that = this;
-			var cols = {
+
+			var subcolumns = [{
+					name: 'groups',
+					cell: 'html',
+					label: 'Groups',
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model, coll) {
+							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
+							var group_str = '';
+							if(_.isEmpty(model.get('groups'))){
+								return '<center>--</center>';
+							} else {
+								_.each(model.get('groups'),function(group,index){
+									if(index < 4) {
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + group + endSpanEle  + " ";
+									} else {
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + group+ endSpanEle  + " ";
+									}
+								});
+								if(model.get('groups').length > 4) {
+									group_str += '<span class="pull-left float-left-margin-2">\
+									<a href="javascript:void(0);" data-id="showMoreAccess" policy-id="'+
+									model.cid+'"><code style=""> + More..</code></a></span>\
+									<span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLessAccess" policy-id="'+
+									model.cid+'" style="display:none;"><code style=""> - Less..</code></a></span>';}
+									return group_str;
+								}
+						}
+					}),
+					editable: false,
+					click: false,
+					sortable: false
+				},
+				{
+					name: 'users',
+					cell: 'html',
+					label: 'Users',
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model) {
+							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
+							var user_str = '';
+							if(_.isEmpty(model.get('users'))){
+								return '<center>--</center>';
+							} else {
+								_.each(model.get('users'),function(user,index){
+									if(index < 4) {
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + user + endSpanEle  + " ";
+									} else {
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + user+ endSpanEle  + " ";
+									}
+								});
+								if(model.get('users').length > 4) {
+									user_str += '<span class="pull-left float-left-margin-2">\
+									<a href="javascript:void(0);" data-id="showMoreAccess" policy-id="'+
+									model.cid+'"><code style=""> + More..</code></a></span>\
+									<span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLessAccess" policy-id="'+
+									model.cid+'" style="display:none;"><code style=""> - Less..</code></a></span>';}
+									return user_str;}
+								}
+					}),
+					editable: false,
+					click: false,
+					sortable: false
+				},
+				{ 
+					name: 'accesses',
+					cell: 'html',
+					label: 'Accesses',
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model) {
+							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
+							var access_str = '';
+							_.each(model.get('accesses'),function(access,index){
+								if(index < 4){
+									access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+ endSpanEle  + " ";
+								} else {
+									access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+ endSpanEle  + " ";
+								}
+							});
+							if(model.get('accesses').length > 4) {
+								access_str += '<span class="pull-left float-left-margin-2">\
+								<a href="javascript:void(0);" data-id="showMoreAccess" policy-id="'+
+								model.cid+'"><code style=""> + More..</code></a></span>\
+								<span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLessAccess" policy-id="'+
+				                model.cid+'" style="display:none;"><code style=""> - Less..</code></a></span>';}
+								return access_str;
+						}
+					}),
+					editable: false,
+					click: false,
+					sortable: false
+				}
+			];
+			var columns = {
 				id : {
 					cell : "uri",
 					href: function(model){
 						var rangerService = new RangerService();
-						rangerService.urlRoot += '/name/'+model.get('service'); 
+						rangerService.urlRoot += '/name/'+model.get('service');
 						rangerService.fetch({
-						  cache : false,
-						  async : false
+							cache : false,
+							async : false
 						});
 						return '#!/service/'+rangerService.get('id')+'/policies/'+model.id+'/edit';
 					},
@@ -205,8 +315,7 @@ define(function(require) {'use strict';
 					editable: false,
 					sortable : false
 				},
-				resources:
-				{
+				resources: {
 					label: 'Resources',
 					cell: 'Html',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
@@ -225,12 +334,12 @@ define(function(require) {'use strict';
 								strVal = strVal+ "<br />";
 							});
 							return strVal;
-							}
+						}
 					}),
 					editable: false,
 					sortable: false,
 					click: false
-				},
+					},
 				policyType: {
 					label: 'Policy Type',
 					cell: Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell'}),
@@ -251,56 +360,6 @@ define(function(require) {'use strict';
 					sortable: false,
 					click: false
 				},
-				permissions: {
-					label: 'Permissions',
-					cell : Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell' }),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
-						fromRaw: function(rawValue,model){
-							var itemList = [], policyType = model.get("policyType");
-							if (XAUtil.isMaskingPolicy(policyType)) {
-								itemList = model.get("dataMaskPolicyItems");
-							} else if (XAUtil.isRowFilterPolicy(policyType)) {
-								itemList = model.get("rowFilterPolicyItems");
-							}else{// by default it is access
-								itemList = model.get("policyItems");
-							}
-							if(itemList.length > 0) {
-							    var htmlStr = '', accessStr = '', grpStr = '', userStr = '';
-							    var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
-								_.each(itemList,function(policyItem){
-									if(!_.isUndefined(policyItem.groups) || !_.isUndefined(policyItem.users) &&
-											!_.isUndefined(policyItem.accesses)){
-										var maxItem = policyItem.groups.length > policyItem.users.length ? policyItem.groups :  policyItem.users;
-										maxItem = policyItem.accesses.length > maxItem.length ? policyItem.accesses : maxItem; 
-										
-										_.each(maxItem,function(item, i){
-											if(!_.isUndefined(policyItem.users[i])){
-												userStr += startSpanEle + policyItem.users[i] + endSpanEle;
-											}
-											if(!_.isUndefined(policyItem.groups[i])){
-												grpStr += startSpanEle + policyItem.groups[i] + endSpanEle;
-											}
-											if(!_.isUndefined(policyItem.accesses[i])){
-												accessStr += startSpanEle + policyItem.accesses[i].type + endSpanEle;
-											}
-										});
-										
-									}
-									htmlStr += '<tr style="height:60px"><td class="report-user-group">'+grpStr+'</td>\
-												<td class="report-user-group">'+(userStr)+'</td>\
-												<td class="report-access">'+accessStr+'</td></tr>';
-									accessStr = '', grpStr = '', userStr = '';
-								});
-								return htmlStr;
-							} else {
-								return '---';
-							}
-						}
-					}),
-					editable: false,
-					sortable: false,
-					click: false
-				},
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",
@@ -314,91 +373,143 @@ define(function(require) {'use strict';
 					drag : false,
 					sortable : false
 				}
-
 			};
-
-			return coll.constructor.getTableCols(cols, coll);
+			var permissions = this.getPermissionColumns(this[collName],collName,serviceDefName,subcolumns);
+			_.extend(columns,permissions);
+			return coll.constructor.getTableCols(columns, coll);
 		},
-		/* add 'component' and 'policy type' select */
-	renderComponentAndPolicyTypeSelect: function(){
-		var that = this;
-		var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}; });
-		var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
-			return {'id': m.value,'text': m.label};
-		});
-		this.ui.componentType.select2({
-			multiple: true,
-			closeOnSelect: true,
-			placeholder: 'Select Component',
-		    //maximumSelectionSize : 1,
-		    width: '220px',
-		    allowClear: true,
-		    data: options
-		});
-		this.ui.policyType.select2({
-			closeOnSelect: true,
-			placeholder: 'Select policy type',
-			maximumSelectionSize : 1,
-			width: '220px',
-			allowClear: true,
-			data: policyTypes
+		getPermissionColumns: function (coll,collName,serviceDefName,subcolumns){
 
-		});
-	},
-	modifyTableForSubcolumns : function(){
-		this.$el.find(".permissions").html('<tr><th colspan="3">Permissions</th></tr>\
-							<tr><th style="width:80px;max-width:80px;">Groups</th><th style="width:80px;max-width:80px;">Users</th>\
-							<th style="width:150px">Accesses</th></tr>');
-	},
-	onDownload: function(e){
-		var that = this, url = '';
-		if(!this.allowDownload){
-			XAUtil.alertPopup({
-				msg :"No policies found to download!",
+			var that = this,permissions,cols,serviceDefOptions;
+
+			var serviceDefOptions = {};
+			_.each(this.serviceDefList.models, function(model){
+				if(model.get('name') === serviceDefName)
+					serviceDefOptions = model.get('options');
 			});
-			return;
-		}
-		if(!this.searchedFlag) {
-			url =  this.previousSearchUrl;
-		} else if (this.searchedFlag && this.updatedUrl) {
-			var urlString = XAUtil.getBaseUrl();
-			if(urlString.slice(-1) === "/") {
-				urlString = urlString.slice(0,-1);
+			var enableDenyAndExceptionsInPolicies = false;
+			if(!_.isUndefined(serviceDefOptions.enableDenyAndExceptionsInPolicies))
+				 enableDenyAndExceptionsInPolicies = true;
+			if(serviceDefName === XAEnums.ServiceType.SERVICE_TAG.label){
+				enableDenyAndExceptionsInPolicies = true;
 			}
-			url = url + urlString;
-			if (e === "xlsFormat") {
-					url = url + '/service/plugins/policies/downloadExcel?';
-			} else {
-					url = url + '/service/plugins/policies/csv?';
-			}
-			url = url + this.searchedParamsString + this.searchedComponentString;
-			this.previousSearchUrl = url;
-			this.searchedFlag = true;
-		}
-		this.ui.downloadReport.attr("href",url)[0].click();
-	},
-	setDownloadReportUrl: function(that,component,params){
 
-		var compString = '', url = '';
-		if(!_.isUndefined(component)) {
-			_.each(component,function(comp){
-				compString = compString + comp + '_';
+            permissions = {
+        		allow:{
+					label: 'Allow Conditions',
+					cell: "subgrid-custom",
+					optionValues : subcolumns,
+					editable: false,
+					sortable: false,
+					click : false
+		        }
+            };
+            if(enableDenyAndExceptionsInPolicies) {
+            	cols = {
+            			allowExclude:{
+            				label: 'Allow Exclude',
+            				cell: "subgrid-custom",
+            				optionValues : subcolumns,
+            				editable: false,
+            				sortable: false,
+            				click : false
+            			},	
+            			deny:{
+            				label: 'Deny Conditions',
+            				cell: "subgrid-custom",
+            				optionValues : subcolumns,
+            				editable: false,
+            				sortable: false,
+            				click : false
+            			},
+            			denyExclude:{
+            				label: 'Deny Exclude',
+            				cell: "subgrid-custom",
+            				optionValues : subcolumns,
+            				editable: false,	
+            				sortable: false,
+            				click : false
+            			}
+            	};
+            }
+			return _.extend(permissions,cols);
+		},
+
+		/* add 'component' and 'policy type' select */
+		renderComponentAndPolicyTypeSelect: function(){
+			var that = this;
+			var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}; });
+			var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
+				return {'id': m.value,'text': m.label};
+			});
+			this.ui.componentType.select2({
+				multiple: true,
+				closeOnSelect: true,
+				placeholder: 'Select Component',
+			    //maximumSelectionSize : 1,
+			    width: '220px',
+			    allowClear: true,
+			    data: options
+			});
+			this.ui.policyType.select2({
+				closeOnSelect: true,
+				placeholder: 'Select policy type',
+				maximumSelectionSize : 1,
+				width: '220px',
+				allowClear: true,
+				data: policyTypes
+	
+			});
+		},
+		onDownload: function(e){
+			var that = this, url = '';
+			if(!this.allowDownload){
+				XAUtil.alertPopup({
+					msg :"No policies found to download!",
 				});
-		}
-		if (!_.isEmpty(compString)) {
-			compString = compString.slice(0,-1);
-		}
-		_.each(params, function(val, paramName){
-			if(_.isUndefined(val) || _.isEmpty(val)) {
-				delete params[paramName];
+				return;
 			}
-		});
-		var str = jQuery.param( params );
-		this.searchedComponentString = "&serviceType=" + compString;
-		this.searchedParamsString = str;
-		this.updatedUrl = true;
+			if(!this.searchedFlag) {
+				url =  this.previousSearchUrl;
+			} else if (this.searchedFlag && this.updatedUrl) {
+				var urlString = XAUtil.getBaseUrl();
+				if(urlString.slice(-1) === "/") {
+					urlString = urlString.slice(0,-1);
+				}
+				url = url + urlString;
+				if (e === "xlsFormat") {
+						url = url + '/service/plugins/policies/downloadExcel?';
+				} else {
+						url = url + '/service/plugins/policies/csv?';
+				}
+				url = url + this.searchedParamsString + this.searchedComponentString;
+				this.previousSearchUrl = url;
+				this.searchedFlag = true;
+			}
+			this.ui.downloadReport.attr("href",url)[0].click();
+		},
+		setDownloadReportUrl: function(that,component,params){
 
-	},
+			var compString = '', url = '';
+			if(!_.isUndefined(component)) {
+				_.each(component,function(comp){
+					compString = compString + comp + '_';
+					});
+			}
+			if (!_.isEmpty(compString)) {
+				compString = compString.slice(0,-1);
+			}
+			_.each(params, function(val, paramName){
+				if(_.isUndefined(val) || _.isEmpty(val)) {
+					delete params[paramName];
+				}
+			});
+			var str = jQuery.param( params );
+			this.searchedComponentString = "&serviceType=" + compString;
+			this.searchedParamsString = str;
+			this.updatedUrl = true;
+
+		},	
 		/** on render callback */
 		setupGroupAutoComplete : function(){
 			this.groupArr = this.groupList.map(function(m){
@@ -673,6 +784,27 @@ define(function(require) {'use strict';
 				}, 1100);
 			}
 		},
+		onShowMorePermissions: function(e){
+						var policyId = $(e.currentTarget).attr('policy-id');
+						var $td = $(e.currentTarget).parents('td');
+						$td.find('[access-policy-id="'+policyId+'"]').show();
+						$td.find('[user-policy-id="'+policyId+'"]').show();
+						$td.find('[group-policy-id="'+policyId+'"]').show();
+						$td.find('[data-id="showLessAccess"][policy-id="'+policyId+'"]').show();
+						$td.find('[data-id="showMoreAccess"][policy-id="'+policyId+'"]').hide();
+
+					},
+					onShowLessPermissions: function(e){
+						var policyId = $(e.currentTarget).attr('policy-id');
+						var $td = $(e.currentTarget).parents('td');
+						$td.find('[access-policy-id="'+policyId+'"]').slice(4).hide();
+						$td.find('[user-policy-id="'+policyId+'"]').slice(4).hide();
+						$td.find('[group-policy-id="'+policyId+'"]').slice(4).hide();
+						$td.find('[data-id="showMoreAccess"][policy-id="'+policyId+'"]').show();
+						$td.find('[data-id="showLessAccess"][policy-id="'+policyId+'"]').hide();
+
+					},
+
 		onShowMore : function(e){
 			var attrName = 'policy-groups-id';
 			var id = $(e.currentTarget).attr(attrName);
