@@ -458,4 +458,14 @@
 		<name>ranger.supportedcomponents</name>
 		<value></value>
 	</property>
+	
+	<property>
+		<name>ranger.sso.cookiename</name>
+		<value>hadoop-jwt</value>
+	</property>
+	<property>
+		<name>ranger.sso.query.param.originalurl</name>
+		<value>originalUrl</value>
+	</property>
+	
 </configuration>

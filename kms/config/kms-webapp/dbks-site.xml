@@ -139,13 +139,13 @@
   
   <property>
   	<name>ranger.ks.hsm.partition.name</name>
-  	<value>par19</value>
+  	<value></value>
   	<description></description>
   </property>
   
   <property>
   	<name>ranger.ks.hsm.partition.password</name>
-  	<value>S@fenet123</value>
+  	<value></value>
   	<description></description>
   </property>
   

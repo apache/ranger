@@ -114,8 +114,6 @@ cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFIL
 sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
 sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
 sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
-sso_cookiename=$(get_prop 'sso_cookiename' $PROPFILE)
-sso_query_param_originalurl=$(get_prop 'sso_query_param_originalurl' $PROPFILE)
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 
 spnego_principal=$(get_prop 'spnego_principal' $PROPFILE)
@@ -760,7 +758,7 @@ update_properties() {
 
 	if [ "${sso_enabled}" == "true" ]
 	then
-		if [ "${sso_providerurl}" == "" ] || [ "${sso_publickey}" == "" ] || [ "${sso_cookiename}" == "" ] || [ "${sso_query_param_originalurl}" == "" ]
+		if [ "${sso_providerurl}" == "" ] || [ "${sso_publickey}" == "" ]
 		then
 			log "[E] Please provide valid values in SSO config properties!";
 			exit 1
@@ -777,13 +775,6 @@ update_properties() {
 		newPropertyValue="${sso_publickey}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	 
-		propertyName=ranger.sso.cookiename
-		newPropertyValue="${sso_cookiename}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-	 
-		propertyName=ranger.sso.query.param.originalurl
-		newPropertyValue="${sso_query_param_originalurl}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	 else
                 propertyName=ranger.sso.enabled
                 newPropertyValue="false"
