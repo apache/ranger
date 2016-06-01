@@ -168,6 +168,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 
 		groupSearchFirstEnabled =   config.isGroupSearchFirstEnabled();
 		userSearchEnabled =   config.isUserSearchEnabled();
+		groupSearchEnabled =   config.isGroupSearchEnabled();
     ldapUrl = config.getLdapUrl();
     ldapBindDn = config.getLdapBindDn();
     ldapBindPassword = config.getLdapBindPassword();
@@ -194,22 +195,22 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		
 		Set<String> userSearchAttributes = new HashSet<String>();
 		userSearchAttributes.add(userNameAttribute);
-		
-		userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
-		for (String useGroupNameAttribute : userGroupNameAttributeSet) {
-			userSearchAttributes.add(useGroupNameAttribute);
+		// For Group based search, user's group name attribute should not be added to the user search attributes
+		if (!groupSearchFirstEnabled && !groupSearchEnabled) { 
+			userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
+			for (String useGroupNameAttribute : userGroupNameAttributeSet) {
+				userSearchAttributes.add(useGroupNameAttribute);
+			}
 		}
 		
 		userSearchControls = new SearchControls();
 		userSearchControls.setSearchScope(userSearchScope);
 		userSearchControls.setReturningAttributes(userSearchAttributes.toArray(
 				new String[userSearchAttributes.size()]));
-    userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
 
     pagedResultsEnabled =   config.isPagedResultsEnabled();
     pagedResultsSize =   config.getPagedResultsSize();
 
-    groupSearchEnabled =   config.isGroupSearchEnabled();
     groupSearchBase = config.getGroupSearchBase().split(";");
     groupSearchScope = config.getGroupSearchScope();
     groupObjectClass = config.getGroupObjectClass();
