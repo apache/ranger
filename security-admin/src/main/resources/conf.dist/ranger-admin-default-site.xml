@@ -467,5 +467,21 @@
 		<name>ranger.sso.query.param.originalurl</name>
 		<value>originalUrl</value>
 	</property>
+	 <property>
+		<name>ranger.rest-csrf.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.rest-csrf.custom-header</name>
+		<value>X-XSRF-HEADER</value>
+	</property>
+	<property>
+		<name>ranger.rest-csrf.methods-to-ignore</name>
+		<value>GET,OPTIONS,HEAD,TRACE</value>
+	</property>
+	<property>
+		<name>ranger.rest-csrf.browser-useragents-regex</name>
+		<value>^Mozilla.*,^Opera.*</value>
+	</property>
 	
 </configuration>

@@ -42,11 +42,11 @@ public class RangerCSRFPreventionFilter implements Filter {
 	
 	private static final Logger LOG = Logger.getLogger(RangerCSRFPreventionFilter.class);
 		
-	public static final boolean isCSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled",true);
+	public static final boolean isCSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
-	static final String  BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*";
+	public static final String BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
-	static final String  METHODS_TO_IGNORE_DEFAULT = "GET,OPTIONS,HEAD,TRACE";
+	public static final String METHODS_TO_IGNORE_DEFAULT = "GET,OPTIONS,HEAD,TRACE";
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
 	public static final String HEADER_DEFAULT = "X-XSRF-HEADER";
 	public static final String HEADER_USER_AGENT = "User-Agent";
@@ -66,18 +66,18 @@ public class RangerCSRFPreventionFilter implements Filter {
 	}
 	
 	public void init(FilterConfig filterConfig) throws ServletException {
-		String customHeader = PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM);
+		String customHeader = PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM, HEADER_DEFAULT);
 	    if (customHeader != null) {
 	      headerName = customHeader;
 	    }
 	    
-	    String customMethodsToIgnore = PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM);
+	    String customMethodsToIgnore = PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM, METHODS_TO_IGNORE_DEFAULT);
         if (customMethodsToIgnore != null) {
           parseMethodsToIgnore(customMethodsToIgnore);
         } else {
           parseMethodsToIgnore(METHODS_TO_IGNORE_DEFAULT);
         }
-        String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM);
+        String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, BROWSER_USER_AGENTS_DEFAULT);
         if (agents == null) {
           agents = BROWSER_USER_AGENTS_DEFAULT;
         }

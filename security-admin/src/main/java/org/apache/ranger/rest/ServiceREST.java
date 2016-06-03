@@ -87,6 +87,7 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
@@ -2283,10 +2284,10 @@ public class ServiceREST {
 
 	private HashMap<String, Object> getCSRFPropertiesMap() {
 		HashMap<String, Object> map = new HashMap<String, Object>();  
-		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, false));
-		map.put(CUSTOM_HEADER_PARAM, PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM));
-		map.put(BROWSER_USER_AGENT_PARAM, PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM));
-		map.put(CUSTOM_METHODS_TO_IGNORE_PARAM, PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM));
+		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));
+		map.put(CUSTOM_HEADER_PARAM, PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM, RangerCSRFPreventionFilter.HEADER_DEFAULT));
+		map.put(BROWSER_USER_AGENT_PARAM, PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT));
+		map.put(CUSTOM_METHODS_TO_IGNORE_PARAM, PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM, RangerCSRFPreventionFilter.METHODS_TO_IGNORE_DEFAULT));
 		return map;
 	}
 	
