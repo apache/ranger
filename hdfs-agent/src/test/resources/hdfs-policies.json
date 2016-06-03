@@ -1,0 +1,414 @@
+{
+  "serviceName": "HDFSTest",
+  "serviceId": 6,
+  "policyVersion": 24,
+  "policyUpdateTime": "20160530-12:34:17.000-+0100",
+  "policies": [
+    {
+      "service": "HDFSTest",
+      "name": "TmpdirWrite",
+      "description": "",
+      "resourceSignature": "532dfdda3e85610c42ffaeb34f82610f",
+      "isAuditEnabled": true,
+      "resources": {
+        "path": {
+          "values": [
+            "/tmp/tmpdir2"
+          ],
+          "isExcludes": false,
+          "isRecursive": true
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 27,
+      "guid": "1464353414767_67_927",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160527-13:50:14.000-+0100",
+      "updateTime": "20160527-13:50:14.000-+0100",
+      "version": 1
+    },
+    {
+      "service": "HDFSTest",
+      "name": "TmpdirExecute",
+      "description": "",
+      "resourceSignature": "1270d836e3dd33e61abda30413111851",
+      "isAuditEnabled": true,
+      "resources": {
+        "path": {
+          "values": [
+            "/tmp/tmpdir3"
+          ],
+          "isExcludes": false,
+          "isRecursive": true
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "execute",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "execute",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 28,
+      "guid": "1464606028409_457_979",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160530-12:00:28.000-+0100",
+      "updateTime": "20160530-12:00:28.000-+0100",
+      "version": 1
+    },
+    {
+      "service": "HDFSTest",
+      "name": "TmpdirRead",
+      "description": "",
+      "resourceSignature": "83af98ea40841d0e7b1b53175f70506c",
+      "isAuditEnabled": true,
+      "resources": {
+        "path": {
+          "values": [
+            "/tmp/tmpdir"
+          ],
+          "isExcludes": false,
+          "isRecursive": true
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 29,
+      "guid": "1464607736570_430_1010",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160530-12:28:56.000-+0100",
+      "updateTime": "20160530-12:34:17.000-+0100",
+      "version": 3
+    }
+  ],
+  "serviceDef": {
+    "name": "hdfs",
+    "implClass": "org.apache.ranger.services.hdfs.RangerServiceHdfs",
+    "label": "HDFS Repository",
+    "description": "HDFS Repository",
+    "options": {},
+    "configs": [
+      {
+        "itemId": 1,
+        "name": "username",
+        "type": "string",
+        "subType": "",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Username"
+      },
+      {
+        "itemId": 2,
+        "name": "password",
+        "type": "password",
+        "subType": "",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Password"
+      },
+      {
+        "itemId": 3,
+        "name": "fs.default.name",
+        "type": "string",
+        "subType": "",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Namenode URL"
+      },
+      {
+        "itemId": 4,
+        "name": "hadoop.security.authorization",
+        "type": "bool",
+        "subType": "YesTrue:NoFalse",
+        "mandatory": true,
+        "defaultValue": "false",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Authorization Enabled"
+      },
+      {
+        "itemId": 5,
+        "name": "hadoop.security.authentication",
+        "type": "enum",
+        "subType": "authnType",
+        "mandatory": true,
+        "defaultValue": "simple",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Authentication Type"
+      },
+      {
+        "itemId": 6,
+        "name": "hadoop.security.auth_to_local",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 7,
+        "name": "dfs.datanode.kerberos.principal",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 8,
+        "name": "dfs.namenode.kerberos.principal",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 9,
+        "name": "dfs.secondary.namenode.kerberos.principal",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 10,
+        "name": "hadoop.rpc.protection",
+        "type": "enum",
+        "subType": "rpcProtection",
+        "mandatory": false,
+        "defaultValue": "authentication",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "RPC Protection Type"
+      },
+      {
+        "itemId": 11,
+        "name": "commonNameForCertificate",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Common Name for Certificate"
+      }
+    ],
+    "resources": [
+      {
+        "itemId": 1,
+        "name": "path",
+        "type": "path",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": true,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Resource Path",
+        "description": "HDFS file or directory path"
+      }
+    ],
+    "accessTypes": [
+      {
+        "itemId": 1,
+        "name": "read",
+        "label": "Read",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 2,
+        "name": "write",
+        "label": "Write",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 3,
+        "name": "execute",
+        "label": "Execute",
+        "impliedGrants": []
+      }
+    ],
+    "policyConditions": [],
+    "contextEnrichers": [],
+    "enums": [
+      {
+        "itemId": 1,
+        "name": "authnType",
+        "elements": [
+          {
+            "itemId": 1,
+            "name": "simple",
+            "label": "Simple"
+          },
+          {
+            "itemId": 2,
+            "name": "kerberos",
+            "label": "Kerberos"
+          }
+        ],
+        "defaultIndex": 0
+      },
+      {
+        "itemId": 2,
+        "name": "rpcProtection",
+        "elements": [
+          {
+            "itemId": 1,
+            "name": "authentication",
+            "label": "Authentication"
+          },
+          {
+            "itemId": 2,
+            "name": "integrity",
+            "label": "Integrity"
+          },
+          {
+            "itemId": 3,
+            "name": "privacy",
+            "label": "Privacy"
+          }
+        ],
+        "defaultIndex": 0
+      }
+    ],
+    "dataMaskDef": {
+      "maskTypes": [],
+      "accessTypes": [],
+      "resources": []
+    },
+    "rowFilterDef": {
+      "accessTypes": [],
+      "resources": []
+    },
+    "id": 1,
+    "guid": "0d047247-bafe-4cf8-8e9b-d5d377284b2d",
+    "isEnabled": true,
+    "createTime": "20160314-14:39:34.000-+0000",
+    "updateTime": "20160314-14:39:34.000-+0000",
+    "version": 1
+  }
+}
