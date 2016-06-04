@@ -83,6 +83,9 @@ public class AuthzAuditEventDbObj implements Serializable {
 	private String clientType;
 	private String clientIP;
 	private String requestData;
+	private long seqNum;
+	private long eventCount;
+	private long eventDurationMS;
 
 	public static void init(Properties props)
 	{
@@ -168,6 +171,9 @@ public class AuthzAuditEventDbObj implements Serializable {
 		this.clientType     = event.getClientType();
 		this.clientIP       = event.getClientIP();
 		this.requestData    = event.getRequestData();
+		this.seqNum         = event.getSeqNum();
+		this.eventCount     = event.getEventCount();
+		this.eventDurationMS= event.getEventDurationMS();
 	}
 
 	@Id
@@ -335,6 +341,22 @@ public class AuthzAuditEventDbObj implements Serializable {
 	public void setRequestData(String requestData) {
 		this.requestData = requestData;
 	}
+
+	@Column(name = "seq_num")
+	public long getSeqNum() { return this.seqNum; }
+
+	public void setSeqNum(long seqNum) { this.seqNum = seqNum; }
+
+	@Column(name = "event_count")
+	public long getEventCount() { return this.eventCount; }
+
+	public void setEventCount(long eventCount) { this.eventCount = eventCount; }
+
+	@Column(name = "event_dur_ms")
+	public long getEventDurationMS() { return this.eventDurationMS; }
+
+	public void setEventDurationMS(long eventDurationMS) { this.eventDurationMS = eventDurationMS; }
+
 	static final String TruncationMarker = "...";
 	static final int TruncationMarkerLength = TruncationMarker.length();
 
