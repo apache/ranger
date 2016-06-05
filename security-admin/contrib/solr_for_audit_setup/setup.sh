@@ -451,6 +451,8 @@ echo "`date`|INFO|Configure Ranger to use the following URL http://`hostname -f`
 if [ "$SOLR_DEPLOYMENT" = "solrcloud" ]; then
     echo "`date`|INFO|Please refer to $SOLR_INSTALL_NOTES for instructions for setting up collections in SolrCloud"
 fi
+echo "`date`|INFO| ** NOTE: If Solr is Secured then solrclient JAAS configuration has to be added to Ranger Admin and Ranger Plugin properties"
+echo "`date`|INFO| ** Refer documentation on how to configure Ranger for audit to Secure Solr"
 echo "########## Done ###################"
 echo "Created file $SOLR_INSTALL_NOTES with instructions to start and stop"
 echo "###################################"

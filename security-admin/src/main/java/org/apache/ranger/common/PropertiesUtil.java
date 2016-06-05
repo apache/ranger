@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+
 import org.apache.log4j.Logger;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.springframework.beans.BeansException;
@@ -243,5 +244,12 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
     }
 	public static Map<String, String> getPropertiesMap() {
 		return propertiesMap;
+	}
+	public static Properties getProps() {
+		Properties ret = new Properties();
+		if (propertiesMap != null) {
+			ret.putAll(propertiesMap);
+		}
+		return ret;
 	}
 }

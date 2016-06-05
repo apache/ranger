@@ -25,7 +25,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
+
 import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessAudit;
@@ -34,13 +36,19 @@ import org.apache.ranger.entity.XXAccessAuditV4;
 import org.apache.ranger.entity.XXAccessAuditV5;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.solr.SolrAccessAuditsService;
+import org.apache.ranger.audit.utils.InMemoryJAASConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.util.CLIUtil;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.BinaryRequestWriter;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpClientUtil;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Krb5HttpClientConfigurer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
@@ -51,16 +59,24 @@ import org.springframework.util.CollectionUtils;
 @Component
 public class DbToSolrMigrationUtil extends BaseLoader {
 	private static Logger logger = Logger.getLogger(DbToSolrMigrationUtil.class);
-	private HttpSolrServer solrServer=null;
 	private final static String CHECK_FILE_NAME = "migration_check_file.txt";
 	private final static Charset ENCODING = StandardCharsets.UTF_8;
+
+	public static SolrClient solrClient = null;
+	public final static String SOLR_URLS_PROP = "ranger.audit.solr.urls";
+	public final static String SOLR_ZK_HOSTS = "ranger.audit.solr.zookeepers";
+	public final static String SOLR_COLLECTION_NAME = "ranger.audit.solr.collection.name";
+	public final static String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG   = "java.security.auth.login.config";
+	public final static String DEFAULT_COLLECTION_NAME = "ranger_audits";
+
 	@Autowired
 	RangerDaoManager daoManager;
 	@Autowired
 	SolrAccessAuditsService solrAccessAuditsService;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		logger.info("main()");
+		logger.info("Note: If migrating to Secure Solr, make sure SolrClient JAAS Properites are configured in ranger-admin-site.xml");
 		try {
 			DbToSolrMigrationUtil loader = (DbToSolrMigrationUtil) CLIUtil
 					.getBean(DbToSolrMigrationUtil.class);
@@ -74,14 +90,18 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 		} catch (Exception e) {
 			logger.error("Error loading", e);
 			System.exit(1);
+		} finally {
+			if (solrClient != null) {
+				solrClient.close();
+			}
 		}
 	}
 
 	@Override
 	public void init() throws Exception {
-		String solrURL=PropertiesUtil.getProperty("ranger.audit.solr.urls");
-		logger.info("solrURL:"+solrURL);
-		solrServer = new HttpSolrServer(solrURL);
+		logger.info("==> DbToSolrMigrationUtil.init() Start.");
+		solrClient = createSolrClient();
+		logger.info("<== DbToSolrMigrationUtil.init() End.");
 	}
 
 	@Override
@@ -222,7 +242,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 	public void send2solr(XXAccessAuditV4 xXAccessAudit) throws Throwable {
 		SolrInputDocument document = new SolrInputDocument();
 		toSolrDocument(xXAccessAudit,document);
-		UpdateResponse response = solrServer.add(document);
+		UpdateResponse response = solrClient.add(document);
 		if (response.getStatus() != 0) {
 			logger.info("Response=" + response.toString() + ", status= "
 					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
@@ -233,7 +253,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 	public void send2solr(XXAccessAuditV5 xXAccessAudit) throws Throwable {
 		SolrInputDocument document = new SolrInputDocument();
 		toSolrDocument(xXAccessAudit,document);
-		UpdateResponse response = solrServer.add(document);
+		UpdateResponse response = solrClient.add(document);
 		if (response.getStatus() != 0) {
 			logger.info("Response=" + response.toString() + ", status= "
 					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
@@ -244,7 +264,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 	public void send2solr(XXAccessAudit xXAccessAudit) throws Throwable {
 		SolrInputDocument document = new SolrInputDocument();
 		toSolrDocument(xXAccessAudit,document);
-		UpdateResponse response = solrServer.add(document);
+		UpdateResponse response = solrClient.add(document);
 		if (response.getStatus() != 0) {
 			logger.info("Response=" + response.toString() + ", status= "
 					+ response.getStatus() + ", event=" + xXAccessAudit.toString());
@@ -331,5 +351,112 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 	}
 	@Override
 	public void printStats() {
+	}
+
+	private SolrClient createSolrClient() throws Exception {
+		SolrClient solrClient = null;
+
+		registerSolrClientJAAS();
+		String zkHosts = PropertiesUtil
+				.getProperty(SOLR_ZK_HOSTS);
+		if (zkHosts == null) {
+			zkHosts = PropertiesUtil
+					.getProperty("ranger.audit.solr.zookeeper");
+		}
+		if (zkHosts == null) {
+			zkHosts = PropertiesUtil
+					.getProperty("ranger.solr.zookeeper");
+		}
+
+		String solrURL = PropertiesUtil
+				.getProperty(SOLR_URLS_PROP);
+		if (solrURL == null) {
+			// Try with url
+			solrURL = PropertiesUtil
+					.getProperty("ranger.audit.solr.url");
+		}
+		if (solrURL == null) {
+			// Let's try older property name
+			solrURL = PropertiesUtil
+					.getProperty("ranger.solr.url");
+		}
+
+		if (zkHosts != null && !zkHosts.trim().equals("")
+				&& !zkHosts.trim().equalsIgnoreCase("none")) {
+			zkHosts = zkHosts.trim();
+			String collectionName = PropertiesUtil
+					.getProperty(SOLR_COLLECTION_NAME);
+			if (collectionName == null
+					|| collectionName.equalsIgnoreCase("none")) {
+				collectionName = DEFAULT_COLLECTION_NAME;
+			}
+
+			logger.info("Solr zkHosts=" + zkHosts
+					+ ", collectionName=" + collectionName);
+
+			try {
+				// Instantiate
+				HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
+				CloudSolrClient solrCloudClient = new CloudSolrClient(
+						zkHosts);
+				solrCloudClient
+						.setDefaultCollection(collectionName);
+				solrClient = solrCloudClient;
+				solrCloudClient.close();
+			} catch (Exception e) {
+				logger.fatal(
+						"Can't connect to Solr server. ZooKeepers="
+								+ zkHosts + ", collection="
+								+ collectionName, e);
+				throw e;
+			} 
+		} else {
+			if (solrURL == null || solrURL.isEmpty()
+					|| solrURL.equalsIgnoreCase("none")) {
+				logger.fatal("Solr ZKHosts and URL for Audit are empty. Please set property "
+						+ SOLR_ZK_HOSTS
+						+ " or "
+						+ SOLR_URLS_PROP);
+			} else {
+				try {
+					HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
+					solrClient = new HttpSolrClient(solrURL);
+					if (solrClient instanceof HttpSolrClient) {
+						HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
+						httpSolrClient
+								.setAllowCompression(true);
+						httpSolrClient
+								.setConnectionTimeout(1000);
+						httpSolrClient.setMaxRetries(1);
+						httpSolrClient
+								.setRequestWriter(new BinaryRequestWriter());
+						}
+					} catch (Exception e) {
+					logger.fatal(
+							"Can't connect to Solr server. URL="
+									+ solrURL, e);
+					throw e;
+				}
+			}
+		}
+		return solrClient;
+	}
+
+	private void registerSolrClientJAAS() {
+		logger.info("==> createSolrClient.registerSolrClientJAAS()" );
+		Properties  props = PropertiesUtil.getProps();
+		try {
+			 // SolrJ requires "java.security.auth.login.config"  property to be set to identify itself that it is kerberized. So using a dummy property for it
+			 // Acutal solrclient JAAS configs are read from the ranger-admin-site.xml in ranger admin config folder and set by InMemoryJAASConfiguration
+			 // Refer InMemoryJAASConfiguration doc for JAAS Configuration
+			 if ( System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null ) {
+				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null") ;
+			 }
+			 logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
+			 InMemoryJAASConfiguration.init(props);
+			} catch (Exception e) {
+				logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit migration to Secure Solr will fail...",e);
+			}
+		logger.info("<==createSolrClient.registerSolrClientJAAS()" );
 	}
 }

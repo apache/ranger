@@ -57,5 +57,10 @@
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
+        <dependency>
+           <groupId>org.apache.solr</groupId>
+           <artifactId>solr-solrj</artifactId>
+          <version>${solr.version}</version>
+        </dependency>
     </dependencies>
 </project>

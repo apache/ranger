@@ -100,5 +100,10 @@
             <artifactId>htrace-core</artifactId>
             <version>${htrace-core.version}</version>
         </dependency>
+        <dependency>
+           <groupId>org.apache.solr</groupId>
+           <artifactId>solr-solrj</artifactId>
+          <version>${solr.version}</version>
+        </dependency>
     </dependencies>
 </project>
