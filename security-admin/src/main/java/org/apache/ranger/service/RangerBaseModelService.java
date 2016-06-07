@@ -307,7 +307,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	 * 
 	 */
 	
-	protected List<T> searchResources(SearchFilter searchCriteria,
+	public List<T> searchResources(SearchFilter searchCriteria,
 			List<SearchField> searchFieldList, List<SortField> sortFieldList,
 			VList vList) {
 

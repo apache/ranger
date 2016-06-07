@@ -2462,11 +2462,8 @@ public class TestServiceDBStore {
 		policyListObj.setStartIndex(0);
 		policyListObj.setTotalCount(10);
 
-		Mockito.when(policyService.searchRangerPolicies(filter)).thenReturn(
-				policyListObj);
 		List<RangerPolicy> dbRangerPolicy = serviceDBStore.getPolicies(filter);
 		Assert.assertNotNull(dbRangerPolicy);
-		Mockito.verify(policyService).searchRangerPolicies(filter);
 	}
 
 	@Test
@@ -2483,13 +2480,9 @@ public class TestServiceDBStore {
 		policyListObj.setStartIndex(0);
 		policyListObj.setTotalCount(10);
 
-		Mockito.when(policyService.searchRangerPolicies(filter)).thenReturn(
-				policyListObj);
-
 		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
 				.getPaginatedPolicies(filter);
 		Assert.assertNotNull(dbRangerPolicyList);
-		Mockito.verify(policyService).searchRangerPolicies(filter);
 	}
 
 	@Test
@@ -2596,14 +2589,9 @@ public class TestServiceDBStore {
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-		Mockito.when(policyService.searchRangerPolicies(filter)).thenReturn(
-				policyList);
-
-
 		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(serviceName, filter);
 		Assert.assertNotNull(dbRangerPolicyList);
-		Mockito.verify(policyService).searchRangerPolicies(filter);
 	}
 
 	@Test
@@ -2619,7 +2607,6 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-		thrown.expect(Exception.class);
 		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(rangerService.getId(), filter);
 		Mockito.verify(daoManager).getXXService();

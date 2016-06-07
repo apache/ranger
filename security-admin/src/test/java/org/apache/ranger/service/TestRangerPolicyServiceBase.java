@@ -21,18 +21,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.persistence.EntityManager;
 import javax.ws.rs.WebApplicationException;
-
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.entity.XXDBBase;
@@ -43,10 +38,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.apache.ranger.view.RangerPolicyList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -241,35 +234,6 @@ public class TestRangerPolicyServiceBase {
 				rangerPolicy.getDescription());
 
 		Mockito.verify(daoManager).getXXService();
-	}
-
-	@Test
-	public void test4searchRangerPolicies() {
-		EntityManager entityManager = Mockito.mock(EntityManager.class);
-		SearchFilter searchFilter = new SearchFilter();
-		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
-		searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
-
-		String searchString = "policyName";
-		String sortString = "asc";
-		List<SearchField> searchFieldList = new ArrayList<SearchField>();
-		boolean isCountQuery = false;
-
-		BaseDao baseDao = Mockito.mock(BaseDao.class);
-
-		Mockito.when(daoManager.getDaoForClassName(Mockito.anyString()))
-				.thenReturn(baseDao);
-		Mockito.when(daoManager.getEntityManager()).thenReturn(entityManager);
-		Mockito.when(
-				searchUtil
-						.createSearchQuery(entityManager, searchString,
-								sortString, searchFilter, searchFieldList,
-								isCountQuery)).thenReturn(null);
-
-		RangerPolicyList dbRangerPolicyList = policyService
-				.searchRangerPolicies(searchFilter);
-		Assert.assertNotNull(dbRangerPolicyList);
-		Mockito.verify(daoManager).getDaoForClassName(Mockito.anyString());
 	}
 
 }

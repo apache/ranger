@@ -22,10 +22,14 @@ package org.apache.ranger.biz;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.io.ByteArrayInputStream;
@@ -1905,7 +1909,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPolicies()");
 		}
-		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+		RangerPolicyList policyList = searchRangerPolicies(filter);
 		List<RangerPolicy> ret = policyList.getPolicies();
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPolicies()");
@@ -1926,7 +1930,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (!CollectionUtils.isEmpty(serviceTypeList)) {
 				for (String serviceType : serviceTypeList) {
 					filter.setParam("serviceType", serviceType);
-					RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+					RangerPolicyList policyList = searchRangerPolicies(filter);
 					if (policyList!=null){
 						retTemp = policyList.getPolicies();
 						if(!CollectionUtils.isEmpty(retTemp)) {
@@ -1947,7 +1951,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		} else {
-			RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+			RangerPolicyList policyList = searchRangerPolicies(filter);
 			ret = policyList.getPolicies();
 			if (!CollectionUtils.isEmpty(ret)) {
 				for (RangerPolicy policy : ret) {
@@ -2015,7 +2019,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.getPaginatedPolicies(+ " + filter + ")");
 		}
 
-		RangerPolicyList policyList = policyService.searchRangerPolicies(filter);
+		RangerPolicyList policyList = searchRangerPolicies(filter);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("before filter: count=" + policyList.getListSize());
@@ -3626,5 +3630,89 @@ public class ServiceDBStore extends AbstractServiceStore {
 		Cell cellStatus = row.createCell(7);
 		cellStatus.setCellStyle(cellStyle);
 		cellStatus.setCellValue("Status");
+	}
+
+
+	private RangerPolicyList searchRangerPolicies(SearchFilter searchFilter) {
+		List<RangerPolicy> policyList = new ArrayList<RangerPolicy>();
+		RangerPolicyList retList = new RangerPolicyList();
+		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
+		Set<Long> processedServices=new HashSet<Long>();
+		Set<Long> processedPolicies=new HashSet<Long>();
+		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
+			public int compare(RangerPolicy c1, RangerPolicy c2) {
+				return (int) ((c1.getId()).compareTo(c2.getId()));
+			}
+		};
+
+		List<XXPolicy> xPolList = (List<XXPolicy>) policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+		if (!CollectionUtils.isEmpty(xPolList)) {
+			for (XXPolicy xXPolicy : xPolList) {
+				if(!processedServices.contains(xXPolicy.getService())){
+					loadRangerPolicies(xXPolicy.getService(),processedServices,policyMap);
+				}
+			}
+		}
+		String userName = searchFilter.getParam("user");
+		if (!StringUtils.isEmpty(userName)) {
+			searchFilter.removeParam("user");
+			Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
+			if (!CollectionUtils.isEmpty(groupNames)) {
+				List<XXPolicy> xPolList2 = null;
+				for (String groupName : groupNames) {
+					xPolList2 = new ArrayList<XXPolicy>();
+					searchFilter.setParam("group", groupName);
+					xPolList2 = (List<XXPolicy>) policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList2)) {
+						for (XXPolicy xPol2 : xPolList2) {
+							if(xPol2!=null){
+								if(!processedPolicies.contains(xPol2.getId())){
+									if(!processedServices.contains(xPol2.getService())){
+										loadRangerPolicies(xPol2.getService(),processedServices,policyMap);
+									}
+									if(policyMap.containsKey(xPol2.getId())){
+										policyList.add(policyMap.get(xPol2.getId()));
+										processedPolicies.add(xPol2.getId());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if (!CollectionUtils.isEmpty(xPolList)) {
+			for (XXPolicy xPol : xPolList) {
+				if(xPol!=null){
+					if(!processedPolicies.contains(xPol.getId())){
+						if(!processedServices.contains(xPol.getService())){
+							loadRangerPolicies(xPol.getService(),processedServices,policyMap);
+						}
+						if(policyMap.containsKey(xPol.getId())){
+							policyList.add(policyMap.get(xPol.getId()));
+							processedPolicies.add(xPol.getId());
+						}
+					}
+				}
+			}
+			Collections.sort(policyList, comparator);
+		}
+		retList.setPolicies(policyList);
+		return retList;
+	}
+
+	private void loadRangerPolicies(Long serviceId,Set<Long> processedServices,Map<Long,RangerPolicy> policyMap){
+		try {
+			List<RangerPolicy> tempPolicyList = getServicePolicies(serviceId,null);
+			if(!CollectionUtils.isEmpty(tempPolicyList)){
+				for (RangerPolicy rangerPolicy : tempPolicyList) {
+					if(!policyMap.containsKey(rangerPolicy.getId())){
+						policyMap.put(rangerPolicy.getId(), rangerPolicy);
+					}
+				}
+				processedServices.add(serviceId);
+			}
+		} catch (Exception e) {
+		}
 	}
 }
