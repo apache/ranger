@@ -48,6 +48,7 @@
 		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
 		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+		    <include>org.apache.solr:solr-solrj</include>
                 </includes>
             </dependencySet>
             <dependencySet>
@@ -74,7 +75,6 @@
         <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.ranger:ranger_solrj</include>
 		<include>org.apache.ranger:ranger-plugins-audit</include>
 		<include>org.apache.ranger:ranger-plugins-cred</include>
 		<include>org.apache.ranger:ranger-plugins-common</include>

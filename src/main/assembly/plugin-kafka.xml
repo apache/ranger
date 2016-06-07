@@ -74,6 +74,7 @@
 							<include>org.codehaus.jackson:jackson-jaxrs</include>
 							<include>org.codehaus.jackson:jackson-mapper-asl</include>
 							<include>org.codehaus.jackson:jackson-xc</include>
+							<include>org.apache.solr:solr-solrj</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>
@@ -107,7 +108,6 @@
 			</binaries>
 			<includes>
 				<include>org.apache.ranger:ranger-kafka-plugin</include>
-				<include>org.apache.ranger:ranger_solrj</include>
 				<include>org.apache.ranger:ranger-plugins-audit</include>
 				<include>org.apache.ranger:ranger-plugins-cred</include>
 				<include>org.apache.ranger:ranger-plugins-common</include>

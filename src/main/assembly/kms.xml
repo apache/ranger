@@ -141,6 +141,7 @@
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
+		    		<include>org.apache.solr:solr-solrj</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -223,7 +224,6 @@
         <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.ranger:ranger_solrj</include>
 		<include>org.apache.ranger:ranger-plugins-audit</include>
 		<include>org.apache.ranger:ranger-plugins-cred</include>
 		<include>org.apache.ranger:ranger-plugins-common</include>

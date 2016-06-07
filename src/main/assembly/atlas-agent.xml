@@ -69,6 +69,7 @@
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
 					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+					<include>org.apache.solr:solr-solrj</include>
 		    	</includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -96,7 +97,6 @@
         <outputDirectory>/lib/ranger-atlas-plugin-impl</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.ranger:ranger_solrj</include>
 		<include>org.apache.ranger:ranger-plugins-audit</include>
 		<include>org.apache.ranger:ranger-plugins-cred</include>
 		<include>org.apache.ranger:ranger-plugins-common</include>

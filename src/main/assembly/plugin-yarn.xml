@@ -55,6 +55,7 @@
 		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
+		    <include>org.apache.solr:solr-solrj</include>
                 </includes>
             </dependencySet>
             <dependencySet>
@@ -81,7 +82,6 @@
         <outputDirectory>/lib/ranger-yarn-plugin-impl</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.ranger:ranger_solrj</include>
 		<include>org.apache.ranger:ranger-plugins-audit</include>
 		<include>org.apache.ranger:ranger-plugins-cred</include>
 		<include>org.apache.ranger:ranger-plugins-common</include>

@@ -59,7 +59,12 @@
       		<groupId>org.apache.atlas</groupId>
       		<artifactId>atlas-common</artifactId>
       		<version>${atlas.version}</version>
-    	</dependency>        
+    	</dependency>    
+    	<dependency>
+           <groupId>org.apache.solr</groupId>
+           <artifactId>solr-solrj</artifactId>
+          <version>${solr.version}</version>
+        </dependency>    
     </dependencies>
 </project>
 
