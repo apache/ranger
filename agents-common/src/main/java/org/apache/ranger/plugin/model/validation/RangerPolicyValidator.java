@@ -251,7 +251,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			RangerServiceDef serviceDef       = null;
 			int              policyItemsCount = 0;
 
-			int policyType=policy.getPolicyType();
+			int policyType=policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 			switch (policyType) {
 			case RangerPolicy.POLICY_TYPE_DATAMASK:
 				if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems()))

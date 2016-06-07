@@ -481,7 +481,7 @@
 	</property>
 	<property>
 		<name>ranger.rest-csrf.browser-useragents-regex</name>
-		<value>^Mozilla.*,^Opera.*</value>
+		<value>^Mozilla.*,^Opera.*,^Chrome.*</value>
 	</property>
 	
 </configuration>
