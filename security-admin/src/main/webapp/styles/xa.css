@@ -1571,6 +1571,9 @@ background-color: #dc6343;
 table.table.backgrid thead th.repoName { 
  border-top: 1px solid #ddd;
 }
+table.table.backgrid thead th.resourceType {
+ border-top: 1px solid #ddd;
+}
 .label-size13-weightbold{
    font-size: 13px;
    font-weight: bold;

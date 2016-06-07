@@ -23,7 +23,7 @@
 // protection by figuring out the custom HTTP headers that need to be sent in
 // requests and which HTTP methods are ignored because they do not require CSRF
 // protection.
-(function() {
+define(function(require) {
 	"use strict";
 	require('jquery');
 	var restCsrfCustomHeader = null;
@@ -95,4 +95,4 @@
       xhr.setRequestHeader(restCsrfCustomHeader, '""');
     }
   }
-})();
+});

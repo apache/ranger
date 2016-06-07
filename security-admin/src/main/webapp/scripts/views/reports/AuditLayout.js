@@ -167,7 +167,7 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable cip">Service</th>\
-					<th class="renderable name"  ></th>\
+					<th class="renderable name">Resource</th>\
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"> </th>\
@@ -262,8 +262,9 @@ define(function(require) {
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Audit Type',label :'auditType'},{text : 'Session ID',label :'sessionId'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Client Type',label :'clientType'},
-			                      {text : 'Tags',label :'tags'}];
-            var searchOpt = ['Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags'];//,'Policy ID'
+			                      {text : 'Tags',label :'tags'},
+			                      {text : 'Resource Type',label : 'resourceType'}];
+            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags'];//,'Policy ID'
             this.clearVisualSearch(this.accessAuditList, serverAttrName);
             
 			//'Resource Type','Audit Type','Session IP','Client Type','Today',
@@ -827,19 +828,23 @@ define(function(require) {
 							}
 						})
 					},
-					resourcePath : {
-						label : localization.tt("lbl.resourceName"),
+					resourceType: {
+						label : 'Name / Type',
 						cell: "html",
-						click : false,
-						drag : false,
-						sortable:false,
-						editable:false,
-						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-							fromRaw: function (rawValue) {
-								rawValue = _.escape(rawValue);
-								return _.isUndefined(rawValue) ? '--': '<span title="'+rawValue+'">'+rawValue+'</span>';  
-							}
-						})
+						click: false,
+						formatter: _.extend({},Backgrid.CellFormatter.prototype,{
+							 fromRaw: function(rawValue,model) {
+								 var resourcePath = _.isUndefined(model.get('resourcePath')) ? undefined : model.get('resourcePath');
+								 var resourceType = _.isUndefined(model.get('resourceType')) ? undefined : model.get('resourceType');
+								 if(resourcePath) {
+								 return '<span title="'+resourcePath+'">'+resourcePath+'</span>\
+									<div title="'+resourceType+'" style="border-top: 1px solid #ddd;">'+resourceType+'</div>';
+								 }
+							 }
+						}),
+						drag: false,
+						sortable: false,
+						editable: false,
 					},
 					accessType : {
 						label : localization.tt("lbl.accessType"),

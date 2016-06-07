@@ -639,6 +639,8 @@ public class AssetREST {
 				"Access Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "clientIP",
 				"Client IP", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "resourceType",
+				"Resource Type", StringUtil.VALIDATION_TEXT);
 
 		searchUtil.extractInt(request, searchCriteria, "auditType", "Audit Type");
 		searchUtil.extractInt(request, searchCriteria, "accessResult", "Audit Type");
