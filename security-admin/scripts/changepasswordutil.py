@@ -51,11 +51,17 @@ def log(msg,type):
 	if type == 'error':
 		logging.error(" %s",msg)
 
+def password_validation(password):
+	if password:
+		if re.search("[\\\`'\"]",password):
+			log("[E] password contains one of the unsupported special characters like \" ' \ `","error")
+			sys.exit(1)
+
 
 def main(argv):
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
-
+	ews_lib = os.path.join(RANGER_ADMIN_HOME,"ews","lib")
 	app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 	ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 
@@ -101,8 +107,9 @@ def main(argv):
 		sys.exit(1)
 
 	if userName != "" and oldPassword != "" and newPassword != "":
+		password_validation(newPassword)
 		if os_name == "LINUX":
-			path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home)
+			path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s/*")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home,ews_lib)
 		elif os_name == "WINDOWS":
 			path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home)
 		get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(JAVA_BIN,ranger_log,path,'ChangePasswordUtil',userName,oldPassword,newPassword)
