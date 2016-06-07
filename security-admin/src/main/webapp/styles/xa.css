@@ -1945,38 +1945,41 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
   max-width: 120px;
 }
 .hdfs-table table.backgrid thead th:nth-child(1){
-  width: 60px;
-  max-width: 60px
+  width: 8%;
+  
 }
 .hdfs-table table.backgrid thead th:nth-child(2) {
   /*width: 300px;*/
   width: 25%;
 }
 .hdfs-table table.backgrid thead th:nth-child(3){
-  width:200px;
+  width:30%;
 }
 .hdfs-table table.backgrid thead th:nth-child(4){
-  width:100px;
+  width:10%;
 }
 .hdfs-table table.backgrid tbody td:nth-child(4){
-  width:100px;
+  width:10%;
   text-align: center;
 }
 .hdfs-table table.backgrid tbody tr td:nth-child(3){
  text-align: left !important;
  max-width: 200px;
 }
-.hdfs-table table.backgrid tbody tr td:nth-child(6){
+.hdfs-table table.backgrid tbody tr td:nth-child(5){
   text-align: center;
   width: 100px
 }
-.hdfs-table table.backgrid thead th:nth-child(6){
+.hdfs-table table.backgrid thead th:nth-child(5){
   text-align: center;
-  width: 100px;
+  width: 10%;
 }
-.hdfs-table table.backgrid thead th:nth-child(5) tr{
+.hdfs-table table.backgrid thead th:nth-child(6){
+  width: 10%;
+}
+/*.hdfs-table table.backgrid thead th:nth-child(5) tr{
   border-left-style: hidden;
-}
+}*/
 .report-access{
   width:100%;
   border-right:1px solid #DDD;
@@ -1984,4 +1987,37 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
 .report-user-group{
   width:80px;
   min-width:80px;
+}
+td.subgrid-custom-cell{
+  text-align: center;
+}
+.backgrid-subgrid-custom-row table.backgrid thead th:nth-child(1){
+  width: 300px;
+  max-width: 300px;
+}
+.backgrid-subgrid-custom-row table.backgrid thead th:nth-child(2){
+  width: 300px;
+  max-width: 300px;
+}
+.backgrid-subgrid-custom-row table.backgrid thead th:nth-child(3){
+  width: 300px;
+  max-width: 300px;
+}
+.backgrid-subgrid-custom-row table.backgrid tbody td:nth-child(1){
+  width: 300px;
+  max-width: 300px;
+}
+.backgrid-subgrid-custom-row table.backgrid tbody td:nth-child(2){
+  width: 300px;
+  max-width: 300px;
+}
+.backgrid-subgrid-custom-row table.backgrid tbody td:nth-child(3){
+  width: 300px;
+  max-width: 300px;
+}
+.hdfs-table table.backgrid tbody tr.backgrid-subgrid-custom-row{
+  background-color: #f9f9f9;
+}
+.backgrid-subgrid-custom-row table.backgrid thead th {
+  font-weight:inherit;
 }
