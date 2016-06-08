@@ -47,6 +47,7 @@ public class CommandLineOptions {
         options.addOption("d", "discoverProperties", true, "{all|users|groups}");
         options.addOption("r", "retrieve", true, "{all|users|groups}");
         options.addOption("a", "noAuthentication", false, "Ignore authentication properties");
+        options.addOption("p", true, "Ldap Bind Password");
     }
 
     public void parse() {
@@ -56,7 +57,13 @@ public class CommandLineOptions {
             if (cmd.hasOption("h")) {
 
             }
-
+            
+            if (cmd.hasOption("p")) {
+            	bindPassword = cmd.getOptionValue("p");
+            	if (bindPassword.trim().isEmpty()) {
+            		System.out.println("Ldap Bind Password cannot be empty!");
+            	}
+            }
 
             if (cmd.hasOption("o")) {
                 output = cmd.getOptionValue("o");
@@ -98,6 +105,10 @@ public class CommandLineOptions {
                     System.out.println("Please specify the input properties file name");
                     help();
                 }
+                
+                if (bindPassword == null || bindPassword.trim().isEmpty()) {
+            		System.out.println("Missing Ldap Bind Password!");
+            	}
 
             } else {
                 // Read the properties from CLI and write to the input properties file.

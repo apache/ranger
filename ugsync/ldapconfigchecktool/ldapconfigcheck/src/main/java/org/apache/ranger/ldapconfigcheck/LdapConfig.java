@@ -109,12 +109,13 @@ public class LdapConfig {
     private Properties prop = new Properties();
 
 
-    public LdapConfig(String configFile) {
-        init(configFile);
+    public LdapConfig(String configFile, String bindPasswd) {
+        init(configFile, bindPasswd);
     }
 
-    private void init(String configFile) {
+    private void init(String configFile, String bindPasswd) {
         readConfigFile(configFile);
+        prop.setProperty(LGSYNC_LDAP_BIND_PASSWORD, bindPasswd);
     }
 
     private void readConfigFile(String fileName) {
@@ -419,7 +420,7 @@ public class LdapConfig {
             prop.setProperty(AUTH_PASSWORD, authPass);
             config.setProperty(LGSYNC_LDAP_URL, ldapUrl);
             config.setProperty(LGSYNC_LDAP_BIND_DN, bindDn);
-            config.setProperty(LGSYNC_LDAP_BIND_PASSWORD, bindPassword);
+            //config.setProperty(LGSYNC_LDAP_BIND_PASSWORD, bindPassword);
             config.setProperty(LGSYNC_USER_SEARCH_BASE, userSearchBase);
             config.setProperty(LGSYNC_USER_SEARCH_FILTER, userSearchFilter);
             config.setProperty(AUTH_USERNAME, authUser);

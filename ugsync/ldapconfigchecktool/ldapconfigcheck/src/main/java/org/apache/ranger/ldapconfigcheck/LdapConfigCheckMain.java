@@ -49,7 +49,7 @@ public class LdapConfigCheckMain {
             outputDir = outputDir.concat("/");
         }
 
-        LdapConfig config = new LdapConfig(inFileName);
+        LdapConfig config = new LdapConfig(inFileName, cli.getBindPassword());
         if (cli.getLdapUrl() != null && !cli.getLdapUrl().isEmpty()) {
             config.updateInputPropFile(cli.getLdapUrl(), cli.getBindDn(), cli.getBindPassword(),
                     cli.getUserSearchBase(), cli.getUserSearchFilter(), cli.getAuthUser(), cli.getAuthPass());
@@ -74,7 +74,7 @@ public class LdapConfigCheckMain {
                     "com.sun.jndi.ldap.LdapCtxFactory");
             env.put(Context.PROVIDER_URL, config.getLdapUrl());
             env.put(Context.SECURITY_PRINCIPAL, bindDn);
-            env.put(Context.SECURITY_CREDENTIALS, config.getLdapBindPassword());
+            env.put(Context.SECURITY_CREDENTIALS, cli.getBindPassword());
             env.put(Context.SECURITY_AUTHENTICATION, config.getLdapAuthenticationMechanism());
             env.put(Context.REFERRAL, "follow");
 

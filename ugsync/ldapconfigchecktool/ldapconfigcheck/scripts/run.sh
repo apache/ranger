@@ -32,10 +32,11 @@ cdir=`pwd`
 cp="${cdir}/lib/*:${cdir}/conf"
 OUTDIR="${cdir}/output/"
 JAVA_CMD="java -cp ${cdir}/lib/ldapconfigcheck.jar:${cp} org.apache.ranger.ldapconfigcheck.LdapConfigCheckMain"
-
+INPUTFILE=""
 while getopts "i:o:d:r:ah" opt; do
   case $opt in
     i) INFILE=$OPTARG
+    INPUTFILE=$OPTARG
 	JAVA_CMD="$JAVA_CMD -i $OPTARG"
 	;;
     o) OUTDIR=$OPTARG
@@ -60,6 +61,13 @@ done
 JAVA_CMD="$JAVA_CMD -o $OUTDIR"
 
 echo "JAVA commnad = $JAVA_CMD"
+
+if [ "${INPUTFILE}" != "" ]
+then
+	prompt="Ldap Bind Password:"
+	read -p "$prompt" -s password
+	JAVA_CMD="$JAVA_CMD -p $password"
+fi
 
 if [ "${JAVA_HOME}" != "" ]
 then
