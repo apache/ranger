@@ -30,6 +30,10 @@ IF EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_portal_user') THEN
                         END IF;
                 END IF;
         END IF;
+        IF EXISTS(select * from SYS.SYSCONSTRAINT where constraint_name = 'x_portal_user_UK_email') THEN
+		ALTER TABLE dbo.x_portal_user DROP CONSTRAINT x_portal_user_UK_email;
+		ALTER TABLE dbo.x_portal_user ALTER email VARCHAR(512) DEFAULT NULL NULL;
+        END IF;
 END IF;
 END
 GO

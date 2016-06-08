@@ -35,6 +35,10 @@ BEGIN
             END
         END
     END
+    IF EXISTS(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where constraint_name = 'x_portal_user$x_portal_user_UK_email')
+    BEGIN
+        ALTER TABLE x_portal_user DROP CONSTRAINT x_portal_user$x_portal_user_UK_email;
+    END
 END
 GO
 exit

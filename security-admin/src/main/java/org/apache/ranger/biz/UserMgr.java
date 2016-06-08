@@ -1127,7 +1127,7 @@ public class UserMgr {
 		}
 		// access control
 		checkAdminAccess();
-		logger.info("create:" + userProfile.getEmailAddress());
+		logger.info("create:" + userProfile.getLoginId());
 		XXPortalUser xXPortalUser = null;
 		String loginId = userProfile.getLoginId();
 		String emailAddress = userProfile.getEmailAddress();
