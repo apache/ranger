@@ -842,8 +842,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					- this would appear in the outputHObjs, i.e. accessType == false
 					- user then must have CREATE permission on the database
 
-					During IMPORT commnad it is not possible for a database to be in inputHObj list. Thus returning SELECT
-					when accessType==true is never expacted to be hit in practice.
+					During IMPORT command it is not possible for a database to be in inputHObj list. Thus returning SELECT
+					when accessType==true is never expected to be hit in practice.
 					 */
 					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
 					break;
