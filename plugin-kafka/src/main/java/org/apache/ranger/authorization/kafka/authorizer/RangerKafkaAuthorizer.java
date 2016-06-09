@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.kafka.common.security.kerberos.LoginManager;
+import org.apache.kafka.common.security.authenticator.LoginManager;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -77,7 +77,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public void configure(Map<String, ?> configs) {
 		if (rangerPlugin == null) {
 			try {
-				LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, configs);
+				LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, true, configs);
 				Subject subject = loginManager.subject();
 				UserGroupInformation ugi = MiscUtil
 						.createUGIFromSubject(subject);
