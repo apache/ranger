@@ -112,6 +112,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 	@SerializedName("tags")
 	protected Set<String> tags = new HashSet<>();
 
+	@SerializedName("additional_info")
+	protected String additionalInfo;
+
 	public AuthzAuditEvent() {
 		super();
 
@@ -450,6 +453,10 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.tags = tags;
 	}
 
+	public String getAdditionalInfo() { return this.additionalInfo; }
+
+	public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
+
 	@Override
 	public String getEventKey() {
 		String key = user + "^" + accessType + "^" + resourcePath + "^"
@@ -503,7 +510,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 				.append("tags=").append("[")
 				.append(StringUtils.join(tags, ", "))
 				.append("]")
-				.append(FIELD_SEPARATOR);
+				.append(FIELD_SEPARATOR).append("additionalInfo=").append(additionalInfo);
 
 		return sb;
 	}

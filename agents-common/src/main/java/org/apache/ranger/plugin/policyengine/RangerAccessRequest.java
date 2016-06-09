@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,6 +41,10 @@ public interface RangerAccessRequest {
 
 	String getClientIPAddress();
 
+	String getRemoteIPAddress();
+
+	List<String> getForwardedAddresses();
+
 	String getClientType();
 
 	String getAction();
@@ -47,7 +52,7 @@ public interface RangerAccessRequest {
 	String getRequestData();
 
 	String getSessionId();
-	
+
 	Map<String, Object> getContext();
 
 	RangerAccessRequest getReadOnlyCopy();

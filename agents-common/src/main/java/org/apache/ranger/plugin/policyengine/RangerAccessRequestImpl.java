@@ -19,22 +19,29 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-
+import org.apache.log4j.Logger;
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
+	private static final Logger LOG = Logger.getLogger(RangerAccessRequestImpl.class);
+
 	private RangerAccessResource resource        = null;
 	private String               accessType      = null;
 	private String               user            = null;
 	private Set<String>          userGroups      = null;
 	private Date                 accessTime      = null;
 	private String               clientIPAddress = null;
+	private List<String>         forwardedAddresses = null;
+	private String               remoteIPAddress = null;
 	private String               clientType      = null;
 	private String               action          = null;
 	private String               requestData     = null;
@@ -54,10 +61,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setAccessType(accessType);
 		setUser(user);
 		setUserGroups(userGroups);
+		setForwardedAddresses(null);
 
 		// set remaining fields to default value
 		setAccessTime(null);
-		setClientIPAddress(null);
+		setRemoteIPAddress(null);
 		setClientType(null);
 		setAction(null);
 		setRequestData(null);
@@ -91,9 +99,15 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public String getClientIPAddress() {
-		return clientIPAddress;
+	public String getClientIPAddress() { return clientIPAddress;}
+
+	@Override
+	public String getRemoteIPAddress() {
+		return remoteIPAddress;
 	}
+
+	@Override
+	public List<String> getForwardedAddresses() { return forwardedAddresses; }
 
 	@Override
 	public String getClientType() {
@@ -161,8 +175,16 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.accessTime = (accessTime == null) ? new Date() : accessTime;
 	}
 
-	public void setClientIPAddress(String clientIPAddress) {
-		this.clientIPAddress = clientIPAddress;
+	public void setClientIPAddress(String ipAddress) {
+		this.clientIPAddress = ipAddress;
+	}
+
+	public void setForwardedAddresses(List<String> forwardedAddresses) {
+		this.forwardedAddresses = (forwardedAddresses == null) ? new ArrayList<String>() : forwardedAddresses;
+	}
+
+	public void setRemoteIPAddress(String remoteIPAddress) {
+		this.remoteIPAddress = remoteIPAddress;
 	}
 
 	public void setClientType(String clientType) {
@@ -185,6 +207,44 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	public void setContext(Map<String, Object> context) {
 		this.context = (context == null) ? new HashMap<String, Object>() : context;
+	}
+
+	protected void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
+		String ip = getRemoteIPAddress();
+		if (ip == null) {
+			ip = getClientIPAddress();
+		}
+
+		String newIp = ip;
+
+		if (useForwardedIPAddress) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using X-Forward-For...");
+			}
+			if (CollectionUtils.isNotEmpty(getForwardedAddresses())) {
+				if (trustedProxyAddresses != null && trustedProxyAddresses.length > 0) {
+					if (StringUtils.isNotEmpty(ip)) {
+						for (String trustedProxyAddress : trustedProxyAddresses) {
+							if (StringUtils.equals(ip, trustedProxyAddress)) {
+								newIp = getForwardedAddresses().get(0);
+								break;
+							}
+						}
+					}
+				} else {
+					newIp = getForwardedAddresses().get(0);
+				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No X-Forwarded-For addresses in the access-request");
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Old Remote/Client IP Address=" + ip + ", new IP Address=" + newIp);
+		}
+		setClientIPAddress(newIp);
 	}
 
 	@Override
@@ -212,7 +272,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("} ");
 
 		sb.append("accessTime={").append(accessTime).append("} ");
-		sb.append("clientIPAddress={").append(clientIPAddress).append("} ");
+		sb.append("clientIPAddress={").append(getClientIPAddress()).append("} ");
+		sb.append("forwardedAddresses={").append(StringUtils.join(forwardedAddresses, " ")).append("} ");
+		sb.append("remoteIPAddress={").append(remoteIPAddress).append("} ");
 		sb.append("clientType={").append(clientType).append("} ");
 		sb.append("action={").append(action).append("} ");
 		sb.append("requestData={").append(requestData).append("} ");

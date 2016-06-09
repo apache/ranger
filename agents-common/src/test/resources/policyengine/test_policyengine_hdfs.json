@@ -68,7 +68,7 @@
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
       "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
-       "clientIPAddress":"255.255.255.255"
+       "remoteIPAddress":"255.255.255.255"
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
@@ -77,7 +77,7 @@
       "request":{
         "resource":{"elements":{"path":"/finance/restricted/sales.db"}},
         "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/sales.db",
-        "clientIPAddress":"128.101.101.99"
+        "remoteIPAddress":"128.101.101.99"
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
@@ -94,7 +94,7 @@
      "request":{
       "resource":{"elements":{"path":"/finance/restricted/hr/payroll.db"}},
       "accessType":"read","user":"user1","userGroups":["finance"],"requestData":"read /finance/restricted/hr/payroll.db",
-       "clientIPAddress":"128.101.101.101"
+       "remoteIPAddress":"128.101.101.101"
 
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}

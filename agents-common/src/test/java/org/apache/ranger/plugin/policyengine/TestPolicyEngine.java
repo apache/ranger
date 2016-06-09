@@ -19,12 +19,18 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -37,7 +43,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +59,7 @@ import static org.junit.Assert.*;
 
 public class TestPolicyEngine {
 	static RangerPolicyEngine policyEngine = null;
-	static Gson               gsonBuilder  = null;
-
+	static Gson gsonBuilder  = null;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -96,17 +106,14 @@ public class TestPolicyEngine {
 
 		System.out.println("provider=" + provider.toString());
 
-/*
-		// For setting up TestTagProvider
+		File file = File.createTempFile("ranger-admin-test-site", ".xml") ;
+		file.deleteOnExit();
 
-		Path filePath = new Path("file:///tmp/ranger-admin-test-site.xml");
-		Configuration config = new Configuration();
-
-		FileSystem fs = filePath.getFileSystem(config);
-
-		FSDataOutputStream outStream = fs.create(filePath, true);
-
+		FileOutputStream outStream = new FileOutputStream(file);
 		OutputStreamWriter writer = new OutputStreamWriter(outStream);
+
+		/*
+		// For setting up TestTagProvider
 
 		writer.write("<configuration>\n" +
 				"        <property>\n" +
@@ -118,13 +125,34 @@ public class TestPolicyEngine {
 				"                <value>http://os-def:6080</value>\n" +
 				"        </property>\n" +
 				"</configuration>\n");
+				*/
 
+		writer.write("<configuration>\n" +
+				/*
+				// For setting up TestTagProvider
+				"        <property>\n" +
+				"                <name>ranger.plugin.tag.policy.rest.url</name>\n" +
+				"                <value>http://os-def:6080</value>\n" +
+				"        </property>\n" +
+				"        <property>\n" +
+				"                <name>ranger.externalurl</name>\n" +
+				"                <value>http://os-def:6080</value>\n" +
+				"        </property>\n" +
+				*/
+				// For setting up x-forwarded-for for Hive
+				"        <property>\n" +
+				"                <name>ranger.plugin.hive.use.x-forwarded-for.ipaddress</name>\n" +
+				"                <value>true</value>\n" +
+				"        </property>\n" +
+				"        <property>\n" +
+				"                <name>ranger.plugin.hive.trusted.proxy.ipaddresses</name>\n" +
+				"                <value>255.255.255.255; 128.101.101.101;128.101.101.99</value>\n" +
+				"        </property>\n" +
+				"</configuration>\n");
 		writer.close();
 
-		RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
-		rangerConfig.addResource(filePath);
-*/
-
+		RangerConfiguration config = RangerConfiguration.getInstance();
+		config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
 	}
 
 	@AfterClass
@@ -210,7 +238,7 @@ public class TestPolicyEngine {
 
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
 			InputStreamReader reader   = new InputStreamReader(inStream);
 
 			runTests(reader, resourceName);
@@ -223,7 +251,7 @@ public class TestPolicyEngine {
 		assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
 		ServicePolicies servicePolicies = new ServicePolicies();
-		servicePolicies.setServiceName(testCase.serviceName);;
+		servicePolicies.setServiceName(testCase.serviceName);
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 
@@ -240,26 +268,38 @@ public class TestPolicyEngine {
 
 		policyEngineOptions.disableTagPolicyEvaluation = false;
 
+		boolean useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = RangerConfiguration.getInstance().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
+		if (trustedProxyAddresses != null) {
+			for (int i = 0; i < trustedProxyAddresses.length; i++) {
+				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
+			}
+		}
 		policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
+		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
 		RangerAccessRequest request = null;
 
 		for(TestData test : testCase.tests) {
-			if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
-					test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+			request = test.request;
+			if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
+					request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest
 				RangerAccessRequestImpl newRequest =
-						new RangerAccessRequestImpl(test.request.getResource(), test.request.getAccessType(),
-								test.request.getUser(), test.request.getUserGroups());
+						new RangerAccessRequestImpl(request.getResource(), request.getAccessType(),
+								request.getUser(), request.getUserGroups());
 
-				newRequest.setClientType(test.request.getClientType());
-				newRequest.setAccessTime(test.request.getAccessTime());
-				newRequest.setAction(test.request.getAction());
-				newRequest.setClientIPAddress(test.request.getClientIPAddress());
-				newRequest.setRequestData(test.request.getRequestData());
-				newRequest.setSessionId(test.request.getSessionId());
+				newRequest.setClientType(request.getClientType());
+				newRequest.setAccessTime(request.getAccessTime());
+				newRequest.setAction(request.getAction());
+				newRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+				newRequest.setForwardedAddresses(request.getForwardedAddresses());
+				newRequest.setRequestData(request.getRequestData());
+				newRequest.setSessionId(request.getSessionId());
 
-				Map<String, Object> context = test.request.getContext();
+				Map<String, Object> context = request.getContext();
 				String tagsJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 				context.remove(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
@@ -274,7 +314,7 @@ public class TestPolicyEngine {
 						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
 								tagsJsonString + ", exception=" + e);
 					}
-				} else if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+				} else if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 					String resourcesJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
 					context.remove(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
 					if (!StringUtils.isEmpty(resourcesJsonString)) {
@@ -303,16 +343,13 @@ public class TestPolicyEngine {
 				// presence of tags!!!
 
 				// Safe cast
-				RangerAccessResourceImpl accessResource = (RangerAccessResourceImpl) test.request.getResource();
+				RangerAccessResourceImpl accessResource = (RangerAccessResourceImpl) request.getResource();
 				accessResource.setServiceDef(testCase.serviceDef);
 
 				request = newRequest;
 
 			} else
-			if (test.request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
-			}
-			else {
-				request = test.request;
+			if (!request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				policyEngine.preProcess(request);
 			}
 

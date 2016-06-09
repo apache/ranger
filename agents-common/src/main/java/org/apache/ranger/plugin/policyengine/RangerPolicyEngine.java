@@ -67,5 +67,9 @@ public interface RangerPolicyEngine {
 
 	boolean preCleanup();
 
+	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
+
+	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
+
 	void cleanup();
 }

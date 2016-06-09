@@ -59,6 +59,7 @@
       "request":{
         "resource":{"elements":{"database":"db1", "table":"tmp", "column":"tmp_1"}},
         "accessType":"select","user":"user1","userGroups":["users"],"requestData":"select tmp_1 from db1.tmp for user1"
+        ,"remoteIPAddress":"1.1.1.1","forwardedAddresses":["127.0.0.1","10.10.10.10"]
       },
       "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }

@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +31,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	// Cached here for reducing access overhead
 	private final RangerAccessResource resource;
 	private final Set<String> userGroups;
+	private final List<String> forwardedAddresses;
 	private final Map<String, Object> context;
 
 	RangerAccessRequestReadOnly(final RangerAccessRequest source) {
@@ -37,6 +39,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 		this.resource = source.getResource().getReadOnlyCopy();
 		this.userGroups = Collections.unmodifiableSet(source.getUserGroups());
 		this.context = Collections.unmodifiableMap(source.getContext());
+		this.forwardedAddresses = Collections.unmodifiableList(source.getForwardedAddresses());
 	}
 
 	@Override
@@ -62,6 +65,12 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 
 	@Override
 	public String getClientIPAddress() { return source.getClientIPAddress(); }
+
+	@Override
+	public String getRemoteIPAddress() { return source.getRemoteIPAddress(); }
+
+	@Override
+	public List<String> getForwardedAddresses() { return forwardedAddresses; }
 
 	@Override
 	public String getClientType() { return source.getClientType(); }
