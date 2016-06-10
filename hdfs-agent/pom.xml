@@ -125,6 +125,11 @@
           <version>${solr.version}</version>
         </dependency>
         <dependency>
+    		<groupId>org.apache.httpcomponents</groupId>
+    		<artifactId>httpcore</artifactId>
+    		<version>${httpcomponents.httpcore.version}</version>
+		</dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>

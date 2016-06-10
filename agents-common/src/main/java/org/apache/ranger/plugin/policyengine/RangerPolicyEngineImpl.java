@@ -51,6 +51,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	
 	private List<RangerContextEnricher> allContextEnrichers;
 
+	private boolean  useForwardedIPAddress = false;
+	private String[] trustedProxyAddresses = null;
+
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ")");
@@ -160,6 +163,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		setResourceServiceDef(request);
+		if (request instanceof RangerAccessRequestImpl) {
+			((RangerAccessRequestImpl) request).extractAndSetClientIPAddress(useForwardedIPAddress, trustedProxyAddresses);
+		}
 
 		List<RangerContextEnricher> enrichers = allContextEnrichers;
 
@@ -750,6 +756,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public void setUseForwardedIPAddress(boolean useForwardedIPAddress) {
+		this.useForwardedIPAddress = useForwardedIPAddress;
+	}
+
+	@Override
+	public void setTrustedProxyAddresses(String[] trustedProxyAddresses) {
+		this.trustedProxyAddresses = trustedProxyAddresses;
+	}
+
+	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
 
@@ -798,6 +814,8 @@ class RangerTagAccessRequest extends RangerAccessRequestImpl {
 
 		super.setClientType(request.getClientType());
 		super.setClientIPAddress(request.getClientIPAddress());
+		super.setRemoteIPAddress(request.getRemoteIPAddress());
+		super.setForwardedAddresses(request.getForwardedAddresses());
 		super.setSessionId(request.getSessionId());
 	}
 }

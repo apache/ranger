@@ -61,7 +61,9 @@
 					<include>org.codehaus.jackson:jackson-xc</include>
                     <include>commons-configuration:commons-configuration</include>
 		    		<include>com.google.code.gson:gson*</include>
-           		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+           		    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+		    		<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+		   			<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>

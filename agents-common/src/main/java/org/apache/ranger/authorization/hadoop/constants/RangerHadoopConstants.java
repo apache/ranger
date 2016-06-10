@@ -45,7 +45,7 @@ public class RangerHadoopConstants {
 	public static final boolean RANGER_ADD_YARN_PERMISSION_DEFAULT = true ;
 
 	//
-	// Loging constants 
+	// Logging constants
 	//
 	public static final String AUDITLOG_FIELD_DELIMITER_PROP 			= "xasecure.auditlog.fieldDelimiterString";
 	public static final String AUDITLOG_RANGER_MODULE_ACL_NAME_PROP  	= "xasecure.auditlog.xasecureAcl.name" ;

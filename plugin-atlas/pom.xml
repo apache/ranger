@@ -65,6 +65,11 @@
            <artifactId>solr-solrj</artifactId>
           <version>${solr.version}</version>
         </dependency>    
+        <dependency>
+    		<groupId>org.apache.httpcomponents</groupId>
+    		<artifactId>httpcore</artifactId>
+    		<version>${httpcomponents.httpcore.version}</version>
+		</dependency>
     </dependencies>
 </project>
 

@@ -40,6 +40,8 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 public class RangerBasePlugin {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
+	public static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
+
 	private String                    serviceType  = null;
 	private String                    appId        = null;
 	private String                    serviceName  = null;
@@ -47,6 +49,8 @@ public class RangerBasePlugin {
 	private RangerPolicyEngine        policyEngine = null;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 	private RangerAccessResultProcessor resultProcessor = null;
+	private boolean                   useForwardedIPAddress = false;
+	private String[]                  trustedProxyAddresses = null;
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
 	int logInterval = 30000; // 30 seconds
@@ -90,8 +94,26 @@ public class RangerBasePlugin {
 		String propertyPrefix    = "ranger.plugin." + serviceType;
 		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
-
 		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
+
+		useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = RangerConfiguration.getInstance().get(propertyPrefix + ".trusted.proxy.ipaddresses");
+		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
+		if (trustedProxyAddresses != null) {
+			for (int i = 0; i < trustedProxyAddresses.length; i++) {
+				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(propertyPrefix + ".use.x-forwarded-for.ipaddress:" + useForwardedIPAddress);
+			LOG.debug(propertyPrefix + ".trusted.proxy.ipaddresses:[" + StringUtils.join(trustedProxyAddresses, ", ") + "]");
+		}
+
+		if (useForwardedIPAddress && StringUtils.isBlank(trustedProxyAddressString)) {
+			LOG.warn("Property " + propertyPrefix + ".use.x-forwarded-for.ipaddress" + " is set to true, and Property "
+					+ propertyPrefix + ".trusted.proxy.ipaddresses" + " is not set");
+			LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
+		}
 
 		policyEngineOptions.evaluatorType           = RangerConfiguration.getInstance().get(propertyPrefix + ".policyengine.option.evaluator.type", RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO);
 		policyEngineOptions.cacheAuditResults       = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
@@ -112,6 +134,8 @@ public class RangerBasePlugin {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 
 			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
+			policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+			policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
 			this.policyEngine = policyEngine;
 
