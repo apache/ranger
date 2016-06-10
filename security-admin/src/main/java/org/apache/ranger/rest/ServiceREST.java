@@ -114,8 +114,8 @@ public class ServiceREST {
 	final static public String PARAM_SERVICE_NAME     = "serviceName";
 	final static public String PARAM_POLICY_NAME      = "policyName";
 	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
-	private static final String Allowed_User_List_For_Download = "policy.download.auth.users";
-	private static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
+	public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
+	public static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
 	public static final String isCSRF_ENABLED = "ranger.rest-csrf.enabled";
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";

@@ -1323,8 +1323,8 @@ public class RangerBizUtil {
 		if (usb != null) {
 			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
 		}
+		if(guidUtil != null){
 		Long trxId = guidUtil.genLong();
-
 		for (XXTrxLog xTrxLog : trxLogList) {
 			if (xTrxLog != null) {
 				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
@@ -1349,6 +1349,7 @@ public class RangerBizUtil {
 				xTrxLog.setRequestId(trxId.toString());
 				daoManager.getXXTrxLog().create(xTrxLog);
 			}
+		}
 		}
 	}
 

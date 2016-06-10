@@ -60,7 +60,7 @@ import java.util.List;
 public class TagREST {
 
     private static final Log LOG = LogFactory.getLog(TagREST.class);
-    private static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
+    public static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;

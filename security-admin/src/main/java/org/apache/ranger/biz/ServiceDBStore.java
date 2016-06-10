@@ -144,6 +144,8 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.rest.ServiceREST;
+import org.apache.ranger.rest.TagREST;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
@@ -282,7 +284,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						@Override
 	                    public Object doInTransaction(TransactionStatus status) {
 							EmbeddedServiceDefsUtil.instance().init(dbStore);
-
+							getServiceUpgraded();
 							return null;
 	                    }
 					});
@@ -2497,7 +2499,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private RangerPolicyItem createDefaultPolicyItem(XXService createdService, VXUser vXUser, List<XXAccessTypeDef> accessTypeDefs) throws Exception {
 		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
 		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
-		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE,"simple");
 		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 
@@ -3714,5 +3716,41 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		} catch (Exception e) {
 		}
+	}
+	public void getServiceUpgraded(){
+		updateServiceWithCustomProperty();
+	}
+	private void updateServiceWithCustomProperty() {		
+			LOG.info("Adding custom properties to services");
+			SearchFilter filter = new SearchFilter();
+			try {
+				List<RangerService> lstRangerService = getServices(filter);
+				for(RangerService rangerService : lstRangerService){
+					String serviceUser = PropertiesUtil.getProperty("ranger.plugins."+rangerService.getType()+".serviceuser");
+					if(!StringUtils.isEmpty(serviceUser)){
+						boolean chkServiceUpdate = false;
+						if(!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Download)){
+							rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Download, serviceUser);
+							chkServiceUpdate = true;
+		                }
+		                if((!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Grant_Revoke)) && (rangerService.getType().equalsIgnoreCase("hbase") || rangerService.getType().equalsIgnoreCase("hive"))){
+							rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Grant_Revoke, serviceUser);
+							chkServiceUpdate = true;
+		                }
+		                if(!rangerService.getConfigs().containsKey(TagREST.Allowed_User_List_For_Tag_Download)){
+							rangerService.getConfigs().put(TagREST.Allowed_User_List_For_Tag_Download, serviceUser);
+							chkServiceUpdate = true;
+		                }
+		                if(chkServiceUpdate){
+							updateService(rangerService);
+							if(LOG.isDebugEnabled()){
+								LOG.debug("Updated service "+rangerService.getName()+" with custom properties in secure environment");
+							}
+		                }
+					}
+				}
+			} catch (Exception e) {
+				LOG.error("Error getting Services : "+e.getMessage());
+			}		
 	}
 }
