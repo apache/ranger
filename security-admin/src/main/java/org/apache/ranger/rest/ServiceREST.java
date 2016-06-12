@@ -1803,12 +1803,13 @@ public class ServiceREST {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ")");
 				}
-				ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+				ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
 	
-				if(ret == null) {
+				if(servicePolicies == null) {
 					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 					logMsg   = "No change since last update";
 				} else {
+					ret = filterServicePolicies(servicePolicies);
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
@@ -1883,11 +1884,12 @@ public class ServiceREST {
 					}
 				}
 				if (isAllowed) {
-					ret = svcStore.getServicePoliciesIfUpdated(serviceName,lastKnownVersion);
-					if (ret == null) {
+					ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName,lastKnownVersion);
+					if (servicePolicies == null) {
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 						logMsg = "No change since last update";
 					} else {
+						ret = filterServicePolicies(servicePolicies);
 						httpCode = HttpServletResponse.SC_OK;
 						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 					}
@@ -2340,4 +2342,82 @@ public class ServiceREST {
 		return ret;
 	}
 
+	private ServicePolicies filterServicePolicies(ServicePolicies servicePolicies) {
+		ServicePolicies ret = null;
+		boolean containsDisabledResourcePolicies = false;
+		boolean containsDisabledTagPolicies = false;
+
+		if (servicePolicies != null) {
+			List<RangerPolicy> policies = null;
+
+			policies = servicePolicies.getPolicies();
+			if (CollectionUtils.isNotEmpty(policies)) {
+				for (RangerPolicy policy : policies) {
+					if (!policy.getIsEnabled()) {
+						containsDisabledResourcePolicies = true;
+						break;
+					}
+				}
+			}
+
+			if (servicePolicies.getTagPolicies() != null) {
+				policies = servicePolicies.getTagPolicies().getPolicies();
+				if (CollectionUtils.isNotEmpty(policies)) {
+					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					for (RangerPolicy policy : policies) {
+						if (!policy.getIsEnabled()) {
+							containsDisabledTagPolicies = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies) {
+				ret = servicePolicies;
+			} else {
+				ret = new ServicePolicies();
+
+				ret.setServiceDef(servicePolicies.getServiceDef());
+				ret.setServiceId(servicePolicies.getServiceId());
+				ret.setServiceName(servicePolicies.getServiceName());
+				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
+				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
+				ret.setPolicies(servicePolicies.getPolicies());
+				ret.setTagPolicies(servicePolicies.getTagPolicies());
+
+				if (containsDisabledResourcePolicies) {
+					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					for (RangerPolicy policy : servicePolicies.getPolicies()) {
+						if (policy.getIsEnabled()) {
+							filteredPolicies.add(policy);
+						}
+					}
+					ret.setPolicies(filteredPolicies);
+				}
+
+				if (containsDisabledTagPolicies) {
+					ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
+
+					tagPolicies.setServiceDef(servicePolicies.getTagPolicies().getServiceDef());
+					tagPolicies.setServiceId(servicePolicies.getTagPolicies().getServiceId());
+					tagPolicies.setServiceName(servicePolicies.getTagPolicies().getServiceName());
+					tagPolicies.setPolicyVersion(servicePolicies.getTagPolicies().getPolicyVersion());
+					tagPolicies.setPolicyUpdateTime(servicePolicies.getTagPolicies().getPolicyUpdateTime());
+
+					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					for (RangerPolicy policy : servicePolicies.getTagPolicies().getPolicies()) {
+						if (policy.getIsEnabled()) {
+							filteredPolicies.add(policy);
+						}
+					}
+					tagPolicies.setPolicies(filteredPolicies);
+
+					ret.setTagPolicies(tagPolicies);
+				}
+			}
+		}
+
+		return ret;
+	}
 }
