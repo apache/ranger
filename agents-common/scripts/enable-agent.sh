@@ -185,7 +185,7 @@ elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
 elif [ "${HCOMPONENT_NAME}" = "storm" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/extlib-daemon
 elif [ "${HCOMPONENT_NAME}" = "atlas" ]; then
-    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/server/webapp/atlas/WEB-INF/lib
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/libext
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf

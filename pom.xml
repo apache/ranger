@@ -404,7 +404,7 @@
                             <descriptor>src/main/assembly/kms.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                            <descriptor>src/main/assembly/atlas-agent.xml</descriptor>
+                            <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
                         </descriptors>
                     </configuration>
                 </plugin>
