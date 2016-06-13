@@ -50,6 +50,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXDataObject;
@@ -1153,33 +1154,43 @@ public class ServiceUtil {
 	}
 	
 	
-	public VXPolicyList rangerPolicyListToPublic(List<RangerPolicy> rangerPolicyList) {
+	public VXPolicyList rangerPolicyListToPublic(List<RangerPolicy> rangerPolicyList,SearchFilter filter) {
 		
 		RangerService service       = null;
 		List<VXPolicy> vXPolicyList = new ArrayList<VXPolicy>();
 
-		for ( RangerPolicy policy : rangerPolicyList) {
-			try {
-				service = svcStore.getServiceByName(policy.getService());
-			} catch(Exception excp) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+		VXPolicyList vXPolicyListObj = new VXPolicyList(new ArrayList<VXPolicy>());
+		if(CollectionUtils.isNotEmpty(rangerPolicyList)) {
+			int    totalCount = rangerPolicyList.size();
+			int    startIndex = filter == null ? 0 : filter.getStartIndex();
+			int    pageSize   = filter == null ? totalCount : filter.getMaxRows();
+			int    toIndex    = Math.min(startIndex + pageSize, totalCount);
+			String sortType   = filter == null ? null : filter.getSortType();
+			String sortBy     = filter == null ? null : filter.getSortBy();
+			for(int i = startIndex; i < toIndex; i++) {
+				RangerPolicy policy =rangerPolicyList.get(i);
+				try {
+					service = svcStore.getServiceByName(policy.getService());
+				} catch(Exception excp) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+				}
+				if(service  == null) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+				}
+				VXPolicy vXPolicy = toVXPolicy(policy,service);
+				if(vXPolicy != null) {
+					vXPolicyList.add(vXPolicy);
+				}
 			}
-
-			if(service  == null) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-			}
-			
-			VXPolicy vXPolicy = toVXPolicy(policy,service);
-
-			if(vXPolicy != null) {
-				vXPolicyList.add(vXPolicy);
-			}
+			vXPolicyListObj = new VXPolicyList(vXPolicyList);
+			vXPolicyListObj.setPageSize(pageSize);
+			vXPolicyListObj.setResultSize(vXPolicyList.size());
+			vXPolicyListObj.setStartIndex(startIndex);
+			vXPolicyListObj.setTotalCount(totalCount);
+			vXPolicyListObj.setSortBy(sortBy);
+			vXPolicyListObj.setSortType(sortType);
 		}
-
-		VXPolicyList vXPolicyListObj = new VXPolicyList(vXPolicyList);
-		
 		return vXPolicyListObj;
-		
 	}
 	
 	

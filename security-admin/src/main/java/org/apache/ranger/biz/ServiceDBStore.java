@@ -3651,7 +3651,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (!CollectionUtils.isEmpty(xPolList)) {
 			for (XXPolicy xXPolicy : xPolList) {
 				if(!processedServices.contains(xXPolicy.getService())){
-					loadRangerPolicies(xXPolicy.getService(),processedServices,policyMap);
+					loadRangerPolicies(xXPolicy.getService(),processedServices,policyMap,searchFilter);
 				}
 			}
 		}
@@ -3670,7 +3670,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							if(xPol2!=null){
 								if(!processedPolicies.contains(xPol2.getId())){
 									if(!processedServices.contains(xPol2.getService())){
-										loadRangerPolicies(xPol2.getService(),processedServices,policyMap);
+										loadRangerPolicies(xPol2.getService(),processedServices,policyMap,searchFilter);
 									}
 									if(policyMap.containsKey(xPol2.getId())){
 										policyList.add(policyMap.get(xPol2.getId()));
@@ -3688,7 +3688,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				if(xPol!=null){
 					if(!processedPolicies.contains(xPol.getId())){
 						if(!processedServices.contains(xPol.getService())){
-							loadRangerPolicies(xPol.getService(),processedServices,policyMap);
+							loadRangerPolicies(xPol.getService(),processedServices,policyMap,searchFilter);
 						}
 						if(policyMap.containsKey(xPol.getId())){
 							policyList.add(policyMap.get(xPol.getId()));
@@ -3703,9 +3703,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return retList;
 	}
 
-	private void loadRangerPolicies(Long serviceId,Set<Long> processedServices,Map<Long,RangerPolicy> policyMap){
+	private void loadRangerPolicies(Long serviceId,Set<Long> processedServices,Map<Long,RangerPolicy> policyMap,SearchFilter searchFilter){
 		try {
-			List<RangerPolicy> tempPolicyList = getServicePolicies(serviceId,null);
+			List<RangerPolicy> tempPolicyList = getServicePolicies(serviceId,searchFilter);
 			if(!CollectionUtils.isEmpty(tempPolicyList)){
 				for (RangerPolicy rangerPolicy : tempPolicyList) {
 					if(!policyMap.containsKey(rangerPolicy.getId())){

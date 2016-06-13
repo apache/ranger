@@ -136,6 +136,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.GROUP, request.getParameter("groupName"));
 		ret.setParam(SearchFilter.IS_ENABLED, request.getParameter("isEnabled"));
 		ret.setParam(SearchFilter.IS_RECURSIVE, request.getParameter("isRecursive"));
+		ret.setParam(SearchFilter.POL_RESOURCE, request.getParameter(SearchFilter.POL_RESOURCE));
 		ret.setParam(SearchFilter.RESOURCE_PREFIX + "path", request.getParameter("resourceName"));
 		ret.setParam(SearchFilter.RESOURCE_PREFIX + "database", request.getParameter("databases"));
 		ret.setParam(SearchFilter.RESOURCE_PREFIX + "table", request.getParameter("tables"));

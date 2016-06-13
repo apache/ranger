@@ -348,19 +348,26 @@ public class PublicAPIs {
 		}
 
 		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, policyService.sortFields);
+		// get all policies from the store; pick the page to return after applying filter
+		int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
+		int savedMaxRows    = filter == null ? Integer.MAX_VALUE : filter.getMaxRows();
 
-		List<RangerPolicy> rangerPolicyList = serviceREST.getPolicies(filter);
-		
-		VXPolicyList vXPolicyList = null;
-
-		if (rangerPolicyList != null) {
-			vXPolicyList = serviceUtil.rangerPolicyListToPublic(rangerPolicyList);
+		if(filter != null) {
+			filter.setStartIndex(0);
+			filter.setMaxRows(Integer.MAX_VALUE);
 		}
-		
+		List<RangerPolicy> rangerPolicyList = serviceREST.getPolicies(filter);
+		if(filter != null) {
+			filter.setStartIndex(savedStartIndex);
+			filter.setMaxRows(savedMaxRows);
+		}
+		VXPolicyList vXPolicyList = null;
+		if (rangerPolicyList != null) {
+			vXPolicyList = serviceUtil.rangerPolicyListToPublic(rangerPolicyList,filter);
+		}
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.searchPolicies(): "  + vXPolicyList );
 		}
-		
 		return vXPolicyList;
 	}
 
