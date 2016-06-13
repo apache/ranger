@@ -91,6 +91,9 @@ ExceptionMappingAuthenticationFailureHandler {
 				}else if(msg.contains("Communications link failure")){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("Unable to connect to DB..");
+				}else if(msg.equalsIgnoreCase("User is disabled")){
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("The username or password you entered is disable..");
 				}
 			}
 			jsonResp = jsonUtil.writeObjectAsString(vXResponse);

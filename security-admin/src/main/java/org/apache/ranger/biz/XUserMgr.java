@@ -1053,8 +1053,11 @@ public class XUserMgr extends XUserMgrBase {
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session != null) {
 			if (!session.isUserAdmin()) {
-				throw restErrorUtil.create403RESTException("Operation" + " denied. LoggedInUser=" + (session != null ? session.getXXPortalUser().getId() : "Not Logged In")
+				VXResponse vXResponse = new VXResponse();
+				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+				vXResponse.setMsgDesc("Operation" + " denied. LoggedInUser=" + (session != null ? session.getXXPortalUser().getId() : "Not Logged In")
 						+ " ,isn't permitted to perform the action.");
+				throw restErrorUtil.generateRESTException(vXResponse);
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();

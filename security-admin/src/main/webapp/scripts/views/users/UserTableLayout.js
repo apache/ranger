@@ -154,14 +154,30 @@ define(function(require){
 					success : function(){
 						that.chgFlags = [];
 						clearCache(collection);
-					}
+					},
+					error : function(resp){
+						if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
+							XAUtil.notifyError('Error', resp.responseJSON.msgDesc);
+						}else{
+							XAUtil.notifyError('Error', "Error occunred while updating user");
+						}
+						collection.trigger('error','',resp)
+					},
 				});
 			} else {
 			    collection.setGroupsVisibility(updateReq, {
 					success : function(){
 						that.chgFlags = [];
 						clearCache(collection);
-					}
+					},
+					error : function(resp){
+						if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
+							XAUtil.notifyError('Error', resp.responseJSON.msgDesc);
+						}else{
+							XAUtil.notifyError('Error', "Error occunred while updating user");
+						}
+						collection.trigger('error','',resp)
+					},
                 });
 			}
 		},

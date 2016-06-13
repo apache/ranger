@@ -191,6 +191,16 @@ define(function(require){
 					if(m.get('action') == 'update' || m.get('action') == 'delete')
 						that.previousConnConfig = $.parseJSON(m.get('previousValue'));
 					configModel = m;
+				}else if(m.get('attributeName') == "Service Status"){
+					 var newVal = m.get('newValue'), oldVal = m.get('previousValue');            
+					 if(!_.isUndefined(newVal)){
+					         m.set('newValue', $.parseJSON(newVal) ? XAEnums.ActiveStatus.STATUS_ENABLED.label 
+					                         : XAEnums.ActiveStatus.STATUS_DISABLED.label);
+					 }
+					 if(!_.isUndefined(oldVal)){
+					         m.set('previousValue', $.parseJSON(oldVal) ? XAEnums.ActiveStatus.STATUS_ENABLED.label 
+					                         : XAEnums.ActiveStatus.STATUS_DISABLED.label);
+					 }
 				}
 			});
 			if(configModel)
