@@ -840,11 +840,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	@Override
 	public void postListProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext, List<ProcedureInfo> procInfoList) throws IOException {
 		if(!procInfoList.isEmpty()) {
-			Iterator itr = procInfoList.iterator();
+			Iterator<ProcedureInfo> itr = procInfoList.iterator();
 			User user = this.getActiveUser();
 
 			while(itr.hasNext()) {
-				ProcedureInfo procInfo = (ProcedureInfo)itr.next();
+				ProcedureInfo procInfo = itr.next();
 
 				try {
 					if(!ProcedureInfo.isProcedureOwner(procInfo, user)) {
