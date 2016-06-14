@@ -121,4 +121,15 @@
     		<version>${httpcomponents.httpcore.version}</version>
 		</dependency>
     </dependencies>
+    <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
+    </build>
 </project>
