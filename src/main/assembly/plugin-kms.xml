@@ -30,9 +30,22 @@
         <unpack>false</unpack>
 	    <directoryMode>755</directoryMode>
 	    <fileMode>644</fileMode>
+  	    <outputDirectory>/lib</outputDirectory>
+     </binaries>
+     <includes>
+	  <include>org.apache.ranger:ranger-kms-plugin-shim</include>
+	  <include>org.apache.ranger:ranger-plugin-classloader</include>
+      </includes>
+  	</moduleSet>
+    <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
-                <outputDirectory>/lib</outputDirectory>
+                <outputDirectory>/lib/ranger-kms-plugin-impl</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
                     <include>commons-configuration:commons-configuration:jar:${commons.pool.version}</include>
@@ -72,7 +85,7 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/lib</outputDirectory>
+        <outputDirectory>/lib/ranger-kms-plugin-impl</outputDirectory>
      </binaries>
      <includes>
 		<include>org.apache.ranger:ranger-plugins-audit</include>

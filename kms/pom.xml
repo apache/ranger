@@ -220,6 +220,11 @@
             <artifactId>httpclient</artifactId>
             <version>${httpcomponents.httpclient.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${kms.httpcomponents.httpclient.version}</version>
+        </dependency>
         <!-- change for version variable -->
         <dependency>
             <groupId>javax.activation</groupId>

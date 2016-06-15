@@ -100,11 +100,11 @@
 					<include>xmlenc:xmlenc</include>
 					<include>org.tukaani:xz</include>
 					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+					<include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
 		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
-		    		<include>org.apache.ranger:ranger-plugins-common</include>
 	            </includes>
             </dependencySet>
         </dependencySets>
@@ -181,9 +181,23 @@
         <unpack>false</unpack>
 	    <directoryMode>755</directoryMode>
 	    <fileMode>644</fileMode>
+  	    <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
+     </binaries>
+     <includes>
+	  <include>org.apache.ranger:ranger-kms-plugin-shim</include>
+	  <include>org.apache.ranger:ranger-plugin-classloader</include>
+	  <include>org.apache.ranger:credentialbuilder</include>
+     </includes>
+  	</moduleSet>
+    <moduleSet>
+     <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+	    <directoryMode>755</directoryMode>
+	    <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
-                <outputDirectory>/ews/plugin/lib</outputDirectory>
+                <outputDirectory>/ews/webapp/WEB-INF/classes/lib/ranger-kms-plugin-impl</outputDirectory>
                 <unpack>false</unpack>
                 <includes>
                     <include>commons-configuration:commons-configuration:jar:${commons.pool.version}</include>
@@ -198,6 +212,7 @@
 		    		<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
 		    		<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+		    		<include>org.apache.solr:solr-solrj</include>
                 </includes>
             </dependencySet>
             <dependencySet>
@@ -221,14 +236,13 @@
                     </includes>
             </dependencySet>
         </dependencySets>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/lib/ranger-kms-plugin-impl</outputDirectory>
      </binaries>
      <includes>
 		<include>org.apache.ranger:ranger-plugins-audit</include>
 		<include>org.apache.ranger:ranger-plugins-cred</include>
 		<include>org.apache.ranger:ranger-plugins-common</include>
 		<include>org.apache.ranger:ranger-kms-plugin</include>
-		<include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
     <moduleSet>
