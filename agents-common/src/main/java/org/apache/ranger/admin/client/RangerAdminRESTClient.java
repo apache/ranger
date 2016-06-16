@@ -88,11 +88,13 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		ServicePolicies ret = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
 
 		ClientResponse response = null;
-		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
+		if (isSecureMode) {
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("Checking Service policy if updated as user : " + MiscUtil.getUGILoginUser());
+				LOG.debug("Checking Service policy if updated as user : " + user);
 			}
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
@@ -102,7 +104,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				};
 			};				
-			response = MiscUtil.getUGILoginUser().doAs(action);
+			response = user.doAs(action);
 		}else{
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("Checking Service policy if updated with old api call");
@@ -119,7 +121,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			// no change
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting policies. response=" + resp.toString() + ", serviceName=" + serviceName);
+			LOG.error("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+
 			throw new Exception(resp.getMessage());
 		}
 
@@ -137,7 +140,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		ClientResponse response = null;
-		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SECURE_SERVICE_GRANT_ACCESS + serviceName)
@@ -145,15 +151,18 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
 				};
 			};
-			LOG.info("grantAccess as user " + MiscUtil.getUGILoginUser());
-			response = MiscUtil.getUGILoginUser().doAs(action);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("grantAccess as user " + user);
+			}
+			response = user.doAs(action);
 		} else {
 			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GRANT_ACCESS + serviceName)
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
 		}
 		if(response != null && response.getStatus() != 200) {
-			LOG.error("grantAccess() failed: HTTP status=" + response.getStatus());
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("grantAccess() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
 
 			if(response.getStatus() == 401) {
 				throw new AccessControlException();
@@ -176,7 +185,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		ClientResponse response = null;
-		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SECURE_SERVICE_REVOKE_ACCESS + serviceName)
@@ -184,8 +196,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
 				};
 			};
-			LOG.info("revokeAccess as user " + MiscUtil.getUGILoginUser());
-			response = MiscUtil.getUGILoginUser().doAs(action);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("revokeAccess as user " + user);
+			}
+			response = user.doAs(action);
 		} else {
 			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_REVOKE_ACCESS + serviceName)
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
@@ -193,7 +207,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		if(response != null && response.getStatus() != 200) {
-			LOG.error("revokeAccess() failed: HTTP status=" + response.getStatus());
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("revokeAccess() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
 
 			if(response.getStatus() == 401) {
 				throw new AccessControlException();
@@ -238,7 +253,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		ServiceTags ret = null;
 		ClientResponse response = null;
 		WebResource webResource = null;
-		if (MiscUtil.getUGILoginUser() != null && UserGroupInformation.isSecurityEnabled()) {
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceName)
@@ -247,8 +265,10 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				};
 			};
-			LOG.info("getServiceTagsIfUpdated as user " + MiscUtil.getUGILoginUser());
-			response = MiscUtil.getUGILoginUser().doAs(action);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getServiceTagsIfUpdated as user " + user);
+			}
+			response = user.doAs(action);
 		} else {
 			webResource = createWebResource(RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName)
 					.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
@@ -262,7 +282,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			// no change
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting taggedResources. request=" + webResource.toString()
+			LOG.error("Error getting taggedResources. secureMode=" + isSecureMode + ", user=" + user
 					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
 					+ ", " + "lastKnownVersion=" + lastKnownVersion);
 			throw new Exception(resp.getMessage());
@@ -283,20 +303,24 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		List<String> ret = null;
 		String emptyString = "";
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
 
 		final WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_LOOKUP_TAG_NAMES)
 				.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceName)
 				.queryParam(RangerRESTUtils.PATTERN_PARAM, pattern);
 
 		ClientResponse response = null;
-		if (MiscUtil.getUGILoginUser() != null) {
+		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					return webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				};
 			};
-			LOG.info("getTagTypes as user " + MiscUtil.getUGILoginUser());
-			response = MiscUtil.getUGILoginUser().doAs(action);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getTagTypes as user " + user);
+			}
+			response = user.doAs(action);
 		} else {
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}

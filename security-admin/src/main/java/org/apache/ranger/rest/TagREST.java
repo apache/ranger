@@ -1169,7 +1169,9 @@ public class TagREST {
 					logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
 				}
 			}else{
-				// do nothing
+				LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed as User doesn't have permission to download tags");
+				httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+				logMsg = "User doesn't have permission to download tags";
 			}
         } catch(Exception excp) {
             LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ") failed", excp);
