@@ -432,8 +432,17 @@ define(function(require) {
 				//to show only mutiline line policy codition 
 				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
 				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
-				//Create new bootstrap x-editable `policyConditions` dataType for policy conditions 
-				XAUtil.customXEditableForPolicyCond(tmpl.join(''));
+				//get the select input size(for bootstrap x-editable) of policy conditions
+				var selectSizeList = [];
+                _.each(this.policyConditions,function(policyCondition){
+                	if (XAUtil.isSinglevValueInput(policyCondition)) {
+                		selectSizeList.push(1);
+                	} else {
+                		selectSizeList.push(undefined);
+                	}
+                });
+              //Create new bootstrap x-editable `policyConditions` dataType for policy conditions
+                XAUtil.customXEditableForPolicyCond(tmpl.join(''),selectSizeList);
 				//create x-editable for policy conditions
 				this.$('#policyConditions').editable({
 					emptytext : 'Add Conditions',

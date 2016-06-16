@@ -947,8 +947,9 @@ define(function(require) {
 			that.$(that.rForm.el).removeClass("policy-disabled");
 		}
 	};
-	XAUtils.customXEditableForPolicyCond = function(template) {
+	XAUtils.customXEditableForPolicyCond = function(template,selectionList) {
 		// $.fn.editable.defaults.mode = 'inline';
+
 		var PolicyConditions = function(options) {
 			this.init('policyConditions', options, PolicyConditions.defaults);
 		};
@@ -967,8 +968,9 @@ define(function(require) {
 					minimumInputLength : 1,
 					tokenSeparators : [ ",", ";" ],
 				}
-				_.each(this.$input, function(elem){
+				_.each(this.$input, function(elem,index){
 					if($(elem).is('input')){
+						pluginOpts.maximumSelectionSize = selectionList[index];
 						$(elem).select2(pluginOpts);
 				    }	
 				})
