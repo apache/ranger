@@ -1,9 +1,16 @@
-/*!
-  backgrid 0.3.5
+/*
+  backgrid
   http://github.com/wyuenho/backgrid
 
-  Copyright (c) 2014 Jimmy Yuen Ho Wong and contributors <wyuenho@gmail.com>
+  Copyright (c) 2013 Jimmy Yuen Ho Wong and contributors
   Licensed under the MIT license.
+
+
+  Copyright 2009, 2010 Kristopher Michael Kowal
+  https://github.com/kriskowal/es5-shim
+  ES5 15.5.4.20
+  http://es5.github.com/#x15.5.4.20
+  MIT License
 */
 
 (function (root, factory) {
@@ -23,18 +30,6 @@
 
   "use strict";
 
-/*
-  backgrid
-  http://github.com/wyuenho/backgrid
-
-  Copyright (c) 2013 Jimmy Yuen Ho Wong and contributors
-  Licensed under the MIT license.
-*/
-
-// Copyright 2009, 2010 Kristopher Michael Kowal
-// https://github.com/kriskowal/es5-shim
-// ES5 15.5.4.20
-// http://es5.github.com/#x15.5.4.20
 var ws = "\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003" +
   "\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028" +
   "\u2029\uFEFF";

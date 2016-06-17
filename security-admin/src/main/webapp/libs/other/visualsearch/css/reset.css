@@ -1,8 +1,11 @@
 /*------------------------------ RESET + DEFAULT STYLES ---------------------------------*/
 
 /* 
-Eric Meyer's final reset.css
-Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ 
+	Eric Meyer's final reset.css
+	Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
+	 
+	License: none (public domain)
+ 
 */
 .VS-search div, .VS-search span, .VS-search a, .VS-search img, 
 .VS-search ul, .VS-search li, .VS-search form, .VS-search label,
@@ -16,7 +19,7 @@ Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
   font-size: 100%;
   font-family: inherit;
   vertical-align: baseline;
-}
+}	
 
 .VS-search :focus {
   outline: 0;

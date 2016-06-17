@@ -4,8 +4,23 @@
 
   Copyright (c) 2013 Jimmy Yuen Ho Wong and contributors
   Licensed under the MIT license.
-*/
 
+*/
+/*
+  Search Icon CSS derived from:
+
+  PURE CSS GUI ICONS
+  by Nicolas Gallagher
+  - http://nicolasgallagher.com/pure-css-gui-icons/
+
+  http://nicolasgallagher.com
+  http://twitter.com/necolas
+
+  Created: 29 July 2010
+  Version: 1.0.1
+
+  Dual licensed under MIT and GNU GPLv2 (c) Nicolas Gallagher
+*/
 .backgrid-container {
   position: relative;
   display: block;
