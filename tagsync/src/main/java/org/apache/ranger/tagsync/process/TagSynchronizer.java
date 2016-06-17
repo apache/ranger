@@ -19,13 +19,18 @@
 
 package org.apache.ranger.tagsync.process;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 public class TagSynchronizer {
 
@@ -261,6 +266,12 @@ public class TagSynchronizer {
 				}
 			}
 		}
+
+		if (CollectionUtils.isEmpty(initializedTagSourceNameList)) {
+			LOG.warn("TagSync is not configured for any tag-sources. No tags will be received by TagSync.");
+			LOG.warn("Please recheck configuration properties and tagsync environment to ensure that this is correct.");
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagSynchronizer.initializeTagSources(" + initializedTagSourceNameList + ")");
 		}

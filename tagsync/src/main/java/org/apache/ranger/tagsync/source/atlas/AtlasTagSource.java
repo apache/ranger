@@ -38,7 +38,8 @@ import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Properties;
+import java.util.List;
 
 public class AtlasTagSource extends AbstractTagSource {
 	private static final Log LOG = LogFactory.getLog(AtlasTagSource.class);
@@ -187,9 +188,7 @@ public class AtlasTagSource extends AbstractTagSource {
 							}
 
 							ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
-							if (serviceTags == null) {
-								LOG.error("No ServiceTags built for notification :" + getPrintableEntityNotification(notification));
-							} else {
+							if (serviceTags != null) {
 								updateSink(serviceTags);
 							}
 						} else {
