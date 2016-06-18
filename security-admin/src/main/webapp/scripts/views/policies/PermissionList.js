@@ -31,6 +31,7 @@ define(function(require) {
 	var SessionMgr 		= require('mgrs/SessionMgr');
 
 	var VXGroup			= require('models/VXGroup');
+	var VXUser				= require('models/VXUser');
 	var VXGroupList			= require('collections/VXGroupList');
 	var VXUserList			= require('collections/VXUserList');
 	
@@ -182,18 +183,18 @@ define(function(require) {
 			});
 		},
 		createDropDown :function($select, list, typeGroup){
-			var that = this;
-			var placeholder = (typeGroup) ? 'Select Group' : 'Select User';
-			var url 		= (typeGroup) ? "service/xusers/groups" : "service/xusers/users";
+			var that = this,
+			placeholder = (typeGroup) ? 'Select Group' : 'Select User',
+			searchUrl   = (typeGroup) ? "service/xusers/groups" : "service/xusers/users",
+			getUrl 		= (typeGroup) ? "service/xusers/groups/groupName/" : "service/xusers/users/userName/";
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
 				var temp = $select.val().split(",");
 				_.each(temp , function(name){
 					if(_.isEmpty(list.where({ 'name' : name}))){
-						var coll;
-						coll = typeGroup ? new VXGroupList() : new VXUserList();
-						coll.queryParams['name'] = name;
-						coll.fetch({async:false}).done(function(){
-							list.add(coll.models);
+						var model = typeGroup ? new VXGroup() : new VXUser();
+						model.urlRoot = getUrl + name;
+						model.fetch({async:false}).done(function(){
+							list.add(model);
 						});
 					}
 				});
@@ -218,7 +219,7 @@ define(function(require) {
 					callback(data);
 				},
 				ajax: { 
-					url: url,
+					url: searchUrl,
 					dataType: 'json',
 					data: function (term, page) {
 						return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};

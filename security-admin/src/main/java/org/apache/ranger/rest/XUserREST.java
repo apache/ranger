@@ -341,8 +341,7 @@ public class XUserREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xUserService.sortFields);
 
-		searchUtil.extractString(request, searchCriteria, "name", "User name",
-				StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
 		searchUtil.extractString(request, searchCriteria, "emailAddress", "Email Address",
 				null);		
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
