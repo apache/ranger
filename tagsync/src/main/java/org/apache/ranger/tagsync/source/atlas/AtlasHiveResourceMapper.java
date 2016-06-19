@@ -45,8 +45,6 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 	public static final String RANGER_TYPE_HIVE_TABLE = "table";
 	public static final String RANGER_TYPE_HIVE_COLUMN = "column";
 
-	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE = "name";
-
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
 
 	public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
@@ -147,9 +145,16 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 
 	public final List<String> getQualifiedNameComponents(IReferenceableInstance entity) throws Exception {
 
-		String qualifiedNameAttributeName = getQualifiedNameAttributeName(entity.getTypeName());
-
+		String qualifiedNameAttributeName = ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 		String qualifiedName = getEntityAttribute(entity, qualifiedNameAttributeName, String.class);
+
+		if (StringUtils.isBlank(qualifiedName)) {
+			throw new Exception("Could not get a valid value for " + qualifiedNameAttributeName + " attribute from entity.");
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Received .... " + qualifiedNameAttributeName + "=" + qualifiedName + " for entity type " + entity.getTypeName());
+		}
 
 		List<String> ret = getQualifiedNameComponents(entity.getTypeName(), qualifiedName);
 
@@ -166,16 +171,6 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 	}
 
 	public final List<String> getQualifiedNameComponents(String entityTypeName, String qualifiedName) throws Exception {
-
-		String qualifiedNameAttributeName = getQualifiedNameAttributeName(entityTypeName);
-
-		if (StringUtils.isBlank(qualifiedName)) {
-			throw new Exception("Could not get a valid value for " + qualifiedNameAttributeName + " attribute from entity.");
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Received .... " + qualifiedNameAttributeName + "=" + qualifiedName + " for entity type " + entityTypeName);
-		}
 
 		String components[] = qualifiedName.split(clusterDelimiter);
 
@@ -198,10 +193,4 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 
 		return ret;
 	}
-
-	public String getQualifiedNameAttributeName(String entityTypeName) {
-		return  StringUtils.equals(entityTypeName, ENTITY_TYPE_HIVE_TABLE) ?
-				ENTITY_ATTRIBUTE_QUALIFIED_NAME_FOR_HIVE_TABLE : ENTITY_ATTRIBUTE_QUALIFIED_NAME;
-	}
-
 }
