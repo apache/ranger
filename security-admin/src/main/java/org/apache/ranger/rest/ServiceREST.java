@@ -2360,7 +2360,6 @@ public class ServiceREST {
 			if (servicePolicies.getTagPolicies() != null) {
 				policies = servicePolicies.getTagPolicies().getPolicies();
 				if (CollectionUtils.isNotEmpty(policies)) {
-					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
 					for (RangerPolicy policy : policies) {
 						if (!policy.getIsEnabled()) {
 							containsDisabledTagPolicies = true;

@@ -52,7 +52,6 @@ public class YarnResourceMgr {
 	
     public static List<String> getYarnResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) {
         String 		 userInput 				  = context.getUserInput();
-		String 		 resource				  = context.getResourceName();
 		Map<String, List<String>> resourceMap = context.getResources();
 	    List<String> 		resultList        = null;
 		List<String> 		yarnQueueList 	  = null;

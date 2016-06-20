@@ -94,7 +94,6 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				// ignore
 			} else {
 				HttpServletRequest httpRequest = (HttpServletRequest) request;
-				String httpMethod=httpRequest.getMethod();
 				HttpSession httpSession = httpRequest.getSession(false);
 
 				// [1]get the context from session

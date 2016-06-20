@@ -91,7 +91,6 @@ public class RangerHSM implements RangerKMSMKI {
 				keyGen = KeyGenerator.getInstance(MK_CIPHER, hsm_keystore);
 				keyGen.init(MK_KeySize);
 				aesKey = keyGen.generateKey();
-				String masterKey = Base64.encode(aesKey.getEncoded()) ;
                 myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
 				return true;
 			} catch (Exception e) {

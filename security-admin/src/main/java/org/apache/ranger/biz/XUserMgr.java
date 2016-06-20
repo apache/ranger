@@ -1406,8 +1406,8 @@ public class XUserMgr extends XUserMgrBase {
 
 	public Collection<String> getMaskedCollection(Collection<String> listunMasked){
         List<String> listMasked=new ArrayList<String>();
-        if(listunMasked!=null && listunMasked.size()>0){
-            for(String content:listunMasked){
+        if(listunMasked!=null) {
+            for(int i = 0; i < listunMasked.size(); i++) {
                 listMasked.add(AppConstants.Masked_String);
             }
         }

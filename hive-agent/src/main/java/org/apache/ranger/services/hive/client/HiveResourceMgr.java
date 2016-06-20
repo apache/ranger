@@ -68,11 +68,9 @@ public class HiveResourceMgr {
 		List<String> 			  	resultList 	 = null;
 		List<String> 			  	databaseList = null;
 		List<String> 				tableList	 = null;
-		List<String> 				udfList	  	 = null;
 		List<String> 				columnList	 = null;
 		String  					databaseName = null;
 		String  					tableName	 = null;
-		String  					udfName	  	 = null;
 		String  					columnName	 = null;
 
 		
@@ -84,7 +82,6 @@ public class HiveResourceMgr {
 			if ( resourceMap != null  && !resourceMap.isEmpty() ) { 
 				databaseList = resourceMap.get(DATABASE); 
 				tableList = resourceMap.get(TABLE); 
-				udfList = resourceMap.get(UDF); 
 				columnList = resourceMap.get(COLUMN); 
 				} 
 				switch (resource.trim().toLowerCase()) {
@@ -93,9 +90,6 @@ public class HiveResourceMgr {
 						break;
 				case TABLE:
 						tableName = userInput;
-						break;
-				case UDF:
-						udfName = userInput;
 						break;
 				case COLUMN:
 						columnName    = userInput;
@@ -122,7 +116,6 @@ public class HiveResourceMgr {
 				
 				final List<String> finaldatabaseList = databaseList;
 				final List<String> finaltableList 	 = tableList;
-				final List<String> finaludfList		 = udfList;
 				final List<String> finalcolumnList   = columnList;
 				
 				

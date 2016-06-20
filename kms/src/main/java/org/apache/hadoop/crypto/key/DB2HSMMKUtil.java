@@ -79,7 +79,6 @@ public class DB2HSMMKUtil {
 			
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
-			RangerKeyStore dbStore = new RangerKeyStore(daoManager);
 			String password = conf.get(ENCRYPTION_KEY);
 			
 			// Get Master Key from Ranger DB			

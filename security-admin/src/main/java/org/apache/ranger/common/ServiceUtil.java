@@ -1264,7 +1264,6 @@ public class ServiceUtil {
 			if (vXPermObjList != null) {
 				for(VXPermObj vXPermObj : vXPermObjList ) {
 					boolean delegatedAdmin  = false;
-					String  ipAddress		= null;
 					
 					if (vXPermObj.getUserList() != null ) {
 						for (String user : vXPermObj.getUserList() ) {
@@ -1294,10 +1293,6 @@ public class ServiceUtil {
 								ret.getAccessTypes().add(perm);
 							}
 						}
-					}
-					
-					if (vXPermObj.getIpAddress() != null) {
-						ipAddress =  vXPermObj.getIpAddress();
 					}
 					
 					if (delegatedAdmin) {

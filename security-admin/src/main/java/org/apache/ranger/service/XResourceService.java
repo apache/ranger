@@ -191,12 +191,9 @@ public class XResourceService extends
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		Long assetId = vObj.getAssetId();
-		int assetType;
 		if(assetId != null){
 			XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
-			if(xAsset != null){
-				assetType = xAsset.getAssetType();
-			} else {
+			if(xAsset == null){
 				throw restErrorUtil.createRESTException("The repository for which "
 						+ "the policy is created, doesn't exist in the system.", 
 						MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);

@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 import kafka.utils.ZkUtils;
 import kafka.utils.ZkUtils$;
-import org.apache.kafka.common.security.JaasUtils;
 import org.I0Itec.zkclient.*;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
@@ -92,7 +91,6 @@ public class ServiceKafkaClient {
 	        zkClient     = ZkUtils$.MODULE$.createZkClient(zookeeperConnect, sessionTimeout, connectionTimeout);
 	        zkConnection = new ZkConnection(zookeeperConnect, sessionTimeout);
 
-	        boolean      zkSecurityEnabled = JaasUtils.isZkSecurityEnabled();
 	        ZkUtils      zkUtils           = new ZkUtils(zkClient, zkConnection, true);
 	        Seq<String>  topicList         = zkUtils.getChildrenParentMayNotExist(ZkUtils.BrokerTopicsPath());
 

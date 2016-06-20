@@ -212,10 +212,8 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		Root<VXXTrxLog> rootEntityType = criteriaQuery.from(klass);
 		Metamodel entityMetaModel = em.getMetamodel();
 		EntityType<VXXTrxLog> entityType = entityMetaModel.entity(klass);
-		CriteriaQuery<VXXTrxLog> selectCQ = criteriaQuery.select(rootEntityType);		
 		Map<String, Object> paramList = searchCriteria.getParamList();
 		CriteriaQuery<Long> countCQ = criteriaBuilder.createQuery(Long.class);
-		Root<VXXTrxLog> countEntityType = countCQ.from(klass);
 		Predicate predicate = criteriaBuilder.conjunction();		
 		String fieldName=null;
 		String clientFieldName =null;

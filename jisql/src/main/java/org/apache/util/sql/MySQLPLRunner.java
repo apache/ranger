@@ -25,7 +25,6 @@ import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -295,7 +294,7 @@ public class MySQLPLRunner {
     	  String driverName = "com.mysql.jdbc.Driver";
     	  Properties props = null;
     	  try {
-              Driver driver = (Driver) Class.forName(driverName).newInstance();
+              Class.forName(driverName).newInstance();
               props = new Properties();
 
               props.put("user", "root");

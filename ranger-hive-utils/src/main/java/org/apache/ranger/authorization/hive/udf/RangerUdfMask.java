@@ -198,7 +198,7 @@ class MaskTransformer extends AbstractTransformer {
 
     long ret = 0;
     long pos = 1;
-    for(int i = 0; val != 0; i++) {
+    while (val != 0) {
       ret += maskedNumber * pos;
 
       val /= 10;

@@ -174,9 +174,6 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				ip = context.getHttpHeader("REMOTE_ADDR");
 			}
 
-			String requestData = context.getResource() + ":"
-					+ context.getParams();
-
 			// Create the list of requests for access check. Each field is
 			// broken
 			// into a request

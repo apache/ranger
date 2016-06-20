@@ -19,12 +19,10 @@ package org.apache.solr.client.solrj.request;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -96,8 +94,6 @@ public class JavaBinUpdateRequestCodec {
    */
   public UpdateRequest unmarshal(InputStream is, final StreamingUpdateHandler handler) throws IOException {
     final UpdateRequest updateRequest = new UpdateRequest();
-    List<List<NamedList>> doclist;
-    List<Entry<SolrInputDocument,Map<Object,Object>>>  docMap;
     List<String> delById;
     Map<String,Map<String,Object>> delByIdMap;
     List<String> delByQ;
@@ -183,15 +179,6 @@ public class JavaBinUpdateRequestCodec {
     delById = (List<String>) namedList[0].get("delById");
     delByIdMap = (Map<String,Map<String,Object>>) namedList[0].get("delByIdMap");
     delByQ = (List<String>) namedList[0].get("delByQ");
-    doclist = (List) namedList[0].get("docs");
-    Object docsMapObj = namedList[0].get("docsMap");
-
-    if (docsMapObj instanceof Map) {//SOLR-5762
-      docMap =  new ArrayList(((Map)docsMapObj).entrySet());
-    } else {
-      docMap = (List<Entry<SolrInputDocument, Map<Object, Object>>>) docsMapObj;
-    }
-    
 
     // we don't add any docs, because they were already processed
     // deletes are handled later, and must be passed back on the UpdateRequest
