@@ -24,6 +24,10 @@ propertyValue=''
 
 CONF_FILE=$PWD/ews/webapp/WEB-INF/classes/conf
 ETC_CONF_FILE=/etc/ranger/kms/conf
+pidFolderName='/var/run/ranger'
+if [ ! -d "${pidFolderName}" ]; then
+    mkdir -p "${pidFolderName}"
+fi
 
 if [ ! -f ${PROPFILE} ]
 then

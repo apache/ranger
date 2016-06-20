@@ -21,7 +21,8 @@
 
 PROPFILE=$PWD/install.properties
 propertyValue=''
-
+pidFolderName='/var/run/ranger'
+mkdir -p ${pidFolderName}
 if [ ! $? = "0" ];then
 	log "$PROPFILE file not found....!!";
 	exit 1;

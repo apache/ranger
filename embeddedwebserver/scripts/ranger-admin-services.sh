@@ -29,7 +29,7 @@ XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
 RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
-
+pidf=/var/run/ranger/rangeradmin.pid
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
 if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
@@ -53,26 +53,66 @@ then
 fi
 
 start() {
-	java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
-	echo "Apache Ranger Admin has started."
+	SLEEP_TIME_AFTER_START=5
+	nohup  java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
+	VALUE_OF_PID=$!
+	echo "Starting Apache Ranger Admin Service"
+	sleep $SLEEP_TIME_AFTER_START
+	if ps -p $VALUE_OF_PID > /dev/null
+	then
+		echo $VALUE_OF_PID > ${pidf}
+		chown ranger ${pidf}
+		chmod 660 ${pidf}
+		pid=`cat $pidf`
+		echo "Apache Ranger Admin Service with pid ${pid} has started."
+	else
+		echo "Apache Ranger Admin Service failed to start!"
+		exit 1
+	fi
 }
 
 stop(){
-	java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1
-	echo "Apache Ranger Admin has been stopped."
-
+	SLEEP_TIME_AFTER_KILL=5
+	if [ -f "$pidf" ] ; then
+		nohup java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1
+		pid=`cat $pidf` > /dev/null 2>&1
+		echo "Found Apache Ranger Admin Service with pid $pid, killing..."
+		kill $pid
+		sleep $SLEEP_TIME_AFTER_KILL
+		# if process is still around, use kill -9
+		if ps -p $pid > /dev/null ; then
+			echo "Initial kill failed, getting serious now..."
+			kill -9 $pid
+		fi
+		if ps -p $pid > /dev/null ; then
+			echo "Wow, even kill -9 failed, giving up! Sorry.."
+			exit 1
+		else
+			rm -rf $pidf
+			echo "Apache Ranger Admin Service with pid ${pid} has been stopped."
+		fi
+	else
+		echo "Apache Ranger Admin Service is not running"
+	fi
 }
-
 if [ "${action}" == "START" ]; then
-	start;
-	exit;
+	if [ -f "$pidf" ] ; then
+		pid=`cat $pidf`
+		if [ "${pid}" != "" ]
+		then
+			echo "Apache Ranger Admin Service is already running [pid={$pid}]"
+			exit 1
+		fi
+        else
+		start;
+		exit;
+	fi
 elif [ "${action}" == "STOP" ]; then
 	stop;
 	exit;
 elif [ "${action}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger Admin"
 	stop;
-	sleep 2
 	start;
 	exit;
 elif [ "${action}" == "VERSION" ]; then
