@@ -498,7 +498,21 @@ public class RangerKrbFilter implements Filter {
           errCode = HttpServletResponse.SC_FORBIDDEN;
         }
         if (authenticationEx == null) {
-            filterChain.doFilter(request, response);
+        	boolean chk = true;
+            Collection<String> headerNames = httpResponse.getHeaderNames();
+            for(String headerName : headerNames){
+                String value = httpResponse.getHeader(headerName);
+                if(headerName.equalsIgnoreCase("Set-Cookie") && value.startsWith("RANGERADMINSESSIONID")){
+                    chk = false;
+                    break;
+                }
+            }
+            String authHeader = httpRequest.getHeader("Authorization");
+            if(authHeader == null && chk){
+            	filterChain.doFilter(request, response);
+            }else if(authHeader != null && authHeader.startsWith("Basic")){
+                filterChain.doFilter(request, response);
+            }
         } else {
           httpResponse.sendError(errCode, authenticationEx.getMessage());
         }
