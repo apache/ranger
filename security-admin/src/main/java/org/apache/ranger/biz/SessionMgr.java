@@ -124,7 +124,7 @@ public class SessionMgr {
 
 		if (newSessionCreation) {
 
-			getSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
+			getSSOSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
 			// Need to build the UserSession
 			XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 			if (gjUser == null) {
@@ -202,12 +202,16 @@ public class SessionMgr {
 		return userSession;
 	}
 
-	private void getSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
+	private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
+
+		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+		UserSessionBase session = context != null ? context.getUserSession() : null;
+		boolean ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
 
 		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-		if (gjUser == null && request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")) {
+		if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
 			if(logger.isDebugEnabled()){
-				logger.debug("User : "+currentLoginId+" doesn't exist in Ranger DB So creating user as it's spnego authenticated");
+				logger.debug("User : "+currentLoginId+" doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated");
 			}
 			xUserMgr.createServiceConfigUser(currentLoginId);
 		}

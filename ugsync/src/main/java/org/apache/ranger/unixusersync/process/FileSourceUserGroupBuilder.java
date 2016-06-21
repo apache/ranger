@@ -93,25 +93,28 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		buildUserGroupInfo();
-
+		String user=null;
+		List<String> groups=null;
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-		    String user = entry.getKey();
-
-			if (userNameRegExInst != null) {
-				user = userNameRegExInst.transform(user);
-			}
-
-		    List<String> groups = entry.getValue();
-
-			if (groupNameRegExInst != null) {
-				List<String> mappedGroups = new ArrayList<>();
-				for (String group : groups) {
-					mappedGroups.add(groupNameRegExInst.transform(group));
+		    user = entry.getKey();
+		    try{
+				if (userNameRegExInst != null) {
+					user = userNameRegExInst.transform(user);
 				}
-				groups = mappedGroups;
+			    groups = entry.getValue();
+				if (groupNameRegExInst != null) {
+					List<String> mappedGroups = new ArrayList<>();
+					for (String group : groups) {
+						mappedGroups.add(groupNameRegExInst.transform(group));
+					}
+					groups = mappedGroups;
+				}
+			    sink.addOrUpdateUser(user, groups);
+			}catch (Throwable t) {
+				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
+				+ ", for user: " + user
+				+ ", groups: " + groups);
 			}
-
-		    sink.addOrUpdateUser(user, groups);
 		}
 	}
 

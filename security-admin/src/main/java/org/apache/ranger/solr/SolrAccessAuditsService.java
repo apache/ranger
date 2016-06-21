@@ -167,7 +167,9 @@ public class SolrAccessAuditsService {
 	private VXAccessAudit populateViewBean(SolrDocument doc) {
 		VXAccessAudit accessAudit = new VXAccessAudit();
 		Object value = null;
-		logger.info("doc=" + doc.toString());
+		if(logger.isDebugEnabled()) {
+			logger.debug("doc=" + doc.toString());
+		}
 
 		value = doc.getFieldValue("id");
 		if (value != null) {

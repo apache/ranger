@@ -371,7 +371,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  				if (!addGroups.isEmpty()){
  					ugInfo.setXuserInfo(addXUserInfo(userName));
  				    ugInfo.setXgroupInfo(getXGroupInfoList(addGroups));
- 				    addUserGroupInfo(ugInfo);
+					try{
+						addUserGroupInfo(ugInfo);
+					}catch(Throwable t){
+						LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: " + t.getMessage()
+						+ ", for user-group entry: " + ugInfo);
+					}
  				}
  				addXUserGroupInfo(user, addGroups) ;
  			}
@@ -387,7 +392,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				if (!updateGroups.isEmpty()){
 					ugInfo.setXuserInfo(addXUserInfo(userName));
 					ugInfo.setXgroupInfo(getXGroupInfoList(updateGroups));
-					addUserGroupInfo(ugInfo);
+					try{
+						addUserGroupInfo(ugInfo);
+					}catch(Throwable t){
+						LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: " + t.getMessage()
+						+ ", for user-group entry: " + ugInfo);
+					}
 				}
 			}
 		}
@@ -586,7 +596,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		   LOG.debug("USER GROUP MAPPING" + jsonString);
 		}
 
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		String response = null;
+		try{
+			response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		}catch(Throwable t){
+			LOG.error("Failed to communicate Ranger Admin : ", t);
+		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug("RESPONSE: [" + response + "]") ;
 		}
@@ -629,7 +644,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
 			}
 		} else {
-			getUserGroupInfo(ret, usergroupInfo);
+			try {
+				getUserGroupInfo(ret, usergroupInfo);
+			} catch (Throwable t) {
+				LOG.error("Failed to add User Group Info : ", t);
+			}
 		}
 	}
 

@@ -107,15 +107,19 @@ public class UserGroupSync implements Runnable {
 	private void syncUserGroup(boolean forceSync) throws Throwable {
 		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
 
-		if (config.isUserSyncEnabled()) {
-			if (forceSync || ugSource.isChanged()) {
-				LOG.info("Begin: update user/group from source==>sink");
-				ugSource.updateSink(ugSink);
-				LOG.info("End: update user/group from source==>sink");
+		try{
+			if (config.isUserSyncEnabled()) {
+				if (forceSync || ugSource.isChanged()) {
+					LOG.info("Begin: update user/group from source==>sink");
+					ugSource.updateSink(ugSink);
+					LOG.info("End: update user/group from source==>sink");
+				}
+				else {
+					LOG.debug("UserGroupSource: no change found for synchronization.") ;
+				}
 			}
-			else {
-				LOG.debug("UserGroupSource: no change found for synchronization.") ;
-			}
+		}catch(Throwable t){
+			LOG.error("Failed to sync user/group : ", t);
 		}
 		
 	}

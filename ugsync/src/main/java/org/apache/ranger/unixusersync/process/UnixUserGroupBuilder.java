@@ -136,7 +136,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		    String       user   = entry.getKey();
 		    List<String> groups = entry.getValue();
 		    
-		    sink.addOrUpdateUser(user, groups);
+			try{
+				sink.addOrUpdateUser(user, groups);
+			}catch (Throwable t) {
+				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
+				+ ", for user: " + user
+				+ ", groups: " + groups);
+			}
 		}
 	}
 	
