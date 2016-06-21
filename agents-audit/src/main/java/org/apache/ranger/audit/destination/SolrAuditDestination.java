@@ -49,6 +49,8 @@ public class SolrAuditDestination extends AuditDestination {
 	public static final String PROP_SOLR_URLS = "urls";
 	public static final String PROP_SOLR_ZK = "zookeepers";
 	public static final String PROP_SOLR_COLLECTION = "collection";
+	public static final String PROP_SOLR_FORCE_USE_INMEMORY_JAAS_CONFIG = "force.use.inmemory.jaas.config";
+
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 
@@ -268,7 +270,11 @@ public class SolrAuditDestination extends AuditDestination {
 			 String confFileName = System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) ;
 			 LOG.info("In solrAuditDestination.init() : JAAS Configuration set as [" + confFileName + "]") ;
 			 if ( System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null ) {
-				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null") ;
+				 if ( MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_SOLR_FORCE_USE_INMEMORY_JAAS_CONFIG,false) ) {
+					 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null") ;
+				 } else {
+					LOG.warn("No Client JAAS config present in solr audit config. Ranger Audit to Kerberized Solr will fail...");
+				}
 			 }
 			 LOG.info("Loading SolrClient JAAS config from Ranger audit config if present...");
 			 InMemoryJAASConfiguration.init(props);
