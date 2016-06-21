@@ -24,6 +24,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.*;
+import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,8 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -101,6 +104,10 @@ public class RangerKrbFilter implements Filter {
    */
   public static final String SIGNER_SECRET_PROVIDER_ATTRIBUTE =
       "signer.secret.provider.object";
+
+  private static final String BROWSER_USER_AGENT_PARAM = "ranger.krb.browser-useragents-regex";	
+  
+  private Set<Pattern> browserUserAgents;
 
   private Properties config;
   private Signer signer;
@@ -498,21 +505,30 @@ public class RangerKrbFilter implements Filter {
           errCode = HttpServletResponse.SC_FORBIDDEN;
         }
         if (authenticationEx == null) {
-        	boolean chk = true;
-            Collection<String> headerNames = httpResponse.getHeaderNames();
-            for(String headerName : headerNames){
-                String value = httpResponse.getHeader(headerName);
-                if(headerName.equalsIgnoreCase("Set-Cookie") && value.startsWith("RANGERADMINSESSIONID")){
-                    chk = false;
-                    break;
-                }
+        	String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT);
+            if (agents == null) {
+              agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
             }
-            String authHeader = httpRequest.getHeader("Authorization");
-            if(authHeader == null && chk){
-            	filterChain.doFilter(request, response);
-            }else if(authHeader != null && authHeader.startsWith("Basic")){
-                filterChain.doFilter(request, response);
-            }
+            parseBrowserUserAgents(agents);
+        	if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT))){
+        		filterChain.doFilter(request, response);
+        	}else{
+	        	boolean chk = true;
+	            Collection<String> headerNames = httpResponse.getHeaderNames();
+	            for(String headerName : headerNames){
+	                String value = httpResponse.getHeader(headerName);
+	                if(headerName.equalsIgnoreCase("Set-Cookie") && value.startsWith("RANGERADMINSESSIONID")){
+	                    chk = false;
+	                    break;
+	                }
+	            }
+	            String authHeader = httpRequest.getHeader("Authorization");
+	            if(authHeader == null && chk){
+	            	filterChain.doFilter(request, response);
+	            }else if(authHeader != null && authHeader.startsWith("Basic")){
+	                filterChain.doFilter(request, response);
+	            }
+        	}
         } else {
           httpResponse.sendError(errCode, authenticationEx.getMessage());
         }
@@ -572,5 +588,28 @@ public class RangerKrbFilter implements Filter {
     sb.append("; HttpOnly");
     resp.addHeader("Set-Cookie", sb.toString());
   }
+  
+  void parseBrowserUserAgents(String userAgents) {
+		String[] agentsArray = userAgents.split(",");
+		browserUserAgents = new HashSet<Pattern>();
+		for (String patternString : agentsArray) {
+			browserUserAgents.add(Pattern.compile(patternString));
+		}
+	}
+	
+	protected boolean isBrowser(String userAgent) {
+		if (userAgent == null) {
+			return false;
+		}
+		if (browserUserAgents != null){
+			for (Pattern pattern : browserUserAgents) {
+				Matcher matcher = pattern.matcher(userAgent);
+				if (matcher.matches()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }
 

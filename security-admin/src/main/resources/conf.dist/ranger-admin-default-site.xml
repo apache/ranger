@@ -483,5 +483,8 @@
 		<name>ranger.rest-csrf.browser-useragents-regex</name>
 		<value>^Mozilla.*,^Opera.*,^Chrome.*</value>
 	</property>
-	
+	<property>
+		<value>ranger.krb.browser-useragents-regex</value>
+		<value>^Mozilla.*,^Opera.*,^Chrome.*</value>
+	</property>
 </configuration>

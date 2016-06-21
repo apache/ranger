@@ -44,7 +44,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 		
 	public static final boolean isCSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
-	public static final String BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*";
+	public static final String BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*,^Chrome.*";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
 	public static final String METHODS_TO_IGNORE_DEFAULT = "GET,OPTIONS,HEAD,TRACE";
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
