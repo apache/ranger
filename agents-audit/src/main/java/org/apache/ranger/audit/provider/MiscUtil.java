@@ -482,7 +482,14 @@ public class MiscUtil {
 	public static UserGroupInformation getUGILoginUser() {
 		if (ugiLoginUser == null) {
 			try {
-				ugiLoginUser = UserGroupInformation.getLoginUser();
+				// Do not cache ugiLoginUser if it is not explicitly set with
+				// setUGILoginUser.
+				// It appears that the user represented by
+				// the returned object is periodically logged out and logged back
+				// in when the token is scheduled to expire. So it is better
+				// to get the user object every time from UserGroupInformation class and
+				// not cache it
+				return UserGroupInformation.getLoginUser();
 			} catch (IOException e) {
 				logger.error("Error getting UGI.", e);
 			}
