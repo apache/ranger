@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.PasswordUtils;
 
 public abstract class BaseClient {
 	private static final Log LOG = LogFactory.getLog(BaseClient.class) ;
@@ -108,7 +109,8 @@ public abstract class BaseClient {
 					 }
 				 }
 				 else {
-					 String password = configHolder.getPassword() ;
+					 String encryptedPwd = configHolder.getPassword() ;
+					 String password = PasswordUtils.decryptPassword(encryptedPwd);
 					 if ( configHolder.isKerberosAuthentication() ) {
 						 LOG.info("Init Login: using username/password");
 						 loginSubject = SecureClientLogin.loginUserWithPassword(userName, password) ;
@@ -182,12 +184,12 @@ public abstract class BaseClient {
 		return StringUtils.join(errList, "");
 	}
 
-	public static Map<String, String> getMaskedConfigMap(Map<String, String> configMap){
+	/*public static Map<String, String> getMaskedConfigMap(Map<String, String> configMap){
 		Map<String, String> maskedMap=new HashMap<String, String>();
 		maskedMap.putAll(configMap);
 		if(maskedMap!=null && maskedMap.containsKey("password")){
 			maskedMap.put("password", "*****");
 		}
 		return maskedMap;
-	}
+	}*/
 }

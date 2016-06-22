@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PasswordUtils;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;

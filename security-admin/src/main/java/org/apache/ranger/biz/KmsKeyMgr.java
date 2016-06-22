@@ -48,7 +48,7 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PasswordUtils;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;

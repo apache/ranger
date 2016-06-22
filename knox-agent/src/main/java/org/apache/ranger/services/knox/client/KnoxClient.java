@@ -309,7 +309,7 @@ public class KnoxClient {
 		KnoxClient knoxClient = null;
 		if(LOG.isDebugEnabled()){
 			LOG.debug("Getting knoxClient for ServiceName: " + serviceName);
-			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
+			LOG.debug("configMap: " + configs);
 		}
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "

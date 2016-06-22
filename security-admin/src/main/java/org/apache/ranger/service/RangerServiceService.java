@@ -30,7 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
-import org.apache.ranger.common.PasswordUtils;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
@@ -293,7 +293,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 				String encryptedPwd = pwdConfig.getConfigvalue();
 				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
 				if(StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-					configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, decryptedPwd);
+					configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
 				}
 			}
 		}

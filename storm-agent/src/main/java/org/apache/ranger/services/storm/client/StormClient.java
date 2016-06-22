@@ -346,7 +346,7 @@ public class StormClient {
 		StormClient stormClient = null;
 		if(LOG.isDebugEnabled()){
 			LOG.debug("Getting StormClient for datasource: " + serviceName);
-			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
+			LOG.debug("configMap: " + configs);
 		}
 		String errMsg = errMessage;
 		if (configs == null || configs.isEmpty()) {

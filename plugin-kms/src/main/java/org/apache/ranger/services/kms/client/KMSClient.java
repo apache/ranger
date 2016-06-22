@@ -39,6 +39,7 @@ import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.kms.client.KMSClient;
 
@@ -190,7 +191,8 @@ public class KMSClient {
 						LOG.info("Init Login: using username/password");
 						String shortName = new HadoopKerberosName(username).getShortName();
 						uri = uri.concat("?doAs="+shortName);
-						sub = SecureClientLogin.loginUserWithPassword(username, password);						
+						String decryptedPwd = PasswordUtils.decryptPassword(password);
+						sub = SecureClientLogin.loginUserWithPassword(username, decryptedPwd);						
 					} 
 				}
 				final WebResource webResource = client.resource(uri);
@@ -334,7 +336,7 @@ public class KMSClient {
 		KMSClient kmsClient = null;
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting KmsClient for datasource: " + serviceName);
-			LOG.debug("configMap: " + BaseClient.getMaskedConfigMap(configs));
+			LOG.debug("configMap: " + configs);
 		}
 		String errMsg = errMessage;
 		if (configs == null || configs.isEmpty()) {
