@@ -35,6 +35,7 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class AuthorizationSession {
 
@@ -95,6 +96,12 @@ public class AuthorizationSession {
 			_groups = null;
 		} else {
 			_groups = _userUtils.getUserGroups(_user);
+			if (_groups.isEmpty() && _user.getUGI() != null) {
+				String[] groups = _user.getUGI().getGroupNames();
+				if (groups != null) {
+					_groups = Sets.newHashSet(groups);
+				}
+			}
 			_superUser = _userUtils.isSuperUser(_user);
 		}
 		return this;
