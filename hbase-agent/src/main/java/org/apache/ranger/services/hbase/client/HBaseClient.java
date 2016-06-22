@@ -245,8 +245,6 @@ public class HBaseClient extends BaseClient {
 						List<String> tableList = new ArrayList<String>() ;
 						HBaseAdmin admin = null ;
 						try {
-							LOG.info("getTableList: creating default Hbase configuration");
-							Configuration conf = HBaseConfiguration.create() ;	// dilli
 							LOG.info("getTableList: setting config values from client");
 							setClientConfigValues(conf);						
 						    LOG.info("getTableList: checking HbaseAvailability with the new config");
@@ -347,8 +345,6 @@ public class HBaseClient extends BaseClient {
 						List<String> colfList = new ArrayList<String>() ;
 						HBaseAdmin admin = null ;
 						try {
-							LOG.info("getColumnFamilyList: creating default Hbase configuration");
-							Configuration conf = HBaseConfiguration.create() ;		// dilli
 							LOG.info("getColumnFamilyList: setting config values from client");
 							setClientConfigValues(conf);						
 						    LOG.info("getColumnFamilyList: checking HbaseAvailability with the new config");
