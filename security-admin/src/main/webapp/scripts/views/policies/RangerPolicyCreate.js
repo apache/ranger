@@ -157,6 +157,8 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
+			
+			
 			//validate policyItems in the policy
 			var validateObj1 = this.form.formValidation(this.form.formInputList);
 			if(!this.validatePolicyItem(validateObj1)) return;
@@ -173,6 +175,11 @@ define(function(require){
 					|| validateObj3.groupPermSet || validateObj4.groupPermSet)
 			if((!validateObj1.auditLoggin) && !(groupPerm || userPerm)){
 				XAUtil.alertPopup({ msg :localization.tt('msg.yourAuditLogginIsOff') });
+				return;
+			}
+			
+			if(!validateObj1.customMaskSet){
+				XAUtil.alertPopup({ msg :localization.tt('msg.enterCustomMask') });
 				return;
 			}
 			this.savePolicy();

@@ -337,7 +337,8 @@ define(function(require) {
 				userUpdatedSucc           :     'User updated successfully',
 				grpUpdatedSucc            : 'Group updated successfully',
 				grpCreatedSucc            : 'Group created successfully',
-				errorLoadingAuditLogs	  : 'Unable to connect to Audit store !!'
+				errorLoadingAuditLogs	  : 'Unable to connect to Audit store !!',
+				enterCustomMask			  : 'Please enter custom masked value or expression !!'
 				
 				
 				

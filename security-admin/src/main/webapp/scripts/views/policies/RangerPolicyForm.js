@@ -675,7 +675,7 @@ define(function(require){
 		},
 		formValidation : function(coll){
 			var groupSet = false,permSet = false,groupPermSet = false,
-			userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false;
+			userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false,customMaskSet = true;
 			console.log('validation called..');
 			coll.each(function(m){
 				if(_.isEmpty(m.attributes)) return;
@@ -698,6 +698,11 @@ define(function(require){
 				if(m.has('conditions') && !_.isEmpty(m.get('conditions'))){
 					condSet = m.has('conditions') ? true : false;
 				}
+				if(m.has('dataMaskInfo') && !_.isUndefined(m.get('dataMaskInfo').dataMaskType)){
+					if(m.get('dataMaskInfo').dataMaskType === "CUSTOM"){
+						customMaskSet = _.isUndefined(m.get('dataMaskInfo').valueExpr) || _.isEmpty(m.get('dataMaskInfo')).valueExpr ? false : true;
+					}
+				}
 			});
 			
 			var auditStatus = this.fields.isAuditEnabled.editor.getValue();
@@ -705,6 +710,7 @@ define(function(require){
 						userSet 		: userSet, isUsers:userPermSet,
 						auditLoggin 	: auditStatus,
 						condSet			: condSet,
+						customMaskSet   : customMaskSet
 					};
 			if(groupSet || userSet){
 				obj['permSet'] = groupSet ? permSet : false;

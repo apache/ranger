@@ -2024,3 +2024,6 @@ td.subgrid-custom-cell{
 .backgrid-subgrid-custom-row table.backgrid thead th {
   font-weight:inherit;
 }
+.customMask{
+	width: 95px;
+}

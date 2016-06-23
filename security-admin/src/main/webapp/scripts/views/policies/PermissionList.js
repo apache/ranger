@@ -610,6 +610,12 @@ define(function(require) {
 					var obj = _.findWhere(srcData, {'value' : value } );
 					// Save form data to model
 					that.model.set('dataMaskInfo', {'dataMaskType': value });
+					//Custom dataMaskType
+					if(value === "CUSTOM"){
+						$(this).siblings('[data-id="maskTypeCustom"]').css("display","");
+					}else{
+						$(this).siblings('[data-id="maskTypeCustom"]').css("display","none");
+					}
 					
 					$(this).html("<span class='label label-info'>" + obj.text + "</span>");
 					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
@@ -624,6 +630,11 @@ define(function(require) {
 				e.stopPropagation();
 				that.$('a[data-js="maskingType"]').editable('toggle');
 //				that.clickOnMaskingType(that);
+			});
+			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
+				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
+					that.model.get('dataMaskInfo').valueExpr = e.currentTarget.value;
+				}
 			});
 		},
 		renderRowLevelFilter :function(){
