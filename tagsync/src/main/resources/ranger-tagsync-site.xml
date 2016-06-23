@@ -46,6 +46,10 @@
 		<value>http://localhost:21000</value>
 	</property>
 	<property>
+		<name>ranger.tagsync.source.atlasrest.username</name>
+		<value>admin</value>
+	</property>
+	<property>
 		<name>ranger.tagsync.source.atlasrest.download.interval.millis</name>
 		<value>900000</value>
 	</property>

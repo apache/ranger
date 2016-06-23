@@ -120,7 +120,8 @@ def main():
 	FILENAME_PROPERTY_NAME=''
 
 	while ENDPOINT == "" or not (ENDPOINT == "ATLAS" or ENDPOINT == "RANGER"):
-		print "Enter Destination NAME (Ranger/Atlas):"
+		sys.stdout.write('Enter Destination NAME (Ranger/Atlas):')
+		sys.stdout.flush()
 		ENDPOINT=raw_input()
 		ENDPOINT = ENDPOINT.upper()
 
@@ -142,19 +143,28 @@ def main():
 
 	KEYSTORE_FILENAME = globalDict[FILENAME_PROPERTY_NAME]
 
-	log("[I] " + KEYSTORE_FILENAME_PROMPT + ":" + str(KEYSTORE_FILENAME),"info")
+	if KEYSTORE_FILENAME == "":
+		log("[E] " + FILENAME_PROPERTY_NAME + " is not specified.","error")
+		return
+
+	log("[D] " + KEYSTORE_FILENAME_PROMPT + ":" + str(KEYSTORE_FILENAME),"debug")
+
 	unix_user = "ranger"
 	unix_group = "ranger"
 
-	while USERNAME == "":
-		print "Enter " + ENDPOINT + " user name:"
-		USERNAME=raw_input()
+	USERNAME = globalDict[USERNAME_PROPERTY_NAME]
+
+	if USERNAME == "":
+		if ENDPOINT == "RANGER":
+			USERNAME = 'rangertagsync'
+		else:
+			USERNAME = 'admin'
 
 	while PASSWORD == "":
-		PASSWORD=getpass.getpass("Enter " + ENDPOINT + " user password:")
+		PASSWORD=getpass.getpass("Enter " + " password for " + ENDPOINT + " user " + USERNAME + ":")
 
 	if KEYSTORE_FILENAME != "" or USERNAME != "" or PASSWORD != "":
-		log("[I] Storing " + ENDPOINT + " tagsync password in credential store:","info")
+		log("[I] Storing password for " + ENDPOINT + " user " + USERNAME + " in credential store:","info")
 		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,ALIAS,PASSWORD,KEYSTORE_FILENAME)
 		ret=subprocess.call(shlex.split(cmd))
 		if ret == 0:
