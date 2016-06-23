@@ -70,7 +70,15 @@
           {{PolicyDetails.description}}
         </td>
       </tr>
+      {{#if PolicyDetails.isRecursive}}
+      <tr>
+        <td>Recursive</td>
+        <td>
+          <span class="label label-info">{{PolicyDetails.isRecursive}}</span>
+        </td>
       </tr>
+      {{/if}}
+      <tr>
         <td>
           {{tt 'lbl.auditLogging'}}
         </td>

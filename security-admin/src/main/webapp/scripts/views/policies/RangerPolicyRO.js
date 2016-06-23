@@ -89,6 +89,7 @@ define(function(require) {
 			details.resources = [];
 			details.service = this.policy.get('service');
 			details.serviceType = this.serviceDef.get('name');
+			details.isRecursive = undefined;
 			_.each(this.serviceDef.get('resources'), function(def, i){
 				if(!_.isUndefined(this.policy.get('resources')[def.name])){
 					var resource = {},
@@ -96,7 +97,7 @@ define(function(require) {
 					resource.label = def.label;
 					resource.values = policyResources.values;
 					if(def.recursiveSupported){
-						resource.Rec_Exc = policyResources.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+						details.isRecursive = policyResources.isRecursive ? 'ON': 'OFF';
 					} else if(def.excludesSupported){
 						resource.Rec_Exc = policyResources.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
 					}

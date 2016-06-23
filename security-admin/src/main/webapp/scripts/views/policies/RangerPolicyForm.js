@@ -104,13 +104,13 @@ define(function(require){
 		},
 		/** fields for the form
 		*/
-		fields: ['name', 'description', 'isEnabled', 'isAuditEnabled'],
+		fields: ['name', 'description', 'isEnabled', 'isAuditEnabled','recursive'],
 		schema :function(){
 			return this.getSchema();
 		},
 		getSchema : function(){
-			var attrs = {};
-			var basicSchema = ['name','isEnabled']
+			var attrs = {},that = this;
+			var basicSchema = ['name','isEnabled'];
 			var schemaNames = this.getPolicyBaseFieldNames();
 			
 			var formDataType = new BackboneFormDataType();
@@ -118,6 +118,22 @@ define(function(require){
 			
 			var attr1 = _.pick(_.result(this.model,'schemaBase'),basicSchema);
 			var attr2 = _.pick(_.result(this.model,'schemaBase'),schemaNames);
+			var arr = {};
+
+			_.each(attrs,function(resourceObject,resourceName){
+				if(resourceObject.hasOwnProperty('recursiveSupport')) {
+					if(resourceObject.recursiveSupport) {
+						var recursiveAttrSchema = _.pick(_.result(that.model,'schemaBase'),'recursive');
+						if(!_.isUndefined(that.model.get('id'))) {
+							recursiveAttrSchema.recursive.switchOn=(that.model.get(resourceName)).isRecursive;
+						}
+						arr[resourceName] = resourceObject;
+						_.extend(arr,recursiveAttrSchema);
+					}
+				}
+			});
+			_.extend(attrs,arr);
+
 			return _.extend(attr1,_.extend(attrs,attr2));
 		},
 		/** on render callback */
@@ -349,6 +365,16 @@ define(function(require){
 			var that = this, resources = [];
 
 			var resources = {};
+			//set 'isRecursive' attribute of resource object to value of field recursive
+			var recursiveValue = '';
+			if(!_.isUndefined(this.model.get('recursive'))){
+				recursiveValue = that.model.get('recursive');
+			}
+			_.each(this.model.attributes,function(val) {
+				if(_.isObject(val) && !_.isUndefined(val.isRecursive)) {
+					val.isRecursive = recursiveValue;
+				}
+			});// 'isRecursive' attribute of model is updated
 			//set sameLevel fieldAttr value with resource name
 			_.each(this.model.attributes, function(val, key) {
                 if(key.indexOf("sameLevel") >= 0){ 
@@ -722,7 +748,7 @@ define(function(require){
 			return obj;
 		},
 		getPolicyBaseFieldNames : function(){
-			 var fields = ['description', 'isAuditEnabled'];
+			 var fields = ['isAuditEnabled','description'];
 			 return fields;
 		}
 	});

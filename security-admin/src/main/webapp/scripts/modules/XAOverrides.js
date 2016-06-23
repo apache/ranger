@@ -454,15 +454,6 @@
 			  			this.value.isRecursive = _.isUndefined(this.value.isRecursive) ? true : this.value.isRecursive;
 			  			isRecursive = this.value.isRecursive;
 			  		}
-			  		this.$recursiveSupport.toggles({
-			  			on: isRecursive,
-			  			text : {on : 'recursive', off : 'nonrecursive' },
-			  			width: 105
-//				  		height: 20
-			  		}).on('toggle', function (e, active) {
-			  		    that.value.isRecursive = active;
-			  		    XAUtil.checkDirtyFieldForToggle($(e.currentTarget))
-			  		});
 			  	}
 		  },
 		  renderSameLevelResource : function() {
@@ -482,7 +473,6 @@
 			  			that.value.isExcludes = false;
 			  			that.value.isRecursive = false;
 			  			that.$excludeSupport.trigger('toggleOn');
-			  			that.$recursiveSupport.trigger('toggleOn');
 			  			($(e.currentTarget).addClass('dirtyField'))
 			  			
 			  			//resource are shown if parent is selected or showned
@@ -555,13 +545,6 @@
 				    }
 				    if(this.excludeSupport){
 				    	excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include"><div  class="toggle"></div></div>';
-				    }
-				    if(this.recursiveSupport){
-				    	kclass = !_.isEmpty(excludeSupportToggleDiv) ?  'recursive-toggle' : 'include-toggle';
-				    	if(this.initilializePathPlugin){
-				    		kclass = "recursive-toggle-path";
-				    	}
-				    	recursiveSupportToggleDiv = '<div class="toggle-xa '+kclass+'" data-js="recursive"><div  class="toggle"></div></div>';
 				    }
 				    return _.template(selectTemplate+'<input data-js="resource" type="text">'+
 				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);

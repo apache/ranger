@@ -80,6 +80,14 @@ define(function(require){
 					offText		: 'NO',
 					switchOn	: true
 				},
+				//recursive(ON/OFF) toggle
+				recursive : {
+					type : 'Switch',
+					title : 'Recursive',
+					onText : 'ON',
+					offText : 'OFF',
+					switchOn : true
+				}
 			});
 		},
 
