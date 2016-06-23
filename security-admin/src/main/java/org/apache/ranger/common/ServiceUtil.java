@@ -1345,7 +1345,11 @@ public class ServiceUtil {
 
 		RangerService service = null;
 		try {
-			service = svcStore.getServiceByName(serviceName);
+			if(null != request.getAttribute("downloadPolicy") && StringUtils.equalsIgnoreCase(request.getAttribute("downloadPolicy").toString(), "secure")){
+				service = svcStore.getServiceByNameForDP(serviceName);
+			}else{
+				service = svcStore.getServiceByName(serviceName);
+			}
 		} catch (Exception e) {
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
 			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",  
@@ -1461,7 +1465,7 @@ public class ServiceUtil {
 		}
 		return isValidAuthentication;
 	}
-   
+
    private boolean matchNames(String target, String source, boolean wildcardMatch) {
        boolean matched = false;
        if(target != null && source != null) {

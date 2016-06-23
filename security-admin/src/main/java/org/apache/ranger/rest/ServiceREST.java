@@ -1850,7 +1850,7 @@ public class ServiceREST {
 		boolean isAllowed = false;
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-		
+		request.setAttribute("downloadPolicy", "secure");
 		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 			if (lastKnownVersion == null) {
 				lastKnownVersion = Long.valueOf(-1);
@@ -1861,9 +1861,10 @@ public class ServiceREST {
 				}
 				XXService xService = daoManager.getXXService().findByName(serviceName);
 				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-				RangerService rangerService = svcStore.getServiceByName(serviceName);
+				RangerService rangerService = null;
 				
 				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					rangerService = svcStore.getServiceByNameForDP(serviceName);
 					if (isKeyAdmin) {
 						isAllowed = true;
 					}else {
@@ -1873,6 +1874,7 @@ public class ServiceREST {
 						}	
 					}
 				}else{
+					rangerService = svcStore.getServiceByName(serviceName);
 					if (isAdmin) {
 						isAllowed = true;
 					}

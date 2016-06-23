@@ -1678,6 +1678,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return xService == null ? null : svcService.getPopulatedViewObject(xService);
 	}
 
+	public RangerService getServiceByNameForDP(String name) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServiceByName()");
+		}
+		XXService xService = daoMgr.getXXService().findByName(name);
+		if (ContextUtil.getCurrentUserSession() != null) {
+			if (xService == null) {
+				return null;
+			}
+		}
+		return xService == null ? null : svcService.getPopulatedViewObject(xService);
+	}
+
 	@Override
 	public List<RangerService> getServices(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {

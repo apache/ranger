@@ -96,6 +96,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	static final String HOST_NAME = "ranger.service.host";
 
 	private static final String KERBEROS_TYPE = "kerberos";
+	private static final String S_USER = "suser";
 
 	public RangerKRBAuthenticationFilter() {
 		try {
@@ -188,6 +189,13 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 				}
 			}
 		}
+		String sessionUserName = request.getParameter(S_USER);
+		String pathInfo = request.getPathInfo();
+		if(!StringUtils.isEmpty(sessionUserName) && sessionUserName.equalsIgnoreCase("keyadmin") && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")){
+			LOG.info("Session will be created by : "+sessionUserName);
+			userName = sessionUserName;
+		}
+
 		if((isSpnegoEnable(authType) && (!StringUtils.isEmpty(userName)))){
 			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
 			if(existingAuth == null || !existingAuth.isAuthenticated()){

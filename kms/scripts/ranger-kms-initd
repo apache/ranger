@@ -27,7 +27,7 @@
 #LINUX_USER=kms
 BIN_PATH=/usr/bin
 MOD_NAME=ranger-kms
-pidf=/var/run/ranger/rangerkms.pid
+pidf=/var/run/ranger_kms/rangerkms.pid
 if [ -f $pidf ]; then
 	pid=`cat $pidf`
 else
