@@ -331,6 +331,12 @@
 				"label": "Date: show only year",
 				"description": "Date: show only year",
 				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
+			},
+			{
+				"itemId": 13,
+				"name": "CUSTOM",
+				"label": "Custom",
+				"description": "Custom"
 			}
 		]
 	},

@@ -73,7 +73,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final char COLUMN_SEP = ',';
 	public static final String MASK_TYPE_NULL     = "MASK_NULL";
 	public static final String MASK_TYPE_NONE     = "MASK_NONE";
-	public static final String MASK_TYPE_CONSTANT = "CONSTANT";
+	public static final String MASK_TYPE_CUSTOM   = "CUSTOM";
 
 	private static volatile RangerHivePlugin hivePlugin = null ;
 
@@ -610,10 +610,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					ret = columnName;
 				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
 					ret = "NULL";
-				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_CONSTANT)) {
+				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_CUSTOM)) {
 					String maskedValue = result.getMaskedValue();
 
-					ret = maskedValue == null ? "NULL" : maskedValue;
+					if(maskedValue == null) {
+						ret = "NULL";
+					} else {
+						ret = maskedValue.replace("{col}", columnName);
+					}
+
 				} else if(StringUtils.isNotEmpty(transformer)) {
 					ret = transformer.replace("{col}", columnName);
 				}
