@@ -53,6 +53,7 @@
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>com.google.guava:guava:jar:${guava.version}</include>
+                    <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj</include>
