@@ -374,6 +374,8 @@ public class RangerSSOAuthenticationFilter implements Filter {
 					}
 				} catch (JOSEException je) {
 					LOG.warn("Error while validating signature", je);
+				}catch(Exception e){
+					LOG.warn("Error while validating signature", e);
 				}
 			}
 		}
@@ -413,25 +415,22 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public SSOAuthenticationProperties getJwtProperties() {
 		String providerUrl = PropertiesUtil.getProperty(JWT_AUTH_PROVIDER_URL);
 		if (providerUrl != null && PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false)) {
+			SSOAuthenticationProperties jwtProperties = new SSOAuthenticationProperties();
 			String publicKeyPath = PropertiesUtil.getProperty(JWT_PUBLIC_KEY);
 			if (publicKeyPath == null) {
 				LOG.error("Public key pem not specified for SSO auth provider {}. SSO auth will be disabled.",providerUrl);
 				return null;
 			}
+			jwtProperties.setAuthenticationProviderUrl(providerUrl);
+			jwtProperties.setCookieName(PropertiesUtil.getProperty(JWT_COOKIE_NAME, JWT_COOKIE_NAME_DEFAULT));
+			jwtProperties.setOriginalUrlQueryParam(PropertiesUtil.getProperty(JWT_ORIGINAL_URL_QUERY_PARAM, JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT));
+			String userAgent = PropertiesUtil.getProperty(BROWSER_USERAGENT);
+			if(userAgent != null && !userAgent.isEmpty()){
+				jwtProperties.setUserAgentList(userAgent.split(","));
+			}
 			try {
 				RSAPublicKey publicKey = parseRSAPublicKey(publicKeyPath);
-				SSOAuthenticationProperties jwtProperties = new SSOAuthenticationProperties();
-				jwtProperties.setAuthenticationProviderUrl(providerUrl);
 				jwtProperties.setPublicKey(publicKey);
-
-				jwtProperties.setCookieName(PropertiesUtil.getProperty(JWT_COOKIE_NAME, JWT_COOKIE_NAME_DEFAULT));
-				jwtProperties.setOriginalUrlQueryParam(PropertiesUtil.getProperty(JWT_ORIGINAL_URL_QUERY_PARAM, JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT));
-				String userAgent = PropertiesUtil.getProperty(BROWSER_USERAGENT);
-				if(userAgent != null && !userAgent.isEmpty()){
-					jwtProperties.setUserAgentList(userAgent.split(","));
-				}
-				return jwtProperties;
-
 			} catch (IOException e) {
 				LOG.error("Unable to read public certificate file. JWT auth will be disabled.",e);
 				return null;
@@ -441,10 +440,10 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			} catch (ServletException e) {
 				LOG.error("ServletException while processing the properties",e);
 			}			
+			return jwtProperties;
 		} else {
 			return null;
 		}
-		return jwtProperties;
 	}
 
 	/*
