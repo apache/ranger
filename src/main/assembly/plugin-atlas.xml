@@ -49,28 +49,13 @@
             <dependencySet>
                 <outputDirectory>/lib/ranger-atlas-plugin-impl</outputDirectory>
                 <includes>
-                	<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
-					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
-					<include>com.google.code.gson:gson</include>
-					<include>org.eclipse.persistence:eclipselink</include>
-					<include>org.eclipse.persistence:javax.persistence</include>
-					<include>com.sun.jersey:jersey-bundle</include>
-					<include>com.google.guava:guava:jar:${guava.version}</include>
-					<include>org.codehaus.jackson:jackson-core-asl</include>
-					<include>org.codehaus.jackson:jackson-jaxrs</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl</include>
-					<include>org.codehaus.jackson:jackson-xc</include>
-                    <include>commons-configuration:commons-configuration</include>
-		    		<include>com.google.code.gson:gson*</include>
-           		    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-		    		<include>org.noggit:noggit:jar:${noggit.version}</include>
-		    		<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
-		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-					<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
-		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
-					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
-					<include>org.apache.solr:solr-solrj</include>
+                    <include>org.eclipse.persistence:eclipselink</include>
+                    <include>org.eclipse.persistence:javax.persistence</include>
+                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>com.google.guava:guava:jar:${guava.version}</include>
+                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+                    <include>org.apache.solr:solr-solrj</include>
 		    	</includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -93,7 +78,7 @@
 							<include>org.apache.ranger:ranger-plugins-cred</include>
 							<include>org.apache.ranger:credentialbuilder</include>
 						</includes>
-					</dependencySet>
+			</dependencySet>
         </dependencySets>
         <outputDirectory>/lib/ranger-atlas-plugin-impl</outputDirectory>
      </binaries>
