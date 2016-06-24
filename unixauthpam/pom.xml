@@ -23,10 +23,10 @@
         <version>0.6.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
-    <artifactId>credValidator</artifactId>
+    <artifactId>pamCredValidator</artifactId>
     <packaging>uexe</packaging>
-    <name>Unix Native Authenticator</name>
-    <description>Unix authentication service</description>
+    <name>PAM Authenticator</name>
+    <description>PAM authentication service</description>
     <build>
         <plugins>
             <plugin>
@@ -46,7 +46,7 @@
                         </source>
                     </sources>
                     <linkerEndOptions>
-                        <linkerEndOption>-lcrypt</linkerEndOption>
+                        <linkerEndOption>-lpam</linkerEndOption>
                     </linkerEndOptions>
                 </configuration>
             </plugin>

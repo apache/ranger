@@ -187,6 +187,7 @@
         <kafka.version>0.10.0.0</kafka.version>
         <kms.httpcomponents.httpclient.version>4.3.6</kms.httpcomponents.httpclient.version>
         <knox.gateway.version>0.6.0</knox.gateway.version>
+        <libpam4j.version>1.8</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
@@ -236,6 +237,20 @@
             </activation>
             <modules>
                 <module>unixauthnative</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>linux-pam</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+				<file>
+					<exists>/usr/include/security/pam_appl.h</exists>
+				</file>
+            </activation>
+            <modules>
+                <module>unixauthpam</module>
             </modules>
         </profile>
     </profiles>

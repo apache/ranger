@@ -120,6 +120,15 @@
 		                        <include>credValidator.*</include>
 		               </includes>
 	</fileSet>
+	<fileSet>
+	    	<directoryMode>755</directoryMode>
+	    	<fileMode>755</fileMode>
+		<outputDirectory>/native</outputDirectory>
+		<directory>unixauthpam/target</directory>
+		               <includes>
+		                        <include>pamCredValidator.*</include>
+		               </includes>
+	</fileSet>
         <fileSet>
 	    	<directoryMode>755</directoryMode>
                 <outputDirectory>/</outputDirectory>

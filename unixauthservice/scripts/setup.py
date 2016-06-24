@@ -62,6 +62,7 @@ confDistDirName = join(installPropDirName, confDistBaseDirName)
 #ugsyncLogFolderName = join(logFolderName, 'usersync')
 nativeAuthFolderName = join(installPropDirName, 'native')
 nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
+pamAuthProgramName = join(nativeAuthFolderName, 'pamCredValidator.uexe')
 usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
 confFolderName = join(usersyncBaseDirFullName, confBaseDirName)
 localConfFolderName = join(installPropDirName, confBaseDirName)
@@ -488,6 +489,12 @@ def main():
 		os.chmod(nativeAuthProgramName, 04555)
 	else:
 		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
+
+	if isfile(pamAuthProgramName):
+		os.chown(pamAuthProgramName, rootOwnerId, groupId)
+		os.chmod(pamAuthProgramName, 04555)
+	else:
+		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (pamAuthProgramName, "root", groupName)
 
         write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
         write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);

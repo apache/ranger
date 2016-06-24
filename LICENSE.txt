@@ -245,6 +245,7 @@ This product includes Block UI v1.1.1 (https://github.com/dreamerslab/jquery.msg
 This product includes Sizzle (http://sizzlejs.com/ - MIT license), Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
 This product includes ES5 15.5.4.20 (https://github.com/kriskowal/es5-shim - MIT license), Copyright 2009, 2010 Kristopher Michael Kowal.
 This product includes PURE CSS GUI ICONS 1.0.1(http://nicolasgallagher.com/pure-css-gui-icons/ - Dual licensed under MIT and GNU GPLv2), by Nicolas Gallagher
+This product includes libpam4j 1.8 (https://github.com/kohsuke/libpam4j - MIT license), Copyright Kohsuke Kawaguchi.
  
 
 
