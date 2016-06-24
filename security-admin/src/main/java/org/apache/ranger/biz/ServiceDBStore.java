@@ -2535,6 +2535,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			// do nothing
 		}
 
+		if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.ATLAS_IMPL_CLASS_NAME)){
+			VXUser vXUserAdmin = chkAdminUserExists("admin");
+			if(vXUserAdmin != null){
+				users.add(vXUserAdmin.getName());
+			}
+		}
+
 		RangerService rangerService = getServiceByName(createdService.getName());
 		if (rangerService != null){
 			Map<String, String> map = rangerService.getConfigs();
@@ -2572,6 +2579,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		policyItem.setDelegateAdmin(true);
 		return policyItem;
+	}
+
+	private VXUser chkAdminUserExists(String adminUser) {
+		VXUser vXUser = null;
+		if(!StringUtils.isEmpty(adminUser)){
+			XXUser xxUser = daoMgr.getXXUser().findByUserName(adminUser);
+			if (xxUser != null) {
+				vXUser = xUserService.populateViewBean(xxUser);
+			}
+		}
+		return vXUser;
 	}
 
 	private VXUser getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {
