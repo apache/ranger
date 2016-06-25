@@ -500,6 +500,7 @@
            autowarmCount - the number of entries to prepopulate from
                and old cache.  
       -->
+
     <filterCache class="solr.FastLRUCache"
                  size="512"
                  initialSize="512"
@@ -652,7 +653,7 @@
          warming searcher and use it.  If "false" then all requests
          will block until the first searcher is done warming.
       -->
-    <useColdSearcher>false</useColdSearcher>
+    <useColdSearcher>true</useColdSearcher>
 
     <!-- Max Warming Searchers
          
@@ -1644,10 +1645,10 @@
   <updateRequestProcessorChain name="add-unknown-fields-to-the-schema">
     <processor class="solr.DefaultValueUpdateProcessorFactory">
         <str name="fieldName">_ttl_</str>
-        <str name="value">+1095DAYS</str>
+        <str name="value">+90DAYS</str>
     </processor>
     <processor class="solr.processor.DocExpirationUpdateProcessorFactory">
-        <int name="autoDeletePeriodSeconds">300</int>
+        <int name="autoDeletePeriodSeconds">86400</int>
         <str name="ttlFieldName">_ttl_</str>
         <str name="expirationFieldName">_expire_at_</str>
     </processor>

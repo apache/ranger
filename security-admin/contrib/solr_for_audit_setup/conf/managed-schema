@@ -55,7 +55,7 @@
   <fieldType name="tints" class="solr.TrieIntField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
   <fieldType name="tlong" class="solr.TrieLongField" precisionStep="8" positionIncrementGap="0"/>
   <fieldType name="tlongs" class="solr.TrieLongField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
-  <field name="_expire_at_" type="tdate" multiValued="false" stored="true"/>
+  <field name="_expire_at_" type="tdate" multiValued="false" stored="true" docValues="true"/>
   <field name="_ttl_" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="_version_" type="long" indexed="true" stored="true"/>
   <field name="access" type="key_lower_case" multiValued="false"/>
@@ -69,7 +69,7 @@
   <field name="enforcer" type="key_lower_case" multiValued="false"/>
   <field name="event_count" type="tlong" multiValued="false" docValues="true" default="1"/>
   <field name="event_dur_ms" type="tlong" multiValued="false" docValues="true"/>
-  <field name="evtTime" type="tdate"/>
+  <field name="evtTime" type="tdate" docValues="true"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
   <field name="logType" type="key_lower_case" multiValued="false"/>
   <field name="policy" type="tlong" docValues="true"/>
