@@ -1647,7 +1647,7 @@
         <str name="value">+{{MAX_AUDIT_RETENTION_DAYS}}DAYS</str>
     </processor>
     <processor class="solr.processor.DocExpirationUpdateProcessorFactory">
-        <int name="autoDeletePeriodSeconds">300</int>
+        <int name="autoDeletePeriodSeconds">86400</int>
         <str name="ttlFieldName">_ttl_</str>
         <str name="expirationFieldName">_expire_at_</str>
     </processor>
