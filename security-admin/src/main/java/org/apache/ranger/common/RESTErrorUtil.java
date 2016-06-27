@@ -29,6 +29,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +138,30 @@ public class RESTErrorUtil {
 	}
 
 	
+	public WebApplicationException createGrantRevokeRESTException(String logMessage) {
+		RESTResponse resp = new RESTResponse();
+		resp.setMsgDesc(logMessage);
+
+		Response errorResponse = Response.status(
+				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
+
+		WebApplicationException restException = new WebApplicationException(
+				errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		Long sessionId = null;
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+			sessionId = userSession.getSessionId();
+		}
+
+		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+				+ loginId + ", logMessage=" + logMessage,
+				restException);
+
+		return restException;
+	}
 
 	
 	public Integer parseInt(String value, String errorMessage,

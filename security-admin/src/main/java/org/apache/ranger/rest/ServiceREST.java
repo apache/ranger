@@ -875,7 +875,7 @@ public class ServiceREST {
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 	
 				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 				}
 	
 				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
@@ -967,7 +967,7 @@ public class ServiceREST {
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 	
 				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to grant access");
 				}
 				// New Code
 				XXService xService = daoManager.getXXService().findByName(serviceName);
@@ -1083,7 +1083,7 @@ public class ServiceREST {
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 				
 				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 				}
 	
 				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
@@ -1142,7 +1142,7 @@ public class ServiceREST {
 				boolean isAllowed = false;
 				boolean isKeyAdmin = bizUtil.isKeyAdmin();
 				if(!isAdmin) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "", true);
+					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to revoke access");
 				}
 	
 				XXService xService = daoManager.getXXService().findByName(serviceName);

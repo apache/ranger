@@ -168,7 +168,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				throw new AccessControlException();
 			}
 
-			throw new Exception("HTTP " + response.getStatus());
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 		} else if(response == null) {
 			throw new Exception("unknown error during grantAccess. serviceName="  + serviceName);
 		}
@@ -214,7 +214,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				throw new AccessControlException();
 			}
 
-			throw new Exception("HTTP " + response.getStatus());
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 		} else if(response == null) {
 			throw new Exception("unknown error. revokeAccess(). serviceName=" + serviceName);
 		}
