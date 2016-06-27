@@ -48,7 +48,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilege;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivObjectActionType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.QueryContext;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
@@ -209,7 +209,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public void checkPrivileges(HiveOperationType         hiveOpType,
 								List<HivePrivilegeObject> inputHObjs,
 							    List<HivePrivilegeObject> outputHObjs,
-							    QueryContext              context)
+							    HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
@@ -384,7 +384,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
     // Commented out to avoid build errors until this interface is stable in Hive Branch
 	// @Override
 	public List<HivePrivilegeObject> filterListCmdObjects(List<HivePrivilegeObject> objs,
-														  QueryContext              context)
+														  HiveAuthzContext          context)
 		      throws HiveAuthzPluginException, HiveAccessControlException {
 		
 		if (LOG.isDebugEnabled()) {
@@ -431,7 +431,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					List<String> columns = privilegeObject.getColumns();
 					List<String> partitionKeys = privilegeObject.getPartKeys();
 					String commandString = context == null ? null : context.getCommandString();
-					String ipAddress = authenticator == null ? null : authenticator.getUserIpAddress();
+					String ipAddress = context == null ? null : context.getIpAddress();
 
 					final String format = "filterListCmdObjects: actionType[%s], objectType[%s], objectName[%s], dbName[%s], columns[%s], partitionKeys[%s]; context: commandString[%s], ipAddress[%s]";
 					LOG.debug(String.format(format, actionType, objectType, objectName, dbName, columns, partitionKeys, commandString, ipAddress));
@@ -469,7 +469,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
 	@Override
-	public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(QueryContext queryContext, List<HivePrivilegeObject> hiveObjs) throws SemanticException {
+	public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(HiveAuthzContext queryContext, List<HivePrivilegeObject> hiveObjs) throws SemanticException {
 		List<HivePrivilegeObject> ret = new ArrayList<HivePrivilegeObject>();
 
 		if(LOG.isDebugEnabled()) {
@@ -535,7 +535,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return true; // TODO: derive from the policies
 	}
 
-	private String getRowFilterExpression(QueryContext context, String databaseName, String tableOrViewName) throws SemanticException {
+	private String getRowFilterExpression(HiveAuthzContext context, String databaseName, String tableOrViewName) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -575,7 +575,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private String getCellValueTransformer(QueryContext context, String databaseName, String tableOrViewName, String columnName) throws SemanticException {
+	private String getCellValueTransformer(HiveAuthzContext context, String databaseName, String tableOrViewName, String columnName) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -1147,9 +1147,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private String toString(HiveOperationType         hiveOpType,
 							List<HivePrivilegeObject> inputHObjs,
 							List<HivePrivilegeObject> outputHObjs,
-							QueryContext              context,
+							HiveAuthzContext          context,
 							HiveAuthzSessionContext   sessionContext,
-							HiveAuthenticationProvider authenticator) {
+							HiveAuthenticationProvider authenticator) { // NOPMD
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("'checkPrivileges':{");
@@ -1165,9 +1165,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		sb.append(", 'context':{");
 		sb.append("'clientType':").append(sessionContext == null ? null : sessionContext.getClientType());
-		sb.append(", 'commandString':").append(context == null ? null : context.getCommandString());
-		sb.append(", 'ipAddress':").append(authenticator == null ? null : authenticator.getUserIpAddress());
-		sb.append(", 'sessionString':").append(sessionContext == null ? null : sessionContext.getSessionString());
+		sb.append(", 'commandString':").append(context == null ? "null" : context.getCommandString());
+		sb.append(", 'ipAddress':").append(context == null ? "null" : context.getIpAddress());
+		sb.append(", 'forwardedAddresses':").append(context == null ? "null" : StringUtils.join(context.getForwardedAddresses(), ", "));
+		sb.append(", 'sessionString':").append(sessionContext == null ? "null" : sessionContext.getSessionString());
 		sb.append("}");
 
 		sb.append(", 'user':").append(this.getCurrentUserGroupInfo().getUserName());
