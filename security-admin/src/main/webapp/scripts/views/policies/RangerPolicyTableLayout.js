@@ -210,7 +210,7 @@ define(function(require){
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
-								return XAUtil.showGroupsOrUsersForPolicy(rawValue, model);
+								return XAUtil.showGroupsOrUsersForPolicy(rawValue, model, true, that.rangerServiceDefModel);
 							}
 							return '--';
 						}
@@ -225,7 +225,7 @@ define(function(require){
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-								return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, false);
+								return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, false, that.rangerServiceDefModel);
 						}
 					}),
 					editable : false,

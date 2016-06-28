@@ -163,7 +163,12 @@ define(function(require){
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible')){
-					$(this).append('<a href="#" class="wrap-expand pull-right">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>').append('<a href="#" class="wrap-collapse pull-right" style="display: none">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
+					$(this).append('<a href="#" class="wrap-expand pull-right" >show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>')
+						   .append('<a href="#" class="wrap-collapse pull-right" style="display: none">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
+					if( i === 0 ) {
+						$(this).find('.wrap-expand').hide();
+						$(this).find('.wrap-collapse').show();
+					}
 				}
 			});
 			// Collapse wrap
@@ -249,13 +254,8 @@ define(function(require){
 				serviceDefOptions = this.rangerServiceDefModel.get('options'),
 				enableDenyAndExceptionsInPolicies = false;
 			//By default hide the PolicyItems for all component except tag component
-			if((!_.isUndefined(serviceDefOptions) && !_.isUndefined(serviceDefOptions.enableDenyAndExceptionsInPolicies))){
-				enableDenyAndExceptionsInPolicies = XAUtil.isAccessPolicy(this.model.get('policyType')) && $.parseJSON(serviceDefOptions.enableDenyAndExceptionsInPolicies);
-			} else {
-				if(this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label){
-					enableDenyAndExceptionsInPolicies = true;
-				}		
-			}
+			//show all policyItems if enableDenyAndExceptionsInPolicies is set to true
+			enableDenyAndExceptionsInPolicies = XAUtil.showAllPolicyItems(this.rangerServiceDefModel, this.model);
 			if( !enableDenyAndExceptionsInPolicies ){
 				this.$el.find(this.ui.allowExcludePerm).hide();
 				this.$el.find(this.ui.denyConditionItems).remove();

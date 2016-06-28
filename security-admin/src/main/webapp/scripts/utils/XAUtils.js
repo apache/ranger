@@ -465,10 +465,19 @@ define(function(require) {
 		} else
 			return '--';
 	};
-	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups) {
+	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups, rangerServiceDefModel) {
 		var showMoreLess = false, groupArr = [], items = [];
 		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems','rowFilterPolicyItems']
-		var type = _.isUndefined(showGroups) ? 'groups' : 'users';
+		if(!_.isUndefined(rangerServiceDefModel)){
+			if(!this.showAllPolicyItems(rangerServiceDefModel, model)){
+				itemList = _.difference(itemList, ["allowExceptions", "denyPolicyItems", "denyExceptions"]);
+			}
+		}
+		itemList = this.isAccessPolicy(model.get('policyType')) ? _.difference(itemList, ["dataMaskPolicyItems", "rowFilterPolicyItems"])
+				: this.isMaskingPolicy(model.get('policyType')) ? _.difference(itemList, ["rowFilterPolicyItems"])
+				: this.isRowFilterPolicy(model.get('policyType')) ? _.difference(itemList, ["dataMaskPolicyItems"]) : itemList; 
+						
+		var type = _.isUndefined(showGroups) || showGroups ? 'groups' : 'users';
 		_.each(itemList, function(item){
 		    if(!_.isUndefined(model.get(item)) && !_.isEmpty(model.get(item))) {
 		    	items =_.union(items,  model.get(item))
@@ -1212,6 +1221,16 @@ define(function(require) {
 		return (!_.isUndefined(rowFilterDef) && !_.isUndefined(rowFilterDef.resources) 
 			&& rowFilterDef.resources.length > 0) ? true : false; 
 	};
-	
+	XAUtils.showAllPolicyItems = function(rangerServiceDefModel, model){
+		var enableDenyAndExceptionsInPolicies = false,serviceDefOptions = rangerServiceDefModel.get('options');
+		if((!_.isUndefined(serviceDefOptions) && !_.isUndefined(serviceDefOptions.enableDenyAndExceptionsInPolicies))){
+			enableDenyAndExceptionsInPolicies = this.isAccessPolicy(model.get('policyType')) && $.parseJSON(serviceDefOptions.enableDenyAndExceptionsInPolicies);
+		} else {
+			if(rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label){
+				enableDenyAndExceptionsInPolicies = true;
+			}		
+		}
+		return enableDenyAndExceptionsInPolicies;
+	};
 	return XAUtils;
 });
