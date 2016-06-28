@@ -41,7 +41,7 @@
     
     <moduleSet>
      <binaries>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
 	    <directoryMode>755</directoryMode>
 	    <fileMode>644</fileMode>
