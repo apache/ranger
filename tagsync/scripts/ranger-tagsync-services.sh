@@ -61,56 +61,58 @@ if [ "${action}" == "START" ]; then
 
 	cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*:${RANGER_TAGSYNC_HADOOP_CONF_DIR}/*"
 
-    if [ -f $pidf ]; then
-            PID=`cat $pidf`
-            if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
-                    rm -f ${pidf}
-            else
-                    kill -9 ${PID} > /dev/null 2>&1
-                    rm -f ${pidf}
-                    echo "Ranger Tagsync Service [pid = ${PID}] has been stopped."
-            fi
-    fi
+	if [ -f "$pidf" ] ; then
+		pid=`cat $pidf`
+		if  ps -p $pid > /dev/null
+		then
+			echo "Apache Ranger Tagsync Service is already running [pid={$pid}]"
+			exit 1
+		else
+			rm -rf $pidf
+		fi
+	fi
 
 	cd ${cdir}
 	umask 0077
+	SLEEP_TIME_AFTER_START=5
 	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${logdir}" -Dlog4j.configuration=file:/etc/ranger/tagsync/conf/log4j.properties -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${logdir}/tagsync.out 2>&1 &
-	echo $! >  ${pidf}
-	chown ranger ${pidf}
-	sleep 5
-	pid=`cat $pidf`
-
-	if [ "${pid}" != "" ]
+	VALUE_OF_PID=$!
+	echo "Starting Apache Ranger Tagsync Service"
+	sleep $SLEEP_TIME_AFTER_START
+	if ps -p $VALUE_OF_PID > /dev/null
 	then
-		if [ -z "`ps axf | grep ${pid} | grep -v grep`" ]; then
-			rm -f ${pidf}
-			echo "Ranger Tagsync Service failed to start. Please refer to log files under ${logdir} for further details."
-		else
-        	echo "Ranger Tagsync Service has started successfully."
-        fi
+		echo $VALUE_OF_PID > ${pidf}
+		chown ranger ${pidf}
+		chmod 660 ${pidf}
+		pid=`cat $pidf`
+		echo "Apache Ranger Tagsync Service with pid ${pid} has started."
 	else
-        	echo "Ranger Tagsync Service failed to start. Please refer to log files under ${logdir} for further details."
+		echo "Apache Ranger Tagsync Service failed to start!"
 	fi
-
 	exit;
 
 elif [ "${action}" == "STOP" ]; then
-
-    if [ -f $pidf ]; then
-	        PID=`cat $pidf` > /dev/null 2>&1
-            kill -9 $PID > /dev/null 2>&1
-            rm -f $pidf
-            echo "Ranger Tagsync Service [pid = ${PID}] has been stopped."
-    else
+	WAIT_TIME_FOR_SHUTDOWN=2
+	NR_ITER_FOR_SHUTDOWN_CHECK=15
+	if [ -f "$pidf" ] ; then
+		pid=`cat $pidf` > /dev/null 2>&1
+		echo "Found Apache Ranger TagSync Service with pid $pid, Stopping..."
+		kill -9 $pid > /dev/null 2>&1
+		sleep 1 #Give kill -9 sometime to "kill"
+		if ps -p $pid > /dev/null; then
+			echo "Wow, even kill -9 failed, giving up! Sorry.."
+                else
+			rm -f $pidf
+			echo "Apache Ranger Tagsync Service pid = ${pid} has been stopped."
+                fi
+	else
             echo "Ranger Tagsync Service not running"
-    fi
-
+	fi
 	exit;
 	
 elif [ "${action}" == "RESTART" ]; then
-	echo "Stopping Ranger Tagsync"
+	echo "Restarting Apache Ranger Tagsync"
 	${cdir}/ranger-tagsync-services.sh stop
-	echo "Starting Apache Ranger Tagsync"
 	${cdir}/ranger-tagsync-services.sh start
 	exit;
 elif [ "${action}" == "VERSION" ]; then

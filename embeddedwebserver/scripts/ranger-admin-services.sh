@@ -67,23 +67,33 @@ start() {
 		echo "Apache Ranger Admin Service with pid ${pid} has started."
 	else
 		echo "Apache Ranger Admin Service failed to start!"
-		exit 1
 	fi
+	exit;
 }
 
 stop(){
-	SLEEP_TIME_AFTER_KILL=5
+	WAIT_TIME_FOR_SHUTDOWN=2
+	NR_ITER_FOR_SHUTDOWN_CHECK=15
 	if [ -f "$pidf" ] ; then
-		nohup java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1
 		pid=`cat $pidf` > /dev/null 2>&1
-		echo "Found Apache Ranger Admin Service with pid $pid, killing..."
-		kill $pid
-		sleep $SLEEP_TIME_AFTER_KILL
+		echo "Found Apache Ranger Admin Service with pid $pid, Stopping it..."
+		nohup java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.StopEmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1
+		for ((i=0; i<$NR_ITER_FOR_SHUTDOWN_CHECK; i++))
+                do
+                        sleep $WAIT_TIME_FOR_SHUTDOWN
+                        if ps -p $pid > /dev/null ; then
+                                echo "Shutdown in progress. Will check after $WAIT_TIME_FOR_SHUTDOWN secs again.."
+                                continue;
+                        else
+                                break;
+                        fi
+                done
 		# if process is still around, use kill -9
 		if ps -p $pid > /dev/null ; then
 			echo "Initial kill failed, getting serious now..."
 			kill -9 $pid
 		fi
+		sleep 1 #give kill -9  sometime to "kill"
 		if ps -p $pid > /dev/null ; then
 			echo "Wow, even kill -9 failed, giving up! Sorry.."
 			exit 1
@@ -98,14 +108,16 @@ stop(){
 if [ "${action}" == "START" ]; then
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf`
-		if [ "${pid}" != "" ]
+		if  ps -p $pid > /dev/null
 		then
 			echo "Apache Ranger Admin Service is already running [pid={$pid}]"
 			exit 1
+		else
+			rm -rf $pidf
+			start;
 		fi
-        else
+    else
 		start;
-		exit;
 	fi
 elif [ "${action}" == "STOP" ]; then
 	stop;
@@ -114,7 +126,6 @@ elif [ "${action}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger Admin"
 	stop;
 	start;
-	exit;
 elif [ "${action}" == "VERSION" ]; then
 	cd ${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo

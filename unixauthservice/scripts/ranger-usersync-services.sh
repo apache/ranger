@@ -49,56 +49,60 @@ if [ "${action}" == "START" ]; then
 
 	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*"
 
-    if [ -f $pidf ]; then
-            PID=`cat $pidf`
-            if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
-                    rm -f ${pidf}
-            else
-                    kill -9 ${PID} > /dev/null 2>&1
-                    rm -f ${pidf}
-                    echo "Ranger Usersync Service [pid = ${PID}] has been stopped."
-            fi
-    fi
-
 	cd ${cdir}
 	umask 0077
-	if [ -z "${logdir}" ]
-	then 
+	if [ -z "${logdir}" ]; then 
 	    logdir=${cdir}/logs
 	fi
-
+	if [ -f "$pidf" ] ; then
+		pid=`cat $pidf`
+		if  ps -p $pid > /dev/null
+		then
+			echo "Apache Ranger Usersync Service is already running [pid={$pid}]"
+			exit ;
+		else
+			rm -rf $pidf
+        fi
+    fi
+	SLEEP_TIME_AFTER_START=5
 	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:/etc/ranger/usersync/conf/log4j.properties ${JAVA_OPTS} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
-	echo $! >  ${pidf}
-	chown ranger ${pidf}
-	sleep 5
-	pid=`cat $pidf`
-
-	if [ "${pid}" != "" ]
-	then
-        	echo "Ranger Usersync Service has started successfully."
+	VALUE_OF_PID=$!
+    echo "Starting Apache Ranger Usersync Service"
+    sleep $SLEEP_TIME_AFTER_START
+    if ps -p $VALUE_OF_PID > /dev/null
+    then
+		echo $VALUE_OF_PID > ${pidf}
+		chown ranger ${pidf}
+		chmod 660 ${pidf}
+		pid=`cat $pidf`
+		echo "Apache Ranger Usersync Service with pid ${pid} has started."
 	else
-        	echo "Ranger Usersync Service failed to start. Please refer to log files under ${logdir} for further details."
+		echo "Apache Ranger Usersync Service failed to start!"
 	fi
 	exit;
 
 elif [ "${action}" == "STOP" ]; then
-
-    if [ -f $pidf ]; then
-            pidf=/var/run/ranger/usersync.pid
-	        PID=`cat $pidf` > /dev/null 2>&1
-            kill -9 $PID > /dev/null 2>&1
-            rm -f $pidf
-            echo "Ranger Usersync Service [pid = ${PID}] has been stopped."
-    else
-            echo "Ranger Usersync Service not running"
-    fi
-
+	WAIT_TIME_FOR_SHUTDOWN=2
+	NR_ITER_FOR_SHUTDOWN_CHECK=15
+	if [ -f $pidf ]; then
+		pidf=/var/run/ranger/usersync.pid
+		pid=`cat $pidf` > /dev/null 2>&1
+		kill -9 $pid > /dev/null 2>&1
+		sleep 1 #Give kill -9 sometime to "kill"
+		if ps -p $pid > /dev/null; then
+			echo "Wow, even kill -9 failed, giving up! Sorry.."
+		else
+			rm -f $pidf
+			echo "Apache Ranger Usersync Service [pid = ${pid}] has been stopped."
+		fi
+	else
+		echo "Apache Ranger Usersync Service not running"
+	fi
 	exit;
 	
 elif [ "${action}" == "RESTART" ]; then
-	echo "Stopping Ranger Usersync"
+	echo "Restarting Apache Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh stop
-	echo "Starting Apache Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh start
 	exit;
 elif [ "${action}" == "VERSION" ]; then
@@ -106,7 +110,7 @@ elif [ "${action}" == "VERSION" ]; then
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit
 else 
-	        echo "Invalid argument [$1];"
-        echo "Usage: Only start | stop | restart | version, are supported."
-        exit;
+	echo "Invalid argument [$1];"
+	echo "Usage: Only start | stop | restart | version, are supported."
+	exit;
 fi
