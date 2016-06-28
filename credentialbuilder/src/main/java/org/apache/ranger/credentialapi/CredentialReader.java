@@ -36,11 +36,12 @@ public class CredentialReader {
 		  }		  		  
 		  char[] pass = null;
 		  Configuration conf = new Configuration();
-		  String crendentialProviderPrefix=JavaKeyStoreProvider.SCHEME_NAME + "://file";
-		  crendentialProviderPrefix=crendentialProviderPrefix.toLowerCase();
+		  String crendentialProviderPrefixJceks=JavaKeyStoreProvider.SCHEME_NAME + "://file";
+		  String crendentialProviderPrefixLocalJceks="localjceks://file";
+		  crendentialProviderPrefixJceks=crendentialProviderPrefixJceks.toLowerCase();
 		  CrendentialProviderPath=CrendentialProviderPath.trim();
 		  alias=alias.trim();
-		  if(CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefix)){
+		  if(CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixJceks) || CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixLocalJceks)){
 			  conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,
 					   //UserProvider.SCHEME_NAME + ":///," +
 			  CrendentialProviderPath);
@@ -52,7 +53,7 @@ public class CredentialReader {
 			  }else{
 				  conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,
 						   //UserProvider.SCHEME_NAME + ":///," +
-				  JavaKeyStoreProvider.SCHEME_NAME + "://file/" + CrendentialProviderPath);
+						  JavaKeyStoreProvider.SCHEME_NAME + "://file/" + CrendentialProviderPath);
 			  }
 		  }
 		  List<CredentialProvider> providers = CredentialProviderFactory.getProviders(conf);

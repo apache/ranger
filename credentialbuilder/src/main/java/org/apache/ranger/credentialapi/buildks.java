@@ -180,13 +180,13 @@ public class buildks {
     		credential = bufferRead.readLine();
     		System.out.println("Enter .jceks output file name with path:");
     		providerPath = bufferRead.readLine();
-    		if(providerPath!=null && !providerPath.trim().isEmpty() && !providerPath.startsWith("jceks://file"))
-        	{
+			if(providerPath!=null && !providerPath.trim().isEmpty() && !providerPath.startsWith("localjceks://file")&&!providerPath.startsWith("jceks://file"))
+			{
     			if(providerPath.startsWith("/")){
-    				providerPath="jceks://file"+providerPath;
-        		}else{
-        			providerPath="jceks://file/"+providerPath;
-        		}
+					providerPath="localjceks://file"+providerPath;
+				}else{
+					providerPath="localjceks://file/"+providerPath;
+				}
         	}	        	
     		command="create";
     		valueOption="-value";
@@ -223,9 +223,18 @@ public class buildks {
 	
 	public int listCredential(String args[]){
 		int returnCode=-1;
+		String command=null;
+		String providerOption=null;
+		String providerPath=null;
 		try{	    		    	
 	    	if(args!=null && args.length==3)
 	    	{
+				command=args[0];
+				providerOption=args[1];
+				providerPath=args[2];
+				if(!isValidListCommand(command,providerOption,providerPath)){
+					return returnCode;
+				}
 	    		//display command which need to be executed or entered
 	    		displayCommand(args);
 	    	}else{  
@@ -339,7 +348,7 @@ public class buildks {
 				displaySyntax("create");
         		return false;
         	}
-        	if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || !providerPath.startsWith("jceks://"))
+			if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || (!providerPath.startsWith("localjceks://") && !providerPath.startsWith("jceks://")))
         	{
         		System.out.println("Invalid provider option in credential creation command!!");
         		System.out.println("Found:'"+providerPath+"'");
@@ -355,6 +364,40 @@ public class buildks {
     	}            	
     	return isValid;
     }
+
+	public static boolean isValidListCommand(String command,String providerOption,String providerPath){
+		boolean isValid=true;
+		try{
+			if(command==null || !"list".equalsIgnoreCase(command.trim())){
+				System.out.println("Invalid list phrase in credential get command!!");
+				System.out.println("Expected:'list' Found:'"+command+"'");
+				displaySyntax("list");
+				return false;
+			}
+
+			if(providerOption==null || !"-provider".equalsIgnoreCase(providerOption.trim()))
+			{
+				System.out.println("Invalid provider option in credential get command!!");
+				System.out.println("Expected:'-provider' Found:'"+providerOption+"'");
+				displaySyntax("list");
+				return false;
+			}
+			if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || (!providerPath.startsWith("localjceks://") && !providerPath.startsWith("jceks://")))
+			{
+				System.out.println("Invalid provider option in credential get command!!");
+				System.out.println("Found:'"+providerPath+"'");
+				displaySyntax("list");
+				return false;
+			}
+		}catch(Exception ex){
+			System.out.println("Invalid input or runtime error! Please try again.");
+			System.out.println("Input:"+command+" "+providerOption+" "+providerPath);
+			displaySyntax("list");
+			ex.printStackTrace();
+			return false;
+		}
+		return isValid;
+	}
 	
 	public static void displayCommand(String args[])
     {
@@ -372,8 +415,16 @@ public class buildks {
 	
 	public static void displaySyntax(String command){
 		if(command!=null && command.trim().equalsIgnoreCase("create")){
-			System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <jceks://file/filepath>");
-			System.out.println("sample command is:create myalias -value password123 -provider jceks://file/tmp/ks/myks.jceks");
+			System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <localjceks://file/filepath>");
+			System.out.println("sample command is:create myalias -value password123 -provider localjceks://file/tmp/ks/myks.jceks");
+		}
+		if(command!=null && command.trim().equalsIgnoreCase("list")){
+			System.out.println("Correct syntax is:list -provider <localjceks://file/filepath>");
+			System.out.println("sample command is:list -provider localjceks://file/tmp/ks/myks.jceks");
+		}
+		if(command!=null && command.trim().equalsIgnoreCase("get")){
+			System.out.println("Correct syntax is:get <aliasname> -provider <localjceks://file/filepath>");
+			System.out.println("sample command is:get myalias -provider localjceks://file/tmp/ks/myks.jceks");
 		}
 	}
 	public String getCredential(String args[]){
@@ -428,7 +479,7 @@ public class buildks {
 				displaySyntax("get");
 				return false;
 			}
-			if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || !providerPath.startsWith("jceks://"))
+			if(providerPath==null || "".equalsIgnoreCase(providerPath.trim()) || (!providerPath.startsWith("localjceks://") && !providerPath.startsWith("jceks://")))
 			{
 				System.out.println("Invalid provider option in credential get command!!");
 				System.out.println("Found:'"+providerPath+"'");
