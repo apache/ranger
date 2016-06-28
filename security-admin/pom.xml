@@ -299,7 +299,7 @@
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity</artifactId>
-            <version>1.7</version>
+            <version>${velocity.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
