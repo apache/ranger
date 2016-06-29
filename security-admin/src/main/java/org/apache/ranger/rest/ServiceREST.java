@@ -965,11 +965,7 @@ public class ServiceREST {
 				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-	
-				if(!isAdmin) {
-					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to grant access");
-				}
-				// New Code
+
 				XXService xService = daoManager.getXXService().findByName(serviceName);
 				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 				RangerService rangerService = svcStore.getServiceByName(serviceName);
@@ -988,7 +984,7 @@ public class ServiceREST {
 						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 					}
 				}
-				// New Code
+				
 				if (isAllowed) {
 					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
 	
@@ -1141,9 +1137,6 @@ public class ServiceREST {
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 				boolean isAllowed = false;
 				boolean isKeyAdmin = bizUtil.isKeyAdmin();
-				if(!isAdmin) {
-					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to revoke access");
-				}
 	
 				XXService xService = daoManager.getXXService().findByName(serviceName);
 				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
@@ -1163,7 +1156,7 @@ public class ServiceREST {
 						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 					}
 				}
-				// New Code
+				
 				if (isAllowed) {
 					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
 					

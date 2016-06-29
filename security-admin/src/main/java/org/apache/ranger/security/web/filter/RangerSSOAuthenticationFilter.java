@@ -433,10 +433,8 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				jwtProperties.setPublicKey(publicKey);
 			} catch (IOException e) {
 				LOG.error("Unable to read public certificate file. JWT auth will be disabled.",e);
-				return null;
 			} catch (CertificateException e) {
 				LOG.error("Unable to parse public certificate file. JWT auth will be disabled.",e);
-				return null;
 			} catch (ServletException e) {
 				LOG.error("ServletException while processing the properties",e);
 			}			
