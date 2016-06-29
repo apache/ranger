@@ -359,6 +359,37 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 				} else {
 					result = hivePlugin.isAccessAllowed(request, auditHandler);
+
+					if(hiveOpType == HiveOperationType.EXPORT && result != null && result.getIsAllowed()) {
+						RangerHiveResource res = (RangerHiveResource)request.getResource();
+
+						if(res.getObjectType() == HiveObjectType.TABLE || res.getObjectType() == HiveObjectType.VIEW) {
+							RangerRowFilterResult rowFilterResult = getRowFilterResult(request);
+
+							if (isRowFilterEnabled(rowFilterResult)) {
+								result.setIsAllowed(false);
+								result.setPolicyId(rowFilterResult.getPolicyId());
+								result.setReason("User does not have acces to all rows of the table");
+
+								auditHandler.processResult(result);
+							}
+
+							if(result.getIsAllowed()) {
+								// check if masking is enabled for any column in the table/view
+								request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
+
+								RangerDataMaskResult dataMaskResult = getDataMaskResult(request);
+
+								if (isDataMaskEnabled(dataMaskResult)) {
+									result.setIsAllowed(false);
+									result.setPolicyId(dataMaskResult.getPolicyId());
+									result.setReason("User does not have acces to unmasked column values");
+
+									auditHandler.processResult(result);
+								}
+							}
+						}
+					}
 				}
 
 				if(result != null && !result.getIsAllowed()) {
@@ -533,6 +564,42 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return true; // TODO: derive from the policies
 	}
 
+	private RangerDataMaskResult getDataMaskResult(RangerHiveAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> getDataMaskResult(request=" + request + ")");
+		}
+
+		RangerDataMaskResult ret = hivePlugin.evalDataMaskPolicies(request, null);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== getDataMaskResult(request=" + request + "): ret=" + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerRowFilterResult getRowFilterResult(RangerHiveAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> getRowFilterResult(request=" + request + ")");
+		}
+
+		RangerRowFilterResult ret = hivePlugin.evalRowFilterPolicies(request, null);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== getRowFilterResult(request=" + request + "): ret=" + ret);
+		}
+
+		return ret;
+	}
+
+	private boolean isDataMaskEnabled(RangerDataMaskResult result) {
+		return result != null && result.isMaskEnabled() && !StringUtils.equalsIgnoreCase(result.getMaskType(), MASK_TYPE_NONE);
+	}
+
+	private boolean isRowFilterEnabled(RangerRowFilterResult result) {
+		return result != null && result.isRowFilterEnabled() && StringUtils.isNotEmpty(result.getFilterExpr());
+	}
+
 	private String getRowFilterExpression(HiveAuthzContext context, String databaseName, String tableOrViewName) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
@@ -558,7 +625,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			RangerRowFilterResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
 
-			if(result != null && result.isRowFilterEnabled()) {
+			if(isRowFilterEnabled(result)) {
 				ret = result.getFilterExpr();
 			}
 		} finally {
@@ -597,14 +664,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			RangerDataMaskResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
 
-			if(result != null && result.isMaskEnabled()) {
+			if(isDataMaskEnabled(result)) {
 				String                maskType    = result.getMaskType();
 				RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
 				String                transformer = maskTypeDef.getTransformer();
 
-				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NONE)) {
-					ret = columnName;
-				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
+				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
 					ret = "NULL";
 				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_CUSTOM)) {
 					String maskedValue = result.getMaskedValue();
