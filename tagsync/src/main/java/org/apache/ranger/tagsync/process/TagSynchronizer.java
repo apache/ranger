@@ -36,12 +36,13 @@ public class TagSynchronizer {
 
 	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
 
-	private TagSink tagSink = null;
-	private List<TagSource> tagSources;
-	private Properties properties = null;
-
 	private static final String TAGSYNC_SOURCE_BASE = "ranger.tagsync.source.";
 	private static final String PROP_CLASS_NAME = "class";
+
+	private TagSink tagSink = null;
+	private List<TagSource> tagSources = new ArrayList<TagSource>();
+	private List<TagSource> failedTagSources = new ArrayList<TagSource>();
+	private Properties properties = null;
 
 	private final Object shutdownNotifier = new Object();
 	private volatile boolean isShutdownInProgress = false;
@@ -103,12 +104,7 @@ public class TagSynchronizer {
 		tagSink = initializeTagSink(properties);
 
 		if (tagSink != null) {
-
-			tagSources = initializeTagSources(properties);
-
-			for (TagSource tagSource : tagSources) {
-				tagSource.setTagSink(tagSink);
-			}
+			initializeTagSources();
 			ret = true;
 		}
 
@@ -134,9 +130,14 @@ public class TagSynchronizer {
 			}
 
 			if (threadsStarted) {
+				long tagSourceRetryInitializationInterval = TagSyncConfig.getTagSourceRetryInitializationInterval(properties);
+
 				synchronized(shutdownNotifier) {
 					while(! isShutdownInProgress) {
-						shutdownNotifier.wait();
+						shutdownNotifier.wait(tagSourceRetryInitializationInterval);
+						if (CollectionUtils.isNotEmpty(failedTagSources)) {
+							reInitializeFailedTagSources();
+						}
 					}
 				}
 			}
@@ -213,12 +214,10 @@ public class TagSynchronizer {
 		return ret;
 	}
 
-	static public List<TagSource> initializeTagSources(Properties properties) {
+	private void initializeTagSources() {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagSynchronizer.initializeTagSources()");
 		}
-
-		List<TagSource> ret = new ArrayList<TagSource>();
 
 		List<String> tagSourceNameList = new ArrayList<String>();
 
@@ -253,29 +252,60 @@ public class TagSynchronizer {
 				try {
 					if (!tagSource.initialize(properties)) {
 						LOG.error("Failed to initialize TAG source " + tagSourceName);
-						ret.clear();
-						break;
+						failedTagSources.add(tagSource);
 					} else {
-						ret.add(tagSource);
+						tagSource.setTagSink(tagSink);
+						tagSources.add(tagSource);
 						initializedTagSourceNameList.add(tagSourceName);
 					}
 				} catch(Exception exception) {
 					LOG.error("tag-source:" + tagSourceName + " initialization failed with ", exception);
-					ret.clear();
-					break;
+					failedTagSources.add(tagSource);
 				}
 			}
 		}
 
-		if (CollectionUtils.isEmpty(initializedTagSourceNameList)) {
+		if (CollectionUtils.isEmpty(tagSources)) {
 			LOG.warn("TagSync is not configured for any tag-sources. No tags will be received by TagSync.");
 			LOG.warn("Please recheck configuration properties and tagsync environment to ensure that this is correct.");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initializeTagSources(" + initializedTagSourceNameList + ")");
+			LOG.debug("<== TagSynchronizer.initializeTagSources(initilaizedTagSources=" + initializedTagSourceNameList
+					+ ", failedTagSources=" + failedTagSources + ")");
 		}
-		return ret;
+	}
+
+	private void reInitializeFailedTagSources() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagSynchronizer.reInitializeFailedTagSources()");
+		}
+
+		for (int index = 0; index < failedTagSources.size(); index++) {
+			TagSource tagSource = failedTagSources.get(index);
+			try {
+				if (tagSource.initialize(properties)) {
+					failedTagSources.remove(index);
+					--index;
+					tagSources.add(tagSource);
+					tagSource.setTagSink(tagSink);
+					if (tagSource.start()) {
+						tagSources.add(tagSource);
+					} else {
+						LOG.error("Failed to start tagSource: " + tagSource);
+					}
+				} else {
+					LOG.error("Failed to initialize TAG source " + tagSource);
+				}
+			} catch (Exception exception) {
+				LOG.error("tag-source:" + tagSource + " initialization failed with ", exception);
+			}
+
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagSynchronizer.reInitializeFailedTagSources()");
+		}
 	}
 
 	static private TagSource getTagSourceFromConfig(Properties props,
@@ -304,6 +334,7 @@ public class TagSynchronizer {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Created instance of " + className);
 				}
+				tagSource.setName(tagSourceName);
 			} catch (Exception e) {
 				LOG.fatal("Can't instantiate tagSource class for tagSourceName="
 						+ tagSourceName + ", className=" + className
@@ -337,4 +368,5 @@ public class TagSynchronizer {
 		}
 		return list;
 	}
+
 }

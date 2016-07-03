@@ -81,6 +81,8 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
 	private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP = "ranger.tagsync.source.atlasrest.keystore.filename";
 
+	private static final String TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP = "ranger.tagsync.source.retry.initialization.interval.millis";
+
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 	private static final String DEFAULT_TAGADMIN_PASSWORD = "rangertagsync";
 	private static final String DEFAULT_ATLASREST_USERNAME = "admin";
@@ -89,6 +91,7 @@ public class TagSyncConfig extends Configuration {
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
 	private static final long DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL = 900000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
+	private static final long DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
 
 	private static final String AUTH_TYPE = "hadoop.security.authentication";
 	private static final String NAME_RULES = "hadoop.security.auth_to_local";
@@ -373,6 +376,19 @@ public class TagSyncConfig extends Configuration {
 	static public long getTagAdminConnectionCheckInterval(Properties prop) {
 		long ret = DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL;
 		String val = prop.getProperty(TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP);
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
+	}
+
+	static public long getTagSourceRetryInitializationInterval(Properties prop) {
+		long ret = DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL;
+		String val = prop.getProperty(TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP);
 		if (StringUtils.isNotBlank(val)) {
 			try {
 				ret = Long.valueOf(val);

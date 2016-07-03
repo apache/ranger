@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.util.ServiceTags;
 public abstract  class AbstractTagSource implements TagSource {
 	private static final Log LOG = LogFactory.getLog(AbstractTagSource.class);
 	private TagSink tagSink;
+	private String name;
 
 	@Override
 	public void setTagSink(TagSink sink) {
@@ -35,6 +36,21 @@ public abstract  class AbstractTagSource implements TagSource {
 		} else {
 			this.tagSink = sink;
 		}
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public String toString( ) {
+		return this.name;
 	}
 
 	protected void updateSink(final ServiceTags toUpload) {

@@ -28,6 +28,10 @@ public interface TagSource {
 
 	void setTagSink(TagSink sink);
 
+	void setName(String name);
+
+	String getName();
+
 	boolean start();
 
 	void stop();
