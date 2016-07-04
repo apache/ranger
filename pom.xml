@@ -200,7 +200,6 @@
         <poi.version>3.12</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
-        <ranger.solrj.version>${project.version}</ranger.solrj.version>
         <scala.version>2.10.4</scala.version>
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
