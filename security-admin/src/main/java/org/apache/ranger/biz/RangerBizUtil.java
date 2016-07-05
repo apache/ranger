@@ -1562,4 +1562,22 @@ public class RangerBizUtil {
 		return false;
 	}
 
+	public boolean isUserAllowedForGrantRevoke(RangerService rangerService,
+			String cfgNameAllowedUsers, String userName) {
+		Map<String, String> map = rangerService.getConfigs();
+
+		if (map != null && map.containsKey(cfgNameAllowedUsers)) {
+			String userNames = map.get(cfgNameAllowedUsers);
+			String[] userList = userNames.split(",");
+			if (userList != null) {
+				for (String u : userList) {
+					if (u.equals("*") || (userName != null && u.equalsIgnoreCase(userName))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}	
+
 }

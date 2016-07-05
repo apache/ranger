@@ -965,7 +965,7 @@ public class ServiceREST {
 				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
 				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-
+				
 				XXService xService = daoManager.getXXService().findByName(serviceName);
 				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 				RangerService rangerService = svcStore.getServiceByName(serviceName);
@@ -974,14 +974,14 @@ public class ServiceREST {
 					if (isKeyAdmin) {
 						isAllowed = true;
 					}else {
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 					}
 				}else{
 					if (isAdmin) {
 						isAllowed = true;
 					}
 					else{
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 					}
 				}
 				
@@ -1035,6 +1035,7 @@ public class ServiceREST {
 					}
 				}else{
 					LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed as User doesn't have permission to grant Policy");
+					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
@@ -1146,14 +1147,14 @@ public class ServiceREST {
 					if (isKeyAdmin) {
 						isAllowed = true;
 					}else {
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 					}
 				}else{
 					if (isAdmin) {
 						isAllowed = true;
 					}
 					else{
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 					}
 				}
 				
@@ -1175,6 +1176,7 @@ public class ServiceREST {
 					}
 				}else{
 					LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed as User doesn't have permission to revoke Policy");
+					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
