@@ -17,6 +17,9 @@
 
 package org.apache.ranger.authorization.storm;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -36,11 +39,28 @@ public class StormRangerPlugin extends RangerBasePlugin {
 	
 	private static final Log LOG = LogFactory.getLog(StormRangerPlugin.class);
 	boolean initialized = false;
-	
+
+	private final Map<String,String> impliedAccessTypes;
+
 	public StormRangerPlugin() {
 		super(PluginConfiguration.ServiceType, PluginConfiguration.AuditApplicationType);
+
+		Map<String, String> impliedTypes = new HashMap<String, String>();
+		// In future this has to be part of Ranger Storm Service Def.
+		impliedTypes.put("getTopologyPageInfo","getTopologyInfo");
+		impliedTypes.put("getComponentPageInfo","getTopologyInfo");
+		impliedTypes.put("setWorkerProfiler","getTopologyInfo");
+		impliedTypes.put("getWorkerProfileActionExpiry","getTopologyInfo");
+		impliedTypes.put("getComponentPendingProfileActions","getTopologyInfo");
+		impliedTypes.put("startProfiling","getTopologyInfo");
+		impliedTypes.put("stopProfiling","getTopologyInfo");
+		impliedTypes.put("dumpProfile","getTopologyInfo");
+		impliedTypes.put("dumpJstack","getTopologyInfo");
+		impliedTypes.put("dumpHeap","getTopologyInfo");
+
+		this.impliedAccessTypes = Collections.unmodifiableMap(impliedTypes);
 	}
-	
+
 	// this method isn't expected to be invoked often.  Per knox design this would be invoked ONCE right after the authorizer servlet is loaded
 	@Override
 	synchronized public void init() {
@@ -53,6 +73,7 @@ public class StormRangerPlugin extends RangerBasePlugin {
 			if (KerberosName.getRules() == null) {
 				KerberosName.setRules("DEFAULT") ;
 			}
+
 			initialized = true;
 			LOG.info("StormRangerPlugin initialized!");
 		}
@@ -66,7 +87,8 @@ public class StormRangerPlugin extends RangerBasePlugin {
 			Set<String> groups = Sets.newHashSet(_groups);
 			request.setUserGroups(groups);
 		}
-		request.setAccessType(_operation);
+
+		request.setAccessType(getAccessType(_operation));
 		request.setClientIPAddress(_clientIp);
 		request.setAction(_operation);
 		// build resource and connect stuff into request
@@ -79,6 +101,15 @@ public class StormRangerPlugin extends RangerBasePlugin {
 		}
 		
 		return request;
+	}
+
+	private String getAccessType(String _operation) {
+		String ret = null;
+		ret = impliedAccessTypes.get(_operation);
+		if ( ret == null) {
+			ret = _operation;
+		}
+		return ret;
 	}
 
 	static public class StormConstants {
