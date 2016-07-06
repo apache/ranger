@@ -55,6 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.security.handler.RangerAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,9 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	
 	@Autowired
 	UserMgr userMgr;
+
+	@Autowired
+	RESTErrorUtil restErrorUtil;
 
 	static final String NAME_RULES = "hadoop.security.auth_to_local";
 	static final String TOKEN_VALID = "ranger.admin.kerberos.token.valid.seconds";
@@ -219,7 +223,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 				try{
 					super.doFilter(filterChain, request, response);
 				}catch(Exception e){
-					LOG.error("Error RangerKRBAuthenticationFilter : "+e.getMessage());
+					throw restErrorUtil.createRESTException("RangerKRBAuthenticationFilter Failed : "+e.getMessage());
 				}
 			}
 		}else{
@@ -280,7 +284,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 				try{
 					super.doFilter(request, response, filterChain);
 				}catch(Exception e){
-					LOG.error("Error RangerKRBAuthenticationFilter : "+e.getMessage());
+					throw restErrorUtil.createRESTException("RangerKRBAuthenticationFilter Failed : "+e.getMessage());
 				}				
 			}	
 		}else{
