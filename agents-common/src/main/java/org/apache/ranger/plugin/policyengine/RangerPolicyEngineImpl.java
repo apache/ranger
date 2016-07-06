@@ -200,17 +200,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if(CollectionUtils.isNotEmpty(requests)) {
 			for(RangerAccessRequest request : requests) {
-				setResourceServiceDef(request);
-			}
-
-			List<RangerContextEnricher> enrichers = allContextEnrichers;
-
-			if(CollectionUtils.isNotEmpty(enrichers)) {
-				for(RangerContextEnricher enricher : enrichers) {
-					for(RangerAccessRequest request : requests) {
-						enricher.enrich(request);
-					}
-				}
+				preProcess(request);
 			}
 		}
 
