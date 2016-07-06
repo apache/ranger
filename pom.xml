@@ -520,7 +520,7 @@
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
                         <exclude>**/bin/**</exclude>
-                        <exclude>**/CHANGES</exclude>
+                        <exclude>*CHANGES*</exclude>
                         <exclude>**/ISSUES</exclude>
                         <exclude>**/patchprocess/**</exclude>
                         <exclude>**/test/resources/**</exclude>
