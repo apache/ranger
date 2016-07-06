@@ -294,7 +294,8 @@ define(function(require){
 								model 	   : that.model,
 								accessTypes: accessType,
 								headerTitle: "",
-								rangerServiceDefModel : that.rangerServiceDefModel
+								rangerServiceDefModel : that.rangerServiceDefModel,
+								rangerPolicyType : that.model.get('policyType')
 							}).render().el);
 						
 							that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
@@ -304,7 +305,8 @@ define(function(require){
 								model 	   : that.model,
 								accessTypes: accessType,
 								headerTitle: "Deny",
-								rangerServiceDefModel : that.rangerServiceDefModel
+								rangerServiceDefModel : that.rangerServiceDefModel,
+								rangerPolicyType : that.model.get('policyType')
 							}).render().el);
 							that.$('[data-customfields="groupPermsDenyExclude"]').html(new PermissionList({
 								collection : that.formInputDenyExceptionList,
@@ -313,7 +315,8 @@ define(function(require){
 								model 	   : that.model,
 								accessTypes: accessType,
 								headerTitle: "Deny",
-								rangerServiceDefModel : that.rangerServiceDefModel
+								rangerServiceDefModel : that.rangerServiceDefModel,
+								rangerPolicyType : that.model.get('policyType')
 							}).render().el);
 					}
 			});
