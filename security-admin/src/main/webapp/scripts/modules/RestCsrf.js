@@ -32,8 +32,9 @@ define(function(require) {
 	if(!window.location.origin){
 		window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
 	}
-	var baseUrl = window.location.origin +
-  					window.location.pathname.substring(window.location.pathname.indexOf('/', 2) + 1, 0);
+	
+	var baseUrl = window.location.origin + window.location.pathname.substr(0, window.location.pathname.lastIndexOf("/"));
+	
 	if(baseUrl.slice(-1) == "/") {
 	  baseUrl = baseUrl.slice(0,-1);
 	}

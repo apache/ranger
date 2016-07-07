@@ -511,6 +511,7 @@ public class RangerKrbFilter implements Filter {
             }
             parseBrowserUserAgents(agents);
         	if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT))){
+        		((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
         		filterChain.doFilter(request, response);
         	}else{
 	        	boolean chk = true;

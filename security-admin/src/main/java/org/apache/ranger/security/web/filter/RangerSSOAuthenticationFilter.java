@@ -319,8 +319,13 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		if (authenticationProviderUrl.contains("?")) {
 			delimiter = "&";
 		}
-		String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=" + request.getRequestURL().toString();
+		String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=" + request.getRequestURL().append(getOriginalQueryString(request));
 		return loginURL;
+	}
+
+	private String getOriginalQueryString(HttpServletRequest request) {
+		String originalQueryString = request.getQueryString();
+		return (originalQueryString == null) ? "" : "?" + originalQueryString;
 	}
 
 	/**
