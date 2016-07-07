@@ -124,6 +124,7 @@ public class RangerBasePlugin {
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
+		refresher.setDaemon(true);
 		refresher.startRefresher();
 	}
 

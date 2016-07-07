@@ -108,7 +108,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				} catch (Throwable exception) {
 					LOG.error("Exception when retrieving tag for the first time for this enricher", exception);
 				}
-
+				tagRefresher.setDaemon(true);
 				tagRefresher.startRefresher();
 			}
 		} else {
