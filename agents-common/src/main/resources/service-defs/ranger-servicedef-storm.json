@@ -46,18 +46,6 @@
 		},
 
 		{
-			"itemId": 3,
-			"name": "getNimbusConf",
-			"label": "Get Nimbus Conf"
-		},
-
-		{
-			"itemId": 4,
-			"name": "getClusterInfo",
-			"label": "Get Cluster Info"
-		},
-
-		{
 			"itemId": 5,
 			"name": "fileDownload",
 			"label": "File Download"
