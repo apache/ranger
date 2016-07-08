@@ -49,6 +49,31 @@
 		</div>
 	{{/if}}	
 {{else}}
-	<h4>{{tt 'msg.groupDoesNotExistAnymore'}}</h4>
+	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
+	{{#if collection.length}}
+	<h5>Group Details:</h5>
+		<div class="diff">
+			<div class="diff-left">
+				<h3>Fields</h3>
+					<ol class="attr">
+					{{#each collection}}
+						<li class="change-row">{{./this.attributes.attributeName}}</li>
+					{{/each}}
+					</ol>
+			</div>
+			<div class="diff-right">
+				<h3>Old Value</h3>
+					<ol class="unstyled data">
+					{{#each collection}}
+					    {{#if ./this.attributes.previousValue}}
+							<li class="change-row">{{./this.attributes.previousValue}}</li>
+						{{else}}
+							<li class="change-row">--</li>
+						{{/if}}
+					{{/each}}
+					</ol>
+			</div>
+		</div>
+	{{/if}}
 {{/compare}}
 </div>

@@ -793,7 +793,7 @@ public class AssetMgr extends AssetMgrBase {
 					String tempNewArr[]=vXTrxLog.getNewValue().split(",");
 					for(int i=0;i<tempNewArr.length;i++){
 						if(tempNewArr[i].contains("{\"password")){
-							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\"}"));
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\""));
 							break;
 						}else if(tempNewArr[i].contains("\"password") && tempNewArr[i].contains("}")){
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\"}"));

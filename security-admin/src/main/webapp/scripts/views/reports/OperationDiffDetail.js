@@ -193,11 +193,11 @@ define(function(require){
 					configModel = m;
 				}else if(m.get('attributeName') == "Service Status"){
 					 var newVal = m.get('newValue'), oldVal = m.get('previousValue');            
-					 if(!_.isUndefined(newVal)){
+					 if(!_.isUndefined(newVal) && !_.isEmpty(newVal)){
 					         m.set('newValue', $.parseJSON(newVal) ? XAEnums.ActiveStatus.STATUS_ENABLED.label 
 					                         : XAEnums.ActiveStatus.STATUS_DISABLED.label);
 					 }
-					 if(!_.isUndefined(oldVal)){
+					 if(!_.isUndefined(oldVal) && !_.isEmpty(oldVal)){
 					         m.set('previousValue', $.parseJSON(oldVal) ? XAEnums.ActiveStatus.STATUS_ENABLED.label 
 					                         : XAEnums.ActiveStatus.STATUS_DISABLED.label);
 					 }
@@ -359,7 +359,10 @@ define(function(require){
 						that.previousGroupList.push(m.get('parentObjectName'));
 					modelArr.push(m);
 				} else if(m.get('attributeName') == 'User Role'){
-					var newRole =  m.get('newValue').replace(/[[\]]/g,'');
+					var newRole;
+					if(!_.isUndefined(m.get('newValue'))){
+						newRole =  m.get('newValue').replace(/[[\]]/g,'');
+					}
 					var prevRole = m.get('previousValue').replace(/[[\]]/g,'');
 					if( newRole == "ROLE_USER")
 						m.set('newValue',XAEnums.UserRoles.ROLE_USER.label)
