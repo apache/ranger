@@ -48,6 +48,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		this.setUserGroups(userGroups);
 		this.setAccessTime(new Date());
 		this.setAction(hiveOpTypeName);
+		this.setHiveAccessType(accessType);
 
 		if(context != null) {
 			this.setRequestData(context.getCommandString());
@@ -58,16 +59,6 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		if(sessionContext != null) {
 			this.setClientType(sessionContext.getClientType() == null ? null : sessionContext.getClientType().toString());
 			this.setSessionId(sessionContext.getSessionString());
-		}
-
-		this.accessType = accessType;
-		
-		if(accessType == HiveAccessType.USE) {
-			this.setAccessType(RangerPolicyEngine.ANY_ACCESS);
-		} else if(accessType == HiveAccessType.ADMIN) {
-			this.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
-		} else {
-			this.setAccessType(accessType.name().toLowerCase());
 		}
 	}
 
@@ -87,6 +78,18 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 
 	public HiveAccessType getHiveAccessType() {
 		return accessType;
+	}
+
+	public void setHiveAccessType(HiveAccessType accessType) {
+		this.accessType = accessType;
+
+		if(accessType == HiveAccessType.USE) {
+			this.setAccessType(RangerPolicyEngine.ANY_ACCESS);
+		} else if(accessType == HiveAccessType.ADMIN) {
+			this.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
+		} else {
+			this.setAccessType(accessType.name().toLowerCase());
+		}
 	}
 
 	public RangerHiveAccessRequest copy() {

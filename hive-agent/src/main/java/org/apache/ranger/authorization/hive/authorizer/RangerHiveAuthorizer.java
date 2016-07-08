@@ -360,21 +360,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				} else {
 					result = hivePlugin.isAccessAllowed(request, auditHandler);
 
-					if(hiveOpType == HiveOperationType.EXPORT && result != null && result.getIsAllowed()) {
+					if(result != null && result.getIsAllowed() && blockAccessIfRowfilterColumnMaskSpecified(hiveOpType, request.getHiveAccessType())) {
+						// check if row-filtering or column-masking is applicable for the table/view being accessed
 						RangerHiveResource res = (RangerHiveResource)request.getResource();
 
 						if(res.getObjectType() == HiveObjectType.TABLE || res.getObjectType() == HiveObjectType.VIEW) {
+							HiveAccessType savedAccessType = request.getHiveAccessType();
+
+							request.setHiveAccessType(HiveAccessType.SELECT); // filtering/masking policies are defined only for SELECT
+
 							RangerRowFilterResult rowFilterResult = getRowFilterResult(request);
 
 							if (isRowFilterEnabled(rowFilterResult)) {
 								result.setIsAllowed(false);
 								result.setPolicyId(rowFilterResult.getPolicyId());
 								result.setReason("User does not have acces to all rows of the table");
-
-								auditHandler.processResult(result);
-							}
-
-							if(result.getIsAllowed()) {
+							} else {
 								// check if masking is enabled for any column in the table/view
 								request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
 
@@ -384,9 +385,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 									result.setIsAllowed(false);
 									result.setPolicyId(dataMaskResult.getPolicyId());
 									result.setReason("User does not have acces to unmasked column values");
-
-									auditHandler.processResult(result);
 								}
+							}
+
+							request.setHiveAccessType(savedAccessType);
+
+							if(! result.getIsAllowed()) {
+								auditHandler.processResult(result);
 							}
 						}
 					}
@@ -1205,6 +1210,20 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return requestedResources;
 	}
 
+	private boolean blockAccessIfRowfilterColumnMaskSpecified(HiveOperationType hiveOpType, HiveAccessType accessType) {
+		boolean ret = hiveOpType == HiveOperationType.EXPORT;
+
+		if(! ret && accessType == HiveAccessType.UPDATE && hivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified) {
+			ret = true;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("blockAccessIfRowfilterColumnMaskSpecified(" + hiveOpType + ", " + accessType + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	private String toString(HiveOperationType         hiveOpType,
 							List<HivePrivilegeObject> inputHObjs,
 							List<HivePrivilegeObject> outputHObjs,
@@ -1271,7 +1290,8 @@ enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUN
 enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, ALL, ADMIN };
 
 class RangerHivePlugin extends RangerBasePlugin {
-	public static boolean UpdateXaPoliciesOnGrantRevoke = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
+	public static boolean UpdateXaPoliciesOnGrantRevoke             = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
+	public static boolean BlockUpdateIfRowfilterColumnMaskSpecified = RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE;
 
 	public RangerHivePlugin(String appType) {
 		super("hive", appType);
@@ -1281,7 +1301,8 @@ class RangerHivePlugin extends RangerBasePlugin {
 	public void init() {
 		super.init();
 
-		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke             = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+		RangerHivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_PROP, RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE);
 	}
 }
 
