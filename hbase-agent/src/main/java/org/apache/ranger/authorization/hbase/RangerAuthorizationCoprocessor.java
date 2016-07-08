@@ -1097,8 +1097,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				String tableName = htd.getTableName().getNameAsString();
 				session.table(tableName).buildRequest().authorize();
 				if (!session.isAuthorized()) {
+					List<AuthzAuditEvent> events = null;
 					itr.remove();
-					auditHandler.getAndDiscardMostRecentEvent();
+					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
+					if (event != null) {
+						events = Lists.newArrayList(event);
+					}
+					auditHandler.logAuthzAudits(events);
 				}
 			}
 			if (descriptors.size() > 0) {
