@@ -489,7 +489,7 @@ public class MiscUtil {
 				// in when the token is scheduled to expire. So it is better
 				// to get the user object every time from UserGroupInformation class and
 				// not cache it
-				return UserGroupInformation.getLoginUser();
+				return getLoginUser();
 			} catch (IOException e) {
 				logger.error("Error getting UGI.", e);
 			}
@@ -777,6 +777,12 @@ public class MiscUtil {
 					AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
 					options), };
 		}
+	}
+
+	public static UserGroupInformation getLoginUser() throws IOException {
+		UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+		ugi.checkTGTAndReloginFromKeytab();
+		return ugi;
 	}
 
 	private static  void initLocalHost() {
