@@ -121,6 +121,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				}
 			}
 			if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
+                boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
+                authentication= (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
 				authentication= getUnixAuthentication(authentication);
 				if(authentication!=null && authentication.isAuthenticated()){
 					return authentication;
