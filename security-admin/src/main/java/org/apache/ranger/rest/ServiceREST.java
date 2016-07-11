@@ -956,7 +956,7 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 		boolean isAllowed = false;
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+		if (serviceUtil.isValidService(serviceName, request)) {
 			try {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.scureGrantAccess(serviceName=" + serviceName + ")");
@@ -1127,7 +1127,7 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
-		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
+		if (serviceUtil.isValidService(serviceName,request)) {
 			try {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.secureRevokeAccess(serviceName=" + serviceName + ")");
@@ -1846,7 +1846,7 @@ public class ServiceREST {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		request.setAttribute("downloadPolicy", "secure");
-		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+		if (serviceUtil.isValidService(serviceName, request)) {
 			if (lastKnownVersion == null) {
 				lastKnownVersion = Long.valueOf(-1);
 			}

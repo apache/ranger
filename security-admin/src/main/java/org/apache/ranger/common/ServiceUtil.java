@@ -1340,11 +1340,7 @@ public class ServiceUtil {
 
 		RangerService service = null;
 		try {
-			if(null != request.getAttribute("downloadPolicy") && StringUtils.equalsIgnoreCase(request.getAttribute("downloadPolicy").toString(), "secure")){
-				service = svcStore.getServiceByNameForDP(serviceName);
-			}else{
-				service = svcStore.getServiceByName(serviceName);
-			}
+			service = svcStore.getServiceByName(serviceName);
 		} catch (Exception e) {
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
 			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",  
@@ -1459,6 +1455,43 @@ public class ServiceUtil {
 			isValidAuthentication = true;  
 		}
 		return isValidAuthentication;
+	}
+
+	public boolean isValidService(String serviceName, HttpServletRequest request){
+		boolean isValid = true;
+		if (serviceName == null || serviceName.isEmpty()) {
+			LOG.error("ServiceName not provided");
+			isValid = false;
+			throw restErrorUtil.createRESTException("Unauthorized access.",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+		}
+
+		RangerService service = null;
+		try {
+			if(null != request.getAttribute("downloadPolicy") && StringUtils.equalsIgnoreCase(request.getAttribute("downloadPolicy").toString(), "secure")){
+				service = svcStore.getServiceByNameForDP(serviceName);
+			}else{
+				service = svcStore.getServiceByName(serviceName);
+			}
+		} catch (Exception e) {
+			isValid = false;
+			LOG.error("Requested Service not found. serviceName=" + serviceName);
+			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		if(service==null){
+			isValid = false;
+			LOG.error("Requested Service not found. serviceName=" + serviceName);
+			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
+					MessageEnums.DATA_NOT_FOUND);
+		}
+		if(!service.getIsEnabled()){
+			isValid = false;
+			LOG.error("Requested Service is disabled. serviceName=" + serviceName);
+			throw restErrorUtil.createRESTException("Unauthorized access.",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+		}
+		return isValid;
 	}
 
    private boolean matchNames(String target, String source, boolean wildcardMatch) {
