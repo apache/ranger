@@ -349,7 +349,7 @@ public class RangerRESTClient {
 	
 	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
 		try {
-			if(kmList != null && tmList != null) {
+			if(tmList != null) {
 				SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
 	
 				sslContext.init(kmList, tmList, new SecureRandom());
@@ -360,8 +360,9 @@ public class RangerRESTClient {
 			LOG.error("SSL algorithm is available in the environment", e);
 		} catch (KeyManagementException e) {
 			LOG.error("Unable to initials the SSLContext", e);
+		}catch (Exception e) {
+			LOG.error("Unable to initialize the SSLContext", e);
 		}
-		
 		return null;
 	}
 
