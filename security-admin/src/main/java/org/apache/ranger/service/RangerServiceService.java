@@ -237,7 +237,9 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 						String key = entry.getKey();
 						if (!xConfig.containsKey(key)) {
-							newConfig.put(key, entry.getValue());
+                                                        if(StringUtils.isNotEmpty(entry.getValue())) {
+							       newConfig.put(key, entry.getValue());
+                                                        }
 						} else if (!entry.getValue().equalsIgnoreCase(
 								xConfig.get(key))) {
 							if (key.equalsIgnoreCase("password")
