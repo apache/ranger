@@ -355,13 +355,13 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		String accessType = ACCESS_TYPE_OTHERS;
 
 		RequestType requestType = context.getRequestType();
-		if (requestType.equals(RequestType.ADMIN)) {
+		if (RequestType.ADMIN.equals(requestType)) {
 			accessType = ACCESS_TYPE_ADMIN;
-		} else if (requestType.equals(RequestType.READ)) {
+		} else if (RequestType.READ.equals(requestType)) {
 			accessType = ACCESS_TYPE_QUERY;
-		} else if (requestType.equals(RequestType.WRITE)) {
+		} else if (RequestType.WRITE.equals(requestType)) {
 			accessType = ACCESS_TYPE_UPDATE;
-		} else if (requestType.equals(RequestType.UNKNOWN)) {
+		} else if (RequestType.UNKNOWN.equals(requestType)) {
 			logger.info("UNKNOWN request type. Mapping it to " + accessType
 					+ ". Resource=" + context.getResource());
 			accessType = ACCESS_TYPE_OTHERS;
