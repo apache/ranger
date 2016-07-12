@@ -565,6 +565,10 @@ public class MiscUtil {
 	 */
 	static public boolean logErrorMessageByInterval(Log useLogger,
 			String message, Throwable e) {
+        if (message == null) {
+            return false;
+        }
+
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {
 			log = new LogHistory();
