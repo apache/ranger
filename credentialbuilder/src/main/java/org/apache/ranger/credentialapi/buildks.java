@@ -183,9 +183,9 @@ public class buildks {
 			if(providerPath!=null && !providerPath.trim().isEmpty() && !providerPath.startsWith("localjceks://file")&&!providerPath.startsWith("jceks://file"))
 			{
     			if(providerPath.startsWith("/")){
-					providerPath="localjceks://file"+providerPath;
+					providerPath="jceks://file"+providerPath;
 				}else{
-					providerPath="localjceks://file/"+providerPath;
+					providerPath="jceks://file/"+providerPath;
 				}
         	}	        	
     		command="create";
@@ -415,16 +415,16 @@ public class buildks {
 	
 	public static void displaySyntax(String command){
 		if(command!=null && command.trim().equalsIgnoreCase("create")){
-			System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <localjceks://file/filepath>");
-			System.out.println("sample command is:create myalias -value password123 -provider localjceks://file/tmp/ks/myks.jceks");
+			System.out.println("Correct syntax is:create <aliasname> -value <password> -provider <jceks://file/filepath>");
+			System.out.println("sample command is:create myalias -value password123 -provider jceks://file/tmp/ks/myks.jceks");
 		}
 		if(command!=null && command.trim().equalsIgnoreCase("list")){
-			System.out.println("Correct syntax is:list -provider <localjceks://file/filepath>");
-			System.out.println("sample command is:list -provider localjceks://file/tmp/ks/myks.jceks");
+			System.out.println("Correct syntax is:list -provider <jceks://file/filepath>");
+			System.out.println("sample command is:list -provider jceks://file/tmp/ks/myks.jceks");
 		}
 		if(command!=null && command.trim().equalsIgnoreCase("get")){
-			System.out.println("Correct syntax is:get <aliasname> -provider <localjceks://file/filepath>");
-			System.out.println("sample command is:get myalias -provider localjceks://file/tmp/ks/myks.jceks");
+			System.out.println("Correct syntax is:get <aliasname> -provider <jceks://file/filepath>");
+			System.out.println("sample command is:get myalias -provider jceks://file/tmp/ks/myks.jceks");
 		}
 	}
 	public String getCredential(String args[]){
