@@ -480,7 +480,9 @@ public class MiscUtil {
 	}
 
 	public static UserGroupInformation getUGILoginUser() {
-		if (ugiLoginUser == null) {
+		UserGroupInformation ret = ugiLoginUser;
+
+		if (ret == null) {
 			try {
 				// Do not cache ugiLoginUser if it is not explicitly set with
 				// setUGILoginUser.
@@ -489,12 +491,21 @@ public class MiscUtil {
 				// in when the token is scheduled to expire. So it is better
 				// to get the user object every time from UserGroupInformation class and
 				// not cache it
-				return getLoginUser();
+				ret = getLoginUser();
 			} catch (IOException e) {
 				logger.error("Error getting UGI.", e);
 			}
 		}
-		return ugiLoginUser;
+
+		if(ret != null) {
+			try {
+			ret.checkTGTAndReloginFromKeytab();
+			} catch(IOException excp) {
+				// ignore
+			}
+		}
+
+		return ret;
 	}
 
 	public static Subject getSubjectLoginUser() {
@@ -785,7 +796,7 @@ public class MiscUtil {
 
 	public static UserGroupInformation getLoginUser() throws IOException {
 		UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-		ugi.checkTGTAndReloginFromKeytab();
+
 		return ugi;
 	}
 
