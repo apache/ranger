@@ -21,7 +21,7 @@
     <parent>
         <artifactId>ranger</artifactId>
         <groupId>org.apache.ranger</groupId>
-        <version>0.5.3</version>
+        <version>0.5.4-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
