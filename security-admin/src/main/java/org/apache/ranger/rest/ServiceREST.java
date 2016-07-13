@@ -455,14 +455,23 @@ public class ServiceREST {
 			validator.validate(service, Action.CREATE);
 
 			UserSessionBase session = ContextUtil.getCurrentUserSession();
+			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
 			if(session != null && !session.isSpnegoEnabled()){
 				bizUtil.hasAdminPermissions("Services");
 
 				// TODO: As of now we are allowing SYS_ADMIN to create all the
 				// services including KMS
-
-				XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
 				bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+			}
+			if(session != null && session.isSpnegoEnabled()){
+				if (session.isKeyAdmin() && !xxServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS ",
+							MessageEnums.OPER_NO_PERMISSION);
+				}
+				if ((!session.isKeyAdmin() && !session.isUserAdmin()) && xxServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+					throw restErrorUtil.createRESTException("User cannot create/update/delete KMS Service",
+							MessageEnums.OPER_NO_PERMISSION);
+				}
 			}
 			ret = svcStore.createService(service);
 		} catch(WebApplicationException excp) {
