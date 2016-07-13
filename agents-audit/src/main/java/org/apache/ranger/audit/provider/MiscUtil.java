@@ -651,7 +651,7 @@ public class MiscUtil {
 			}
 		} catch (Throwable t) {
 			logger.fatal("Error logging as appName=" + appName + ", config="
-					+ config.toString());
+					+ config.toString() + ", error=" + t.getMessage());
 		}
 	}
 
