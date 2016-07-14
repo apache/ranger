@@ -84,7 +84,7 @@ public class ServiceRESTUtil {
 		return policyUpdated;
 	}
 
-	static public boolean processRevokeRequest(RangerPolicy policy, GrantRevokeRequest revokeRequest) {
+	static public boolean processRevokeRequest(RangerPolicy existingRangerPolicy, GrantRevokeRequest revokeRequest) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.processRevokeRequest()");
 		}
@@ -93,29 +93,75 @@ public class ServiceRESTUtil {
 
 		// remove all existing privileges for users and groups
 		if (revokeRequest.getReplaceExistingPermissions()) {
-			policyUpdated = removeUsersAndGroupsFromPolicy(policy, revokeRequest.getUsers(), revokeRequest.getGroups());
+			policyUpdated = removeUsersAndGroupsFromPolicy(existingRangerPolicy, revokeRequest.getUsers(), revokeRequest.getGroups());
 		} else {
 			//Build a policy and set up policyItem in it to mimic revoke request
-			RangerPolicy appliedPolicy = new RangerPolicy();
+			RangerPolicy appliedRangerPolicy = new RangerPolicy();
 
-			RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+			RangerPolicy.RangerPolicyItem appliedRangerPolicyItem = new RangerPolicy.RangerPolicyItem();
 
-			policyItem.setDelegateAdmin(revokeRequest.getDelegateAdmin());
-			policyItem.getUsers().addAll(revokeRequest.getUsers());
-			policyItem.getGroups().addAll(revokeRequest.getGroups());
+			appliedRangerPolicyItem.setDelegateAdmin(revokeRequest.getDelegateAdmin());
+			appliedRangerPolicyItem.getUsers().addAll(revokeRequest.getUsers());
+			appliedRangerPolicyItem.getGroups().addAll(revokeRequest.getGroups());
 
-			List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+			List<RangerPolicy.RangerPolicyItemAccess> appliedRangerPolicyItemAccess = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
 
-			Set<String> accessTypes = revokeRequest.getAccessTypes();
-			for (String accessType : accessTypes) {
-				accesses.add(new RangerPolicy.RangerPolicyItemAccess(accessType, true));
+			Set<String> appliedPolicyItemAccessType = revokeRequest.getAccessTypes();
+			for (String accessType : appliedPolicyItemAccessType) {
+				appliedRangerPolicyItemAccess.add(new RangerPolicy.RangerPolicyItemAccess(accessType, false));
 			}
 
-			policyItem.setAccesses(accesses);
+			appliedRangerPolicyItem.setAccesses(appliedRangerPolicyItemAccess);
 
-			appliedPolicy.getDenyPolicyItems().add(policyItem);
+			appliedRangerPolicy.getPolicyItems().add(appliedRangerPolicyItem);
 
-			processApplyPolicy(policy, appliedPolicy);
+			//List<RangerPolicy.RangerPolicyItem> appliedRangerPolicyItems = appliedRangerPolicy.getPolicyItems();
+			processApplyPolicyForItemType(existingRangerPolicy, appliedRangerPolicy, POLICYITEM_TYPE.ALLOW);
+			/*if (CollectionUtils.isNotEmpty(appliedRangerPolicyItems)) {
+				Set<String> users = new HashSet<String>();
+				Set<String> groups = new HashSet<String>();
+
+				Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+				Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+
+				// Extract users and groups specified in appliedPolicy items
+				extractUsersAndGroups(appliedRangerPolicyItems, users, groups);
+
+				// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
+				splitExistingPolicyItems(existingRangerPolicy, users, userPolicyItems, groups, groupPolicyItems);
+
+				for (RangerPolicy.RangerPolicyItem tempPolicyItem : appliedRangerPolicyItems) {
+					List<String> appliedPolicyItemsUser = tempPolicyItem.getUsers();
+					for (String user : appliedPolicyItemsUser) {
+						RangerPolicy.RangerPolicyItem[] rangerPolicyItems = userPolicyItems.get(user);
+						if(rangerPolicyItems!=null && rangerPolicyItems.length>0){
+							removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
+							if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
+								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
+							}else{
+								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+							}
+						}
+					}
+				}
+				for (RangerPolicy.RangerPolicyItem tempPolicyItem : appliedRangerPolicyItems) {
+					List<String> appliedPolicyItemsGroup = tempPolicyItem.getGroups();
+					for (String group : appliedPolicyItemsGroup) {
+						RangerPolicy.RangerPolicyItem[] rangerPolicyItems = groupPolicyItems.get(group);
+						if(rangerPolicyItems!=null && rangerPolicyItems.length>0){
+							removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
+							if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
+								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
+							}else{
+								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+							}
+						}
+					}
+				}
+				// Add modified/new policyItems back to existing policy
+				mergeProcessedPolicyItems(existingRangerPolicy, userPolicyItems, groupPolicyItems);
+				compactPolicy(existingRangerPolicy);
+			}*/
 
 			policyUpdated = true;
 		}
