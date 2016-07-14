@@ -168,6 +168,15 @@ public class XUserMgr extends XUserMgrBase {
 		return vXUser;
 	}
 
+	public VXGroup getGroupByGroupName(String groupName) {
+		VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName);
+		if (vxGroup == null) {
+			throw restErrorUtil.createRESTException(
+					groupName + " is Not Found", MessageEnums.DATA_NOT_FOUND);
+		}
+		return vxGroup;
+	}
+
 	public VXUser createXUser(VXUser vXUser) {
 		checkAdminAccess();
 		String userName = vXUser.getName();

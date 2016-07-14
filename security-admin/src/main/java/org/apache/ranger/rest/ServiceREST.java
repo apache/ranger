@@ -870,131 +870,25 @@ public class ServiceREST {
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
 
-		if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
+		if(grantRequest!=null){
+			if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
-			try {
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
-				}
-
-				String               userName   = grantRequest.getGrantor();
-				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
-
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-	
-				if(!isAdmin) {
-					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
-				}
-	
-				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
-
-				if(policy != null) {
-					boolean policyUpdated = false;
-					policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
-
-					if(policyUpdated) {
-						svcStore.updatePolicy(policy);
-					} else {
-						LOG.error("processGrantRequest processing failed");
-						throw new Exception("processGrantRequest processing failed");
-					}
-				} else {
-					policy = new RangerPolicy();
-					policy.setService(serviceName);
-					policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
-					policy.setDescription("created by grant");
-					policy.setIsAuditEnabled(grantRequest.getEnableAudit());
-					policy.setCreatedBy(userName);
-		
-					Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
-					Set<String>                       resourceNames   = resource.getKeys();
-		
-					if(! CollectionUtils.isEmpty(resourceNames)) {
-						for(String resourceName : resourceNames) {
-							RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
-							policyResource.setIsRecursive(grantRequest.getIsRecursive());
-	
-							policyResources.put(resourceName, policyResource);
-						}
-					}
-					policy.setResources(policyResources);
-
-					RangerPolicyItem policyItem = new RangerPolicyItem();
-
-					policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-					policyItem.getUsers().addAll(grantRequest.getUsers());
-					policyItem.getGroups().addAll(grantRequest.getGroups());
-
-					for(String accessType : grantRequest.getAccessTypes()) {
-						policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+				try {
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
 					}
 
-					policy.getPolicyItems().add(policyItem);
-
-					svcStore.createPolicy(policy);
-				}
-			} catch(WebApplicationException excp) {
-				throw excp;
-			} catch(Throwable excp) {
-				LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
+					validateGrantRevokeRequest(grantRequest);
+					String               userName   = grantRequest.getGrantor();
+					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
 	
-				throw restErrorUtil.createRESTException(excp.getMessage());
-			} finally {
-				RangerPerfTracer.log(perf);
-			}
-	
-			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
-		}
+					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.grantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
-		}
+					if(!isAdmin) {
+						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
+					}
 
-		return ret;
-	}
-	
-	@POST
-	@Path("/secure/services/grant/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
-	public RESTResponse secureGrantAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + ")");
-		}
-		RESTResponse     ret  = new RESTResponse();
-		RangerPerfTracer perf = null;
-		boolean isAllowed = false;
-		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-		if (serviceUtil.isValidService(serviceName, request)) {
-			try {
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.scureGrantAccess(serviceName=" + serviceName + ")");
-				}
-				String               userName   = grantRequest.getGrantor();
-				Set<String>          userGroups = userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-				
-				XXService xService = daoManager.getXXService().findByName(serviceName);
-				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-				RangerService rangerService = svcStore.getServiceByName(serviceName);
-				
-				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-					if (isKeyAdmin) {
-						isAllowed = true;
-					}else {
-						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-					}
-				}else{
-					if (isAdmin) {
-						isAllowed = true;
-					}
-					else{
-						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-					}
-				}
-				
-				if (isAllowed) {
 					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
 	
 					if(policy != null) {
@@ -1004,8 +898,8 @@ public class ServiceREST {
 						if(policyUpdated) {
 							svcStore.updatePolicy(policy);
 						} else {
-							LOG.error("processSecureGrantRequest processing failed");
-							throw new Exception("processSecureGrantRequest processing failed");
+							LOG.error("processGrantRequest processing failed");
+							throw new Exception("processGrantRequest processing failed");
 						}
 					} else {
 						policy = new RangerPolicy();
@@ -1042,21 +936,134 @@ public class ServiceREST {
 	
 						svcStore.createPolicy(policy);
 					}
-				}else{
-					LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed as User doesn't have permission to grant Policy");
-					throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
+				} catch(WebApplicationException excp) {
+					throw excp;
+				} catch(Throwable excp) {
+					LOG.error("grantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
+
+					throw restErrorUtil.createRESTException(excp.getMessage());
+				} finally {
+					RangerPerfTracer.log(perf);
 				}
-			} catch(WebApplicationException excp) {
-				throw excp;
-			} catch(Throwable excp) {
-				LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
-	
-				throw restErrorUtil.createRESTException(excp.getMessage());
-			} finally {
-				RangerPerfTracer.log(perf);
+
+				ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 			}
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.grantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
+		}
+
+		return ret;
+	}
 	
-			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+	@POST
+	@Path("/secure/services/grant/{serviceName}")
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse secureGrantAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + ")");
+		}
+		RESTResponse     ret  = new RESTResponse();
+		RangerPerfTracer perf = null;
+		boolean isAllowed = false;
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+		if(grantRequest!=null){
+			if (serviceUtil.isValidService(serviceName, request)) {
+				try {
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.scureGrantAccess(serviceName=" + serviceName + ")");
+					}
+
+					validateGrantRevokeRequest(grantRequest);
+
+					String               userName   = grantRequest.getGrantor();
+					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
+					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+
+					XXService xService = daoManager.getXXService().findByName(serviceName);
+					XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+					RangerService rangerService = svcStore.getServiceByName(serviceName);
+
+					if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+						if (isKeyAdmin) {
+							isAllowed = true;
+						}else {
+							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
+						}
+					}else{
+						if (isAdmin) {
+							isAllowed = true;
+						}
+						else{
+							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
+						}
+					}
+
+					if (isAllowed) {
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+
+						if(policy != null) {
+							boolean policyUpdated = false;
+							policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
+
+							if(policyUpdated) {
+								svcStore.updatePolicy(policy);
+							} else {
+								LOG.error("processSecureGrantRequest processing failed");
+								throw new Exception("processSecureGrantRequest processing failed");
+							}
+						} else {
+							policy = new RangerPolicy();
+							policy.setService(serviceName);
+							policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
+							policy.setDescription("created by grant");
+							policy.setIsAuditEnabled(grantRequest.getEnableAudit());
+							policy.setCreatedBy(userName);
+
+							Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+							Set<String>                       resourceNames   = resource.getKeys();
+
+							if(! CollectionUtils.isEmpty(resourceNames)) {
+								for(String resourceName : resourceNames) {
+									RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+									policyResource.setIsRecursive(grantRequest.getIsRecursive());
+
+									policyResources.put(resourceName, policyResource);
+								}
+							}
+							policy.setResources(policyResources);
+
+							RangerPolicyItem policyItem = new RangerPolicyItem();
+
+							policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
+							policyItem.getUsers().addAll(grantRequest.getUsers());
+							policyItem.getGroups().addAll(grantRequest.getGroups());
+
+							for(String accessType : grantRequest.getAccessTypes()) {
+								policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+							}
+
+							policy.getPolicyItems().add(policyItem);
+
+							svcStore.createPolicy(policy);
+						}
+					}else{
+						LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed as User doesn't have permission to grant Policy");
+						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
+					}
+				} catch(WebApplicationException excp) {
+					throw excp;
+				} catch(Throwable excp) {
+					LOG.error("secureGrantAccess(" + serviceName + ", " + grantRequest + ") failed", excp);
+
+					throw restErrorUtil.createRESTException(excp.getMessage());
+				} finally {
+					RangerPerfTracer.log(perf);
+				}
+
+				ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+			}
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + "): " + ret);
@@ -1074,52 +1081,54 @@ public class ServiceREST {
 
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+		if(revokeRequest!=null){
+			if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
-		if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
-
-			try {
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
-				}
-
-				String               userName   = revokeRequest.getGrantor();
-				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
-
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-				
-				if(!isAdmin) {
-					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
-				}
-	
-				RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
-				
-				if(policy != null) {
-					boolean policyUpdated = false;
-					policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
-
-					if(policyUpdated) {
-						svcStore.updatePolicy(policy);
-					} else {
-						LOG.error("processRevokeRequest processing failed");
-						throw new Exception("processRevokeRequest processing failed");
+				try {
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
 					}
-				} else {
-					// nothing to revoke!
-				}
-			} catch(WebApplicationException excp) {
-				throw excp;
-			} catch(Throwable excp) {
-				LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
-	
-				throw restErrorUtil.createRESTException(excp.getMessage());
-			} finally {
-				RangerPerfTracer.log(perf);
-			}
-	
-			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
-		}
 
+					validateGrantRevokeRequest(revokeRequest);
+
+					String               userName   = revokeRequest.getGrantor();
+					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
+
+					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+
+					if(!isAdmin) {
+						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
+					}
+
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+
+					if(policy != null) {
+						boolean policyUpdated = false;
+						policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
+
+						if(policyUpdated) {
+							svcStore.updatePolicy(policy);
+						} else {
+							LOG.error("processRevokeRequest processing failed");
+							throw new Exception("processRevokeRequest processing failed");
+						}
+					} else {
+						// nothing to revoke!
+					}
+				} catch(WebApplicationException excp) {
+					throw excp;
+				} catch(Throwable excp) {
+					LOG.error("revokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
+
+					throw restErrorUtil.createRESTException(excp.getMessage());
+				} finally {
+					RangerPerfTracer.log(perf);
+				}
+
+				ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+			}
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.revokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);
 		}
@@ -1136,68 +1145,73 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
-		if (serviceUtil.isValidService(serviceName,request)) {
-			try {
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.secureRevokeAccess(serviceName=" + serviceName + ")");
-				}
-				String               userName   = revokeRequest.getGrantor();
-				Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
-				RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
-				boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-				boolean isAllowed = false;
-				boolean isKeyAdmin = bizUtil.isKeyAdmin();
-	
-				XXService xService = daoManager.getXXService().findByName(serviceName);
-				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-				RangerService rangerService = svcStore.getServiceByName(serviceName);
-				
-				if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-					if (isKeyAdmin) {
-						isAllowed = true;
-					}else {
-						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
+		if(revokeRequest!=null){
+			if (serviceUtil.isValidService(serviceName,request)) {
+				try {
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.secureRevokeAccess(serviceName=" + serviceName + ")");
 					}
-				}else{
-					if (isAdmin) {
-						isAllowed = true;
-					}
-					else{
-						isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-					}
-				}
-				
-				if (isAllowed) {
-					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
-					
-					if(policy != null) {
-						boolean policyUpdated = false;
-						policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
-	
-						if(policyUpdated) {
-							svcStore.updatePolicy(policy);
-						} else {
-							LOG.error("processSecureRevokeRequest processing failed");
-							throw new Exception("processSecureRevokeRequest processing failed");
+
+					validateGrantRevokeRequest(revokeRequest);
+
+					String               userName   = revokeRequest.getGrantor();
+					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
+					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+					boolean isAllowed = false;
+					boolean isKeyAdmin = bizUtil.isKeyAdmin();
+
+					XXService xService = daoManager.getXXService().findByName(serviceName);
+					XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+					RangerService rangerService = svcStore.getServiceByName(serviceName);
+
+					if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+						if (isKeyAdmin) {
+							isAllowed = true;
+						}else {
+							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 						}
-					} else {
-						// nothing to revoke!
+					}else{
+						if (isAdmin) {
+							isAllowed = true;
+						}
+						else{
+							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
+						}
 					}
-				}else{
-					LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed as User doesn't have permission to revoke Policy");
-					throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
+
+					if (isAllowed) {
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+
+						if(policy != null) {
+							boolean policyUpdated = false;
+							policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
+
+							if(policyUpdated) {
+								svcStore.updatePolicy(policy);
+							} else {
+								LOG.error("processSecureRevokeRequest processing failed");
+								throw new Exception("processSecureRevokeRequest processing failed");
+							}
+						} else {
+							// nothing to revoke!
+						}
+					}else{
+						LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed as User doesn't have permission to revoke Policy");
+						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
+					}
+				} catch(WebApplicationException excp) {
+					throw excp;
+				} catch(Throwable excp) {
+					LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
+
+					throw restErrorUtil.createRESTException(excp.getMessage());
+				} finally {
+					RangerPerfTracer.log(perf);
 				}
-			} catch(WebApplicationException excp) {
-				throw excp;
-			} catch(Throwable excp) {
-				LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed", excp);
-	
-				throw restErrorUtil.createRESTException(excp.getMessage());
-			} finally {
-				RangerPerfTracer.log(perf);
+
+				ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 			}
-	
-			ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.secureRevokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);
@@ -2429,5 +2443,27 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private void validateGrantRevokeRequest(GrantRevokeRequest request){
+		if( request!=null){
+			if(CollectionUtils.isEmpty(request.getUsers()) && CollectionUtils.isEmpty(request.getGroups())){
+				throw restErrorUtil.createGrantRevokeRESTException( "Grantee users/groups list is empty");
+			}
+			String grantor=request.getGrantor();
+			if(grantor==null || userMgr.getXUserByUserName(grantor) == null) {
+				throw restErrorUtil.createGrantRevokeRESTException( "Grantor user "+grantor+" doesn't exist");
+			}
+			for(String userName:request.getUsers()){
+				if(userMgr.getXUserByUserName(userName) == null) {
+					throw restErrorUtil.createGrantRevokeRESTException( "Grantee user "+userName+" doesn't exist");
+				}
+			}
+			for(String groupName:request.getGroups()){
+				if(userMgr.getGroupByGroupName(groupName)== null) {
+					throw restErrorUtil.createGrantRevokeRESTException( "Grantee group "+groupName+" doesn't exist");
+				}
+			}
+		}
 	}
 }
