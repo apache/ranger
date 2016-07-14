@@ -352,48 +352,55 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						for(RangerAccessResult colResult : colResults) {
 							result = colResult;
 
-							if(!result.getIsAllowed()) {
+							if(result != null && !result.getIsAllowed()) {
 								break;
 							}
 						}
 					}
 				} else {
 					result = hivePlugin.isAccessAllowed(request, auditHandler);
+				}
 
-					if(result != null && result.getIsAllowed() && blockAccessIfRowfilterColumnMaskSpecified(hiveOpType, request.getHiveAccessType())) {
-						// check if row-filtering or column-masking is applicable for the table/view being accessed
-						RangerHiveResource res = (RangerHiveResource)request.getResource();
+				if((result == null || result.getIsAllowed()) && isBlockAccessIfRowfilterColumnMaskSpecified(hiveOpType, request)) {
+					// check if row-filtering is applicable for the table/view being accessed
+					HiveAccessType     savedAccessType = request.getHiveAccessType();
+					RangerHiveResource tblResource     = new RangerHiveResource(HiveObjectType.TABLE, resource.getDatabase(), resource.getTable());
 
-						if(res.getObjectType() == HiveObjectType.TABLE || res.getObjectType() == HiveObjectType.VIEW) {
-							HiveAccessType savedAccessType = request.getHiveAccessType();
+					request.setHiveAccessType(HiveAccessType.SELECT); // filtering/masking policies are defined only for SELECT
+					request.setResource(tblResource);
 
-							request.setHiveAccessType(HiveAccessType.SELECT); // filtering/masking policies are defined only for SELECT
+					RangerRowFilterResult rowFilterResult = getRowFilterResult(request);
 
-							RangerRowFilterResult rowFilterResult = getRowFilterResult(request);
-
-							if (isRowFilterEnabled(rowFilterResult)) {
-								result.setIsAllowed(false);
-								result.setPolicyId(rowFilterResult.getPolicyId());
-								result.setReason("User does not have acces to all rows of the table");
-							} else {
-								// check if masking is enabled for any column in the table/view
-								request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
-
-								RangerDataMaskResult dataMaskResult = getDataMaskResult(request);
-
-								if (isDataMaskEnabled(dataMaskResult)) {
-									result.setIsAllowed(false);
-									result.setPolicyId(dataMaskResult.getPolicyId());
-									result.setReason("User does not have acces to unmasked column values");
-								}
-							}
-
-							request.setHiveAccessType(savedAccessType);
-
-							if(! result.getIsAllowed()) {
-								auditHandler.processResult(result);
-							}
+					if (isRowFilterEnabled(rowFilterResult)) {
+						if(result == null) {
+							result = new RangerAccessResult(rowFilterResult.getServiceName(), rowFilterResult.getServiceDef(), request);
 						}
+
+						result.setIsAllowed(false);
+						result.setPolicyId(rowFilterResult.getPolicyId());
+						result.setReason("User does not have acces to all rows of the table");
+					} else {
+						// check if masking is enabled for any column in the table/view
+						request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
+
+						RangerDataMaskResult dataMaskResult = getDataMaskResult(request);
+
+						if (isDataMaskEnabled(dataMaskResult)) {
+							if(result == null) {
+								result = new RangerAccessResult(dataMaskResult.getServiceName(), dataMaskResult.getServiceDef(), request);
+							}
+
+							result.setIsAllowed(false);
+							result.setPolicyId(dataMaskResult.getPolicyId());
+							result.setReason("User does not have acces to unmasked column values");
+						}
+					}
+
+					request.setHiveAccessType(savedAccessType);
+					request.setResource(resource);
+
+					if(result != null && !result.getIsAllowed()) {
+						auditHandler.processResult(result);
 					}
 				}
 
@@ -1210,15 +1217,23 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return requestedResources;
 	}
 
-	private boolean blockAccessIfRowfilterColumnMaskSpecified(HiveOperationType hiveOpType, HiveAccessType accessType) {
-		boolean ret = hiveOpType == HiveOperationType.EXPORT;
+	private boolean isBlockAccessIfRowfilterColumnMaskSpecified(HiveOperationType hiveOpType, RangerHiveAccessRequest request) {
+		boolean            ret      = false;
+		RangerHiveResource resource = (RangerHiveResource)request.getResource();
+		HiveObjectType     objType  = resource.getObjectType();
 
-		if(! ret && accessType == HiveAccessType.UPDATE && hivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified) {
-			ret = true;
+		if(objType == HiveObjectType.TABLE || objType == HiveObjectType.VIEW || objType == HiveObjectType.COLUMN) {
+			ret = hiveOpType == HiveOperationType.EXPORT;
+
+			if(!ret) {
+				if (request.getHiveAccessType() == HiveAccessType.UPDATE && hivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified) {
+					ret = true;
+				}
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("blockAccessIfRowfilterColumnMaskSpecified(" + hiveOpType + ", " + accessType + "): " + ret);
+			LOG.debug("isBlockAccessIfRowfilterColumnMaskSpecified(" + hiveOpType + ", " + request + "): " + ret);
 		}
 
 		return ret;
