@@ -85,7 +85,7 @@
 
 	<!--
 	<category name="org.apache.ranger.perf" additivity="false">
-		<priority value="debug" />
+		<priority value="info" />
 		<appender-ref ref="perf_appender" />
 	</category>
 	-->

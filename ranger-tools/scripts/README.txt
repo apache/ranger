@@ -67,3 +67,16 @@ This file describes how to build, setup, configure and run the performance testi
 
 [RangerPolicyEngine.isAccessAllowed] execCount:64, totalTimeTaken:1873, maxTimeTaken:276, minTimeTaken:4, avgTimeTaken:29
 
+
+RangerPluginPerfTester tool
+
+Steps 1 - 4 as above..
+
+Run the tool with
+
+	% ./ranger-plugin-perftester.sh -s <service-type>  -n <service-name> -a <app-id> -r <ranger-admin-host> -t <socket-read-timeout-in-milliseconds> -p <policy-download-interval-in-milliseconds> -c <local-policy-cache-dir> -e <policy-evaluator-type>
+
+	Example:
+	% ./ranger-plugin-perftester.sh -s hive -n cl1_hive -a test_hive_plugin -r http://ranger_admin_host -t 30000 -p 30000 -c /tmp/hive/policycache -e nocache
+
+

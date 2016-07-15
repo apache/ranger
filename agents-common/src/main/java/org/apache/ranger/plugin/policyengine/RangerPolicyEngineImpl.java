@@ -63,6 +63,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
 			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.init(appId=" + appId + ",hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
+			long freeMemory = Runtime.getRuntime().freeMemory();
+			long totalMemory = Runtime.getRuntime().totalMemory();
+			PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
 		}
 
 		if (options == null) {
@@ -130,6 +133,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		this.allContextEnrichers = tmpList;
 
 		RangerPerfTracer.log(perf);
+
+		if (PERF_POLICYENGINE_INIT_LOG.isDebugEnabled()) {
+			long freeMemory = Runtime.getRuntime().freeMemory();
+			long totalMemory = Runtime.getRuntime().totalMemory();
+			PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl()");

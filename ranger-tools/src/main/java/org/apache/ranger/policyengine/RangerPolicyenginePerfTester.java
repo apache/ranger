@@ -83,6 +83,18 @@ public class RangerPolicyenginePerfTester {
                 LOG.debug("Number of perfTestClients=" + perfTestClients.size());
             }
 
+            Runtime runtime = Runtime.getRuntime();
+            runtime.gc();
+
+            long totalMemory = runtime.totalMemory();
+            long freeMemory = runtime.freeMemory();
+
+            LOG.info("Initial Memory Statistics:");
+            LOG.info("\t\tMaximum memory available for the process:\t" + runtime.maxMemory());
+            LOG.info("\t\tInitial In-Use memory:\t\t\t\t" + (totalMemory-freeMemory));
+            LOG.info("\t\tInitial Free memory:\t\t\t\t" + freeMemory);
+            LOG.info("\n\n");
+
             for (PerfTestClient client : perfTestClients) {
                 try {
                     client.start();
@@ -94,15 +106,27 @@ public class RangerPolicyenginePerfTester {
             LOG.info("Waiting for " + perfTestClients.size() + " clients to finish up");
 
             for (PerfTestClient client : perfTestClients) {
-                try {
-                    if (client.isAlive()) {
+                while (client.isAlive()) {
+                    try {
                         LOG.info("Waiting for " + client.getName() + " to finish up.");
-                        client.join();
+                        client.join(1000);
+
+                        runtime.gc();
+
+                        totalMemory = runtime.totalMemory();
+                        freeMemory = runtime.freeMemory();
+
+                        LOG.info("Memory Statistics:");
+                        LOG.info("\t\tCurrent In-Use memory:\t\t" + (totalMemory-freeMemory));
+                        LOG.info("\t\tCurrent Free memory:\t\t" + freeMemory);
+                        LOG.info("\n\n");
+
+                    } catch (InterruptedException interruptedException) {
+                        LOG.error("PerfTestClient.join() was interrupted");
                     }
-                } catch (InterruptedException interruptedException) {
-                    LOG.error("PerfTestClient.join() was interrupted");
                 }
             }
+
             if (LOG.isDebugEnabled()) {
                 LOG.debug("<== RangerPolicyenginePerfTester.main()");
             }
