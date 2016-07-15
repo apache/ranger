@@ -179,6 +179,9 @@ public class PolicyRefresher extends Thread {
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
 			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.loadPolicy(serviceName=" + serviceName + ")");
+			long freeMemory = Runtime.getRuntime().freeMemory();
+			long totalMemory = Runtime.getRuntime().totalMemory();
+			PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory-freeMemory) + ", Free memory:" + freeMemory);
 		}
 
 		//load policy from PolicyAdmin
@@ -194,6 +197,12 @@ public class PolicyRefresher extends Thread {
 		}
 
 		RangerPerfTracer.log(perf);
+
+		if (PERF_POLICYENGINE_INIT_LOG.isDebugEnabled()) {
+			long freeMemory = Runtime.getRuntime().freeMemory();
+			long totalMemory = Runtime.getRuntime().totalMemory();
+			PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory-freeMemory) + ", Free memory:" + freeMemory);
+		}
 
 		if (svcPolicies != null) {
 			plugIn.setPolicies(svcPolicies);
@@ -212,6 +221,12 @@ public class PolicyRefresher extends Thread {
 		}
 
 		ServicePolicies svcPolicies = null;
+
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.loadPolicyFromPolicyAdmin(serviceName=" + serviceName + ")");
+		}
 
 		try {
 			svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion);
@@ -240,7 +255,9 @@ public class PolicyRefresher extends Thread {
    			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
    		 }
 
-		 if(LOG.isDebugEnabled()) {
+		RangerPerfTracer.log(perf);
+
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadPolicyfromPolicyAdmin()");
 		 }
 
@@ -261,6 +278,12 @@ public class PolicyRefresher extends Thread {
     	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
     		Reader reader = null;
 
+    		RangerPerfTracer perf = null;
+
+    		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+    			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.loadFromCache(serviceName=" + serviceName + ")");
+    		}
+
     		try {
 	        	reader = new FileReader(cacheFile);
 
@@ -278,6 +301,8 @@ public class PolicyRefresher extends Thread {
 	        } catch (Exception excp) {
 	        	LOG.error("failed to load policies from cache file " + cacheFile.getAbsolutePath(), excp);
 	        } finally {
+	        	RangerPerfTracer.log(perf);
+
 	        	if(reader != null) {
 	        		try {
 	        			reader.close();
@@ -320,6 +345,13 @@ public class PolicyRefresher extends Thread {
 			}
 			
 	    	if(cacheFile != null) {
+
+				RangerPerfTracer perf = null;
+
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
+				}
+
 				Writer writer = null;
 	
 				try {
@@ -337,6 +369,9 @@ public class PolicyRefresher extends Thread {
 		        		}
 		        	}
 		        }
+
+				RangerPerfTracer.log(perf);
+
 	    	}
 		} else {
 			LOG.info("policies is null. Nothing to save in cache");
