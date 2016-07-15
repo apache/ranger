@@ -279,15 +279,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 					final ServiceDBStore dbStore = this;
 					predicateUtil = new ServicePredicateUtil(dbStore);
 
-
-					txTemplate.execute(new TransactionCallback<Object>() {
-						@Override
-	                    public Object doInTransaction(TransactionStatus status) {
-							EmbeddedServiceDefsUtil.instance().init(dbStore);
-							getServiceUpgraded();
-							return null;
-	                    }
-					});
+					try {
+						txTemplate.execute(new TransactionCallback<Object>() {
+							@Override
+							public Object doInTransaction(TransactionStatus status) {
+								EmbeddedServiceDefsUtil.instance().init(dbStore);
+								getServiceUpgraded();
+								return null;
+							}
+						});
+					} catch (Throwable ex) {
+						LOG.fatal("ServiceDefDBStore.initStore(): Failed to update DB: " + ex);
+					}
 
 					legacyServiceDefsInitDone = true;
 				}
@@ -1507,7 +1510,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setCreateTime(existing.getCreateTime());
 			service.setGuid(existing.getGuid());
 			service.setVersion(existing.getVersion());
-
 			service = svcService.update(service);
 
 			if (hasTagServiceValueChanged || hasIsEnabledChanged) {
@@ -1698,9 +1700,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		RangerServiceList serviceList = svcService.searchRangerServices(filter);
-
 		predicateUtil.applyFilter(serviceList.getServices(), filter);
-
 		List<RangerService> ret = serviceList.getServices();
 
 		if (LOG.isDebugEnabled()) {
@@ -3749,7 +3749,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 	public void getServiceUpgraded(){
+		LOG.info("==> ServiceDBStore.getServiceUpgraded()");
 		updateServiceWithCustomProperty();
+		LOG.info("<== ServiceDBStore.getServiceUpgraded()");
 	}
 	private void updateServiceWithCustomProperty() {		
 			LOG.info("Adding custom properties to services");
@@ -3760,6 +3762,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					String serviceUser = PropertiesUtil.getProperty("ranger.plugins."+rangerService.getType()+".serviceuser");
 					if(!StringUtils.isEmpty(serviceUser)){
 						boolean chkServiceUpdate = false;
+						LOG.debug("customproperty = " + rangerService.getConfigs().get(ServiceREST.Allowed_User_List_For_Download) + " for service = " + rangerService.getName());
 						if(!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Download)){
 							rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Download, serviceUser);
 							chkServiceUpdate = true;
@@ -3773,15 +3776,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 							chkServiceUpdate = true;
 		                }
 		                if(chkServiceUpdate){
-							updateService(rangerService);
+		                	updateService(rangerService);
 							if(LOG.isDebugEnabled()){
 								LOG.debug("Updated service "+rangerService.getName()+" with custom properties in secure environment");
 							}
 		                }
 					}
 				}
-			} catch (Exception e) {
-				LOG.error("Error getting Services : "+e.getMessage());
-			}		
+			} catch (Throwable e) {
+				LOG.fatal("updateServiceWithCustomProperty failed with exception : "+e.getMessage());
+				return;
+			}
 	}
 }
