@@ -52,7 +52,7 @@
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-                    <include>com.google.guava:guava:jar:${guava.version}</include>
+                    <include>com.google.guava:guava:jar:${atlas.guava.version}</include>
                     <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
@@ -72,7 +72,7 @@
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
 							<include>commons-logging:commons-logging</include>
-							<include>com.google.guava:guava:jar:${guava.version}</include>
+							<include>com.google.guava:guava:jar:${atlas.guava.version}</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
 							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}</include>
 							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}</include>
