@@ -1232,5 +1232,9 @@ define(function(require) {
 		}
 		return enableDenyAndExceptionsInPolicies;
 	};
+	XAUtils.isEmptyObjectResourceVal = function (obj) {
+		return !_.isUndefined(obj['resources']) && !_.isEmpty(obj['resources'])
+		 		&& !_.isNull(obj['resources']) ? false : true;
+	};
 	return XAUtils;
 });

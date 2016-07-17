@@ -131,7 +131,7 @@ define(function(require){
 			this.renderTable();
 			this.initializePolicies();
 		},
-
+		
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
@@ -143,6 +143,15 @@ define(function(require){
 			}else if( XAUtil.isRowFilterPolicy(policyType) ){
 				this.ui.policyTypeTab.find('ul li').removeClass('active');
 				this.$el.find('li[data-tab="rowLevelFilter"]').addClass('active');
+			}
+			this.showRequiredTabs()
+		},
+		showRequiredTabs : function(){
+			if(XAUtil.isEmptyObjectResourceVal(this.rangerServiceDefModel.get('dataMaskDef'))){
+				this.$el.find('li[data-tab="masking"]').hide();
+			}
+			if(XAUtil.isEmptyObjectResourceVal(this.rangerServiceDefModel.get('rowFilterDef'))){
+				this.$el.find('li[data-tab="rowLevelFilter"]').hide();
 			}
 		},
 		renderTable : function(){
