@@ -115,9 +115,9 @@ public class ServiceRESTUtil {
 
 			appliedRangerPolicy.getPolicyItems().add(appliedRangerPolicyItem);
 
-			//List<RangerPolicy.RangerPolicyItem> appliedRangerPolicyItems = appliedRangerPolicy.getPolicyItems();
-			processApplyPolicyForItemType(existingRangerPolicy, appliedRangerPolicy, POLICYITEM_TYPE.ALLOW);
-			/*if (CollectionUtils.isNotEmpty(appliedRangerPolicyItems)) {
+			List<RangerPolicy.RangerPolicyItem> appliedRangerPolicyItems = appliedRangerPolicy.getPolicyItems();
+			//processApplyPolicyForItemType(existingRangerPolicy, appliedRangerPolicy, POLICYITEM_TYPE.ALLOW);
+			if (CollectionUtils.isNotEmpty(appliedRangerPolicyItems)) {
 				Set<String> users = new HashSet<String>();
 				Set<String> groups = new HashSet<String>();
 
@@ -135,11 +135,17 @@ public class ServiceRESTUtil {
 					for (String user : appliedPolicyItemsUser) {
 						RangerPolicy.RangerPolicyItem[] rangerPolicyItems = userPolicyItems.get(user);
 						if(rangerPolicyItems!=null && rangerPolicyItems.length>0){
-							removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
-							if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
-								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
-							}else{
-								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+							if(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
+								if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
+								}else{
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+								}
+							}
+							if(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], tempPolicyItem.getAccesses());
+								rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()].setDelegateAdmin(Boolean.FALSE);
 							}
 						}
 					}
@@ -149,11 +155,17 @@ public class ServiceRESTUtil {
 					for (String group : appliedPolicyItemsGroup) {
 						RangerPolicy.RangerPolicyItem[] rangerPolicyItems = groupPolicyItems.get(group);
 						if(rangerPolicyItems!=null && rangerPolicyItems.length>0){
-							removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
-							if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
-								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
-							}else{
-								rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+							if(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
+								if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
+								}else{
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+								}
+							}
+							if(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], tempPolicyItem.getAccesses());
+								rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()].setDelegateAdmin(Boolean.FALSE);
 							}
 						}
 					}
@@ -161,7 +173,7 @@ public class ServiceRESTUtil {
 				// Add modified/new policyItems back to existing policy
 				mergeProcessedPolicyItems(existingRangerPolicy, userPolicyItems, groupPolicyItems);
 				compactPolicy(existingRangerPolicy);
-			}*/
+			}
 
 			policyUpdated = true;
 		}
