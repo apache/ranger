@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.utils.RollingTimeUtil;
 
 /**
  * This class write the logs to local file
@@ -46,15 +47,20 @@ public class HDFSAuditDestination extends AuditDestination {
 	public static final String PROP_HDFS_SUBDIR = "subdir";
 	public static final String PROP_HDFS_FILE_NAME_FORMAT = "filename.format";
 	public static final String PROP_HDFS_ROLLOVER = "file.rollover.sec";
+	public static final String PROP_HDFS_ROLLOVER_PERIOD = "file.rollover.period";
 
 	String baseFolder = null;
 	String fileFormat = null;
 	int fileRolloverSec = 24 * 60 * 60; // In seconds
+
 	private String logFileNameFormat;
+
+	private String rolloverPeriod;
 
 	boolean initDone = false;
 
 	private String logFolder;
+
 	PrintWriter logWriter = null;
 
 	private Date fileCreateTime = null;
@@ -62,6 +68,12 @@ public class HDFSAuditDestination extends AuditDestination {
 	private String currentFileName;
 
 	private boolean isStopped = false;
+
+	private RollingTimeUtil rollingTimeUtil = null;
+
+	private Date  nextRollOverTime = null;
+
+	private boolean rollOverByDuration  = false;
 
 	@Override
 	public void init(Properties prop, String propPrefix) {
@@ -97,6 +109,24 @@ public class HDFSAuditDestination extends AuditDestination {
 		logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="
 				+ getName());
 		logger.info("config=" + configProps.toString());
+
+		rolloverPeriod =  MiscUtil.getStringProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_PERIOD);
+		rollingTimeUtil = RollingTimeUtil.getInstance();
+
+		//file.rollover.period is used for rolling over. If it could compute the next roll over time using file.rollover.period
+		//it fall back to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window
+		//for rollover.
+		if(StringUtils.isEmpty(rolloverPeriod) ) {
+			rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
+		}
+
+		try {
+			nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
+		} catch ( Exception e) {
+			logger.warn("Rollover by file.rollover.period failed...will be using the file.rollover.sec for hdfs audit file rollover...",e);
+			rollOverByDuration = true;
+			nextRollOverTime = rollOverByDuration();
+		}
 		initDone = true;
 	}
 
@@ -278,11 +308,10 @@ public class HDFSAuditDestination extends AuditDestination {
 		if (logWriter == null) {
 			return;
 		}
-		// TODO: Close the file on absolute time. Currently it is implemented as
-		// relative time
-		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
+
+		if ( System.currentTimeMillis() > nextRollOverTime.getTime() ) {
 			logger.info("Closing file. Rolling over. name=" + getName()
-					+ ", fileName=" + currentFileName);
+				+ ", fileName=" + currentFileName);
 			try {
 				logWriter.flush();
 				logWriter.close();
@@ -293,7 +322,25 @@ public class HDFSAuditDestination extends AuditDestination {
 
 			logWriter = null;
 			currentFileName = null;
+
+			if (!rollOverByDuration) {
+				try {
+					if(StringUtils.isEmpty(rolloverPeriod) ) { 
+						rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
+					}
+					nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
+				} catch ( Exception e) {
+					logger.warn("Rollover by file.rollover.period failed...will be using the file.rollover.sec for hdfs audit file rollover...",e);
+					nextRollOverTime = rollOverByDuration();
+				}
+			} else {
+				nextRollOverTime = rollOverByDuration();
+			}
 		}
 	}
 
+	private  Date rollOverByDuration() {
+		long rollOverTime = rollingTimeUtil.computeNextRollingTime(fileRolloverSec,nextRollOverTime);
+		return new Date(rollOverTime);
+	}
 }
