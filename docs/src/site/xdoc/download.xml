@@ -31,7 +31,17 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 <ul>
 <li>
 <p>
-The current stable release is Apache Ranger 0.5.3:
+The current stable release is Apache Ranger 0.6.0:
+</p>
+<p>
+<a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.6.0-incubating/apache-ranger-incubating-0.6.0.tar.gz">apache-ranger-incubating-0.6.0.tar.gz</a>
+(<a href="https://www.apache.org/dist/incubator/ranger/0.6.0-incubating/apache-ranger-incubating-0.6.0.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/incubator/ranger/0.6.0-incubating/apache-ranger-incubating-0.6.0.tar.gz.mds">Digests</a>)
+</p>
+</li>
+<li>
+<p>
+An older branch release is Apache Ranger 0.5.3:
 </p>
 <p>
 <a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
@@ -41,7 +51,7 @@ The current stable release is Apache Ranger 0.5.3:
 </li>
 <li>
 <p>
-The older branch release is Apache Ranger 0.4.0:
+An older branch release is Apache Ranger 0.4.0:
 </p>
 <p>
 <a href="http://www.apache.org/dyn/closer.lua/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz">ranger-0.4.0-incubating.tar.gz</a>
