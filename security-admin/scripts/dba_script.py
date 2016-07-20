@@ -31,7 +31,7 @@ os_name = platform.system()
 os_name = os_name.upper()
 
 jisql_debug=True
-
+masked_pwd_string='********'
 if os_name == "LINUX":
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 	if RANGER_ADMIN_HOME is None:
@@ -107,18 +107,18 @@ def password_validation(password, userType):
 			log("[I] "+userType+" user password validated","info")
 	else:
 		if userType == "DBA root":
-                        log("[I] "+userType+" user password validated","info")
-                else:
+			log("[I] "+userType+" user password validated","info")
+		else:
 			log("[E] Blank password is not allowed,please enter valid password.","error")
 			sys.exit(1)
 
 def jisql_log(query, db_root_password):
 	if jisql_debug == True:
 		if os_name == "WINDOWS":
-			query = query.replace(' -p "'+db_root_password+'"' , ' -p "********"')
+			query = query.replace(' -p "'+db_root_password+'"' , ' -p "'+masked_pwd_string+'"')
 			log("[JISQL] "+query, "info")
 		else:
-			query = query.replace(" -p '"+db_root_password+"'" , " -p '********'")
+			query = query.replace(" -p '"+db_root_password+"'" , " -p '"+masked_pwd_string+"'")
 			log("[JISQL] "+query, "info")
 
 class BaseDB(object):
@@ -217,11 +217,13 @@ class MysqlConf(BaseDB):
 							log("[I] MySQL user " + db_user + " does not exists for host " + host, "info")
 							if os_name == "LINUX":
 								query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
-								jisql_log(query, db_root_password)
+								query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, masked_pwd_string)
+								jisql_log(query_with_masked_pwd, db_root_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
 								query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, db_password)
-								jisql_log(query, db_root_password)
+								query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, masked_pwd_string)
+								jisql_log(query_with_masked_pwd, db_root_password)
 								ret = subprocess.call(query)
 							if ret == 0:
 								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
@@ -418,11 +420,13 @@ class OracleConf(BaseDB):
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password)
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user,masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(root_user, db_user, db_root_password,dryMode):
@@ -618,11 +622,13 @@ class OracleConf(BaseDB):
 					get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password)
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, db_password)
-						jisql_log(query, audit_db_root_password)
+						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, audit_db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, db_password)
-						jisql_log(query, audit_db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, audit_db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(audit_db_root_user, db_user, audit_db_root_password,dryMode):
@@ -645,11 +651,13 @@ class OracleConf(BaseDB):
 					get_cmd = self.get_jisql_cmd(audit_db_root_user, audit_db_root_password)
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(audit_db_user, audit_db_password)
-						jisql_log(query, audit_db_root_password)
+						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(audit_db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, audit_db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(audit_db_user, audit_db_password)
-						jisql_log(query, audit_db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(audit_db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, audit_db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(audit_db_root_user, audit_db_user, audit_db_root_password,dryMode):
@@ -746,11 +754,13 @@ class PostgresConf(BaseDB):
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
 					if os_name == "LINUX":
 						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(root_user, db_root_password, db_user,dryMode):
@@ -990,11 +1000,13 @@ class SqlServerConf(BaseDB):
 					log("[I] User does not exists, Creating Login user " + db_user, "info")
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\" -c ;" %(db_user,db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\" -c ;" %(db_user,masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(root_user, db_root_password, db_user,dryMode):
@@ -1208,11 +1220,13 @@ class SqlAnywhereConf(BaseDB):
 					log("[I] User does not exists, Creating Login user " + db_user, "info")
 					if os_name == "LINUX":
 						query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user,db_password)
-						jisql_log(query, db_root_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user,masked_pwd_string)
+						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
 						if self.verify_user(root_user, db_root_password, db_user,dryMode):
@@ -1262,11 +1276,13 @@ class SqlAnywhereConf(BaseDB):
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
 				if os_name == "LINUX":
 					query = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, db_password)
-					jisql_log(query, db_root_password)
+					query_with_masked_pwd = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, masked_pwd_string)
+					jisql_log(query_with_masked_pwd, db_root_password)
 					ret = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\" -c ;" %(db_name,db_user, db_password)
-					jisql_log(query, db_root_password)
+					query_with_masked_pwd = get_cmd + " -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\" -c ;" %(db_name,db_user, masked_pwd_string)
+					jisql_log(query_with_masked_pwd, db_root_password)
 					ret = subprocess.call(query)
 				if ret != 0:
 					log("[E] Database creation failed..","error")
@@ -1298,11 +1314,13 @@ class SqlAnywhereConf(BaseDB):
 			if dryMode == False:
 				if os_name == "LINUX":
 					query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
-					jisql_log(query, db_root_password)
+					query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, masked_pwd_string)
+					jisql_log(query_with_masked_pwd, db_root_password)
 					ret = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user, db_password)
-					jisql_log(query, db_root_password)
+					query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user, masked_pwd_string)
+					jisql_log(query_with_masked_pwd, db_root_password)
 					ret = subprocess.call(query)
 				if ret == 0:
 					if os_name == "LINUX":
@@ -1328,11 +1346,13 @@ class SqlAnywhereConf(BaseDB):
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
 			if os_name == "LINUX":
 				query = get_cmd + " -c \; -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
-				jisql_log(query, db_root_password)
+				query_with_masked_pwd = get_cmd + " -c \; -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
+				jisql_log(query_with_masked_pwd, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
-				jisql_log(query, db_root_password)
+				query_with_masked_pwd = get_cmd + " -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
+				jisql_log(query_with_masked_pwd, db_root_password)
 				ret = subprocess.call(query)
 			if ret != 0:
 				sys.exit(1)
@@ -1376,8 +1396,8 @@ def main(argv):
 	is_revoke=False
 
 	if len(argv) == 4 and argv[3] == 'password_validation':
-        	password_validation(argv[1],argv[2]);
-        	return;
+			password_validation(argv[1],argv[2]);
+			return;
 
 	if len(argv) > 1:
 		for i in range(len(argv)):
@@ -1498,7 +1518,7 @@ def main(argv):
 	else:
 		if (dryMode):
 			xa_db_root_user='db_root_user'
-			xa_db_root_password='*****'
+			xa_db_root_password=masked_pwd_string
 		else:
 			xa_db_root_user=''
 			while xa_db_root_user == "":
@@ -1533,7 +1553,7 @@ def main(argv):
 		db_password = globalDict['db_password']
 	else:
 		if (dryMode):
-			db_password='*****'
+			db_password=masked_pwd_string
 		else:
 			db_password=''
 			while db_password == "":
@@ -1578,7 +1598,7 @@ def main(argv):
 				audit_db_password = globalDict['audit_db_password']
 		else:
 			if (dryMode):
-				audit_db_password='*****'
+				audit_db_password=masked_pwd_string
 			else:
 				audit_db_password=''
 				while audit_db_password == "":
@@ -1636,7 +1656,7 @@ def main(argv):
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		db_user=db_user.lower()
-        	db_name=db_name.lower()
+		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,postgres_dbversion_catalog)
