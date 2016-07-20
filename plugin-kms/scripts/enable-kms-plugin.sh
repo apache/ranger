@@ -639,13 +639,13 @@ then
             }
             {
                 if ($1 == "nimbus.authorizer") {
-                    if ($2 ~ /^[ \t]*"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer"[ \t]*$/) {
+                    if ($2 ~ /^[ \t]*"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer"[ \t]*$/) {
                         configured = 1 ;
                         printf("%s\n",$0) ;
                     }
                     else {
                         printf("#%s\n",$0);
-                        printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+                        printf("nimbus.authorizer: \"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
                         configured = 1 ;
                     }
                 }
@@ -655,7 +655,7 @@ then
             }
             END {
                 if (configured == 0) {
-                    printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+                    printf("nimbus.authorizer: \"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
                 }
             }' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new	
 		fi

@@ -32,13 +32,13 @@ awk -F: 'BEGIN {
 }
 { 
 	if ($1 == "nimbus.authorizer") {
-		if ($2 ~ /^[ \t]*"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer"[ \t]*$/) {
+		if ($2 ~ /^[ \t]*"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer"[ \t]*$/) {
 			configured = 1 ;
 			printf("%s\n",$0) ;
 		}
 		else {
 			printf("#%s\n",$0);
-			printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+			printf("nimbus.authorizer: \"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
 			configured = 1 ;
 		}
 	}
@@ -48,7 +48,7 @@ awk -F: 'BEGIN {
 }
 END {
 	if (configured == 0) {
-		printf("nimbus.authorizer: \"backtype.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
+		printf("nimbus.authorizer: \"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
 	}
 }' ${ARCHIVE_FILE} > ${ARCHIVE_FILE}.new 
 
