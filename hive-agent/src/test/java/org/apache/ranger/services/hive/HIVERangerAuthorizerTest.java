@@ -83,6 +83,7 @@ public class HIVERangerAuthorizerTest {
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER.varname, 
                  "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory");
+        conf.set(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
         
         hiveServer = new HiveServer2();
         hiveServer.init(conf);
