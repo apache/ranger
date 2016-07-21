@@ -75,6 +75,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public static final String MASK_TYPE_NONE     = "MASK_NONE";
 	public static final String MASK_TYPE_CUSTOM   = "CUSTOM";
 
+	private static final String HIVE_CONF_VAR_QUERY_STRING = "hive.query.string";
+
 	private static volatile RangerHivePlugin hivePlugin = null ;
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
@@ -1129,7 +1131,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if(ss != null) {
 			ret.setClientIPAddress(ss.getUserIpAddress());
 			ret.setSessionId(ss.getSessionId());
-			ret.setRequestData(ss.getConf().getQueryString());
+
+			HiveConf hiveConf = ss.getConf();
+
+			if(hiveConf != null) {
+				ret.setRequestData(hiveConf.get(HIVE_CONF_VAR_QUERY_STRING));
+			}
 		}
 
 		HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
