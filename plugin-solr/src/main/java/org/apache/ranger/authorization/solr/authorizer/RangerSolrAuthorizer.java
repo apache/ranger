@@ -181,10 +181,12 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			for (CollectionRequest collectionRequest : context
 					.getCollectionRequests()) {
 
-				List<RangerAccessRequestImpl> requestsForCollection = createRequests(
+				RangerAccessRequestImpl requestForCollection = createRequest(
 						userName, userGroups, ip, eventTime, context,
 						collectionRequest);
-				rangerRequests.addAll(requestsForCollection);
+				if (requestForCollection != null) {
+					rangerRequests.add(requestForCollection);
+				}
 			}
 			if (logger.isDebugEnabled()) {
 				logger.debug("rangerRequests.size()=" + rangerRequests.size());
@@ -291,11 +293,10 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	 * @param collectionRequest
 	 * @return
 	 */
-	private List<RangerAccessRequestImpl> createRequests(String userName,
+	private RangerAccessRequestImpl createRequest(String userName,
 			Set<String> userGroups, String ip, Date eventTime,
 			AuthorizationContext context, CollectionRequest collectionRequest) {
 
-		List<RangerAccessRequestImpl> requests = new ArrayList<RangerAccessRequestImpl>();
 		String accessType = mapToRangerAccessType(context);
 		String action = accessType;
 
@@ -309,14 +310,14 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			rangerRequest.setAccessType(accessType);
 			rangerRequest.setAction(action);
 
-			requests.add(rangerRequest);
-		} else {
-			logger.fatal("Can't create RangerRequest oject. userName="
-					+ userName + ", accessType=" + accessType + ", ip=" + ip
-					+ ", collectionRequest=" + collectionRequest);
+			return rangerRequest;
 		}
+		
+		logger.fatal("Can't create RangerRequest oject. userName="
+				+ userName + ", accessType=" + accessType + ", ip=" + ip
+				+ ", collectionRequest=" + collectionRequest);
 
-		return requests;
+		return null;
 	}
 
 	private RangerAccessRequestImpl createBaseRequest(String userName,
