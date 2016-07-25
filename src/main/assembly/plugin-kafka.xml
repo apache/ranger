@@ -46,11 +46,11 @@
 						<includes>
 							<include>commons-configuration:commons-configuration:jar:${commons.configuration.version}
 							</include>
-							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}
 							</include>
-							<include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}
 							</include>
-							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}
 							</include>
 							<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 							<include>com.google.code.gson:gson</include>
@@ -94,9 +94,9 @@
 							<include>commons-logging:commons-logging</include>
 							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}
 							</include>
-							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}
 							</include>
 							<include>org.apache.ranger:ranger-plugins-cred
 							</include>

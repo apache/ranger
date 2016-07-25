@@ -71,9 +71,9 @@
 							<include>commons-logging:commons-logging</include>
 							<include>com.google.guava:guava:jar:${guava.version}</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-							<include>org.apache.hadoop:hadoop-common:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}
 							</include>
-							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop-common.version}
+							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}
 							</include>
 							<include>org.apache.ranger:ranger-plugins-cred
 							</include>

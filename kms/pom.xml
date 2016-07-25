@@ -30,13 +30,13 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-kms</artifactId>
-            <version>${hadoop-common-kms.version}</version>
+            <version>${hadoop.version}</version>
             <type>war</type>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>${hadoop-common.version}</version>
+            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
@@ -113,13 +113,6 @@
             <artifactId>log4jdbc</artifactId>
             <version>${googlecode.log4jdbc.version}</version>
         </dependency>
-        <!-- Hadoop KMS dependency -->
-        <!-- <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minikdc</artifactId>
-      <version>${hadoop.minikdc.version}</version>
-      <scope>test</scope>
-    </dependency> -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -131,7 +124,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
-            <version>${hadoop-auth.version}</version>
+            <version>${hadoop.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -319,7 +312,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-annotations</artifactId>
-            <version>${hadoop-auth.version}</version>
+            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.htrace</groupId>

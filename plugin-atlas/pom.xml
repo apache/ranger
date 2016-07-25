@@ -68,7 +68,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
-            <version>${hadoop-auth.version}</version>
+            <version>${hadoop.version}</version>
             <scope>compile</scope>
         </dependency>    
         <dependency>
