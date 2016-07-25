@@ -30,7 +30,7 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 
 public class RangerLegacyConfigBuilder {
 
-	public static final Logger LOG = Logger.getLogger(RangerLegacyConfigBuilder.class);
+	private static final Logger LOG = Logger.getLogger(RangerLegacyConfigBuilder.class);
 
 	static String serviceType 	   = null;
 	static String legacyResource  = null;

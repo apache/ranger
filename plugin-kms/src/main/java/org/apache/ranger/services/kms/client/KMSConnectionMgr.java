@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 
 public class KMSConnectionMgr {
 
-	public static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
     
 	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType) {
 		KMSClient kmsClient = null;

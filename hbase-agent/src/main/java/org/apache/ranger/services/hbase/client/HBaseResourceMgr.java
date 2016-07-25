@@ -33,7 +33,7 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HBaseResourceMgr {
 
-	public static final Logger LOG = Logger.getLogger(HBaseResourceMgr.class);
+	private static final Logger LOG = Logger.getLogger(HBaseResourceMgr.class);
 	
 	private static final String TABLE 		 		    = "table";
 	private static final String COLUMNFAMILY 		    = "column-family";

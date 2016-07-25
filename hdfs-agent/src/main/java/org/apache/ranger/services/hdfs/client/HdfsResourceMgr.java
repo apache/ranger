@@ -33,7 +33,7 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HdfsResourceMgr {
 
-	public static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
+	private static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
 	public static final String PATH	= "path";
 
 	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {

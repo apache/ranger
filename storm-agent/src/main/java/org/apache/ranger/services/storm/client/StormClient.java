@@ -51,7 +51,7 @@ import com.sun.jersey.api.client.WebResource;
 
 public class StormClient {
 	
-	public static final Logger LOG = Logger.getLogger(StormClient.class) ;
+	private static final Logger LOG = Logger.getLogger(StormClient.class) ;
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 	

@@ -67,7 +67,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends VXDataObject> {
 
-	public static final Logger logger = Logger
+	protected static final Logger logger = Logger
 			.getLogger(AbstractBaseResourceService.class);
 
 	public static final int OPERATION_CREATE_CONTEXT = 1;

@@ -39,7 +39,7 @@ import scala.collection.Iterator;
 import scala.collection.Seq;
 
 public class ServiceKafkaClient {
-	public static final Logger LOG = Logger.getLogger(ServiceKafkaClient.class);
+	private static final Logger LOG = Logger.getLogger(ServiceKafkaClient.class);
 
 	enum RESOURCE_TYPE {
 		TOPIC

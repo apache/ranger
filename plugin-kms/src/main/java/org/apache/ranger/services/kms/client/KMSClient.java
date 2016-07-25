@@ -54,7 +54,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class KMSClient {
 
-	public static final Logger LOG = Logger.getLogger(KMSClient.class);
+	private static final Logger LOG = Logger.getLogger(KMSClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 

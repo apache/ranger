@@ -27,7 +27,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 public class ServiceSolrConnectionMgr {
-	public static final Logger LOG = Logger
+	private static final Logger LOG = Logger
 			.getLogger(ServiceSolrConnectionMgr.class);
 
 	static public ServiceSolrClient getSolrClient(String serviceName,

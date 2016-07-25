@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 public class ServiceKafkaConnectionMgr {
-	public static final Logger LOG = Logger
+	private static final Logger LOG = Logger
 			.getLogger(ServiceKafkaConnectionMgr.class);
 
 	static public ServiceKafkaClient getKafkaClient(String serviceName,

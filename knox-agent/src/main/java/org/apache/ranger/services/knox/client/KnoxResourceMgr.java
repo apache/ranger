@@ -29,7 +29,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 
 public class KnoxResourceMgr {
 
-	public static final Logger LOG = Logger.getLogger(KnoxResourceMgr.class);
+	private static final Logger LOG = Logger.getLogger(KnoxResourceMgr.class);
 	
 	private static final String TOPOLOGY	  	 = "topology";
 	private static final String SERVICE 	 	 = "service";

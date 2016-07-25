@@ -31,7 +31,7 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HiveResourceMgr {
 
-	public static final Logger LOG = Logger.getLogger(HiveResourceMgr.class);
+	private static final Logger LOG = Logger.getLogger(HiveResourceMgr.class);
 	
 	private static final String  DATABASE 	  = "database";
 	private static final String  TABLE	 	  = "table";

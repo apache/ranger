@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 
 public class StormConnectionMgr {
 
-	public static final Logger LOG = Logger.getLogger(StormConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(StormConnectionMgr.class);
     
 	public static StormClient getStormClient(final String stormUIURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
         StormClient stormClient = null;

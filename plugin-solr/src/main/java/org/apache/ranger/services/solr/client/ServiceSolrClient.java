@@ -44,7 +44,7 @@ import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 import org.apache.solr.common.util.SimpleOrderedMap;
 
 public class ServiceSolrClient {
-	public static final Logger LOG = Logger.getLogger(ServiceSolrClient.class);
+	private static final Logger LOG = Logger.getLogger(ServiceSolrClient.class);
 
 	enum RESOURCE_TYPE {
 		COLLECTION, FIELD

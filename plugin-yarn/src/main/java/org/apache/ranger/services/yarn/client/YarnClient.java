@@ -42,7 +42,7 @@ import com.sun.jersey.api.client.WebResource;
 
 public class YarnClient extends BaseClient {
 
-	public static final Logger LOG = Logger.getLogger(YarnClient.class) ;
+	private static final Logger LOG = Logger.getLogger(YarnClient.class) ;
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 	

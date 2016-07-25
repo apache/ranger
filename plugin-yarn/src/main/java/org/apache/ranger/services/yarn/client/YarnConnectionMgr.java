@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 
 public class YarnConnectionMgr {
 
-	public static final Logger LOG = Logger.getLogger(YarnConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(YarnConnectionMgr.class);
 	
 	public static YarnClient getYarnClient(String serviceName, Map<String, String> configs) {
         return  new YarnClient(serviceName, configs);
