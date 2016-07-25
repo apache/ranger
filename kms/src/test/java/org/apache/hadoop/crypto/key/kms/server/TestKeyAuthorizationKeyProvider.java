@@ -43,6 +43,7 @@ import org.junit.Test;
 public class TestKeyAuthorizationKeyProvider {
 
   private static final String CIPHER = "AES";
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   @Test
   public void testCreateKey() throws Exception {
@@ -63,16 +64,18 @@ public class TestKeyAuthorizationKeyProvider {
           @Override
           public Void run() throws Exception {
             try {
-              kpExt.createKey("foo", SecureRandom.getSeed(16),
-                  newOptions(conf));
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              kpExt.createKey("foo", seed, newOptions(conf));
             } catch (IOException ioe) {
               Assert.fail("User should be Authorized !!");
             }
 
             // "bar" key not configured
             try {
-              kpExt.createKey("bar", SecureRandom.getSeed(16),
-                  newOptions(conf));
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              kpExt.createKey("bar", seed, newOptions(conf));
               Assert.fail("User should NOT be Authorized !!");
             } catch (IOException ioe) {
               // Ignore
@@ -88,8 +91,9 @@ public class TestKeyAuthorizationKeyProvider {
           @Override
           public Void run() throws Exception {
             try {
-              kpExt.createKey("foo", SecureRandom.getSeed(16),
-                  newOptions(conf));
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              kpExt.createKey("foo", seed, newOptions(conf));
               Assert.fail("User should NOT be Authorized !!");
             } catch (IOException ioe) {
               // Ignore
@@ -132,10 +136,14 @@ public class TestKeyAuthorizationKeyProvider {
             m.put("key.acl.name", "testKey");
             opt.setAttributes(m);
             try {
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
               KeyVersion kv = 
-                  kpExt.createKey("foo", SecureRandom.getSeed(16), opt);
+                  kpExt.createKey("foo", seed, opt);
               kpExt.rollNewVersion(kv.getName());
-              kpExt.rollNewVersion(kv.getName(), SecureRandom.getSeed(16));
+              seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              kpExt.rollNewVersion(kv.getName(), seed);
               kpExt.deleteKey(kv.getName());
             } catch (IOException ioe) {
               Assert.fail("User should be Authorized !!");
@@ -143,7 +151,9 @@ public class TestKeyAuthorizationKeyProvider {
 
             KeyVersion retkv = null;
             try {
-              retkv = kpExt.createKey("bar", SecureRandom.getSeed(16), opt);
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              retkv = kpExt.createKey("bar", seed, opt);
               kpExt.generateEncryptedKey(retkv.getName());
               Assert.fail("User should NOT be Authorized to generate EEK !!");
             } catch (IOException ioe) {
@@ -192,10 +202,14 @@ public class TestKeyAuthorizationKeyProvider {
             m.put("key.acl.name", "testKey");
             opt.setAttributes(m);
             try {
+              byte[] seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
               KeyVersion kv = 
-                  kpExt.createKey("foo", SecureRandom.getSeed(16), opt);
+                  kpExt.createKey("foo", seed, opt);
               kpExt.rollNewVersion(kv.getName());
-              kpExt.rollNewVersion(kv.getName(), SecureRandom.getSeed(16));
+              seed = new byte[16];
+              SECURE_RANDOM.nextBytes(seed);
+              kpExt.rollNewVersion(kv.getName(), seed);
               EncryptedKeyVersion ekv = kpExt.generateEncryptedKey(kv.getName());
               kpExt.decryptEncryptedKey(ekv);
               kpExt.deleteKey(kv.getName());
@@ -251,10 +265,14 @@ public class TestKeyAuthorizationKeyProvider {
             Map<String, String> m = new HashMap<String, String>();
             m.put("key.acl.name", "testKey");
             opt.setAttributes(m);
+            byte[] seed = new byte[16];
+            SECURE_RANDOM.nextBytes(seed);
             KeyVersion kv =
-                kpExt.createKey("foo", SecureRandom.getSeed(16), opt);
+                kpExt.createKey("foo", seed, opt);
             kpExt.rollNewVersion(kv.getName());
-            kpExt.rollNewVersion(kv.getName(), SecureRandom.getSeed(16));
+            seed = new byte[16];
+            SECURE_RANDOM.nextBytes(seed);
+            kpExt.rollNewVersion(kv.getName(), seed);
             EncryptedKeyVersion ekv = kpExt.generateEncryptedKey(kv.getName());
             ekv = EncryptedKeyVersion.createForDecryption(
                 ekv.getEncryptionKeyName() + "x",
