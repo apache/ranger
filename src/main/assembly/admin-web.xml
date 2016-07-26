@@ -49,7 +49,7 @@
 
     <moduleSet>
      <binaries>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/hdfs</outputDirectory>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
