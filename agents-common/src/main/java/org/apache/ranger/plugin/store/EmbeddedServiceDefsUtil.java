@@ -187,6 +187,14 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
+	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
+		RangerServiceDef serviceDef=null;
+		if(StringUtils.isNotEmpty(defType)){
+			serviceDef=loadEmbeddedServiceDef(defType);
+		}
+		return serviceDef;
+	}
+
 	private long getId(RangerServiceDef serviceDef) {
 		return serviceDef == null || serviceDef.getId() == null ? -1 : serviceDef.getId().longValue();
 	}
