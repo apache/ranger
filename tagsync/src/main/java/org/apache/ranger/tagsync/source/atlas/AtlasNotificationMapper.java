@@ -23,6 +23,7 @@ import org.apache.atlas.AtlasException;
 import org.apache.atlas.notification.entity.EntityNotification;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.atlas.typesystem.IStruct;
+import org.apache.atlas.typesystem.persistence.Id;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -84,12 +85,17 @@ public class AtlasNotificationMapper {
 				IReferenceableInstance entity = entityNotification.getEntity();
 
 				if (entity != null && AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName())) {
-					AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entityNotification.getEntity(), entityNotification.getAllTraits());
+					AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, entityNotification.getAllTraits());
 					if (entityNotification.getOperationType() == EntityNotification.OperationType.ENTITY_DELETE) {
-						// Special case for ENTITY_DELETE notifications
 						ret = buildServiceTagsForEntityDeleteNotification(entityWithTraits);
 					} else {
-						ret = buildServiceTags(entityWithTraits, null);
+						if (entity.getId().getState() == Id.EntityState.ACTIVE) {
+							ret = buildServiceTags(entityWithTraits, null);
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Ignoring entityNotification for entity that is not ACTIVE: " + entityWithTraits);
+							}
+						}
 					}
 				} else {
 					logUnhandledEntityNotification(entityNotification);
@@ -169,7 +175,14 @@ public class AtlasNotificationMapper {
 		Map<String, ServiceTags> ret = new HashMap<String, ServiceTags>();
 
 		for (AtlasEntityWithTraits element : entitiesWithTraits) {
-			buildServiceTags(element, ret);
+			IReferenceableInstance entity = element.getEntity();
+			if (entity != null && entity.getId().getState() == Id.EntityState.ACTIVE) {
+				buildServiceTags(element, ret);
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Ignoring entity because its State is not ACTIVE: " + element);
+				}
+			}
 		}
 
 		// Remove duplicate tag definitions

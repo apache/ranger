@@ -59,7 +59,9 @@ public class AtlasEntityWithTraits {
 		sb.append("AtlasEntityWithTraits={ ");
 
 		sb.append("Entity-Id: " + entity.getId()._getId()).append(", ")
-				.append("Entity-Type: " + entity.getTypeName()).append(", ");
+				.append("Entity-Type: " + entity.getTypeName()).append(", ")
+				.append("Entity-Version: " + entity.getId().getVersion()).append(", ")
+				.append("Entity-State: " + entity.getId().getStateAsString()).append(", ");
 
 		sb.append("Entity-Values={ ");
 		try {
