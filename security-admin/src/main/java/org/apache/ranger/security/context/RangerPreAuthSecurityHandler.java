@@ -95,7 +95,7 @@ public class RangerPreAuthSecurityHandler {
 
 	public boolean isAPISpnegoAccessible(){
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && userSession.isSpnegoEnabled()) {
+		if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin())) {
 			return true;
 		}else if(userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin())){
 			return true;

@@ -172,16 +172,16 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public RangerService getService(@PathParam("id") Long id) {
 		return serviceREST.getService(id);
 	}
 
 	@GET
 	@Path("/api/service/name/{name}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public RangerService getServiceByName(@PathParam("name") String name) {
 		return serviceREST.getServiceByName(name);
 	}
@@ -204,7 +204,7 @@ public class PublicAPIsv2 {
 
 	@PUT
 	@Path("/api/service/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	@Produces({ "application/json", "application/xml" })
 	public RangerService updateService(RangerService service, @PathParam("id") Long id) {
 		// if service.id is specified, it should be same as the param 'id'
@@ -220,7 +220,7 @@ public class PublicAPIsv2 {
 
 	@PUT
 	@Path("/api/service/name/{name}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	@Produces({ "application/json", "application/xml" })
 	public RangerService updateServiceByName(RangerService service,
 	                                               @PathParam("name") String name) {
@@ -258,14 +258,14 @@ public class PublicAPIsv2 {
 
 	@DELETE
 	@Path("/api/service/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public void deleteService(@PathParam("id") Long id) {
 		serviceREST.deleteService(id);
 	}
 
 	@DELETE
 	@Path("/api/service/name/{name}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public void deleteServiceByName(@PathParam("name") String name) {
 		RangerService service = serviceREST.getServiceByName(name);
 		serviceREST.deleteService(service.getId());
