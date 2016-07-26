@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -126,7 +127,7 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTimeOfDayMatcher.extractDuration(" + value + "): duration[" + result + "]");
+			LOG.debug("<== RangerTimeOfDayMatcher.extractDuration(" + value + "): duration:" + Arrays.toString(result));
 		}
 		return result;
 	}

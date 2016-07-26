@@ -776,7 +776,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isValid(%s, %s): %s", accesses, failures, serviceDef, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isValid(%s, %s, %s): %b", accesses, failures, serviceDef, valid));
 		}
 		return valid;
 	}

@@ -195,7 +195,7 @@ public class TagFileStore extends AbstractTagStore {
 
 		RangerTagDef existing = getTagDefByName(name);
 
-		if (existing == null) {
+		if (existing != null) {
 			try {
 				deleteTagDef(existing);
 			} catch (Exception excp) {
@@ -422,7 +422,9 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			RangerTag tag = getTag(id);
 
-			deleteTag(tag);
+			if (tag != null) {
+				deleteTag(tag);
+			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete tag with ID=" + id, excp);
 		}
@@ -667,7 +669,9 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			RangerServiceResource resource = getServiceResource(id);
 
-			deleteServiceResource(resource);
+			if (resource != null) {
+				deleteServiceResource(resource);
+			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete service-resource with ID=" + id, excp);
 		}
@@ -686,7 +690,9 @@ public class TagFileStore extends AbstractTagStore {
 		try {
 			RangerServiceResource resource = getServiceResourceByGuid(guid);
 
-			deleteServiceResource(resource);
+			if (resource != null) {
+				deleteServiceResource(resource);
+			}
 		} catch (Exception excp) {
 			throw new Exception("failed to delete service-resource with GUID=" + guid, excp);
 		}

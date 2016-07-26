@@ -247,8 +247,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 					try {
 						ServiceTags uploaded = doUpload(toUpload);
-						// ServiceTags uploaded successfully
-						uploadWorkItem.uploadCompleted(uploaded);
+						if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
+							doRetry = true;
+							Thread.sleep(rangerAdminConnectionCheckInterval);
+						} else {
+							// ServiceTags uploaded successfully
+							uploadWorkItem.uploadCompleted(uploaded);
+						}
 					} catch (InterruptedException interrupted) {
 						LOG.error("Caught exception..: ", interrupted);
 						return;

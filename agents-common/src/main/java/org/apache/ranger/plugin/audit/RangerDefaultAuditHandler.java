@@ -67,7 +67,9 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		Collection<AuthzAuditEvent> events = getAuthzEvents(results);
 
-		logAuthzAudits(events);
+		if (events != null) {
+			logAuthzAudits(events);
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultAuditHandler.processResults(" + results + ")");
