@@ -162,7 +162,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			String keysString = sb.toString();
 			String serviceDefName = serviceDef == null ? "" : serviceDef.getName();
 			String validHierarchy = "";
-			if (CollectionUtils.isNotEmpty(firstValidResourceDefHierarchy)) {
+			if (serviceDef != null && CollectionUtils.isNotEmpty(firstValidResourceDefHierarchy)) {
 				RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
 				List<String> resourceDefNameOrderedList = serviceDefHelper.getAllResourceNamesOrdered(firstValidResourceDefHierarchy);
 

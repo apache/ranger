@@ -153,13 +153,17 @@ public class AtlasNotificationMapper {
 			ret.getServiceResources().add(serviceResource);
 		} else {
 			ret = buildServiceTags(entityWithTraits, null);
-			// tag-definitions should NOT be deleted as part of service-resource delete
-			ret.setTagDefinitions(MapUtils.EMPTY_MAP);
-			// Ranger deletes tags associated with deleted service-resource
-			ret.setTags(MapUtils.EMPTY_MAP);
+			if (ret != null) {
+				// tag-definitions should NOT be deleted as part of service-resource delete
+				ret.setTagDefinitions(MapUtils.EMPTY_MAP);
+				// Ranger deletes tags associated with deleted service-resource
+				ret.setTags(MapUtils.EMPTY_MAP);
+			}
 		}
 
-		ret.setOp(ServiceTags.OP_DELETE);
+		if (ret != null) {
+			ret.setOp(ServiceTags.OP_DELETE);
+		}
 
 		return ret;
 	}

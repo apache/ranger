@@ -77,7 +77,9 @@ public class RangerServiceTagsCache {
 				ServiceTagsWrapper cachedServiceTagsWrapper = null;
 
 				for (String serviceName : serviceNames) {
-					cachedServiceTagsWrapper = serviceTagsMap.get(serviceName);
+					synchronized (this) {
+						cachedServiceTagsWrapper = serviceTagsMap.get(serviceName);
+					}
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServiceTagsWrapper);
 					}

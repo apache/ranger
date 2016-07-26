@@ -96,18 +96,6 @@ public class SearchFilter {
 		return params == null ? null : params.get(name);
 	}
 
-	public Long getParamAsLong(String name) {
-
-		String stringValue =  params == null ? null : params.get(name);
-		Long ret = null;
-		try {
-			ret = Long.valueOf(stringValue);
-		} catch (NumberFormatException exception) {
-			// Ignore
-		}
-		return ret;
-	}
-
 	public void setParam(String name, String value) {
 		if(StringUtils.isEmpty(name) || StringUtils.isEmpty(value)) {
 			return;

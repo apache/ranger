@@ -77,7 +77,9 @@ public class RangerServicePoliciesCache {
 				ServicePoliciesWrapper cachedServicePoliciesWrapper = null;
 
 				for (String serviceName : serviceNames) {
-					cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
+					synchronized (this) {
+						cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
+					}
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServicePoliciesWrapper);
 					}
