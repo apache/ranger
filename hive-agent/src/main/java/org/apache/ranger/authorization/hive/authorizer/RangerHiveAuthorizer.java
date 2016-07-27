@@ -1014,14 +1014,24 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             try {
                 Path       filePath   = new Path(uri);
                 FileSystem fs         = FileSystem.get(filePath.toUri(), conf);
-                // Path       path       = FileUtils.getPathOrParentThatExists(fs, filePath);
-                // FileStatus fileStatus = fs.getFileStatus(path);
-                FileStatus fileStatus = FileUtils.getPathOrParentThatExists(fs, filePath);
+                FileStatus[] filestat = fs.globStatus(filePath);
 
-                if (FileUtils.isOwnerOfFileHierarchy(fs, fileStatus, userName)) {
+                if(filestat != null && filestat.length > 0) {
                     ret = true;
-                } else {
-                    ret = FileUtils.isActionPermittedForFileHierarchy(fs, fileStatus, userName, action);
+
+                    for(FileStatus file : filestat) {
+                        ret = FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
+                              FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action);
+
+                        if(! ret) {
+                            break;
+                        }
+                     }
+                } else { // if given path does not exist then check for parent
+                    FileStatus file = FileUtils.getPathOrParentThatExists(fs, filePath);
+
+                    FileUtils.checkFileAccessWithImpersonation(fs, file, action, userName);
+                    ret = true;
                 }
             } catch(Exception excp) {
                 LOG.error("Error getting permissions for " + uri, excp);
