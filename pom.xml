@@ -83,7 +83,6 @@
         <module>knox-agent</module>
         <module>storm-agent</module>
         <module>plugin-yarn</module>
-        <module>ranger_solrj</module>
         <module>security-admin</module>
         <module>plugin-kafka</module>
         <module>plugin-solr</module>
