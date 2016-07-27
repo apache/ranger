@@ -133,9 +133,6 @@ public class RangerAuthenticationEntryPoint extends
 					request.getSession().setAttribute("locallogin","true");
 					request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");
 			}
-			if(request.getHeader("x-forwarded-server") != null){
-				super.setUseForward(true);
-			}
 			super.commence(request, response, authException);
 		}
 	}
