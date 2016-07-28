@@ -137,8 +137,9 @@ public class PamLoginModule extends Object implements LoginModule
     private void initPassword(PasswordCallback passwordCallback)
     {
         char[] password = passwordCallback.getPassword();
-        _password = new String(password);
-
+        if (password != null) {
+        	_password = new String(password);
+        }
         passwordCallback.clearPassword();
     }
 

@@ -351,9 +351,15 @@ public class UnixAuthenticationService {
 				
 		Socket client = null ;
 		
-		while ( (client = socket.accept()) != null ) {
-			Thread clientValidatorThread = new Thread(new PasswordValidator(client)) ;
-			clientValidatorThread.start(); 
+		try {
+		
+			while ( (client = socket.accept()) != null ) {
+				Thread clientValidatorThread = new Thread(new PasswordValidator(client)) ;
+				clientValidatorThread.start(); 
+			}
+		} catch (IOException e) {
+			socket.close();
+			throw(e);
 		}
 
 	}
