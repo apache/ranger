@@ -251,7 +251,7 @@
 			{
 				"itemId": 1,
 				"name": "MASK",
-				"label": "Mask",
+				"label": "Redact",
 				"description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
 				"transformer": "mask({col})",
 				"dataMaskOptions": {
@@ -281,49 +281,14 @@
 			{
 				"itemId": 5,
 				"name": "MASK_NULL",
-				"label": "NULL",
+				"label": "Nullify",
 				"description": "Replace with NULL"
 			},
 			{
 				"itemId": 6,
 				"name": "MASK_NONE",
-				"label": "No masking",
+				"label": "Unmasked (retain original value)",
 				"description": "No masking"
-			},
-			{
-				"itemId": 7,
-				"name": "MASK_DATE_DAY",
-				"label": "Date: mask day",
-				"description": "Date: mask day",
-				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, -1, -1)"
-			},
-			{
-				"itemId": 8,
-				"name": "MASK_DATE_MONTH",
-				"label": "Date: mask month",
-				"description": "Date: mask month",
-				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', -1, 0, -1)"
-			},
-			{
-				"itemId": 9,
-				"name": "MASK_DATE_YEAR",
-				"label": "Date: mask year",
-				"description": "Date: mask year",
-				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', -1, -1, 0)"
-			},
-			{
-				"itemId": 10,
-				"name": "MASK_DATE_SHOW_DAY",
-				"label": "Date: show only day",
-				"description": "Date: show only day",
-				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', -1, 0, 0)"
-			},
-			{
-				"itemId": 11,
-				"name": "MASK_DATE_SHOW_MONTH",
-				"label": "Date: show only month",
-				"description": "Date: show only month",
-				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, -1, 0)"
 			},
 			{
 				"itemId": 12,

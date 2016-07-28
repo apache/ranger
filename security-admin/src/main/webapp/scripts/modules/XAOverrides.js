@@ -871,7 +871,8 @@
 	                  $label = $('<label>', {'class':this.options.inputclass}).append($('<input>', {
 	                      type : 'radio',
 	                      name : this.options.name,
-	                      value : this.sourceData[i].value
+	                      value : this.sourceData[i].value,
+	                      'class' : 'margin-right-5'
 	                  })).append($('<span>').text(this.sourceData[i].text));
 
 	                  // Add radio buttons to template

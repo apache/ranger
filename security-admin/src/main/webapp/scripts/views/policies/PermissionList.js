@@ -595,7 +595,7 @@ define(function(require) {
 			this.maskTypes =  _.map(maskingTypes, function(m){return {text:m.label, value : m.name };});
 			//create x-editable for permissions
 			this.ui.maskingType.editable({
-			    emptytext : 'Select Masking Type',
+			    emptytext : localization.tt('lbl.selectMaskingOption'),
 				source: this.maskTypes,
 				value : this.maskTypeIds,
 				display: function(value,srcData) {
@@ -728,7 +728,7 @@ define(function(require) {
 					permList.unshift(localization.tt('lbl.rowLevelFilter'));
 					permList.unshift(localization.tt('lbl.accessTypes'));
 				}else if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
-					permList.unshift(localization.tt('lbl.selectDataMaskTypes'));
+					permList.unshift(localization.tt('lbl.selectMaskingOption'));
 					permList.unshift(localization.tt('lbl.accessTypes'));
 				}else{
 					permList.unshift(localization.tt('lbl.permissions'));

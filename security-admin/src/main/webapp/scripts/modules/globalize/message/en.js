@@ -233,7 +233,8 @@ define(function(require) {
 				componentPermissions			: 'Component Permissions',
 				selectDataMaskTypes				: 'Select Data Mask Types',
 				accessTypes						: 'Access Types',
-				rowLevelFilter					: 'Row Level Filter'
+				rowLevelFilter					: 'Row Level Filter',
+				selectMaskingOption				: 'Select Masking Option'
 			},
 			btn : {
 				add							: 'Add',

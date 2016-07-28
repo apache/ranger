@@ -2027,3 +2027,18 @@ td.subgrid-custom-cell{
 .customMask{
 	width: 95px;
 }
+.margin-right-5{
+	margin-right: 5px !important;	
+}
+.VS-search .search_facet {
+	margin-top: 5px;
+}
+.VS-search .VS-cancel-search-box {
+	margin-top: 3px;
+}
+.VS-search .VS-icon-search {
+	margin-top: 3px;
+}
+.VS-search .search_facet_input_container{
+	margin-top: 1px;
+}
