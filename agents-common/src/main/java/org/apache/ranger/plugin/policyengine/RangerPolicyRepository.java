@@ -35,12 +35,21 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
 
     private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
+
+    private enum AuditModeEnum {
+        AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
+    }
 
     private final String                      serviceName;
     private final String                      appId;
@@ -51,6 +60,7 @@ public class RangerPolicyRepository {
     private List<RangerPolicyEvaluator>       policyEvaluators;
     private List<RangerPolicyEvaluator>       dataMaskPolicyEvaluators;
     private List<RangerPolicyEvaluator>       rowFilterPolicyEvaluators;
+    private final AuditModeEnum               auditModeEnum;
     private final Map<String, Boolean>        accessAuditCache;
 
     private final String                      componentServiceName;
@@ -71,17 +81,35 @@ public class RangerPolicyRepository {
             LOG.debug("RangerPolicyRepository : building resource-policy-repository for service " + serviceName);
         }
 
-        String propertyName = "ranger.plugin." + serviceName + ".policyengine.auditcachesize";
+        String auditMode = servicePolicies.getAuditMode();
 
-        if (options.cacheAuditResults) {
-            final int RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE = 64*1024;
-
-            int auditResultCacheSize = RangerConfiguration.getInstance().getInt(propertyName, RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE);
-            accessAuditCache = Collections.synchronizedMap(new CacheMap<String, Boolean>(auditResultCacheSize));
+        if (StringUtils.equals(auditMode, RangerPolicyEngine.AUDIT_ALL)) {
+            auditModeEnum = AuditModeEnum.AUDIT_ALL;
+        } else if (StringUtils.equals(auditMode, RangerPolicyEngine.AUDIT_NONE)) {
+            auditModeEnum = AuditModeEnum.AUDIT_NONE;
         } else {
+            auditModeEnum = AuditModeEnum.AUDIT_DEFAULT;
+        }
+
+        if (auditModeEnum == AuditModeEnum.AUDIT_DEFAULT) {
+            String propertyName = "ranger.plugin." + serviceName + ".policyengine.auditcachesize";
+
+            if (options.cacheAuditResults) {
+                final int RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE = 64 * 1024;
+
+                int auditResultCacheSize = RangerConfiguration.getInstance().getInt(propertyName, RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE);
+                accessAuditCache = Collections.synchronizedMap(new CacheMap<String, Boolean>(auditResultCacheSize));
+            } else {
                 accessAuditCache = null;
             }
+        } else {
+            this.accessAuditCache = null;
+        }
 
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("RangerPolicyRepository : building policy-repository for service[" + serviceName
+                    + "] with auditMode[" + auditModeEnum + "]");
+        }
         init(options);
 
     }
@@ -100,10 +128,22 @@ public class RangerPolicyRepository {
 
         this.policies = Collections.unmodifiableList(normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName()));
         this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
+
+        String auditMode = tagPolicies.getAuditMode();
+
+        if (StringUtils.equals(auditMode, RangerPolicyEngine.AUDIT_ALL)) {
+            auditModeEnum = AuditModeEnum.AUDIT_ALL;
+        } else if (StringUtils.equals(auditMode, RangerPolicyEngine.AUDIT_NONE)) {
+            auditModeEnum = AuditModeEnum.AUDIT_NONE;
+        } else {
+            auditModeEnum = AuditModeEnum.AUDIT_DEFAULT;
+        }
+
         this.accessAuditCache = null;
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("RangerPolicyRepository : building tag-policy-repository for tag service " + serviceName);
+            LOG.debug("RangerPolicyRepository : building tag-policy-repository for tag service[" + serviceName
+                    + "] with auditMode[" + auditModeEnum +"]");
         }
 
         init(options);
@@ -472,8 +512,18 @@ public class RangerPolicyRepository {
 
         Boolean value = null;
 
-        if (accessAuditCache != null) {
-	        value = accessAuditCache.get(request.getResource().getAsString());
+        switch (auditModeEnum) {
+            case AUDIT_ALL:
+                value = Boolean.TRUE;
+                break;
+            case AUDIT_NONE:
+                value = Boolean.FALSE;
+                break;
+            default:
+                if (accessAuditCache != null) {
+                    value = accessAuditCache.get(request.getResource().getAsString());
+                }
+                break;
         }
 
         if ((value != null)) {
@@ -492,14 +542,10 @@ public class RangerPolicyRepository {
             LOG.debug("==> RangerPolicyRepository.storeAuditEnabledInCache()");
         }
 
-        if ((ret.getIsAuditedDetermined())) {
+        if (accessAuditCache != null && ret.getIsAuditedDetermined()) {
             String strResource = request.getResource().getAsString();
-
             Boolean value = ret.getIsAudited() ? Boolean.TRUE : Boolean.FALSE;
-
-            if (accessAuditCache != null) {
-	            accessAuditCache.put(strResource, value);
-	        }
+            accessAuditCache.put(strResource, value);
         }
 
         if (LOG.isDebugEnabled()) {

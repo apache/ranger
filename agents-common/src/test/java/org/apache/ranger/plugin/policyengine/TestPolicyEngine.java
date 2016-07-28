@@ -167,6 +167,20 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hdfs_allaudit() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs_allaudit.json" };
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hdfs_noaudit() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs_noaudit.json" };
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hdfsForTag() {
 		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_tag_hdfs.json" };
 
@@ -255,12 +269,19 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 
+		if (StringUtils.isNotBlank(testCase.auditMode)) {
+			servicePolicies.setAuditMode(testCase.auditMode);
+		}
+
 		if (null != testCase.tagPolicyInfo) {
 			ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
 			tagPolicies.setServiceName(testCase.tagPolicyInfo.serviceName);
 			tagPolicies.setServiceDef(testCase.tagPolicyInfo.serviceDef);
 			tagPolicies.setPolicies(testCase.tagPolicyInfo.tagPolicies);
 
+			if (StringUtils.isNotBlank(testCase.auditMode)) {
+				tagPolicies.setAuditMode(testCase.auditMode);
+			}
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
@@ -403,6 +424,7 @@ public class TestPolicyEngine {
 		public RangerServiceDef   serviceDef;
 		public List<RangerPolicy> policies;
 		public TagPolicyInfo	  tagPolicyInfo;
+		public String             auditMode;
 		public List<TestData>     tests;
 		
 		class TestData {
