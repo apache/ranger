@@ -56,6 +56,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -2258,6 +2259,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicy> policies = null;
 		ServicePolicies.TagPolicies tagPolicies = null;
 
+		String auditMode = getAuditMode(serviceDef.getName(), serviceName);
+
 		if (serviceDbObj.getIsenabled()) {
 			if (serviceDbObj.getTagService() != null) {
 				XXService tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
@@ -2282,6 +2285,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 					tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
 					tagPolicies.setServiceDef(tagServiceDef);
+					tagPolicies.setAuditMode(auditMode);
 				}
 			}
 
@@ -2299,6 +2303,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
 		ret.setPolicies(policies);
 		ret.setServiceDef(serviceDef);
+		ret.setAuditMode(auditMode);
 		ret.setTagPolicies(tagPolicies);
 
 		if (LOG.isDebugEnabled()) {
@@ -3787,5 +3792,22 @@ public class ServiceDBStore extends AbstractServiceStore {
 				LOG.fatal("updateServiceWithCustomProperty failed with exception : "+e.getMessage());
 				return;
 			}
+	}
+
+	private String  getAuditMode(String serviceTypeName, String serviceName) {
+		RangerConfiguration config = RangerConfiguration.getInstance();
+		String ret = config.get("ranger.audit.global.mode");
+		if (StringUtils.isNotBlank(ret)) {
+			return ret;
+		}
+		ret = config.get("ranger.audit.servicedef." + serviceTypeName + ".mode");
+		if (StringUtils.isNotBlank(ret)) {
+			return ret;
+		}
+		ret = config.get("ranger.audit.service." + serviceName + ".mode");
+		if (StringUtils.isNotBlank(ret)) {
+			return ret;
+		}
+		return RangerPolicyEngine.AUDIT_DEFAULT;
 	}
 }

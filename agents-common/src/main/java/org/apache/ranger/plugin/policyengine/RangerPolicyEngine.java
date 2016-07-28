@@ -33,6 +33,10 @@ public interface RangerPolicyEngine {
 	String ANY_ACCESS     = "_any";
 	String ADMIN_ACCESS   = "_admin";
 
+	String AUDIT_ALL = "audit-all";
+	String AUDIT_NONE = "audit-none";
+	String AUDIT_DEFAULT = "audit-default";
+
 	String getServiceName();
 
 	RangerServiceDef getServiceDef();

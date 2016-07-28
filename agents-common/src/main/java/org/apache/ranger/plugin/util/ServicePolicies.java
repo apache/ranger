@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -50,6 +51,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private Date               policyUpdateTime;
 	private List<RangerPolicy> policies;
 	private RangerServiceDef   serviceDef;
+	private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 	private TagPolicies        tagPolicies;
 
 	/**
@@ -124,6 +126,14 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setServiceDef(RangerServiceDef serviceDef) {
 		this.serviceDef = serviceDef;
 	}
+
+	public String getAuditMode() {
+		return auditMode;
+	}
+
+	public void setAuditMode(String auditMode) {
+		this.auditMode = auditMode;
+	}
 	/**
 	 * @return the tagPolicies
 	 */
@@ -146,6 +156,7 @@ public class ServicePolicies implements java.io.Serializable {
 			.add("policyUpdateTime", policyUpdateTime)
 			.add("policies", policies)
 			.add("serviceDef", serviceDef)
+			.add("auditMode", auditMode)
 			.add("tagPolicies", tagPolicies)
 			.toString();
 	}
@@ -164,6 +175,7 @@ public class ServicePolicies implements java.io.Serializable {
 		private Date               policyUpdateTime;
 		private List<RangerPolicy> policies;
 		private RangerServiceDef   serviceDef;
+		private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 		/**
 		 * @return the serviceName
 		 */
@@ -237,16 +249,25 @@ public class ServicePolicies implements java.io.Serializable {
 			this.serviceDef = serviceDef;
 		}
 
+		public String getAuditMode() {
+			return auditMode;
+		}
+
+		public void setAuditMode(String auditMode) {
+			this.auditMode = auditMode;
+		}
+
 		@Override
 		public String toString() {
 			return Objects.toStringHelper(this.getClass())
-				.add("serviceName", serviceName)
-				.add("serviceId", serviceId)
-				.add("policyVersion", policyVersion)
-				.add("policyUpdateTime", policyUpdateTime)
-				.add("policies", policies)
-				.add("serviceDef", serviceDef)
-				.toString();
+					.add("serviceName", serviceName)
+					.add("serviceId", serviceId)
+					.add("policyVersion", policyVersion)
+					.add("policyUpdateTime", policyUpdateTime)
+					.add("policies", policies)
+					.add("serviceDef", serviceDef)
+					.add("auditMode", auditMode)
+					.toString();
 		}
 	}
 }
