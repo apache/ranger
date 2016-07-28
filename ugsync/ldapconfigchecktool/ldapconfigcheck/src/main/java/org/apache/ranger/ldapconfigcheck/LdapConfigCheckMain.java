@@ -58,7 +58,7 @@ public class LdapConfigCheckMain {
         PrintStream logFile = null;
         PrintStream ambariProps = null;
         PrintStream installProps = null;
-        LdapContext ldapContext;
+        LdapContext ldapContext = null;
 
         try {
             logFile = new PrintStream(new File(outputDir + LOG_FILE));
@@ -135,6 +135,13 @@ public class LdapConfigCheckMain {
             }
             if (installProps != null) {
                 installProps.close();
+            }
+            try {
+            	if (ldapContext != null) {
+            		ldapContext.close();
+            	}
+            } catch (NamingException ne){
+            	System.out.println("Failed to close LdapContext!");
             }
         }
     }
