@@ -42,7 +42,7 @@ public class SolrAuditProvider extends AuditDestination {
 	public static final String AUDIT_RETRY_WAIT_PROP = "xasecure.audit.solr.retry.ms";
 
 	static final Object lock = new Object();
-	SolrClient solrClient = null;
+	volatile SolrClient solrClient = null;
 	Date lastConnectTime = null;
 	long lastFailTime = 0;
 
@@ -61,9 +61,11 @@ public class SolrAuditProvider extends AuditDestination {
 	}
 
 	void connect() {
-		if (solrClient == null) {
+		SolrClient  me  = solrClient;
+		if (me == null) {
 			synchronized (lock) {
-				if (solrClient == null) {
+				me = solrClient;
+				if (me == null) {
 					String solrURL = MiscUtil.getStringProperty(props,
 							"xasecure.audit.solr.solr_url");
 
@@ -89,7 +91,7 @@ public class SolrAuditProvider extends AuditDestination {
 
 					try {
 						// TODO: Need to support SolrCloud also
-						solrClient = new HttpSolrClient(solrURL);
+						me = solrClient = new HttpSolrClient(solrURL);
 						if (solrClient instanceof HttpSolrClient) {
 							HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
 							httpSolrClient.setAllowCompression(true);

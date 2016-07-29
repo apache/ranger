@@ -67,7 +67,7 @@ public class AuditProviderFactory {
 
 	private static final int RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY = 30;
 
-	private static AuditProviderFactory sFactory;
+	private volatile static AuditProviderFactory sFactory = null;
 
 	private AuditHandler mProvider = null;
 	private String componentAppType = "";
@@ -80,15 +80,17 @@ public class AuditProviderFactory {
 	}
 
 	public static AuditProviderFactory getInstance() {
-		if (sFactory == null) {
-			synchronized (AuditProviderFactory.class) {
-				if (sFactory == null) {
-					sFactory = new AuditProviderFactory();
+		AuditProviderFactory ret = sFactory;
+		if(ret == null) {
+			synchronized(AuditProviderFactory.class) {
+				ret = sFactory;
+				if(ret == null) {
+					ret = sFactory = new AuditProviderFactory();
 				}
 			}
 		}
 
-		return sFactory;
+		return ret;
 	}
 
 	public static AuditHandler getAuditProvider() {
