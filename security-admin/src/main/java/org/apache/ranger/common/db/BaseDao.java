@@ -233,6 +233,12 @@ public abstract class BaseDao<T> {
 			conn.createStatement().execute("SET IDENTITY_INSERT " + tableName + " " + identityInsertStr);
 		} catch (SQLException e) {
 			logger.error("Error while settion identity_insert " + identityInsertStr, e);
+		} finally {
+			try {
+				conn.close();
+			} catch ( SQLException sqe ) {
+				logger.error("Error while settion identity_insert " + identityInsertStr, sqe);
+			}
 		}
 	}
 

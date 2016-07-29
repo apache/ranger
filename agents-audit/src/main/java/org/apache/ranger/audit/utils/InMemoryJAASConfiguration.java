@@ -148,14 +148,15 @@ public final class InMemoryJAASConfiguration extends Configuration {
             properties.load(in);
             init(properties);
         } catch (IOException e) {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception exception) {
-                    // Ignore
-                }
-            }
             throw new Exception("Failed to load JAAS application properties", e);
+        } finally {
+	        if ( in != null) {
+	           try {
+	               in.close();
+	            } catch ( Exception e) {
+	               //Ignore
+	            }
+	        }
         }
         LOG.debug("<== InMemoryJAASConfiguration.init( {} ) ", propFile);
     }
