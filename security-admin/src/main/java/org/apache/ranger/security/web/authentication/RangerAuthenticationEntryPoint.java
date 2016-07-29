@@ -129,9 +129,10 @@ public class RangerAuthenticationEntryPoint extends
 			response.sendError(ajaxReturnCode, "");
 		} else if (!(requestURL.startsWith(reqServletPath))) {
 			if(requestURL.contains(RangerSSOAuthenticationFilter.LOCAL_LOGIN_URL)){
-				if (request.getSession() != null)
+				if (request.getSession() != null){
 					request.getSession().setAttribute("locallogin","true");
 					request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");
+				}
 			}
 			super.commence(request, response, authException);
 		}

@@ -281,7 +281,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 						oldValue = String.valueOf(processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled()));
 					}
 				}
-				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
+				if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
 					return null;
 				} else if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
 					// Compare old and new resources

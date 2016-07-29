@@ -115,14 +115,15 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)throws IOException, ServletException {
 		
 		HttpServletRequest httpRequest = (HttpServletRequest)servletRequest;
-        if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid())
-        {   
-        	if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString().equals("locallogin")){
-        		ssoEnabled = false;
-        		httpRequest.getSession().setAttribute("locallogin","true");
-        		httpRequest.getServletContext().removeAttribute(httpRequest.getRequestedSessionId());
-        	}
-        }		
+		if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()){
+			synchronized(httpRequest.getServletContext()){
+				if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString().equals("locallogin")){
+					ssoEnabled = false;
+					httpRequest.getSession().setAttribute("locallogin","true");
+					httpRequest.getServletContext().removeAttribute(httpRequest.getRequestedSessionId());
+				}
+			}
+		}
 		
 		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 		UserSessionBase session = context != null ? context.getUserSession() : null;

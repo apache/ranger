@@ -1061,7 +1061,10 @@ public class RangerBizUtil {
 		} else {
 			int interval = max - min;
 			int randomNum = random.nextInt();
-			return ((Math.abs(randomNum) % interval) + min);
+			if(randomNum<0){
+				randomNum=Math.abs(randomNum);
+			}
+			return ((randomNum % interval) + min);
 		}
 	}
 

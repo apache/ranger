@@ -69,12 +69,12 @@ public class RangerKeyStore extends KeyStoreSpi {
 	
     // keys
     private static class KeyEntry {
-        Date date; // the creation date of this entry
+        Date date=new Date(); // the creation date of this entry
     };
 
     // Secret key
     private static final class SecretKeyEntry {
-        Date date; // the creation date of this entry
+        Date date=new Date(); // the creation date of this entry
         SealedObject sealedKey;
         String cipher_field;
         int bit_length;
@@ -127,12 +127,15 @@ public class RangerKeyStore extends KeyStoreSpi {
     @Override
     public Date engineGetCreationDate(String alias) {
         Object entry = keyEntries.get(convertAlias(alias));
+        Date date=null;
         if (entry != null) {
-               return new Date(((KeyEntry)entry).date.getTime());
-        } else {
-            return null;
-        }
-    }
+			KeyEntry keyEntry=(KeyEntry)entry;
+			if(keyEntry.date!=null){
+				date=new Date(keyEntry.date.getTime());
+			}
+		}
+		return date;
+	}
 
 
     public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes)
@@ -331,10 +334,14 @@ public class RangerKeyStore extends KeyStoreSpi {
         	}
 			
 			keyEntries.clear();     
-			md = getKeyedMessageDigest(password);
+			if(password!=null){
+				md = getKeyedMessageDigest(password);
+			}
 
-			byte computed[];
-            computed = md.digest();
+			byte computed[]={};
+            if(md!=null){
+				computed = md.digest();
+			}
             for(XXRangerKeyStore rangerKey : rangerKeyDetails){
             	String encoded = rangerKey.getEncoded();
             	byte[] data = DatatypeConverter.parseBase64Binary(encoded);
@@ -555,18 +562,19 @@ public class RangerKeyStore extends KeyStoreSpi {
 				KeyStore ks;
 				try {
 					ks = KeyStore.getInstance(fileFormat);
-					ks.load(null, storePass);
-					String alias = null;
-					engineLoad(null, masterKey);
-				    Enumeration<String> e = engineAliases();
-					Key key;
-					while (e.hasMoreElements()) {
-					   alias = e.nextElement();					   
-					   key = engineGetKey(alias, masterKey);	
-					   ks.setKeyEntry(alias, key, keyPass, null);
+					if(ks!=null){
+						ks.load(null, storePass);
+						String alias = null;
+						engineLoad(null, masterKey);
+						Enumeration<String> e = engineAliases();
+						Key key;
+						while (e.hasMoreElements()) {
+							alias = e.nextElement();
+							key = engineGetKey(alias, masterKey);
+							ks.setKeyEntry(alias, key, keyPass, null);
+						}
+						ks.store(stream, storePass);
 					}
-					
-					ks.store(stream, storePass);
 				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);
 					throw new IOException(t) ;

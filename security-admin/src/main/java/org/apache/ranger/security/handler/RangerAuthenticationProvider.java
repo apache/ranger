@@ -569,12 +569,15 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			}
 
 			authenticator.setSaltSource(saltSource);
-
-			String userName = authentication.getName();
+			String userName ="";
 			String userPassword = "";
-			if (authentication.getCredentials() != null) {
-				userPassword = authentication.getCredentials().toString();
+			if(authentication!=null){
+				userName = authentication.getName();
+				if (authentication.getCredentials() != null) {
+					userPassword = authentication.getCredentials().toString();
+				}
 			}
+
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
 			if (userName != null && userPassword != null && !userName.trim().isEmpty()&& !userPassword.trim().isEmpty()) {
 				final List<GrantedAuthority> grantedAuths = new ArrayList<>();

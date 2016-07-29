@@ -84,9 +84,11 @@ public class KMSResourceMgr {
     public static List<String> getKMSResource(String url, String username, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType, String kmsKeyName, List<String> kmsKeyList) {
     	List<String> topologyList = null;
         final KMSClient KMSClient = KMSConnectionMgr.getKMSClient(url, username, password, rangerPrincipal, rangerKeytab, nameRules, authType);
-        synchronized(KMSClient){
-        	topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
-        }
-        return topologyList;
-    }    
+		if(KMSClient!=null){
+			synchronized(KMSClient){
+				topologyList = KMSClient.getKeyList(kmsKeyName, kmsKeyList);
+			}
+		}
+		return topologyList;
+	}
 }

@@ -1286,7 +1286,7 @@ public class ServiceUtil {
 							if ( AppConstants.getEnumFor_XAPermType(perm) != 0 ) {
 								if (perm.equalsIgnoreCase("Admin")) {
 									delegatedAdmin=true;
-									if ( assetType != RangerCommonEnums.ASSET_HBASE) {
+									if (assetType!=null && assetType.intValue() != RangerCommonEnums.ASSET_HBASE) {
 										continue;
 									}
 								}

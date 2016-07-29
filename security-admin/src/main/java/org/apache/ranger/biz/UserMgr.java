@@ -742,8 +742,8 @@ public class UserMgr {
 		// Get total count first
 		Query query = createUserSearchQuery(countQueryStr, null, searchCriteria);
 		Long count = (Long) query.getSingleResult();
-		int resultSize = Integer.parseInt(count.toString());
-		if (count == null || count.longValue() == 0) {
+		int resultSize = count!=null ? count.intValue() :0;
+		if (resultSize == 0) {
 			return returnList;
 		}
 

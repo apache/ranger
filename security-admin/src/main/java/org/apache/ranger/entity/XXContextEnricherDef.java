@@ -313,10 +313,14 @@ public class XXContextEnricherDef extends XXDBBase implements
 	 */
 	@Override
 	public String toString() {
-		return "XXContextEnricherDef [id=" + id + ", defId=" + defId + ", itemId=" + itemId
+		String str = "XXContextEnricherDef={";
+		str += super.toString();
+		str+=" [id=" + id + ", defId=" + defId + ", itemId=" + itemId
 				+ ", name=" + name + ", enricher=" + enricherOptions
 				+ ", enricherOptions=" + enricherOptions + ", order=" + order
 				+ "]";
+		str += "}";
+		return str;
 	}
 
 }

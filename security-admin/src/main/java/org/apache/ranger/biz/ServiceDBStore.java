@@ -2024,9 +2024,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				}
 				finally {
-					in.close();
-					out.flush();
-					out.close();
+					try{
+						if(in!=null){
+							in.close();
+							in=null;
+						}
+					}catch(Exception ex){
+					}
+					try{
+						if(out!=null){
+							out.flush();
+							out.close();
+						}
+					}catch(Exception ex){
+					}
 				}
 			}
 
@@ -3290,7 +3301,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				break;
 			}
 
-			if (serviceTypeId == 100) {
+			if (serviceTypeId!=null && serviceTypeId.equals(Long.valueOf(100L))) {
 				Map<String, RangerPolicyResource> resources = policy.getResources();
 
 				if (resources != null) {

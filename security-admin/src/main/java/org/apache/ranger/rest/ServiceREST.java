@@ -1348,7 +1348,7 @@ public class ServiceREST {
 				throw restErrorUtil.createRESTException(exception.getMessage());
 			}
 		} else {
-			throw restErrorUtil.createRESTException("Non-existing service specified:" + policy == null ? null : policy.getService());
+			throw restErrorUtil.createRESTException("Non-existing service specified:");
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1886,10 +1886,12 @@ public class ServiceREST {
 					if (isKeyAdmin) {
 						isAllowed = true;
 					}else {
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
-						if(!isAllowed){
-							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
-						}	
+						if(rangerService!=null){
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+							if(!isAllowed){
+								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+							}
+						}
 					}
 				}else{
 					rangerService = svcStore.getServiceByName(serviceName);
@@ -1897,10 +1899,12 @@ public class ServiceREST {
 						isAllowed = true;
 					}
 					else{
-						isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
-						if(!isAllowed){
-							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
-						}	
+						if(rangerService!=null){
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+							if(!isAllowed){
+								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
+							}
+						}
 					}
 				}
 				if (isAllowed) {

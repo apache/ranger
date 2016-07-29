@@ -184,8 +184,12 @@ public class SolrMgr {
 	}
 
 	public SolrClient getSolrClient() {
-		if (solrClient == null) {
-			connect();
+		if(solrClient!=null){
+			return solrClient;
+		}else{
+			synchronized(this){
+				connect();
+			}
 		}
 		return solrClient;
 	}

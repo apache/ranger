@@ -120,10 +120,6 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 				currentTagVersion = Long.valueOf(0);
 			}
 
-			if (updateTime == null) {
-				updateTime = new Date();
-			}
-
 			serviceVersionInfo.setTagVersion(currentTagVersion + 1);
 			serviceVersionInfo.setTagUpdateTime(updateTime);
 		}
