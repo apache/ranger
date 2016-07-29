@@ -205,9 +205,13 @@ public class XXPolicyItemUserPerm extends XXDBBase implements
 	 */
 	@Override
 	public String toString() {
-		return "XXPolicyItemUserPerm [id=" + id + ", policyItemId="
+		String str = "XXPolicyItemUserPerm={";
+		str += super.toString();
+		str +=  " [id=" + id + ", policyItemId="
 				+ policyItemId + ", userId=" + userId + ", order=" + order
 				+ "]";
+		str += "}";
+		return str;
 	}
 
 }

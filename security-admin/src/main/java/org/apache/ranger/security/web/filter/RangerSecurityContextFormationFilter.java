@@ -97,7 +97,10 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				HttpSession httpSession = httpRequest.getSession(false);
 
 				// [1]get the context from session
-				RangerSecurityContext context = (RangerSecurityContext) httpSession.getAttribute(AKA_SC_SESSION_KEY);
+				RangerSecurityContext context = null;
+				if(httpSession!=null){
+					context=(RangerSecurityContext) httpSession.getAttribute(AKA_SC_SESSION_KEY);
+				}
 				int clientTimeOffset = 0;
 				if (context == null) {
 					context = new RangerSecurityContext();

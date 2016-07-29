@@ -159,12 +159,12 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
 			}
 		}
-		
-		Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
-		service.setConfigs(newConfigs);
-		
-		RangerBaseService svc = getRangerServiceByService(service, svcStore);
-
+		RangerBaseService svc=null;
+		if(service!=null){
+			Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+			service.setConfigs(newConfigs);
+			svc = getRangerServiceByService(service, svcStore);
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.validateConfig for Service: (" + svc + ")");
 		}

@@ -123,7 +123,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		updateSequence("X_POLICY_SEQ", maxId + 1);
 	}
 	public List<XXPolicy> findByUserId(Long userId) {
-		if(userId == null || userId.equals(0)) {
+		if(userId == null || userId.equals(Long.valueOf(0L))) {
 			return new ArrayList<XXPolicy>();
 		}
 		try {
@@ -135,7 +135,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 	}
 	public List<XXPolicy> findByGroupId(Long groupId) {
-		if(groupId == null || groupId.equals(0)) {
+		if(groupId == null || groupId.equals(Long.valueOf(0L))) {
 			return new ArrayList<XXPolicy>();
 		}
 		try {

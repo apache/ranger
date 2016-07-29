@@ -244,15 +244,16 @@ public abstract class BaseDao<T> {
 
 	public void updateUserIDReference(String paramName,long oldID) {
 		Table table = tClass.getAnnotation(Table.class);
-		if(table == null) {
+		if(table != null) {
+			String tableName = table.name();
+			String query = "update " + tableName + " set " + paramName+"=null"
+					+ " where " +paramName+"=" + oldID;
+			int count=getEntityManager().createNativeQuery(query).executeUpdate();
+			if(count>0){
+				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=null where " + paramName + "=" + oldID);
+			}
+		}else{
 			logger.warn("Required annotation `Table` not found");
-		}
-		String tableName = table.name();
-		String query = "update " + tableName + " set " + paramName+"=null"
-				+ " where " +paramName+"=" + oldID;
-		int count=getEntityManager().createNativeQuery(query).executeUpdate();
-		if(count>0){
-			logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=null where " + paramName + "=" + oldID);
 		}
 	}
 

@@ -234,35 +234,39 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		//
 		xaBizUtil.createTrxLog(trxLogList);
-
-		assignPermissionToUser(vXPortalUser, true);
+		if(vXPortalUser!=null){
+			assignPermissionToUser(vXPortalUser, true);
+		}
 
 		return createdXUser;
 	}
 
 	public void assignPermissionToUser(VXPortalUser vXPortalUser, boolean isCreate) {
 		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
+		if(moduleNameId!=null && vXPortalUser!=null){
+			if(CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList())){
+				for (String role : vXPortalUser.getUserRoleList()) {
 
-		for (String role : vXPortalUser.getUserRoleList()) {
+					if (role.equals(RangerConstants.ROLE_USER)) {
 
-			if (role.equals(RangerConstants.ROLE_USER)) {
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+					} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-			} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
+					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
 
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-			} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+					}
 
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-				createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+				}
 			}
-
 		}
 	}
 
@@ -1606,7 +1610,10 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		XXPortalUserDao xXPortalUserDao=daoManager.getXXPortalUser();
 		XXPortalUser xXPortalUser=xXPortalUserDao.findByLoginId(vXUser.getName().trim());
-		VXPortalUser vXPortalUser=xPortalUserService.populateViewBean(xXPortalUser);
+		VXPortalUser vXPortalUser=null;
+		if(xXPortalUser!=null){
+			vXPortalUser=xPortalUserService.populateViewBean(xXPortalUser);
+		}
 		if(vXPortalUser==null ||StringUtil.isEmpty(vXPortalUser.getLoginId())){
 			throw restErrorUtil.createRESTException("No user found with id=" + id);
 		}
@@ -1772,11 +1779,8 @@ public class XUserMgr extends XUserMgrBase {
 				xXPortalUserDao.remove(xXPortalUserId);
 				List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
 				xaBizUtil.createTrxLog(trxLogList);
-				if (xXPortalUser != null) {
-					trxLogList=xPortalUserService
-							.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
-					xaBizUtil.createTrxLog(trxLogList);
-				}
+				trxLogList=xPortalUserService.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
+				xaBizUtil.createTrxLog(trxLogList);
 			}
 		}
 	}

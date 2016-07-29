@@ -191,7 +191,9 @@ public class TagREST {
 
         try {
             RangerTagDef exist = tagStore.getTagDefByGuid(guid);
-            tagStore.deleteTagDef(exist.getId());
+            if(exist!=null){
+				tagStore.deleteTagDef(exist.getId());
+			}
         } catch(Exception excp) {
             LOG.error("deleteTagDef(" + guid + ") failed", excp);
 

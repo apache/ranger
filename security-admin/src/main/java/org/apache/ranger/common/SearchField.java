@@ -213,5 +213,7 @@ public class SearchField {
 	public String getCustomCondition() {
 		return customCondition;
 	}
-
+	public void setCustomCondition(String conditions) {
+		customCondition=conditions;
+	}
 }

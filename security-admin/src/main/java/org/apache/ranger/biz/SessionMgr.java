@@ -96,10 +96,6 @@ public class SessionMgr {
 
 	private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
 
-	public UserSessionBase processSuccessLogin(int authType, String userAgent) {
-		return processSuccessLogin(authType, userAgent, null);
-	}
-
 	public UserSessionBase processSuccessLogin(int authType, String userAgent,
 			HttpServletRequest httpRequest) {
 		boolean newSessionCreation = true;

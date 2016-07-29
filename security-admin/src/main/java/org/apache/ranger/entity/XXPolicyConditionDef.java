@@ -558,7 +558,9 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	 */
 	@Override
 	public String toString() {
-		return "XXPolicyConditionDef [id=" + id + ", defId=" + defId + ", itemId=" + itemId
+		String str = "XXPolicyConditionDef={";
+		str += super.toString();
+		str += " [id=" + id + ", defId=" + defId + ", itemId=" + itemId
 				+ ", name=" + name + ", evaluator=" + evaluator
 				+ ", evaluatorOptions=" + evaluatorOptions + ", label=" + label
 				+ ", validationRegEx=" + validationRegEx
@@ -568,6 +570,8 @@ public class XXPolicyConditionDef extends XXDBBase implements
 				+ ", rbKeyValidationMessage=" + rbKeyValidationMessage
 				+ ", rbKeyDescription=" + rbKeyDescription + ", order=" + order
 				+ "]";
+		str += "}";
+		return str;
 	}
 
 }

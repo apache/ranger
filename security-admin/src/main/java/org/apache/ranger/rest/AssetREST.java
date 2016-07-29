@@ -39,6 +39,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
@@ -502,12 +503,17 @@ public class AssetREST {
 
 		VXResource resource = getXResource(id);
 
-		File file = assetMgr.getXResourceFile(resource, fileType);
 
-		return Response
-				.ok(file, MediaType.APPLICATION_OCTET_STREAM)
-				.header("Content-Disposition",
-						"attachment;filename=" + file.getName()).build();
+		Response response=null;
+		if(resource!=null && StringUtils.isNotEmpty(fileType)){
+			File file = null;
+			file=assetMgr.getXResourceFile(resource, fileType);
+			if(file!=null){
+				response=Response.ok(file, MediaType.APPLICATION_OCTET_STREAM).header("Content-Disposition","attachment;filename=" + file.getName()).build();
+				file=null;
+			}
+		}
+		return response;
 	}
 
 	@GET

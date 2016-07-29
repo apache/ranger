@@ -125,52 +125,54 @@ public class KmsKeyMgr {
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + repoName + ") failed", e1);
 		} 
-		for (int i = 0; i < providers.length; i++) {
-			Client c = getClient();
-			String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
-			String keyLists = KMS_KEY_LIST_URI.replaceAll(
-					Pattern.quote("${userName}"), currentUserLoginId);
-			connProvider = providers[i];
-			String uri = providers[i]
-					+ (providers[i].endsWith("/") ? keyLists : ("/" + keyLists));			
-			if(!isKerberos){
-				uri = uri.concat("?user.name="+currentUserLoginId);
-			}else{
-				uri = uri.concat("?doAs="+currentUserLoginId);
-			}
-			final WebResource r = c.resource(uri);
-			try {
-				String response = null;
+		if(providers!=null){
+			for (int i = 0; i < providers.length; i++) {
+				Client c = getClient();
+				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String keyLists = KMS_KEY_LIST_URI.replaceAll(
+						Pattern.quote("${userName}"), currentUserLoginId);
+				connProvider = providers[i];
+				String uri = providers[i]
+						+ (providers[i].endsWith("/") ? keyLists : ("/" + keyLists));
 				if(!isKerberos){
-					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+					uri = uri.concat("?user.name="+currentUserLoginId);
 				}else{
-					Subject sub = getSubjectForKerberos(repoName);
-					response = Subject.doAs(sub, new PrivilegedAction<String>() {
-						@Override
-						public String run() {
-							return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-						}						
-					});
+					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				Gson gson = new GsonBuilder().create();
-				logger.debug(" Search Key RESPONSE: [" + response + "]");
-				keys = gson.fromJson(response, List.class);
-				Collections.sort(keys);
-				VXKmsKeyList vxKmsKeyList2 = new VXKmsKeyList();
-				List<VXKmsKey> vXKeys2 = new ArrayList<VXKmsKey>();
-				for (String name : keys) {
-					VXKmsKey key = new VXKmsKey();
-					key.setName(name);
-					vXKeys2.add(key);
+				final WebResource r = c.resource(uri);
+				try {
+					String response = null;
+					if(!isKerberos){
+						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+					}else{
+						Subject sub = getSubjectForKerberos(repoName);
+						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+							@Override
+							public String run() {
+								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+							}
+						});
+					}
+					Gson gson = new GsonBuilder().create();
+					logger.debug(" Search Key RESPONSE: [" + response + "]");
+					keys = gson.fromJson(response, List.class);
+					Collections.sort(keys);
+					VXKmsKeyList vxKmsKeyList2 = new VXKmsKeyList();
+					List<VXKmsKey> vXKeys2 = new ArrayList<VXKmsKey>();
+					for (String name : keys) {
+						VXKmsKey key = new VXKmsKey();
+						key.setName(name);
+						vXKeys2.add(key);
+					}
+					vxKmsKeyList2.setVXKeys(vXKeys2);
+					vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
+					break;
+				} catch (Exception e) {
+					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+						throw e;
+					else
+						continue;
 				}
-				vxKmsKeyList2.setVXKeys(vXKeys2);
-				vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
-				break;
-			} catch (Exception e) {
-				if (e instanceof UniformInterfaceException || i == providers.length - 1)
-					throw e;								
-				else
-					continue;
 			}
 		}
 		//details
@@ -186,7 +188,7 @@ public class KmsKeyMgr {
 					request.getParameter("pageSize"), 0,
 					"Invalid value for parameter pageSize",
 					MessageEnums.INVALID_INPUT_DATA, null, "pageSize");
-			pageSize = pageSize < 0 ? 0 : pageSize;			
+			pageSize = pageSize < 0 ? 0 : pageSize;
 			
 			vxKmsKeyList.setResultSize(lstKMSKey.size());
 			vxKmsKeyList.setTotalCount(lstKMSKey.size());
@@ -196,14 +198,20 @@ public class KmsKeyMgr {
 				startIndex = startIndex >= lstKMSKey.size() ? 0 : startIndex;
 				lstKMSKey = lstKMSKey.subList(startIndex, lstKMSKey.size());
 			}
-			for (VXKmsKey kmsKey : lstKMSKey) {
-				VXKmsKey key = getKeyFromUri(connProvider, kmsKey.getName(), isKerberos, repoName);
-				vXKeys.add(key);
-			}			
+			if(CollectionUtils.isNotEmpty(lstKMSKey)){
+				for (VXKmsKey kmsKey : lstKMSKey) {
+					if(kmsKey!=null){
+						VXKmsKey key = getKeyFromUri(connProvider, kmsKey.getName(), isKerberos, repoName);
+						vXKeys.add(key);
+					}
+				}
+			}
 			vxKmsKeyList.setStartIndex(startIndex);
 			vxKmsKeyList.setPageSize(pageSize);
 		}
-		vxKmsKeyList.setVXKeys(vXKeys);
+		if(vxKmsKeyList!=null){
+			vxKmsKeyList.setVXKeys(vXKeys);
+		}
 		return vxKmsKeyList;
 	}
 
@@ -221,40 +229,42 @@ public class KmsKeyMgr {
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
-		for (int i = 0; i < providers.length; i++) {
-			Client c = getClient();
-			String rollRest = KMS_ROLL_KEY_URI.replaceAll(Pattern.quote("${alias}"), vXKey.getName());
-			String currentUserLoginId = ContextUtil.getCurrentUserLoginId();			
-			String uri = providers[i] + (providers[i].endsWith("/") ? rollRest : ("/" + rollRest));
-			if(!isKerberos){
-				uri = uri.concat("?user.name="+currentUserLoginId);
-			}else{
-				uri = uri.concat("?doAs="+currentUserLoginId);
-			}
-			final WebResource r = c.resource(uri);
-			Gson gson = new GsonBuilder().create();
-			final String jsonString = gson.toJson(vXKey);
-			try {
-				String response = null;
+		if(providers!=null){
+			for (int i = 0; i < providers.length; i++) {
+				Client c = getClient();
+				String rollRest = KMS_ROLL_KEY_URI.replaceAll(Pattern.quote("${alias}"), vXKey.getName());
+				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String uri = providers[i] + (providers[i].endsWith("/") ? rollRest : ("/" + rollRest));
 				if(!isKerberos){
-				 response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);}
-				else{
-					Subject sub = getSubjectForKerberos(provider);
-		            response = Subject.doAs(sub, new PrivilegedAction<String>() {
-						@Override
-						public String run() {
-	                        return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-						}		            	
-					});
-	            }
-				logger.debug("Roll RESPONSE: [" + response + "]");
-				ret = gson.fromJson(response, VXKmsKey.class);
-				break;
-			} catch (Exception e) {
-				if (e instanceof UniformInterfaceException || i == providers.length - 1)
-					throw e;								
-				else
-					continue;
+					uri = uri.concat("?user.name="+currentUserLoginId);
+				}else{
+					uri = uri.concat("?doAs="+currentUserLoginId);
+				}
+				final WebResource r = c.resource(uri);
+				Gson gson = new GsonBuilder().create();
+				final String jsonString = gson.toJson(vXKey);
+				try {
+					String response = null;
+					if(!isKerberos){
+					 response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);}
+					else{
+						Subject sub = getSubjectForKerberos(provider);
+			            response = Subject.doAs(sub, new PrivilegedAction<String>() {
+							@Override
+							public String run() {
+		                        return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+							}
+						});
+		            }
+					logger.debug("Roll RESPONSE: [" + response + "]");
+					ret = gson.fromJson(response, VXKmsKey.class);
+					break;
+				} catch (Exception e) {
+					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+						throw e;
+					else
+						continue;
+				}
 			}
 		}
 		return ret;
@@ -273,39 +283,41 @@ public class KmsKeyMgr {
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
-		for (int i = 0; i < providers.length; i++) {
-			Client c = getClient();
-			String deleteRest = KMS_DELETE_KEY_URI.replaceAll(Pattern.quote("${alias}"), name);
-			String currentUserLoginId = ContextUtil.getCurrentUserLoginId();			
-			String uri = providers[i] + (providers[i].endsWith("/") ? deleteRest : ("/" + deleteRest));
-			if(!isKerberos){
-					uri = uri.concat("?user.name="+currentUserLoginId);
-			}else{
-				uri = uri.concat("?doAs="+currentUserLoginId);
-			}
-			final WebResource r = c.resource(uri);
-			try {
-				String response = null;
+		if(providers!=null){
+			for (int i = 0; i < providers.length; i++) {
+				Client c = getClient();
+				String deleteRest = KMS_DELETE_KEY_URI.replaceAll(Pattern.quote("${alias}"), name);
+				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String uri = providers[i] + (providers[i].endsWith("/") ? deleteRest : ("/" + deleteRest));
 				if(!isKerberos){
-					response = r.delete(String.class) ;
+						uri = uri.concat("?user.name="+currentUserLoginId);
 				}else{
-					Subject sub = getSubjectForKerberos(provider);
-					response = Subject.doAs(sub, new PrivilegedAction<String>() {
-						@Override
-						public String run() {
-							return r.delete(String.class);
-						}
-					});
+					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				logger.debug("delete RESPONSE: [" + response + "]") ;	
-				break;
-			} catch (Exception e) {
-				if (e instanceof UniformInterfaceException || i == providers.length - 1)
-					throw e;								
-				else
-					continue;
+				final WebResource r = c.resource(uri);
+				try {
+					String response = null;
+					if(!isKerberos){
+						response = r.delete(String.class) ;
+					}else{
+						Subject sub = getSubjectForKerberos(provider);
+						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+							@Override
+							public String run() {
+								return r.delete(String.class);
+							}
+						});
+					}
+					logger.debug("delete RESPONSE: [" + response + "]") ;
+					break;
+				} catch (Exception e) {
+					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+						throw e;
+					else
+						continue;
+				}
 			}
-		}			
+		}
 	}
 
 	public VXKmsKey createKey(String provider, VXKmsKey vXKey) throws Exception{
@@ -323,39 +335,41 @@ public class KmsKeyMgr {
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
-		for (int i = 0; i < providers.length; i++) {
-			Client c = getClient();
-			String currentUserLoginId = ContextUtil.getCurrentUserLoginId();			
-			String uri = providers[i] + (providers[i].endsWith("/") ? KMS_ADD_KEY_URI : ("/" + KMS_ADD_KEY_URI));			
-			if(!isKerberos){
-				uri = uri.concat("?user.name="+currentUserLoginId);
-			}else{
-				uri = uri.concat("?doAs="+currentUserLoginId);
-			}
-			final WebResource r = c.resource(uri);
-			Gson gson = new GsonBuilder().create();
-			final String jsonString = gson.toJson(vXKey);
-			try {
-				String response = null;
+		if(providers!=null){
+			for (int i = 0; i < providers.length; i++) {
+				Client c = getClient();
+				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String uri = providers[i] + (providers[i].endsWith("/") ? KMS_ADD_KEY_URI : ("/" + KMS_ADD_KEY_URI));
 				if(!isKerberos){
-					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+					uri = uri.concat("?user.name="+currentUserLoginId);
 				}else{
-						Subject sub = getSubjectForKerberos(provider);
-						response = Subject.doAs(sub, new PrivilegedAction<String>() {
-							@Override
-							public String run() {
-								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-							}							
-						});
+					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				logger.debug("Create RESPONSE: [" + response + "]");
-				ret = gson.fromJson(response, VXKmsKey.class);
-				return ret;
-			} catch (Exception e) {
-				if (e instanceof UniformInterfaceException || i == providers.length - 1)
-					throw e;								
-				else
-					continue;
+				final WebResource r = c.resource(uri);
+				Gson gson = new GsonBuilder().create();
+				final String jsonString = gson.toJson(vXKey);
+				try {
+					String response = null;
+					if(!isKerberos){
+						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+					}else{
+							Subject sub = getSubjectForKerberos(provider);
+							response = Subject.doAs(sub, new PrivilegedAction<String>() {
+								@Override
+								public String run() {
+									return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+								}
+							});
+					}
+					logger.debug("Create RESPONSE: [" + response + "]");
+					ret = gson.fromJson(response, VXKmsKey.class);
+					return ret;
+				} catch (Exception e) {
+					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+						throw e;
+					else
+						continue;
+				}
 			}
 		}
 		return ret;	
@@ -374,39 +388,41 @@ public class KmsKeyMgr {
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
 		} 
-		for (int i = 0; i < providers.length; i++) {
-			Client c = getClient();
-			String keyRest = KMS_KEY_METADATA_URI.replaceAll(Pattern.quote("${alias}"), name);
-			String currentUserLoginId = ContextUtil.getCurrentUserLoginId();			
-			String uri = providers[i] + (providers[i].endsWith("/") ? keyRest : ("/" + keyRest));
-			if(!isKerberos){
-					uri = uri.concat("?user.name="+currentUserLoginId);
-			}else{
-				uri = uri.concat("?doAs="+currentUserLoginId);
-			}
-			final WebResource r = c.resource(uri);
-			try {
-				String response = null;
+		if(providers!=null){
+			for (int i = 0; i < providers.length; i++) {
+				Client c = getClient();
+				String keyRest = KMS_KEY_METADATA_URI.replaceAll(Pattern.quote("${alias}"), name);
+				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String uri = providers[i] + (providers[i].endsWith("/") ? keyRest : ("/" + keyRest));
 				if(!isKerberos){
-					response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+						uri = uri.concat("?user.name="+currentUserLoginId);
 				}else{
-					Subject sub = getSubjectForKerberos(provider);
-					response = Subject.doAs(sub, new PrivilegedAction<String>() {
-						@Override
-						public String run() {
-							return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-						}
-					});
+					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				Gson gson = new GsonBuilder().create();
-				logger.debug("RESPONSE: [" + response + "]");
-				VXKmsKey key = gson.fromJson(response, VXKmsKey.class);
-				return key;
-			} catch (Exception e) {
-				if (e instanceof UniformInterfaceException || i == providers.length - 1)
-					throw e;								
-				else
-					continue;
+				final WebResource r = c.resource(uri);
+				try {
+					String response = null;
+					if(!isKerberos){
+						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+					}else{
+						Subject sub = getSubjectForKerberos(provider);
+						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+							@Override
+							public String run() {
+								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+							}
+						});
+					}
+					Gson gson = new GsonBuilder().create();
+					logger.debug("RESPONSE: [" + response + "]");
+					VXKmsKey key = gson.fromJson(response, VXKmsKey.class);
+					return key;
+				} catch (Exception e) {
+					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+						throw e;
+					else
+						continue;
+				}
 			}
 		}
 		return null;
@@ -415,7 +431,7 @@ public class KmsKeyMgr {
 	public VXKmsKey getKeyFromUri(String provider, String name, boolean isKerberos, String repoName) throws Exception {
 		Client c = getClient();
 		String keyRest = KMS_KEY_METADATA_URI.replaceAll(Pattern.quote("${alias}"), name);
-		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();		
+		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
 		String uri = provider + (provider.endsWith("/") ? keyRest : ("/" + keyRest));
 		if(!isKerberos){
 			uri = uri.concat("?user.name="+currentUserLoginId);
@@ -438,7 +454,7 @@ public class KmsKeyMgr {
 		Gson gson = new GsonBuilder().create();
 		logger.debug("RESPONSE: [" + response + "]");
 		VXKmsKey key = gson.fromJson(response, VXKmsKey.class);
-		return key;			
+		return key;
 	}
 	
 	private String[] getKMSURL(String name) throws Exception{
@@ -446,21 +462,24 @@ public class KmsKeyMgr {
 		RangerService rangerService = null;
 		try {
 			rangerService = svcStore.getServiceByName(name);
-			String kmsUrl = rangerService.getConfigs().get(KMS_URL_CONFIG);
-			String dbKmsUrl = kmsUrl;
-			if(providerList.containsKey(kmsUrl)){
-				kmsUrl = providerList.get(kmsUrl);				
+			if(rangerService!=null){
+				String kmsUrl = rangerService.getConfigs().get(KMS_URL_CONFIG);
+				String dbKmsUrl = kmsUrl;
+				if(providerList.containsKey(kmsUrl)){
+					kmsUrl = providerList.get(kmsUrl);
+				}else{
+					providerList.put(kmsUrl, kmsUrl);
+				}
+				providers = createProvider(dbKmsUrl,kmsUrl);
 			}else{
-				providerList.put(kmsUrl, kmsUrl);
+				throw new Exception("Service " + name + " not found");
 			}
-			providers = createProvider(dbKmsUrl,kmsUrl);
 		} catch (Exception excp) {
 			logger.error("getServiceByName(" + name + ") failed", excp);
 			throw new Exception("getServiceByName(" + name + ") failed", excp);
 		}
-
-		if (rangerService == null || providers == null) {
-			throw new Exception("Provider " + name + " not found");
+		if (providers == null) {
+			throw new Exception("Providers for service " + name + " not found");
 		}
 		return providers;
 	}
@@ -554,7 +573,7 @@ public class KmsKeyMgr {
 	}
 
 	private String getKMSPassword(String srvName) throws Exception {
-		XXService rangerService = rangerDaoManagerBase.getXXService().findByName(srvName);		
+		XXService rangerService = rangerDaoManagerBase.getXXService().findByName(srvName);
 		XXServiceConfigMap xxConfigMap = rangerDaoManagerBase.getXXServiceConfigMap().findByServiceAndConfigKey(rangerService.getId(), KMS_PASSWORD);
 		String encryptedPwd = xxConfigMap.getConfigvalue();
 		String pwd = PasswordUtils.decryptPassword(encryptedPwd);

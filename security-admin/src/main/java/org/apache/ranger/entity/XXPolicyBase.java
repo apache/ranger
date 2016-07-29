@@ -352,9 +352,13 @@ public abstract class XXPolicyBase extends XXDBBase {
 	 */
 	@Override
 	public String toString() {
-		return "XXPolicyBase [guid=" + guid + ", version=" + version + ", service=" + service + ", name=" + name
+		String str = "XXPolicyBase={";
+		str += super.toString();
+		str += " [guid=" + guid + ", version=" + version + ", service=" + service + ", name=" + name
 				+ ", policyType=" + policyType + ", description=" + description + ", resourceSignature="
 				+ resourceSignature + ", isEnabled=" + isEnabled + ", isAuditEnabled=" + isAuditEnabled + "]";
+		str += "}";
+		return str;
 	}
 
 }
