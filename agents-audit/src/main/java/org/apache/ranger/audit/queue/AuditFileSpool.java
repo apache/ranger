@@ -663,7 +663,7 @@ public class AuditFileSpool implements Runnable {
 				}
 			});
 
-			if (logFiles.length > maxArchiveFiles) {
+			if (logFiles != null && logFiles.length > maxArchiveFiles) {
 				int filesToDelete = logFiles.length - maxArchiveFiles;
 				BufferedReader br = new BufferedReader(new FileReader(
 						indexDoneFile));

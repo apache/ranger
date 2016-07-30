@@ -105,11 +105,17 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		}
 
 		try {
-			if (solrPlugin == null) {
-				logger.info("RangerSolrAuthorizer(): init called");
-				solrPlugin = new RangerBasePlugin("solr", "solr");
-				solrPlugin.init();
+			RangerBasePlugin me = solrPlugin;
+			if (me == null) {
+				synchronized(RangerSolrAuthorizer.class) {
+					me = solrPlugin;
+					logger.info("RangerSolrAuthorizer(): init called");
+					if (me == null) {
+						me = solrPlugin = new RangerBasePlugin("solr", "solr");
+					}
+				}
 			}
+			solrPlugin.init();
 		} catch (Throwable t) {
 			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}

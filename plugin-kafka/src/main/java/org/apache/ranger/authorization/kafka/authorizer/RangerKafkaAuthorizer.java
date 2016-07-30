@@ -75,27 +75,31 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	 */
 	@Override
 	public void configure(Map<String, ?> configs) {
-		if (rangerPlugin == null) {
-			try {
-				LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, true, configs);
-				Subject subject = loginManager.subject();
-				UserGroupInformation ugi = MiscUtil
-						.createUGIFromSubject(subject);
-				if (ugi != null) {
-					MiscUtil.setUGILoginUser(ugi, subject);
+		RangerBasePlugin me = rangerPlugin;
+		if (me == null) {
+			synchronized(RangerKafkaAuthorizer.class) {
+				me = rangerPlugin;
+				if (me == null) {
+					try {
+						LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, true, configs);
+						Subject subject = loginManager.subject();
+						UserGroupInformation ugi = MiscUtil
+								.createUGIFromSubject(subject);
+						if (ugi != null) {
+							MiscUtil.setUGILoginUser(ugi, subject);
+						}
+						logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
+					} catch (Throwable t) {
+						logger.error("Error getting principal.", t);
+					}
+					me = rangerPlugin = new RangerBasePlugin("kafka", "kafka");
 				}
-				logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
-			} catch (Throwable t) {
-				logger.error("Error getting principal.", t);
 			}
-
-			rangerPlugin = new RangerBasePlugin("kafka", "kafka");
-			logger.info("Calling plugin.init()");
-			rangerPlugin.init();
-
-			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
-			rangerPlugin.setResultProcessor(auditHandler);
 		}
+		logger.info("Calling plugin.init()");
+		rangerPlugin.init();
+		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+		rangerPlugin.setResultProcessor(auditHandler);
 	}
 
 	@Override
