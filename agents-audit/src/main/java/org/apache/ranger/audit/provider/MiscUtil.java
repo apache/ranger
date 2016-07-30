@@ -184,7 +184,9 @@ public class MiscUtil {
 	}
 
 	public static String getJvmInstanceId() {
-		String ret = Integer.toString(Math.abs(sJvmID.toString().hashCode()));
+		Integer val  = Integer.valueOf(sJvmID.toString().hashCode());
+		long longVal = val.longValue();
+		String ret 	 = Long.toString(Math.abs(longVal));
 
 		return ret;
 	}
@@ -719,7 +721,7 @@ public class MiscUtil {
 			}
 
 		} catch (Throwable t) {
-			logger.error("Failed to login as [" + spnegoPrincipals + "]", t);
+			logger.error("Failed to login with given keytab and principal", t);
 		}
 
 	}

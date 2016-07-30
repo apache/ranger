@@ -87,7 +87,7 @@ public class HdfsClient extends BaseClient {
 				FileStatus[] fileStats = fs.listStatus(basePath) ;
 
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsClient fileStatus : " + fileStats + " PathList :" + pathList) ;
+					LOG.debug("<== HdfsClient fileStatus : " + fileStats.length + " PathList :" + pathList) ;
 				}
 
 				if (fileStats != null) {
@@ -185,7 +185,7 @@ public class HdfsClient extends BaseClient {
 		String baseDir = args[1] ;
 		String fileNameToMatch = (args.length == 2 ? null : args[2]) ;
 		
-		HdfsClient fs = new HdfsClient(repositoryName, null) ;
+		HdfsClient fs = new HdfsClient(repositoryName, new HashMap<String,String>()) ;
 		List<String> fsList = null;
 		try {
 			fsList = fs.listFiles(baseDir, fileNameToMatch,null);

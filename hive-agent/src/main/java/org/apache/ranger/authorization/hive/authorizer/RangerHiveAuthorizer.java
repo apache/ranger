@@ -672,7 +672,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if(isDataMaskEnabled(result)) {
 				String                maskType    = result.getMaskType();
 				RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
-				String                transformer = maskTypeDef.getTransformer();
+				String transformer	= null;
+				if (maskTypeDef != null) {
+					transformer = maskTypeDef.getTransformer();
+				}
 
 				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
 					ret = "NULL";

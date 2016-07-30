@@ -54,7 +54,7 @@ public class SolrAuditDestination extends AuditDestination {
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 
-	SolrClient solrClient = null;
+	private volatile SolrClient solrClient = null;
 
 	public SolrAuditDestination() {
 	}
@@ -74,76 +74,79 @@ public class SolrAuditDestination extends AuditDestination {
 	}
 
 	synchronized void connect() {
-		if (solrClient == null) {
-			if (solrClient == null) {
-				String urls = MiscUtil.getStringProperty(props, propPrefix
-						+ "." + PROP_SOLR_URLS);
-				if (urls != null) {
-					urls = urls.trim();
-				}
-				if (urls != null && urls.equalsIgnoreCase("NONE")) {
-					urls = null;
-				}
-
-				List<String> solrURLs = new ArrayList<String>();
-				String zkHosts = null;
-				solrURLs = MiscUtil.toArray(urls, ",");
-				zkHosts = MiscUtil.getStringProperty(props, propPrefix + "."
-						+ PROP_SOLR_ZK);
-				if (zkHosts != null && zkHosts.equalsIgnoreCase("NONE")) {
-					zkHosts = null;
-				}
-
-				String collectionName = MiscUtil.getStringProperty(props,
-						propPrefix + "." + PROP_SOLR_COLLECTION);
-				if (collectionName == null
-						|| collectionName.equalsIgnoreCase("none")) {
-					collectionName = DEFAULT_COLLECTION_NAME;
-				}
-
-				LOG.info("Solr zkHosts=" + zkHosts + ", solrURLs=" + urls
-						+ ", collectionName=" + collectionName);
-
-				if (zkHosts != null && !zkHosts.isEmpty()) {
-					LOG.info("Connecting to solr cloud using zkHosts="
-							+ zkHosts);
-					try {
-						// Instantiate
-						HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
-						CloudSolrClient solrCloudClient = new CloudSolrClient(
-								zkHosts);
-						solrCloudClient.setDefaultCollection(collectionName);
-						solrClient = solrCloudClient;
-					} catch (Throwable t) {
-						LOG.fatal("Can't connect to Solr server. ZooKeepers="
-								+ zkHosts, t);
+		SolrClient me = solrClient;
+		if (me == null) {
+			synchronized(SolrAuditDestination.class) {
+				me = solrClient;
+				if (solrClient == null) {
+					String urls = MiscUtil.getStringProperty(props, propPrefix
+							+ "." + PROP_SOLR_URLS);
+					if (urls != null) {
+						urls = urls.trim();
 					}
-					finally {
-						resetInitializerInSOLR() ;
+					if (urls != null && urls.equalsIgnoreCase("NONE")) {
+						urls = null;
 					}
-				} else if (solrURLs != null && !solrURLs.isEmpty()) {
-					try {
-						LOG.info("Connecting to Solr using URLs=" + solrURLs);
-						HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
-						LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
-								solrURLs.get(0));
-						lbSolrClient.setConnectionTimeout(1000);
+					List<String> solrURLs = new ArrayList<String>();
+					String zkHosts = null;
+					solrURLs = MiscUtil.toArray(urls, ",");
+					zkHosts = MiscUtil.getStringProperty(props, propPrefix + "."
+							+ PROP_SOLR_ZK);
+					if (zkHosts != null && zkHosts.equalsIgnoreCase("NONE")) {
+						zkHosts = null;
+					}
+					String collectionName = MiscUtil.getStringProperty(props,
+							propPrefix + "." + PROP_SOLR_COLLECTION);
+					if (collectionName == null
+							|| collectionName.equalsIgnoreCase("none")) {
+						collectionName = DEFAULT_COLLECTION_NAME;
+					}
 
-						for (int i = 1; i < solrURLs.size(); i++) {
-							lbSolrClient.addSolrServer(solrURLs.get(i));
+					LOG.info("Solr zkHosts=" + zkHosts + ", solrURLs=" + urls
+							+ ", collectionName=" + collectionName);
+
+					if (zkHosts != null && !zkHosts.isEmpty()) {
+						LOG.info("Connecting to solr cloud using zkHosts="
+								+ zkHosts);
+						try {
+							// Instantiate
+							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
+							CloudSolrClient solrCloudClient = new CloudSolrClient(
+									zkHosts);
+							solrCloudClient.setDefaultCollection(collectionName);
+							me = solrClient = solrCloudClient;
+						} catch (Throwable t) {
+							LOG.fatal("Can't connect to Solr server. ZooKeepers="
+									+ zkHosts, t);
 						}
-						solrClient = lbSolrClient;
-					} catch (Throwable t) {
-						LOG.fatal("Can't connect to Solr server. URL="
-								+ solrURLs, t);
-					}
-					finally {
-						resetInitializerInSOLR() ;
+						finally {
+							resetInitializerInSOLR() ;
+						}
+					} else if (solrURLs != null && !solrURLs.isEmpty()) {
+						try {
+							LOG.info("Connecting to Solr using URLs=" + solrURLs);
+							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
+							LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
+									solrURLs.get(0));
+							lbSolrClient.setConnectionTimeout(1000);
+
+							for (int i = 1; i < solrURLs.size(); i++) {
+								lbSolrClient.addSolrServer(solrURLs.get(i));
+							}
+							me = solrClient = lbSolrClient;
+						} catch (Throwable t) {
+							LOG.fatal("Can't connect to Solr server. URL="
+									+ solrURLs, t);
+						}
+						finally {
+							resetInitializerInSOLR() ;
+						}
 					}
 				}
 			}
 		}
 	}
+
 
     private void resetInitializerInSOLR() {
 		javax.security.auth.login.Configuration solrConfig = javax.security.auth.login.Configuration.getConfiguration();

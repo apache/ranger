@@ -251,10 +251,9 @@ public class HBaseClient extends BaseClient {
 							HBaseAdmin.checkHBaseAvailable(conf);					
 						    LOG.info("getTableList: no exception: HbaseAvailability true");
 							admin = new HBaseAdmin(conf) ;
-							for (HTableDescriptor htd : admin.listTables(tableNameMatching)) {
-								if (htd == null) {
-									LOG.error("getTableList: null HTableDescription received from HBaseAdmin.listTables");
-								} else {
+							HTableDescriptor [] htds = admin.listTables(tableNameMatching);
+							if (htds != null) {
+								for (HTableDescriptor htd : admin.listTables(tableNameMatching)) {
 									String tableName = htd.getNameAsString();
 									if (existingTableList != null && existingTableList.contains(tableName)) {
 										continue;
@@ -262,7 +261,9 @@ public class HBaseClient extends BaseClient {
 										tableList.add(htd.getNameAsString());
 									}
 								}
-							}
+							 } else {
+								LOG.error("getTableList: null HTableDescription received from HBaseAdmin.listTables");
+							 }
 						} catch (ZooKeeperConnectionException zce) {
 							String msgDesc = "getTableList: Unable to connect to `ZooKeeper` "
 									+ "using given config parameters.";
