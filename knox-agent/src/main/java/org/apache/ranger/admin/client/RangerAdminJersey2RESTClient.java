@@ -91,9 +91,9 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ")");
+			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
 		}
 
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
@@ -162,11 +162,11 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 			}
 
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + "): " + servicePolicies);
+				LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + servicePolicies);
 			}
 			return servicePolicies;
 		} catch (Exception ex) {
-			LOG.error("Failed getting policies from server. url=" + url + ", pluginId=" + _pluginId + ", lastKnownVersion=" + lastKnownVersion );
+			LOG.error("Failed getting policies from server. url=" + url + ", pluginId=" + _pluginId + ", lastKnownVersion=" + lastKnownVersion + ", " + lastActivationTimeInMillis);
 			throw ex;
 		}
 	}
@@ -242,7 +242,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception {
+	public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
 		throw new Exception("RangerAdminjersey2RESTClient.getServiceTagsIfUpdated() -- *** NOT IMPLEMENTED *** ");
 	}
 

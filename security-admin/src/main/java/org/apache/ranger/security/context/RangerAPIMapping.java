@@ -91,6 +91,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_FOR_VERSION_NO);
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_FROM_EVENT_TIME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_VERSION_LIST);
+		apiAssociatedWithReports.add(RangerAPIList.GET_PLUGIN_SERVICE_VERSION_INFO);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_BY_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEF);
@@ -372,6 +373,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_POLICY_FOR_VERSION_NO);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_POLICY_FROM_EVENT_TIME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_POLICY_VERSION_LIST);
+		apiAssociatedWithAudit.add(RangerAPIList.GET_PLUGIN_SERVICE_VERSION_INFO);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_BY_NAME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEF);

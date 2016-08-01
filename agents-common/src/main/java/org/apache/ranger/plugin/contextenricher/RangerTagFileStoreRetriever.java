@@ -47,12 +47,13 @@ public class RangerTagFileStoreRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
 
 		ServiceTags serviceTags = null;
 
 		if (tagStore != null) {
 			try {
+				// Ignore lastActivationTimeInMillis for TagFileStore
 				serviceTags = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 			} catch (InterruptedException interruptedException) {
 				LOG.error("Tag-retriever thread was interrupted");

@@ -1127,4 +1127,29 @@
 	<named-query name="XXPortalUserRole.findXPortalUserRolebyXPortalUserId">
 		<query>select obj.userRole from XXPortalUserRole obj where obj.userId = :userId</query>
 	</named-query>
+
+	<!-- XXPluginServiceVersionInfo -->
+	<named-query name="XXPluginServiceVersionInfo.find">
+		<query>
+			select obj from XXPluginServiceVersionInfo obj where obj.serviceName = :serviceName and obj.hostName = :hostName and obj.appType = :appType and obj.entityType = :entityType
+		</query>
+	</named-query>
+	<named-query name="XXPluginServiceVersionInfo.findByServiceName">
+		<query>
+			select obj from XXPluginServiceVersionInfo obj where obj.serviceName = :serviceName
+		</query>
+	</named-query>
+
+	<named-query name="XXPluginServiceVersionInfo.findByServiceId">
+		<query>
+			select obj from XXPluginServiceVersionInfo obj, XXService service where obj.serviceName = service.name and service.id = :serviceId
+		</query>
+	</named-query>
+
+	<named-query name="XXPluginServiceVersionInfo.findByServiceAndHostName">
+		<query>
+			select obj from XXPluginServiceVersionInfo obj where obj.serviceName = :serviceName and obj.hostName = :hostName
+		</query>
+	</named-query>
+
 </entity-mappings>

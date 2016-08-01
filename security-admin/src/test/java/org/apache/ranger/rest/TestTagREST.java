@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
@@ -49,6 +50,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import static org.mockito.Matchers.*;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -84,6 +86,9 @@ public class TestTagREST {
 	
 	@Mock
 	ServiceDBStore svcStore;
+
+	@Mock
+	AssetMgr assetMgr;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -1408,7 +1413,7 @@ public class TestTagREST {
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(),Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		try {
 			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
@@ -1427,8 +1432,12 @@ public class TestTagREST {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
-		
-		ServiceTags serviceTags = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		try {
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+
+		} catch (Exception e) {
+		}
+		ServiceTags serviceTags = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertEquals(serviceTags.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(serviceTags.getTagVersion(), oldServiceTag.getTagVersion());
 		
@@ -1477,10 +1486,11 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1539,10 +1549,11 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1604,10 +1615,11 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1669,10 +1681,11 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1735,7 +1748,7 @@ public class TestTagREST {
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		Mockito.verify(bizUtil).isAdmin();
 		Mockito.verify(bizUtil).isKeyAdmin();
@@ -1789,12 +1802,13 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
+			Mockito.doNothing().when(assetMgr).createPluginServiceVersionInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, pluginId);
+		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		Mockito.verify(bizUtil).isAdmin();
 		Mockito.verify(bizUtil).isKeyAdmin();

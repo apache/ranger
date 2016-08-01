@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
@@ -30,6 +31,7 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPluginServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -48,8 +50,18 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 
 import java.util.List;
 
@@ -76,6 +88,9 @@ public class TagREST {
 	
 	@Autowired
 	RangerBizUtil bizUtil;
+
+    @Autowired
+    AssetMgr assetMgr;
 
     TagValidator validator;
 
@@ -1088,9 +1103,11 @@ public class TagREST {
     @Path(TagRESTConstants.TAGS_DOWNLOAD + "{serviceName}")
     @Produces({ "application/json", "application/xml" })
     public ServiceTags getServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
-                                                   @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion, @QueryParam("pluginId") String pluginId) {
+                                                   @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
+                                               @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
+                                               @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+            LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1099,14 +1116,18 @@ public class TagREST {
 
         try {
             ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+            Long downloadedVersion;
 
 			if(ret == null) {
+                downloadedVersion = lastKnownVersion;
 				httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 				logMsg   = "No change since last update";
 			} else {
+                downloadedVersion = ret.getTagVersion();
 				httpCode = HttpServletResponse.SC_OK;
 				logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
 			}
+            assetMgr.createPluginServiceVersionInfo(serviceName, pluginId, request, RangerPluginServiceVersionInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
         } catch(Exception excp) {
             LOG.error("getServiceTagsIfUpdated(" + serviceName + ") failed", excp);
 
@@ -1120,7 +1141,7 @@ public class TagREST {
 		}
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+            LOG.debug("<==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
         }
 
         return ret;
@@ -1130,9 +1151,12 @@ public class TagREST {
     @Path(TagRESTConstants.TAGS_SECURE_DOWNLOAD + "{serviceName}")
     @Produces({ "application/json", "application/xml" })
     public ServiceTags getSecureServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
-                                                   @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion, @QueryParam("pluginId") String pluginId) {
+                                                   @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
+                                                     @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
+                                                     @Context HttpServletRequest request) {
+
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+            LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1162,16 +1186,20 @@ public class TagREST {
         	}
         	if (isAllowed) {
 	            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
-	
+                Long downloadedVersion;
+
 				if(ret == null) {
+                    downloadedVersion = lastKnownVersion;
 					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 					logMsg   = "No change since last update";
 				} else {
+                    downloadedVersion = ret.getTagVersion();
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
 				}
+                assetMgr.createPluginServiceVersionInfo(serviceName, pluginId, request, RangerPluginServiceVersionInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
 			}else{
-				LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed as User doesn't have permission to download tags");
+				LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed as User doesn't have permission to download tags");
 				httpCode = HttpServletResponse.SC_UNAUTHORIZED;
 				logMsg = "User doesn't have permission to download tags";
 			}
@@ -1180,17 +1208,24 @@ public class TagREST {
 
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
+        }  finally {
+            // Placeholder to avoid PMD violations
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("httpCode=" + httpCode);
+            }
+            // createOrUpdatePluginTagVersion(serviceName, lastKnownVersion, pluginId, lastActivationTime);
         }
 
-		if(httpCode != HttpServletResponse.SC_OK) {
+        if(httpCode != HttpServletResponse.SC_OK) {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
 			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
 		}
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + pluginId + ")");
+            LOG.debug("<==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
         }
 
         return ret;
     }
+
 }

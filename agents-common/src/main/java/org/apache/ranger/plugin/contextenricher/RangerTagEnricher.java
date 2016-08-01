@@ -357,6 +357,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private final RangerTagRetriever tagRetriever;
 		private final RangerTagEnricher tagEnricher;
 		private long lastKnownVersion = -1L;
+		private long lastActivationTimeInMillis = 0L;
 
 		private final long pollingIntervalMs;
 		private final String cacheFile;
@@ -379,6 +380,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			} catch(Throwable excp) {
 				LOG.fatal("failed to create GsonBuilder object", excp);
 			}
+		}
+
+		public long getLastActivationTimeInMillis() {
+			return lastActivationTimeInMillis;
+		}
+
+		public void setLastActivationTimeInMillis(long lastActivationTimeInMillis) {
+			this.lastActivationTimeInMillis = lastActivationTimeInMillis;
 		}
 
 		@Override
@@ -423,7 +432,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (tagEnricher != null) {
 				ServiceTags serviceTags = null;
 
-				serviceTags = tagRetriever.retrieveTags(lastKnownVersion);
+				serviceTags = tagRetriever.retrieveTags(lastKnownVersion, lastActivationTimeInMillis);
 
 				if (serviceTags == null) {
 					if (!hasProvidedTagsToReceiver) {
@@ -435,9 +444,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 				if (serviceTags != null) {
 					tagEnricher.setServiceTags(serviceTags);
-					lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
-					LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion=" + serviceTags.getTagVersion());
+					LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion="
+							+ (serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion()));
 					hasProvidedTagsToReceiver = true;
+					lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
+					setLastActivationTimeInMillis(System.currentTimeMillis());
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);

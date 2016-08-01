@@ -535,7 +535,7 @@ public class AssetREST {
 		ServicePolicies servicePolicies = null;
 
 		try {
-			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, agentId, request);
+			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, request);
 		} catch(Exception excp) {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}

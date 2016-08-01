@@ -65,6 +65,12 @@ public class SearchFilter {
 	public static final String TAG_MAP_GUID              = "tagResourceMapGuid";  // search
 
 	public static final String SERVICE_NAME_PARTIAL      = "serviceNamePartial";
+
+	public static final String PLUGIN_HOST_NAME          = "pluginHostName";
+	public static final String PLUGIN_APP_TYPE           = "pluginAppType";
+	public static final String PLUGIN_ENTITY_TYPE        = "pluginEntityType";
+	public static final String PLUGIN_IP_ADDRESS         = "pluginIpAddress";
+
 	private Map<String, String> params     = null;
 	private int                 startIndex = 0;
 	private int                 maxRows    = Integer.MAX_VALUE;
