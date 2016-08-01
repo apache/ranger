@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +33,10 @@ import java.util.Set;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
@@ -45,10 +48,15 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPermMap;
+import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.service.RangerPluginActivityLogger;
+import org.apache.ranger.service.RangerPluginInfoService;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupService;
@@ -58,25 +66,26 @@ import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
-import org.apache.ranger.view.*;
+import org.apache.ranger.view.VXAccessAuditList;
+import org.apache.ranger.view.VXAsset;
+import org.apache.ranger.view.VXAuditMap;
+import org.apache.ranger.view.VXPermMap;
+import org.apache.ranger.view.VXPolicyExportAuditList;
+import org.apache.ranger.view.VXResource;
+import org.apache.ranger.view.VXTrxLog;
+import org.apache.ranger.view.VXTrxLogList;
+import org.apache.ranger.view.VXUser;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 public class AssetMgr extends AssetMgrBase {
-	
-	
+
 	@Autowired
 	XPermMapService xPermMapService;
-	
+
 	@Autowired
 	XAuditMapService xAuditMapService;
 
@@ -114,14 +123,15 @@ public class AssetMgr extends AssetMgrBase {
 	SolrAccessAuditsService solrAccessAuditsService;
 
 	@Autowired
-	@Qualifier(value = "transactionManager")
-	PlatformTransactionManager txManager;
-	
-	@Autowired
 	XPolicyService xPolicyService;
-	
-	static Logger logger = Logger.getLogger(AssetMgr.class);
 
+	@Autowired
+	RangerPluginActivityLogger activityLogger;
+
+	@Autowired
+	RangerPluginInfoService pluginInfoService;
+
+	static Logger logger = Logger.getLogger(AssetMgr.class);
 
 	public File getXResourceFile(Long id, String fileType) {
 		VXResource xResource = xResourceService.readResource(id);
@@ -171,8 +181,8 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	public String getLatestRepoPolicy(VXAsset xAsset, List<VXResource> xResourceList, Long updatedTime,
-			X509Certificate[] certchain, boolean httpEnabled, String epoch,
-			String ipAddress, boolean isSecure, String count, String agentId) {
+									  X509Certificate[] certchain, boolean httpEnabled, String epoch,
+									  String ipAddress, boolean isSecure, String count, String agentId) {
 		if(xAsset==null){
 			logger.error("Requested repository not found");
 			throw restErrorUtil.createRESTException("No Data Found.",
@@ -631,26 +641,193 @@ public class AssetMgr extends AssetMgrBase {
 
 	public XXPolicyExportAudit createPolicyAudit(
 			final XXPolicyExportAudit xXPolicyExportAudit) {
-		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-		txTemplate
-				.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-		XXPolicyExportAudit policyExportAudit = (XXPolicyExportAudit) txTemplate
-				.execute(new TransactionCallback<Object>() {
-					public Object doInTransaction(TransactionStatus status) {
-						if (xXPolicyExportAudit.getHttpRetCode() == HttpServletResponse.SC_NOT_MODIFIED) {
-							boolean logNotModified = PropertiesUtil.getBooleanProperty("ranger.log.SC_NOT_MODIFIED", false);
-							if (!logNotModified) {
-								logger.debug("Not logging HttpServletResponse."
-										+ "SC_NOT_MODIFIED, to enable, update "
-										+ ": ranger.log.SC_NOT_MODIFIED");
-								return null;
-							}
-						}
-						return rangerDaoManager.getXXPolicyExportAudit().create(
-								xXPolicyExportAudit);
+
+		XXPolicyExportAudit ret = null;
+		if (xXPolicyExportAudit.getHttpRetCode() == HttpServletResponse.SC_NOT_MODIFIED) {
+			boolean logNotModified = PropertiesUtil.getBooleanProperty("ranger.log.SC_NOT_MODIFIED", false);
+			if (!logNotModified) {
+				logger.debug("Not logging HttpServletResponse."
+						+ "SC_NOT_MODIFIED, to enable, update "
+						+ ": ranger.log.SC_NOT_MODIFIED");
+			} else {
+				// Create PolicyExportAudit record after transaction is completed. If it is created in-line here
+				// then the TransactionManager will roll-back the changes because the HTTP return code is
+				// HttpServletResponse.SC_NOT_MODIFIED
+				Runnable commitWork = new Runnable() {
+					@Override
+					public void run() {
+						rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
+
 					}
-				});
-		return policyExportAudit;
+				};
+				activityLogger.commitAfterTransactionComplete(commitWork);
+			}
+		} else {
+			ret = rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
+		}
+
+		return ret;
+	}
+
+	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode) {
+		RangerRESTUtils restUtils = new RangerRESTUtils();
+
+		final String ipAddress = request != null ? request.getRemoteAddr() : null;
+		final String appType = restUtils.getAppIdFromPluginId(pluginId);
+
+		String tmpHostName = null;
+		if (StringUtils.isNotBlank(pluginId)) {
+			tmpHostName = restUtils.getHostnameFromPluginId(pluginId, serviceName);
+		}
+		if (StringUtils.isBlank(tmpHostName) && request != null) {
+			tmpHostName = request.getRemoteHost();
+		}
+
+		final String hostName = (StringUtils.isBlank(tmpHostName)) ? ipAddress : tmpHostName;
+
+		RangerPluginInfo pluginSvcVersionInfo = new RangerPluginInfo();
+
+		pluginSvcVersionInfo.setServiceName(serviceName);
+		pluginSvcVersionInfo.setAppType(appType);
+		pluginSvcVersionInfo.setHostName(hostName);
+		pluginSvcVersionInfo.setIpAddress(ipAddress);
+
+		if (entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES) {
+			pluginSvcVersionInfo.setPolicyActiveVersion(lastKnownVersion);
+			pluginSvcVersionInfo.setPolicyActivationTime(lastActivationTime);
+			pluginSvcVersionInfo.setPolicyDownloadedVersion(downloadedVersion);
+			pluginSvcVersionInfo.setPolicyDownloadTime(new Date().getTime());
+		} else {
+			pluginSvcVersionInfo.setTagActiveVersion(lastKnownVersion);
+			pluginSvcVersionInfo.setTagActivationTime(lastActivationTime);
+			pluginSvcVersionInfo.setTagDownloadedVersion(downloadedVersion);
+			pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
+		}
+
+		createOrUpdatePluginInfo(pluginSvcVersionInfo, httpCode);
+	}
+
+	void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final int httpCode) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
+		}
+
+		if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
+			// Create or update PluginInfo record after transaction is completed. If it is created in-line here
+			// then the TransactionManager will roll-back the changes because the HTTP return code is
+			// HttpServletResponse.SC_NOT_MODIFIED
+			Runnable commitWork = new Runnable() {
+				@Override
+				public void run() {
+					doCreateOrUpdateXXPluginInfo(pluginInfo);
+				}
+			};
+			activityLogger.commitAfterTransactionComplete(commitWork);
+		} else {
+			doCreateOrUpdateXXPluginInfo(pluginInfo);
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
+		}
+
+	}
+
+	XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo) {
+		XXPluginInfo ret = null;
+
+		if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
+
+			boolean isPolicyInfo = pluginInfo.getPolicyDownloadedVersion() != null;
+
+			// If the ranger-admin is restarted, plugin contains latest version and there is no row for this pluginInfo
+			if (isPolicyInfo) {
+				if (pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
+					// This is our best guess of when policies may have been downloaded
+					pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
+				}
+			} else {
+				if (pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
+					// This is our best guess of when tags may have been downloaded
+					pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
+				}
+			}
+
+			XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().find(pluginInfo.getServiceName(),
+					pluginInfo.getHostName(), pluginInfo.getAppType());
+
+			if (xObj == null) {
+				xObj = pluginInfoService.populateDBObject(pluginInfo);
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("Creating RangerPluginInfo record for service-version");
+				}
+				ret = rangerDaoManager.getXXPluginInfo().create(xObj);
+			} else {
+				boolean needsUpdating = false;
+
+				RangerPluginInfo dbObj = pluginInfoService.populateViewObject(xObj);
+				if (!dbObj.getIpAddress().equals(pluginInfo.getIpAddress())) {
+					dbObj.setIpAddress(pluginInfo.getIpAddress());
+					needsUpdating = true;
+				}
+				if (isPolicyInfo) {
+					if (dbObj.getPolicyDownloadedVersion() == null || !dbObj.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyDownloadedVersion())) {
+						dbObj.setPolicyDownloadedVersion(pluginInfo.getPolicyDownloadedVersion());
+						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
+						needsUpdating = true;
+					}
+					long lastKnownPolicyVersion = pluginInfo.getPolicyActiveVersion();
+					long lastPolicyActivationTime = pluginInfo.getPolicyActivationTime();
+
+					if (lastKnownPolicyVersion > 0 && (dbObj.getPolicyActiveVersion() == null || !dbObj.getPolicyActiveVersion().equals(lastKnownPolicyVersion))) {
+						dbObj.setPolicyActiveVersion(lastKnownPolicyVersion);
+						if (lastPolicyActivationTime > 0) {
+							dbObj.setPolicyActivationTime(lastPolicyActivationTime);
+						}
+						needsUpdating = true;
+					} else if (lastKnownPolicyVersion == -1) {
+						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
+						dbObj.setPolicyActiveVersion(null);
+						dbObj.setPolicyActivationTime(null);
+						needsUpdating = true;
+					}
+				} else {
+					if (dbObj.getTagDownloadedVersion() == null || !dbObj.getTagDownloadedVersion().equals(pluginInfo.getTagDownloadedVersion())) {
+						dbObj.setTagDownloadedVersion(pluginInfo.getTagDownloadedVersion());
+						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
+						needsUpdating = true;
+					}
+					long lastKnownTagVersion = pluginInfo.getTagActiveVersion();
+					long lastTagActivationTime = pluginInfo.getTagActivationTime();
+
+					if (lastKnownTagVersion > 0 && (dbObj.getTagActiveVersion() == null || !dbObj.getTagActiveVersion().equals(lastKnownTagVersion))) {
+						dbObj.setTagActiveVersion(lastKnownTagVersion);
+						if (lastTagActivationTime > 0) {
+							dbObj.setTagActivationTime(lastTagActivationTime);
+						}
+						needsUpdating = true;
+					} else if (lastKnownTagVersion == -1) {
+						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
+						dbObj.setTagActiveVersion(null);
+						dbObj.setTagActivationTime(null);
+						needsUpdating = true;
+					}
+				}
+
+				if (needsUpdating) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Updating XXPluginInfo record for service-version");
+					}
+					xObj = pluginInfoService.populateDBObject(dbObj);
+
+					ret = rangerDaoManager.getXXPluginInfo().update(xObj);
+				}
+			}
+		} else {
+			logger.error("Invalid parameters: pluginInfo=" + pluginInfo + ")");
+		}
+
+		return ret;
 	}
 
 	public VXTrxLogList getReportLogs(SearchCriteria searchCriteria) {
@@ -665,17 +842,17 @@ public class AssetMgr extends AssetMgrBase {
 		if (searchCriteria.getParamList() != null
 				&& searchCriteria.getParamList().size() > 0) {
 			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-			java.util.Date temp = null;
+			Date temp = null;
 			DateUtil dateUtil = new DateUtil();
 			if (searchCriteria.getParamList().containsKey("startDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
+				temp = (Date) searchCriteria.getParamList().get(
 						"startDate");
 				temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
 				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
 				searchCriteria.getParamList().put("startDate", temp);
 			}
 			if (searchCriteria.getParamList().containsKey("endDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
+				temp = (Date) searchCriteria.getParamList().get(
 						"endDate");
 				temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
 				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
@@ -713,17 +890,17 @@ public class AssetMgr extends AssetMgrBase {
         if (searchCriteria.getParamList() != null
                 && searchCriteria.getParamList().size() > 0) {
             int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-            java.util.Date temp = null;
+            Date temp = null;
             DateUtil dateUtil = new DateUtil();
             if (searchCriteria.getParamList().containsKey("startDate")) {
-                temp = (java.util.Date) searchCriteria.getParamList().get(
+                temp = (Date) searchCriteria.getParamList().get(
                         "startDate");
                 temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
                 temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
                 searchCriteria.getParamList().put("startDate", temp);
             }
             if (searchCriteria.getParamList().containsKey("endDate")) {
-                temp = (java.util.Date) searchCriteria.getParamList().get(
+                temp = (Date) searchCriteria.getParamList().get(
                         "endDate");
                 temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
                 temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
@@ -828,17 +1005,17 @@ public class AssetMgr extends AssetMgrBase {
                 && searchCriteria.getParamList().size() > 0) {
 
             int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-            java.util.Date temp = null;
+            Date temp = null;
             DateUtil dateUtil = new DateUtil();
             if (searchCriteria.getParamList().containsKey("startDate")) {
-                temp = (java.util.Date) searchCriteria.getParamList().get(
+                temp = (Date) searchCriteria.getParamList().get(
                         "startDate");
                 temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
                 temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
                 searchCriteria.getParamList().put("startDate", temp);
             }
             if (searchCriteria.getParamList().containsKey("endDate")) {
-                temp = (java.util.Date) searchCriteria.getParamList().get(
+                temp = (Date) searchCriteria.getParamList().get(
                         "endDate");
                 temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
                 temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);

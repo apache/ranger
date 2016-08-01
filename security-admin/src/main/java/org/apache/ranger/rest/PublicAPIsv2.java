@@ -23,10 +23,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.view.RangerPluginInfoList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -431,5 +433,20 @@ public class PublicAPIsv2 {
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
 		}
+	}
+
+	@GET
+	@Path("/api/plugins/info")
+	public List<RangerPluginInfo> getPluginsInfo(@Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.getPluginsInfo()");
+		}
+
+		RangerPluginInfoList pluginInfoList = serviceREST.getPluginsInfo(request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.getPluginsInfo()");
+		}
+		return pluginInfoList.getPluginInfoList();
 	}
 }

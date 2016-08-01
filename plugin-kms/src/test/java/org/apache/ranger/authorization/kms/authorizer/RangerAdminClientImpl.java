@@ -50,7 +50,7 @@ public class RangerAdminClientImpl implements RangerAdminClient {
         this.gson = gson;
     }
 
-    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion) throws Exception {
+    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
 
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
@@ -71,7 +71,7 @@ public class RangerAdminClientImpl implements RangerAdminClient {
 
     }
 
-    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception {
+    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         return null;
 
     }

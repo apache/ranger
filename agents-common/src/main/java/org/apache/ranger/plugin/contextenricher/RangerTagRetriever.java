@@ -32,7 +32,7 @@ public abstract class RangerTagRetriever {
 
 	public abstract void init(Map<String, String> options);
 
-	public abstract ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException;
+	public abstract ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException;
 
 	public String getServiceName() {
 		return serviceName;

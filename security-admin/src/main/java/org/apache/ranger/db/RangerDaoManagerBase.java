@@ -363,6 +363,9 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXServiceVersionInfo")) {
 			return getXXServiceVersionInfo();
 		}
+		if (className.equals("XXPluginInfo")) {
+			return getXXPluginInfo();
+		}
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -582,6 +585,10 @@ public abstract class RangerDaoManagerBase {
 
 	public XXServiceVersionInfoDao getXXServiceVersionInfo() {
 		return new XXServiceVersionInfoDao(this);
+	}
+
+	public XXPluginInfoDao getXXPluginInfo() {
+		return new XXPluginInfoDao(this);
 	}
 }
 

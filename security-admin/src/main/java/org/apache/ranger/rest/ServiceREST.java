@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -67,6 +68,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -77,7 +79,12 @@ import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
@@ -89,9 +96,11 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
+import org.apache.ranger.service.RangerPluginInfoService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
@@ -149,7 +158,10 @@ public class ServiceREST {
 	
 	@Autowired
 	RangerServiceDefService serviceDefService;
-	
+
+	@Autowired
+    RangerPluginInfoService pluginInfoService;
+
 	@Autowired
 	RangerSearchUtil searchUtil;
 	
@@ -1800,9 +1812,9 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/download/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @QueryParam("lastKnownVersion") Long lastKnownVersion, @QueryParam("pluginId") String pluginId, @Context HttpServletRequest request) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ")");
+			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ")");
 		}
 
 		ServicePolicies ret      = null;
@@ -1817,20 +1829,24 @@ public class ServiceREST {
 			
 			try {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ")");
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion +  ",lastActivationTime=" + lastActivationTime + ")");
 				}
 				ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
-	
+
+                Long downloadedVersion;
 				if(servicePolicies == null) {
+                    downloadedVersion = lastKnownVersion;
 					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 					logMsg   = "No change since last update";
 				} else {
+                    downloadedVersion = servicePolicies.getPolicyVersion();
 					ret = filterServicePolicies(servicePolicies);
 					httpCode = HttpServletResponse.SC_OK;
-					logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+                    logMsg   = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
-			} catch(Throwable excp) {
-				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
+                assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+            } catch(Throwable excp) {
+				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed", excp);
 	
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg   = excp.getMessage();
@@ -1846,16 +1862,16 @@ public class ServiceREST {
 		 }
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 
 		return ret;
 	}
-	
+
 	@GET
 	@Path("/secure/policies/download/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName,@QueryParam("lastKnownVersion") Long lastKnownVersion,@QueryParam("pluginId") String pluginId,@Context HttpServletRequest request) throws Exception {
+	public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName,@QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId,@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("+ serviceName + ", " + lastKnownVersion + ")");
 		}
@@ -1873,7 +1889,7 @@ public class ServiceREST {
 			}
 			try {
 				if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getSecureServicePoliciesIfUpdated(serviceName="+ serviceName + ",lastKnownVersion="+ lastKnownVersion + ")");
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getSecureServicePoliciesIfUpdated(serviceName="+ serviceName + ",lastKnownVersion="+ lastKnownVersion +  ",lastActivationTime=" + lastActivationTime + ")");
 				}
 				XXService xService = daoManager.getXXService().findByName(serviceName);
 				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
@@ -1907,21 +1923,26 @@ public class ServiceREST {
 				}
 				if (isAllowed) {
 					ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName,lastKnownVersion);
+                    Long downloadedVersion;
 					if (servicePolicies == null) {
+					    downloadedVersion = lastKnownVersion;
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 						logMsg = "No change since last update";
 					} else {
+					    downloadedVersion = servicePolicies.getPolicyVersion();
 						ret = filterServicePolicies(servicePolicies);
 						httpCode = HttpServletResponse.SC_OK;
 						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
 					}
-				} else {
+
+                    assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+                } else {
 					LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed as User doesn't have permission to download Policy");
 					httpCode = HttpServletResponse.SC_UNAUTHORIZED;
 					logMsg = "User doesn't have permission to download policy";
 				}
 			} catch (Throwable excp) {
-				LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed", excp);
+				LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed", excp);
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg = excp.getMessage();
 			} finally {
@@ -1934,7 +1955,7 @@ public class ServiceREST {
 			}
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 		return ret;
 	}		
@@ -2078,6 +2099,45 @@ public class ServiceREST {
 		return svcStore.getPolicyForVersionNumber(policyId, versionNo);
 	}
 
+	@GET
+	@Path("/plugins/info")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_PLUGINS_INFO + "\")")
+	public RangerPluginInfoList getPluginsInfo(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPluginsInfo()");
+		}
+
+		RangerPluginInfoList ret = null;
+
+		SearchFilter filter = searchUtil.getSearchFilter(request, pluginInfoService.getSortFields());
+
+		try {
+			PList<RangerPluginInfo> paginatedPluginsInfo = pluginInfoService.searchRangerPluginInfo(filter);
+			if (paginatedPluginsInfo != null) {
+				ret = new RangerPluginInfoList();
+
+				ret.setPluginInfoList(paginatedPluginsInfo.getList());
+				ret.setPageSize(paginatedPluginsInfo.getPageSize());
+				ret.setResultSize(paginatedPluginsInfo.getResultSize());
+				ret.setStartIndex(paginatedPluginsInfo.getStartIndex());
+				ret.setTotalCount(paginatedPluginsInfo.getTotalCount());
+				ret.setSortBy(paginatedPluginsInfo.getSortBy());
+				ret.setSortType(paginatedPluginsInfo.getSortType());
+			}
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("getPluginsInfo() failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPluginsInfo()");
+		}
+
+		return ret;
+	}
 
 	private RangerPolicy getPolicyByGuid(String guid) {
 		RangerPolicy ret = null;
