@@ -163,7 +163,9 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		if(auditEvent != null) {
 			populateDefaults(auditEvent);
-			AuditProviderFactory.getAuditProvider().log(auditEvent);
+                        if(!AuditProviderFactory.getAuditProvider().log(auditEvent)) {
+				MiscUtil.logErrorMessageByInterval(LOG, "fail to log audit event " + auditEvent);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
