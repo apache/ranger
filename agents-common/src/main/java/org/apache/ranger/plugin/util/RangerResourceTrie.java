@@ -59,7 +59,7 @@ public class RangerResourceTrie {
 
         this.resourceName  = resourceDef.getName();
         this.optIgnoreCase = strIgnoreCase != null ? Boolean.parseBoolean(strIgnoreCase) : false;
-        this.optWildcard   = strWildcard != null ? Boolean.parseBoolean(strWildcard) : false;;
+        this.optWildcard   = strWildcard != null ? Boolean.parseBoolean(strWildcard) : false;
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS : "";
         this.root          = new TrieNode(Character.valueOf((char)0));
 

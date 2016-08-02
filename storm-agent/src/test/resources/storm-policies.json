@@ -1,0 +1,337 @@
+{
+  "serviceName": "StormTest",
+  "serviceId": 10,
+  "policyVersion": 12,
+  "policyUpdateTime": "20160704-15:53:20.000-+0100",
+  "policies": [
+    {
+      "service": "StormTest",
+      "name": "WordCount",
+      "description": "",
+      "resourceSignature": "25dc26943b5859a6e5f904388cd02830",
+      "isAuditEnabled": true,
+      "resources": {
+        "topology": {
+          "values": [
+            "word-count"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "submitTopology",
+              "isAllowed": true
+            },
+            {
+              "type": "fileUpload",
+              "isAllowed": true
+            },
+            {
+              "type": "getNimbusConf",
+              "isAllowed": true
+            },
+            {
+              "type": "getClusterInfo",
+              "isAllowed": true
+            },
+            {
+              "type": "fileDownload",
+              "isAllowed": true
+            },
+            {
+              "type": "killTopology",
+              "isAllowed": true
+            },
+            {
+              "type": "rebalance",
+              "isAllowed": true
+            },
+            {
+              "type": "activate",
+              "isAllowed": true
+            },
+            {
+              "type": "deactivate",
+              "isAllowed": true
+            },
+            {
+              "type": "getTopologyConf",
+              "isAllowed": true
+            },
+            {
+              "type": "getTopology",
+              "isAllowed": true
+            },
+            {
+              "type": "getUserTopology",
+              "isAllowed": true
+            },
+            {
+              "type": "getTopologyInfo",
+              "isAllowed": true
+            },
+            {
+              "type": "uploadNewCredentials",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 40,
+      "guid": "1467386247700_275_2404",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160701-16:17:27.000-+0100",
+      "updateTime": "20160704-14:51:01.000-+0100",
+      "version": 6
+    },
+    {
+      "service": "StormTest",
+      "name": "TempPolicy",
+      "description": "",
+      "resourceSignature": "1e4cafdc98da3cec11b565ef03cfab14",
+      "isAuditEnabled": true,
+      "resources": {
+        "topology": {
+          "values": [
+            "temp*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "submitTopology",
+              "isAllowed": true
+            },
+            {
+              "type": "getClusterInfo",
+              "isAllowed": true
+            },
+            {
+              "type": "killTopology",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 42,
+      "guid": "1467641649473_569_2619",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160704-15:14:09.000-+0100",
+      "updateTime": "20160704-15:53:20.000-+0100",
+      "version": 5
+    }
+  ],
+  "serviceDef": {
+    "name": "storm",
+    "implClass": "org.apache.ranger.services.storm.RangerServiceStorm",
+    "label": "Storm",
+    "description": "Storm",
+    "options": {},
+    "configs": [
+      {
+        "itemId": 1,
+        "name": "username",
+        "type": "string",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Username"
+      },
+      {
+        "itemId": 2,
+        "name": "password",
+        "type": "password",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Password"
+      },
+      {
+        "itemId": 3,
+        "name": "nimbus.url",
+        "type": "string",
+        "mandatory": true,
+        "defaultValue": "",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Nimbus URL"
+      },
+      {
+        "itemId": 4,
+        "name": "commonNameForCertificate",
+        "type": "string",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Common Name for Certificate"
+      }
+    ],
+    "resources": [
+      {
+        "itemId": 1,
+        "name": "topology",
+        "type": "string",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": false,
+        "excludesSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Storm Topology",
+        "description": "Storm Topology"
+      }
+    ],
+    "accessTypes": [
+      {
+        "itemId": 1,
+        "name": "submitTopology",
+        "label": "Submit Topology",
+        "impliedGrants": [
+          "fileUpload",
+          "fileDownload"
+        ]
+      },
+      {
+        "itemId": 2,
+        "name": "fileUpload",
+        "label": "File Upload",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 3,
+        "name": "getNimbusConf",
+        "label": "Get Nimbus Conf",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 4,
+        "name": "getClusterInfo",
+        "label": "Get Cluster Info",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 5,
+        "name": "fileDownload",
+        "label": "File Download",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 6,
+        "name": "killTopology",
+        "label": "Kill Topology",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 7,
+        "name": "rebalance",
+        "label": "Rebalance",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 8,
+        "name": "activate",
+        "label": "Activate",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 9,
+        "name": "deactivate",
+        "label": "Deactivate",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 10,
+        "name": "getTopologyConf",
+        "label": "Get Topology Conf",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 11,
+        "name": "getTopology",
+        "label": "Get Topology",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 12,
+        "name": "getUserTopology",
+        "label": "Get User Topology",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 13,
+        "name": "getTopologyInfo",
+        "label": "Get Topology Info",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 14,
+        "name": "uploadNewCredentials",
+        "label": "Upload New Credential",
+        "impliedGrants": []
+      }
+    ],
+    "policyConditions": [],
+    "contextEnrichers": [],
+    "enums": [],
+    "dataMaskDef": {
+      "maskTypes": [],
+      "accessTypes": [],
+      "resources": []
+    },
+    "rowFilterDef": {
+      "accessTypes": [],
+      "resources": []
+    },
+    "id": 6,
+    "guid": "2a60f427-edcf-4e20-834c-a9a267b5b963",
+    "isEnabled": true,
+    "createTime": "20160314-14:39:35.000-+0000",
+    "updateTime": "20160314-14:39:35.000-+0000",
+    "version": 1
+  }
+}
