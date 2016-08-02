@@ -26,6 +26,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -127,6 +128,8 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	@Override
 	public void run() {
 		try {
+			//This is done to clear the MDC context to avoid issue with Ranger Auditing for Knox
+			MDC.clear();
 			if (isConsumerDestination && MiscUtil.getUGILoginUser() != null) {
 				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
 					public Void run() {
@@ -140,6 +143,7 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 			} else {
 				runDoAs();
 			}
+
 		} catch (Throwable t) {
 			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
 		}

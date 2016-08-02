@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -753,6 +754,8 @@ public class AuditFileSpool implements Runnable {
 	@Override
 	public void run() {
 		try {
+			//This is done to clear the MDC context to avoid issue with Ranger Auditing for Knox
+			MDC.clear();
 			if (MiscUtil.getUGILoginUser() != null) {
 				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
 					public Void run() {
