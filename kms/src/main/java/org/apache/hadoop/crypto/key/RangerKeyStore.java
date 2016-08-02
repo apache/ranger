@@ -102,7 +102,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     {
     	Key key = null;
 
-        Object entry = keyEntries.get(alias.toLowerCase());
+        Object entry = keyEntries.get(convertAlias(alias));
 
         if (!(entry instanceof SecretKeyEntry)) {
             return null;
@@ -166,7 +166,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                 entry.description = description;
                 entry.version = version;
                 entry.attributes = attributes;
-                deltaEntries.put(alias.toLowerCase(), entry);                       
+                deltaEntries.put(convertAlias(alias), entry);
             } catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
@@ -174,7 +174,7 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
         synchronized(keyEntries) {
         	try {
-        		keyEntries.put(alias.toLowerCase(), entry);
+        		keyEntries.put(convertAlias(alias), entry);
         	}catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());

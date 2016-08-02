@@ -168,11 +168,11 @@ public class KMSWebApp implements ServletContextListener {
       if (providerString == null) {
         throw new IllegalStateException("No KeyProvider has been defined");
       }
-      Log.info("------------------ Ranger KMSWEbApp---------------------");
+      Log.info("------------------ Ranger KMSWebApp---------------------");
       Log.info("provider string = "+providerString);
       Log.info("URI = "+new URI(providerString).toString()+" scheme = "+new URI(providerString).getScheme());
       Log.info("kmsconf size= "+kmsConf.size() + " kms classname="+kmsConf.getClass().getName());
-      Log.info("----------------INstantiating key provider ---------------");
+      Log.info("----------------Instantiating key provider ---------------");
       KeyProvider keyProvider =
           KeyProviderFactory.get(new URI(providerString), kmsConf);
       Log.info("keyProvider = "+keyProvider.toString());

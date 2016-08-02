@@ -88,10 +88,10 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	
 	/**
-	 * Generate the master key encrypt's it and save it in database
+	 * Generate the master key, encrypt it and save it in the database
 	 * @param password password to be used for encryption
-	 * @return true if successfully created the master key
-	 * 		   false if master key generation was unsuccessful or already master key exists
+	 * @return true if the master key was successfully created
+	 * 		   false if master key generation was unsuccessful or the master key already exists
 	 * @throws Throwable 
 	 */
 	@Override
