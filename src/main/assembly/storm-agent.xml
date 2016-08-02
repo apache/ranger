@@ -72,6 +72,7 @@
                     <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl</include>
                     <include>org.apache.solr:solr-solrj</include>
+                    <include>commons-codec:commons-codec</include>
                 </includes>
             </dependencySet>
             <dependencySet>
