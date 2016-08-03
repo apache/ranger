@@ -88,7 +88,7 @@ public class MiscUtil {
 					"yyyy-MM-dd HH:mm:ss.SSS").create();
 		} catch (Throwable excp) {
 			LogLog.warn(
-					"failed to create GsonBuilder object. stringigy() will return obj.toString(), instead of Json",
+					"failed to create GsonBuilder object. stringify() will return obj.toString(), instead of Json",
 					excp);
 		}
 
@@ -797,14 +797,12 @@ public class MiscUtil {
 	}
 
 	public static UserGroupInformation getLoginUser() throws IOException {
-		UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-
-		return ugi;
+		return UserGroupInformation.getLoginUser();
 	}
 
-	private static  void initLocalHost() {
+	private static void initLocalHost() {
 		if ( logger.isDebugEnabled() ) {
-			logger.debug("==> MiscUti.initLocalHost()");
+			logger.debug("==> MiscUtil.initLocalHost()");
 		}
 
 		try {
@@ -813,7 +811,7 @@ public class MiscUtil {
 			LogLog.warn("getHostname()", excp);
 		}
 		if ( logger.isDebugEnabled() ) {
-			logger.debug("<== MiscUti.initLocalHost()");
+			logger.debug("<== MiscUtil.initLocalHost()");
 		}
 	}
 	public static Date getUTCDateForLocalDate(Date date) {
