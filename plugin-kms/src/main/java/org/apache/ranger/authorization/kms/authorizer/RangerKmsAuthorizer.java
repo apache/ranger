@@ -67,6 +67,8 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 	  public static final int RELOADER_SLEEP_MILLIS = 1000;
 	  
+	  private static final Map<KMSACLsType.Type, String> ACCESS_TYPE_MAP = new HashMap<>();
+	  
 	  private volatile Map<Type, AccessControlList> blacklistedAcls;
 	  
 	  private long lastReload;
@@ -99,6 +101,18 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	   * Constant for the configuration property that indicates the keytab file path.
 	   */
 	  public static final String KEYTAB = TYPE + ".keytab";
+	  
+	  static {
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.CREATE, RangerKmsAuthorizer.ACCESS_TYPE_CREATE);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.DELETE, RangerKmsAuthorizer.ACCESS_TYPE_DELETE);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.ROLLOVER, RangerKmsAuthorizer.ACCESS_TYPE_ROLLOVER);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.GET, RangerKmsAuthorizer.ACCESS_TYPE_GET);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.GET_KEYS, RangerKmsAuthorizer.ACCESS_TYPE_GET_KEYS);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.GET_METADATA, RangerKmsAuthorizer.ACCESS_TYPE_GET_METADATA);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.SET_KEY_MATERIAL, RangerKmsAuthorizer.ACCESS_TYPE_SET_KEY_MATERIAL);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.GENERATE_EEK, RangerKmsAuthorizer.ACCESS_TYPE_GENERATE_EEK);
+		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.DECRYPT_EEK, RangerKmsAuthorizer.ACCESS_TYPE_DECRYPT_EEK);
+	  }
 
 	  RangerKmsAuthorizer(Configuration conf) {
 		  LOG.info("RangerKmsAuthorizer(conf)...");
@@ -253,9 +267,6 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 	  @Override
 	  public boolean hasAccessToKey(String keyName, UserGroupInformation ugi, KeyOpType opType) {
-		  if(LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
-			}
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
 			}
@@ -307,46 +318,11 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		}
 
 		private static String getRangerAccessType(KMSACLsType.Type accessType) {
-			String ret = null;
-		
-			switch(accessType) {
-				case CREATE:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_CREATE;
-				break;
-
-				case DELETE:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_DELETE;
-				break;
-				
-				case ROLLOVER:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_ROLLOVER;
-				break;
-				
-				case GET:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_GET;
-				break;
-				
-				case GET_KEYS:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_GET_KEYS;
-				break;
-				
-				case GET_METADATA:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_GET_METADATA;
-				break;
-				
-				case SET_KEY_MATERIAL:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_SET_KEY_MATERIAL;
-				break;
-				
-				case GENERATE_EEK:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_GENERATE_EEK;
-				break;
-				
-				case DECRYPT_EEK:
-					ret = RangerKmsAuthorizer.ACCESS_TYPE_DECRYPT_EEK;
-				break;			
+			if (ACCESS_TYPE_MAP.containsKey(accessType)) {
+				return ACCESS_TYPE_MAP.get(accessType);
 			}
-			return ret;
+			
+			return null;
 		}
 	}
 
