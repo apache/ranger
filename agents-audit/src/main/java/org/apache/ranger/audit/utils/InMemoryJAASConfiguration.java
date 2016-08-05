@@ -198,15 +198,16 @@ public final class InMemoryJAASConfiguration extends Configuration {
         LOG.trace("==> InMemoryJAASConfiguration.getAppConfigurationEntry( {} )", name);
        
         AppConfigurationEntry[] ret = null;
-        List<AppConfigurationEntry> retList = applicationConfigEntryMap.get(name);
-        if (retList == null || retList.size() == 0) {
-            if (parent != null) {
-                ret = parent.getAppConfigurationEntry(name);
-            }
-        } else {
-            int sz = retList.size();
-            ret = new AppConfigurationEntry[sz];
-            ret = retList.toArray(ret);
+		if (parent != null) {
+        	ret = parent.getAppConfigurationEntry(name);
+		}
+		if (ret == null || ret.length == 0) {
+        	List<AppConfigurationEntry> retList = applicationConfigEntryMap.get(name);
+        	if (retList != null && retList.size() > 0) {
+            	int sz = retList.size();
+            	ret = new AppConfigurationEntry[sz];
+            	ret = retList.toArray(ret);
+			}
         }
         LOG.trace("<== InMemoryJAASConfiguration.getAppConfigurationEntry( {} ) : {}", name, ArrayUtils.toString(ret));
         return ret;
