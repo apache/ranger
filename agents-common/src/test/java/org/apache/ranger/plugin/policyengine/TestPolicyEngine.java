@@ -160,6 +160,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hdfs_resourcespec() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs_resourcespec.json" };
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hdfs() {
 		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs.json" };
 

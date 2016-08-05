@@ -20,10 +20,13 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,6 +54,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected List<String> policyValues     = null;
 	protected boolean      policyIsExcludes = false;
 	protected boolean      isMatchAny       = false;
+	protected List<ResourceMatcher> resourceMatchers = null;
 
 	@Override
 	public void setResourceDef(RangerResourceDef resourceDef) {
@@ -75,31 +79,40 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
 
 		if(policyResource != null && policyResource.getValues() != null) {
-			boolean isWildCardPresent = false;
-			for(String policyValue : policyResource.getValues()) {
-				if(StringUtils.isEmpty(policyValue)) {
+			for (String policyValue : policyResource.getValues()) {
+				if (StringUtils.isEmpty(policyValue)) {
 					continue;
-				}
-
-				if(optWildCard) {
-					if (StringUtils.containsOnly(policyValue, WILDCARD_ASTERISK)) {
-						isMatchAny = true;
-					} else if (!isWildCardPresent && StringUtils.containsAny(policyValue, WILDCARDS)) {
-						isWildCardPresent = true;
-					}
 				}
 				policyValues.add(policyValue);
 			}
-			optWildCard = optWildCard && isWildCardPresent;
 		}
-
-		if(policyValues.isEmpty()) {
-			isMatchAny = true;
-		}
+		resourceMatchers = buildResourceMatchers();
+		isMatchAny = CollectionUtils.isEmpty(resourceMatchers);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractResourceMatcher.init()");
 		}
+	}
+
+	protected List<ResourceMatcher> buildResourceMatchers() {
+		List<ResourceMatcher> ret = new ArrayList<ResourceMatcher> ();
+
+		for (String policyValue : policyValues) {
+			ResourceMatcher matcher = getMatcher(policyValue);
+
+			if (matcher != null) {
+				if (matcher.isMatchAny()) {
+					ret.clear();
+					break;
+				} else {
+					ret.add(matcher);
+				}
+			}
+		}
+
+		Collections.sort(ret);
+
+		return ret;
 	}
 
 	@Override
@@ -228,11 +241,6 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return sb;
 	}
 
-	/**
-	 * Is resource asking to authorize all possible values at this level?
-	 * @param resource
-	 * @return
-	 */
 	boolean isAllValuesRequested(String resource) {
 		boolean result = StringUtils.isEmpty(resource) || WILDCARD_ASTERISK.equals(resource);
 		if (LOG.isDebugEnabled()) {
@@ -246,13 +254,156 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	 * - Resource denotes all possible values (i.e. resource in (null, "", "*")
 	 * - where as policy does not allow all possible values (i.e. policy.values().contains("*")
 	 *
-	 * @param allValuesRequested
-	 * @param resultWithoutExcludes
-     * @return
      */
 	public boolean applyExcludes(boolean allValuesRequested, boolean resultWithoutExcludes) {
 		if (!policyIsExcludes) return resultWithoutExcludes;                   // not an excludes policy!
 		if (allValuesRequested && !isMatchAny)  return resultWithoutExcludes;  // one case where excludes has no effect
 		return !resultWithoutExcludes;                                         // all other cases flip it
 	}
+
+	ResourceMatcher getMatcher(String policyValue) {
+		final int len = policyValue != null ? policyValue.length() : 0;
+
+		if (len == 0) {
+			return null;
+		}
+
+		final ResourceMatcher ret;
+
+		int wildcardStartIdx = -1;
+		int wildcardEndIdx = -1;
+		boolean needWildcardMatch = false;
+
+		// If optWildcard is true
+		//   If ('?' found or non-contiguous '*'s found in policyValue)
+		//	   needWildcardMatch = true
+		// 	 End
+		//
+		// 	 wildcardStartIdx is set to index of first '*' in policyValue or -1 if '*' is not found in policyValue, and
+		// 	 wildcardEndIdx is set to index of last '*' in policyValue or -1 if '*' is not found in policyValue
+		// Else
+		// 	 needWildcardMatch is set to false
+		// End
+		if (optWildCard) {
+			for (int i = 0; i < len; i++) {
+				final char c = policyValue.charAt(i);
+
+				if (c == '?') {
+					needWildcardMatch = true;
+					break;
+				} else if (c == '*') {
+					if (wildcardEndIdx == -1 || wildcardEndIdx == (i - 1)) {
+						wildcardEndIdx = i;
+						if (wildcardStartIdx == -1) {
+							wildcardStartIdx = i;
+						}
+					} else {
+						needWildcardMatch = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (needWildcardMatch) {
+			ret = optIgnoreCase ? new CaseInsensitiveWildcardMatcher(policyValue) : new CaseSensitiveWildcardMatcher(policyValue);
+		} else if (wildcardStartIdx == -1) {
+			ret = optIgnoreCase ? new CaseInsensitiveStringMatcher(policyValue) : new CaseSensitiveStringMatcher(policyValue);
+		} else if (wildcardStartIdx == 0) {
+			String matchStr = policyValue.substring(wildcardEndIdx + 1);
+			ret = optIgnoreCase ? new CaseInsensitiveEndsWithMatcher(matchStr) : new CaseSensitiveEndsWithMatcher(matchStr);
+		} else {
+			String matchStr = policyValue.substring(0, wildcardStartIdx);
+			ret = optIgnoreCase ? new CaseInsensitiveStartsWithMatcher(matchStr) : new CaseSensitiveStartsWithMatcher(matchStr);
+		}
+
+		return ret;
+	}
 }
+
+final class CaseSensitiveStringMatcher extends ResourceMatcher {
+	CaseSensitiveStringMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return StringUtils.equals(str, value);
+	}
+	int getPriority() { return 1;}
+}
+
+final class CaseInsensitiveStringMatcher extends ResourceMatcher {
+	CaseInsensitiveStringMatcher(String value) { super(value); }
+
+	boolean isMatch(String str) {
+		return StringUtils.equalsIgnoreCase(str, value);
+	}
+	int getPriority() {return 2; }
+}
+
+final class CaseSensitiveStartsWithMatcher extends ResourceMatcher {
+	CaseSensitiveStartsWithMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return StringUtils.startsWith(str, value);
+	}
+	int getPriority() { return 3;}
+}
+
+final class CaseInsensitiveStartsWithMatcher extends ResourceMatcher {
+	CaseInsensitiveStartsWithMatcher(String value) { super(value); }
+
+	boolean isMatch(String str) {
+		return StringUtils.startsWithIgnoreCase(str, value);
+	}
+	int getPriority() { return 4; }
+}
+
+final class CaseSensitiveEndsWithMatcher extends ResourceMatcher {
+	CaseSensitiveEndsWithMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return StringUtils.endsWith(str, value);
+	}
+	int getPriority() { return 3; }
+}
+
+final class CaseInsensitiveEndsWithMatcher extends ResourceMatcher {
+	CaseInsensitiveEndsWithMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return StringUtils.endsWithIgnoreCase(str, value);
+	}
+	int getPriority() { return 4; }
+}
+
+final class CaseSensitiveWildcardMatcher extends ResourceMatcher {
+	CaseSensitiveWildcardMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return FilenameUtils.wildcardMatch(str, value, IOCase.SENSITIVE);
+	}
+	int getPriority() { return 5; }
+}
+
+
+final class CaseInsensitiveWildcardMatcher extends ResourceMatcher {
+	CaseInsensitiveWildcardMatcher(String value) {
+		super(value);
+	}
+
+	boolean isMatch(String str) {
+		return FilenameUtils.wildcardMatch(str, value, IOCase.INSENSITIVE);
+	}
+	int getPriority() {return 6; }
+
+}
+

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,18 +19,21 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
+    protected final String value;
 
-public interface RangerResourceMatcher {
-	void setResourceDef(RangerResourceDef resourceDef);
+    ResourceMatcher(String value) { this.value = value; }
 
-	void setPolicyResource(RangerPolicyResource policyResource);
+    abstract boolean isMatch(String str);
+    abstract int getPriority();
 
-	void init();
+    boolean isMatchAny() { return value != null && value.length() == 0; }
 
-	boolean isMatch(String resource);
+    @Override
+    public int compareTo(ResourceMatcher other) { return Integer.compare(getPriority(), other.getPriority()); }
 
-	boolean isCompleteMatch(String resource);
-
+    @Override
+    public String toString() {
+        return this.getClass().getName() + "(" + this.value + ")";
+    }
 }
