@@ -22,8 +22,10 @@
 import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
+import javax.security.auth.login.LoginContext;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.storm.StormRangerPlugin;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -37,11 +39,15 @@ import org.apache.storm.Config;
 import org.apache.storm.security.auth.IAuthorizer;
 import org.apache.storm.security.auth.ReqContext;
 
+import javax.security.auth.Subject;
+
 public class RangerStormAuthorizer implements IAuthorizer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
-	
-	static final StormRangerPlugin plugin = new StormRangerPlugin();
+
+	private static final String STORM_CLIENT_JASS_CONFIG_SECTION = "StormClient";
+
+	private static volatile StormRangerPlugin plugin = null;
 
 	static final Set<String> noAuthzOperations = Sets.newHashSet(new String[] { "getNimbusConf", "getClusterInfo" });
 
@@ -84,6 +90,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 			if(noAuthzOperations.contains(aOperationName)) {
 				accessAllowed = true;
+			} else if(plugin == null) {
+				LOG.info("Ranger plugin not initialized yet! Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
 			} else {
 				String userName = null ;
 				String[] groups = null ;
@@ -105,7 +113,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 				
 				if (userName != null) {
 					String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() ) ;
-					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName); 
+					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName);
 					RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
 					accessAllowed = result != null && result.getIsAllowed();
 					isAuditEnabled = result != null && result.getIsAudited();
@@ -142,7 +150,49 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	@Override
 	public void prepare(Map aStormConfigMap) {
-		plugin.init();
+		StormRangerPlugin me = plugin;
+
+		if (me == null) {
+			synchronized(RangerStormAuthorizer.class) {
+				me = plugin;
+
+				if (me == null) {
+					try {
+						Subject subject = getStormSubject();
+
+						UserGroupInformation ugi = MiscUtil.createUGIFromSubject(subject);
+
+						if (ugi != null) {
+							MiscUtil.setUGILoginUser(ugi, subject);
+						}
+
+						LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
+					} catch (Throwable t) {
+						LOG.error("Error getting principal.", t);
+					}
+
+					LOG.info("Creating StormRangerPlugin");
+
+					plugin = new StormRangerPlugin();
+					plugin.init();
+				}
+			}
+		}
 	}
-	
+
+	private Subject getStormSubject() {
+		Subject ret = null;
+
+		try {
+			LoginContext lc = new LoginContext(STORM_CLIENT_JASS_CONFIG_SECTION);
+
+			lc.login();
+
+			ret = lc.getSubject();
+		} catch (Exception excp) {
+			LOG.error("Failed to get Storm server login subject", excp);
+		}
+
+		return ret;
+	}
 }

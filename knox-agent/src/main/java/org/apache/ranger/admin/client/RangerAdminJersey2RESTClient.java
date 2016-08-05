@@ -20,6 +20,7 @@
 package org.apache.ranger.admin.client;
 
 import java.lang.reflect.Type;
+import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.List;
 
@@ -34,7 +35,9 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.glassfish.jersey.client.ClientProperties;
 
@@ -61,8 +64,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
-	
-	
+
 	@Override
 	public void init(String serviceName, String appId, String configPropertyPrefix) {
 		if(LOG.isDebugEnabled()) {
@@ -89,18 +91,46 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ")");
 		}
-		ServicePolicies servicePolicies = null;
-		String url = _utils.getUrlForPolicyUpdate(_baseUrl, _serviceName);
+
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		String url = null;
 		try {
-			Response response = _client.target(url)
-				.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
-				.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
-				.request(MediaType.APPLICATION_JSON_TYPE)
-				.get();
+			ServicePolicies servicePolicies = null;
+			Response response = null;
+			if(isSecureMode){
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Checking Service policy if updated as user : " + user);
+				}
+				url = _utils.getSecureUrlForPolicyUpdate(_baseUrl, _serviceName);
+				final String secureUrl = url;
+				PrivilegedAction<Response> action = new PrivilegedAction<Response>() {
+					public Response run() {
+						return _client.target(secureUrl)
+								.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+								.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+								.request(MediaType.APPLICATION_JSON_TYPE)
+								.get();
+					};
+				};
+				response = user.doAs(action);
+			}else{
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Checking Service policy if updated with old api call");
+				}
+				url = _utils.getUrlForPolicyUpdate(_baseUrl, _serviceName);
+				response = _client.target(url)
+						.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+						.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+						.request(MediaType.APPLICATION_JSON_TYPE)
+						.get();
+			}
+
 			int httpResponseCode = response == null ? -1 : response.getStatus();
 			String body = null;
 
@@ -280,5 +310,4 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		
 		return _client;
 	}
-
 }

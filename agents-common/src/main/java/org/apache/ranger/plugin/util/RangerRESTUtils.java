@@ -87,6 +87,11 @@ public class RangerRESTUtils {
 		return url;
 	}
 
+	public String getSecureUrlForPolicyUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
+		return url;
+	}
+
 	public boolean isSsl(String _baseUrl) {
 		return StringUtils.isEmpty(_baseUrl) ? false : _baseUrl.toLowerCase().startsWith("https");
 	}
