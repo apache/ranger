@@ -110,8 +110,7 @@ public class RangerHSM implements RangerKMSMKI {
 	            if (result == true) {
 	                logger.debug("Ranger Master Key is present in Keystore");
 	                SecretKey key = (SecretKey)myStore.getKey(alias, password.toCharArray());
-	                String masterKey = Base64.encode(key.getEncoded()) ;
-	                return masterKey;
+	                return Base64.encode(key.getEncoded()) ;
 	            }
 	         } catch (Exception e) {
 	            logger.error("getMasterKey : Exception searching for Ranger Master Key - "  + e.getMessage());
