@@ -36,7 +36,6 @@ public class PerfDataRecorder {
 
 	private static volatile PerfDataRecorder instance = null;
 	private Map<String, PerfStatistic> perfStatistics = new HashMap<String, PerfStatistic>();
-	private boolean initPerfStatisticsOnce = true;
 
 	public static void initialize(List<String> names) {
 		if (instance == null) {
@@ -57,6 +56,13 @@ public class PerfDataRecorder {
 			instance.dumpStatistics();
 		}
 	}
+
+	public static void clearStatistics() {
+		if (instance != null) {
+			instance.clear();
+		}
+	}
+
 	public static void recordStatistic(String tag, long elapsedTime) {
 		if (instance != null) {
 			instance.record(tag, elapsedTime);
@@ -73,19 +79,16 @@ public class PerfDataRecorder {
 			PerfStatistic perfStatistic = perfStatistics.get(tag);
 
 			long averageTimeSpent = 0L;
-			long minTimeSpent = 0L;
-			long maxTimeSpent = 0L;
+
 			if (perfStatistic.numberOfInvocations.get() != 0L) {
 				averageTimeSpent = perfStatistic.millisecondsSpent.get()/perfStatistic.numberOfInvocations.get();
-				minTimeSpent = perfStatistic.minTimeSpent.get();
-				maxTimeSpent = perfStatistic.maxTimeSpent.get();
 			}
 
 			String logMsg = "[" + tag + "]" +
-                             " execCount:" + perfStatistic.numberOfInvocations +
-                             ", totalTimeTaken:" + perfStatistic.millisecondsSpent +
-                             ", maxTimeTaken:" + maxTimeSpent +
-                             ", minTimeTaken:" + minTimeSpent +
+                             " execCount:" + perfStatistic.numberOfInvocations.get() +
+                             ", totalTimeTaken:" + perfStatistic.millisecondsSpent.get() +
+                             ", maxTimeTaken:" + perfStatistic.maxTimeSpent.get() +
+                             ", minTimeTaken:" + perfStatistic.minTimeSpent.get() +
                              ", avgTimeTaken:" + averageTimeSpent;
 
 			LOG.info(logMsg);
@@ -93,23 +96,25 @@ public class PerfDataRecorder {
 		}
 	}
 
+	private void clear() {
+		perfStatistics.clear();
+	}
+
 	private void record(String tag, long elapsedTime) {
 		PerfStatistic perfStatistic = perfStatistics.get(tag);
 
-		if (perfStatistic == null  && !initPerfStatisticsOnce) {
+		if (perfStatistic == null) {
 			synchronized (PerfDataRecorder.class) {
 				perfStatistic = perfStatistics.get(tag);
-				if (perfStatistic == null) {
+
+				if(perfStatistic == null) {
 					perfStatistic = new PerfStatistic();
 					perfStatistics.put(tag, perfStatistic);
 				}
 			}
 		}
 
-		if (perfStatistic != null) {
-			perfStatistic.addPerfDataItem(elapsedTime);
-		}
-
+		perfStatistic.addPerfDataItem(elapsedTime);
 	}
 
 	private PerfDataRecorder(List<String> names) {
@@ -118,8 +123,6 @@ public class PerfDataRecorder {
 				// Create structure
 				perfStatistics.put(name, new PerfStatistic());
 			}
-		} else {
-			initPerfStatisticsOnce = false;
 		}
 	}
 
@@ -134,12 +137,12 @@ public class PerfDataRecorder {
 			millisecondsSpent.getAndAdd(timeTaken);
 
 			long min = minTimeSpent.get();
-			if (timeTaken < min) {
+			if(timeTaken < min) {
 				minTimeSpent.compareAndSet(min, timeTaken);
 			}
 
 			long max = maxTimeSpent.get();
-			if (timeTaken > max) {
+			if(timeTaken > max) {
 				maxTimeSpent.compareAndSet(max, timeTaken);
 			}
 		}

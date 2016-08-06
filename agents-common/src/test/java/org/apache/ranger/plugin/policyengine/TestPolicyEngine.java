@@ -300,11 +300,15 @@ public class TestPolicyEngine {
 		policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+		long requestCount = 0L;
 
 		RangerAccessRequest request = null;
 
 		for(TestData test : testCase.tests) {
 			request = test.request;
+			if ((requestCount++ % 10) == 1) {
+				policyEngine.reorderPolicyEvaluators();
+			}
 			if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
 					request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest

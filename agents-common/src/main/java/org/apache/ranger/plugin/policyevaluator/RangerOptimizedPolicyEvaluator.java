@@ -47,7 +47,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private static final String RANGER_POLICY_EVAL_MATCH_ONE_CHARACTER_STRING = "?";
 
     private static final int RANGER_POLICY_EVAL_SCORE_DEFAULT                         = 10000;
-    private static final int RANGER_POLICY_EVAL_SCORE_DISCOUNT_POLICY_HAS_DENY        =  4000;
 
     private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_RESOURCE          = 100;
     private static final int RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS       =  25;
@@ -200,10 +199,6 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         int customConditionsDiscount = RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_CUSTOM_CONDITIONS - (RANGER_POLICY_EVAL_SCORE_CUSTOM_CONDITION_PENALTY * this.getCustomConditionsCount());
         if(customConditionsDiscount > 0) {
             evalOrder -= customConditionsDiscount;
-        }
-
-        if (hasDeny()) {
-            evalOrder -= RANGER_POLICY_EVAL_SCORE_DISCOUNT_POLICY_HAS_DENY;
         }
 
         if(LOG.isDebugEnabled()) {

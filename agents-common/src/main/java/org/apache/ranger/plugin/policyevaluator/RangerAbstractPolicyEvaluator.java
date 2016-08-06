@@ -35,6 +35,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	private RangerPolicy     policy     = null;
 	private RangerServiceDef serviceDef = null;
 	private int              evalOrder  = 0;
+	protected long           usageCount = 0;
+	protected boolean        usageCountMutable = true;
 
 
 	@Override
@@ -74,10 +76,14 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public long getUsageCount() {
+		return usageCount;
+	}
+
+	@Override
 	public int getEvalOrder() {
 		return evalOrder;
 	}
-
 	@Override
 	public boolean isAuditEnabled() {
 		return policy != null && policy.getIsAuditEnabled();
@@ -89,7 +95,17 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		LOG.debug("==> RangerAbstractPolicyEvaluator.compareTo()");
 		}
 
-		int result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
+		int result;
+		if (hasDeny() && !other.hasDeny()) {
+			result = -1;
+		} else if (!hasDeny() && other.hasDeny()) {
+			result = 1;
+		} else {
+			result = Long.compare(other.getUsageCount(), this.usageCount);
+			if (result == 0) {
+				result = Integer.compare(this.evalOrder, other.getEvalOrder());
+			}
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.compareTo(), result:" + result);
@@ -100,6 +116,22 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public void setEvalOrder(int evalOrder) {
 		this.evalOrder = evalOrder;
+	}
+
+	@Override
+	public void incrementUsageCount(int number) {
+		if (usageCountMutable) usageCount += number;
+	}
+
+	@Override
+	public void setUsageCountImmutable() {
+		this.usageCountMutable = false;
+	}
+
+	@Override
+	public void resetUsageCount() {
+		this.usageCount = 0;
+		this.usageCountMutable = true;
 	}
 
 	@Override

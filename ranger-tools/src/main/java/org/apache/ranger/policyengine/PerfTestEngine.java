@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.io.InputStream;
@@ -31,15 +32,20 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class PerfTestEngine {
 	static final Log LOG      = LogFactory.getLog(PerfTestEngine.class);
 
+	static private final long POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT = 100;
 	private final URL servicePoliciesFileURL;
+	private final boolean isDynamicReorderingEnabled;
 	private RangerPolicyEngine policyEvaluationEngine;
+	private AtomicLong requestCount = new AtomicLong();
 
-	public PerfTestEngine(final URL servicePoliciesFileURL) {
+	public PerfTestEngine(final URL servicePoliciesFileURL, boolean isDynamicReorderingEnabled) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
+		this.isDynamicReorderingEnabled = isDynamicReorderingEnabled;
 	}
 
 	public boolean init() {
@@ -66,8 +72,11 @@ public class PerfTestEngine {
 
 			RangerPolicyEngineOptions engineOptions = new RangerPolicyEngineOptions();
 			engineOptions.disableTagPolicyEvaluation = false;
+			engineOptions.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
 
 			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, engineOptions);
+
+			requestCount.set(0L);
 
 			ret = true;
 
@@ -100,6 +109,12 @@ public class PerfTestEngine {
 		RangerAccessResult ret = null;
 
 		if (policyEvaluationEngine != null) {
+
+			long processedRequestCount = requestCount.getAndIncrement();
+
+			if (isDynamicReorderingEnabled && (processedRequestCount % POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT) == 0) {
+				policyEvaluationEngine.reorderPolicyEvaluators();
+			}
 
 			policyEvaluationEngine.preProcess(request);
 

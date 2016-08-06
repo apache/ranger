@@ -26,17 +26,19 @@ public class PerfTestOptions {
 	private final URL servicePoliciesFileURL;
 	private final URL[] requestFileURLs;
 	private final URL statCollectionFileURL;
+	private final boolean isDynamicReorderingEnabled;
 
 
 	private final int concurrentClientCount;
 	private final int iterationsCount;
 
-	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount) {
+	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isDynamicReorderingEnabled) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.requestFileURLs = requestFileURLs;
 		this.statCollectionFileURL = statCollectionFileURL;
 		this.iterationsCount = iterationsCount;
 		this.concurrentClientCount = concurrentClientCount;
+		this.isDynamicReorderingEnabled = isDynamicReorderingEnabled;
 	}
 
 	public URL getServicePoliciesFileURL() {
@@ -57,4 +59,7 @@ public class PerfTestOptions {
 
 	public int getIterationsCount() {
 		return iterationsCount;
-	}}
+	}
+
+	public boolean getIsDynamicReorderingEnabled() { return isDynamicReorderingEnabled; }
+}

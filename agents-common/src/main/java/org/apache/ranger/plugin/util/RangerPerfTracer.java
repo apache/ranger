@@ -71,6 +71,11 @@ public class RangerPerfTracer {
 		}
 	}
 
+	public static void logAlways(RangerPerfTracer tracer) {
+		if(tracer != null) {
+			tracer.logAlways();
+		}
+	}
 	public RangerPerfTracer(Log logger, String tag, String data) {
 		this.logger = logger;
 		this.tag    = tag;
@@ -95,5 +100,9 @@ public class RangerPerfTracer {
 		if (elapsedTime > reportingThresholdMs) {
 			logger.debug("[PERF] " + tag + data + ": " + elapsedTime);
 		}
+	}
+	public void logAlways() {
+		long elapsedTime = getElapsedTime();
+		logger.debug("[PERF] " + tag + data + ": " + elapsedTime);
 	}
 }
