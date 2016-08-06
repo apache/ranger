@@ -52,6 +52,14 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 
 	int getEvalOrder();
 
+	long getUsageCount();
+
+	void incrementUsageCount(int number);
+
+	void setUsageCountImmutable();
+
+	void resetUsageCount();
+
 	int getCustomConditionsCount();
 
 	boolean isAuditEnabled();
@@ -73,4 +81,5 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
+
 }

@@ -54,7 +54,7 @@ public class RangerPolicyenginePerfTester {
 
             URL servicePoliciesFileURL = perfTestOptions.getServicePoliciesFileURL();
 
-            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL);
+            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, perfTestOptions.getIsDynamicReorderingEnabled());
             if (!perfTestEngine.init()) {
                 LOG.error("Error initializing test data. Existing...");
                 System.exit(1);
@@ -62,6 +62,22 @@ public class RangerPolicyenginePerfTester {
 
             URL[] requestFileURLs = perfTestOptions.getRequestFileURLs();
             int requestFilesCount = requestFileURLs.length;
+
+            // warm-up policy engine
+            LOG.error("Warming up..");
+            try {
+                for(URL requestFileURL : requestFileURLs) {
+                    PerfTestClient perfTestClient = new PerfTestClient(perfTestEngine, 0, requestFileURL, 1);
+
+                    perfTestClient.init();
+                    perfTestClient.run();
+                }
+            } catch(Throwable t) {
+                LOG.error("Error during warmup", t);
+            }
+            LOG.error("Warmed up!");
+
+            PerfDataRecorder.clearStatistics();
 
             int clientsCount = perfTestOptions.getConcurrentClientCount();
             List<PerfTestClient> perfTestClients = new ArrayList<PerfTestClient>(clientsCount);
@@ -89,12 +105,9 @@ public class RangerPolicyenginePerfTester {
             long totalMemory = runtime.totalMemory();
             long freeMemory = runtime.freeMemory();
 
-            LOG.info("Initial Memory Statistics:");
-            LOG.info("\t\tMaximum memory available for the process:\t" + runtime.maxMemory());
-            LOG.info("\t\tInitial In-Use memory:\t\t\t\t" + (totalMemory-freeMemory));
-            LOG.info("\t\tInitial Free memory:\t\t\t\t" + freeMemory);
-            LOG.info("\n\n");
+            LOG.info("Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
 
+            LOG.info("Starting " + perfTestClients.size() + " clients..");
             for (PerfTestClient client : perfTestClients) {
                 try {
                     client.start();
@@ -102,13 +115,13 @@ public class RangerPolicyenginePerfTester {
                     LOG.error("Error in starting client: " + client.getName(), t);
                 }
             }
+            LOG.info("Started " + perfTestClients.size() + " clients");
 
             LOG.info("Waiting for " + perfTestClients.size() + " clients to finish up");
 
             for (PerfTestClient client : perfTestClients) {
                 while (client.isAlive()) {
                     try {
-                        LOG.info("Waiting for " + client.getName() + " to finish up.");
                         client.join(1000);
 
                         runtime.gc();
@@ -116,10 +129,7 @@ public class RangerPolicyenginePerfTester {
                         totalMemory = runtime.totalMemory();
                         freeMemory = runtime.freeMemory();
 
-                        LOG.info("Memory Statistics:");
-                        LOG.info("\t\tCurrent In-Use memory:\t\t" + (totalMemory-freeMemory));
-                        LOG.info("\t\tCurrent Free memory:\t\t" + freeMemory);
-                        LOG.info("\n\n");
+                        LOG.info("Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
 
                     } catch (InterruptedException interruptedException) {
                         LOG.error("PerfTestClient.join() was interrupted");

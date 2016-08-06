@@ -20,6 +20,8 @@
 PolicyRefresher.loadPolicy
 RangerPolicyEngine.init
 RangerPolicyEngine.cleanUp
+RangerPolicyEngine.reorderPolicyEvaluators
+RangerPolicyEngine.usage
 RangerContextEnricher.init
 RangerPolicyEvaluator.init
 RangerPolicyItemEvaluator.init

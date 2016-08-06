@@ -177,6 +177,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     // We are done for determining if audit is needed for this policy
                     if (isAuditEnabled()) {
                         result.setIsAudited(true);
+                        result.setAuditPolicyId(getPolicy().getId());
                     }
                 }
             }
@@ -249,6 +250,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				if (isResourceMatch || isResourceHeadMatch) {
 					if (isAuditEnabled()) {
 						result.setIsAudited(true);
+						result.setAuditPolicyId(getPolicy().getId());
 					}
 				}
 			}
@@ -270,6 +272,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					evaluatePolicyItems(request, result);
 				}
 			}
+
 		}
 
 		RangerPerfTracer.log(perf);
@@ -314,6 +317,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				if (isResourceMatch || isResourceHeadMatch) {
 					if (isAuditEnabled()) {
 						result.setIsAudited(true);
+						result.setAuditPolicyId(getPolicy().getId());
 					}
 				}
 			}
@@ -990,5 +994,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         }
 
         return ret;
-	}
+    }
+
 }

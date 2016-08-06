@@ -21,4 +21,5 @@ RangerTagEnricher.setServiceTags
 RangerPolicyEngine.init
 RangerPolicyEngine.preProcess
 RangerPolicyEngine.isAccessAllowedNoAudit
-
+RangerPolicyEngine.reorderPolicyEvaluators
+RangerPolicyEngine.usage

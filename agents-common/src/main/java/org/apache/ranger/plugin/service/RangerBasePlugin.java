@@ -22,6 +22,8 @@ package org.apache.ranger.plugin.service;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -30,7 +32,17 @@ import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
@@ -51,6 +63,7 @@ public class RangerBasePlugin {
 	private RangerAccessResultProcessor resultProcessor = null;
 	private boolean                   useForwardedIPAddress = false;
 	private String[]                  trustedProxyAddresses = null;
+	private Timer                     policyEngineRefreshTimer;
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
 	int logInterval = 30000; // 30 seconds
@@ -126,6 +139,32 @@ public class RangerBasePlugin {
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
 		refresher.setDaemon(true);
 		refresher.startRefresher();
+
+		long policyReorderIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
+		if (policyReorderIntervalMs >= 0 && policyReorderIntervalMs < 15 * 1000) {
+			policyReorderIntervalMs = 15 * 1000;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(propertyPrefix + ".policy.policyReorderInterval:" + policyReorderIntervalMs);
+		}
+
+		if (policyReorderIntervalMs > 0) {
+			policyEngineRefreshTimer = new Timer("PolicyEngineRefreshTimer", true);
+			try {
+				policyEngineRefreshTimer.schedule(new PolicyEngineRefresher(this), policyReorderIntervalMs, policyReorderIntervalMs);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Scheduled PolicyEngineRefresher to reorder policies nbased on number of evaluations in and every " + policyReorderIntervalMs + " milliseconds");
+				}
+			} catch (IllegalStateException exception) {
+				LOG.error("Error scheduling policyEngineRefresher:", exception);
+				LOG.error("*** PolicyEngine will NOT be reorderd based on number of evaluations every " + policyReorderIntervalMs + " milliseconds ***");
+				policyEngineRefreshTimer = null;
+			}
+		} else {
+			LOG.info("Policies will NOT be reordered based on number of evaluations because "
+					+ propertyPrefix + ".policy.policyReorderInterval is set to a negative number[" + policyReorderIntervalMs +"]");
+		}
 	}
 
 	public void setPolicies(ServicePolicies policies) {
@@ -154,17 +193,25 @@ public class RangerBasePlugin {
 
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
+		Timer policyEngineRefreshTimer = this.policyEngineRefreshTimer;
+
 		this.serviceName  = null;
 		this.policyEngine = null;
 		this.refresher    = null;
+		this.policyEngineRefreshTimer = null;
 
 		if (refresher != null) {
 			refresher.stopRefresher();
 		}
 
+		if (policyEngineRefreshTimer != null) {
+			policyEngineRefreshTimer.cancel();
+		}
+
 		if (policyEngine != null) {
 			policyEngine.cleanup();
 		}
+
 	}
 
 	public void setResultProcessor(RangerAccessResultProcessor resultProcessor) {
@@ -400,4 +447,19 @@ public class RangerBasePlugin {
 		int counter=0;
 	}
 
+	private class PolicyEngineRefresher extends TimerTask {
+		private final RangerBasePlugin plugin;
+
+		PolicyEngineRefresher(RangerBasePlugin plugin) {
+			this.plugin = plugin;
+		}
+
+		@Override
+		public void run() {
+			RangerPolicyEngine policyEngine = plugin.policyEngine;
+			if (policyEngine != null) {
+				policyEngine.reorderPolicyEvaluators();
+			}
+		}
+	}
 }

@@ -69,6 +69,8 @@ public interface RangerPolicyEngine {
 
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 
+	void reorderPolicyEvaluators();
+
 	boolean preCleanup();
 
 	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
