@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
@@ -32,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.RollingTimeUtil;
@@ -131,7 +133,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	}
 
 	@Override
-	synchronized public boolean logJSON(Collection<String> events) {
+	synchronized public boolean logJSON(final Collection<String> events) {
 		logStatusIfRequired();
 		addTotalCount(events.size());
 
@@ -150,10 +152,26 @@ public class HDFSAuditDestination extends AuditDestination {
 				logger.debug("UGI=" + MiscUtil.getUGILoginUser()
 						+ ". Will write to HDFS file=" + currentFileName);
 			}
-			PrintWriter out = getLogFileStream();
-			for (String event : events) {
-				out.println(event);
+
+			PrivilegedExceptionAction<PrintWriter> action = new PrivilegedExceptionAction<PrintWriter>() {
+				@Override
+				public PrintWriter run()  throws Exception {
+					PrintWriter out = getLogFileStream();
+					for (String event : events) {
+						out.println(event);
+					}
+					return out;
+				};
+			};
+
+			PrintWriter out = null;
+			UserGroupInformation ugi =  MiscUtil.getUGILoginUser();
+			if ( ugi != null) {
+				out = ugi.doAs(action);
+			} else {
+				out = action.run();
 			}
+
 			// flush and check the stream for errors
 			if (out.checkError()) {
 				// In theory, this count may NOT be accurate as part of the messages may have been successfully written.
@@ -230,7 +248,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	}
 
 	// Helper methods in this class
-	synchronized private PrintWriter getLogFileStream() throws Throwable {
+	synchronized private PrintWriter getLogFileStream() throws Exception {
 		closeFileIfNeeded();
 
 		// Either there are no open log file or the previous one has been rolled
@@ -294,7 +312,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	}
 
 	private void createParents(Path pathLogfile, FileSystem fileSystem)
-			throws Throwable {
+			throws Exception {
 		logger.info("Creating parent folder for " + pathLogfile);
 		Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
 

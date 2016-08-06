@@ -19,7 +19,6 @@
 
 package org.apache.ranger.audit.queue;
 
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
-import org.apache.ranger.audit.provider.MiscUtil;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
@@ -130,26 +128,13 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 		try {
 			//This is done to clear the MDC context to avoid issue with Ranger Auditing for Knox
 			MDC.clear();
-			if (isConsumerDestination && MiscUtil.getUGILoginUser() != null) {
-				PrivilegedAction<Void> action = new PrivilegedAction<Void>() {
-					public Void run() {
-						runDoAs();
-						return null;
-					};
-				};
-				logger.info("Running queue " + getName() + " as user "
-						+ MiscUtil.getUGILoginUser());
-				MiscUtil.getUGILoginUser().doAs(action);
-			} else {
-				runDoAs();
-			}
-
+			runLogAudit();
 		} catch (Throwable t) {
 			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
 		}
 	}
 
-	public void runDoAs() {
+	public void runLogAudit() {
 		while (true) {
 			try {
 				AuditEventBase event = null;
