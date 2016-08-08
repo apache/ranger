@@ -407,6 +407,7 @@
 		  renderResource : function() {
 			  var that = this;
 			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+				this.value.values = _.map(this.value.values, function(val){ return _.escape(val); });
 			    	this.$resource.val(this.value.values.toString())
 			    	//to preserve resources values to text field
 			    	if(!_.isUndefined(this.value.resourceType)){

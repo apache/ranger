@@ -214,9 +214,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('groups'),function(group,index){
 									if(index < 4) {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + group + endSpanEle  + " ";
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + endSpanEle  + " ";
 									} else {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + group+ endSpanEle  + " ";
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + endSpanEle  + " ";
 									}
 								});
 								if(model.get('groups').length > 4) {
@@ -246,9 +246,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('users'),function(user,index){
 									if(index < 4) {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + user + endSpanEle  + " ";
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + endSpanEle  + " ";
 									} else {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + user+ endSpanEle  + " ";
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + endSpanEle  + " ";
 									}
 								});
 								if(model.get('users').length > 4) {
@@ -327,7 +327,7 @@ define(function(require) {'use strict';
 								strVal += "<span title='";
 								names = '';
 								_.map(resourceObj.values,function(resourceVal){
-									names += resourceVal+",";
+									names += _.escape(resourceVal)+",";
 								});
 								names = names.slice(0,-1);
 								strVal += names + "'>"+names +"</span>";
@@ -513,7 +513,7 @@ define(function(require) {'use strict';
 		/** on render callback */
 		setupGroupAutoComplete : function(){
 			this.groupArr = this.groupList.map(function(m){
-				return { id : m.get('name') , text : m.get('name')};
+				return { id : m.get('name') , text : _.escape(m.get('name'))};
 			});
 			var that = this, arr = [];
 			this.ui.userGroup.select2({
@@ -543,7 +543,7 @@ define(function(require) {'use strict';
 						if(!_.isEmpty(that.ui.userGroup.val()))
 							selectedVals = that.ui.userGroup.val().split(',');
 						if(data.resultSize != "0"){
-							results = data.vXGroups.map(function(m, i){	return {id : m.name, text: m.name};	});
+							results = data.vXGroups.map(function(m, i){	return {id : m.name, text: _.escape(m.name) };	});
 							if(!_.isEmpty(selectedVals))
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							return {results : results};
@@ -566,7 +566,7 @@ define(function(require) {'use strict';
 			var that = this;
 			var arr = [];
 			this.userArr = this.userList.map(function(m){
-				return { id : m.get('name') , text : m.get('name')};
+				return { id : m.get('name') , text : _.escape(m.get('name')) };
 			});
 			this.ui.userName.select2({
 //				multiple: true,
@@ -597,7 +597,7 @@ define(function(require) {'use strict';
 						if(!_.isEmpty(that.ui.userName.select2('val')))
 							selectedVals = that.ui.userName.select2('val');
 						if(data.resultSize != "0"){
-							results = data.vXUsers.map(function(m, i){	return {id : m.name, text: m.name};	});
+							results = data.vXUsers.map(function(m, i){	return {id : m.name, text: _.escape(m.name) };	});
 							if(!_.isEmpty(selectedVals))
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							return {results : results};

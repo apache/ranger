@@ -456,7 +456,7 @@ define(function(require){
 			var selArr = [];
 			var message = '';
 			_.each(collection.selected,function(obj){
-				selArr.push(obj.get('name'));
+				selArr.push(_.escape(obj.get('name')));
 			});
 			var  vXStrings = [];
 			var jsonUsers  = {};

@@ -101,7 +101,7 @@ define(function(require){
 			    		values = $(that.el).find('.select2-container-multi').select2('data')
 			    	} else {
 			    		var groupNameList = that.model.get('groupNameList');
-			    		values = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': groupNameList[i]};});
+			    		values = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': _.escape(groupNameList[i]) };});
 			    	}
 			    	
 			    	valArr = _.map(values,function(val,i){ 
@@ -138,7 +138,7 @@ define(function(require){
 		},
 		getSelect2Options :function(){
 			var that = this,groupCnt = 0;
-    		var tags = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': that.model.get('groupNameList')[i]};});
+    		var tags = _.map(that.model.get('groupIdList'),function(id,i){ return {'id': id, 'text': _.escape(that.model.get('groupNameList')[i]) };});
 			return{
 				closeOnSelect : true,
 				placeholder : 'Select Group',
@@ -171,7 +171,7 @@ define(function(require){
 							selectedVals = that.$('.tags').data('editable').input.$input.val().split(',');
 						}
 						if(data.resultSize != "0"){
-							results = data.vXGroups.map(function(m, i){	return {id : (m.id).toString(), text: m.name};	});
+							results = data.vXGroups.map(function(m, i){	return {id : (m.id).toString(), text: _.escape(m.name) };	});
 							if(!_.isEmpty(selectedVals)) {
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							}

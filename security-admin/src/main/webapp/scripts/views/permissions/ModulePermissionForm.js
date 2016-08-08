@@ -105,12 +105,12 @@ define(function(require) {
 		setupFieldsforEditModule : function(){
 			var groupsNVList=[],usersNVList =[];
 			groupsNVList = _.map(this.model.get('groupPermList'),function(gPerm){
-				return {'id': Number(gPerm.groupId), 'text':gPerm.groupName};
+				return {'id': Number(gPerm.groupId), 'text':_.escape(gPerm.groupName)};
 			});
 			this.model.set('selectGroups', groupsNVList);
 
 			usersNVList = _.map(this.model.get('userPermList'),function(uPerm){
-				return {'id': Number(uPerm.userId), 'text':uPerm.userName};
+				return {'id': Number(uPerm.userId), 'text':_.escape(uPerm.userName)};
 			});
 			this.model.set('selectUsers', usersNVList);
 
@@ -136,7 +136,7 @@ define(function(require) {
 					initSelection : function (element, callback) {
 						var data = [];
 						_.each(options.permList,function (elem) {
-							data.push({id: elem[options.idKey], text: elem[options.textKey]});
+							data.push({id: elem[options.idKey], text: _.escape(elem[options.textKey])});
 						});
 						callback(data);
 					},
@@ -169,9 +169,9 @@ define(function(require) {
 							selectedVals = that.getSelectedValues(options);
 							if(data.resultSize != "0"){
 								if(!_.isUndefined(data.vXGroups)){
-									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
 								} else if(!_.isUndefined(data.vXUsers)){
-									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
 									if(!_.isEmpty(selectedVals)){
 										results = XAUtil.filterResultByText(results, selectedVals);
 									}
