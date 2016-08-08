@@ -115,10 +115,10 @@ define(function(require) {
 			});
 			if(this.model.has('editMode') && this.model.get('editMode')){
 				if(!_.isUndefined(this.model.get('groupName')) && !_.isNull(this.model.get('groupName'))){
-					this.ui.selectGroups.val(this.model.get('groupName'));
+					this.ui.selectGroups.val(_.map(this.model.get('groupName'), function(name){ return _.escape(name); }));
 				}
 				if(!_.isUndefined(this.model.get('userName')) && !_.isNull(this.model.get('userName'))){
-					this.ui.selectUsers.val(this.model.get('userName'));
+					this.ui.selectUsers.val(_.map(this.model.get('userName'), function(name){ return _.escape(name); }));
 				}
 				
 				if(!_.isUndefined(this.model.get('conditions'))){
@@ -200,6 +200,7 @@ define(function(require) {
 				});
 			}
 			var tags = list.map(function(m){
+//				return { id : m.id+"" , text : _.escape(m.get('name'))};
 				return { id : m.id+"" , text : m.get('name')};
 			});
 			
@@ -213,6 +214,7 @@ define(function(require) {
 				initSelection : function (element, callback) {
 					var data = [], names = (typeGroup) ? that.model.get('groupName') : that.model.get('userName');
 					_.each(names, function (name) {
+//						name = _.escape(name);
 						var obj = _.findWhere(tags, {text: name });
 						data.push({ id : obj.id, text : name })
 					});
@@ -230,9 +232,9 @@ define(function(require) {
 						selectedVals = that.getSelectedValues($select, typeGroup);
 						if(data.resultSize != "0"){
 							if(typeGroup){
-								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
 							} else {
-								results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: m.name};	});
+								results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
 							}
 							if(!_.isEmpty(selectedVals)){
 								results = XAUtil.filterResultByText(results, selectedVals);
@@ -653,7 +655,7 @@ define(function(require) {
 						return;
 					}	
 					that.model.set('rowFilterInfo', {'filterExpr': value });
-					$(this).html("<span class='label label-info'>" + value + "</span>");
+					$(this).html("<span class='label label-info'>" + _.escape(value) + "</span>");
 					that.ui.addRowFilterSpan.find('i').attr('class', 'icon-pencil');
 					that.ui.addRowFilterSpan.attr('title','edit');
 				},

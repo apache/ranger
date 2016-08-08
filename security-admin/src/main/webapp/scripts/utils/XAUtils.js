@@ -430,7 +430,7 @@ define(function(require) {
 			var groupArr = _.uniq(_.compact(_.map(rawValue.models, function(m,
 					i) {
 				if (m.has('groupName'))
-					return m.get('groupName');
+					return _.escape(m.get('groupName'));
 			})));
 			if (groupArr.length > 0) {
 				if (rawValue.first().has('resourceId'))
@@ -492,14 +492,14 @@ define(function(require) {
 			if (i >= 4) {
 				return '<span class="label label-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '" style="display:none;">'
-						+ name + '</span>';
+						+ _.escape(name) + '</span>';
 			} else if (i == 3 && groupArr.length > 4) {
 				showMoreLess = true;
 				return '<span class="label label-info float-left-margin-2" policy-' + type
-						+ '-id="' + model.id + '">' + name + '</span>';
+						+ '-id="' + model.id + '">' + _.escape(name) + '</span>';
 			} else {
 				return '<span class="label label-info float-left-margin-2" policy-' + type
-						+ '-id="' + model.id + '">' + name + '</span>';
+						+ '-id="' + model.id + '">' + _.escape(name) + '</span>';
 			}
 		});
 		if (showMoreLess) {
@@ -526,11 +526,11 @@ define(function(require) {
 			return '--';
 		if (userOrGroups == 'groups') {
 			_.each(rawValue, function(perm) {
-				objArr = _.union(objArr, perm.groupName)
+				objArr = _.union(objArr, _.escape(perm.groupName))
 			});
 		} else if (userOrGroups == 'users') {
 			_.each(rawValue, function(perm) {
-				objArr = _.union(objArr, perm.userName)
+				objArr = _.union(objArr, _.escape(perm.userName))
 			});
 		}
 
