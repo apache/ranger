@@ -21,8 +21,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 
 import scala.collection.immutable.Set;
@@ -36,7 +35,7 @@ import kafka.security.auth.Resource;
 
 //public class RangerKafkaAuthorizer extends Authorizer {
 public class RangerKafkaAuthorizer implements Authorizer {
-	private static final Log LOG  = LogFactory.getLog(RangerKafkaAuthorizer.class);
+	private static final Logger LOG  = Logger.getLogger(RangerKafkaAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "kafka";
 	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-kafka-plugin"};
