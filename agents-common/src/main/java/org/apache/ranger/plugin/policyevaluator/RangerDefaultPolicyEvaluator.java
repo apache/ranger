@@ -152,8 +152,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             if (!result.getIsAccessDetermined()) {
                 // Try Match only if it was not attempted as part of evaluating Audit requirement
                 if (!isMatchAttempted) {
-                    matchResult = isResourceMatch(request);
-	                isMatchAttempted = true;
+                    // Attempt matching only if there may be a matchable policyItem
+                    if (hasMatchablePolicyItem(request)) {
+                        matchResult = isResourceMatch(request);
+                        isMatchAttempted = true;
+                    }
                 }
 
                 // Go further to evaluate access only if match or head match was found at this point

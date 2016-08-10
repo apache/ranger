@@ -21,11 +21,13 @@ package org.apache.ranger.plugin.policyevaluator;
 
 
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
@@ -91,6 +93,14 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public void setEvalOrder(int evalOrder) {
 		this.evalOrder = evalOrder;
+	}
+
+	public boolean hasAllow() {
+		return policy != null && CollectionUtils.isNotEmpty(policy.getPolicyItems());
+	}
+
+	protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
+		return hasAllow();
 	}
 
 	@Override
