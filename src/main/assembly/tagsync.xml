@@ -51,6 +51,7 @@
 					<include>org.apache.kafka:kafka_2.10:jar:${kafka.version}</include>
 					<include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
 					<include>org.apache.ranger:credentialbuilder</include>
+					<include>org.apache.ranger:ranger-plugins-cred</include>
 					<include>org.apache.ranger:ranger-plugins-common</include>
 					<include>org.apache.ranger:ranger-util</include>
 					<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
