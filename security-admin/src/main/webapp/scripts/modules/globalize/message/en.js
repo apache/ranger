@@ -294,7 +294,7 @@ define(function(require) {
 				searchForYourUser 			:"Search for your users...",
 				searchForYourGroup 			:"Search for your groups...",
 				access						: 'Access',
-				policyCondition				: 'Policy Condtions',
+				policyCondition				: 'Policy Conditions',
 				permissions					: 'Permissions',
 				kms							: 'KMS',
 				keyCreate					: 'Key Create',
