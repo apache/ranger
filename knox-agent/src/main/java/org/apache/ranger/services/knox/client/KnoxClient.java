@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -73,6 +74,17 @@ public class KnoxClient {
 		if ( topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
 			topologyNameMatching = "";
 		}
+		String decryptedPwd=null;
+		try{
+			decryptedPwd=PasswordUtils.decryptPassword(password);
+		}catch(Exception ex){
+			LOG.info("Password decryption failed; trying knox connection with received password string");
+			decryptedPwd=null;
+		}finally{
+			if(decryptedPwd==null){
+				decryptedPwd=password;
+			}
+		}
 		try {
 
 			Client client = null;
@@ -81,7 +93,7 @@ public class KnoxClient {
 			try {
 				client = Client.create();;
 				
-				client.addFilter(new HTTPBasicAuthFilter(userName, password));
+				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
 				WebResource webResource = client.resource(knoxUrl);
 				response = webResource.accept(EXPECTED_MIME_TYPE)
 					    .get(ClientResponse.class);
@@ -164,6 +176,17 @@ public class KnoxClient {
 		if ( serviceNameMatching == null ||  serviceNameMatching.trim().isEmpty()) {
 			serviceNameMatching = "";
 		}
+		String decryptedPwd=null;
+		try{
+			decryptedPwd=PasswordUtils.decryptPassword(password);
+		}catch(Exception ex){
+			LOG.info("Password decryption failed; trying knox connection with received password string");
+			decryptedPwd=null;
+		}finally{
+			if(decryptedPwd==null){
+				decryptedPwd=password;
+			}
+		}
 		try {
 
 			Client client = null;
@@ -172,7 +195,7 @@ public class KnoxClient {
 			try {
 				client = Client.create();;
 				
-				client.addFilter(new HTTPBasicAuthFilter(userName, password));
+				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
 				
 				WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
 				
