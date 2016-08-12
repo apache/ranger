@@ -57,6 +57,9 @@ public class StormRangerPlugin extends RangerBasePlugin {
 		impliedTypes.put("dumpProfile","getTopologyInfo");
 		impliedTypes.put("dumpJstack","getTopologyInfo");
 		impliedTypes.put("dumpHeap","getTopologyInfo");
+		impliedTypes.put("setLogConfig","getTopologyInfo");
+		impliedTypes.put("getLogConfig","getTopologyInfo");
+		impliedTypes.put("debug","getTopologyInfo");
 
 		this.impliedAccessTypes = Collections.unmodifiableMap(impliedTypes);
 	}
