@@ -214,38 +214,39 @@ licenses.
 
 The Apache Ranger project bundles the following files under the MIT License:
 
-This product includes jQuery (http://jquery.org - MIT license), Copyright © 2014, John Resig.
-This product includes jQuery UI (http://jqueryui.com - MIT license), Copyright © 2013 jQuery Foundation.  
-This product includes Backbone (http://backbonejs.org - MIT license), Copyright © 2010-2014 Jeremy Ashkenas, DocumentCloud.
-This product includes underscore (http:underscorejs.org - MIT license), Copyright © 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors.  
-This product includes Backbone.Marionette (http://marionettejs.com/ - MIT license).  
-This product includes Backbone.Wreqr (http://marionettejs.com/ - MIT license) Copyright ©,2012 Derick Bailey, Muted Solutions, LLC.
-This product includes Backbone.BabySitter (http://marionettejs.com/ - MIT license), Copyright ©2013 Derick Bailey, Muted Solutions, LLC.  
-This product includes Backbone fetch cache (https://github.com/mrappleton/backbone-fetch-cache - MIT license), Copyright © 2012-2013 Andrew Appleton.  
-This product includes Backbone-forms (https://github.com/powmedia/backbone-forms - MIT license), Copyright © 2013 Charles Davison.
-This product includes Backbone localStorage Adapter v1.1.7 (http://documentup.com/jeromegn/backbone.localStorage - MIT license), Copyright © 2010 Jerome Gravel-Niquet.  
-This product includes Backbone.BootstrapModal (https://github.com/powmedia/backbone.bootstrap-modal - MIT license), Copyright © 2013 Charles Davison.  
-This product includes X-editable - v1.5.0 (http://vitalets.github.io/x-editable/ - MIT license), Copyright © 2013 Vitaliy Potapov;
-This product includes backgrid 0.3.5 (http://backgridjs.com/ - MIT license), Copyright © 2014 Jimmy Yuen Ho Wong and contributors.
-This product includes backgrid-paginator (http://github.com/wyuenho/backgrid - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  This product includes backgrid-filter (http://github.com/wyuenho/backgrid - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  
-This product includes backbone-pageable 1.3.2 (http://github.com/wyuenho/backbone-pageable - MIT license), Copyright © 2013 Jimmy Yuen Ho Wong.
-This product includes jQuery Cookie Plugin v1.4.0 (https://github.com/carhartl/jquery-cookie - MIT license), Copyright 2013 Klaus Hartl  
-This product includes jQuery Toggles v2.0.4 (http://simontabor.com/labs/toggles - MIT license), Copyright 2013 Simon Tabor.  
-This product includes jQuery UI Tag-it! (http://aehlke.github.com/tag-it/ - MIT license), Copyright 2011, Levy Carneiro Jr.
-This product includes bootbox.js v3.3.0 (http://bootboxjs.com/ - MIT license), Copyright © 2011-2014 by Nick Payne.  
-This product includes moment.js (http://moment.js - MIT license), Copyright © 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors.  
-This product includes Globalize (http://github.com/jquery/globalize - MIT license), Copyright Software Freedom Conservancy, Inc. Globalize license applies to all files under globalize including globalize/generator.
-This product includes RequireJS 2.1.8 (https://github.com/requirejs/requirejs - MIT licensed), Copyright jQuery Foundation and other contributors.
-This product includes Handlebars.js (http://handlebarsjs.com/ - MIT license), Copyright © 2011-2014 by Yehuda Katz.  
-This product includes Font Awesome 3.2.1 (http://fontawesome.io/ - MIT license) by Dave Gandy
-This product includes Qunit(https://qunitjs.com/ - MIT license) Copyright (c) 2011 John Resig, Jörn Zaefferer
-This product includes jQuery Migrate-v1.1.1 (https://plugins.jquery.com/migrate/ - MIT license) Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
+This product includes jQuery (http://jquery.org ), Copyright © 2014, John Resig.
+This product includes jQuery UI (http://jqueryui.com ), Copyright © 2013 jQuery Foundation.  
+This product includes Backbone (http://backbonejs.org ), Copyright © 2010-2014 Jeremy Ashkenas, DocumentCloud.
+This product includes underscore (http:underscorejs.org ), Copyright © 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors.  
+This product includes Backbone.Marionette (http://marionettejs.com/ ) Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.  
+This product includes Backbone.Wreqr (http://marionettejs.com/ ) Copyright ©,2012 Derick Bailey, Muted Solutions, LLC.
+This product includes Backbone.BabySitter (http://marionettejs.com/ ), Copyright ©2013 Derick Bailey, Muted Solutions, LLC.  
+This product includes Backbone fetch cache (https://github.com/mrappleton/backbone-fetch-cache ), Copyright © 2012-2013 Andrew Appleton.  
+This product includes Backbone-forms (https://github.com/powmedia/backbone-forms ), Copyright © 2013 Charles Davison.
+This product includes Backbone localStorage Adapter v1.1.7 (http://documentup.com/jeromegn/backbone.localStorage ), Copyright © 2010 Jerome Gravel-Niquet.  
+This product includes Backbone.BootstrapModal (https://github.com/powmedia/backbone.bootstrap-modal ), Copyright © 2013 Charles Davison.  
+This product includes X-editable - v1.5.0 (http://vitalets.github.io/x-editable/ ), Copyright © 2013 Vitaliy Potapov;
+This product includes backgrid 0.3.5 (http://backgridjs.com/ ), Copyright © 2014 Jimmy Yuen Ho Wong and contributors.
+This product includes backgrid-paginator (http://github.com/wyuenho/backgrid ), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  This product includes backgrid-filter (http://github.com/wyuenho/backgrid ), Copyright © 2013 Jimmy Yuen Ho Wong and contributors.  
+This product includes backbone-pageable 1.3.2 (http://github.com/wyuenho/backbone-pageable ), Copyright © 2013 Jimmy Yuen Ho Wong.
+This product includes jQuery Cookie Plugin v1.4.0 (https://github.com/carhartl/jquery-cookie ), Copyright 2013 Klaus Hartl  
+This product includes jQuery Toggles v2.0.4 (http://simontabor.com/labs/toggles ), Copyright 2013 Simon Tabor.  
+This product includes jQuery UI Tag-it! (http://aehlke.github.com/tag-it/ ), Copyright 2011, Levy Carneiro Jr.
+This product includes bootbox.js v3.3.0 (http://bootboxjs.com/ ), Copyright © 2011-2014 by Nick Payne.  
+This product includes moment.js (http://moment.js ), Copyright © 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors.  
+This product includes Globalize (http://github.com/jquery/globalize ), Copyright Software Freedom Conservancy, Inc. Globalize license applies to all files under globalize including globalize/generator.
+This product includes RequireJS 2.1.8 (https://github.com/requirejs/requirejs ), Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+This product includes Handlebars.js (http://handlebarsjs.com/ ), Copyright © 2011-2016 by Yehuda Katz.  
+This product includes Font Awesome 3.2.1 (http://fontawesome.io/ ) by Dave Gandy
+This product includes Qunit(https://qunitjs.com/ ) Copyright (c) 2011 John Resig, Jörn Zaefferer
+This product includes jQuery Migrate-v1.1.1 (https://plugins.jquery.com/migrate/ ) Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
 This product includes bootstrap v2.3.2 (http://getbootstrap.com/ - MIT License) Copyright 2013 Twitter, Inc.
 This product includes Block UI v1.1.1 (https://github.com/dreamerslab/jquery.msg/ - MIT License) Copyright 2011, Ben Lin.
-This product includes Sizzle (http://sizzlejs.com/ - MIT license), Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
-This product includes ES5 15.5.4.20 (https://github.com/kriskowal/es5-shim - MIT license), Copyright 2009, 2010 Kristopher Michael Kowal.
+This product includes Sizzle (http://sizzlejs.com/ ), Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
+This product includes ES5 15.5.4.20 (https://github.com/kriskowal/es5-shim ), Copyright 2009, 2010 Kristopher Michael Kowal.
 This product includes PURE CSS GUI ICONS 1.0.1(http://nicolasgallagher.com/pure-css-gui-icons/ - Dual licensed under MIT and GNU GPLv2), by Nicolas Gallagher
-This product includes libpam4j 1.8 (https://github.com/kohsuke/libpam4j - MIT license), Copyright Kohsuke Kawaguchi.
+This product includes libpam4j 1.8 (https://github.com/kohsuke/libpam4j ), Copyright Kohsuke Kawaguchi.
+This product bundles VisualSearch.js 0.4.0 (http://documentcloud.github.io/visualsearch/docs/visualsearch.html ), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
  
 
 
@@ -293,48 +294,10 @@ This product includes Require.js Handlebars Plugin (https://github.com/SlexAxton
   0. You just DO WHAT THE FUCK YOU WANT TO.
 
 -----------------------------------------------------------------------
- VisualSearch License 
------------------------------------------------------------------------
-This product includes VisualSearch.js 0.4.0 (http://documentcloud.github.com/visualsearch), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
-
-Copyright (c) 2011 Samuel Clay, @samuelclay, DocumentCloud
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
------------------------------------------------------------------------
- The Apache License 2.0
------------------------------------------------------------------------
-This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datepicker - Apache License - 2.0), Copyright 2012 Stefan Petre.  
-This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.  
-This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.  
-This product includes bootstrap-notify v1.0 (http://goodybag.github.io/bootstrap-notify/ - Apache License - 2.0), Copyright 2012 Goodybag, Inc.
-This product includes Open Sans font (http://www.opensans.com/ - Apache License - 2.0), © 2016 OpenSans.com
-This product includes Jisql (https://bitbucket.org/stdunbar/jisql - Apache License - 2.0), © 2004-2011 Scott Dunbar
-This product includes PasswordComparisonAuthenticator.java in Spring Security (https://github.com/spring-projects/spring-security - Apache License - 2.0), Copyright 2004, 2005, 2006 Acegi Technology Pty Limited
-
------------------------------------------------------------------------
  BSD license
 -----------------------------------------------------------------------
 This product includes Easing Functions in jQuery UI v1.10.3 (http://www.robertpenner.com/easing - BSD License), Copyright © 2001 by Robert Penner.
-
-Copyright © 2001 Robert Penner
-All rights reserved.
+This product includes Esprima (https://github.com/jquery/esprima - BSD License), Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -354,101 +317,6 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
-
------------------------------------------------------------------------
- SIL Open Font License (OFL)
------------------------------------------------------------------------
-This product includes Font Awesome 3.2.1 (http://fontawesome.io/ - SIL Open Font License (OFL) licensee) by Dave Gandy
-
-
-PREAMBLE
-The goals of the Open Font License (OFL) are to stimulate worldwide
-development of collaborative font projects, to support the font creation
-efforts of academic and linguistic communities, and to provide a free and
-open framework in which fonts may be shared and improved in partnership
-with others.
-
-The OFL allows the licensed fonts to be used, studied, modified and
-redistributed freely as long as they are not sold by themselves. The
-fonts, including any derivative works, can be bundled, embedded,
-redistributed and/or sold with any software provided that any reserved
-names are not used by derivative works. The fonts and derivatives,
-however, cannot be released under any other type of license. The
-requirement for fonts to remain under this license does not apply
-to any document created using the fonts or their derivatives.
-
-DEFINITIONS
-"Font Software" refers to the set of files released by the Copyright
-Holder(s) under this license and clearly marked as such. This may
-include source files, build scripts and documentation.
-
-"Reserved Font Name" refers to any names specified as such after the
-copyright statement(s).
-
-"Original Version" refers to the collection of Font Software components as
-distributed by the Copyright Holder(s).
-
-"Modified Version" refers to any derivative made by adding to, deleting,
-or substituting -- in part or in whole -- any of the components of the
-Original Version, by changing formats or by porting the Font Software to a
-new environment.
-
-"Author" refers to any designer, engineer, programmer, technical
-writer or other person who contributed to the Font Software.
-
-PERMISSION & CONDITIONS
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of the Font Software, to use, study, copy, merge, embed, modify,
-redistribute, and sell modified and unmodified copies of the Font
-Software, subject to the following conditions:
-
-1) Neither the Font Software nor any of its individual components,
-in Original or Modified Versions, may be sold by itself.
-
-2) Original or Modified Versions of the Font Software may be bundled,
-redistributed and/or sold with any software, provided that each copy
-contains the above copyright notice and this license. These can be
-included either as stand-alone text files, human-readable headers or
-in the appropriate machine-readable metadata fields within text or
-binary files as long as those fields can be easily viewed by the user.
-
-3) No Modified Version of the Font Software may use the Reserved Font
-Name(s) unless explicit written permission is granted by the corresponding
-Copyright Holder. This restriction only applies to the primary font name as
-presented to the users.
-
-4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
-Software shall not be used to promote, endorse or advertise any
-Modified Version, except to acknowledge the contribution(s) of the
-Copyright Holder(s) and the Author(s) or with their explicit written
-permission.
-
-5) The Font Software, modified or unmodified, in part or in whole,
-must be distributed entirely under this license, and must not be
-distributed under any other license. The requirement for fonts to
-remain under this license does not apply to any document created
-using the Font Software.
-
-TERMINATION
-This license becomes null and void if any of the above conditions are
-not met.
-
-DISCLAIMER
-THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
-OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
-COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
-DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
-OTHER DEALINGS IN THE FONT SOFTWARE.
-
------------------------------------------------------------------------
- Public Domain License
------------------------------------------------------------------------
-This product includes json2.js (https://github.com/douglascrockford/JSON-js - Public Domain license) by Douglas Crockford
-
 ------------------------------------------------------------------------------------------------------------------------------------------
 
 
