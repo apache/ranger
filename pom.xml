@@ -563,11 +563,12 @@
                         <exclude>**/.classpath/**</exclude>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
-                        <exclude>**/bin/**</exclude>
                         <exclude>*CHANGES*</exclude>
                         <exclude>**/ISSUES</exclude>
                         <exclude>**/patchprocess/**</exclude>
-                        <exclude>**/test/resources/**</exclude>
+                        <exclude>**/test/resources/**/*.json</exclude>
+                        <exclude>**/test/resources/**/*.txt</exclude>
+                        <exclude>**/test/resources/**/*.csv</exclude>
                         <exclude>**/main/resources/**/*.json</exclude>
                         <exclude>**/samples/**/*.json</exclude>
                         <exclude>**/.externalToolBuilders/*</exclude>
