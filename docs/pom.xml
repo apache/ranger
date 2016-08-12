@@ -24,7 +24,7 @@
     <url>http://ranger.incubator.apache.org/</url>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.incubator.apache.ranger</groupId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.1</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>
     <licenses>
