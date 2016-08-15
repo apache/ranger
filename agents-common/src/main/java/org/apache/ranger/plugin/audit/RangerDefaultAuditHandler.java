@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.audit;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -36,10 +37,14 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
+
 	protected static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
 
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 	static long sequenceNumber = 0;
+
+	private static String UUID 	= MiscUtil.generateUniqueId();
+	private static AtomicInteger  counter =  new AtomicInteger(0); ;
 
 	public RangerDefaultAuditHandler() {
 	}
@@ -114,7 +119,6 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 				ret.setTags(tags);
 			}
 			ret.setAdditionalInfo(getAdditionalInfo(request));
-
 			populateDefaults(ret);
 		}
 
@@ -187,7 +191,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		}
 
 		if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
-			auditEvent.setEventId(MiscUtil.generateUniqueId());
+			auditEvent.setEventId(generateNextAuditEventId());
 		}
 
 		auditEvent.setSeqNum(sequenceNumber++);
@@ -238,4 +242,18 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		return sb.toString();
 	}
+
+	private String generateNextAuditEventId() {
+      int nextId = counter.getAndIncrement();
+
+      if(nextId == Integer.MAX_VALUE) {
+        // reset UUID and counter
+        RangerDefaultAuditHandler.UUID = MiscUtil.generateUniqueId();
+        counter = new AtomicInteger(0);
+      }
+
+      String ret = RangerDefaultAuditHandler.UUID + "-" + Integer.toString(nextId);
+
+      return ret;
+	 }
 }
