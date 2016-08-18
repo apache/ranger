@@ -51,7 +51,7 @@ class RangerPolicyRepository {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
     }
 
-    class AuditInfo {
+    static private final class AuditInfo {
         final boolean isAudited;
         final long    auditPolicyId;
 
