@@ -69,8 +69,12 @@ public class RangerPolicyenginePerfTester {
                 for(URL requestFileURL : requestFileURLs) {
                     PerfTestClient perfTestClient = new PerfTestClient(perfTestEngine, 0, requestFileURL, 1);
 
-                    perfTestClient.init();
-                    perfTestClient.run();
+                    if (perfTestClient.init()) {
+                        perfTestClient.start();
+                        perfTestClient.join();
+                    } else {
+                        LOG.error("Error initializing warm-up PerfTestClient");
+                    }
                 }
             } catch(Throwable t) {
                 LOG.error("Error during warmup", t);

@@ -447,7 +447,7 @@ public class RangerBasePlugin {
 		int counter=0;
 	}
 
-	private class PolicyEngineRefresher extends TimerTask {
+	static private final class PolicyEngineRefresher extends TimerTask {
 		private final RangerBasePlugin plugin;
 
 		PolicyEngineRefresher(RangerBasePlugin plugin) {
