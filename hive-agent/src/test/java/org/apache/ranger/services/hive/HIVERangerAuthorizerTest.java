@@ -96,7 +96,7 @@ public class HIVERangerAuthorizerTest {
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
         
-        statement.execute("CREATE DATABASE rangerauthz");
+        statement.execute("CREATE DATABASE IF NOT EXISTS rangerauthz");
         
         statement.close();
         connection.close();
@@ -106,7 +106,7 @@ public class HIVERangerAuthorizerTest {
         connection = DriverManager.getConnection(url, "admin", "admin");
         statement = connection.createStatement();
         // statement.execute("CREATE TABLE WORDS (word STRING, count INT)");
-        statement.execute("create table words (word STRING, count INT) row format delimited fields terminated by '\t' stored as textfile");
+        statement.execute("create table if not exists words (word STRING, count INT) row format delimited fields terminated by '\t' stored as textfile");
         
         // Copy "wordcount.txt" to "target" to avoid overwriting it during load
         java.io.File inputFile = new java.io.File(HIVERangerAuthorizerTest.class.getResource("../../../../../wordcount.txt").toURI());
@@ -311,7 +311,7 @@ public class HIVERangerAuthorizerTest {
         Connection connection = DriverManager.getConnection(url, "bob", "bob");
         Statement statement = connection.createStatement();
 
-        statement.execute("CREATE DATABASE bobtemp");
+        statement.execute("CREATE DATABASE if not exists bobtemp");
 
         statement.close();
         connection.close();
@@ -321,7 +321,7 @@ public class HIVERangerAuthorizerTest {
         statement = connection.createStatement();
 
         try {
-            statement.execute("CREATE DATABASE alicetemp");
+            statement.execute("CREATE DATABASE if not exists alicetemp");
             Assert.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
@@ -357,7 +357,7 @@ public class HIVERangerAuthorizerTest {
         Connection connection = DriverManager.getConnection(url, "admin", "admin");
         Statement statement = connection.createStatement();
 
-        statement.execute("CREATE DATABASE admintemp");
+        statement.execute("CREATE DATABASE if not exists admintemp");
 
         statement.close();
         connection.close();
@@ -366,7 +366,7 @@ public class HIVERangerAuthorizerTest {
         url = "jdbc:hive2://localhost:" + port + "/admintemp";
         connection = DriverManager.getConnection(url, "admin", "admin");
         statement = connection.createStatement();
-        statement.execute("CREATE TABLE WORDS (word STRING, count INT)");
+        statement.execute("CREATE TABLE if not exists  WORDS (word STRING, count INT)");
         
         statement.close();
         connection.close();
@@ -403,7 +403,7 @@ public class HIVERangerAuthorizerTest {
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
         Connection connection = DriverManager.getConnection(url, "admin", "admin");
         Statement statement = connection.createStatement();
-        statement.execute("CREATE TABLE WORDS2 (word STRING, count INT)");
+        statement.execute("CREATE TABLE if not exists WORDS2 (word STRING, count INT)");
         
         statement.close();
         connection.close();
@@ -440,7 +440,7 @@ public class HIVERangerAuthorizerTest {
         // Create a new table as admin
         Connection connection = DriverManager.getConnection(url, "admin", "admin");
         Statement statement = connection.createStatement();
-        statement.execute("CREATE TABLE WORDS2 (word STRING, count INT)");
+        statement.execute("CREATE TABLE IF NOT EXISTS WORDS2 (word STRING, count INT)");
         
         statement.close();
         connection.close();
