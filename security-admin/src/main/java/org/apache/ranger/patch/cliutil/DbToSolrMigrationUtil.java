@@ -236,6 +236,15 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 			System.out.println("Total Number of Migrated Audit logs:"+totalMigratedLogs);
 			logger.info("Total Number of Migrated Audit logs:"+totalMigratedLogs);
 		}
+		if(solrClient!=null){
+			try {
+				solrClient.close();
+			} catch (IOException e) {
+				logger.error("Error while closing solr connection", e);
+			}finally{
+				solrClient=null;
+			}
+		}
 		System.out.println("Migration process finished!!");
 	}
 
@@ -401,8 +410,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 						zkHosts);
 				solrCloudClient
 						.setDefaultCollection(collectionName);
-				solrClient = solrCloudClient;
-				solrCloudClient.close();
+				return solrCloudClient;
 			} catch (Exception e) {
 				logger.fatal(
 						"Can't connect to Solr server. ZooKeepers="
