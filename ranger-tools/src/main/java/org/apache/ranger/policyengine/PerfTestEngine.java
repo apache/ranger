@@ -24,7 +24,6 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.*;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.io.InputStream;
@@ -39,13 +38,15 @@ public class PerfTestEngine {
 
 	static private final long POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT = 100;
 	private final URL servicePoliciesFileURL;
-	private final boolean isDynamicReorderingEnabled;
+	private final RangerPolicyEngineOptions policyEngineOptions;
 	private RangerPolicyEngine policyEvaluationEngine;
+	private final boolean disableDynamicPolicyEvalReordering;
 	private AtomicLong requestCount = new AtomicLong();
 
-	public PerfTestEngine(final URL servicePoliciesFileURL, boolean isDynamicReorderingEnabled) {
+	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions, boolean disableDynamicPolicyEvalReordering) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
-		this.isDynamicReorderingEnabled = isDynamicReorderingEnabled;
+		this.policyEngineOptions = policyEngineOptions;
+		this.disableDynamicPolicyEvalReordering = disableDynamicPolicyEvalReordering;
 	}
 
 	public boolean init() {
@@ -70,11 +71,7 @@ public class PerfTestEngine {
 
 			servicePolicies = gsonBuilder.fromJson(reader, ServicePolicies.class);
 
-			RangerPolicyEngineOptions engineOptions = new RangerPolicyEngineOptions();
-			engineOptions.disableTagPolicyEvaluation = false;
-			engineOptions.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-
-			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, engineOptions);
+			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions);
 
 			requestCount.set(0L);
 
@@ -112,7 +109,7 @@ public class PerfTestEngine {
 
 			long processedRequestCount = requestCount.getAndIncrement();
 
-			if (isDynamicReorderingEnabled && (processedRequestCount % POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT) == 0) {
+			if (!disableDynamicPolicyEvalReordering && (processedRequestCount % POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT) == 0) {
 				policyEvaluationEngine.reorderPolicyEvaluators();
 			}
 

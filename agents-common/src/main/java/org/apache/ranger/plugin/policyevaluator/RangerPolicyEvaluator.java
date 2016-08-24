@@ -33,6 +33,8 @@ import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 
 public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
@@ -63,6 +65,10 @@ public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator>
 	int getCustomConditionsCount();
 
 	boolean isAuditEnabled();
+
+	RangerPolicyResourceMatcher getPolicyResourceMatcher();
+
+	RangerResourceMatcher getResourceMatcher(String resourceName);
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 

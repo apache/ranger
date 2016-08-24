@@ -2286,6 +2286,7 @@ public class ServiceREST {
 		options.disableContextEnrichers   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
 		options.disableCustomConditions   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
 		options.evaluateDelegateAdminOnly = false;
+		options.disableTrieLookupPrefilter = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 
 		ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, -1L);
 

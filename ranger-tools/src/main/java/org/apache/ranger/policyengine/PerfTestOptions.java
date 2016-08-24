@@ -26,19 +26,21 @@ public class PerfTestOptions {
 	private final URL servicePoliciesFileURL;
 	private final URL[] requestFileURLs;
 	private final URL statCollectionFileURL;
-	private final boolean isDynamicReorderingEnabled;
+	private final boolean isDynamicReorderingDisabled;
+	private final boolean isTrieLookupPrefixDisabled;
 
 
 	private final int concurrentClientCount;
 	private final int iterationsCount;
 
-	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isDynamicReorderingEnabled) {
+	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isDynamicReorderingDisabled, boolean isTrieLookupPrefixDisabled) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.requestFileURLs = requestFileURLs;
 		this.statCollectionFileURL = statCollectionFileURL;
 		this.iterationsCount = iterationsCount;
 		this.concurrentClientCount = concurrentClientCount;
-		this.isDynamicReorderingEnabled = isDynamicReorderingEnabled;
+		this.isDynamicReorderingDisabled = isDynamicReorderingDisabled;
+		this.isTrieLookupPrefixDisabled = isTrieLookupPrefixDisabled;
 	}
 
 	public URL getServicePoliciesFileURL() {
@@ -61,5 +63,7 @@ public class PerfTestOptions {
 		return iterationsCount;
 	}
 
-	public boolean getIsDynamicReorderingEnabled() { return isDynamicReorderingEnabled; }
+	public boolean getIsDynamicReorderingDisabled() { return isDynamicReorderingDisabled; }
+
+	public boolean getIsTrieLookupPrefixDisabled() { return isTrieLookupPrefixDisabled; }
 }
