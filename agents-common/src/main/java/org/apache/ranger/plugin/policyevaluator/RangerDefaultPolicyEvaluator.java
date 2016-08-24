@@ -51,6 +51,7 @@ import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
@@ -74,6 +75,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	@Override
 	public int getCustomConditionsCount() {
 		return customConditionsCount;
+	}
+
+	@Override
+	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return resourceMatcher; }
+
+	@Override
+	public RangerResourceMatcher getResourceMatcher(String resourceName) {
+		return  resourceMatcher != null ? resourceMatcher.getResourceMatcher(resourceName) : null;
 	}
 
 	@Override

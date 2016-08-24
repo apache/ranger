@@ -52,7 +52,8 @@ public class CommandLineParser
     private int concurrentClientCount = 1;
     private int iterationsCount = 1;
 
-    private boolean isDynamicReorderingEnabled = false;
+    private boolean isDynamicReorderingDisabled = true;
+    private boolean isTrieLookupPrefixDisabled = true;
 
     private Options options = new Options();
 
@@ -62,7 +63,7 @@ public class CommandLineParser
         PerfTestOptions ret = null;
         if (parseArguments(args) && validateInputFiles()) {
             // Instantiate a data-object and return
-            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount, isDynamicReorderingEnabled);
+            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount, isDynamicReorderingDisabled, isTrieLookupPrefixDisabled);
         } else {
             showUsage();
         }
@@ -98,6 +99,7 @@ public class CommandLineParser
         options.addOption("c", "clients", true, "Number of concurrent clients");
         options.addOption("n", "cycles", true, "Number of iterations");
         options.addOption("o", "optimize", false, "Enable usage-based policy reordering");
+        options.addOption("t", "trie-prefilter", false, "Enable trie-prefilter");
 
         org.apache.commons.cli.CommandLineParser commandLineParser = new DefaultParser();
 
@@ -125,13 +127,17 @@ public class CommandLineParser
                 iterationsCount = Integer.parseInt(iterationsOptionValue);
             }
             if (commandLine.hasOption("o")) {
-                isDynamicReorderingEnabled = true;
+                isDynamicReorderingDisabled = false;
+            }
+            if (commandLine.hasOption("t")) {
+                isTrieLookupPrefixDisabled = false;
             }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("servicePoliciesFileName=" + servicePoliciesFileName + ", requestFileName=" + Arrays.toString(requestFileNames));
                 LOG.debug("concurrentClientCount=" + concurrentClientCount + ", iterationsCount=" + iterationsCount);
-                LOG.debug("isDynamicReorderingEnabled=" + isDynamicReorderingEnabled);
+                LOG.debug("isDynamicReorderingDisabled=" + isDynamicReorderingDisabled);
+                LOG.debug("isTrieLookupPrefixDisabled=" + isTrieLookupPrefixDisabled);
             }
 
             ret = true;

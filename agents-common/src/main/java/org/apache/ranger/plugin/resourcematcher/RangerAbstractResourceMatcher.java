@@ -94,6 +94,9 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 	}
 
+	@Override
+	public boolean isMatchAny() { return isMatchAny; }
+
 	protected List<ResourceMatcher> buildResourceMatchers() {
 		List<ResourceMatcher> ret = new ArrayList<ResourceMatcher> ();
 

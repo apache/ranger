@@ -313,7 +313,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerDataMaskResult ret = new RangerDataMaskResult(getServiceName(), getServiceDef(), request);
 
 		if(request != null) {
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getDataMaskPolicyEvaluators();
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getDataMaskPolicyEvaluators(request.getResource());
 			for (RangerPolicyEvaluator evaluator : evaluators) {
 				evaluator.evaluate(request, ret);
 
@@ -355,7 +355,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerRowFilterResult ret = new RangerRowFilterResult(getServiceName(), getServiceDef(), request);
 
 		if(request != null) {
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getRowFilterPolicyEvaluators();
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getRowFilterPolicyEvaluators(request.getResource());
 			for (RangerPolicyEvaluator evaluator : evaluators) {
 				evaluator.evaluate(request, ret);
 
@@ -400,7 +400,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 		boolean ret = false;
 
-		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators(resource)) {
 			ret = evaluator.isAccessAllowed(resource, user, userGroups, accessType);
 
 			if (ret) {
@@ -534,7 +534,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerResourceAccessInfo ret = new RangerResourceAccessInfo(request);
 
 		List<RangerPolicyEvaluator> tagPolicyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
-		List<RangerPolicyEvaluator> resPolicyEvaluators = policyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
 			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
@@ -543,12 +542,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				for (RangerTag tag : tags) {
 					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
 
-					for (RangerPolicyEvaluator evaluator : tagPolicyEvaluators) {
+					List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators(tagEvalRequest.getResource());
+
+					for (RangerPolicyEvaluator evaluator : evaluators) {
 						evaluator.getResourceAccessInfo(tagEvalRequest, ret);
 					}
 				}
 			}
 		}
+
+		List<RangerPolicyEvaluator> resPolicyEvaluators = policyRepository.getPolicyEvaluators(request.getResource());
 
 		if(CollectionUtils.isNotEmpty(resPolicyEvaluators)) {
 			for (RangerPolicyEvaluator evaluator : resPolicyEvaluators) {
@@ -596,7 +599,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					ret.setIsAccessDetermined(false); // discard allowed result by tag-policies, to evaluate resource policies for possible deny
 				}
 
-				List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
+				List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators(request.getResource());
 				for (RangerPolicyEvaluator evaluator : evaluators) {
 					ret.incrementEvaluatedPoliciesCount();
 					evaluator.evaluate(request, ret);
@@ -632,9 +635,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")");
 		}
 
-		List<RangerPolicyEvaluator> evaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
+		List<RangerPolicyEvaluator> tagEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
 
-		if (CollectionUtils.isNotEmpty(evaluators)) {
+		if (CollectionUtils.isNotEmpty(tagEvaluators)) {
 			List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 			if(CollectionUtils.isNotEmpty(tags)) {
@@ -653,6 +656,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						tagEvalResult.setIsAllowed(result.getIsAllowed());
 					}
 					tagEvalResult.setAuditResultFrom(result);
+
+					List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators(tagEvalRequest.getResource());
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
 						tagEvalResult.incrementEvaluatedPoliciesCount();

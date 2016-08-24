@@ -180,6 +180,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	}
 
 	@Override
+	public RangerResourceMatcher getResourceMatcher(String resourceName) {
+		return matchers != null ? matchers.get(resourceName) : null;
+	}
+
+	@Override
 	public boolean isMatch(RangerAccessResource resource) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isMatch(" + resource + ")");

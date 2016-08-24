@@ -29,4 +29,5 @@ public class RangerPolicyEngineOptions {
 	public boolean disableCustomConditions = false;
 	public boolean disableTagPolicyEvaluation = true;
 	public boolean evaluateDelegateAdminOnly = false;
+	public boolean disableTrieLookupPrefilter = false;
 }
