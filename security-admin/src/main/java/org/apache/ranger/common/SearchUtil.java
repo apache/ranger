@@ -665,7 +665,7 @@ public class SearchUtil {
 			if (searchCriteria.getNullParamList().contains(
 					searchField.getClientFieldName())
 					|| searchCriteria.getNotNullParamList().contains(
-							searchField.getClientFieldName())) {
+							searchField.getClientFieldName())) { //NOPMD
 				// Already addressed while building where clause
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST
 					|| isListValue

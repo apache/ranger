@@ -79,7 +79,7 @@ public class KnoxClient {
 			ClientResponse response = null;
 
 			try {
-				client = Client.create();;
+				client = Client.create();
 				
 				client.addFilter(new HTTPBasicAuthFilter(userName, password));
 				WebResource webResource = client.resource(knoxUrl);
@@ -170,7 +170,7 @@ public class KnoxClient {
 			ClientResponse response = null;
 
 			try {
-				client = Client.create();;
+				client = Client.create();
 				
 				client.addFilter(new HTTPBasicAuthFilter(userName, password));
 				

@@ -471,7 +471,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			return;
 		}
 
-		String  excpMsgToExclude   = EXCP_MSG_FILESYSTEM_CLOSED;;
+		String  excpMsgToExclude   = EXCP_MSG_FILESYSTEM_CLOSED;
 		String  excpMsg            = excp != null ? excp.getMessage() : null;
 		boolean excpExcludeLogging = (excpMsg != null && excpMsg.contains(excpMsgToExclude));
 		

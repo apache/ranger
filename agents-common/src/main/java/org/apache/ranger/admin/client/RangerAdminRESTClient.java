@@ -117,9 +117,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		
 		if(response != null && response.getStatus() == 200) {
 			ret = response.getEntity(ServicePolicies.class);
-		} else if(response != null && response.getStatus() == 304) {
-			// no change
-		} else {
+		} else if(!(response != null && response.getStatus() == 304)) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
 
@@ -278,9 +276,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		if(response != null && response.getStatus() == 200) {
 			ret = response.getEntity(ServiceTags.class);
-		} else if(response != null && response.getStatus() == 304) {
-			// no change
-		} else {
+		} else if(!(response != null && response.getStatus() == 304)) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting taggedResources. secureMode=" + isSecureMode + ", user=" + user
 					+ ", response=" + resp.toString() + ", serviceName=" + serviceName

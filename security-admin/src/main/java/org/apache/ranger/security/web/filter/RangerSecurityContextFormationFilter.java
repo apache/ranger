@@ -90,9 +90,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 			Authentication auth = SecurityContextHolder.getContext()
 					.getAuthentication();
 
-			if (auth instanceof AnonymousAuthenticationToken) {
-				// ignore
-			} else {
+			if (!(auth instanceof AnonymousAuthenticationToken)) {
 				HttpServletRequest httpRequest = (HttpServletRequest) request;
 				HttpSession httpSession = httpRequest.getSession(false);
 

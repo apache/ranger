@@ -215,10 +215,10 @@ public class SolrAccessAuditsService {
 			accessAudit.setClientIP(value.toString());
 		}
 		value = doc.getFieldValue("logType");
-		if (value != null) {
+		//if (value != null) {
 			// TODO: Need to see what logType maps to in UI
 //			accessAudit.setAuditType(solrUtil.toInt(value));
-		}
+		//}
 		value = doc.getFieldValue("result");
 		if (value != null) {
 			accessAudit.setAccessResult(solrUtil.toInt(value));

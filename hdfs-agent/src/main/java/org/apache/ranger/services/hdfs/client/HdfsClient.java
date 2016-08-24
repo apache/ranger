@@ -55,9 +55,7 @@ public class HdfsClient extends BaseClient {
     for (Map.Entry<String, String> entry: connectionProperties.entrySet())  {
       String key = entry.getKey();
       String value = entry.getValue();
-      if (rangerInternalPropertyKeys.contains(key)) {
-         // skip
-      }  else {
+      if (!rangerInternalPropertyKeys.contains(key)) {
         conf.set(key, value);
       }
     }

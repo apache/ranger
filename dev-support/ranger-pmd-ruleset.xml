@@ -46,9 +46,6 @@
   </rule>
   <rule ref="rulesets/java/empty.xml">
 	<exclude name="EmptyCatchBlock" />
-	<exclude name="EmptyIfStmt" />
-	<exclude name="EmptyStatementNotInLoop" />
-	<exclude name="EmptyWhileStmt" />
   </rule>
   <rule ref="rulesets/java/migrating.xml" />
   <rule ref="rulesets/java/unnecessary.xml">

@@ -599,9 +599,7 @@ public class ServiceRESTStore extends AbstractServiceStore {
 
 		if(response != null && response.getStatus() == 200) {
 			ret = response.getEntity(ServicePolicies.class);
-		} else if(response != null && response.getStatus() == 304) {
-			// no change
-		} else {
+		} else if(!(response != null && response.getStatus() == 304)) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 
 			throw new Exception(resp.getMessage());

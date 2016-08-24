@@ -122,7 +122,7 @@ public class SolrUtil {
 				} else if (searchField.getSearchType() == SEARCH_TYPE.GREATER_EQUAL_THAN
 						|| searchField.getSearchType() == SEARCH_TYPE.GREATER_THAN
 						|| searchField.getSearchType() == SEARCH_TYPE.LESS_EQUAL_THAN
-						|| searchField.getSearchType() == SEARCH_TYPE.LESS_THAN) {
+						|| searchField.getSearchType() == SEARCH_TYPE.LESS_THAN) { //NOPMD
 					// TODO: Need to handle range here
 				} else {
 					String fq = setField(fieldName, paramValue);

@@ -191,9 +191,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 							buildUserList();
 							buildUserGroupLinkList() ;
 							rebuildUserGroupMap() ;
-							if (LOG.isDebugEnabled()) {
-							//	this.print(); 
-							}
 						} catch (Exception e) {
 							LOG.error("Failed to build Group List : ", e);
 						}
