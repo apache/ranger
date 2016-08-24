@@ -853,7 +853,7 @@ public class UserGroupSyncConfig  {
 			}
 			regexPatterns.add(baseRegex);
 			int i = 1;
-			String nextRegex = prop.getProperty(baseProperty + "." + i);;
+			String nextRegex = prop.getProperty(baseProperty + "." + i);
 			while (nextRegex != null) {
 				regexPatterns.add(nextRegex);
 				i++;

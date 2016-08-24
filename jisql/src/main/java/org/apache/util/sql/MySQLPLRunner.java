@@ -135,13 +135,9 @@ public class MySQLPLRunner {
                 }
                 String trimmedLine = line.trim();
                 
-                if (trimmedLine.startsWith("--")) {
+                if (trimmedLine.length() < 1 || trimmedLine.startsWith("--")
+                    || trimmedLine.startsWith("//")) { //NOPMD
                     //println(trimmedLine);
-                } else if (trimmedLine.length() < 1
-                        || trimmedLine.startsWith("//")) {
-                    // Do nothing
-                } else if (trimmedLine.length() < 1
-                        || trimmedLine.startsWith("--")) {
                     // Do nothing
                 } else if (!fullLineDelimiter
                         && trimmedLine.endsWith(getDelimiter())

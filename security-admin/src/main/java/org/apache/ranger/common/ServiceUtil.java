@@ -1226,10 +1226,7 @@ public class ServiceUtil {
 		
 			Integer assetType = toAssetType(serviceType);
 			
-			if(assetType == null) {
-				// nothing to do
-			}
-			else if (assetType == RangerCommonEnums.ASSET_HIVE) {
+			if (assetType == RangerCommonEnums.ASSET_HIVE) {
 				
 				String database = StringUtils.isEmpty(vXPolicy.getDatabases()) ? "*" : vXPolicy.getDatabases();
 				String table    = getTableOrUdf(vXPolicy);

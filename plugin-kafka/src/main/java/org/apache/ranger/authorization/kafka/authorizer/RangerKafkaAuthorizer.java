@@ -177,7 +177,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 		if (resource.resourceType().equals(Topic$.MODULE$)) {
 			rangerResource.setValue(KEY_TOPIC, resource.name());
-		} else if (resource.resourceType().equals(Cluster$.MODULE$)) {
+		} else if (resource.resourceType().equals(Cluster$.MODULE$)) { //NOPMD
 			// CLUSTER should go as null
 			// rangerResource.setValue(KEY_CLUSTER, resource.name());
 		} else if (resource.resourceType().equals(Group$.MODULE$)) {

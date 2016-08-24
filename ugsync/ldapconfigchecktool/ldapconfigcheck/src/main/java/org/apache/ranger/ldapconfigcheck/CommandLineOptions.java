@@ -54,9 +54,8 @@ public class CommandLineOptions {
     	CommandLineParser parser = new BasicParser();
         try {
             CommandLine cmd = parser.parse(options, args);
-            if (cmd.hasOption("h")) {
-
-            }
+            // if (cmd.hasOption("h")) {
+            //}
             
             if (cmd.hasOption("p")) {
             	bindPassword = cmd.getOptionValue("p");

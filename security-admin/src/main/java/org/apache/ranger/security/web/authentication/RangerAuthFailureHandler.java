@@ -113,9 +113,9 @@ ExceptionMappingAuthenticationFailureHandler {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Sending login failed response : " + jsonResp);
 		}
-	} else {
+	}// else {
 //	    super.onAuthenticationFailure(request, response, exception);
-	}
+	//}
     }
 
 }

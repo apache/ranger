@@ -161,7 +161,7 @@ public class SessionMgr {
 							}else if (StringUtils.isEmpty(httpRequest.getRequestURI())){
 								gjAuthSession = storeAuthSession(gjAuthSession);
 								session.setAttribute("auditLoginId", gjAuthSession.getId());
-							}else{
+							}else{ //NOPMD
 								//do not log the details for download policy and tag
 							}														
 						}

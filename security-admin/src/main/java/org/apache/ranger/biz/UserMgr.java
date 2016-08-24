@@ -1154,7 +1154,7 @@ public class UserMgr {
 					xXPortalUser = this.createUser(userProfile,
 							RangerCommonEnums.STATUS_ENABLED);
 				}
-			} else {
+			} else { //NOPMD
 				/*
 				 * throw restErrorUtil .createRESTException( "The login id " +
 				 * loginId +

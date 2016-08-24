@@ -68,7 +68,7 @@ public class RangerDataHistService {
 		String objectGuid = baseModelObj.getGuid();
 		Date currentDate = DateUtil.getUTCDate();
 		
-		XXDataHist xDataHist = new XXDataHist();;
+		XXDataHist xDataHist = new XXDataHist();
 		
 		xDataHist.setObjectId(baseModelObj.getId());
 		xDataHist.setObjectGuid(objectGuid);

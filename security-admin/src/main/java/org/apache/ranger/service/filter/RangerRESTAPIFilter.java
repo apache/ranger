@@ -120,12 +120,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 			ContainerResponse response) {
 		if (logStdOut) {
 			// If it is image, then don't call super
-			if (response.getMediaType() != null) {
-				// logger.info("DELETE ME: Response= mediaType="
-				// + response.getMediaType() + ", getType()"
-				// + response.getMediaType().getType() + ", getSubType()="
-				// + response.getMediaType().getSubtype());
-			} else {
+			if (response.getMediaType() == null) {
 				logger.info("DELETE ME: Response= mediaType is null");
 			}
 			if (response.getMediaType() == null

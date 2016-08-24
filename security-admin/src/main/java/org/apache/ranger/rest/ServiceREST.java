@@ -1113,8 +1113,6 @@ public class ServiceREST {
 							LOG.error("processRevokeRequest processing failed");
 							throw new Exception("processRevokeRequest processing failed");
 						}
-					} else {
-						// nothing to revoke!
 					}
 				} catch(WebApplicationException excp) {
 					throw excp;
@@ -1193,8 +1191,6 @@ public class ServiceREST {
 								LOG.error("processSecureRevokeRequest processing failed");
 								throw new Exception("processSecureRevokeRequest processing failed");
 							}
-						} else {
-							// nothing to revoke!
 						}
 					}else{
 						LOG.error("secureRevokeAccess(" + serviceName + ", " + revokeRequest + ") failed as User doesn't have permission to revoke Policy");
