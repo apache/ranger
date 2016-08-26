@@ -58,7 +58,6 @@ import static org.junit.Assert.*;
 
 
 public class TestPolicyEngine {
-	static RangerPolicyEngine policyEngine = null;
 	static Gson gsonBuilder  = null;
 
 	@BeforeClass
@@ -304,7 +303,7 @@ public class TestPolicyEngine {
 				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
 			}
 		}
-		policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 		long requestCount = 0L;

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,38 +19,20 @@
 
 package org.apache.ranger.plugin.policyresourcematcher;
 
-import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
-public interface RangerPolicyResourceMatcher {
-	void setServiceDef(RangerServiceDef serviceDef);
+import java.util.Map;
 
-	void setPolicy(RangerPolicy policy);
+public interface RangerPolicyResourceEvaluator extends Comparable<RangerPolicyResourceEvaluator>  {
+    long getId();
 
-	void setPolicyResources(Map<String, RangerPolicyResource> policyResources);
+    RangerPolicyResourceMatcher getPolicyResourceMatcher();
 
-	void init();
+    Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource();
 
-	RangerServiceDef getServiceDef();
+    RangerResourceMatcher getResourceMatcher(String resourceName);
 
-	RangerResourceMatcher getResourceMatcher(String resourceName);
-
-	boolean isMatch(RangerAccessResource resource);
-
-	boolean isMatch(Map<String, RangerPolicyResource> resources);
-
-	boolean isCompleteMatch(RangerAccessResource resource);
-
-	boolean isHeadMatch(RangerAccessResource resource);
-
-	boolean isExactHeadMatch(RangerAccessResource resource);
-
-	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources);
-
-	StringBuilder toString(StringBuilder sb);
+    Integer getLeafResourceLevel();
 }

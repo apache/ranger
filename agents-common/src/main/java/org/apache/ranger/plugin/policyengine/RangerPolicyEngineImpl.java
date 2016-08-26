@@ -706,12 +706,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	@Override
 	public void reorderPolicyEvaluators() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> reorderPolicyEvaluators()");
+			LOG.debug("==> reorderEvaluators()");
 		}
 		RangerPerfTracer perf = null;
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REBALANCE_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REBALANCE_LOG, "RangerPolicyEngine.reorderPolicyEvaluators()");
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REBALANCE_LOG, "RangerPolicyEngine.reorderEvaluators()");
 		}
 		if (MapUtils.isNotEmpty(policyEvaluatorsMap)) {
 			for (Map.Entry<Long, RangerPolicyEvaluator> entry : policyEvaluatorsMap.entrySet()) {
@@ -735,7 +735,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerPerfTracer.log(perf);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== reorderPolicyEvaluators()");
+			LOG.debug("<== reorderEvaluators()");
 		}
 	}
 

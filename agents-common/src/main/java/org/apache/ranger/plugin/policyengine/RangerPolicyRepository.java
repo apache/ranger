@@ -253,7 +253,7 @@ class RangerPolicyRepository {
                     continue;
                 }
 
-                List<RangerPolicyEvaluator> resourceEvaluators = trie.getPoliciesForResource(resource.getValue(resourceName));
+                List<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
                 if(CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
                     ret = null;
@@ -729,7 +729,7 @@ class RangerPolicyRepository {
 
     void reorderPolicyEvaluators() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> reorderPolicyEvaluators()");
+            LOG.debug("==> reorderEvaluators()");
         }
 
         if(disableTrieLookupPrefilter) {
@@ -743,7 +743,7 @@ class RangerPolicyRepository {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== reorderPolicyEvaluators()");
+            LOG.debug("<== reorderEvaluators()");
         }
     }
 
@@ -753,7 +753,7 @@ class RangerPolicyRepository {
                 RangerResourceTrie trie = entry.getValue();
 
                 if(trie != null) {
-                    trie.reorderPolicyEvaluators();
+                    trie.reorderEvaluators();
                 }
             }
         }

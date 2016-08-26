@@ -19,24 +19,63 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
-public class RangerServiceResourceMatcher {
-	private final RangerServiceResource serviceResource;
+import java.util.Map;
+
+public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluator {
+	private final RangerServiceResource       serviceResource;
 	private final RangerPolicyResourceMatcher policyResourceMatcher;
+	private final Integer                     leafResourceLevel;
 
 	public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
-		this.serviceResource = serviceResource;
+		this.serviceResource       = serviceResource;
 		this.policyResourceMatcher = policyResourceMatcher;
+		this.leafResourceLevel     = ServiceDefUtil.getLeafResourceLevel(getServiceDef(), getPolicyResource());
 	}
 
 	public RangerServiceResource getServiceResource() { return serviceResource; }
 
+	@Override
+	public long getId() {
+		return serviceResource != null ? serviceResource.getId() :-1;
+	}
+
+	@Override
 	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
 
+	@Override
+	public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
+		return serviceResource != null ? serviceResource.getResourceElements() : null;
+	}
+
+	@Override
+	public RangerResourceMatcher getResourceMatcher(String resourceName) {
+		return policyResourceMatcher != null ? policyResourceMatcher.getResourceMatcher(resourceName) : null;
+	}
+
+	@Override
+	public Integer getLeafResourceLevel() {
+		return leafResourceLevel;
+	}
+
+	@Override
+	public int compareTo(RangerPolicyResourceEvaluator other) {
+		return Long.compare(getId(), other.getId());
+	}
+
 	public boolean isMatch(RangerAccessResource requestedResource) {
-		return this.policyResourceMatcher.isExactHeadMatch(requestedResource);
+		return policyResourceMatcher != null ? policyResourceMatcher.isExactHeadMatch(requestedResource) : false;
+	}
+
+	RangerServiceDef getServiceDef() {
+		return policyResourceMatcher != null ? policyResourceMatcher.getServiceDef() : null;
 	}
 }
