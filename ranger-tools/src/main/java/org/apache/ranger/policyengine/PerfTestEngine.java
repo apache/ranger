@@ -36,10 +36,12 @@ public class PerfTestEngine {
 	static final Log LOG      = LogFactory.getLog(PerfTestEngine.class);
 
 	private final URL servicePoliciesFileURL;
+	private final RangerPolicyEngineOptions policyEngineOptions;
 	private RangerPolicyEngine policyEvaluationEngine;
 
-	public PerfTestEngine(final URL servicePoliciesFileURL) {
+	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
+		this.policyEngineOptions = policyEngineOptions;
 	}
 
 	public boolean init() {
@@ -64,9 +66,7 @@ public class PerfTestEngine {
 
 			servicePolicies = gsonBuilder.fromJson(reader, ServicePolicies.class);
 
-			RangerPolicyEngineOptions engineOptions = new RangerPolicyEngineOptions();
-
-			policyEvaluationEngine = new RangerPolicyEngineImpl(servicePolicies, engineOptions);
+			policyEvaluationEngine = new RangerPolicyEngineImpl(servicePolicies, policyEngineOptions);
 
 			ret = true;
 

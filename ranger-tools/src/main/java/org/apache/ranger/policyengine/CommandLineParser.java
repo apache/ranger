@@ -47,6 +47,7 @@ public class CommandLineParser
 
     private int concurrentClientCount = 1;
     private int iterationsCount = 1;
+    private boolean isTrieLookupPrefixDisabled = true;
 
     private Options options = new Options();
 
@@ -56,7 +57,7 @@ public class CommandLineParser
         PerfTestOptions ret = null;
         if (parseArguments(args) && validateInputFiles()) {
             // Instantiate a data-object and return
-            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount);
+            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount, isTrieLookupPrefixDisabled);
         } else {
             showUsage(-1);
         }
@@ -90,6 +91,7 @@ public class CommandLineParser
         options.addOption("p", "statistics", true, "Modules for stat collection File Name");
         options.addOption("c", "clients", true, "Number of concurrent clients");
         options.addOption("n", "cycles", true, "Number of iterations");
+        options.addOption("t", "trie-prefilter", false, "Enable trie-prefilter");
 
         org.apache.commons.cli.CommandLineParser commandLineParser = new DefaultParser();
 
@@ -115,9 +117,13 @@ public class CommandLineParser
             if (iterationsOptionValue != null) {
                 iterationsCount = Integer.parseInt(iterationsOptionValue);
             }
+            if (commandLine.hasOption("t")) {
+                isTrieLookupPrefixDisabled = false;
+            }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("servicePoliciesFileName=" + servicePoliciesFileName + ", requestFileName=" + Arrays.toString(requestFileNames));
                 LOG.debug("concurrentClientCount=" + concurrentClientCount + ", iterationsCount=" + iterationsCount);
+                LOG.debug("isTrieLookupPrefixDisabled=" + isTrieLookupPrefixDisabled);
             }
 
             ret = true;

@@ -29,6 +29,8 @@ public interface RangerResourceMatcher {
 
 	void init();
 
+	boolean isMatchAny();
+
 	boolean isMatch(String resource);
 
 	boolean isSingleAndExactMatch(String resource);

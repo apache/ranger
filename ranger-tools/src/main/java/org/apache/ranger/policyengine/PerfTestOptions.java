@@ -26,17 +26,18 @@ public class PerfTestOptions {
 	private final URL servicePoliciesFileURL;
 	private final URL[] requestFileURLs;
 	private final URL statCollectionFileURL;
-
+	private final boolean isTrieLookupPrefixDisabled;
 
 	private final int concurrentClientCount;
 	private final int iterationsCount;
 
-	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount) {
+	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isTrieLookupPrefixDisabled) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.requestFileURLs = requestFileURLs;
 		this.statCollectionFileURL = statCollectionFileURL;
 		this.iterationsCount = iterationsCount;
 		this.concurrentClientCount = concurrentClientCount;
+		this.isTrieLookupPrefixDisabled = isTrieLookupPrefixDisabled;
 	}
 
 	public URL getServicePoliciesFileURL() {
@@ -57,4 +58,7 @@ public class PerfTestOptions {
 
 	public int getIterationsCount() {
 		return iterationsCount;
-	}}
+	}
+
+	public boolean getIsTrieLookupPrefixDisabled() { return isTrieLookupPrefixDisabled; }
+}

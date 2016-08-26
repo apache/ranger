@@ -255,7 +255,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 		boolean ret = false;
 
-		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators(resource)) {
 			ret = evaluator.isAccessAllowed(resource, user, userGroups, accessType);
 
 			if(ret) {
@@ -361,7 +361,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		RangerResourceAccessInfo ret = new RangerResourceAccessInfo(request);
 
-		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+		for(RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators(request.getResource())) {
 			evaluator.getResourceAccessInfo(request, ret);
 		}
 
@@ -380,7 +380,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult ret = createAccessResult(request);
 
 		if(ret != null && request != null) {
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators();
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getPolicyEvaluators(request.getResource());
 
 			if(evaluators != null) {
 				boolean foundInCache = policyRepository.setAuditEnabledFromCache(request, ret);

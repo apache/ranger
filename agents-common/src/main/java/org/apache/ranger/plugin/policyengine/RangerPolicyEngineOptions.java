@@ -28,4 +28,5 @@ public class RangerPolicyEngineOptions {
 	public boolean disableContextEnrichers = false;
 	public boolean disableCustomConditions = false;
 	public boolean evaluateDelegateAdminOnly = false;
+	public boolean disableTrieLookupPrefilter = false;
 }
