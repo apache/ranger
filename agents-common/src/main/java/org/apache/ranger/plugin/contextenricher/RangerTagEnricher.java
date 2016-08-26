@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -34,12 +35,16 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
@@ -47,16 +52,15 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
+	public static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
+	public static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
 
-	public static final String TAG_RETRIEVER_CLASSNAME_OPTION = "tagRetrieverClassName";
-
-	private RangerTagRefresher tagRefresher = null;
-
-	private RangerTagRetriever tagRetriever = null;
-
-	ServiceTags serviceTags = null;
-
-	List<RangerServiceResourceMatcher> serviceResourceMatchers;
+	private RangerTagRefresher                 tagRefresher               = null;
+	private RangerTagRetriever                 tagRetriever               = null;
+	private ServiceTags                        serviceTags                = null;
+	private List<RangerServiceResourceMatcher> serviceResourceMatchers    = null;
+	private Map<String, RangerResourceTrie>    serviceResourceTrie        = null;
+	private boolean                            disableTrieLookupPrefilter = false;
 
 	@Override
 	public void init() {
@@ -69,6 +73,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		String tagRetrieverClassName = getOption(TAG_RETRIEVER_CLASSNAME_OPTION);
 
 		long pollingIntervalMs = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
+
+		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);
 
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
@@ -162,8 +168,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		}
 
+		Map<String, RangerResourceTrie> serviceResourceTrie = null;
+
+		if(!disableTrieLookupPrefilter) {
+			serviceResourceTrie = new HashMap<String, RangerResourceTrie>();
+
+			for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
+				serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers));
+			}
+		}
+
 		this.serviceResourceMatchers = resourceMatchers;
-		this.serviceTags = serviceTags;
+		this.serviceResourceTrie     = serviceResourceTrie;
+		this.serviceTags             = serviceTags;
 	}
 
 	@Override
@@ -191,7 +208,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 
 		List<RangerTag> ret = null;
-		final List<RangerServiceResourceMatcher> serviceResourceMatchers = this.serviceResourceMatchers;
+		final List<RangerServiceResourceMatcher> serviceResourceMatchers = getEvaluators(resource);
 
 		if (CollectionUtils.isNotEmpty(serviceResourceMatchers)) {
 
@@ -221,6 +238,70 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerTagEnricher.findMatchingTags(" + resource + ")");
+		}
+
+		return ret;
+	}
+
+	private List<RangerServiceResourceMatcher> getEvaluators(RangerAccessResource resource) {
+		List<RangerServiceResourceMatcher> ret = null;
+
+		if(serviceResourceTrie == null) {
+			ret = serviceResourceMatchers;
+		} else {
+			Set<String> resourceKeys = resource == null ? null : resource.getKeys();
+
+			if (CollectionUtils.isNotEmpty(resourceKeys)) {
+				boolean isRetModifiable = false;
+
+				for (String resourceName : resourceKeys) {
+					RangerResourceTrie trie = serviceResourceTrie.get(resourceName);
+
+					if (trie == null) { // if no trie exists for this resource level, ignore and continue to next level
+						continue;
+					}
+
+					List<RangerServiceResourceMatcher> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+
+					if (CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
+						ret = null;
+					} else if (ret == null) { // initialize ret with policies found for this resource
+						ret = resourceEvaluators;
+					} else { // remove policies from ret that are not in resourceEvaluators
+						if (isRetModifiable) {
+							ret.retainAll(resourceEvaluators);
+						} else {
+							final List<RangerServiceResourceMatcher> shorterList;
+							final List<RangerServiceResourceMatcher> longerList;
+
+							if (ret.size() < resourceEvaluators.size()) {
+								shorterList = ret;
+								longerList = resourceEvaluators;
+							} else {
+								shorterList = resourceEvaluators;
+								longerList = ret;
+							}
+
+							ret = new ArrayList<>(shorterList);
+							ret.retainAll(longerList);
+							isRetModifiable = true;
+						}
+					}
+
+					if (CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
+						ret = null;
+						break;
+					}
+				}
+			}
+		}
+
+		if(ret == null) {
+			ret = Collections.emptyList();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerTagEnricher.getEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
 		}
 
 		return ret;

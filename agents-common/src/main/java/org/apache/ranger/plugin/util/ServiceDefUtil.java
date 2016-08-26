@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -71,6 +72,42 @@ public class ServiceDefUtil {
         normalizeRowFilterDef(serviceDef);
 
         return serviceDef;
+    }
+
+    public static RangerResourceDef getResourceDef(RangerServiceDef serviceDef, String resource) {
+        RangerResourceDef ret = null;
+
+        if(serviceDef != null && resource != null && CollectionUtils.isNotEmpty(serviceDef.getResources())) {
+            for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+                if(StringUtils.equalsIgnoreCase(resourceDef.getName(), resource)) {
+                    ret = resourceDef;
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public static Integer getLeafResourceLevel(RangerServiceDef serviceDef, Map<String, RangerPolicy.RangerPolicyResource> policyResource) {
+        Integer ret = null;
+
+        if(serviceDef != null && policyResource != null) {
+            for(Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : policyResource.entrySet()) {
+                String            resource    = entry.getKey();
+                RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
+
+                if(resourceDef != null && resourceDef.getLevel() != null) {
+                    if(ret == null) {
+                        ret = resourceDef.getLevel();
+                    } else if(ret < resourceDef.getLevel()) {
+                        ret = resourceDef.getLevel();
+                    }
+                }
+            }
+        }
+
+        return ret;
     }
 
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {

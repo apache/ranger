@@ -180,6 +180,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	}
 
 	@Override
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
+	}
+
+	@Override
 	public RangerResourceMatcher getResourceMatcher(String resourceName) {
 		return matchers != null ? matchers.get(resourceName) : null;
 	}
