@@ -28,6 +28,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+
+
+import java.util.Map;
 
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
@@ -53,6 +57,16 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public long getId() {
+		return policy != null ? policy.getId() :-1;
+	}
+
+	@Override
+	public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
+		return policy !=null ? policy.getResources() : null;
+	}
+
+	@Override
 	public RangerPolicy getPolicy() {
 		return policy;
 	}
@@ -73,15 +87,23 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public int compareTo(RangerPolicyEvaluator other) {
+	public int compareTo(RangerPolicyResourceEvaluator obj) {
 		if(LOG.isDebugEnabled()) {
 		LOG.debug("==> RangerAbstractPolicyEvaluator.compareTo()");
 		}
 
-		int result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
+		int result;
 
-		if (result == 0) {
-			result = Integer.compare(getCustomConditionsCount(), other.getCustomConditionsCount());
+		if(obj instanceof RangerPolicyEvaluator) {
+			RangerPolicyEvaluator other = (RangerPolicyEvaluator)obj;
+
+			result = Integer.compare(this.getEvalOrder(), other.getEvalOrder());
+
+			if (result == 0) {
+				result = Integer.compare(getCustomConditionsCount(), other.getCustomConditionsCount());
+			}
+		} else {
+			result = Long.compare(getId(), obj.getId());
 		}
 
 		if(LOG.isDebugEnabled()) {

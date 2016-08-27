@@ -31,11 +31,12 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 
-public interface RangerPolicyEvaluator extends Comparable<RangerPolicyEvaluator> {
+public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	public static final String EVALUATOR_TYPE_AUTO   = "auto";
 	public static final String EVALUATOR_TYPE_OPTIMIZED = "optimized";
 	public static final String EVALUATOR_TYPE_CACHED    = "cached";

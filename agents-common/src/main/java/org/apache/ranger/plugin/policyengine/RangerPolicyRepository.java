@@ -282,7 +282,7 @@ public class RangerPolicyRepository {
                     continue;
                 }
 
-                List<RangerPolicyEvaluator> resourceEvaluators = trie.getPoliciesForResource(resource.getValue(resourceName));
+                List<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
                 if(CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
                     ret = null;
