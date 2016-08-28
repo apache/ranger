@@ -197,6 +197,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         sb.append("; optWildcard=").append(optWildcard);
         sb.append("; wildcardChars=").append(wildcardChars);
         sb.append("; nodeCount=").append(trieData.nodeCount);
+        sb.append("; leafNodeCount=").append(trieData.leafNodeCount);
+        sb.append("; singleChildNodeCount=").append(trieData.singleChildNodeCount);
         sb.append("; maxDepth=").append(trieData.maxDepth);
         sb.append("; evaluatorListCount=").append(trieData.evaluatorListCount);
         sb.append("; wildcardEvaluatorListCount=").append(trieData.wildcardEvaluatorListCount);
@@ -208,6 +210,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
     public class TrieData {
         int nodeCount                     = 0;
+        int leafNodeCount                 = 0;
+        int singleChildNodeCount          = 0;
         int maxDepth                      = 0;
         int evaluatorListCount            = 0;
         int wildcardEvaluatorListCount    = 0;
@@ -268,12 +272,18 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
-        if(children != null) {
+        if(children != null && children.size() > 0) {
+            if(children.size() == 1) {
+                trieData.singleChildNodeCount++;
+            }
+
             for(Map.Entry<Character, TrieNode> entry : children.entrySet()) {
                 TrieNode child = entry.getValue();
 
                 child.populateTrieData(trieData);
             }
+        } else {
+            trieData.leafNodeCount++;
         }
     }
 
