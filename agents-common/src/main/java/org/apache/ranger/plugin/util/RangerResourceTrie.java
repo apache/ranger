@@ -58,7 +58,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         this.resourceName  = resourceDef.getName();
         this.optIgnoreCase = strIgnoreCase != null ? Boolean.parseBoolean(strIgnoreCase) : false;
-        this.optWildcard   = strWildcard != null ? Boolean.parseBoolean(strWildcard) : false;;
+        this.optWildcard   = strWildcard != null ? Boolean.parseBoolean(strWildcard) : false;
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS : "";
         this.root          = new TrieNode(Character.valueOf((char)0));
 
@@ -67,6 +67,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             RangerPolicyResource              policyResource  = policyResources != null ? policyResources.get(resourceName) : null;
 
             if(policyResource == null) {
+                if(evaluator.getLeafResourceLevel() != null && resourceDef.getLevel() != null && evaluator.getLeafResourceLevel() < resourceDef.getLevel()) {
+                    root.addWildcardEvaluator(evaluator);
+                }
+
                 continue;
             }
 

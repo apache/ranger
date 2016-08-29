@@ -33,6 +33,8 @@ public interface RangerPolicyResourceMatcher {
 
 	void init();
 
+	RangerServiceDef getServiceDef();
+
 	RangerResourceMatcher getResourceMatcher(String resourceName);
 
 	boolean isMatch(RangerAccessResource resource);

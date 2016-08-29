@@ -33,4 +33,6 @@ public interface RangerPolicyResourceEvaluator extends Comparable<RangerPolicyRe
     Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource();
 
     RangerResourceMatcher getResourceMatcher(String resourceName);
+
+    Integer getLeafResourceLevel();
 }
