@@ -39,7 +39,7 @@ import org.apache.ranger.common.DateUtil;
 
 @MappedSuperclass @EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
 @XmlRootElement
-public abstract class XXDBBase extends Object implements java.io.Serializable {
+public abstract class XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 

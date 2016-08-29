@@ -19,7 +19,7 @@ package org.apache.ranger.authentication.unix.jaas;
 import javax.security.auth.callback.*;
 import java.io.IOException;
 
-public class UsernamePasswordCallbackHandler extends Object implements CallbackHandler {
+public class UsernamePasswordCallbackHandler implements CallbackHandler {
     private String _user;
     private String _password;
 

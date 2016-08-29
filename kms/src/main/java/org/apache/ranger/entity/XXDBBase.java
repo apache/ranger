@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
 @XmlRootElement
-public abstract class XXDBBase extends Object implements java.io.Serializable {
+public abstract class XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final int CLASS_TYPE_NONE = 0;
 	private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");

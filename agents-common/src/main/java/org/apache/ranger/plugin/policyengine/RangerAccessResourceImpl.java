@@ -132,13 +132,10 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 				for(int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
 					RangerResourceDef resourceDef = resourceDefs.get(idx);
 
-					if(resourceDef == null || !exists(resourceDef.getName())) {
-						continue;
-					}
-
-					ret = leafName = resourceDef.getName();
-
-					break;
+					if(resourceDef != null && exists(resourceDef.getName())) {
+					    ret = leafName = resourceDef.getName();
+					    break;
+                    }
 				}
 			}
 		}

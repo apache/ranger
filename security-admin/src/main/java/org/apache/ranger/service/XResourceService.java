@@ -879,17 +879,15 @@ public class XResourceService extends
 		for (Long userId : listOfUser) {
 			HashMap<Integer, VXPermMap> map = userPermMap.get(userId);
 			VXPermMap vxPermMap = null;
+            if (!map.isEmpty()) {
+                vxPermMap = map.values().iterator().next();
+            }
 			
-			for (Entry<Integer, VXPermMap> perm : map.entrySet()) {
-				vxPermMap = perm.getValue();
-				break;
-			}
-
 			if (vxPermMap == null) {
 				continue;
 			}
 
-			if (map.size() > 0 && map.get(AppConstants.XA_PERM_TYPE_READ) == null) {
+			if (map.get(AppConstants.XA_PERM_TYPE_READ) == null) {
 				vxPermMap.setPermType(AppConstants.XA_PERM_TYPE_READ);
 				map.put(AppConstants.XA_PERM_TYPE_READ, vxPermMap);
 			}
@@ -904,17 +902,15 @@ public class XResourceService extends
 		for (Long groupId : listOfGroup) {
 			HashMap<Integer, VXPermMap> map = groupPermMap.get(groupId);
 			VXPermMap vxPermMap = null;
+            if (!map.isEmpty()) {
+                vxPermMap = map.values().iterator().next();
+            }
 			
-			for (Entry<Integer, VXPermMap> perm : map.entrySet()) {
-				vxPermMap = perm.getValue();
-				break;
-			}
-
 			if (vxPermMap == null) {
 				continue;
 			}
 
-			if (map.size() > 0 && map.get(AppConstants.XA_PERM_TYPE_READ) == null) {
+			if (map.get(AppConstants.XA_PERM_TYPE_READ) == null) {
 				vxPermMap.setPermType(AppConstants.XA_PERM_TYPE_READ);
 				map.put(AppConstants.XA_PERM_TYPE_READ, vxPermMap);
 			}

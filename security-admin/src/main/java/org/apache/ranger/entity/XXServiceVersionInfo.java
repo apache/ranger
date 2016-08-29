@@ -42,7 +42,7 @@ import org.apache.ranger.common.DateUtil;
 @Cacheable
 @XmlRootElement
 @Table(name = "x_service_version_info")
-public class XXServiceVersionInfo extends Object implements java.io.Serializable {
+public class XXServiceVersionInfo implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id

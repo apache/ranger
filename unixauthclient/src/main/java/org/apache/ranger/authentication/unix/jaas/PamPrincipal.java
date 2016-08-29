@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.Set;
 
 
-public class PamPrincipal extends Object implements Principal {
+public class PamPrincipal implements Principal {
     private String _userName;
     private String _gecos;
     private String _homeDir;

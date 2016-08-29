@@ -183,17 +183,10 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 
 			AccessControlList acl = entityPermissions == null ? null : entityPermissions.get(accessType);
 
-			if(acl == null || !acl.isUserAllowed(ugi)) {
-				continue;
-			}
-
-			if(! isSelfOrChildOf(entity, aclEntity)) {
-				continue;
-			}
-
-			ret = true;
-
-			break;
+			if(acl != null && acl.isUserAllowed(ugi) && isSelfOrChildOf(entity, aclEntity)) {
+			    ret = true;
+		    	break;
+            }
 		}
 
 		if(auditHandler != null) {

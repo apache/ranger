@@ -25,13 +25,9 @@
   </description>
 
   <rule ref="rulesets/java/basic.xml">
-	<exclude name="AvoidBranchingStatementAsLastInLoop" />
-	<exclude name="AvoidThreadGroup" />
-	<exclude name="AvoidUsingHardCodedIP" />
-	<exclude name="ClassCastExceptionWithToArray" />
+    <exclude name="AvoidUsingHardCodedIP" />
 	<exclude name="CollapsibleIfStatements" />
 	<exclude name="DoubleCheckedLocking" />
-	<exclude name="ExtendsObject" />
 	<exclude name="OverrideBothEqualsAndHashcode" />
   </rule>
   <rule ref="rulesets/java/unusedcode.xml">
