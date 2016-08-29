@@ -27,6 +27,7 @@ import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.RebalanceOptions;
 import org.apache.storm.topology.TopologyBuilder;
 import org.junit.Assert;
+import org.junit.Ignore;
 
 /**
  * A simple test that wires a WordSpout + WordCounterBolt into a topology and runs it. The "RangerStormAuthorizer" takes care of authorization.
@@ -76,6 +77,7 @@ public class StormRangerAuthorizerTest {
     }
     
     // "bob" can't create topologies other than "word-count" and "temp*"
+    @Ignore
     @org.junit.Test
     public void testCreateTopologyBob() throws Exception {
         final Config conf = new Config();
@@ -100,7 +102,8 @@ public class StormRangerAuthorizerTest {
             }
         });
     }
-    
+
+    @Ignore
     @org.junit.Test
     public void testTopologyActivation() throws Exception {
         final Subject subject = new Subject();
@@ -138,7 +141,8 @@ public class StormRangerAuthorizerTest {
             }
         });
     }
-    
+
+    @Ignore
     @org.junit.Test
     public void testTopologyRebalancing() throws Exception {
         final Subject subject = new Subject();
