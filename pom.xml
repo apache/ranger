@@ -189,7 +189,6 @@
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>1.8.4</mockito.version>
-        <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.6.2.Final</netty.version>
         <noggit.version>0.6</noggit.version>
