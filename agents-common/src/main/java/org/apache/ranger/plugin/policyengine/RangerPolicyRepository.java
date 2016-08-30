@@ -87,7 +87,6 @@ class RangerPolicyRepository {
 
     private final String                      componentServiceName;
     private final RangerServiceDef            componentServiceDef;
-    private final boolean                         disableTrieLookupPrefilter;
     private final Map<String, RangerResourceTrie> policyResourceTrie;
     private final Map<String, RangerResourceTrie> dataMaskResourceTrie;
     private final Map<String, RangerResourceTrie> rowFilterResourceTrie;
@@ -132,24 +131,22 @@ class RangerPolicyRepository {
             this.accessAuditCache = null;
         }
 
-        this.disableTrieLookupPrefilter = options.disableTrieLookupPrefilter;
-
-        if(this.disableTrieLookupPrefilter) {
-            policyResourceTrie    = null;
-            dataMaskResourceTrie  = null;
-            rowFilterResourceTrie = null;
-        } else {
-            policyResourceTrie    = new HashMap<String, RangerResourceTrie>();
-            dataMaskResourceTrie  = new HashMap<String, RangerResourceTrie>();
-            rowFilterResourceTrie = new HashMap<String, RangerResourceTrie>();
-        }
-
         if(LOG.isDebugEnabled()) {
             LOG.debug("RangerPolicyRepository : building policy-repository for service[" + serviceName
                     + "] with auditMode[" + auditModeEnum + "]");
         }
 
         init(options);
+
+        if(options.disableTrieLookupPrefilter) {
+            policyResourceTrie    = null;
+            dataMaskResourceTrie  = null;
+            rowFilterResourceTrie = null;
+        } else {
+            policyResourceTrie    = createResourceTrieMap(policyEvaluators);
+            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators);
+            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators);
+        }
     }
 
     RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
@@ -179,24 +176,22 @@ class RangerPolicyRepository {
 
         this.accessAuditCache = null;
 
-        this.disableTrieLookupPrefilter = options.disableTrieLookupPrefilter;
-
-        if(this.disableTrieLookupPrefilter) {
-            policyResourceTrie    = null;
-            dataMaskResourceTrie  = null;
-            rowFilterResourceTrie = null;
-        } else {
-            policyResourceTrie    = new HashMap<String, RangerResourceTrie>();
-            dataMaskResourceTrie  = new HashMap<String, RangerResourceTrie>();
-            rowFilterResourceTrie = new HashMap<String, RangerResourceTrie>();
-        }
-
         if(LOG.isDebugEnabled()) {
             LOG.debug("RangerPolicyRepository : building tag-policy-repository for tag service[" + serviceName
                     + "] with auditMode[" + auditModeEnum +"]");
         }
 
         init(options);
+
+        if(options.disableTrieLookupPrefilter) {
+            policyResourceTrie    = null;
+            dataMaskResourceTrie  = null;
+            rowFilterResourceTrie = null;
+        } else {
+            policyResourceTrie    = createResourceTrieMap(policyEvaluators);
+            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators);
+            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators);
+        }
     }
 
     public String getServiceName() { return serviceName; }
@@ -220,7 +215,7 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getPolicyEvaluators(RangerAccessResource resource) {
-       return disableTrieLookupPrefilter ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
+       return policyResourceTrie == null ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
@@ -228,7 +223,7 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators(RangerAccessResource resource) {
-        return disableTrieLookupPrefilter ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
+        return dataMaskResourceTrie == null ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
@@ -236,7 +231,7 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators(RangerAccessResource resource) {
-        return disableTrieLookupPrefilter ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
+        return rowFilterResourceTrie == null ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
     }
 
     private List<RangerPolicyEvaluator> getPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
@@ -529,8 +524,6 @@ class RangerPolicyRepository {
         }
         this.contextEnrichers = Collections.unmodifiableList(contextEnrichers);
 
-        initResourceTries();
-
         if(LOG.isDebugEnabled()) {
             LOG.debug("policy evaluation order: " + this.policyEvaluators.size() + " policies");
 
@@ -555,26 +548,6 @@ class RangerPolicyRepository {
                 RangerPolicy policy = policyEvaluator.getPolicy();
 
                 LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
-            }
-
-            LOG.debug("policyResourceTrie: " + this.policyResourceTrie);
-            LOG.debug("dataMaskResourceTrie: " + this.dataMaskResourceTrie);
-            LOG.debug("rowFilterResourceTrie: " + this.rowFilterResourceTrie);
-        }
-    }
-
-    private void initResourceTries() {
-        if(! this.disableTrieLookupPrefilter) {
-            policyResourceTrie.clear();
-            dataMaskResourceTrie.clear();
-            rowFilterResourceTrie.clear();
-
-            if (serviceDef != null && serviceDef.getResources() != null) {
-                for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                    policyResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, policyEvaluators));
-                    dataMaskResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, dataMaskPolicyEvaluators));
-                    rowFilterResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, rowFilterPolicyEvaluators));
-                }
             }
         }
     }
@@ -732,14 +705,22 @@ class RangerPolicyRepository {
             LOG.debug("==> reorderEvaluators()");
         }
 
-        if(disableTrieLookupPrefilter) {
-            policyEvaluators          = getReorderedPolicyEvaluators(policyEvaluators);
-            dataMaskPolicyEvaluators  = getReorderedPolicyEvaluators(dataMaskPolicyEvaluators);
-            rowFilterPolicyEvaluators = getReorderedPolicyEvaluators(rowFilterPolicyEvaluators);
-        } else {
+        if(policyResourceTrie != null) {
             reorderPolicyEvaluators(policyResourceTrie);
+        } else {
+            policyEvaluators = getReorderedPolicyEvaluators(policyEvaluators);
+        }
+
+        if(dataMaskResourceTrie != null) {
             reorderPolicyEvaluators(dataMaskResourceTrie);
+        } else {
+            dataMaskPolicyEvaluators = getReorderedPolicyEvaluators(dataMaskPolicyEvaluators);
+        }
+
+        if(rowFilterResourceTrie != null) {
             reorderPolicyEvaluators(rowFilterResourceTrie);
+        } else {
+            rowFilterPolicyEvaluators = getReorderedPolicyEvaluators(rowFilterPolicyEvaluators);
         }
 
         if (LOG.isDebugEnabled()) {
@@ -768,6 +749,22 @@ class RangerPolicyRepository {
             Collections.sort(ret);
 
             ret = Collections.unmodifiableList(ret);
+        }
+
+        return ret;
+    }
+
+    private Map<String, RangerResourceTrie> createResourceTrieMap(List<RangerPolicyEvaluator> evaluators) {
+        final Map<String, RangerResourceTrie> ret;
+
+        if (CollectionUtils.isNotEmpty(evaluators) && serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getResources())) {
+            ret = new HashMap<String, RangerResourceTrie>();
+
+            for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators));
+            }
+        } else {
+            ret = null;
         }
 
         return ret;
