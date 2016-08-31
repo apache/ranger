@@ -19,11 +19,6 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +32,7 @@ import java.util.regex.Pattern;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -85,9 +81,9 @@ public class RangerTimeOfDayMatcherTest {
 		for (String aDuration : durations) {
 			Matcher matcher = p.matcher(aDuration);
 			if (match) {
-				assertTrue(aDuration, matcher.matches());
+				Assert.assertTrue(aDuration, matcher.matches());
 			} else {
-				assertFalse(aDuration, matcher.matches());
+				Assert.assertFalse(aDuration, matcher.matches());
 			}
 		}
 	}
@@ -113,14 +109,14 @@ public class RangerTimeOfDayMatcherTest {
 	void checkGroups(String[][] input) {
 		for (String[] data : input) {
 			Matcher m = p.matcher(data[0]);
-			assertTrue(data[0], m.matches());
-			assertEquals(8, m.groupCount());
-			assertEquals(data[1], m.group(1));
-			assertEquals(data[2], m.group(3));
-			assertEquals(data[3], m.group(4));
-			assertEquals(data[4], m.group(5));
-			assertEquals(data[5], m.group(7));
-			assertEquals(data[6], m.group(8));
+			Assert.assertTrue(data[0], m.matches());
+			Assert.assertEquals(8, m.groupCount());
+			Assert.assertEquals(data[1], m.group(1));
+			Assert.assertEquals(data[2], m.group(3));
+			Assert.assertEquals(data[3], m.group(4));
+			Assert.assertEquals(data[4], m.group(5));
+			Assert.assertEquals(data[5], m.group(7));
+			Assert.assertEquals(data[6], m.group(8));
 		}
 	}
 
@@ -143,9 +139,9 @@ public class RangerTimeOfDayMatcherTest {
 			if (expectedToMatch) {
 				int start = (Integer)data[2];
 				int end = (Integer)data[3];
-				assertArrayEquals(new int[] { start, end }, duration);
+				Assert.assertArrayEquals(new int[] { start, end }, duration);
 			} else {
-				assertNull(duration);
+				Assert.assertNull(duration);
 			}
 		}
 	}
@@ -174,9 +170,9 @@ public class RangerTimeOfDayMatcherTest {
 			boolean matchExpected = (boolean)data[1];
 			boolean result = matcher.durationMatched(durations, hour, 0);
 			if (matchExpected) {
-				assertTrue("" + hour, result);
+				Assert.assertTrue("" + hour, result);
 			} else {
-				assertFalse("" + hour, result);
+				Assert.assertFalse("" + hour, result);
 			}
 		}
 	}
@@ -220,9 +216,9 @@ public class RangerTimeOfDayMatcherTest {
 			when(request.getAccessTime()).thenReturn(aDate);
 			boolean matchExpected = (boolean)data[2];
 			if (matchExpected) {
-				assertTrue("" + hour, matcher.isMatched(request));
+				Assert.assertTrue("" + hour, matcher.isMatched(request));
 			} else {
-				assertFalse("" + hour, matcher.isMatched(request));
+				Assert.assertFalse("" + hour, matcher.isMatched(request));
 			}
 		}
 	}
@@ -264,9 +260,9 @@ public class RangerTimeOfDayMatcherTest {
 			when(request.getAccessTime()).thenReturn(aDate);
 			boolean matchExpected = (boolean)data[2];
 			if (matchExpected) {
-				assertTrue("" + hour, matcher.isMatched(request));
+				Assert.assertTrue("" + hour, matcher.isMatched(request));
 			} else {
-				assertFalse("" + hour, matcher.isMatched(request));
+				Assert.assertFalse("" + hour, matcher.isMatched(request));
 			}
 		}
 	}

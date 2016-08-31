@@ -517,6 +517,7 @@
                     <sourceEncoding>UTF-8</sourceEncoding>
                     <failOnViolation>true</failOnViolation>
                     <linkXRef>false</linkXRef>
+                    <!--<includeTests>true</includeTests>-->
                     <verbose>true</verbose>
                     <excludeRoots>
                         <excludeRoot>${basedir}/src/main/generated</excludeRoot>

@@ -20,8 +20,6 @@ package org.apache.ranger.authorization.hbase;
 
 import static org.junit.Assert.*;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 

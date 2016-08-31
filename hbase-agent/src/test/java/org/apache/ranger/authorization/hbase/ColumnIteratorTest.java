@@ -18,9 +18,6 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.hbase.KeyValue;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -41,14 +39,14 @@ public class ColumnIteratorTest {
 	public void test_firewalling() {
 		// passing null collection
 		ColumnIterator iterator = new ColumnIterator(null);
-		assertFalse(iterator.hasNext());
+		Assert.assertFalse(iterator.hasNext());
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test_setOfBytes() {
 		/*
-		 * It is pointless to test the functionality of base iterator!  What we want to assert is that ColumnIterator delegates to the real iterators appropriately.
+		 * It is pointless to test the functionality of base iterator!  What we want to Assert.assert is that ColumnIterator delegates to the real iterators appropriately.
 		 */
 		Iterator<byte[]> iterator = mock(Iterator.class);
 		// We want to make sure ColumnIterator will return exactly what the real iterator gives it.  Let's us doctor mock iteracor to return items in a particular order.
@@ -82,10 +80,10 @@ public class ColumnIteratorTest {
 		int i = 0;
 		while (columnIterator.hasNext()) {
 			String value = columnIterator.next();
-			assertEquals(values[i++], value);
+			Assert.assertEquals(values[i++], value);
 		}
 		// We should get back exactly as many items as were in the real iterator, no more no less
-		assertEquals(3, i);
+		Assert.assertEquals(3, i);
 
 		// this should be called only once!
 		verify(collection, times(1)).iterator();
@@ -129,10 +127,10 @@ public class ColumnIteratorTest {
 		int i = 0;
 		while (columnIterator.hasNext()) {
 			String value = columnIterator.next();
-			assertEquals(qualifiers[i++], value);
+			Assert.assertEquals(qualifiers[i++], value);
 		}
 		// We should get back exactly as many items as were in the real iterator, no more no less
-		assertEquals(3, i);
+		Assert.assertEquals(3, i);
 
 		// this should be called only once!
 		verify(list, times(1)).iterator();

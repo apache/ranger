@@ -19,9 +19,6 @@
 
 package org.apache.ranger.plugin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +31,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature.ResourceSerializer;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature.PolicySerializer;
 import org.apache.ranger.plugin.model.validation.ValidationTestUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestRangerPolicyResourceSignature {
@@ -43,22 +41,22 @@ public class TestRangerPolicyResourceSignature {
 		// null resource
 		RangerPolicyResource resource = null;
 		ResourceSerializer serializer = new ResourceSerializer(resource);
-		assertEquals("{}", serializer.toString());
+		Assert.assertEquals("{}", serializer.toString());
 		
 		// non-null policy resource with null values/recursive flag
 		resource = createPolicyResource(null, null, null);
 		serializer = new ResourceSerializer(resource);
-		assertEquals("{values=,excludes=false,recursive=false}", serializer.toString());
+		Assert.assertEquals("{values=,excludes=false,recursive=false}", serializer.toString());
 		
 		// valid values in non-asending order
 		resource = createPolicyResource(new String[]{"b", "a", "d", "c"}, true, false);
 		serializer = new ResourceSerializer(resource);
-		assertEquals("{values=[a, b, c, d],excludes=false,recursive=true}", serializer.toString());
+		Assert.assertEquals("{values=[a, b, c, d],excludes=false,recursive=true}", serializer.toString());
 		
 		// recursive flag is false and different variation of values to show lexicographic ordering
 		resource = createPolicyResource(new String[]{"9", "A", "e", "_"}, false, true);
 		serializer = new ResourceSerializer(resource);
-		assertEquals("{values=[9, A, _, e],excludes=true,recursive=false}", serializer.toString());
+		Assert.assertEquals("{values=[9, A, _, e],excludes=true,recursive=false}", serializer.toString());
 	}
 	
 	RangerPolicyResource createPolicyResource(String[] values, Boolean recursive, Boolean excludes) {
@@ -80,33 +78,33 @@ public class TestRangerPolicyResourceSignature {
 		// null policy is invalid
 		RangerPolicy rangerPolicy = null;
 		PolicySerializer policySerializer = new PolicySerializer(rangerPolicy);
-		assertFalse("policy==null", policySerializer.isPolicyValidForResourceSignatureComputation());
+		Assert.assertFalse("policy==null", policySerializer.isPolicyValidForResourceSignatureComputation());
 
 		// null resource map is invalid
 		rangerPolicy = mock(RangerPolicy.class);
 		when(rangerPolicy.getResources()).thenReturn(null);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertFalse("policy.getResources()==null", policySerializer.isPolicyValidForResourceSignatureComputation());
+		Assert.assertFalse("policy.getResources()==null", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
 		// empty resources map is ok!
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
 		when(rangerPolicy.getResources()).thenReturn(policyResources);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertTrue("policy.getResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());
+		Assert.assertTrue("policy.getResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
 		// but having a resource map with null key is not ok!
 		RangerPolicyResource aPolicyResource = mock(RangerPolicyResource.class);
 		policyResources.put(null, aPolicyResource);
 		policySerializer = new PolicySerializer(rangerPolicy);
-		assertFalse("policy.getResources().contains(null)", policySerializer.isPolicyValidForResourceSignatureComputation());
+		Assert.assertFalse("policy.getResources().contains(null)", policySerializer.isPolicyValidForResourceSignatureComputation());
 	}
 	
 	@Test
 	public void test_RangerPolicyResourceSignature() {
 		// String rep of a null policy is an empty string! and its hash is sha of empty string!
 		RangerPolicyResourceSignature signature = new RangerPolicyResourceSignature((String)null);
-		assertEquals("", signature.asString());
-		assertEquals(DigestUtils.md5Hex(""), signature.getSignature());
+		Assert.assertEquals("", signature.asString());
+		Assert.assertEquals(DigestUtils.md5Hex(""), signature.getSignature());
 	}
 
 	/*
@@ -154,7 +152,7 @@ public class TestRangerPolicyResourceSignature {
 		// null policy returns signature of empty resource
 		RangerPolicy policy = null;
 		PolicySerializer serializer = new PolicySerializer(policy);
-		assertTrue("Null policy", serializer.toString() == "");
+		Assert.assertTrue("Null policy", serializer.toString() == "");
 		
 		policy = mock(RangerPolicy.class);
 		when(policy.getPolicyType()).thenReturn(null);
@@ -170,17 +168,17 @@ public class TestRangerPolicyResourceSignature {
 		"}";
 		String serializationFormat = "{%s,%s,resource=%s}";
 		String expectedFull = String.format(serializationFormat, expectedVersion, expectedType, expectedResource);
-		assertEquals(expectedFull, serializer.toString());
+		Assert.assertEquals(expectedFull, serializer.toString());
 
 		// order of values should not matter
 		policyResources = _utils.createPolicyResourceMap(data_second);
 		when(policy.getResources()).thenReturn(policyResources);
-		assertEquals(expectedFull, serializer.toString());
+		Assert.assertEquals(expectedFull, serializer.toString());
 		// changing the policy type has expected changes
 		when(policy.getPolicyType()).thenReturn(1);
 		expectedType="type=1";
 		expectedFull =  String.format(serializationFormat, expectedVersion, expectedType, expectedResource);
-		assertEquals(expectedFull, serializer.toString());
+		Assert.assertEquals(expectedFull, serializer.toString());
 	}
 	
 	
@@ -191,7 +189,7 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy2 = createPolicy(first_recursive_null_or_false);
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
-		assertEquals("Recursive flag: null is same as false", signature1.toString(), signature2.toString());
+		Assert.assertEquals("Recursive flag: null is same as false", signature1.toString(), signature2.toString());
 	}
 	
 	@Test
@@ -201,7 +199,7 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy2 = createPolicy(first_recursive_flag_different);
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
-		assertFalse("Resources differ only by recursive flag true vs false/null", signature1.toString().equals(signature2.toString()));
+		Assert.assertFalse("Resources differ only by recursive flag true vs false/null", signature1.toString().equals(signature2.toString()));
 	}
 	
 	@Test
@@ -211,7 +209,7 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy2 = createPolicy(first_excludes_null_or_false);
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
-		assertEquals("Excludes flag: null is same as false", signature1.toString(), signature2.toString());
+		Assert.assertEquals("Excludes flag: null is same as false", signature1.toString(), signature2.toString());
 	}
 	
 	@Test
@@ -221,7 +219,7 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy2 = createPolicy(first_excludes_flag_different);
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
-		assertFalse("Resources differ only by excludes flag true vs false/null", signature1.toString().equals(signature2.toString()));
+		Assert.assertFalse("Resources differ only by excludes flag true vs false/null", signature1.toString().equals(signature2.toString()));
 	}
 	
 	RangerPolicy createPolicy(Object[][] data) {
@@ -243,8 +241,8 @@ public class TestRangerPolicyResourceSignature {
 		resources = _utils.createPolicyResourceMap(data_second);
 		when(anotherPolicy.getResources()).thenReturn(resources);
 		RangerPolicyResourceSignature anotherSignature = new RangerPolicyResourceSignature(anotherPolicy);
-		assertTrue(signature.equals(anotherSignature));
-		assertTrue(anotherSignature.equals(signature));
+		Assert.assertTrue(signature.equals(anotherSignature));
+		Assert.assertTrue(anotherSignature.equals(signature));
 	}
 	
 	ValidationTestUtils _utils = new ValidationTestUtils();

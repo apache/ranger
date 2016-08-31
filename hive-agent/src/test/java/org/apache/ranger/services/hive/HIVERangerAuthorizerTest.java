@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.service.server.HiveServer2;
 import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * 
@@ -109,15 +110,15 @@ public class HIVERangerAuthorizerTest {
         statement.execute("create table if not exists words (word STRING, count INT) row format delimited fields terminated by '\t' stored as textfile");
         
         // Copy "wordcount.txt" to "target" to avoid overwriting it during load
-        java.io.File inputFile = new java.io.File(HIVERangerAuthorizerTest.class.getResource("../../../../../wordcount.txt").toURI());
-        Path outputPath = Paths.get(inputFile.toPath().getParent().getParent().toString() + java.io.File.separator + "wordcountout.txt");
+        File inputFile = new File(HIVERangerAuthorizerTest.class.getResource("../../../../../wordcount.txt").toURI());
+        Path outputPath = Paths.get(inputFile.toPath().getParent().getParent().toString() + File.separator + "wordcountout.txt");
         Files.copy(inputFile.toPath(), outputPath);
         
         statement.execute("LOAD DATA INPATH '" + outputPath + "' OVERWRITE INTO TABLE words");
         
         // Just test to make sure it's working
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
-        resultSet.next();
+        Assert.assertTrue(resultSet.next());
         Assert.assertEquals("Mr.", resultSet.getString(1));
         
         statement.close();
@@ -133,7 +134,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // this should be allowed (by the policy - user)
-    @org.junit.Test
+    @Test
     public void testHiveSelectAllAsBob() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -141,7 +142,7 @@ public class HIVERangerAuthorizerTest {
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
-        resultSet.next();
+        Assert.assertTrue(resultSet.next());
         Assert.assertEquals("Mr.", resultSet.getString(1));
         Assert.assertEquals(100, resultSet.getInt(2));
 
@@ -150,7 +151,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // the "IT" group doesn't have permission to select all
-    @org.junit.Test
+    @Test
     public void testHiveSelectAllAsAlice() throws Exception {
         
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting("alice", new String[] {"IT"});
@@ -175,7 +176,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // this should be allowed (by the policy - user)
-    @org.junit.Test
+    @Test
     public void testHiveSelectSpecificColumnAsBob() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -183,7 +184,7 @@ public class HIVERangerAuthorizerTest {
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
-        resultSet.next();
+        Assert.assertTrue(resultSet.next());
         Assert.assertEquals(100, resultSet.getInt(1));
 
         statement.close();
@@ -191,7 +192,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // this should be allowed (by the policy - group)
-    @org.junit.Test
+    @Test
     public void testHiveSelectSpecificColumnAsAlice() throws Exception {
         
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting("alice", new String[] {"IT"});
@@ -203,7 +204,7 @@ public class HIVERangerAuthorizerTest {
                 Statement statement = connection.createStatement();
 
                 ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
-                resultSet.next();
+                Assert.assertTrue(resultSet.next());
                 Assert.assertEquals(100, resultSet.getInt(1));
 
                 statement.close();
@@ -214,7 +215,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // An unknown user shouldn't be allowed
-    @org.junit.Test
+    @Test
     public void testHiveSelectSpecificColumnAsEve() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -233,7 +234,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // test "alice", but in the wrong group
-    @org.junit.Test
+    @Test
     public void testHiveSelectSpecificColumnAsAliceWrongGroup() throws Exception {
         
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting("alice", new String[] {"DevOps"});
@@ -259,7 +260,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // this should be allowed (by the policy - user)
-    @org.junit.Test
+    @Test
     public void testHiveUpdateAllAsBob() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -269,7 +270,7 @@ public class HIVERangerAuthorizerTest {
         statement.execute("insert into words (word, count) values ('newword', 5)");
         
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where word == 'newword'");
-        resultSet.next();
+        Assert.assertTrue(resultSet.next());
         Assert.assertEquals("newword", resultSet.getString(1));
         Assert.assertEquals(5, resultSet.getInt(2));
 
@@ -278,7 +279,7 @@ public class HIVERangerAuthorizerTest {
     }
     
     // this should not be allowed as "alice" can't insert into the table
-    @org.junit.Test
+    @Test
     public void testHiveUpdateAllAsAlice() throws Exception {
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting("alice", new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -302,7 +303,7 @@ public class HIVERangerAuthorizerTest {
         });
     }
     
-    @org.junit.Test
+    @Test
     public void testHiveCreateDropDatabase() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port;
@@ -348,7 +349,7 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
     
-    @org.junit.Test
+    @Test
     public void testBobSelectOnDifferentDatabase() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port;
@@ -396,7 +397,7 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
     
-    @org.junit.Test
+    @Test
     public void testBobSelectOnDifferentTables() throws Exception {
         
         // Create a "words2" table in "rangerauthz"
@@ -432,7 +433,7 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
     
-    @org.junit.Test
+    @Test
     public void testBobAlter() throws Exception {
         
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";

@@ -19,9 +19,6 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.junit.Assert;
 
 public class ValidationTestUtils {
 	
@@ -86,7 +84,7 @@ public class ValidationTestUtils {
 	// check if any one of the sub-fields is present
 	void checkFailureForMissingValue(List<ValidationFailureDetails> failures, String field, String[] subFields) {
 		if (CollectionUtils.isEmpty(failures)) {
-			fail("List of failures is null/empty!");
+			Assert.fail("List of failures is null/empty!");
 		} else {
 			boolean found = false;
 			int i = 0;
@@ -97,7 +95,7 @@ public class ValidationTestUtils {
 				}
 				i++;
 			}
-			assertTrue(failures.toString(), found);
+			Assert.assertTrue(failures.toString(), found);
 		}
 	}
 
@@ -111,10 +109,10 @@ public class ValidationTestUtils {
 
 	void checkFailure(List<ValidationFailureDetails> failures, Boolean internalError, Boolean missing, Boolean semanticError, String field, String subField) {
 		if (CollectionUtils.isEmpty(failures)) {
-			fail("List of failures is null/empty!");
+			Assert.fail("List of failures is null/empty!");
 		} else {
 			boolean found = hasFailure(failures, internalError, missing, semanticError, field, subField);
-			assertTrue(failures.toString(), found);
+			Assert.assertTrue(failures.toString(), found);
 		}
 	}
 	
@@ -133,7 +131,7 @@ public class ValidationTestUtils {
 	}
 
 	List<RangerAccessTypeDef> createAccessTypeDefs(String[] names) {
-		assertFalse(names == null); // fail if null is passed in!
+		Assert.assertFalse(names == null); // fail if null is passed in!
 		List<RangerAccessTypeDef> defs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
 		for (String name : names) {
 			RangerAccessTypeDef def = mock(RangerAccessTypeDef.class);
@@ -217,7 +215,7 @@ public class ValidationTestUtils {
 			}
 			when(policyItem.getGroups()).thenReturn(groupsList);
 			
-			String[] accesses = (String[])map.get("accesses");;
+			String[] accesses = (String[])map.get("accesses");
 			Boolean[] isAllowedFlags = (Boolean[])map.get("isAllowed");
 			List<RangerPolicyItemAccess> accessesList = null;
 			if (accesses != null && isAllowedFlags != null) {

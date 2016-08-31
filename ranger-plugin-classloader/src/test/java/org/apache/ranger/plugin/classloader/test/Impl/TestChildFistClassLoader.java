@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.classloader.test.Impl;
 
 import java.io.File;
 import java.net.URL;
-import java.net.URLClassLoader;
 
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.classloader.test.TestPlugin;

@@ -21,10 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.lang.reflect.Field;
-
-import org.apache.hadoop.security.alias.CredentialShell;
-import org.apache.ranger.credentialapi.buildks;
 import org.junit.Test;
 
 public class Testbuildks {

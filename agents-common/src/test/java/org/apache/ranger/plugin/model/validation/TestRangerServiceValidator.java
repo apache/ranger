@@ -19,9 +19,6 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,10 +29,9 @@ import java.util.Map;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,7 +54,7 @@ public class TestRangerServiceValidator {
 	
 	void checkFailure_isValid(RangerServiceValidator validator, RangerService service, Action action, List<ValidationFailureDetails> failures, String errorType, String field, String subField) {
 		failures.clear();
-		assertFalse(validator.isValid(service, action, failures));
+		Assert.assertFalse(validator.isValid(service, action, failures));
 		switch (errorType) {
 		case "missing":
 			_utils.checkFailureForMissingValue(failures, field, subField);
@@ -70,7 +66,7 @@ public class TestRangerServiceValidator {
 			_utils.checkFailureForInternalError(failures);
 			break;
 		default:
-			fail("Unsupported errorType[" + errorType + "]");
+			Assert.fail("Unsupported errorType[" + errorType + "]");
 			break;
 		}
 	}
@@ -79,13 +75,13 @@ public class TestRangerServiceValidator {
 	public void testIsValid_failures() throws Exception {
 		RangerService service = mock(RangerService.class);
 		// passing in a null service to the check itself is an error
-		assertFalse(_validator.isValid((RangerService)null, _action, _failures));
+		Assert.assertFalse(_validator.isValid((RangerService)null, _action, _failures));
 		_utils.checkFailureForMissingValue(_failures, "service");
 
 		// id is required for update
 		when(service.getId()).thenReturn(null);
 		// let's verify the failure and the sort of error information that is returned (for one of these)
-		// assert that among the failure reason is one about id being missing.
+		// Assert.assert that among the failure reason is one about id being missing.
 		checkFailure_isValid(_validator, service, Action.UPDATE, _failures, "missing", "id");
 		when(service.getId()).thenReturn(7L);
 
@@ -190,7 +186,7 @@ public class TestRangerServiceValidator {
 		// service def exists
 		when(_store.getServiceDefByName("aType")).thenReturn(serviceDef);
 
-		assertTrue(_validator.isValid(service, Action.CREATE, _failures));
+		Assert.assertTrue(_validator.isValid(service, Action.CREATE, _failures));
 
 		// for update to work the only additional requirement is that id is required and service should exist
 		// if name is not null and it points to a service then it should match the id
@@ -199,29 +195,29 @@ public class TestRangerServiceValidator {
 		when(existingService.getId()).thenReturn(Long.valueOf(7L));
 		when(_store.getService(7L)).thenReturn(existingService);
 		when(_store.getServiceByName("aName")).thenReturn(existingService);
-		assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
+		Assert.assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
 		// name need not point to a service for update to work, of course.
 		when(_store.getServiceByName("aName")).thenReturn(null);
-		assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
+		Assert.assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
 	}
 
 	@Test
 	public void test_isValid_withId_errorConditions() throws Exception {
 		// api that takes in long is only supported for delete currently
-		assertFalse(_validator.isValid(1L, Action.CREATE, _failures));
+		Assert.assertFalse(_validator.isValid(1L, Action.CREATE, _failures));
 		_utils.checkFailureForInternalError(_failures);
 		// passing in a null id is a failure!
 		_validator = new RangerServiceValidator(_store);
-		_failures.clear(); assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
+		_failures.clear(); Assert.assertFalse(_validator.isValid((Long)null, Action.DELETE, _failures));
 		_utils.checkFailureForMissingValue(_failures, "id");
 		// if service with that id does not exist then that, is ok because delete is idempotent
 		when(_store.getService(1L)).thenReturn(null);
 		when(_store.getService(2L)).thenThrow(new Exception());
-		_failures.clear(); assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
-		assertTrue(_failures.isEmpty());
+		_failures.clear(); Assert.assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
+		Assert.assertTrue(_failures.isEmpty());
 
-		_failures.clear(); assertTrue(_validator.isValid(2L, Action.DELETE, _failures));
-		assertTrue(_failures.isEmpty());
+		_failures.clear(); Assert.assertTrue(_validator.isValid(2L, Action.DELETE, _failures));
+		Assert.assertTrue(_failures.isEmpty());
 	}
 	
 	@Test
@@ -229,7 +225,7 @@ public class TestRangerServiceValidator {
 		_validator = new RangerServiceValidator(_store);
 		RangerService service = mock(RangerService.class);
 		when(_store.getService(1L)).thenReturn(service);
-		assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
+		Assert.assertTrue(_validator.isValid(1L, Action.DELETE, _failures));
 	}
 	
 	private ServiceStore _store;
