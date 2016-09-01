@@ -519,7 +519,7 @@ define(function(require){
 						setTimeout(function(){ 
 							p.abort();
 							console.log('connection timeout for resource path request...!!');
-						}, 7000);
+						}, 10000);
 					},
 					open : function(){
 						$(this).removeClass('working');
@@ -620,7 +620,7 @@ define(function(require){
 						url: options.lookupURL,
 						type : 'POST',
 						params : {
-							timeout: 3000,
+							timeout: 10000,
 							contentType: "application/json; charset=utf-8",
 						},
 						cache: false,
