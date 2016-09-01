@@ -280,15 +280,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 					final ServiceDBStore dbStore = this;
 					predicateUtil = new ServicePredicateUtil(dbStore);
 
-
-					txTemplate.execute(new TransactionCallback<Object>() {
-						@Override
-	                    public Object doInTransaction(TransactionStatus status) {
-							EmbeddedServiceDefsUtil.instance().init(dbStore);
-							getServiceUpgraded();
-							return null;
-	                    }
-					});
+					try {
+						txTemplate.execute(new TransactionCallback<Object>() {
+							@Override
+							public Object doInTransaction(TransactionStatus status) {
+								EmbeddedServiceDefsUtil.instance().init(dbStore);
+								getServiceUpgraded();
+								createGenericUser();
+								return null;
+							}
+						});
+					} catch (Throwable ex) {
+						LOG.fatal("ServiceDefDBStore.initStore(): Failed to update DB: " + ex);
+					}
 
 					legacyServiceDefsInitDone = true;
 				}
@@ -3816,5 +3820,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return ret;
 		}
 		return RangerPolicyEngine.AUDIT_DEFAULT;
+	}
+
+	private void createGenericUser() {
+		VXUser genericUser = new VXUser();
+		genericUser.setName(RangerPolicyEngine.USER_CURRENT);
+		xUserService.createXUserWithOutLogin(genericUser);
 	}
 }
