@@ -112,13 +112,15 @@ define(function(require){
 						cache : false,
 						async : false
 					})
-					this.rangerServiceDefModel = new RangerServiceDef();
-					this.rangerServiceDefModel.url = XAUtils.getRangerServiceDef(rangerService.get('type'));
-					this.rangerServiceDefModel.fetch({
-						cache : false,
-						async : false
-					})
-					this.repositoryType = this.rangerServiceDefModel.get('name');
+					if(!_.isUndefined(rangerService.get('type'))){
+						this.rangerServiceDefModel = new RangerServiceDef();
+						this.rangerServiceDefModel.url = XAUtils.getRangerServiceDef(rangerService.get('type'));
+						this.rangerServiceDefModel.fetch({
+							cache : false,
+							async : false
+						})
+						this.repositoryType = this.rangerServiceDefModel.get('name');
+					}
 				}
 				
 				//get policy created/updated date/owner
