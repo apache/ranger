@@ -40,7 +40,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean     delegateAdmin  = false;
     private boolean     hasAllPerms    = false;
     private boolean     hasPublicGroup = false;
-
+    private boolean     hasCurrentUser = false;
 
     // For computation of priority
     private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING   = "*";
@@ -59,7 +59,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private static final int RANGER_POLICY_EVAL_SCORE_RESOURCE_DISCOUNT_IS_EXCLUDES                      =  5;
     private static final int RANGER_POLICY_EVAL_SCORE_RESORUCE_DISCOUNT_IS_RECURSIVE                     =  5;
     private static final int RANGER_POLICY_EVAL_SCORE_CUSTOM_CONDITION_PENALTY                           =  5;
-
+    private static final int RANGER_POLICY_EVAL_SCORE_DYNAMIC_RESOURCE_EVAL_PENALTY                      =  20;
 
     @Override
     public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
@@ -77,9 +77,17 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
         hasAllPerms = checkIfHasAllPerms();
 
+        for (String user : users) {
+            if (user.equalsIgnoreCase(RangerPolicyEngine.USER_CURRENT)) {
+                hasCurrentUser = true;
+                break;
+            }
+        }
+
         for (String group : groups) {
             if (group.equalsIgnoreCase(RangerPolicyEngine.GROUP_PUBLIC)) {
                 hasPublicGroup = true;
+                break;
             }
         }
 
@@ -185,10 +193,13 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
                 }
             }
         }
+        if (needsDynamicEval()) {
+            evalOrder += RANGER_POLICY_EVAL_SCORE_DYNAMIC_RESOURCE_EVAL_PENALTY;
+        }
 
         evalOrder -= Math.min(RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_RESOURCE, resourceDiscount);
 
-        if (hasPublicGroup) {
+        if (hasPublicGroup || hasCurrentUser) {
             evalOrder -= RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS;
         } else {
             evalOrder -= Math.min(groups.size() + users.size(), RANGER_POLICY_EVAL_SCORE_MAX_DISCOUNT_USERSGROUPS);
@@ -227,7 +238,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
         boolean ret = false;
 
-        if (hasPublicGroup || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
+        if (hasPublicGroup || hasCurrentUser || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
             if(request.isAccessTypeDelegatedAdmin()) {
                 ret = delegateAdmin;
             } else if(hasAllPerms) {
@@ -243,7 +254,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean hasMatchablePolicyItem(String user, Set<String> userGroups, String accessType) {
         boolean ret = false;
 
-        if (hasPublicGroup || users.contains(user) || CollectionUtils.containsAny(groups, userGroups)) {
+        if (hasPublicGroup || hasCurrentUser || users.contains(user) || CollectionUtils.containsAny(groups, userGroups)) {
             boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 
             if(isAdminAccess) {
@@ -276,6 +287,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
 	            groups.addAll(item.getGroups());
 	            users.addAll(item.getUsers());
+
 	        }
         }
     }

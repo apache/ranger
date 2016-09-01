@@ -72,7 +72,7 @@ public class RangerHiveResourcesAccessedTogetherCondition extends RangerAbstract
 		if (isInitialized && CollectionUtils.isNotEmpty(matchers)) {
 			RangerRequestedResources resources = RangerAccessRequestUtil.getRequestedResourcesFromContext(request.getContext());
 
-			ret = resources == null ? false : !resources.isMutuallyExcluded(matchers);
+			ret = resources == null ? false : !resources.isMutuallyExcluded(matchers, request.getContext());
 		} else {
 			LOG.error("RangerHiveResourcesAccessedTogetherCondition.isMatched() - condition is not initialized correctly and will NOT be enforced");
 		}

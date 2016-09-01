@@ -326,8 +326,8 @@ public class PublicAPIsv2 {
 	@POST
 	@Path("/api/policy/apply/")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy applyPolicy(RangerPolicy policy) { // new API
-		return serviceREST.applyPolicy(policy);
+	public RangerPolicy applyPolicy(RangerPolicy policy, @Context HttpServletRequest request) { // new API
+		return serviceREST.applyPolicy(policy, request);
 	}
 
 	@PUT

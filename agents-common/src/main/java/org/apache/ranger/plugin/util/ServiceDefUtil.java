@@ -110,6 +110,28 @@ public class ServiceDefUtil {
         return ret;
     }
 
+    public static String getOption(Map<String, String> options, String name, String defaultValue) {
+        String ret = options != null && name != null ? options.get(name) : null;
+
+        if(ret == null) {
+            ret = defaultValue;
+        }
+
+        return ret;
+    }
+
+    public static boolean getBooleanOption(Map<String, String> options, String name, boolean defaultValue) {
+        String val = getOption(options, name, null);
+
+        return val == null ? defaultValue : Boolean.parseBoolean(val);
+    }
+
+    public static char getCharOption(Map<String, String> options, String name, char defaultValue) {
+        String val = getOption(options, name, null);
+
+        return StringUtils.isEmpty(val) ? defaultValue : val.charAt(0);
+    }
+
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {
         if(serviceDef != null && serviceDef.getDataMaskDef() != null) {
             List<RangerResourceDef>   dataMaskResources   = serviceDef.getDataMaskDef().getResources();
@@ -282,4 +304,5 @@ public class ServiceDefUtil {
 
         return ret;
     }
+
 }

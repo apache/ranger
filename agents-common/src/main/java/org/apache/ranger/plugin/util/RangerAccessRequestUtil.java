@@ -37,6 +37,8 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_TAG_OBJECT          = "TAG_OBJECT";
 	public static final String KEY_CONTEXT_RESOURCE            = "RESOURCE";
 	public static final String KEY_CONTEXT_REQUESTED_RESOURCES = "REQUESTED_RESOURCES";
+	public static final String KEY_TOKEN_NAMESPACE = "token:";
+	public static final String KEY_USER = "USER";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, List<RangerTag> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -124,5 +126,23 @@ public class RangerAccessRequestUtil {
 		}
 
 		return ret;
+	}
+
+	public static void setCurrentUserInContext(Map<String, Object> context, String user) {
+		setTokenInContext(context, KEY_USER, user);
+	}
+
+	public static String getCurrentUserFromContext(Map<String, Object> context) {
+		Object ret = getTokenFromContext(context, KEY_USER);
+		return ret != null ? ret.toString() : "";
+	}
+
+	public static void setTokenInContext(Map<String, Object> context, String tokenName, Object tokenValue) {
+		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
+		context.put(tokenNameWithNamespace, tokenValue);
+	}
+	public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
+		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
+		return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
 	}
 }

@@ -53,13 +53,25 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         Map<String, String> matcherOptions = resourceDef.getMatcherOptions();
-        String              strIgnoreCase  = matcherOptions != null ? matcherOptions.get(RangerAbstractResourceMatcher.OPTION_IGNORE_CASE) : null;
-        String              strWildcard    = matcherOptions != null ? matcherOptions.get(RangerAbstractResourceMatcher.OPTION_WILD_CARD) : null;
+
+        boolean optReplaceTokens = RangerAbstractResourceMatcher.getOptionReplaceTokens(matcherOptions);
+
+        String tokenReplaceSpecialChars = "";
+
+        if(optReplaceTokens) {
+            char delimiterStart  = RangerAbstractResourceMatcher.getOptionDelimiterStart(matcherOptions);
+            char delimiterEnd    = RangerAbstractResourceMatcher.getOptionDelimiterEnd(matcherOptions);
+            char delimiterEscape = RangerAbstractResourceMatcher.getOptionDelimiterEscape(matcherOptions);
+
+            tokenReplaceSpecialChars += delimiterStart;
+            tokenReplaceSpecialChars += delimiterEnd;
+            tokenReplaceSpecialChars += delimiterEscape;
+        }
 
         this.resourceName  = resourceDef.getName();
-        this.optIgnoreCase = strIgnoreCase != null ? Boolean.parseBoolean(strIgnoreCase) : false;
-        this.optWildcard   = strWildcard != null ? Boolean.parseBoolean(strWildcard) : false;
-        this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS : "";
+        this.optIgnoreCase = RangerAbstractResourceMatcher.getOptionIgnoreCase(matcherOptions);
+        this.optWildcard   = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
+        this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
         this.root          = new TrieNode(Character.valueOf((char)0));
 
         for(T evaluator : evaluators) {
@@ -79,7 +91,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             } else {
                 RangerResourceMatcher resourceMatcher = evaluator.getResourceMatcher(resourceName);
 
-                if(resourceMatcher != null && resourceMatcher.isMatchAny()) {
+                if(resourceMatcher != null && (resourceMatcher.isMatchAny())) {
                     root.addWildcardEvaluator(evaluator);
                 } else {
                     if(CollectionUtils.isNotEmpty(policyResource.getValues())) {

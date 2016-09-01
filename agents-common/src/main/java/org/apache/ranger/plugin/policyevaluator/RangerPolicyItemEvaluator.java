@@ -47,7 +47,6 @@ public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEv
 
 	int getEvalOrder();
 
-
 	boolean isMatch(RangerAccessRequest request);
 
 	boolean matchUserGroup(String user, Set<String> userGroups);

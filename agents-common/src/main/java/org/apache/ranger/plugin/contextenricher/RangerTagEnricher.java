@@ -132,7 +132,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerTagEnricher.enrich(" + request + ")");
 		}
 
-		List<RangerTag> matchedTags = findMatchingTags(request.getResource());
+		List<RangerTag> matchedTags = findMatchingTags(request.getResource(), request.getContext());
 
 		RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 
@@ -202,9 +202,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private List<RangerTag> findMatchingTags(final RangerAccessResource resource) {
+	private List<RangerTag> findMatchingTags(final RangerAccessResource resource, final Map<String, Object> evalContext) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagEnricher.findMatchingTags(" + resource + ")");
+			LOG.debug("==> RangerTagEnricher.findMatchingTags(" + resource + ", " + evalContext + ")");
 		}
 
 		List<RangerTag> ret = null;
@@ -216,7 +216,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			for (RangerServiceResourceMatcher resourceMatcher : serviceResourceMatchers) {
 
-				boolean matchResult = resourceMatcher.isMatch(resource);
+				boolean matchResult = resourceMatcher.isMatch(resource, evalContext);
 
 				if (matchResult) {
 					if (ret == null) {
@@ -237,7 +237,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagEnricher.findMatchingTags(" + resource + ")");
+			LOG.debug("<== RangerTagEnricher.findMatchingTags(" + resource + ", " + evalContext + ")");
 		}
 
 		return ret;

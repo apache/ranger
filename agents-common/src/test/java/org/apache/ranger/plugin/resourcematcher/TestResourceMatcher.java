@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -39,7 +40,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class TestResourceMatcher {
-	static Gson               gsonBuilder  = null;
+	static Gson gsonBuilder = null;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -74,6 +75,20 @@ public class TestResourceMatcher {
 		runTestsFromResourceFiles(tests);
 	}
 
+	@Test
+    public void testResourceMatcher_dynamic() throws Exception {
+        String[] tests = { "/resourcematcher/test_resourcematcher_dynamic.json"};
+
+        runTestsFromResourceFiles(tests);
+    }
+
+	@Test
+	public void testResourceMatcher_wildcards_as_delimiters() throws Exception {
+		String[] tests = { "/resourcematcher/test_resourcematcher_wildcards_as_delimiters.json"};
+
+		runTestsFromResourceFiles(tests);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -97,7 +112,7 @@ public class TestResourceMatcher {
 				}
 
 				boolean expected = oneTest.result;
-				boolean result   = matcher.isMatch(oneTest.input);
+				boolean result   = matcher.isMatch(oneTest.input, oneTest.evalContext);
 
 				assertEquals("isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input, expected, result);
 			}
@@ -130,6 +145,7 @@ public class TestResourceMatcher {
 			class OneTest {
 				String  name;
 				String  input;
+				Map<String, Object> evalContext;
 				boolean result;
 			}
 		}

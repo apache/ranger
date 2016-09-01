@@ -83,6 +83,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -889,7 +890,7 @@ public class ServiceREST {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 					}
 
-					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 	
 					if(policy != null) {
 						boolean policyUpdated = false;
@@ -1001,7 +1002,7 @@ public class ServiceREST {
 					}
 
 					if (isAllowed) {
-						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
 						if(policy != null) {
 							boolean policyUpdated = false;
@@ -1101,7 +1102,7 @@ public class ServiceREST {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 					}
 
-					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
 					if(policy != null) {
 						boolean policyUpdated = false;
@@ -1179,7 +1180,7 @@ public class ServiceREST {
 					}
 
 					if (isAllowed) {
-						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource);
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
 						if(policy != null) {
 							boolean policyUpdated = false;
@@ -1313,7 +1314,7 @@ public class ServiceREST {
 	@POST
 	@Path("/policies/apply")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy applyPolicy(RangerPolicy policy) {
+	public RangerPolicy applyPolicy(RangerPolicy policy, @Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.applyPolicy(" + policy + ")");
 		}
@@ -1328,7 +1329,8 @@ public class ServiceREST {
 					throw new Exception("Applied policy contains condition(s); not supported:" + policy);
 				}
 
-				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy.getService(), policy.getResources());
+				String user = request.getRemoteUser();
+				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy.getService(), policy.getResources(), StringUtils.isNotBlank(user) ? user :"admin");
 
 				if (existingPolicy == null) {
 					ret = createPolicy(policy, null);
@@ -1959,14 +1961,18 @@ public class ServiceREST {
 		}
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource, String user) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ")");
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + user + ")");
 		}
 
 		RangerPolicy       ret          = null;
 		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource) : null;
+
+		Map<String, Object> evalContext = new HashMap<String, Object>();
+		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource, evalContext) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -1974,20 +1980,24 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resource + "): " + ret);
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + user + "): " + ret);
 		}
 
 		return ret;
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, Map<String, RangerPolicyResource> resources) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, Map<String, RangerPolicyResource> resources, String user) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resources + ")");
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resources + ", " + user + ")");
 		}
 
 		RangerPolicy       ret          = null;
 		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resources) : null;
+
+		Map<String, Object> evalContext = new HashMap<String, Object>();
+		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resources, evalContext) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -1995,7 +2005,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resources + "): " + ret);
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resources + ", " + user + "): " + ret);
 		}
 
 		return ret;

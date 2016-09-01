@@ -21,7 +21,11 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,21 +33,21 @@ public class RangerPathResourceMatcherTest {
 
     Object[][] data = {
             // { resource, policy, optWildcard, recursive, result
-            { "/app/hive/test.db",    "/",                 true, false, false },
-            { "/app/hive/test.db",    "/",                 true, true,  true },
-            { "/app/hive/test.db",    "/*",                true, false, true },
-            { "/app/hbase/test.tbl",  "/*",                true, false, true },
-            { "/app/hive/test.db",    "/app",              true, false, false },
-            { "/app/hive/test.db",    "/app/",             true, false, false },
-            { "/app/hive/test.db",    "/app/",             true, true,  true },
-            { "/app/hive/test.db",    "/app/*",            true, false, true },
-            { "/app/hbase/test.tbl",  "/app/*",            true, false, true },
-            { "/app/hive/test.db",    "/app/hive/*",       true, false, true },
-            { "/app/hbase/test.tbl",  "/app/hive/*",       true, false, false },
-            { "/app/hive/test.db",    "/app/hive/test*",   true, false, true },
-            { "/app/hbase/test.tbl",  "/app/hive/test*",   true, false, false },
-            { "/app/hive/test.db",    "/app/hive/test.db", true, false, true },
-            { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false },
+            { "/app/hive/test.db",    "/",                 true, false, false, "user" },
+            { "/app/hive/test.db",    "/",                 true, true,  true, "user" },
+            { "/app/hive/test.db",    "/*",                true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/*",                true, false, true, "user" },
+            { "/app/hive/test.db",    "/app",              true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/",             true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/",             true, true,  true, "user" },
+            { "/app/hive/test.db",    "/app/*",            true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/*",            true, false, true, "user" },
+            { "/app/hive/test.db",    "/app/hive/*",       true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/*",       true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test*",   true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test*",   true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test.db", true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false, "user" },
     };
 
     @Test
@@ -54,9 +58,13 @@ public class RangerPathResourceMatcherTest {
             boolean optWildcard = (boolean)row[2];
             boolean isRecursive = (boolean)row[3];
             boolean result = (boolean)row[4];
+            String user = (String) row[5];
+
+            Map<String, Object> evalContext = new HashMap<String, Object>();
+            RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
-            assertEquals(getMessage(row), result, matcher.isMatch(resource));
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
         }
     }
 

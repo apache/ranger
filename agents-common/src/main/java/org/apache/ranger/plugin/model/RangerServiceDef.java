@@ -1260,7 +1260,6 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String              rbKeyDescription       = null;
 		private String              rbKeyValidationMessage = null;
 
-
 		public RangerResourceDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
@@ -1931,6 +1930,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			result = prime * result + ((name == null) ? 0 : name.hashCode());
 			result = prime * result
 					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+
 			return result;
 		}
 
