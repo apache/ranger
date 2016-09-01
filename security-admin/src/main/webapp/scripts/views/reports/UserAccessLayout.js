@@ -342,7 +342,7 @@ define(function(require) {'use strict';
 					},
 				policyType: {
 					label: 'Policy Type',
-					cell: Backgrid.HtmlCell.extend({className: 'cellWidth-1', className: 'html-cell'}),
+					cell: Backgrid.HtmlCell.extend({className: 'html-cell, cellWidth-1'}),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
 						fromRaw: function(rawValue,model){
 							var policyType = model.get("policyType");

@@ -23,7 +23,6 @@ define(function(require){
 
 	var VXPortalUserBase	= require('model_bases/VXPortalUserBase');
 	var XAEnums			= require('utils/XAEnums');
-	var XAUtils			= require('utils/XAUtils');
 	var localization		= require('utils/XALangSupport');
 	
 	var VXPortalUser = VXPortalUserBase.extend(
@@ -94,6 +93,7 @@ define(function(require){
 				userRoleList : {
 					type : 'Select',
 					options : function(callback, editor){
+						var XAUtils = require('utils/XAUtils');
 						var userTypes = _.filter(XAEnums.UserRoles,function(m){return m.label != 'Unknown'});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);

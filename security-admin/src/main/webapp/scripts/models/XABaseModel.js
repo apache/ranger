@@ -27,7 +27,6 @@ define(function(require){
 	'use strict';
 
 	var Backbone = require('backbone');
-	var XAUtils	= require('utils/XAUtils');
 	
 	var XABaseModel = Backbone.Model.extend(
 	/** @lends XABaseModel.prototype */
@@ -41,7 +40,11 @@ define(function(require){
 			
 		},
 		bindErrorEvents :function(){
-			this.bind("error", XAUtils.defaultErrorHandler);
+			//Moved require inside fuctn expression due to ie issue
+			this.bind("error", function(){
+				var XAUtils = require('utils/XAUtils');
+			        XAUtils.defaultErrorHandler();
+			});
 		},
 		/**
 		 * toString for a model. Every model should implement this function.
