@@ -2499,6 +2499,7 @@ public class TestServiceDBStore {
 		thrown.expect(Exception.class);
 		List<RangerPolicy> dbRangerPolicy = serviceDBStore.getServicePolicies(
 				Id, filter);
+        Assert.assertFalse(dbRangerPolicy.isEmpty());
 		Mockito.verify(daoManager).getXXService();
 	}
 
@@ -2607,8 +2608,8 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
-				.getPaginatedServicePolicies(rangerService.getId(), filter);
+		//PList<RangerPolicy> dbRangerPolicyList =
+        serviceDBStore.getPaginatedServicePolicies(rangerService.getId(), filter);
 		Mockito.verify(daoManager).getXXService();
 	}
 

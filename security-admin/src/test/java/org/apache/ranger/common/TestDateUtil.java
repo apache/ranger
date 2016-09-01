@@ -30,6 +30,8 @@ public class TestDateUtil {
 	@Autowired
 	DateUtil dateUtil = new DateUtil();
 
+    @Test
+    @Ignore
 	public void testGetDateFromNow() {
 		int days = 1;		
 		Date dateCheck= dateUtil.getDateFromNow(days);

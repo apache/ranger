@@ -118,8 +118,11 @@ public class HIVERangerAuthorizerTest {
         
         // Just test to make sure it's working
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
-        Assert.assertTrue(resultSet.next());
-        Assert.assertEquals("Mr.", resultSet.getString(1));
+        if (resultSet.next()) {
+            Assert.assertEquals("Mr.", resultSet.getString(1));
+        } else {
+            Assert.fail("No ResultSet found");
+        }
         
         statement.close();
         connection.close();
@@ -142,9 +145,12 @@ public class HIVERangerAuthorizerTest {
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
-        Assert.assertTrue(resultSet.next());
-        Assert.assertEquals("Mr.", resultSet.getString(1));
-        Assert.assertEquals(100, resultSet.getInt(2));
+        if (resultSet.next()) {
+            Assert.assertEquals("Mr.", resultSet.getString(1));
+            Assert.assertEquals(100, resultSet.getInt(2));
+        } else {
+            Assert.fail("No ResultSet found");
+        }
 
         statement.close();
         connection.close();
@@ -184,8 +190,11 @@ public class HIVERangerAuthorizerTest {
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
-        Assert.assertTrue(resultSet.next());
-        Assert.assertEquals(100, resultSet.getInt(1));
+        if (resultSet.next()) {
+            Assert.assertEquals(100, resultSet.getInt(1));
+        } else {
+            Assert.fail("No ResultSet found");
+        }
 
         statement.close();
         connection.close();
@@ -204,8 +213,11 @@ public class HIVERangerAuthorizerTest {
                 Statement statement = connection.createStatement();
 
                 ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
-                Assert.assertTrue(resultSet.next());
-                Assert.assertEquals(100, resultSet.getInt(1));
+                if (resultSet.next()) {
+                    Assert.assertEquals(100, resultSet.getInt(1));
+                } else {
+                    Assert.fail("No ResultSet found");
+                }
 
                 statement.close();
                 connection.close();
@@ -270,9 +282,12 @@ public class HIVERangerAuthorizerTest {
         statement.execute("insert into words (word, count) values ('newword', 5)");
         
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where word == 'newword'");
-        Assert.assertTrue(resultSet.next());
-        Assert.assertEquals("newword", resultSet.getString(1));
-        Assert.assertEquals(5, resultSet.getInt(2));
+        if (resultSet.next()) {
+            Assert.assertEquals("newword", resultSet.getString(1));
+            Assert.assertEquals(5, resultSet.getInt(2));
+        } else {
+            Assert.fail("No ResultSet found");
+        }
 
         statement.close();
         connection.close();

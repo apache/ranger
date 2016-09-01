@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;

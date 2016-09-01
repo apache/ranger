@@ -56,7 +56,6 @@ import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUserPermission;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

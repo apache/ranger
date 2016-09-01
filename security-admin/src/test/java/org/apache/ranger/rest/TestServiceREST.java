@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;

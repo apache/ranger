@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
 
 public class TestRangerCSRFPreventionFilter {
 	
@@ -52,7 +51,7 @@ public class TestRangerCSRFPreventionFilter {
 		RangerCSRFPreventionFilter filter = new RangerCSRFPreventionFilter();
 		filter.doFilter(mockReq, mockRes, mockChain);
 
-		verify(mockRes, atLeastOnce()).sendError(HttpServletResponse.SC_BAD_REQUEST, EXPECTED_MESSAGE);
+		Mockito.verify(mockRes, atLeastOnce()).sendError(HttpServletResponse.SC_BAD_REQUEST, EXPECTED_MESSAGE);
 		Mockito.verifyZeroInteractions(mockChain);
 	}
 	
