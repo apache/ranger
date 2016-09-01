@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public interface RangerPolicyEngine {
 	String GROUP_PUBLIC   = "public";
@@ -37,7 +38,7 @@ public interface RangerPolicyEngine {
 	String AUDIT_NONE = "audit-none";
 	String AUDIT_DEFAULT = "audit-default";
 
-	String USER_CURRENT = "{USER}";
+	String USER_CURRENT = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 
 	String getServiceName();
 
