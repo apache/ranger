@@ -19,15 +19,30 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.util.StringTokenReplacer;
+
+import java.util.Map;
+
 abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
+    private static final Log LOG = LogFactory.getLog(ResourceMatcher.class);
+
     protected final String value;
+    protected StringTokenReplacer tokenReplacer;
+
+    static final int DYNAMIC_EVALUATION_PENALTY = 8;
 
     ResourceMatcher(String value) { this.value = value; }
 
-    abstract boolean isMatch(String str);
+    abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
     abstract int getPriority();
 
     boolean isMatchAny() { return value != null && value.length() == 0; }
+
+    boolean getNeedsDynamicEval() {
+        return tokenReplacer != null;
+    }
 
     @Override
     public int compareTo(ResourceMatcher other) { return Integer.compare(getPriority(), other.getPriority()); }
@@ -35,5 +50,33 @@ abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
     @Override
     public String toString() {
         return this.getClass().getName() + "(" + this.value + ")";
+    }
+
+    void setDelimiters(char startDelimiterChar, char endDelimiterChar, char escapeChar, String tokenPrefix) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> setDelimiters(value= " + value + ", startDelimiter=" + startDelimiterChar +
+                    ", endDelimiter=" + endDelimiterChar + ", escapeChar=" + escapeChar + ", prefix=" + tokenPrefix);
+        }
+
+        if(value != null && (value.indexOf(escapeChar) != -1 || (value.indexOf(startDelimiterChar) != -1 && value.indexOf(endDelimiterChar) != -1))) {
+            tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== setDelimiters(value= " + value + ", startDelimiter=" + startDelimiterChar +
+                    ", endDelimiter=" + endDelimiterChar + ", escapeChar=" + escapeChar + ", prefix=" + tokenPrefix);
+        }
+    }
+
+    String getExpandedValue(Map<String, Object> evalContext) {
+        final String ret;
+
+        if(tokenReplacer != null) {
+            ret = tokenReplacer.replaceTokens(value, evalContext);
+        } else {
+            ret = value;
+        }
+
+        return ret;
     }
 }

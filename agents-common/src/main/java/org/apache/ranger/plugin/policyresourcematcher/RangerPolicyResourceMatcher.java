@@ -40,17 +40,19 @@ public interface RangerPolicyResourceMatcher {
 
 	RangerResourceMatcher getResourceMatcher(String resourceName);
 
-	boolean isMatch(RangerAccessResource resource);
+	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isMatch(Map<String, RangerPolicyResource> resources);
+	boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(RangerAccessResource resource);
+	boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isHeadMatch(RangerAccessResource resource);
+	boolean isHeadMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isExactHeadMatch(RangerAccessResource resource);
+	boolean isExactHeadMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources);
+	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
+
+	boolean getNeedsDynamicEval();
 
 	StringBuilder toString(StringBuilder sb);
 }

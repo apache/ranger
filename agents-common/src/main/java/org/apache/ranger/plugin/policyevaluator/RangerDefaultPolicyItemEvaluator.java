@@ -20,6 +20,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -47,6 +48,8 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	private static final Log PERF_POLICYITEM_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyitem.request");
 	private static final Log PERF_POLICYCONDITION_INIT_LOG = RangerPerfTracer.getPerfLogger("policycondition.init");
 	private static final Log PERF_POLICYCONDITION_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policycondition.request");
+
+	private boolean hasCurrentUser = false;
 
 	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
 		super(serviceDef, policy, policyItem, policyItemType, policyItemIndex, options);
@@ -99,6 +102,9 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			}
 			RangerPerfTracer.log(perf);
 		}
+
+		List<String> users = policyItem != null ? policyItem.getUsers() : null;
+		this.hasCurrentUser = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.USER_CURRENT);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyItemEvaluator(policyId=" + policyId + ", conditionsCount=" + getConditionEvaluators().size() + ")");
@@ -172,7 +178,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 
 		if(policyItem != null) {
 			if(!ret && user != null && policyItem.getUsers() != null) {
-				ret = policyItem.getUsers().contains(user);
+				ret = hasCurrentUser || policyItem.getUsers().contains(user);
 			}
 
 			if(!ret && userGroups != null && policyItem.getGroups() != null) {

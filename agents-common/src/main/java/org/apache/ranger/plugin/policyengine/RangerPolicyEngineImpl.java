@@ -209,6 +209,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			((RangerAccessRequestImpl) request).extractAndSetClientIPAddress(useForwardedIPAddress, trustedProxyAddresses);
 		}
 
+		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+
 		List<RangerContextEnricher> enrichers = allContextEnrichers;
 
 		if(!CollectionUtils.isEmpty(enrichers)) {
@@ -461,15 +463,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource) {
+	public List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, Map<String, Object> evalContext) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + ", " + evalContext + ")");
 		}
 
 		List<RangerPolicy> ret = null;
 
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-			if (evaluator.isCompleteMatch(resource)) {
+			if (evaluator.isCompleteMatch(resource, evalContext)) {
 				if(ret == null) {
 					ret = new ArrayList<RangerPolicy>();
 				}
@@ -479,22 +481,22 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicies(" + resource + ", " + evalContext + "): " + ret);
 		}
 
 		return ret;
 	}
 
 	@Override
-	public List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources) {
+	public List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicies(" + resources + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.getExactMatchPolicies(" + resources + ", " + evalContext + ")");
 		}
 
 		List<RangerPolicy> ret = null;
 
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-			if (evaluator.isCompleteMatch(resources)) {
+			if (evaluator.isCompleteMatch(resources, evalContext)) {
 				if(ret == null) {
 					ret = new ArrayList<RangerPolicy>();
 				}
@@ -504,7 +506,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicies(" + resources + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.getExactMatchPolicies(" + resources + ", " + evalContext + "): " + ret);
 		}
 
 		return ret;
@@ -672,8 +674,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
 						tagEvalResult.incrementEvaluatedPoliciesCount();
-						if(! evaluator.isMatch(tagEvalRequest.getResource())) 
-							continue;
 
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
@@ -973,6 +973,7 @@ class RangerTagAccessRequest extends RangerAccessRequestImpl {
 
 		RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
 		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
+		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
 		super.setContext(requestContext);
 

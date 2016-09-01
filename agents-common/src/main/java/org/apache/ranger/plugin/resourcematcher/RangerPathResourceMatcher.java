@@ -19,16 +19,19 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
@@ -46,8 +49,10 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			LOG.debug("==> RangerPathResourceMatcher.init()");
 		}
 
+		Map<String, String> options = resourceDef == null ? null : resourceDef.getMatcherOptions();
+
 		policyIsRecursive = policyResource == null ? false : policyResource.getIsRecursive();
-		pathSeparatorChar = getCharOption(OPTION_PATH_SEPARATOR, DEFAULT_PATH_SEPARATOR_CHAR);
+		pathSeparatorChar = ServiceDefUtil.getCharOption(options, OPTION_PATH_SEPARATOR, DEFAULT_PATH_SEPARATOR_CHAR);
 
 		super.init();
 
@@ -57,8 +62,10 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	}
 
 	@Override
-	protected List<ResourceMatcher> buildResourceMatchers() {
-		List<ResourceMatcher> ret = new ArrayList<ResourceMatcher>();
+
+	protected ResourceMatcherWrapper buildResourceMatchers() {
+		List<ResourceMatcher> resourceMatchers = new ArrayList<ResourceMatcher>();
+		boolean needsDynamicEval = false;
 
 		for (String policyValue : policyValues) {
 			if (optWildCard && policyIsRecursive) {
@@ -71,17 +78,20 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 			if (matcher != null) {
 				if (matcher.isMatchAny()) {
-					ret.clear();
+					resourceMatchers.clear();
 					break;
-				} else {
-					ret.add(matcher);
 				}
+				if (!needsDynamicEval && matcher.getNeedsDynamicEval()) {
+					needsDynamicEval = true;
+				}
+				resourceMatchers.add(matcher);
 			}
 		}
 
-		Collections.sort(ret);
+		Collections.sort(resourceMatchers);
 
-		return ret;
+		return CollectionUtils.isNotEmpty(resourceMatchers) ?
+				new ResourceMatcherWrapper(needsDynamicEval, resourceMatchers) : null;
 	}
 
 	@Override
@@ -123,6 +133,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			ret = optIgnoreCase ? new CaseInsensitiveStartsWithMatcher(policyValue) : new CaseSensitiveStartsWithMatcher(policyValue);
 		}
 
+		ret.setDelimiters(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+
 		return ret;
 	}
 
@@ -157,7 +169,6 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity) ;
 			}
 		}
-
 		return ret;
 	}
 
@@ -182,10 +193,11 @@ final class CaseSensitiveRecursiveWildcardMatcher extends ResourceMatcher {
 		this.levelSeparatorChar = levelSeparatorChar;
 	}
 
-	boolean isMatch(String str) {
-		return RangerPathResourceMatcher.isRecursiveWildCardMatch(str, value, levelSeparatorChar, IOCase.SENSITIVE);
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		return RangerPathResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.SENSITIVE);
 	}
-	int getPriority() { return 7;}
+	int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
 final class CaseInsensitiveRecursiveWildcardMatcher extends ResourceMatcher {
@@ -195,10 +207,10 @@ final class CaseInsensitiveRecursiveWildcardMatcher extends ResourceMatcher {
 		this.levelSeparatorChar = levelSeparatorChar;
 	}
 
-	boolean isMatch(String str) {
-		return RangerPathResourceMatcher.isRecursiveWildCardMatch(str, value, levelSeparatorChar, IOCase.INSENSITIVE);
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		return RangerPathResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.INSENSITIVE);
 	}
-	int getPriority() { return 8;}
+	int getPriority() { return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 
 }
-

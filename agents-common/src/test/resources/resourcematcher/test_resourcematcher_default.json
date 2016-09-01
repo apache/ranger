@@ -1,5 +1,28 @@
 {
   "testCases":[
+        {
+            "name":"values={USER}_simple, %{USER}_simple; wildCard=true; ignoreCase=true; startDelimiter={, endDelimiter=}, escapeChar=%",
+            "resourceDef":{
+                "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":{"wildCard":true, "ignoreCase":true, "replaceTokens":true, "tokenDelimiterEscape":"%", "tokenDelimiterPrefix":"rangerToken:" }
+            },
+            "policyResource":{
+                "values": ["{rangerToken:USER}_simple", "simple_{USER}", "{USER}_simple"]
+            },
+            "tests":[
+                { "name":"all-lower","input":"admin_simple", "evalContext": { "token:USER": "admin"}, "result":true},
+                { "name":"all-upper","input":"{USER}_SIMPLE", "result":true},
+                { "name":"mixed-case","input":"_SiMpLe", "evalContext": { "token:USER": ""}, "result":true},
+                { "name":"invalid-all-lower-wild","input":"other-simple", "result":false},
+                { "name":"invalid-all-upper-wild","input":"OTHER-SIMPLE", "result":false},
+                { "name":"invalid-mixed-case-wild","input":"OtHeR-SiMpLe", "result":false},
+                { "name":"escaped-delimiter","input":"%{USER}_SiMpLe", "evalContext": { "token:USER": ""}, "result":false},
+                { "name":"not-escaped-delimiter-with-evalContext","input":"{USER}_SiMpLe", "evalContext": { "token:USER": ""}, "result":true},
+                { "name":"not-escaped-delimiter-no-evalContext","input":"{USER}_SiMpLe", "result":true},
+                { "name":"with-no-prefix","input":"simple_admin", "evalContext": { "token:USER": "admin"}, "result":false},
+                { "name":"with-no-prefix-straight-match","input":"simple_{USER}", "evalContext": { "token:USER": "admin"}, "result":true}
+            ]
+        },
   	{
       "name":"value=simple; wildCard=true; ignoreCase=true",
       "resourceDef":{

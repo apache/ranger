@@ -72,7 +72,7 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		if (isInitialized && CollectionUtils.isNotEmpty(matchers)) {
 			RangerRequestedResources resources = RangerAccessRequestUtil.getRequestedResourcesFromContext(request.getContext());
 
-			ret = resources == null ? true : resources.isMutuallyExcluded(matchers);
+			ret = resources == null ? true : resources.isMutuallyExcluded(matchers, request.getContext());
 		} else {
 			LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.isMatched() - Enforcer is not initialized correctly, Mutual Exclusion will NOT be enforced");
 		}

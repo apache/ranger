@@ -21,6 +21,8 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import org.junit.Test;
 
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
 public class RangerAbstractResourceMatcherTest {
@@ -40,7 +42,7 @@ public class RangerAbstractResourceMatcherTest {
     static class AbstractMatcherWrapper extends RangerAbstractResourceMatcher {
 
         @Override
-        public boolean isMatch(String resource) {
+        public boolean isMatch(String resource, Map<String, Object> evalContext) {
             fail("This method is not expected to be used by test!");
             return false;
         }

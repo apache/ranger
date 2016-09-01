@@ -71,11 +71,11 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	void evaluate(RangerAccessRequest request, RangerRowFilterResult result);
 
-	boolean isMatch(RangerAccessResource resource);
+	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(RangerAccessResource resource);
+	boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources);
+	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 

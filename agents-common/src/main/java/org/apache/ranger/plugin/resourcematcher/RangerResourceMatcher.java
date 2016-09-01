@@ -22,6 +22,8 @@ package org.apache.ranger.plugin.resourcematcher;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
+import java.util.Map;
+
 public interface RangerResourceMatcher {
 	void setResourceDef(RangerResourceDef resourceDef);
 
@@ -31,8 +33,10 @@ public interface RangerResourceMatcher {
 
 	boolean isMatchAny();
 
-	boolean isMatch(String resource);
+	boolean isMatch(String resource, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(String resource);
+	boolean isCompleteMatch(String resource, Map<String, Object> evalContext);
+
+	boolean getNeedsDynamicEval();
 
 }

@@ -20,18 +20,19 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.Map;
 
 
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultResourceMatcher.class);
 
 	@Override
-	public boolean isMatch(String resource) {
+	public boolean isMatch(String resource, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ")");
+			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + ")");
 		}
 
 		boolean ret = false;
@@ -40,14 +41,13 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 		if(allValuesRequested || isMatchAny) {
 			ret = isMatchAny;
 		} else {
-			if (CollectionUtils.isNotEmpty(resourceMatchers)) {
-				for (ResourceMatcher resourceMatcher : resourceMatchers) {
-					ret = resourceMatcher.isMatch(resource);
-					if (ret) {
-						break;
-					}
+			for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+				ret = resourceMatcher.isMatch(resource, evalContext);
+				if (ret) {
+					break;
 				}
 			}
+
 		}
 
 		ret = applyExcludes(allValuesRequested, ret);
@@ -67,7 +67,7 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.isMatch(" + resource + "): " + ret);
+			LOG.debug("<== RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + "): " + ret);
 		}
 
 		return ret;

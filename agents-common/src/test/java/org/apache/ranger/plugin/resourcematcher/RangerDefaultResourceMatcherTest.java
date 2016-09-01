@@ -21,7 +21,11 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -29,16 +33,16 @@ public class RangerDefaultResourceMatcherTest {
 
     Object[][] data = {
             // { resource, policy, excludes, result
-            { "*",  "*",  false, true },  // resource is all values
-            { "*",  "*",  true,  false },
-            { "*",  "a*", false, false }, // but, policy is not match any
-            { "*",  "a*", true,  false }, // ==> compare with above: exclude flag has no effect here
-            { "a*", "a",  false, false }, // resource has regex marker!
-            { "a*", "a",  true,  true },
-            { "a",  "a",  false, true },  // exact match
-            { "a",  "a",  true,  false },
-            { "a1", "a*", false, true },  // trivial regex match
-            { "a1", "a*", true,  false },
+            { "*",  "*",  false, true, "user" },  // resource is all values
+            { "*",  "*",  true,  false, "user" },
+            { "*",  "a*", false, false, "user" }, // but, policy is not match any
+            { "*",  "a*", true,  false, "user" }, // ==> compare with above: exclude flag has no effect here
+            { "a*", "a",  false, false, "user" }, // resource has regex marker!
+            { "a*", "a",  true,  true, "user" },
+            { "a",  "a",  false, true, "user" },  // exact match
+            { "a",  "a",  true,  false, "user" },
+            { "a1", "a*", false, true, "user" },  // trivial regex match
+            { "a1", "a*", true,  false, "user" },
     };
 
     @Test
@@ -48,9 +52,13 @@ public class RangerDefaultResourceMatcherTest {
             String policyValue = (String)row[1];
             boolean excludes = (boolean)row[2];
             boolean result = (boolean)row[3];
+            String user = (String) row[4];
+
+            Map<String, Object> evalContext = new HashMap<String, Object>();
+            RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, excludes);
-            assertEquals(getMessage(row), result, matcher.isMatch(resource));
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
         }
     }
 

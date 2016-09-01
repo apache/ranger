@@ -26,6 +26,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
+import java.util.Map;
+
 public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerCachedPolicyEvaluator.class);
 
@@ -47,34 +49,38 @@ public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator 
     }
 
     @Override
-    public boolean isMatch(RangerAccessResource resource) {
+    public boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerCachedPolicyEvaluator.isMatch(" + resource + ")");
+            LOG.debug("==> RangerCachedPolicyEvaluator.isMatch(" + resource + ", " + evalContext + ")");
         }
 
         boolean result = false;
 
-        // Check in the evaluator-owned cache for the match, if found return. else call super.isMatch(), add result to cache
-        RangerResourceAccessCache.LookupResult lookup = cache.lookup(resource);
+        if (needsDynamicEval()) {
+            result = super.isMatch(resource, evalContext);
+        } else {
+            // Check in the evaluator-owned cache for the match, if found return. else call super.isMatch(), add result to cache
+            RangerResourceAccessCache.LookupResult lookup = cache.lookup(resource);
 
-        if (lookup != RangerResourceAccessCache.LookupResult.IN_NOTMATCHED_CACHE) {
-            // We dont know definitely that this previously not matched
-            if (lookup != RangerResourceAccessCache.LookupResult.IN_MATCHED_CACHE) {
-                result = super.isMatch(resource);
+            if (lookup != RangerResourceAccessCache.LookupResult.IN_NOTMATCHED_CACHE) {
+                // We dont know definitely that this previously not matched
+                if (lookup != RangerResourceAccessCache.LookupResult.IN_MATCHED_CACHE) {
+                    result = super.isMatch(resource, evalContext);
 
-                // update the cache with the result of the match
-                if(result) {
-	                cache.add(resource, RangerResourceAccessCache.CacheType.MATCHED_CACHE);
+                    // update the cache with the result of the match
+                    if (result) {
+                        cache.add(resource, RangerResourceAccessCache.CacheType.MATCHED_CACHE);
+                    } else {
+                        cache.add(resource, RangerResourceAccessCache.CacheType.NOTMATCHED_CACHE);
+                    }
                 } else {
-	                cache.add(resource, RangerResourceAccessCache.CacheType.NOTMATCHED_CACHE);
+                    result = true;
                 }
-            } else {
-                result = true;
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerCachedPolicyEvaluator.isMatch(" + resource + "): " + result);
+            LOG.debug("<== RangerCachedPolicyEvaluator.isMatch(" + resource + ", " + evalContext + "): " + result);
         }
 
         return result;

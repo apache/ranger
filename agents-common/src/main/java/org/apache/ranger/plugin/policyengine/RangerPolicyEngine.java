@@ -37,6 +37,8 @@ public interface RangerPolicyEngine {
 	String AUDIT_NONE = "audit-none";
 	String AUDIT_DEFAULT = "audit-default";
 
+	String USER_CURRENT = "{USER}";
+
 	String getServiceName();
 
 	RangerServiceDef getServiceDef();
@@ -61,9 +63,9 @@ public interface RangerPolicyEngine {
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
-	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource);
+	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources);
+	List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 

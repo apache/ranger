@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
@@ -67,7 +68,7 @@ public class RangerRequestedResources {
 		}
 	}
 
-	public boolean isMutuallyExcluded(final List<RangerPolicyResourceMatcher> matchers) {
+	public boolean isMutuallyExcluded(final List<RangerPolicyResourceMatcher> matchers, final Map<String, Object> evalContext) {
 		boolean ret = true;
 
 		int matchedCount = 0;
@@ -78,7 +79,7 @@ public class RangerRequestedResources {
 
 				for (RangerPolicyResourceMatcher matcher : matchers) {
 
-					if (matcher.isMatch(resource) && matchedCount++ > 0) {
+					if (matcher.isMatch(resource, evalContext) && matchedCount++ > 0) {
 						ret = false;
 						break;
 					}

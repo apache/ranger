@@ -120,7 +120,8 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 		int evalOrder = RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT;
 
 		if(policyItem != null) {
-			if(CollectionUtils.isNotEmpty(policyItem.getGroups()) && policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC)) {
+			if((CollectionUtils.isNotEmpty(policyItem.getGroups()) && policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC))
+				|| (CollectionUtils.isNotEmpty(policyItem.getUsers()) && policyItem.getUsers().contains(RangerPolicyEngine.USER_CURRENT))) {
 				evalOrder -= RANGER_POLICY_ITEM_EVAL_ORDER_MAX_DISCOUNT_USERSGROUPS;
 			} else {
 				int userGroupCount = 0;
