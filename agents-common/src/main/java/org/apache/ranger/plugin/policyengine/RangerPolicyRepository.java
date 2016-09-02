@@ -215,7 +215,9 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getPolicyEvaluators(RangerAccessResource resource) {
-       return policyResourceTrie == null ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
+       String resourceStr = resource == null ? null : resource.getAsString();
+
+       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
@@ -223,7 +225,9 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators(RangerAccessResource resource) {
-        return dataMaskResourceTrie == null ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
+        String resourceStr = resource == null ? null : resource.getAsString();
+
+        return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
@@ -231,7 +235,9 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators(RangerAccessResource resource) {
-        return rowFilterResourceTrie == null ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
+        String resourceStr = resource == null ? null : resource.getAsString();
+
+        return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
     }
 
     private List<RangerPolicyEvaluator> getPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
