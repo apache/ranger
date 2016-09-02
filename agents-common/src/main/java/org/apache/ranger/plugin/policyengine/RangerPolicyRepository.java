@@ -157,7 +157,9 @@ public class RangerPolicyRepository {
     }
 
     public List<RangerPolicyEvaluator> getPolicyEvaluators(RangerAccessResource resource) {
-        return disableTrieLookupPrefilter ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
+        String resourceStr = resource == null ? null : resource.getAsString();
+
+        return disableTrieLookupPrefilter || StringUtils.isEmpty(resourceStr) ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
     }
 
     public static boolean isDelegateAdminPolicy(RangerPolicy policy) {
