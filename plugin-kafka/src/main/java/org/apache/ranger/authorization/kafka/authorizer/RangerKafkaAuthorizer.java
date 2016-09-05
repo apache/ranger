@@ -124,10 +124,10 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			return false;
 		}
 
-		// TODO: If resource type if consumer group, then allow it by default
+		// TODO: If resource type is consumer group, then allow it by default
 		if (resource.resourceType().equals(Group$.MODULE$)) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("If resource type if consumer group, then we allow it by default!  Returning true");
+				logger.debug("If resource type is consumer group, then we allow it by default!  Returning true");
 			}
 			return true;
 		}
