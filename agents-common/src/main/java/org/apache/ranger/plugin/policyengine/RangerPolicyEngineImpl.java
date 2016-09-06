@@ -285,7 +285,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				evaluator.evaluate(request, ret);
 
 				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-					break;
+					if(!StringUtils.equalsIgnoreCase(ret.getMaskType(), RangerPolicy.MASK_TYPE_NONE)) {
+						break;
+					} else {
+						ret.setMaskType(null);
+						ret.setIsAccessDetermined(false);
+					}
 				}
 			}
 		}
@@ -320,7 +325,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				evaluator.evaluate(request, ret);
 
 				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-					break;
+					if(StringUtils.isNotEmpty(ret.getFilterExpr())) {
+						break;
+					} else {
+						ret.setIsAccessDetermined(false);
+					}
 				}
 			}
 		}

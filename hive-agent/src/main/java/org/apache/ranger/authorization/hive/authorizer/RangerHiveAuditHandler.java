@@ -24,6 +24,7 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -66,7 +67,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		if(result instanceof RangerDataMaskResult) {
 			accessType = ((RangerDataMaskResult)result).getMaskType();
 
-			if(StringUtils.equals(accessType, RangerHiveAuthorizer.MASK_TYPE_NONE)) {
+			if(StringUtils.equals(accessType, RangerPolicy.MASK_TYPE_NONE)) {
 				return null;
 			}
 

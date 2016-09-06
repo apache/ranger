@@ -54,6 +54,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -71,9 +72,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ;
 
 	private static final char COLUMN_SEP = ',';
-	public static final String MASK_TYPE_NULL     = "MASK_NULL";
-	public static final String MASK_TYPE_NONE     = "MASK_NONE";
-	public static final String MASK_TYPE_CUSTOM   = "CUSTOM";
 
 	private static volatile RangerHivePlugin hivePlugin = null ;
 
@@ -598,7 +596,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
 	private boolean isDataMaskEnabled(RangerDataMaskResult result) {
-		return result != null && result.isMaskEnabled() && !StringUtils.equalsIgnoreCase(result.getMaskType(), MASK_TYPE_NONE);
+		return result != null && result.isMaskEnabled() && !StringUtils.equalsIgnoreCase(result.getMaskType(), RangerPolicy.MASK_TYPE_NONE);
 	}
 
 	private boolean isRowFilterEnabled(RangerRowFilterResult result) {
@@ -677,9 +675,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					transformer = maskTypeDef.getTransformer();
 				}
 
-				if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_NULL)) {
+				if(StringUtils.equalsIgnoreCase(maskType, RangerPolicy.MASK_TYPE_NULL)) {
 					ret = "NULL";
-				} else if(StringUtils.equalsIgnoreCase(maskType, MASK_TYPE_CUSTOM)) {
+				} else if(StringUtils.equalsIgnoreCase(maskType, RangerPolicy.MASK_TYPE_CUSTOM)) {
 					String maskedValue = result.getMaskedValue();
 
 					if(maskedValue == null) {
