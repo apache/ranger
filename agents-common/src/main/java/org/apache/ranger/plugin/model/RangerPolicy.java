@@ -50,6 +50,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			POLICY_TYPE_ROWFILTER
 	};
 
+	public static final String MASK_TYPE_NULL   = "MASK_NULL";
+	public static final String MASK_TYPE_NONE   = "MASK_NONE";
+	public static final String MASK_TYPE_CUSTOM = "CUSTOM";
+
 	// For future use
 	private static final long serialVersionUID = 1L;
 
