@@ -347,38 +347,13 @@ public class AuthorizationSession {
 	}
 
 	/**
-	 * Hand creates a result object and set it on the request for cases where we need not go to policy manager.
-	 * @return
-	 */
-	AuthorizationSession knownPatternAllowedNotAudited(String reason) {
-		_result = buildResult(true, false, reason);
-		return this;
-	}
-
-	AuthorizationSession knownPatternDisallowedNotAudited(String reason) {
-		_result = buildResult(false, false, reason);
-		
-		return this;
-	}
-	
-	/**
-	 * This method could potentially null out an earlier audit handler -- which effectively would suppress audits. 
+	 * This method could potentially null out an earlier audit handler -- which effectively would suppress audits.
 	 * @param anAuditHandler
 	 * @return
 	 */
 	AuthorizationSession auditHandler(HbaseAuditHandler anAuditHandler) {
 		_auditHandler = anAuditHandler;
 		return this;
-	}
-
-	RangerAccessResult buildResult(boolean allowed, boolean audited, String reason) {
-		RangerAccessResult result = _authorizer.createAccessResult(_request);
-		if (result != null) {
-			result.setIsAllowed(allowed);
-			result.setReason(reason);
-			result.setIsAudited(audited);
-		}
-		return result;
 	}
 
 	AuthorizationSession resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope scope) {

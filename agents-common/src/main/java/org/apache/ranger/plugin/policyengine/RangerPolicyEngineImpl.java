@@ -184,7 +184,18 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	@Override
 	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
-		return new RangerAccessResult(this.getServiceName(), policyRepository.getServiceDef(), request);
+		RangerAccessResult ret = new RangerAccessResult(this.getServiceName(), policyRepository.getServiceDef(), request);
+		switch (policyRepository.getAuditModeEnum()) {
+			case AUDIT_ALL:
+				ret.setIsAudited(true);
+				break;
+			case AUDIT_NONE:
+				ret.setIsAudited(false);
+				break;
+			default:
+				break;
+		}
+		return ret;
 	}
 
 	@Override

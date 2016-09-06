@@ -291,16 +291,6 @@ public class RangerBasePlugin {
 		return null;
 	}
 
-	public RangerAccessResult createAccessResult(RangerAccessRequest request) {
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if(policyEngine != null) {
-			return policyEngine.createAccessResult(request);
-		}
-
-		return null;
-	}
-
 	public void grantAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
