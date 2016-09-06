@@ -50,7 +50,7 @@ class RangerPolicyRepository {
 
     private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 
-    private enum AuditModeEnum {
+    enum AuditModeEnum {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
     }
 
@@ -239,6 +239,7 @@ class RangerPolicyRepository {
 
         return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
     }
+    AuditModeEnum getAuditModeEnum() { return auditModeEnum; }
 
     private List<RangerPolicyEvaluator> getPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
         List<RangerPolicyEvaluator> ret          = null;
@@ -629,40 +630,18 @@ class RangerPolicyRepository {
             LOG.debug("==> RangerPolicyRepository.setAuditEnabledFromCache()");
         }
 
-        final boolean auditResult;
-        final boolean foundInCache;
+        final AuditInfo auditInfo = accessAuditCache != null ? accessAuditCache.get(request.getResource().getAsString()) : null;
 
-        switch (auditModeEnum) {
-            case AUDIT_ALL:
-                auditResult = true;
-                foundInCache = true;
-                break;
-            case AUDIT_NONE:
-                auditResult = false;
-                foundInCache = true;
-                break;
-            default:
-                AuditInfo auditInfo = accessAuditCache != null ? accessAuditCache.get(request.getResource().getAsString()) : null;
-                if (auditInfo != null) {
-                    auditResult = auditInfo.getIsAudited();
-                    result.setAuditPolicyId(auditInfo.getAuditPolicyId());
-                    foundInCache = true;
-                } else {
-                    auditResult = false;
-                    foundInCache = false;
-                }
-                break;
-        }
-
-        if (foundInCache) {
-            result.setIsAudited(auditResult);
+        if (auditInfo != null) {
+            result.setIsAudited(auditInfo.getIsAudited());
+            result.setAuditPolicyId(auditInfo.getAuditPolicyId());
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.setAuditEnabledFromCache()");
+            LOG.debug("<== RangerPolicyRepository.setAuditEnabledFromCache():" + (auditInfo != null));
         }
 
-        return foundInCache;
+        return auditInfo != null;
     }
 
      void storeAuditEnabledInCache(RangerAccessRequest request, RangerAccessResult result) {
