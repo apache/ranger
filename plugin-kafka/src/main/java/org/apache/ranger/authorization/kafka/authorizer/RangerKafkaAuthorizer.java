@@ -62,8 +62,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String ACCESS_TYPE_KAFKA_ADMIN = "kafka_admin";
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
-	long lastLogTime = 0;
-	int errorLogFreq = 30000; // Log after every 30 seconds
 
 	public RangerKafkaAuthorizer() {
 	}
@@ -187,11 +185,10 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			validationFailed = true;
 		}
 
-		boolean returnValue = true;
+		boolean returnValue = false;
 		if (validationFailed) {
 			MiscUtil.logErrorMessageByInterval(logger, validationStr
 					+ ", request=" + rangerRequest);
-			returnValue = false;
 		} else {
 
 			try {
@@ -199,7 +196,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 						.isAccessAllowed(rangerRequest);
 				if (result == null) {
 					logger.error("Ranger Plugin returned null. Returning false");
-					returnValue = false;
 				} else {
 					returnValue = result.getIsAllowed();
 				}
