@@ -27,7 +27,6 @@ import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.RebalanceOptions;
 import org.apache.storm.topology.TopologyBuilder;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -78,7 +77,6 @@ public class StormRangerAuthorizerTest {
     }
     
     // "bob" can't create topologies other than "word-count" and "temp*"
-    @Ignore
     @Test
     public void testCreateTopologyBob() throws Exception {
         final Config conf = new Config();
@@ -104,7 +102,6 @@ public class StormRangerAuthorizerTest {
         });
     }
 
-    @Ignore
     @Test
     public void testTopologyActivation() throws Exception {
         final Subject subject = new Subject();
@@ -143,7 +140,6 @@ public class StormRangerAuthorizerTest {
         });
     }
 
-    @Ignore
     @Test
     public void testTopologyRebalancing() throws Exception {
         final Subject subject = new Subject();
