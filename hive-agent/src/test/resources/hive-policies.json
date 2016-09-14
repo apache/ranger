@@ -1,14 +1,13 @@
 {
   "serviceName": "HIVETest",
-  "serviceId": 7,
-  "policyVersion": 12,
-  "policyUpdateTime": "20160610-11:07:20.000-+0100",
+  "serviceId": 2,
+  "policyVersion": 9,
+  "policyUpdateTime": "20160914-14:51:46.000-+0100",
   "policies": [
     {
       "service": "HIVETest",
-      "name": "HIVETest-1-20160609091836",
-      "description": "Default Policy for Service: HIVETest",
-      "resourceSignature": "6e79c1c989c79b7e53af663d3bdc2de6",
+      "name": "all - database, table, column",
+      "policyType": 0,
       "isAuditEnabled": true,
       "resources": {
         "database": {
@@ -96,20 +95,14 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 30,
-      "guid": "1465463916045_476_1125",
+      "id": 8,
       "isEnabled": true,
-      "createdBy": "Admin",
-      "updatedBy": "Admin",
-      "createTime": "20160609-10:18:36.000-+0100",
-      "updateTime": "20160609-11:09:59.000-+0100",
       "version": 2
     },
     {
       "service": "HIVETest",
-      "name": "HIVETest-2-20160609091836",
-      "description": "Default Policy for Service: HIVETest",
-      "resourceSignature": "c834ed2b8c7462d2aa8bbffdb05226c8",
+      "name": "all - database, udf",
+      "policyType": 0,
       "isAuditEnabled": true,
       "resources": {
         "database": {
@@ -176,20 +169,14 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 31,
-      "guid": "1465463916203_470_1126",
+      "id": 9,
       "isEnabled": true,
-      "createdBy": "Admin",
-      "updatedBy": "Admin",
-      "createTime": "20160609-10:18:36.000-+0100",
-      "updateTime": "20160609-10:18:36.000-+0100",
       "version": 1
     },
     {
       "service": "HIVETest",
       "name": "SelectUpdateAllWords",
-      "description": "",
-      "resourceSignature": "e6175b643348d03ee0aab3a381257e6e",
+      "policyType": 0,
       "isAuditEnabled": true,
       "resources": {
         "database": {
@@ -232,6 +219,20 @@
           "groups": [],
           "conditions": [],
           "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "dave"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
         }
       ],
       "denyPolicyItems": [],
@@ -239,20 +240,14 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 32,
-      "guid": "1465464434667_623_1161",
+      "id": 10,
       "isEnabled": true,
-      "createdBy": "Admin",
-      "updatedBy": "Admin",
-      "createTime": "20160609-10:27:14.000-+0100",
-      "updateTime": "20160610-10:59:16.000-+0100",
-      "version": 7
+      "version": 2
     },
     {
       "service": "HIVETest",
       "name": "SelectCountWords",
-      "description": "",
-      "resourceSignature": "ec1331571f87b9c87464086d961f4e89",
+      "policyType": 0,
       "isAuditEnabled": true,
       "resources": {
         "database": {
@@ -298,20 +293,14 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 33,
-      "guid": "1465466645682_874_1202",
+      "id": 11,
       "isEnabled": true,
-      "createdBy": "Admin",
-      "updatedBy": "Admin",
-      "createTime": "20160609-11:04:05.000-+0100",
-      "updateTime": "20160610-11:07:20.000-+0100",
-      "version": 5
+      "version": 1
     },
     {
       "service": "HIVETest",
       "name": "TmpUpdatePolicy",
-      "description": "",
-      "resourceSignature": "87d65f69544e63cfe302db8f9d006b6b",
+      "policyType": 0,
       "isAuditEnabled": true,
       "resources": {
         "database": {
@@ -330,7 +319,7 @@
         },
         "table": {
           "values": [
-            "*__tmp__*"
+            "*_tmp_*"
           ],
           "isExcludes": false,
           "isRecursive": false
@@ -359,13 +348,57 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 34,
-      "guid": "1465553055683_559_1400",
+      "id": 12,
       "isEnabled": true,
-      "createdBy": "Admin",
-      "updatedBy": "Admin",
-      "createTime": "20160610-11:04:15.000-+0100",
-      "updateTime": "20160610-11:04:15.000-+0100",
+      "version": 1
+    },
+    {
+      "service": "HIVETest",
+      "name": "DaveFilter",
+      "policyType": 2,
+      "isAuditEnabled": true,
+      "resources": {
+        "database": {
+          "values": [
+            "rangerauthz"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "words"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [
+        {
+          "rowFilterInfo": {
+            "filterExpr": "count \u003e\u003d \u002780\u0027"
+          },
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "dave"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "id": 13,
+      "isEnabled": true,
       "version": 1
     }
   ],
@@ -574,19 +607,240 @@
     "contextEnrichers": [],
     "enums": [],
     "dataMaskDef": {
-      "maskTypes": [],
-      "accessTypes": [],
-      "resources": []
+      "maskTypes": [
+        {
+          "itemId": 1,
+          "name": "MASK",
+          "label": "Mask",
+          "description": "Replace lowercase with \u0027x\u0027, uppercase with \u0027X\u0027, digits with \u00270\u0027",
+          "transformer": "mask({col})",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 2,
+          "name": "MASK_SHOW_LAST_4",
+          "label": "Partial mask: show last 4",
+          "description": "Show last 4 characters; replace rest with \u0027x\u0027",
+          "transformer": "mask_show_last_n({col}, 4, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 3,
+          "name": "MASK_SHOW_FIRST_4",
+          "label": "Partial mask: show first 4",
+          "description": "Show first 4 characters; replace rest with \u0027x\u0027",
+          "transformer": "mask_show_first_n({col}, 4, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 4,
+          "name": "MASK_HASH",
+          "label": "Hash",
+          "description": "Hash the value",
+          "transformer": "mask_hash({col})",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 5,
+          "name": "MASK_NULL",
+          "label": "NULL",
+          "description": "Replace with NULL",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 6,
+          "name": "MASK_NONE",
+          "label": "No masking",
+          "description": "No masking",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 7,
+          "name": "MASK_DATE_DAY",
+          "label": "Date: mask day",
+          "description": "Date: mask day",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, 1, -1, -1)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 8,
+          "name": "MASK_DATE_MONTH",
+          "label": "Date: mask month",
+          "description": "Date: mask month",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, -1, 0, -1)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 9,
+          "name": "MASK_DATE_YEAR",
+          "label": "Date: mask year",
+          "description": "Date: mask year",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, -1, -1, 0)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 10,
+          "name": "MASK_DATE_SHOW_DAY",
+          "label": "Date: show only day",
+          "description": "Date: show only day",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, -1, 0, 0)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 11,
+          "name": "MASK_DATE_SHOW_MONTH",
+          "label": "Date: show only month",
+          "description": "Date: show only month",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, 1, -1, 0)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 12,
+          "name": "MASK_DATE_SHOW_YEAR",
+          "label": "Date: show only year",
+          "description": "Date: show only year",
+          "transformer": "mask({col}, \u0027x\u0027, \u0027x\u0027, \u0027x\u0027, -1, \u00271\u0027, 1, 0, -1)",
+          "dataMaskOptions": {}
+        },
+        {
+          "itemId": 13,
+          "name": "CUSTOM",
+          "label": "Custom",
+          "description": "Custom",
+          "dataMaskOptions": {}
+        }
+      ],
+      "accessTypes": [
+        {
+          "itemId": 1,
+          "name": "select",
+          "label": "select",
+          "impliedGrants": []
+        }
+      ],
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "database",
+          "type": "string",
+          "level": 10,
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": "false",
+            "ignoreCase": "true"
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "{ \"singleValue\":true }",
+          "label": "Hive Database",
+          "description": "Hive Database"
+        },
+        {
+          "itemId": 2,
+          "name": "table",
+          "type": "string",
+          "level": 20,
+          "parent": "database",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": "false",
+            "ignoreCase": "true"
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "{ \"singleValue\":true }",
+          "label": "Hive Table",
+          "description": "Hive Table"
+        },
+        {
+          "itemId": 4,
+          "name": "column",
+          "type": "string",
+          "level": 30,
+          "parent": "table",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": "false",
+            "ignoreCase": "true"
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "{ \"singleValue\":true }",
+          "label": "Hive Column",
+          "description": "Hive Column"
+        }
+      ]
     },
     "rowFilterDef": {
-      "accessTypes": [],
-      "resources": []
+      "accessTypes": [
+        {
+          "itemId": 1,
+          "name": "select",
+          "label": "select",
+          "impliedGrants": []
+        }
+      ],
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "database",
+          "type": "string",
+          "level": 10,
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": "false",
+            "ignoreCase": "true"
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "{ \"singleValue\":true }",
+          "label": "Hive Database",
+          "description": "Hive Database"
+        },
+        {
+          "itemId": 2,
+          "name": "table",
+          "type": "string",
+          "level": 20,
+          "parent": "database",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": "false",
+            "ignoreCase": "true"
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "{ \"singleValue\":true }",
+          "label": "Hive Table",
+          "description": "Hive Table"
+        }
+      ]
     },
     "id": 3,
     "guid": "3e1afb5a-184a-4e82-9d9c-87a5cacc243c",
     "isEnabled": true,
-    "createTime": "20160314-14:39:35.000-+0000",
-    "updateTime": "20160314-14:39:35.000-+0000",
+    "createTime": "20160914-11:19:33.000-+0100",
+    "updateTime": "20160914-11:19:33.000-+0100",
     "version": 1
   }
 }
