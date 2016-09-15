@@ -1,8 +1,8 @@
 {
   "serviceName": "HIVETest",
   "serviceId": 2,
-  "policyVersion": 9,
-  "policyUpdateTime": "20160914-14:51:46.000-+0100",
+  "policyVersion": 11,
+  "policyUpdateTime": "20160915-12:47:25.000-+0100",
   "policies": [
     {
       "service": "HIVETest",
@@ -228,7 +228,8 @@
             }
           ],
           "users": [
-            "dave"
+            "dave",
+            "jane"
           ],
           "groups": [],
           "conditions": [],
@@ -242,7 +243,7 @@
       "rowFilterPolicyItems": [],
       "id": 10,
       "isEnabled": true,
-      "version": 2
+      "version": 3
     },
     {
       "service": "HIVETest",
@@ -398,6 +399,62 @@
         }
       ],
       "id": 13,
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "HIVETest",
+      "name": "JaneWordMask",
+      "policyType": 1,
+      "isAuditEnabled": true,
+      "resources": {
+        "database": {
+          "values": [
+            "rangerauthz"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column": {
+          "values": [
+            "word"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "words"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [
+        {
+          "dataMaskInfo": {
+            "dataMaskType": "MASK_HASH"
+          },
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "jane"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "rowFilterPolicyItems": [],
+      "id": 14,
       "isEnabled": true,
       "version": 1
     }
