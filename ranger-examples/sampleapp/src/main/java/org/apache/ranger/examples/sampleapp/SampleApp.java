@@ -128,28 +128,11 @@ public class SampleApp {
 		return args[index];
 	}
 
-	private Set<String> getStringSetArg(String[] args, int index) {
-		String argValue = getStringArg(args, index);
-
-		if(argValue == null) {
-			return null;
-		}
-
-		Set<String> ret = new HashSet<String>();
-
-		for(String value : argValue.split(",")) {
-			ret.add(value);
-		}
-
-		return ret;
-	}
-
 	private String getInput() {
-		Scanner inputReader = new Scanner(System.in, StandardCharsets.UTF_8.name());
 
-		System.out.print("command> ");
-		System.out.flush();
-		try {
+		try (Scanner inputReader = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
+			System.out.print("command> ");
+			System.out.flush();
 			return inputReader.nextLine();
 		} catch(Exception excp) {
 			// ignore

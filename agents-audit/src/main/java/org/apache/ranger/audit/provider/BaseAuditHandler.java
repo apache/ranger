@@ -138,9 +138,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	 */
 	@Override
 	public boolean log(AuditEventBase event) {
-		List<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
-		eventList.add(event);
-		return log(eventList);
+		return log(Collections.singletonList(event));
 	}
 
 	/*
@@ -165,7 +163,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	 */
 	@Override
 	public boolean logJSON(Collection<String> events) {
-		List<AuditEventBase> eventList = new ArrayList<AuditEventBase>();
+		List<AuditEventBase> eventList = new ArrayList<AuditEventBase>(events.size());
 		for (String event : events) {
 			eventList.add(MiscUtil.fromJson(event, AuthzAuditEvent.class));
 		}
