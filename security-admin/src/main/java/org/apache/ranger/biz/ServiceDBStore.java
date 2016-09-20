@@ -3825,6 +3825,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private void createGenericUser() {
 		VXUser genericUser = new VXUser();
 		genericUser.setName(RangerPolicyEngine.USER_CURRENT);
+		genericUser.setDescription(RangerPolicyEngine.USER_CURRENT);
 		xUserService.createXUserWithOutLogin(genericUser);
 	}
 }
