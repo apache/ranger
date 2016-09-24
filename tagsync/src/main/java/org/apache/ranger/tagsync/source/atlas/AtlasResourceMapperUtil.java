@@ -84,18 +84,17 @@ public class AtlasResourceMapperUtil {
 		}
 		boolean ret = true;
 
-		String allResourceMappers = "org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper";
+		List<String> mapperNames = new ArrayList<String>();
+		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper");
+		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper");
 
 		if (StringUtils.isNotBlank(customMapperNames)) {
-			allResourceMappers = allResourceMappers + MAPPER_NAME_DELIMIER + customMapperNames;
+			for(String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMIER)) {
+				mapperNames.add(customMapperName.trim());
+			}
 		}
 
-		String[] mapperNamesArray = allResourceMappers.split(MAPPER_NAME_DELIMIER);
-
-		List<String> mapperNames = Arrays.asList(mapperNamesArray);
-
 		for (String mapperName : mapperNames) {
-			mapperName = mapperName.trim();
 			try {
 				Class clazz = Class.forName(mapperName);
 				AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
@@ -113,7 +112,7 @@ public class AtlasResourceMapperUtil {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + allResourceMappers + "): " + ret);
+			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + mapperNames + "): " + ret);
 		}
 		return ret;
 	}

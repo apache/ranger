@@ -20,13 +20,11 @@
 package org.apache.ranger.tagsync.process;
 
 
-import org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.*;
-import java.util.List;
 import java.util.Properties;
 
 
@@ -72,34 +70,5 @@ public class TestTagSynchronizer {
 
 		assert(initDone);
 
-	}
-
-	@Test
-	public void testQualifiedNames() {
-
-		List<String> components;
-		AtlasHiveResourceMapper hiveResourceBuilder = new AtlasHiveResourceMapper();
-		try {
-			components = hiveResourceBuilder.getQualifiedNameComponents("hive_db", "database@cluster");
-			printComponents(components);
-
-			components = hiveResourceBuilder.getQualifiedNameComponents("hive_table", "database.table@cluster");
-			printComponents(components);
-
-			components = hiveResourceBuilder.getQualifiedNameComponents("hive_column", "database.table.column@cluster");
-			printComponents(components);
-
-			assert(true);
-		} catch (Exception e) {
-			System.out.println("Failed...");
-			assert(false);
-		}
-
-	}
-	private void printComponents(List<String> components) {
-		int i = 0;
-		for (String value : components) {
-			System.out.println("-----		Index:" + i++ + "	Value:" + value);
-		}
 	}
 }
