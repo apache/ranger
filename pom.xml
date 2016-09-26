@@ -150,6 +150,8 @@
         <commons.net.version>3.3</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
         <curator.test.version>2.7.0</curator.test.version>
+        <derby.version>10.11.1.1</derby.version>
+        <easymock.version>3.4</easymock.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
         <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
         <google.guava.version>17.0</google.guava.version>
