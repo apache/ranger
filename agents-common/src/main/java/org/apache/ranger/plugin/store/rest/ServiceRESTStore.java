@@ -72,7 +72,7 @@ public class ServiceRESTStore extends AbstractServiceStore {
 	public final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 	public final String REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED = "/service/plugins/secure/policies/download/";
 
-	public static final String REST_MIME_TYPE_JSON = "application/json" ;
+	public static final String REST_MIME_TYPE_JSON = "application/json";
 	
 	private Boolean populateExistingBaseFields = false;
 

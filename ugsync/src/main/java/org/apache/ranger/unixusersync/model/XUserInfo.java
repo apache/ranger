@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class XUserInfo {
-	private String id ;
-	private String name ;
-	private String 	description ;
+	private String id;
+	private String name;
+	private String 	description;
 	
-	private List<String>  	groupNameList = new ArrayList<String>() ;
+	private List<String>  	groupNameList = new ArrayList<String>();
 	
 	public String getId() {
 		return id;

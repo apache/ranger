@@ -427,7 +427,7 @@ public class RangerKeyStore extends KeyStoreSpi {
      * hash with a bit of whitener.
      */
 
-    private final String SECRET_KEY_HASH_WORD = "Apache Ranger" ;
+    private final String SECRET_KEY_HASH_WORD = "Apache Ranger";
 
     private MessageDigest getKeyedMessageDigest(char[] aKeyPassword)
         throws NoSuchAlgorithmException, UnsupportedEncodingException
@@ -491,8 +491,8 @@ public class RangerKeyStore extends KeyStoreSpi {
 	// The method is created to support JKS migration (from hadoop-common KMS keystore to RangerKMS keystore)
 	//
 	
-	private static final String METADATA_FIELDNAME = "metadata" ;
-	private static final int NUMBER_OF_BITS_PER_BYTE = 8 ;
+	private static final String METADATA_FIELDNAME = "metadata";
+	private static final int NUMBER_OF_BITS_PER_BYTE = 8;
 	
 	public void engineLoadKeyStoreFile(InputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat)
 	        throws IOException, NoSuchAlgorithmException, CertificateException
@@ -510,23 +510,23 @@ public class RangerKeyStore extends KeyStoreSpi {
 							  Key k = ks.getKey(alias, keyPass);		
 							
 							  if (k instanceof JavaKeyStoreProvider.KeyMetadata) {
-								  JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata)k ;
-								  Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME) ;
+								  JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata)k;
+								  Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME);
 								  f.setAccessible(true);
-								  Metadata metadata = (Metadata)f.get(keyMetadata) ;
-								  entry.bit_length = metadata.getBitLength() ;
-								  entry.cipher_field = metadata.getAlgorithm() ;
+								  Metadata metadata = (Metadata)f.get(keyMetadata);
+								  entry.bit_length = metadata.getBitLength();
+								  entry.cipher_field = metadata.getAlgorithm();
 								  Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class.getDeclaredConstructor(Metadata.class);
 							      constructor.setAccessible(true);
 							      RangerKeyStoreProvider.KeyMetadata  nk = constructor.newInstance(metadata);
-							      k = nk ;
+							      k = nk;
 							  }
 							  else {
-			                      entry.bit_length = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE) ;
+			                      entry.bit_length = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
 			                      entry.cipher_field = k.getAlgorithm();
 							  }
-		                      String keyName = alias.split("@")[0] ;
-		                      entry.attributes = "{\"key.acl.name\":\"" +  keyName + "\"}" ;
+		                      String keyName = alias.split("@")[0];
+		                      entry.attributes = "{\"key.acl.name\":\"" +  keyName + "\"}";
 		                      Class<?> c = null;
 		                  	  Object o = null;
 		                  	  try {
@@ -550,7 +550,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 		                    }
 				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);
-					throw new IOException(t) ;
+					throw new IOException(t);
 				}
 			}
 	}
@@ -577,7 +577,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 					}
 				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);
-					throw new IOException(t) ;
+					throw new IOException(t);
 				}
 			}
 	}

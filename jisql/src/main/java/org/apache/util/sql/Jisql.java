@@ -296,7 +296,7 @@ public class Jisql {
             	if(connectString.toLowerCase().startsWith("jdbc:mysql") && inputFileName!=null){
             		MySQLPLRunner scriptRunner = new MySQLPLRunner(connection, false, true,printDebug);
             		scriptRunner.setDelimiter(commandTerminator,false);
-            		FileReader reader = new FileReader(inputFileName) ;
+            		FileReader reader = new FileReader(inputFileName);
             		try {
                 	scriptRunner.runScript(reader);
             		}

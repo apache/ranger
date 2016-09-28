@@ -21,10 +21,10 @@
 
 public class XGroupInfo {
 	
-	private String id ;
-	private String name ;
-	private String description ;
-	private String groupType ;
+	private String id;
+	private String name;
+	private String description;
+	private String groupType;
 	private String groupSource;
 	public String getId() {
 		return id;

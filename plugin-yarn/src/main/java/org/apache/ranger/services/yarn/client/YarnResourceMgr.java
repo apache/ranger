@@ -34,18 +34,18 @@ public class YarnResourceMgr {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> YarnResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("==> YarnResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );
 		}	
 		
 		try {
 			ret = YarnClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-			LOG.error("<== YarnResourceMgr.validateConfig Error: " + e) ;
+			LOG.error("<== YarnResourceMgr.validateConfig Error: " + e);
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== YarnResourceMgr.validateConfig Result : "+ ret  ) ;
+			LOG.debug("<== YarnResourceMgr.validateConfig Result : "+ ret  );
 		}	
 		return ret;
 	}
@@ -68,9 +68,9 @@ public class YarnResourceMgr {
         if (configs == null || configs.isEmpty()) {
                 LOG.error("Connection Config is empty");
         } else {
-               resultList = getYarnResource(serviceName, configs, yarnQueueName,yarnQueueList) ;
+               resultList = getYarnResource(serviceName, configs, yarnQueueName,yarnQueueList);
         }
-        return resultList ;
+        return resultList;
     }
 
     public static List<String> getYarnResource(String serviceName, Map<String, String> configs, String yarnQueueName, List<String> yarnQueueList) {

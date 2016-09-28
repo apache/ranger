@@ -49,7 +49,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 	private static final String REST_PREFIX = "/service";
 	private static final String MODULE_PREFIX = "/tags";
 
-	private static final String REST_MIME_TYPE_JSON = "application/json" ;
+	private static final String REST_MIME_TYPE_JSON = "application/json";
 
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
 
@@ -136,7 +136,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 	private ServiceTags doUpload(ServiceTags serviceTags) throws Exception {
 			if(!StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
 				try{
-					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 					if(LOG.isDebugEnabled()) {
 						LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
 					}

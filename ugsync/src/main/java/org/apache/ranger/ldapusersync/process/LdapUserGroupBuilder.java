@@ -91,10 +91,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	private LdapContext ldapContext;
 	StartTlsResponse tls;
 
-	private boolean userNameCaseConversionFlag = false ;
-	private boolean groupNameCaseConversionFlag = false ;
-	private boolean userNameLowerCaseFlag = false ;
-	private boolean groupNameLowerCaseFlag = false ;
+	private boolean userNameCaseConversionFlag = false;
+	private boolean groupNameCaseConversionFlag = false;
+	private boolean userNameLowerCaseFlag = false;
+	private boolean groupNameLowerCaseFlag = false;
 
   private boolean  groupUserMapSyncEnabled = false;
 
@@ -107,26 +107,26 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	
 	public LdapUserGroupBuilder() {
 		super();
-		LOG.info("LdapUserGroupBuilder created") ;
+		LOG.info("LdapUserGroupBuilder created");
 		
-		String userNameCaseConversion = config.getUserNameCaseConversion() ;
+		String userNameCaseConversion = config.getUserNameCaseConversion();
 		
 		if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
-		    userNameCaseConversionFlag = false ;
+		    userNameCaseConversionFlag = false;
 		}
 		else {
-		    userNameCaseConversionFlag = true ;
-		    userNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion) ;
+		    userNameCaseConversionFlag = true;
+		    userNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion);
 		}
 		
-		String groupNameCaseConversion = config.getGroupNameCaseConversion() ;
+		String groupNameCaseConversion = config.getGroupNameCaseConversion();
 		
 		if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion)) {
-		    groupNameCaseConversionFlag = false ;
+		    groupNameCaseConversionFlag = false;
 		}
 		else {
-		    groupNameCaseConversionFlag = true ;
-		    groupNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion) ;
+		    groupNameCaseConversionFlag = true;
+		    groupNameLowerCaseFlag = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion);
 		}
 	}
 
@@ -160,7 +160,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, ldapBindDn);
 		ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, ldapBindPassword);
 		ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
-		ldapContext.addToEnvironment(Context.REFERRAL, ldapReferral) ;
+		ldapContext.addToEnvironment(Context.REFERRAL, ldapReferral);
 	}
 	
 	private void setConfig() throws Throwable {
@@ -313,10 +313,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 				List<String> groupList = userInfo.getGroups();
 				if (userNameCaseConversionFlag) {
 					if (userNameLowerCaseFlag) {
-						userName = userName.toLowerCase() ;
+						userName = userName.toLowerCase();
 					}
 					else {
-						userName = userName.toUpperCase() ;
+						userName = userName.toUpperCase();
 					}
 				}
 
@@ -346,10 +346,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 					List<String> groupList = userInfo.getGroups();
 					if (userNameCaseConversionFlag) {
 						if (userNameLowerCaseFlag) {
-							userName = userName.toLowerCase() ;
+							userName = userName.toLowerCase();
 						}
 						else {
-							userName = userName.toUpperCase() ;
+							userName = userName.toUpperCase();
 						}
 					}
 
@@ -511,10 +511,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 								List<String> groupList = userInfo.getGroups();
 								if (userNameCaseConversionFlag) {
 									if (userNameLowerCaseFlag) {
-										userName = userName.toLowerCase() ;
+										userName = userName.toLowerCase();
 									}
 									else {
-										userName = userName.toUpperCase() ;
+										userName = userName.toUpperCase();
 									}
 								}
 

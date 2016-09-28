@@ -31,5 +31,5 @@ public interface HDFSAccessVerifier {
 	}
 	
 	boolean isAccessGranted(String aPathName, String aPathOwnerName, String access, String username, Set<String> groups);
-	boolean isAuditLogEnabled(String aPathName) ;
+	boolean isAuditLogEnabled(String aPathName);
 }

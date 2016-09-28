@@ -305,7 +305,7 @@ public class MySQLPLRunner {
     	
     	
     	// Executing SQL Script
-     	FileReader reader = new FileReader(aSQLScriptFilePath) ;
+     	FileReader reader = new FileReader(aSQLScriptFilePath);
      	
      	try {
      		scriptRunner.runScript(reader);

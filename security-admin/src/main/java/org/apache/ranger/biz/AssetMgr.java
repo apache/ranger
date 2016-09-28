@@ -295,7 +295,7 @@ public class AssetMgr extends AssetMgrBase {
 		long epochTime = epoch != null ? Long.parseLong(epoch) : 0;
 
 		if(epochTime == updatedTime) {
-			int resourceListSz = xResourceList.size() ;
+			int resourceListSz = xResourceList.size();
 			
 			if (policyCount == resourceListSz) {
 				policyExportAudit
@@ -401,8 +401,8 @@ public class AssetMgr extends AssetMgrBase {
 				HashMap<String, Object> resourceMap = new HashMap<String, Object>();
 
 				resourceMap.put("id", xResource.getId());
-				resourceMap.put("topology_name", xResource.getTopologies()) ;
-				resourceMap.put("service_name", xResource.getServices()) ;
+				resourceMap.put("topology_name", xResource.getTopologies());
+				resourceMap.put("service_name", xResource.getServices());
 				resourceMap.put("policyStatus", RangerCommonEnums
 						.getLabelFor_ActiveStatus(xResource
 								.getResourceStatus()));
@@ -429,7 +429,7 @@ public class AssetMgr extends AssetMgrBase {
                         HashMap<String, Object> resourceMap = new HashMap<String, Object>();
 
                         resourceMap.put("id", xResource.getId());
-                        resourceMap.put("topology_name", xResource.getTopologies()) ;
+                        resourceMap.put("topology_name", xResource.getTopologies());
                         resourceMap.put("policyStatus", RangerCommonEnums
                                         .getLabelFor_ActiveStatus(xResource
                                                         .getResourceStatus()));

@@ -31,76 +31,76 @@ import org.apache.log4j.Logger;
 
 public class PasswordValidator implements Runnable {
 
-	private static final Logger LOG = Logger.getLogger(PasswordValidator.class) ;
+	private static final Logger LOG = Logger.getLogger(PasswordValidator.class);
 	
-	private static String validatorProgram = null ;
+	private static String validatorProgram = null;
 
-	private static List<String> adminUserList ;
+	private static List<String> adminUserList;
 
-	private static String adminRoleNames ;
+	private static String adminRoleNames;
 
-	private Socket client ;
+	private Socket client;
 	
 	public PasswordValidator(Socket client) {
-		this.client = client ;
+		this.client = client;
 	}
 
 	@Override
 	public void run() {
-		BufferedReader reader = null ;
+		BufferedReader reader = null;
 		PrintWriter writer = null;
 
-		String userName = null ;
+		String userName = null;
 
 		try {
-			reader = new BufferedReader(new InputStreamReader(client.getInputStream())) ;
-			writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream())) ;
-			String request = reader.readLine() ;
+			reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+			writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
+			String request = reader.readLine();
 			
 			if (request.startsWith("LOGIN:")) {
-				String line = request.substring(6).trim() ;
-				int passwordAt = line.indexOf(' ') ;
+				String line = request.substring(6).trim();
+				int passwordAt = line.indexOf(' ');
 				if (passwordAt != -1) {
-					userName = line.substring(0,passwordAt).trim() ;
+					userName = line.substring(0,passwordAt).trim();
 				}
 			}
 
 			if (validatorProgram == null) {
-				String res = "FAILED: Unable to validate credentials." ;
-				writer.println(res) ;
+				String res = "FAILED: Unable to validate credentials.";
+				writer.println(res);
 				writer.flush();
-				LOG.error("Response [" + res + "] for user: " + userName + " as ValidatorProgram is not defined in configuration.") ;
+				LOG.error("Response [" + res + "] for user: " + userName + " as ValidatorProgram is not defined in configuration.");
 
 			}
 			else {
 				
-				BufferedReader pReader = null ;
+				BufferedReader pReader = null;
 				PrintWriter pWriter = null;
 				Process p =  null;
 				
 				try {
-					p = Runtime.getRuntime().exec(validatorProgram) ;
+					p = Runtime.getRuntime().exec(validatorProgram);
 					
-					pReader = new BufferedReader(new InputStreamReader(p.getInputStream())) ;
+					pReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 					
-					pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream())) ;
+					pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream()));
 					
-					pWriter.println(request) ; pWriter.flush();
+					pWriter.println(request); pWriter.flush();
 	
-					String res = pReader.readLine() ;
+					String res = pReader.readLine();
 
 
 					if (res != null && res.startsWith("OK")) {
 						if (adminRoleNames != null && adminUserList != null) {
 							if (adminUserList.contains(userName)) {
-								res = res + " " + adminRoleNames ;
+								res = res + " " + adminRoleNames;
 							}
 						}
 					}
 
 					LOG.info("Response [" + res + "] for user: " + userName);
 					
-					writer.println(res) ; writer.flush();
+					writer.println(res); writer.flush();
 				}
 				finally {
 					if (p != null) {
@@ -112,8 +112,8 @@ public class PasswordValidator implements Runnable {
 		}
 		catch(Throwable t) {
 			if (userName != null && writer != null ) {
-				String res = "FAILED: unable to validate due to error " + t ;
-				writer.println(res) ;
+				String res = "FAILED: unable to validate due to error " + t;
+				writer.println(res);
 				LOG.error("Response [" + res + "] for user: " + userName, t);
 			}
 		}

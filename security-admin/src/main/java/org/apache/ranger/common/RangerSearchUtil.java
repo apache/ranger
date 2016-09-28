@@ -95,11 +95,11 @@ public class RangerSearchUtil extends SearchUtil {
 
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("name"));
 		ret.setParam(SearchFilter.IS_ENABLED, request.getParameter("status"));
-		String serviceType = request.getParameter("type") ;
+		String serviceType = request.getParameter("type");
 		if (serviceType != null) {
-			serviceType = serviceType.toLowerCase() ;
+			serviceType = serviceType.toLowerCase();
 		}
-		ret.setParam(SearchFilter.SERVICE_TYPE,serviceType) ;
+		ret.setParam(SearchFilter.SERVICE_TYPE,serviceType);
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 
 		return ret;
@@ -117,10 +117,10 @@ public class RangerSearchUtil extends SearchUtil {
 			ret.setParams(new HashMap<String, String>());
 		}
 
-		String repositoryType = request.getParameter("repositoryType") ;
+		String repositoryType = request.getParameter("repositoryType");
 
 		if (repositoryType != null) {
-			repositoryType = repositoryType.toLowerCase() ;
+			repositoryType = repositoryType.toLowerCase();
 		}
 
 		String repositoryId = request.getParameter("repositoryId");
@@ -128,7 +128,7 @@ public class RangerSearchUtil extends SearchUtil {
 			repositoryId = request.getParameter("assetId");
 		}
 
-		ret.setParam(SearchFilter.SERVICE_TYPE, repositoryType) ;
+		ret.setParam(SearchFilter.SERVICE_TYPE, repositoryType);
 		ret.setParam(SearchFilter.SERVICE_NAME, request.getParameter("repositoryName"));
 		ret.setParam(SearchFilter.SERVICE_ID, repositoryId);
 		ret.setParam(SearchFilter.POLICY_NAME, request.getParameter("policyName"));

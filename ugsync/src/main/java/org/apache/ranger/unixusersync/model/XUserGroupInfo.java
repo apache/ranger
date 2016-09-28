@@ -23,10 +23,10 @@ import com.google.gson.annotations.SerializedName;
 
 public class XUserGroupInfo {
 
-	private String userId ;
+	private String userId;
 	@SerializedName("name")
-	private String groupName ;
-	private String parentGroupId ;
+	private String groupName;
+	private String parentGroupId;
 
 	
 	

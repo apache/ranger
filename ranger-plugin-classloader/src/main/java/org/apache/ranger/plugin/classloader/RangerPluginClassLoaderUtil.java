@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class RangerPluginClassLoaderUtil {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoaderUtil.class) ;
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoaderUtil.class);
 
 	private static volatile RangerPluginClassLoaderUtil config   = null;
 	private static String rangerPluginLibDir			= "ranger-%-plugin-impl";

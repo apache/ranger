@@ -42,11 +42,11 @@ import com.sun.jersey.api.client.WebResource;
 
 public class YarnClient extends BaseClient {
 
-	private static final Logger LOG = Logger.getLogger(YarnClient.class) ;
+	private static final Logger LOG = Logger.getLogger(YarnClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 	
-	private static final String YARN_LIST_API_ENDPOINT = "/ws/v1/cluster/scheduler" ;
+	private static final String YARN_LIST_API_ENDPOINT = "/ws/v1/cluster/scheduler";
 	
 	private static final String errMessage =  " You can still save the repository and start creating "
 											  + "policies, but you would not be able to use autocomplete for "
@@ -59,7 +59,7 @@ public class YarnClient extends BaseClient {
 
 	public  YarnClient(String serviceName, Map<String, String> configs) {
 
-		super(serviceName,configs,"yarn-client") ;
+		super(serviceName,configs,"yarn-client");
 
 		this.yarnQUrl = configs.get("yarn.url");
 		this.userName = configs.get("username");
@@ -105,14 +105,14 @@ public class YarnClient extends BaseClient {
 
 						List<String> lret = new ArrayList<String>();
 
-						String url = yarnQUrl + YARN_LIST_API_ENDPOINT ;
+						String url = yarnQUrl + YARN_LIST_API_ENDPOINT;
 
-						Client client = null ;
+						Client client = null;
 
-						ClientResponse response = null ;
+						ClientResponse response = null;
 
 						try {
-							client = Client.create() ;
+							client = Client.create();
 
 							WebResource webResource = client.resource(url);
 
@@ -143,7 +143,7 @@ public class YarnClient extends BaseClient {
 														if (LOG.isDebugEnabled()) {
 															LOG.debug("getQueueList():Adding yarnQueue " + yarnQueueName);
 														}
-														lret.add(yarnQueueName) ;
+														lret.add(yarnQueueName);
 													}
 												}
 											}
@@ -191,7 +191,7 @@ public class YarnClient extends BaseClient {
 								client.destroy();
 							}
 						}
-						return lret ;
+						return lret;
 					}
 				  } );
 				}
@@ -202,7 +202,7 @@ public class YarnClient extends BaseClient {
 		try {
 			ret = timedTask(callableYarnQListGetter, 5, TimeUnit.SECONDS);
 		} catch ( Throwable t) {
-			LOG.error("Unable to get Yarn Queue list from [" + yarnQUrl + "]", t) ;
+			LOG.error("Unable to get Yarn Queue list from [" + yarnQUrl + "]", t);
 			String msgDesc = "Unable to get a valid response for "
 					+ "expected mime type : [" + EXPECTED_MIME_TYPE
 					+ "] URL : " + yarnQUrl;

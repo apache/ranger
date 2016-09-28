@@ -32,15 +32,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 
 public class HadoopConfigHolder  {
-	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class) ;
-	public static final String GLOBAL_LOGIN_PARAM_PROP_FILE = "hadoop-login.properties" ;
-	public static final String DEFAULT_DATASOURCE_PARAM_PROP_FILE = "datasource.properties" ;
-	public static final String RESOURCEMAP_PROP_FILE = "resourcenamemap.properties" ;
-	public static final String DEFAULT_RESOURCE_NAME = "core-site.xml" ;
-	public static final String RANGER_SECTION_NAME = "xalogin.xml" ;
-	public static final String RANGER_LOGIN_USER_NAME_PROP = "username" ;
-	public static final String RANGER_LOGIN_KEYTAB_FILE_PROP = "keytabfile" ;
-	public static final String RANGER_LOGIN_PASSWORD = "password" ;
+	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class);
+	public static final String GLOBAL_LOGIN_PARAM_PROP_FILE = "hadoop-login.properties";
+	public static final String DEFAULT_DATASOURCE_PARAM_PROP_FILE = "datasource.properties";
+	public static final String RESOURCEMAP_PROP_FILE = "resourcenamemap.properties";
+	public static final String DEFAULT_RESOURCE_NAME = "core-site.xml";
+	public static final String RANGER_SECTION_NAME = "xalogin.xml";
+	public static final String RANGER_LOGIN_USER_NAME_PROP = "username";
+	public static final String RANGER_LOGIN_KEYTAB_FILE_PROP = "keytabfile";
+	public static final String RANGER_LOGIN_PASSWORD = "password";
 	public static final String RANGER_LOOKUP_PRINCIPAL = "lookupprincipal";
 	public static final String RANGER_LOOKUP_KEYTAB = "lookupkeytab";
 	public static final String RANGER_PRINCIPAL = "rangerprincipal";
@@ -53,19 +53,19 @@ public class HadoopConfigHolder  {
 	public static final String HADOOP_RPC_PROTECTION = "hadoop.rpc.protection";
 	
 
-	private static boolean initialized = false ;
-	private static Map<String,HashMap<String,Properties>> dataSource2ResourceListMap = new HashMap<String,HashMap<String,Properties>>() ;
-	private static Properties globalLoginProp = new Properties() ;
-	private static Map<String,HadoopConfigHolder> dataSource2HadoopConfigHolder = new HashMap<String,HadoopConfigHolder>() ;
-	private static Properties resourcemapProperties = null ;
+	private static boolean initialized = false;
+	private static Map<String,HashMap<String,Properties>> dataSource2ResourceListMap = new HashMap<String,HashMap<String,Properties>>();
+	private static Properties globalLoginProp = new Properties();
+	private static Map<String,HadoopConfigHolder> dataSource2HadoopConfigHolder = new HashMap<String,HadoopConfigHolder>();
+	private static Properties resourcemapProperties = null;
 	
 	
-	private String datasourceName ;
-	private String defaultConfigFile ;
-	private String userName ;
-	private String keyTabFile ;
-	private String password ;
-	private boolean isKerberosAuth ;
+	private String datasourceName;
+	private String defaultConfigFile;
+	private String userName;
+	private String keyTabFile;
+	private String password;
+	private boolean isKerberosAuth;
 	private String lookupPrincipal;
 	private String lookupKeytab;
 	private String nameRules;
@@ -76,17 +76,17 @@ public class HadoopConfigHolder  {
   private static Set<String> rangerInternalPropertyKeys = new HashSet<String>();
 	
 	public static HadoopConfigHolder getInstance(String aDatasourceName) {
-		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName) ;
+		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName);
 		if (ret == null) {
 			synchronized(HadoopConfigHolder.class) {
-				HadoopConfigHolder temp = ret ;
+				HadoopConfigHolder temp = ret;
 				if (temp == null) {
-					ret = new HadoopConfigHolder(aDatasourceName) ;
-					dataSource2HadoopConfigHolder.put(aDatasourceName, ret) ;
+					ret = new HadoopConfigHolder(aDatasourceName);
+					dataSource2HadoopConfigHolder.put(aDatasourceName, ret);
 				}
 			}
 		}
-		return ret ;
+		return ret;
 	}
 
   public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties) {
@@ -95,25 +95,25 @@ public class HadoopConfigHolder  {
 
 	public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties,
                                                String defaultConfigFile) {
-		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName) ;
+		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName);
 		if (ret == null) {
 			synchronized(HadoopConfigHolder.class) {
-				HadoopConfigHolder temp = ret ;
+				HadoopConfigHolder temp = ret;
 				if (temp == null) {
-					ret = new HadoopConfigHolder(aDatasourceName,connectionProperties, defaultConfigFile) ;
-					dataSource2HadoopConfigHolder.put(aDatasourceName, ret) ;
+					ret = new HadoopConfigHolder(aDatasourceName,connectionProperties, defaultConfigFile);
+					dataSource2HadoopConfigHolder.put(aDatasourceName, ret);
 				}
 			}
 		}
 		else {
 			if (connectionProperties !=null  &&  !connectionProperties.equals(ret.connectionProperties)) {
-				ret = new HadoopConfigHolder(aDatasourceName,connectionProperties) ;
-				dataSource2HadoopConfigHolder.remove(aDatasourceName) ;
-				dataSource2HadoopConfigHolder.put(aDatasourceName, ret) ;
+				ret = new HadoopConfigHolder(aDatasourceName,connectionProperties);
+				dataSource2HadoopConfigHolder.remove(aDatasourceName);
+				dataSource2HadoopConfigHolder.put(aDatasourceName, ret);
 			}
 		}
 
-		return ret ;
+		return ret;
 	}
 	
 	
@@ -121,7 +121,7 @@ public class HadoopConfigHolder  {
 	private HadoopConfigHolder(String aDatasourceName) {
 		datasourceName = aDatasourceName;
 		if ( ! initialized ) {
-			init() ;
+			init();
 		}
 		initLoginInfo();
 	}
@@ -133,21 +133,21 @@ public class HadoopConfigHolder  {
 	private HadoopConfigHolder(String aDatasourceName, Map<String,String> connectionProperties,
                              String defaultConfigFile) {
 		datasourceName = aDatasourceName;
-		this.connectionProperties = connectionProperties ;
+		this.connectionProperties = connectionProperties;
     this.defaultConfigFile = defaultConfigFile;
-		initConnectionProp() ;
+		initConnectionProp();
 		initLoginInfo();
 	}
 	
 	private void initConnectionProp() {
 		for(String key : connectionProperties.keySet()) {
 			
-			String resourceName = getResourceName(key) ;
+			String resourceName = getResourceName(key);
 			
 			if (resourceName == null) {
-				resourceName = RANGER_SECTION_NAME ;
+				resourceName = RANGER_SECTION_NAME;
 			}
-			String val = connectionProperties.get(key) ;
+			String val = connectionProperties.get(key);
 			addConfiguration(datasourceName, resourceName, key, val );
 		}
 	}
@@ -169,8 +169,8 @@ public class HadoopConfigHolder  {
 
 	public static void initResourceMap() {
 		if (resourcemapProperties == null) {
-			resourcemapProperties = new Properties() ;
-			InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(RESOURCEMAP_PROP_FILE) ;
+			resourcemapProperties = new Properties();
+			InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(RESOURCEMAP_PROP_FILE);
 			if (in != null) {
 				try {
 					resourcemapProperties.load(in);
@@ -187,7 +187,7 @@ public class HadoopConfigHolder  {
 				finally {
 					if (in != null) {
 						try {
-							in.close() ;
+							in.close();
 						}
 						catch(IOException ioe) {
 							// Ignore IOException during close of stream
@@ -206,15 +206,15 @@ public class HadoopConfigHolder  {
 	private static synchronized void init() {
 
 		if (initialized) {
-			return ;
+			return;
 		}
 
 		try {
-			InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(DEFAULT_DATASOURCE_PARAM_PROP_FILE) ;
+			InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(DEFAULT_DATASOURCE_PARAM_PROP_FILE);
 			if (in != null) {
-				Properties prop = new Properties() ;
+				Properties prop = new Properties();
 				try {
-					prop.load(in) ;
+					prop.load(in);
 				} catch (IOException e) {
 					throw new HadoopException("Unable to get configuration information for Hadoop environments", e);
 				}
@@ -227,36 +227,36 @@ public class HadoopConfigHolder  {
 				}
 	
 				if (prop.size() == 0)
-					return ;
+					return;
 				
 				for(Object keyobj : prop.keySet()) {
 					String key = (String)keyobj;
-					String val = prop.getProperty(key) ;
+					String val = prop.getProperty(key);
 					
-					int dotLocatedAt = key.indexOf(".") ;
+					int dotLocatedAt = key.indexOf(".");
 					
 					if (dotLocatedAt == -1) {
-						continue ;
+						continue;
 					}
 					
-					String dataSource = key.substring(0,dotLocatedAt) ;
+					String dataSource = key.substring(0,dotLocatedAt);
 					
-					String propKey = key.substring(dotLocatedAt+1) ;
-					int resourceFoundAt =  propKey.indexOf(".") ;
+					String propKey = key.substring(dotLocatedAt+1);
+					int resourceFoundAt =  propKey.indexOf(".");
 					if (resourceFoundAt > -1) {
-						String resourceName = propKey.substring(0, resourceFoundAt) + ".xml" ;
-						propKey = propKey.substring(resourceFoundAt+1) ;
-						addConfiguration(dataSource, resourceName, propKey, val) ;
+						String resourceName = propKey.substring(0, resourceFoundAt) + ".xml";
+						propKey = propKey.substring(resourceFoundAt+1);
+						addConfiguration(dataSource, resourceName, propKey, val);
 					}
 					
 				}
 			}
 			
-			in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(GLOBAL_LOGIN_PARAM_PROP_FILE) ;
+			in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(GLOBAL_LOGIN_PARAM_PROP_FILE);
 			if (in != null) {
-				Properties tempLoginProp = new Properties() ;
+				Properties tempLoginProp = new Properties();
 				try {
-					tempLoginProp.load(in) ;
+					tempLoginProp.load(in);
 				} catch (IOException e) {
 					throw new HadoopException("Unable to get login configuration information for Hadoop environments from file: [" + GLOBAL_LOGIN_PARAM_PROP_FILE + "]", e);
 				}
@@ -267,21 +267,21 @@ public class HadoopConfigHolder  {
 						// Ignored exception when the stream is closed.
 					}
 				}
-				globalLoginProp = tempLoginProp ;
+				globalLoginProp = tempLoginProp;
 			}
 		}
 		finally {
-			initialized = true ;
+			initialized = true;
 		}
 	}
 	
 	
 	private void initLoginInfo() {
-		Properties prop = this.getRangerSection() ;
+		Properties prop = this.getRangerSection();
 		if (prop != null) {
-			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP) ;
-			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP) ;
-			password = prop.getProperty(RANGER_LOGIN_PASSWORD) ;
+			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP);
+			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP);
+			password = prop.getProperty(RANGER_LOGIN_PASSWORD);
 			lookupPrincipal = prop.getProperty(RANGER_LOOKUP_PRINCIPAL);
 			lookupKeytab = prop.getProperty(RANGER_LOOKUP_KEYTAB);
 			nameRules = prop.getProperty(RANGER_NAME_RULES);
@@ -300,11 +300,11 @@ public class HadoopConfigHolder  {
 
 	
 	public Properties getRangerSection() {
-		Properties prop = this.getProperties(RANGER_SECTION_NAME) ;
+		Properties prop = this.getProperties(RANGER_SECTION_NAME);
 		if (prop == null) {
-			prop = globalLoginProp ;
+			prop = globalLoginProp;
 		}
-		return prop ;
+		return prop;
 	}
 
 
@@ -312,55 +312,55 @@ public class HadoopConfigHolder  {
 	private static void addConfiguration(String dataSource, String resourceName, String propertyName, String value) {
 
 		if (dataSource == null || dataSource.isEmpty()) {
-			return ;
+			return;
 		}
 		
 		if (propertyName == null || propertyName.isEmpty()) {
-			return ;
+			return;
 		}
 		
 		if (resourceName == null) {
-			resourceName = DEFAULT_RESOURCE_NAME ;
+			resourceName = DEFAULT_RESOURCE_NAME;
 		}
 		
 		
-		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(dataSource) ;
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(dataSource);
 		
 		if (resourceName2PropertiesMap == null) {
-			resourceName2PropertiesMap = new HashMap<String,Properties>() ;
-			dataSource2ResourceListMap.put(dataSource, resourceName2PropertiesMap) ;
+			resourceName2PropertiesMap = new HashMap<String,Properties>();
+			dataSource2ResourceListMap.put(dataSource, resourceName2PropertiesMap);
 		}
 		
-		Properties prop = resourceName2PropertiesMap.get(resourceName) ;
+		Properties prop = resourceName2PropertiesMap.get(resourceName);
 		if (prop == null) {
-			prop = new Properties() ;
-			resourceName2PropertiesMap.put(resourceName, prop) ;
+			prop = new Properties();
+			resourceName2PropertiesMap.put(resourceName, prop);
 		}
 		if (value == null) {
-			prop.remove(propertyName) ;
+			prop.remove(propertyName);
 		}
 		else {
-			prop.put(propertyName, value) ;
+			prop.put(propertyName, value);
 		}
 	}
 	
 	
 	public String getDatasourceName() {
-		return datasourceName ;
+		return datasourceName;
 	}
 	
 	public boolean hasResourceExists(String aResourceName) {    // dilli
-		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(datasourceName) ;
-		return (resourceName2PropertiesMap != null && resourceName2PropertiesMap.containsKey(aResourceName)) ;
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(datasourceName);
+		return (resourceName2PropertiesMap != null && resourceName2PropertiesMap.containsKey(aResourceName));
  	}
 
 	public Properties getProperties(String aResourceName) {
-		Properties ret = null ;
-		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(datasourceName) ;
+		Properties ret = null;
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(datasourceName);
 		if (resourceName2PropertiesMap != null) {
-			ret =  resourceName2PropertiesMap.get(aResourceName) ;
+			ret =  resourceName2PropertiesMap.get(aResourceName);
 		}
-		return ret ;
+		return ret;
  	}
 	
 	public String getHadoopSecurityAuthentication() {
@@ -427,10 +427,10 @@ public class HadoopConfigHolder  {
 			LOG.debug("==> HadoopConfigHolder.getProperties( " + " DataSource : " + sectionName + " Property : " +  property + ")" );
 		}
 
-		Properties repoParam = null ;
+		Properties repoParam = null;
 		String ret = null;
 
-		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(this.getDatasourceName()) ;
+		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(this.getDatasourceName());
 
 		if ( resourceName2PropertiesMap != null) {
 			repoParam=resourceName2PropertiesMap.get(sectionName);

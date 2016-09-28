@@ -57,7 +57,7 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 	@Override
 	public String getTable(RegionCoprocessorEnvironment regionServerEnv) {
 		HRegionInfo hri = regionServerEnv.getRegion().getRegionInfo();
-		byte[] tableName = hri.getTable().getName() ;
+		byte[] tableName = hri.getTable().getName();
 		String tableNameStr = Bytes.toString(tableName);
 		if (LOG.isDebugEnabled()) {
 			String message = String.format("getTable: Returning tablename[%s]", tableNameStr);

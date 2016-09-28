@@ -63,9 +63,9 @@ public class RangerSslHelper {
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";	
 
-	static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = "SunX509" ;
-	static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = "SunX509" ;
-	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "SSL" ;
+	static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = "SunX509";
+	static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = "SunX509";
+	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "SSL";
 
 	private String mKeyStoreURL     = null;
 	private String mKeyStoreAlias   = null;
@@ -108,12 +108,12 @@ public class RangerSslHelper {
 	}
 	
 	void readConfig() {
-		InputStream in =  null ;
+		InputStream in =  null;
 
 		try {
-			Configuration conf = new Configuration() ;
+			Configuration conf = new Configuration();
 
-			in = getFileInputStream(mSslConfigFileName) ;
+			in = getFileInputStream(mSslConfigFileName);
 
 			if (in != null) {
 				conf.addResource(in);
@@ -156,10 +156,10 @@ public class RangerSslHelper {
 		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
 		if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
-			InputStream in =  null ;
+			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(mKeyStoreFile) ;
+				in = getFileInputStream(mKeyStoreFile);
 
 				if (in != null) {
 					KeyStore keyStore = KeyStore.getInstance(mKeyStoreType);
@@ -200,10 +200,10 @@ public class RangerSslHelper {
 		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 
 		if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
-			InputStream in =  null ;
+			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(mTrustStoreFile) ;
+				in = getFileInputStream(mTrustStoreFile);
 
 				if (in != null) {
 					KeyStore trustStore = KeyStore.getInstance(mTrustStoreType);
@@ -261,28 +261,28 @@ public class RangerSslHelper {
 	}
 
 	private InputStream getFileInputStream(String fileName)  throws IOException {
-		InputStream in = null ;
+		InputStream in = null;
 
 		if(! StringUtil.isEmpty(fileName)) {
-			File f = new File(fileName) ;
+			File f = new File(fileName);
 
 			if (f.exists()) {
-				in = new FileInputStream(f) ;
+				in = new FileInputStream(f);
 			}
 			else {
-				in = ClassLoader.getSystemResourceAsStream(fileName) ;
+				in = ClassLoader.getSystemResourceAsStream(fileName);
 			}
 		}
 
-		return in ;
+		return in;
 	}
 
 	private void close(InputStream str, String filename) {
 		if (str != null) {
 			try {
-				str.close() ;
+				str.close();
 			} catch (IOException excp) {
-				LOG.error("Error while closing file: [" + filename + "]", excp) ;
+				LOG.error("Error while closing file: [" + filename + "]", excp);
 			}
 		}
 	}

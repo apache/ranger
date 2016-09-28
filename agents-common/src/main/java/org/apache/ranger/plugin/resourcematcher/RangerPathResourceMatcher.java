@@ -150,18 +150,18 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				for(String p : pathElements) {
 					sb.append(p);
 
-					ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity) ;
+					ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
 
 					if (ret) {
 						break;
 					}
 
-					sb.append(pathSeparatorChar) ;
+					sb.append(pathSeparatorChar);
 				}
 
 				sb = null;
 			} else { // pathToCheck consists of only pathSeparatorChar
-				ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity) ;
+				ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity);
 			}
 		}
 		return ret;

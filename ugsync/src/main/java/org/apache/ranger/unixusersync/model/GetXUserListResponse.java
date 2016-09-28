@@ -25,10 +25,10 @@ import com.google.gson.annotations.SerializedName;
 
 public class GetXUserListResponse {
 
-	private int totalCount ;
+	private int totalCount;
 
 	@SerializedName("vXUsers")
-	List<XUserInfo> xuserInfoList ;
+	List<XUserInfo> xuserInfoList;
 	
 	public int getTotalCount() {
 		return totalCount;

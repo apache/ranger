@@ -25,24 +25,24 @@ import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
 public class UserGroupSync implements Runnable {
 	
-	private static final Logger LOG = Logger.getLogger(UserGroupSync.class) ;
+	private static final Logger LOG = Logger.getLogger(UserGroupSync.class);
 
-	private boolean         shutdownFlag = false ;
-	private UserGroupSink   ugSink       = null ;
-	private UserGroupSource ugSource     =  null ;
+	private boolean         shutdownFlag = false;
+	private UserGroupSink   ugSink       = null;
+	private UserGroupSource ugSource     =  null;
 
 
 
 	public static void main(String[] args) {
-		UserGroupSync userGroupSync = new UserGroupSync() ;
-		userGroupSync.run() ;
+		UserGroupSync userGroupSync = new UserGroupSync();
+		userGroupSync.run();
 	}
 
 	public void run() {
 		try {
-			long sleepTimeBetweenCycleInMillis = UserGroupSyncConfig.getInstance().getSleepTimeInMillisBetweenCycle() ;
+			long sleepTimeBetweenCycleInMillis = UserGroupSyncConfig.getInstance().getSleepTimeInMillisBetweenCycle();
 
-			boolean initDone = false ;
+			boolean initDone = false;
 
 			while (! initDone ) {
 				try {
@@ -58,17 +58,17 @@ public class UserGroupSync implements Runnable {
 					ugSource.updateSink(ugSink);
 					LOG.info("End: initial load of user/group from source==>sink");
 
-					initDone = true ;
+					initDone = true;
 
-					LOG.info("Done initializing user/group source and sink") ;
+					LOG.info("Done initializing user/group source and sink");
 				}
 				catch(Throwable t) {
-					LOG.error("Failed to initialize UserGroup source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds. Error details: ", t) ;
+					LOG.error("Failed to initialize UserGroup source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds. Error details: ", t);
 					try {
-						LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds") ;
-						Thread.sleep(sleepTimeBetweenCycleInMillis) ;
+						LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+						Thread.sleep(sleepTimeBetweenCycleInMillis);
 					} catch (Exception e) {
-						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize UserGroup source/sink", e) ;
+						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize UserGroup source/sink", e);
 					}
 				}
 			}
@@ -77,19 +77,19 @@ public class UserGroupSync implements Runnable {
 
 			while (! shutdownFlag ) {
 				try {
-					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds") ;
+					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
 					Thread.sleep(sleepTimeBetweenCycleInMillis);
 				} catch (InterruptedException e) {
-					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize UserGroup information", e) ;
+					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize UserGroup information", e);
 				}
 
 				try {
-					syncUserGroup(forceSync) ;
+					syncUserGroup(forceSync);
 
 					forceSync = false;
 				}
 				catch(Throwable t) {
-					LOG.error("Failed to synchronize UserGroup information. Error details: ", t) ;
+					LOG.error("Failed to synchronize UserGroup information. Error details: ", t);
 
 					forceSync = true;  // force sync to the destination in the next attempt
 				}
@@ -97,15 +97,15 @@ public class UserGroupSync implements Runnable {
 		
 		}
 		catch(Throwable t) {
-			LOG.error("UserGroupSync thread got an error", t) ;
+			LOG.error("UserGroupSync thread got an error", t);
 		}
 		finally {
-			LOG.error("Shutting down the UserGroupSync thread") ;
+			LOG.error("Shutting down the UserGroupSync thread");
 		}
 	}
 	
 	private void syncUserGroup(boolean forceSync) throws Throwable {
-		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
+		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
 		try{
 			if (config.isUserSyncEnabled()) {
@@ -115,7 +115,7 @@ public class UserGroupSync implements Runnable {
 					LOG.info("End: update user/group from source==>sink");
 				}
 				else {
-					LOG.debug("UserGroupSource: no change found for synchronization.") ;
+					LOG.debug("UserGroupSource: no change found for synchronization.");
 				}
 			}
 		}catch(Throwable t){

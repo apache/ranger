@@ -118,17 +118,17 @@ public class RangerMasterKey implements RangerKMSMKI{
 
 	private String decryptMasterKey(byte masterKey[], String password) throws Throwable {
 		logger.debug("Decrypting Master Key");
-		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password) ;
-		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec) ;
-		SecretKey masterKeyFromDB = getMasterKeyFromBytes(masterKeyFromDBDecrypted) ;
+		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password);
+		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec);
+		SecretKey masterKeyFromDB = getMasterKeyFromBytes(masterKeyFromDBDecrypted);
 		return Base64.encode(masterKeyFromDB.getEncoded());
 	}
 	
 	private SecretKey decryptMasterKeySK(byte masterKey[], String password) throws Throwable {
 		logger.debug("Decrypting Master Key");
-		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password) ;
-		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec) ;
-		return getMasterKeyFromBytes(masterKeyFromDBDecrypted) ;		
+		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password);
+		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec);
+		return getMasterKeyFromBytes(masterKeyFromDBDecrypted);		
 	}
 
 	private byte[] getEncryptedMK() throws Base64DecodingException {
@@ -144,7 +144,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 				  }else {
 					  XXRangerMasterKey rangerMasterKey = rangerKMSDao.getById(lstRangerMasterKey.get(0).getId());
 					  String masterKeyStr = rangerMasterKey.getMasterKey();
-					  return Base64.decode(masterKeyStr) ;
+					  return Base64.decode(masterKeyStr);
 				  }
 			  }			
 		  }catch(Exception e){
@@ -179,14 +179,14 @@ public class RangerMasterKey implements RangerKMSMKI{
 			Key secretKey = generateMasterKey();
 			PBEKeySpec pbeKeySpec = getPBEParameterSpec(password);
 			byte[] masterKeyToDB = encryptKey(secretKey.getEncoded(), pbeKeySpec);
-			return Base64.encode(masterKeyToDB) ;
+			return Base64.encode(masterKeyToDB);
 	}
 	
 	private String encryptMasterKey(String password, byte[] secretKey) throws Throwable {
 		logger.debug("Encrypting Master Key");
 		PBEKeySpec pbeKeySpec = getPBEParameterSpec(password);
 		byte[] masterKeyToDB = encryptKey(secretKey, pbeKeySpec);
-		return Base64.encode(masterKeyToDB) ;
+		return Base64.encode(masterKeyToDB);
 	}
 	
 	private Key generateMasterKey() throws NoSuchAlgorithmException{
@@ -196,33 +196,33 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	
 	private PBEKeySpec getPBEParameterSpec(String password) throws Throwable {
-		MessageDigest md = MessageDigest.getInstance(MD_ALGO) ;
-		byte[] saltGen = md.digest(password.getBytes()) ;		
-		byte[] salt = new byte[SALT_SIZE] ;		
+		MessageDigest md = MessageDigest.getInstance(MD_ALGO);
+		byte[] saltGen = md.digest(password.getBytes());		
+		byte[] salt = new byte[SALT_SIZE];		
 		System.arraycopy(saltGen, 0, salt, 0, SALT_SIZE);		
-		int iteration = password.toCharArray().length + 1 ;
-		return new PBEKeySpec(password.toCharArray(), salt, iteration) ;		
+		int iteration = password.toCharArray().length + 1;
+		return new PBEKeySpec(password.toCharArray(), salt, iteration);		
 	}
 	private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {
-		SecretKey key = getPasswordKey(keyspec) ;
-		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount()) ;
-		Cipher c = Cipher.getInstance(key.getAlgorithm()) ;
+		SecretKey key = getPasswordKey(keyspec);
+		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
+		Cipher c = Cipher.getInstance(key.getAlgorithm());
 		c.init(Cipher.ENCRYPT_MODE, key,paramSpec);
-		return c.doFinal(data) ;
+		return c.doFinal(data);
 	}
 	private SecretKey getPasswordKey(PBEKeySpec keyspec) throws Throwable {
-		SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGO) ;
-		return factory.generateSecret(keyspec) ;
+		SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGO);
+		return factory.generateSecret(keyspec);
 	}
 	private byte[] decryptKey(byte[] encrypted, PBEKeySpec keyspec) throws Throwable {
-		SecretKey key = getPasswordKey(keyspec) ;
-		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount()) ;
-		Cipher c = Cipher.getInstance(key.getAlgorithm()) ;
+		SecretKey key = getPasswordKey(keyspec);
+		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
+		Cipher c = Cipher.getInstance(key.getAlgorithm());
 		c.init(Cipher.DECRYPT_MODE, key, paramSpec);
-		return c.doFinal(encrypted) ;
+		return c.doFinal(encrypted);
 	}
 	private SecretKey getMasterKeyFromBytes(byte[] keyData) throws Throwable {
-		return new SecretKeySpec(keyData, MK_CIPHER) ;
+		return new SecretKeySpec(keyData, MK_CIPHER);
 	}
 	
 	public Map<String, String> getPropertiesWithPrefix(Properties props, String prefix) {

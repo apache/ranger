@@ -40,18 +40,18 @@ public class HdfsResourceMgr {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HdfsResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("<== HdfsResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );
 		}	
 		
 		try {
 			ret = HdfsClient.connectionTest(serviceName, configs);
 		} catch (HadoopException e) {
-			LOG.error("<== HdfsResourceMgr.testConnection Error: " + e.getMessage(),  e) ;
+			LOG.error("<== HdfsResourceMgr.testConnection Error: " + e.getMessage(),  e);
 			throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HdfsResourceMgr.connectionTest Result : "+ ret  ) ;
+			LOG.debug("<== HdfsResourceMgr.connectionTest Result : "+ ret  );
 		}	
 		return ret;
 	}
@@ -73,7 +73,7 @@ public class HdfsResourceMgr {
 		if (serviceName != null && userInput != null) {
 			try {
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsResourceMgr.getHdfsResources() UserInput: "+ userInput  + "configs: " + configs + "context: "  + context) ;
+					LOG.debug("<== HdfsResourceMgr.getHdfsResources() UserInput: "+ userInput  + "configs: " + configs + "context: "  + context);
 				}
 				
 				String wildCardToMatch;
@@ -124,7 +124,7 @@ public class HdfsResourceMgr {
 
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HdfsResourceMgr.getHdfsResources() Result : "+ resultList  ) ;
+			LOG.debug("<== HdfsResourceMgr.getHdfsResources() Result : "+ resultList  );
 		}	
 		return resultList;
     }

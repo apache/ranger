@@ -37,7 +37,7 @@ import java.util.Properties;
 import org.apache.ranger.credentialapi.CredentialReader;
 
 public class TagSyncConfig extends Configuration {
-	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class) ;
+	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class);
 
 	private static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 
@@ -45,9 +45,9 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String CORE_SITE_FILE = "core-site.xml";
 
-	public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled" ;
+	public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled";
 
-	public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir" ;
+	public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir";
 
 	private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.dest.ranger.endpoint";
 
@@ -98,7 +98,7 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_KERBEROS_PRICIPAL = "ranger.tagsync.kerberos.principal";
 	private static final String TAGSYNC_KERBEROS_KEYTAB = "ranger.tagsync.kerberos.keytab";
 
-	private static String LOCAL_HOSTNAME = "unknown" ;
+	private static String LOCAL_HOSTNAME = "unknown";
 
 	private Properties props;
 
@@ -106,7 +106,7 @@ public class TagSyncConfig extends Configuration {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
 		} catch (UnknownHostException e) {
-			LOCAL_HOSTNAME = "unknown" ;
+			LOCAL_HOSTNAME = "unknown";
 		}
 	}
 	
@@ -136,7 +136,7 @@ public class TagSyncConfig extends Configuration {
 			}
 
 			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path) ;
+				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
 				if (ret == null) {
 					if (! path.startsWith("/")) {
 						ret = ClassLoader.getSystemResourceAsStream("/" + path);
@@ -401,7 +401,7 @@ public class TagSyncConfig extends Configuration {
 
 	private TagSyncConfig() {
 		super(false);
-		init() ;
+		init();
 	}
 
 	private void init() {

@@ -31,12 +31,12 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 
 public class RangerConfiguration extends Configuration {
 	
-	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class) ;
+	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
 	
 	private static volatile RangerConfiguration config = null;
 	
 	private RangerConfiguration() {
-		super(false) ;
+		super(false);
 	}
 
 	public void addResourcesForServiceType(String serviceType) {
@@ -87,18 +87,18 @@ public class RangerConfiguration extends Configuration {
 			LOG.debug("==> addResourceIfReadable(" + aResourceName + ")");
 		}
 
-		String fName = getFileLocation(aResourceName) ;
+		String fName = getFileLocation(aResourceName);
 		if (fName != null) {
 			if(LOG.isInfoEnabled()) {
 				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fName);
 			}
 
-			File f = new File(fName) ;
+			File f = new File(fName);
 			if (f.exists() && f.canRead()) {
-				URL fUrl = null ;
+				URL fUrl = null;
 				try {
-					fUrl = f.toURI().toURL() ;
-					addResource(fUrl) ;
+					fUrl = f.toURI().toURL();
+					addResource(fUrl);
 					ret = true;
 				} catch (MalformedURLException e) {
 					LOG.error("Unable to find URL for the resource name [" + aResourceName + "]. Ignoring the resource:" + aResourceName);
@@ -134,7 +134,7 @@ public class RangerConfiguration extends Configuration {
 		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
 
 		if(auditFactory == null) {
-			LOG.error("Unable to find the AuditProviderFactory. (null) found") ;
+			LOG.error("Unable to find the AuditProviderFactory. (null) found");
 			return;
 		}
 
@@ -157,19 +157,19 @@ public class RangerConfiguration extends Configuration {
 	
 	private String getFileLocation(String fileName) {
 		
-		String ret = null ;
+		String ret = null;
 		
-		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName) ;
+		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
 		
 		if (lurl == null ) {
-			lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName) ;
+			lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
 		}
 		
 		if (lurl != null) {
-			ret = lurl.getFile() ;
+			ret = lurl.getFile();
 		}
 		
-		return ret ;
+		return ret;
 	}
 	
 	private void  addSecurityResource(String serviceType) {

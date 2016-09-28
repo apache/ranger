@@ -96,7 +96,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="IS_VISIBLE"  , nullable=false )
-	protected Integer isVisible ;
+	protected Integer isVisible;
 	/**
 	 * Id of the credential store
 	 * <ul>

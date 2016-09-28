@@ -33,7 +33,7 @@ public class ListUserGroupTest {
   
   public static void main(String[] args) {
 
-	clientusergroupmapping = RangerClientUserGroupMapping.buildClientUserGroupMapping(passwdfile) ;
+	clientusergroupmapping = RangerClientUserGroupMapping.buildClientUserGroupMapping(passwdfile);
 	System.out.println(clientusergroupmapping);
 	}
 }

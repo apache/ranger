@@ -298,7 +298,7 @@ public class KmsKeyMgr {
 				try {
 					String response = null;
 					if(!isKerberos){
-						response = r.delete(String.class) ;
+						response = r.delete(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(provider);
 						response = Subject.doAs(sub, new PrivilegedAction<String>() {
@@ -308,7 +308,7 @@ public class KmsKeyMgr {
 							}
 						});
 					}
-					logger.debug("delete RESPONSE: [" + response + "]") ;
+					logger.debug("delete RESPONSE: [" + response + "]");
 					break;
 				} catch (Exception e) {
 					if (e instanceof UniformInterfaceException || i == providers.length - 1)
@@ -554,7 +554,7 @@ public class KmsKeyMgr {
 		String password = getKMSPassword(provider);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
 	    if (StringUtils.isEmpty(nameRules)) {
-        	KerberosName.setRules("DEFAULT") ;
+        	KerberosName.setRules("DEFAULT");
     	}else{
     		KerberosName.setRules(nameRules);
     	}
@@ -599,7 +599,7 @@ public class KmsKeyMgr {
 		ClientConfig cc = new DefaultClientConfig();
 		cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 		ret = Client.create(cc);	
-		return ret ;
+		return ret;
 	}	
 	
 	public VXKmsKeyList getFilteredKeyList(HttpServletRequest request, VXKmsKeyList vXKmsKeyList){

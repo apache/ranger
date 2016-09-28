@@ -31,52 +31,52 @@ import org.apache.ranger.kms.dao.DaoManager;
 
 public class JKS2RangerUtil {
 	
-	private static final String DEFAULT_KEYSTORE_TYPE = "jceks" ;
-	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password" ;
+	private static final String DEFAULT_KEYSTORE_TYPE = "jceks";
+	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 	
 	public static void showUsage() {
-		System.err.println("USAGE: java " + JKS2RangerUtil.class.getName() + " <KMS_FileName> [KeyStoreType]") ;
-		System.err.println(" If KeyStoreType is not provided, it will be considered as " + DEFAULT_KEYSTORE_TYPE) ;
-		System.err.println(" When execution of this utility, it will prompt for both keystore password and key password.") ;
+		System.err.println("USAGE: java " + JKS2RangerUtil.class.getName() + " <KMS_FileName> [KeyStoreType]");
+		System.err.println(" If KeyStoreType is not provided, it will be considered as " + DEFAULT_KEYSTORE_TYPE);
+		System.err.println(" When execution of this utility, it will prompt for both keystore password and key password.");
 	}
 	
 
 	public static void main(String[] args) {
 			if (args.length == 0) {
-				System.err.println("Invalid number of parameters found.") ;
-				showUsage() ;
-				System.exit(1) ;
+				System.err.println("Invalid number of parameters found.");
+				showUsage();
+				System.exit(1);
 			}
 			else {
-				String keyStoreFileName = args[0] ;
-				File f = new File(keyStoreFileName) ;
+				String keyStoreFileName = args[0];
+				File f = new File(keyStoreFileName);
 				if (! f.exists()) {
-					System.err.println("File: [" + f.getAbsolutePath() + "] does not exists.") ;
-					showUsage() ;
+					System.err.println("File: [" + f.getAbsolutePath() + "] does not exists.");
+					showUsage();
 					System.exit(1);
 				}
-				String keyStoreType = (args.length == 2 ? args[1] : DEFAULT_KEYSTORE_TYPE) ;
+				String keyStoreType = (args.length == 2 ? args[1] : DEFAULT_KEYSTORE_TYPE);
 				try {
-					KeyStore.getInstance(keyStoreType) ;
+					KeyStore.getInstance(keyStoreType);
 				} catch (KeyStoreException e) {
-					System.err.println("ERROR: Unable to get valid keystore for the type [" + keyStoreType + "]") ;
-					showUsage() ;
-					System.exit(1) ;
+					System.err.println("ERROR: Unable to get valid keystore for the type [" + keyStoreType + "]");
+					showUsage();
+					System.exit(1);
 				}
 				
 				new JKS2RangerUtil().doImportKeysFromJKS(keyStoreFileName, keyStoreType);
 				
-				System.out.println("Keys from " + keyStoreFileName + " has been successfully imported into RangerDB.") ;
+				System.out.println("Keys from " + keyStoreFileName + " has been successfully imported into RangerDB.");
 				
-				System.exit(0) ;
+				System.exit(0);
 				
 			}
 	}
 	
 	private void doImportKeysFromJKS(String keyStoreFileName, String keyStoreType) {
 		try {
-			char[] keyStorePassword = getPasswordFromConsole("Enter Password for the keystore FILE :") ;
-			char[] keyPassword = getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:") ;
+			char[] keyStorePassword = getPasswordFromConsole("Enter Password for the keystore FILE :");
+			char[] keyPassword = getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
@@ -85,9 +85,9 @@ public class JKS2RangerUtil {
 			RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
 			rangerMasterKey.generateMasterKey(password);		
 			char[] masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
-			InputStream in = null ;
+			InputStream in = null;
 			try {
-				in = new FileInputStream(new File(keyStoreFileName)) ;
+				in = new FileInputStream(new File(keyStoreFileName));
 				dbStore.engineLoadKeyStoreFile(in, keyStorePassword, keyPassword, masterKey, keyStoreType);
 				dbStore.engineStore(null,masterKey);	
 			}
@@ -96,19 +96,19 @@ public class JKS2RangerUtil {
 					try {
 						in.close();
 					} catch (Exception e) {
-						throw new RuntimeException("ERROR:  Unable to close file stream for [" + keyStoreFileName + "]", e) ;
+						throw new RuntimeException("ERROR:  Unable to close file stream for [" + keyStoreFileName + "]", e);
 					}
 				}
 			}
 		}
 		catch(Throwable t) {
-			throw new RuntimeException("Unable to import keys from [" + keyStoreFileName + "] due to exception.", t) ;
+			throw new RuntimeException("Unable to import keys from [" + keyStoreFileName + "] due to exception.", t);
 		}
 	}
 	
 	
 	private char[] getPasswordFromConsole(String prompt) throws IOException {
-		String ret = null ;
+		String ret = null;
 		Console c=System.console();
 	    if (c == null) {
 	        System.out.print(prompt + " ");
@@ -123,18 +123,18 @@ public class JKS2RangerUtil {
 	            ret = new String(e, Charset.defaultCharset());
 	        }
 	    } else {
-	    	char[] pwd = c.readPassword(prompt + " ") ;
+	    	char[] pwd = c.readPassword(prompt + " ");
 	    	if (pwd == null) {
-	    		ret = null ;
+	    		ret = null;
 	    	}
 	    	else {
 	    		ret = new String(pwd);
 	    	}
 	    }
 	    if (ret == null) {
-	    	ret = "" ;
+	    	ret = "";
 	    }
-	    return ret.toCharArray() ;
+	    return ret.toCharArray();
 	}
 
 }

@@ -61,7 +61,7 @@ public class LdapConfig {
 
     private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.groupnameattribute";
 
-    public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none" ;
+    public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none";
     public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
 
     private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.username.caseconversion";
@@ -172,7 +172,7 @@ public class LdapConfig {
 			}
 			
 			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path) ;
+				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
 				if (ret == null) {
 					if (! path.startsWith("/")) {
 						ret = ClassLoader.getSystemResourceAsStream("/" + path);

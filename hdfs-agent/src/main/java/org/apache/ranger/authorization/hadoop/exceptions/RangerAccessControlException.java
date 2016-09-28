@@ -26,7 +26,7 @@ public class RangerAccessControlException extends AccessControlException {
 	private static final long serialVersionUID = -4673975720243484927L;
 
 	public RangerAccessControlException(String aMsg) {
-		super(aMsg) ;
+		super(aMsg);
 	}
 
 }

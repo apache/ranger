@@ -246,7 +246,7 @@ public class RollingTimeUtil {
 	// Test Method for RolloverTime calculation
 	// Set rollOverPeriod 10m,30m..,1h,2h,..1d,2d..,1w,2w..,1M,2M..1y..2y
 	// If nothing is set for rollOverPeriod or Duration default rollOverPeriod is 1 day
-	String rollOverPeriod = "" ;
+	String rollOverPeriod = "";
 	RollingTimeUtil rollingTimeUtil = new RollingTimeUtil();
 	int duration = 86400;
 	Date nextRollOvertime = null;

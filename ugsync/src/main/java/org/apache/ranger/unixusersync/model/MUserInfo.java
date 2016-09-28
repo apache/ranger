@@ -21,11 +21,11 @@
 
 public class MUserInfo {
 	
-	private String loginId ;
-	private String firstName ;
-	private String lastName ;
-	private String emailAddress ;
-	private String[] userRoleList = { "ROLE_USER" } ;
+	private String loginId;
+	private String firstName;
+	private String lastName;
+	private String emailAddress;
+	private String[] userRoleList = { "ROLE_USER" };
 	
 	
 	public String getLoginId() {

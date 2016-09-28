@@ -155,7 +155,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 						propertiesMap.put("ranger.solr.audit.user.password", solrAuditPassword);
 						props.put("ranger.solr.audit.user.password", solrAuditPassword);
 					}else{
-						logger.info("Credential keystore password not applied for Solr ; clear text password shall be applicable");
+						logger.info("Credential keystore password not applied for Solr; clear text password shall be applicable");
 					}
 				}
 			}

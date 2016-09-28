@@ -52,13 +52,13 @@ public class RangerRESTUtils {
 
 	public static final String REST_URL_LOOKUP_TAG_NAMES = "/service/tags/lookup";
 
-	public static final String REST_EXPECTED_MIME_TYPE = "application/json" ;
-	public static final String REST_MIME_TYPE_JSON     = "application/json" ;
+	public static final String REST_EXPECTED_MIME_TYPE = "application/json";
+	public static final String REST_MIME_TYPE_JSON     = "application/json";
 
 	public static final String REST_PARAM_LAST_KNOWN_POLICY_VERSION = "lastKnownVersion";
 	public static final String REST_PARAM_PLUGIN_ID                 = "pluginId";
 
-	private static final int MAX_PLUGIN_ID_LEN = 255 ;
+	private static final int MAX_PLUGIN_ID_LEN = 255;
 
 
 	public String getPolicyRestUrl(String propertyPrefix) {
@@ -112,22 +112,22 @@ public class RangerRESTUtils {
         String hostName = null;
 
         try {
-            hostName = InetAddress.getLocalHost().getHostName() ;
+            hostName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
             LOG.error("ERROR: Unable to find hostname for the agent ", e);
-            hostName = "unknownHost" ;
+            hostName = "unknownHost";
         }
 
-        String ret  = hostName + "-" + serviceName ;
+        String ret  = hostName + "-" + serviceName;
 
         if(! StringUtils.isEmpty(appId)) {
         	ret = appId + "@" + ret;
         }
 
         if (ret.length() > MAX_PLUGIN_ID_LEN ) {
-        	ret = ret.substring(0,MAX_PLUGIN_ID_LEN) ;
+        	ret = ret.substring(0,MAX_PLUGIN_ID_LEN);
         }
 
-        return ret  ;
+        return ret ;
     }
 }

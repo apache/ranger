@@ -32,7 +32,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 	private static final Log LOG = LogFactory.getLog(HdfsAuditProvider.class);
 
 	public static final String AUDIT_HDFS_IS_ASYNC_PROP           = "xasecure.audit.hdfs.is.async";
-	public static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.hdfs.async.max.queue.size" ;
+	public static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.hdfs.async.max.queue.size";
 	public static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.hdfs.async.max.flush.interval.ms";
 
 	public HdfsAuditProvider() {

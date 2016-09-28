@@ -458,7 +458,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 			 // Acutal solrclient JAAS configs are read from the ranger-admin-site.xml in ranger admin config folder and set by InMemoryJAASConfiguration
 			 // Refer InMemoryJAASConfiguration doc for JAAS Configuration
 			 if ( System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null ) {
-				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null") ;
+				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
 			 }
 			 logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
 			 InMemoryJAASConfiguration.init(props);

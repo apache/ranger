@@ -47,10 +47,10 @@ public class DbAuditProvider extends AuditDestination {
 	private static final Log LOG = LogFactory.getLog(DbAuditProvider.class);
 
 	public static final String AUDIT_DB_IS_ASYNC_PROP           = "xasecure.audit.db.is.async";
-	public static final String AUDIT_DB_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.db.async.max.queue.size" ;
+	public static final String AUDIT_DB_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.db.async.max.queue.size";
 	public static final String AUDIT_DB_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.db.async.max.flush.interval.ms";
 
-	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size" ;
+	private static final String AUDIT_DB_BATCH_SIZE_PROP            = "xasecure.audit.db.batch.size";
 	private static final String AUDIT_DB_RETRY_MIN_INTERVAL_PROP    = "xasecure.audit.db.config.retry.min.interval.ms";
 	private static final String AUDIT_JPA_CONFIG_PROP_PREFIX        = "xasecure.audit.jpa.";
 	private static final String AUDIT_DB_CREDENTIAL_PROVIDER_FILE   = "xasecure.audit.credential.provider.file";

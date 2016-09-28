@@ -49,19 +49,19 @@ public class TestServiceStore {
 	public static void setupTest() throws Exception {
 		
 		
-		File file = File.createTempFile("fileStore", "dir") ;
+		File file = File.createTempFile("fileStore", "dir");
 		
 		if (file.exists()) {
-			file.delete() ;
+			file.delete();
 		}
 		
 		file.deleteOnExit();
 		
-		file.mkdirs() ;
+		file.mkdirs();
 		
-		String fileStoreDir =  file.getAbsolutePath() ;
+		String fileStoreDir =  file.getAbsolutePath();
 		
-		System.out.println("Using fileStoreDirectory as [" + fileStoreDir + "]") ;
+		System.out.println("Using fileStoreDirectory as [" + fileStoreDir + "]");
 
 		svcStore = new ServiceFileStore(fileStoreDir);
 		svcStore.init();
@@ -250,8 +250,8 @@ public class TestServiceStore {
 		assertEquals("getPolicies(filter=origPolicyName) failed", 1, policies == null ? 0 : policies.size());
 		filter = null;
 		
-		String osName = System.getProperty("os.name") ;
-		boolean windows = (osName != null && osName.toLowerCase().startsWith("windows")) ;
+		String osName = System.getProperty("os.name");
+		boolean windows = (osName != null && osName.toLowerCase().startsWith("windows"));
 
 		if (! windows ) {
 

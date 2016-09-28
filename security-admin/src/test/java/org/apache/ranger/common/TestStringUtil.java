@@ -159,14 +159,14 @@ public class TestStringUtil {
 	
 	@Test
 	public void testIsListEmpty(){
-		List<String> list=new ArrayList<String>() ;			
+		List<String> list=new ArrayList<String>();			
 		boolean listValue = stringUtil.isEmpty(list);
 		Assert.assertTrue(listValue);
 	}
 	
 	@Test
 	public void testIsListNotEmpty(){
-		List<String> list=new ArrayList<String>() ;
+		List<String> list=new ArrayList<String>();
 		             list.add("a");
 		             list.add("b");
 		boolean listValue = stringUtil.isEmpty(list);

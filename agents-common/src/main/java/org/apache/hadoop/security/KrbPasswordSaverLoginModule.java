@@ -32,7 +32,7 @@ public class KrbPasswordSaverLoginModule implements LoginModule {
     public static final String PASSWORD_PARAM = "javax.security.auth.login.password";
 
 	@SuppressWarnings("rawtypes")
-	private Map sharedState = null ;
+	private Map sharedState = null;
 	
 	public KrbPasswordSaverLoginModule() {
 	}
@@ -51,16 +51,16 @@ public class KrbPasswordSaverLoginModule implements LoginModule {
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackhandler, Map<String, ?> sharedMap, Map<String, ?> options) {
 		
-		this.sharedState = sharedMap ;
+		this.sharedState = sharedMap;
 		
-		String userName = (options != null) ? (String)options.get(USERNAME_PARAM) : null ;
+		String userName = (options != null) ? (String)options.get(USERNAME_PARAM) : null;
 		if (userName != null) {
-			this.sharedState.put(USERNAME_PARAM,userName) ;
+			this.sharedState.put(USERNAME_PARAM,userName);
 		}
-		String password = (options != null) ? (String)options.get(PASSWORD_PARAM) : null ;
+		String password = (options != null) ? (String)options.get(PASSWORD_PARAM) : null;
 		
 		if (password != null) {
-			this.sharedState.put(PASSWORD_PARAM,password.toCharArray()) ;
+			this.sharedState.put(PASSWORD_PARAM,password.toCharArray());
 		}
 	}
 

@@ -37,17 +37,17 @@ public class KnoxResourceMgr {
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 		HashMap<String, Object> ret = null;
 		if (LOG.isDebugEnabled()) {
-		   LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs ) ;
+		   LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs );
 		}
 		try {
 			ret = KnoxClient.connectionTest(serviceName, configs);
 		} catch (Exception e) {
-		  LOG.error("<== KnoxResourceMgr.connectionTest Error: " + e) ;
+		  LOG.error("<== KnoxResourceMgr.connectionTest Error: " + e);
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== KnoxResourceMgr.HdfsResourceMgr Result : "+ ret  ) ;
+			LOG.debug("<== KnoxResourceMgr.HdfsResourceMgr Result : "+ ret  );
 		}
 		return ret;
 	 }
@@ -97,7 +97,7 @@ public class KnoxResourceMgr {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== KnoxResourceMgr.getKnoxResources()  knoxUrl: "+ knoxUrl  + " knoxAdminUser: " + knoxAdminUser + " topologyName: "  + knoxTopologyName + " KnoxServiceName: " + knoxServiceName) ;
+			LOG.debug("<== KnoxResourceMgr.getKnoxResources()  knoxUrl: "+ knoxUrl  + " knoxAdminUser: " + knoxAdminUser + " topologyName: "  + knoxTopologyName + " KnoxServiceName: " + knoxServiceName);
 		}
 		
 		final KnoxClient knoxClient = new KnoxConnectionMgr().getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);

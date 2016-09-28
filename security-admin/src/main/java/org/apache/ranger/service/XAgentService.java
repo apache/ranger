@@ -53,34 +53,34 @@ public class XAgentService {
 	}
 	
 	private boolean isHDFSLog(String loggerName, int fieldCount) {
-		boolean ret = false ;
+		boolean ret = false;
 		if (loggerName != null) {
-			ret = loggerName.startsWith("org.") ;
+			ret = loggerName.startsWith("org.");
 		}
 		else {
-			ret = (fieldCount == 5) ;
+			ret = (fieldCount == 5);
 		}
 		return ret;
 	}
 	
 	private boolean isHiveLog(String loggerName, int fieldCount) {
-		boolean ret = false ;
+		boolean ret = false;
 		if (loggerName != null) {
-			ret = loggerName.startsWith("org.apache.ranger.authorization.hive")  || loggerName.startsWith("org.apache.ranger.pdp.hive.") ;
+			ret = loggerName.startsWith("org.apache.ranger.authorization.hive")  || loggerName.startsWith("org.apache.ranger.pdp.hive.");
 		}
 		else {
-			ret = (fieldCount == 11) ;
+			ret = (fieldCount == 11);
 		}
 		return ret;
 	}
 
 	private boolean isHBaseLog(String loggerName, int fieldCount) {
-		boolean ret = false ;
+		boolean ret = false;
 		if (loggerName != null) {
-			ret = loggerName.startsWith("org.apache.ranger.authorization.hbase") ;
+			ret = loggerName.startsWith("org.apache.ranger.authorization.hbase");
 		}
 		else {
-			ret = ((fieldCount != 5) && (fieldCount != 11)) ;
+			ret = ((fieldCount != 5) && (fieldCount != 11));
 		}
 		return ret;
 	}

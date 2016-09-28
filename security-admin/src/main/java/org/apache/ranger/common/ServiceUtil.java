@@ -67,8 +67,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServiceUtil {
 	static final Logger LOG = Logger.getLogger(ServiceUtil.class);
-	private static final String REGEX_PREFIX_STR 	 = "regex:" ;
-	private static final int REGEX_PREFIX_STR_LENGTH = REGEX_PREFIX_STR.length() ;
+	private static final String REGEX_PREFIX_STR 	 = "regex:";
+	private static final int REGEX_PREFIX_STR_LENGTH = REGEX_PREFIX_STR.length();
 
 	static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<String, Integer>();
 	static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<String, Integer>();
@@ -1377,10 +1377,10 @@ public class ServiceUtil {
 			}
 
 
-			String cnFromConfigForTest = cnFromConfig ;
-			boolean isRegEx = cnFromConfig.toLowerCase().startsWith(REGEX_PREFIX_STR) ;
+			String cnFromConfigForTest = cnFromConfig;
+			boolean isRegEx = cnFromConfig.toLowerCase().startsWith(REGEX_PREFIX_STR);
 			if (isRegEx) {
-				cnFromConfigForTest = cnFromConfig.substring(REGEX_PREFIX_STR_LENGTH) ;
+				cnFromConfigForTest = cnFromConfig.substring(REGEX_PREFIX_STR_LENGTH);
 			}
 
 			// Perform SAN validation

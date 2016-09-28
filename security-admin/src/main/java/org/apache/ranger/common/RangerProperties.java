@@ -39,12 +39,12 @@ public class RangerProperties extends  HashMap<String,String>  {
 	
 	private static final long serialVersionUID = -4094378755892810987L;
 
-	private final Logger LOG = Logger.getLogger(RangerProperties.class) ;
+	private final Logger LOG = Logger.getLogger(RangerProperties.class);
 
 	private final String XMLCONFIG_FILENAME_DELIMITOR = ",";
-	private final String XMLCONFIG_PROPERTY_TAGNAME = "property" ;
-	private final String XMLCONFIG_NAME_TAGNAME = "name" ;
-	private final String XMLCONFIG_VALUE_TAGNAME = "value" ;
+	private final String XMLCONFIG_PROPERTY_TAGNAME = "property";
+	private final String XMLCONFIG_NAME_TAGNAME = "name";
+	private final String XMLCONFIG_VALUE_TAGNAME = "value";
 
 	private String xmlConfigFileNames = null;
 
@@ -63,7 +63,7 @@ public class RangerProperties extends  HashMap<String,String>  {
 
 		for (String fn : fnList) {
 			try {
-				loadXMLConfig(fn) ;
+				loadXMLConfig(fn);
 			}
 			catch(IOException ioe) {
 				LOG.error("Unable to load configuration from file: [" + fn + "]", ioe);
@@ -112,7 +112,7 @@ public class RangerProperties extends  HashMap<String,String>  {
 					}
 					
 					if (get(propertyName) != null)
-						remove(propertyName) ;
+						remove(propertyName);
 					
 					if (propertyValue != null)
 						put(propertyName, propertyValue);

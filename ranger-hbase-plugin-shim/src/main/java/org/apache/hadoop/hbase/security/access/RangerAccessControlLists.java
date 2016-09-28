@@ -29,50 +29,50 @@ import org.apache.log4j.Logger;
 
 public class RangerAccessControlLists {
 	
-	private static final Logger LOG = Logger.getLogger(RangerAccessControlLists.class) ;
+	private static final Logger LOG = Logger.getLogger(RangerAccessControlLists.class);
 	
 	public static void init(MasterServices master) throws IOException {
 
-		Class<AccessControlLists> accessControlListsClass = AccessControlLists.class ;
-		String cName = accessControlListsClass.getName() ;
+		Class<AccessControlLists> accessControlListsClass = AccessControlLists.class;
+		String cName = accessControlListsClass.getName();
 
-		Class<?>[] params = new Class[1] ;
-		params[0] = MasterServices.class ;
+		Class<?>[] params = new Class[1];
+		params[0] = MasterServices.class;
 		
 		for (String mname : new String[] { "init", "createACLTable" } ) {
 			try {
 				try {
-					Method m = accessControlListsClass.getDeclaredMethod(mname, params) ;
+					Method m = accessControlListsClass.getDeclaredMethod(mname, params);
 					if (m != null) {
 						try {
 							
 							try {
-								m.invoke(null, master) ;
+								m.invoke(null, master);
 								logInfo("Execute method name [" + mname + "] in Class [" +  cName + "] is successful.");
 							} catch (InvocationTargetException e) {
-								Throwable cause = e ;
-								boolean tableExistsExceptionFound = false ;
+								Throwable cause = e;
+								boolean tableExistsExceptionFound = false;
 								if  (e != null) { 	
-									Throwable ecause = e.getTargetException() ;
+									Throwable ecause = e.getTargetException();
 									if (ecause != null) {
-										cause = ecause ;
+										cause = ecause;
 										if (ecause instanceof TableExistsException) {
-											tableExistsExceptionFound = true ;
+											tableExistsExceptionFound = true;
 										}
 									}
 								}
 								if (! tableExistsExceptionFound) {
-									logError("Unable to execute the method [" + mname + "] on [" + cName + "] due to exception", cause) ;
-									throw new IOException(cause) ;
+									logError("Unable to execute the method [" + mname + "] on [" + cName + "] due to exception", cause);
+									throw new IOException(cause);
 								}
 							}
-							return ;
+							return;
 						} catch (IllegalArgumentException e) {
 							logError("Unable to execute method name [" + mname + "] in Class [" +  cName + "].", e);
-							throw new IOException(e) ;
+							throw new IOException(e);
 						} catch (IllegalAccessException e) {
 							logError("Unable to execute method name [" + mname + "] in Class [" +  cName + "].", e);
-							throw new IOException(e) ;
+							throw new IOException(e);
 						}
 					}
 				}
@@ -81,20 +81,20 @@ public class RangerAccessControlLists {
 				}
 			} catch (SecurityException e) {
 				logError("Unable to get method name [" + mname + "] in Class [" +  cName + "].", e);
-				throw new IOException(e) ;
+				throw new IOException(e);
 			}
 		}
-		throw new IOException("Unable to initialize() [" + cName + "]") ;
+		throw new IOException("Unable to initialize() [" + cName + "]");
 	}
 	
 	
 	private static void logInfo(String msg) {
-		// System.out.println(msg) ;
-		LOG.info(msg) ;
+		// System.out.println(msg);
+		LOG.info(msg);
 	}
 
 	private static void logError(String msg, Throwable t) {
-//		System.err.println(msg) ;
+//		System.err.println(msg);
 //		if (t != null) {
 //			t.printStackTrace(System.err);
 //		}

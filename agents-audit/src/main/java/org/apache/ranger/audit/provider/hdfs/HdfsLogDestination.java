@@ -425,7 +425,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
     		return "";
     	}
 
-        for(int i = 1; ; i++) {
+        for(int i = 1;; i++) {
         	String ret = fileName;
 
 	        String strToAppend = "-" + Integer.toString(i);

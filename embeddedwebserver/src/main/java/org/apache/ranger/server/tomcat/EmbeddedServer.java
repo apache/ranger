@@ -227,7 +227,7 @@ public class EmbeddedServer {
 			if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
 				try{
 					LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
-					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 					Subject.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
 						public Void run() {
@@ -282,7 +282,7 @@ public class EmbeddedServer {
 		String keystoreFile=getConfig("ranger.service.https.attrib.keystore.file");
 		if (keystoreFile == null || keystoreFile.trim().isEmpty()) {
 			// new property not configured, lets use the old property
-			keystoreFile = getConfig("ranger.https.attrib.keystore.file") ;
+			keystoreFile = getConfig("ranger.https.attrib.keystore.file");
 		}
 		return keystoreFile;
 	}

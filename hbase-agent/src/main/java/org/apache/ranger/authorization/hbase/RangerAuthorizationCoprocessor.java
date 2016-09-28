@@ -140,7 +140,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		if (region != null) {
 			HRegionInfo regionInfo = region.getRegionInfo();
 			if (regionInfo != null) {
-				tableName = regionInfo.getTable().getName() ;
+				tableName = regionInfo.getTable().getName();
 			}
 		}
 		return tableName;

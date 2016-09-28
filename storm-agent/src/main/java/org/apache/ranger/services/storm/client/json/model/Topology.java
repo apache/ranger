@@ -20,9 +20,9 @@
 package org.apache.ranger.services.storm.client.json.model;
 
 public class Topology {
-	private String id ;
-	private String name ;
-	private String status ;
+	private String id;
+	private String name;
+	private String status;
 	
 	public String getId() {
 		return id;

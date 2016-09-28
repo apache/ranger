@@ -73,7 +73,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 	private char[] password;
 	private Subject subject;
 	private CallbackHandler callbackHandler;
-	private boolean debug = true ;
+	private boolean debug = true;
 
 	private String remoteHostName;
 	private int remoteHostAuthServicePort;
@@ -88,9 +88,9 @@ public class RemoteUnixLoginModule implements LoginModule {
 
 	private boolean SSLEnabled = false;
 	
-	private boolean serverCertValidation = true ;
+	private boolean serverCertValidation = true;
 	
-	private boolean remoteLoginEnabled = true ;
+	private boolean remoteLoginEnabled = true;
 
 	public RemoteUnixLoginModule() {
 		log("Created RemoteUnixLoginModule");
@@ -129,24 +129,24 @@ public class RemoteUnixLoginModule implements LoginModule {
 		this.subject = subject;
 		this.callbackHandler = callbackHandler;
 		
-		log("RemoteUnixLoginModule::initialize() has been called with callbackhandler: " + this.callbackHandler) ;
+		log("RemoteUnixLoginModule::initialize() has been called with callbackhandler: " + this.callbackHandler);
 
 		if (this.callbackHandler == null) {
 			this.callbackHandler = new ConsolePromptCallbackHandler();
 		}
 
 		/*
-		Properties config = null ;
+		Properties config = null;
 
 		String val = (String) options.get(REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM);
-		log("Remote Unix Auth Configuration file [" + val + "]") ;
+		log("Remote Unix Auth Configuration file [" + val + "]");
 		if (val != null) {
-			InputStream in = null ;
+			InputStream in = null;
 			try {
-				in = getFileInputStream(val) ;
+				in = getFileInputStream(val);
 				if (in != null) {
 					try {
-						config = new Properties() ;
+						config = new Properties();
 						// config.load(in);
 						DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
 								.newInstance();
@@ -204,21 +204,21 @@ public class RemoteUnixLoginModule implements LoginModule {
 				
 			}
 			catch(Throwable t) {
-				logError("Unable to load REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM [" + val + "]") ;
+				logError("Unable to load REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM [" + val + "]");
 			}
 		}
 		
 		if (config == null) {
-			logError("Remote Unix Auth Configuration is being loaded from XML configuration - not Properties") ;
-			config = new Properties() ;
+			logError("Remote Unix Auth Configuration is being loaded from XML configuration - not Properties");
+			config = new Properties();
 			config.putAll(options);
 		}
 		
 		*/
 		
-		Properties config = new Properties() ;
-		config.putAll(options) ;
-		initParams(config) ;
+		Properties config = new Properties();
+		config.putAll(options);
+		initParams(config);
 		
 	}
 	
@@ -226,17 +226,17 @@ public class RemoteUnixLoginModule implements LoginModule {
 	
 	public void initParams(Properties  options) {
 		
-		String val = (String) options.get(JAAS_ENABLED_PARAM) ;
+		String val = (String) options.get(JAAS_ENABLED_PARAM);
 		
 		if (val != null) {
-			remoteLoginEnabled = val.trim().equalsIgnoreCase("true") ;
+			remoteLoginEnabled = val.trim().equalsIgnoreCase("true");
 			if (! remoteLoginEnabled) {
-				System.err.println("Skipping RemoteLogin - [" + JAAS_ENABLED_PARAM + "] => [" + val + "]") ;
-				return ;
+				System.err.println("Skipping RemoteLogin - [" + JAAS_ENABLED_PARAM + "] => [" + val + "]");
+				return;
 			}
 		}
 		else {
-			remoteLoginEnabled = true ;
+			remoteLoginEnabled = true;
 		}
 
 		val = (String) options.get(DEBUG_PARAM);
@@ -244,7 +244,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 			debug = true;
 		}
 		else {
-			debug = false ;
+			debug = false;
 		}
 
 		remoteHostName = (String) options.get(REMOTE_LOGIN_HOST_PARAM);
@@ -257,8 +257,8 @@ public class RemoteUnixLoginModule implements LoginModule {
 		log("remoteHostAuthServicePort:" + remoteHostAuthServicePort);
 		
 		
-		val = (String)options.get(SSL_ENABLED_PARAM) ;
-		SSLEnabled = (val != null) && val.trim().equalsIgnoreCase("true") ;
+		val = (String)options.get(SSL_ENABLED_PARAM);
+		SSLEnabled = (val != null) && val.trim().equalsIgnoreCase("true");
 		log("SSLEnabled:" + SSLEnabled);
 
 		if (SSLEnabled) {
@@ -283,9 +283,9 @@ public class RemoteUnixLoginModule implements LoginModule {
 				log("keyStorePathPassword:*****");
 			}
 			
-			String certValidationFlag = (String) options.get(SERVER_CERT_VALIDATION_PARAM) ;
-			serverCertValidation = (! (certValidationFlag != null && ("false".equalsIgnoreCase(certValidationFlag.trim().toLowerCase())))) ;
-			log("Server Cert Validation : " + serverCertValidation) ;
+			String certValidationFlag = (String) options.get(SERVER_CERT_VALIDATION_PARAM);
+			serverCertValidation = (! (certValidationFlag != null && ("false".equalsIgnoreCase(certValidationFlag.trim().toLowerCase()))));
+			log("Server Cert Validation : " + serverCertValidation);
 		}
 
 	}
@@ -306,12 +306,12 @@ public class RemoteUnixLoginModule implements LoginModule {
 
 			userName = nameCallback.getName();
 			
-			String modifiedUserName = userName ;
+			String modifiedUserName = userName;
 			
 			if (userName != null) {
-				int atStartsAt = userName.indexOf("@") ;
+				int atStartsAt = userName.indexOf("@");
 				if ( atStartsAt > -1) {
-					modifiedUserName = userName.substring(0, atStartsAt) ;
+					modifiedUserName = userName.substring(0, atStartsAt);
 				}
 			}
 			
@@ -405,7 +405,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 	
 					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 					
-					TrustManager[] tm = null ;
+					TrustManager[] tm = null;
 					
 					if (serverCertValidation) {
 
@@ -449,7 +449,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 						    }
 						};
 						
-						tm  = new TrustManager[] {ignoreValidationTM} ;
+						tm  = new TrustManager[] {ignoreValidationTM};
 					}
 	
 					SecureRandom random = new SecureRandom();
@@ -510,7 +510,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 			}
 			
 			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path) ;
+				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
 				if (ret == null) {
 					if (! path.startsWith("/")) {
 						ret = ClassLoader.getSystemResourceAsStream("/" + path);

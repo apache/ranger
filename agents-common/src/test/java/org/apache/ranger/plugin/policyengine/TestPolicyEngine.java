@@ -105,7 +105,7 @@ public class TestPolicyEngine {
 
 		System.out.println("provider=" + provider.toString());
 
-		File file = File.createTempFile("ranger-admin-test-site", ".xml") ;
+		File file = File.createTempFile("ranger-admin-test-site", ".xml");
 		file.deleteOnExit();
 
 		FileOutputStream outStream = new FileOutputStream(file);

@@ -77,7 +77,7 @@ public class RangerKMSDB {
 			DB_PROPERTIES.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
 			DB_PROPERTIES.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
 
-			//DB_PROPERTIES.list(System.out) ;
+			//DB_PROPERTIES.list(System.out);
 
 			/*
 			Set keys = DB_PROPERTIES.keySet();

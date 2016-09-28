@@ -95,7 +95,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	 *
 	 */
 	@Column(name="IS_VISIBLE"  , nullable=false )
-	protected Integer isVisible ;
+	protected Integer isVisible;
 
 	/**
 	 * Type of group

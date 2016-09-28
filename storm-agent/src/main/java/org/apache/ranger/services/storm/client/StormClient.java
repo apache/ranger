@@ -51,11 +51,11 @@ import com.sun.jersey.api.client.WebResource;
 
 public class StormClient {
 	
-	private static final Logger LOG = Logger.getLogger(StormClient.class) ;
+	private static final Logger LOG = Logger.getLogger(StormClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 	
-	private static final String TOPOLOGY_LIST_API_ENDPOINT = "/api/v1/topology/summary" ;
+	private static final String TOPOLOGY_LIST_API_ENDPOINT = "/api/v1/topology/summary";
 	
 	private static final String errMessage =  " You can still save the repository and start creating "
 											  + "policies, but you would not be able to use autocomplete for "
@@ -71,7 +71,7 @@ public class StormClient {
 	public StormClient(String aStormUIUrl, String aUserName, String aPassword, String lookupPrincipal, String lookupKeytab, String nameRules) {
 		
 		this.stormUIUrl = aStormUIUrl;
-		this.userName = aUserName ;
+		this.userName = aUserName;
 		this.password = aPassword;
 		this.lookupPrincipal = lookupPrincipal;
 		this.lookupKeytab = lookupKeytab;
@@ -97,13 +97,13 @@ public class StormClient {
 				
 				ArrayList<String> lret = new ArrayList<String>();
 				
-				String url = stormUIUrl + TOPOLOGY_LIST_API_ENDPOINT ;
+				String url = stormUIUrl + TOPOLOGY_LIST_API_ENDPOINT;
 				
-				Client client = null ;
-				ClientResponse response = null ;
+				Client client = null;
+				ClientResponse response = null;
 				
 				try {
-					client = Client.create() ;
+					client = Client.create();
 					
 					WebResource webResource = client.resource(url);
 					
@@ -121,7 +121,7 @@ public class StormClient {
 							if (topologyListResponse != null) {
 								if (topologyListResponse.getTopologyList() != null) {
 									for(Topology topology : topologyListResponse.getTopologyList()) {
-										String topologyName = topology.getName() ;
+										String topologyName = topology.getName();
 										if ( stormTopologyList != null && stormTopologyList.contains(topologyName)) {
 								        	continue;
 								        }
@@ -130,7 +130,7 @@ public class StormClient {
 										if (topologyName != null) {
 											if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching + "*")) {
 												LOG.debug("getTopologyList():Adding topology " + topologyName);
-												lret.add(topologyName) ;
+												lret.add(topologyName);
 											}
 										}
 									}
@@ -176,14 +176,14 @@ public class StormClient {
 					}
 				
 				}
-				return lret ;
+				return lret;
 			}
-		} ;
+		};
 		
 		try {
-			ret = executeUnderKerberos(this.userName, this.password, this.lookupPrincipal, this.lookupKeytab, this.nameRules, topologyListGetter) ;
+			ret = executeUnderKerberos(this.userName, this.password, this.lookupPrincipal, this.lookupKeytab, this.nameRules, topologyListGetter);
 		} catch (IOException e) {
-			LOG.error("Unable to get Topology list from [" + stormUIUrl + "]", e) ;
+			LOG.error("Unable to get Topology list from [" + stormUIUrl + "]", e);
 		}
 		
 		return ret;
@@ -197,7 +197,7 @@ public class StormClient {
 				javax.security.auth.login.Configuration {
 
 			private String userName;
-			private String password ;
+			private String password;
 
 			MySecureClientLoginConfiguration(String aUserName,
 					String password) {

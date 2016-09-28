@@ -108,7 +108,7 @@ public class SecureClientLogin {
 	}
 	
 	public static Principal createUserPrincipal(String aLoginName) {
-		return new User(aLoginName) ;
+		return new User(aLoginName);
 	}
 	
 	public static boolean isKerberosCredentialExists(String principal, String keytabPath){
@@ -163,7 +163,7 @@ public class SecureClientLogin {
 class SecureClientLoginConfiguration extends javax.security.auth.login.Configuration {
 
 	private Map<String, String> kerberosOptions = new HashMap<String, String>();
-	private boolean usePassword = false ;
+	private boolean usePassword = false;
 
 	public SecureClientLoginConfiguration(boolean useKeyTab, String principal, String credential) {
 		kerberosOptions.put("principal", principal);
@@ -173,13 +173,13 @@ class SecureClientLoginConfiguration extends javax.security.auth.login.Configura
 			kerberosOptions.put("keyTab", credential);
 			kerberosOptions.put("doNotPrompt", "true");
 		} else {
-			usePassword = true ;
+			usePassword = true;
 			kerberosOptions.put("useKeyTab", "false");
 			kerberosOptions.put(KrbPasswordSaverLoginModule.USERNAME_PARAM, principal);
 			kerberosOptions.put(KrbPasswordSaverLoginModule.PASSWORD_PARAM, credential);
 			kerberosOptions.put("doNotPrompt", "false");
 			kerberosOptions.put("useFirstPass", "true");
-			kerberosOptions.put("tryFirstPass","false") ;
+			kerberosOptions.put("tryFirstPass","false");
 		}
 		kerberosOptions.put("storeKey", "true");
 		kerberosOptions.put("refreshKrb5Config", "true");

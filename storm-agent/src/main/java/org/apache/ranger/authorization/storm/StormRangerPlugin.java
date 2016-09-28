@@ -74,7 +74,7 @@ public class StormRangerPlugin extends RangerBasePlugin {
 			super.setResultProcessor(new RangerDefaultAuditHandler());
 			// this needed to set things right in the nimbus process
 			if (KerberosName.getRules() == null) {
-				KerberosName.setRules("DEFAULT") ;
+				KerberosName.setRules("DEFAULT");
 			}
 
 			initialized = true;

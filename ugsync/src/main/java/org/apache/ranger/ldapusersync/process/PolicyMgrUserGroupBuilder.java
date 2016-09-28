@@ -22,8 +22,8 @@ package org.apache.ranger.ldapusersync.process;
 public class PolicyMgrUserGroupBuilder extends org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder {
 	
 	public static void main(String[] args) throws Throwable {
-		PolicyMgrUserGroupBuilder  ugbuilder = new PolicyMgrUserGroupBuilder() ;
-		ugbuilder.init() ;
+		PolicyMgrUserGroupBuilder  ugbuilder = new PolicyMgrUserGroupBuilder();
+		ugbuilder.init();
 		
 	}
 }

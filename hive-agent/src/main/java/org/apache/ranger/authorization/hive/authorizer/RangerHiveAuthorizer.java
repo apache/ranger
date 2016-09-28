@@ -69,13 +69,13 @@ import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
-	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class) ;
+	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class);
 
 	private static final char COLUMN_SEP = ',';
 
 	private static final String HIVE_CONF_VAR_QUERY_STRING = "hive.query.string";
 
-	private static volatile RangerHivePlugin hivePlugin = null ;
+	private static volatile RangerHivePlugin hivePlugin = null;
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
 								  HiveConf                   hiveConf,

@@ -413,7 +413,7 @@ public class KnoxClient {
 			throw hdpException;
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== KnoxClient.getKnoxResources() Result : "+ resultList  ) ;
+			LOG.debug("<== KnoxClient.getKnoxResources() Result : "+ resultList  );
 		}
 		return resultList;
 	}

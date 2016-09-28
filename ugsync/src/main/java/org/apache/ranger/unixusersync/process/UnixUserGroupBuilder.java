@@ -38,17 +38,17 @@ import org.apache.ranger.usergroupsync.UserGroupSource;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
 	
-	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class) ;
-	private final static String OS = System.getProperty("os.name") ;
+	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class);
+	private final static String OS = System.getProperty("os.name");
 
 	// kept for legacy support
-	public static final String UNIX_USER_PASSWORD_FILE = "/etc/passwd" ;
-	public static final String UNIX_GROUP_FILE = "/etc/group" ;
+	public static final String UNIX_USER_PASSWORD_FILE = "/etc/passwd";
+	public static final String UNIX_GROUP_FILE = "/etc/group";
 
 	/** Shell commands to get users and groups */
-	static final String LINUX_GET_ALL_USERS_CMD = "getent passwd" ;
-	static final String LINUX_GET_ALL_GROUPS_CMD = "getent group" ;
-	static final String LINUX_GET_GROUP_CMD = "getent group %s" ;
+	static final String LINUX_GET_ALL_USERS_CMD = "getent passwd";
+	static final String LINUX_GET_ALL_GROUPS_CMD = "getent group";
+	static final String LINUX_GET_GROUP_CMD = "getent group %s";
 
 	// mainly for testing purposes
 	// there might be a better way
@@ -56,12 +56,12 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			"awk 'BEGIN { OFS = \":\"; ORS=\"\\n\"; i=0;}" +
 			"/RecordName: / {name = $2;i = 0;}/PrimaryGroupID: / {gid = $2;}" +
 			"/^ / {if (i == 0) { i++; name = $1;}}" +
-			"/UniqueID: / {uid = $2;print name, \"*\", gid, uid;}'" ;
+			"/UniqueID: / {uid = $2;print name, \"*\", gid, uid;}'";
 	static final String MAC_GET_ALL_GROUPS_CMD = "dscl . -list /Groups PrimaryGroupID | " +
-			"awk -v OFS=\":\" '{print $1, \"*\", $2, \"\"}'" ;
+			"awk -v OFS=\":\" '{print $1, \"*\", $2, \"\"}'";
 	static final String MAC_GET_GROUP_CMD = "dscl . -read /Groups/%1$s | paste -d, -s - | sed -e 's/:/|/g' | " +
 			"awk -v OFS=\":\" -v ORS=\"\\n\" -F, '{print \"%1$s\",\"*\",$6,$4}' | " +
-			"sed -e 's/:[^:]*| /:/g' | sed -e 's/ /,/g'" ;
+			"sed -e 's/:[^:]*| /:/g' | sed -e 's/ /,/g'";
 
 	static final String BACKEND_PASSWD = "passwd";
 
@@ -71,29 +71,29 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private long lastUpdateTime = 0; // Last time maps were updated
 	private long timeout = 0;
 
-	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance() ;
+	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 	private Map<String,List<String>> user2GroupListMap = new HashMap<String,List<String>>();
 	private Map<String,List<String>>  	internalUser2GroupListMap = new HashMap<String,List<String>>();
-	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>() ;
-	private int 						minimumUserId  = 0 ;
-	private int							minimumGroupId = 0 ;
+	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>();
+	private int 						minimumUserId  = 0;
+	private int							minimumGroupId = 0;
 
-	private long passwordFileModifiedAt = 0 ;
-	private long groupFileModifiedAt = 0 ;
+	private long passwordFileModifiedAt = 0;
+	private long groupFileModifiedAt = 0;
 
 	public static void main(String[] args) throws Throwable {
-		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder() ;
+		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder();
 		ugbuilder.init();
 		ugbuilder.print();
 	}
 	
 	public UnixUserGroupBuilder() {
-		minimumUserId = Integer.parseInt(config.getMinUserId()) ;
-		minimumGroupId = Integer.parseInt(config.getMinGroupId()) ;
+		minimumUserId = Integer.parseInt(config.getMinUserId());
+		minimumGroupId = Integer.parseInt(config.getMinGroupId());
 
-		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId) ;
+		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
 
-		timeout = config.getUpdateMillisMin() ;
+		timeout = config.getUpdateMillisMin();
 		enumerateGroupMembers = config.isGroupEnumerateEnabled();
 
 		if (!config.getUnixBackend().equalsIgnoreCase(BACKEND_PASSWD)) {
@@ -106,31 +106,31 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	@Override
 	public void init() throws Throwable {
-		buildUserGroupInfo() ;
+		buildUserGroupInfo();
 	}
 
 	@Override
 	public boolean isChanged() {
 		if (useNss)
-			return System.currentTimeMillis() - lastUpdateTime > timeout ;
+			return System.currentTimeMillis() - lastUpdateTime > timeout;
 
-		long TempPasswordFileModifiedAt = new File(UNIX_USER_PASSWORD_FILE).lastModified() ;
+		long TempPasswordFileModifiedAt = new File(UNIX_USER_PASSWORD_FILE).lastModified();
 		if (passwordFileModifiedAt != TempPasswordFileModifiedAt) {
-			return true ;
+			return true;
 		}
 
-		long TempGroupFileModifiedAt = new File(UNIX_GROUP_FILE).lastModified() ;
+		long TempGroupFileModifiedAt = new File(UNIX_GROUP_FILE).lastModified();
 		if (groupFileModifiedAt != TempGroupFileModifiedAt) {
-			return true ;
+			return true;
 		}
 
-		return false ;
+		return false;
 	}
 
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
-		buildUserGroupInfo() ;
+		buildUserGroupInfo();
 
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
 		    String       user   = entry.getKey();
@@ -162,20 +162,20 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			buildUnixUserList(LINUX_GET_ALL_USERS_CMD);
 		}
 
-		lastUpdateTime = System.currentTimeMillis() ;
+		lastUpdateTime = System.currentTimeMillis();
 
 		if (LOG.isDebugEnabled()) {
-			print() ;
+			print();
 		}
 	}
 	
 	private void print() {
 		for(String user : user2GroupListMap.keySet()) {
-			LOG.debug("USER:" + user) ;
-			List<String> groups = user2GroupListMap.get(user) ;
+			LOG.debug("USER:" + user);
+			List<String> groups = user2GroupListMap.get(user);
 			if (groups != null) {
 				for(String group : groups) {
-					LOG.debug("\tGROUP: " + group) ;
+					LOG.debug("\tGROUP: " + group);
 				}
 			}
 		}
@@ -213,9 +213,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					continue;
 				}
 
-				String userName = null ;
-				String userId = null ;
-				String groupId = null ;
+				String userName = null;
+				String userId = null;
+				String groupId = null;
 
 				try {
 					userName = tokens[0];
@@ -223,8 +223,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					groupId = tokens[3];
 				}
 				catch(ArrayIndexOutOfBoundsException aiobe) {
-					LOG.warn("Ignoring line - [" + line + "]: Unable to parse line for getting user information", aiobe) ;
-					continue ;
+					LOG.warn("Ignoring line - [" + line + "]: Unable to parse line for getting user information", aiobe);
+					continue;
 				}
 
 				int numUserId = -1;

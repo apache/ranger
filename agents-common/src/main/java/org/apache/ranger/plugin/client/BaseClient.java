@@ -34,44 +34,44 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.PasswordUtils;
 
 public abstract class BaseClient {
-	private static final Log LOG = LogFactory.getLog(BaseClient.class) ;
+	private static final Log LOG = LogFactory.getLog(BaseClient.class);
 
 
 	private static final String DEFAULT_NAME_RULE = "DEFAULT";
 
 
-	private String serviceName ;
-  	private String defaultConfigFile ;
-	private Subject loginSubject ;
+	private String serviceName;
+  	private String defaultConfigFile;
+	private Subject loginSubject;
 	private HadoopConfigHolder configHolder;
 	
-	protected Map<String,String> connectionProperties ;
+	protected Map<String,String> connectionProperties;
 	
   public BaseClient(String svcName, Map<String,String> connectionProperties) {
     this(svcName, connectionProperties, null);
   }
 
 	public BaseClient(String serivceName, Map<String,String> connectionProperties, String defaultConfigFile) {
-		this.serviceName = serivceName ;
-		this.connectionProperties = connectionProperties ;
-		this.defaultConfigFile = defaultConfigFile ;
-		init() ;
-		login() ;
+		this.serviceName = serivceName;
+		this.connectionProperties = connectionProperties;
+		this.defaultConfigFile = defaultConfigFile;
+		init();
+		login();
 	}
 	
 	
 	private void init() {
 		if (connectionProperties == null) {
-			configHolder = HadoopConfigHolder.getInstance(serviceName) ;
+			configHolder = HadoopConfigHolder.getInstance(serviceName);
 		}
 		else {
-			configHolder = HadoopConfigHolder.getInstance(serviceName,connectionProperties, defaultConfigFile) ;
+			configHolder = HadoopConfigHolder.getInstance(serviceName,connectionProperties, defaultConfigFile);
 		}
 	}
 	
 	
 	protected void login() {
-		ClassLoader prevCl = Thread.currentThread().getContextClassLoader() ;
+		ClassLoader prevCl = Thread.currentThread().getContextClassLoader();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
@@ -86,7 +86,7 @@ public abstract class BaseClient {
 				 }
 				 nameRules = DEFAULT_NAME_RULE;
 			 }
-			 String userName = configHolder.getUserName() ;
+			 String userName = configHolder.getUserName();
 			 if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){				
 				 if (userName == null) {
 					 String msgDesc = "Unable to find login username for hadoop environment, ["
@@ -97,33 +97,33 @@ public abstract class BaseClient {
 
 					 throw hdpException;
 				 }
-				 String keyTabFile = configHolder.getKeyTabFile() ;
+				 String keyTabFile = configHolder.getKeyTabFile();
 				 if (keyTabFile != null) {
 					 if ( configHolder.isKerberosAuthentication() ) {
 						 LOG.info("Init Login: security enabled, using username/keytab");
-						 loginSubject = SecureClientLogin.loginUserFromKeytab(userName, keyTabFile, nameRules) ;
+						 loginSubject = SecureClientLogin.loginUserFromKeytab(userName, keyTabFile, nameRules);
 					 }
 					 else {
 						 LOG.info("Init Login: using username");
-						 loginSubject = SecureClientLogin.login(userName) ;
+						 loginSubject = SecureClientLogin.login(userName);
 					 }
 				 }
 				 else {
-					 String encryptedPwd = configHolder.getPassword() ;
+					 String encryptedPwd = configHolder.getPassword();
 					 String password = PasswordUtils.decryptPassword(encryptedPwd);
 					 if ( configHolder.isKerberosAuthentication() ) {
 						 LOG.info("Init Login: using username/password");
-						 loginSubject = SecureClientLogin.loginUserWithPassword(userName, password) ;
+						 loginSubject = SecureClientLogin.loginUserWithPassword(userName, password);
 					 }
 					 else {
 						 LOG.info("Init Login: security not enabled, using username");
-						 loginSubject = SecureClientLogin.login(userName) ;
+						 loginSubject = SecureClientLogin.login(userName);
 					 }
 				 }
 			 }else{
 				 if ( configHolder.isKerberosAuthentication() ) {
 					 LOG.info("Init Lookup Login: security enabled, using lookupPrincipal/lookupKeytab");
-					 loginSubject = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules) ;
+					 loginSubject = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
 				 }else{
 					 LOG.info("Init Login: security not enabled, using username");
 					 loginSubject = SecureClientLogin.login(userName);					
@@ -150,7 +150,7 @@ public abstract class BaseClient {
 	}
 	
 	public String getSerivceName() {
-		return serviceName ;
+		return serviceName;
 	}
 
 	protected Subject getLoginSubject() {

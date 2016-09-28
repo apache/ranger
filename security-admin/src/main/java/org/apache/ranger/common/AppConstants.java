@@ -45,7 +45,7 @@ public class AppConstants extends RangerCommonEnums {
 	/**
 	 * enum XAAGENT is reserved for internal use
 	 */
-	public static final int XAAGENT  = 4 ;
+	public static final int XAAGENT  = 4;
 	/**
 	 * ASSET_KNOX is an element of enum AssetType. Its value is "ASSET_KNOX".
 	 */
@@ -799,59 +799,59 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if( elementValue == 18 ) {
 			// return "Submit Topology"; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
-			return "submitTopology" ;
+			return "submitTopology";
 		}
 		if( elementValue == 19 ) {
 			// return "File Upload"; //XA_PERM_TYPE_FILE_UPLOAD
-			return "fileUpload" ;
+			return "fileUpload";
 		}
 		if( elementValue == 20 ) {
 			// return "Get Nimbus Conf"; //XA_PERM_TYPE_GET_NIMBUS
-			return "getNimbusConf" ;
+			return "getNimbusConf";
 		}
 		if( elementValue == 21 ) {
 			// return "Get Cluster Info"; //XA_PERM_TYPE_GET_CLUSTER_INFO
-			return "getClusterInfo" ;
+			return "getClusterInfo";
 		}
 		if( elementValue == 22 ) {
 			// return "File Download"; //XA_PERM_TYPE_FILE_DOWNLOAD
-			return "fileDownload" ;
+			return "fileDownload";
 		}
 		if( elementValue == 23 ) {
 			// return "Kill Topology"; //XA_PERM_TYPE_KILL_TOPOLOGY
-			return "killTopology" ;
+			return "killTopology";
 		}
 		if( elementValue == 24 ) {
 			// return "Rebalance"; //XA_PERM_TYPE_REBALANCE
-			return "rebalance" ;
+			return "rebalance";
 		}
 		if( elementValue == 25 ) {
 			// return "Activate"; //XA_PERM_TYPE_ACTIVATE
-			return "activate" ;
+			return "activate";
 		}
 		if( elementValue == 26 ) {
 			// return "Deactivate"; //XA_PERM_TYPE_DEACTIVATE
-			return "deactivate" ;
+			return "deactivate";
 		}
 		if( elementValue == 27 ) {
 			// return "Get Topology Conf"; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
-			return "getTopologyConf" ;
+			return "getTopologyConf";
 		}
 		if( elementValue == 28 ) {
 			// return "Get Topology"; //XA_PERM_TYPE_GET_TOPOLOGY
-			return "getTopology" ;
+			return "getTopology";
 		}
 		if( elementValue == 29 ) {
 			// return "Get User Topology"; //XA_PERM_TYPE_GET_USER_TOPOLOGY
-			return "getUserTopology" ;
+			return "getUserTopology";
 		}
 		if( elementValue == 30 ) {
 			// return "Get Topology Info"; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
-			return "getTopologyInfo" ;
+			return "getTopologyInfo";
 		}
 		if( elementValue == 31 ) {
 			// return "Upload New Credential"; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
-			return "uploadNewCredentials" ;
+			return "uploadNewCredentials";
 		}
 		return null;
 	}

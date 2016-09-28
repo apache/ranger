@@ -28,49 +28,49 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class HSM2DBMKUtil {
 
-	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password" ;
+	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 	private static final String PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
 	private static final String PARTITION_NAME = "ranger.ks.hsm.partition.name";
 	private static final String HSM_TYPE = "ranger.ks.hsm.type";
 	
 	public static void showUsage() {
-		System.err.println("USAGE: java " + HSM2DBMKUtil.class.getName() + " <HSMType> <partitionName>") ;
+		System.err.println("USAGE: java " + HSM2DBMKUtil.class.getName() + " <HSMType> <partitionName>");
 	}
 	
 
 	public static void main(String[] args) {
 			if (args.length < 2) {
-				System.err.println("Invalid number of parameters found.") ;
-				showUsage() ;
-				System.exit(1) ;
+				System.err.println("Invalid number of parameters found.");
+				showUsage();
+				System.exit(1);
 			}
 			else {				
 				String hsmType = args[0];
 				if (hsmType == null || hsmType.trim().isEmpty()) {
-					System.err.println("HSM Type does not exists.") ;
-					showUsage() ;
+					System.err.println("HSM Type does not exists.");
+					showUsage();
 					System.exit(1);
 				}
 				
 				String partitionName = args[1];
 				if (partitionName == null || partitionName.trim().isEmpty()) {
-					System.err.println("Partition name does not exists.") ;
-					showUsage() ;
-					System.exit(1) ;
+					System.err.println("Partition name does not exists.");
+					showUsage();
+					System.exit(1);
 				}
 				
 				new HSM2DBMKUtil().doImportMKFromHSM(hsmType, partitionName);
 				
-				System.out.println("Master Key from HSM has been successfully imported into Ranger KMS DB.") ;
+				System.out.println("Master Key from HSM has been successfully imported into Ranger KMS DB.");
 				
-				System.exit(0) ;
+				System.exit(0);
 				
 			}
 	}
 	
 	private void doImportMKFromHSM(String hsmType, String partitionName) {
 		try {
-			String partitionPassword = getPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ") ;
+			String partitionPassword = getPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			conf.set(HSM_TYPE, hsmType);
 			conf.set(PARTITION_NAME, partitionName);
@@ -90,12 +90,12 @@ public class HSM2DBMKUtil {
 			rangerMasterKey.generateMKFromHSMMK(password, key);		
 		}
 		catch(Throwable t) {
-			throw new RuntimeException("Unable to import Master key from HSM to Ranger DB", t) ;
+			throw new RuntimeException("Unable to import Master key from HSM to Ranger DB", t);
 		}
 	}
 		
 	private String getPasswordFromConsole(String prompt) throws IOException {
-		String ret = null ;
+		String ret = null;
 		Console c=System.console();
 	    if (c == null) {
 	        System.out.print(prompt + " ");
@@ -110,16 +110,16 @@ public class HSM2DBMKUtil {
 	            ret = new String(e, Charset.defaultCharset());
 	        }
 	    } else {
-	    	char[] pwd = c.readPassword(prompt + " ") ;
+	    	char[] pwd = c.readPassword(prompt + " ");
 	    	if (pwd == null) {
-	    		ret = null ;
+	    		ret = null;
 	    	}
 	    	else {
 	    		ret = new String(pwd);
 	    	}
 	    }
 	    if (ret == null) {
-	    	ret = "" ;
+	    	ret = "";
 	    }
 	    return ret;
 	}	

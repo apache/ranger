@@ -71,7 +71,7 @@ import org.apache.ranger.usersync.util.UserSyncUtil;
 
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
-	private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class) ;
+	private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class);
 	
 	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";	
 	private String AUTH_KERBEROS = "kerberos";
@@ -79,46 +79,46 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private static final String KEYTAB = "ranger.usersync.kerberos.keytab";
 	private static final String NAME_RULE = "hadoop.security.auth_to_local";
 	
-	public static final String PM_USER_LIST_URI  = "/service/xusers/users/" ;				// GET
-	private static final String PM_ADD_USER_URI  = "/service/xusers/users/" ;				// POST
-	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo" ;	// POST
+	public static final String PM_USER_LIST_URI  = "/service/xusers/users/";				// GET
+	private static final String PM_ADD_USER_URI  = "/service/xusers/users/";				// POST
+	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo";	// POST
 	
-	public static final String PM_GROUP_LIST_URI = "/service/xusers/groups/" ;				// GET
-	private static final String PM_ADD_GROUP_URI = "/service/xusers/groups/" ;				// POST
+	public static final String PM_GROUP_LIST_URI = "/service/xusers/groups/";				// GET
+	private static final String PM_ADD_GROUP_URI = "/service/xusers/groups/";				// POST
 	
 	
-	public static final String PM_USER_GROUP_MAP_LIST_URI = "/service/xusers/groupusers/" ;		// GET
-	private static final String PM_ADD_USER_GROUP_LINK_URI = "/service/xusers/groupusers/" ;	// POST
+	public static final String PM_USER_GROUP_MAP_LIST_URI = "/service/xusers/groupusers/";		// GET
+	private static final String PM_ADD_USER_GROUP_LINK_URI = "/service/xusers/groupusers/";	// POST
 	
-	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}" ; // DELETE
+	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}"; // DELETE
 	
-	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default" ;			// POST
+	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default";			// POST
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 	
-	private static String LOCAL_HOSTNAME = "unknown" ;
-	private String recordsToPullPerCall = "1000" ;
-	private boolean isMockRun = false ;
-	private String policyMgrBaseUrl ;
+	private static String LOCAL_HOSTNAME = "unknown";
+	private String recordsToPullPerCall = "1000";
+	private boolean isMockRun = false;
+	private String policyMgrBaseUrl;
 	
-	private UserGroupSyncConfig  config = UserGroupSyncConfig.getInstance() ;
+	private UserGroupSyncConfig  config = UserGroupSyncConfig.getInstance();
 
 	private UserGroupInfo				usergroupInfo = new UserGroupInfo();
-	private List<XGroupInfo> 			xgroupList = new ArrayList<XGroupInfo>() ;
-	private List<XUserInfo> 			xuserList = new ArrayList<XUserInfo>() ;
-	private List<XUserGroupInfo> 		xusergroupList = new ArrayList<XUserGroupInfo>() ;
-	private HashMap<String,XUserInfo>  	userId2XUserInfoMap = new HashMap<String,XUserInfo>() ;
-	private HashMap<String,XUserInfo>  	userName2XUserInfoMap = new HashMap<String,XUserInfo>() ;
-	private HashMap<String,XGroupInfo>  groupName2XGroupInfoMap = new HashMap<String,XGroupInfo>() ;
+	private List<XGroupInfo> 			xgroupList = new ArrayList<XGroupInfo>();
+	private List<XUserInfo> 			xuserList = new ArrayList<XUserInfo>();
+	private List<XUserGroupInfo> 		xusergroupList = new ArrayList<XUserGroupInfo>();
+	private HashMap<String,XUserInfo>  	userId2XUserInfoMap = new HashMap<String,XUserInfo>();
+	private HashMap<String,XUserInfo>  	userName2XUserInfoMap = new HashMap<String,XUserInfo>();
+	private HashMap<String,XGroupInfo>  groupName2XGroupInfoMap = new HashMap<String,XGroupInfo>();
 	
-	private String keyStoreFile =  null ;
+	private String keyStoreFile =  null;
 	private String keyStoreFilepwd = null;
-	private String trustStoreFile = null ;
-	private String trustStoreFilepwd = null ;
-	private String keyStoreType = null ;
-	private String trustStoreType = null ;
-	private HostnameVerifier hv =  null ;
+	private String trustStoreFile = null;
+	private String trustStoreFilepwd = null;
+	private String keyStoreType = null;
+	private String trustStoreType = null;
+	private HostnameVerifier hv =  null;
 
-	private SSLContext sslContext = null ;
+	private SSLContext sslContext = null;
 	private String authenticationType = null;
 	String principal;
 	String keytab;
@@ -128,40 +128,40 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
 		} catch (UnknownHostException e) {
-			LOCAL_HOSTNAME = "unknown" ;
+			LOCAL_HOSTNAME = "unknown";
 		}
 	}
 	
 	
 	public static void main(String[] args) throws Throwable {
-		PolicyMgrUserGroupBuilder  ugbuilder = new PolicyMgrUserGroupBuilder() ;
-		ugbuilder.init() ;
+		PolicyMgrUserGroupBuilder  ugbuilder = new PolicyMgrUserGroupBuilder();
+		ugbuilder.init();
 //		ugbuilder.print();
-//		ugbuilder.addMUser("testuser") ;
-//		ugbuilder.addXUserInfo("testuser") ;
-//		ugbuilder.addXGroupInfo("testgroup") ;
-// 		XUserInfo u = ugbuilder.addXUserInfo("testuser") ;
-//		XGroupInfo g = ugbuilder.addXGroupInfo("testgroup") ;
-//		 ugbuilder.addXUserGroupInfo(u, g) ;
+//		ugbuilder.addMUser("testuser");
+//		ugbuilder.addXUserInfo("testuser");
+//		ugbuilder.addXGroupInfo("testgroup");
+// 		XUserInfo u = ugbuilder.addXUserInfo("testuser");
+//		XGroupInfo g = ugbuilder.addXGroupInfo("testgroup");
+//		 ugbuilder.addXUserGroupInfo(u, g);
 		
 	}
 
 	
 	synchronized public void init() throws Throwable {
-		recordsToPullPerCall = config.getMaxRecordsPerAPICall() ;
-		policyMgrBaseUrl = config.getPolicyManagerBaseURL() ;
-		isMockRun = config.isMockRunEnabled() ;
+		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
+		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
+		isMockRun = config.isMockRunEnabled();
 		
 		if (isMockRun) {
-			LOG.setLevel(Level.DEBUG) ;
+			LOG.setLevel(Level.DEBUG);
 		}
 		
-		keyStoreFile =  config.getSSLKeyStorePath() ;
-		keyStoreFilepwd = config.getSSLKeyStorePathPassword() ;
-		trustStoreFile = config.getSSLTrustStorePath() ;
-		trustStoreFilepwd = config.getSSLTrustStorePathPassword() ;
-		keyStoreType = KeyStore.getDefaultType() ;
-		trustStoreType = KeyStore.getDefaultType() ;
+		keyStoreFile =  config.getSSLKeyStorePath();
+		keyStoreFilepwd = config.getSSLKeyStorePathPassword();
+		trustStoreFile = config.getSSLTrustStorePath();
+		trustStoreFilepwd = config.getSSLTrustStorePathPassword();
+		keyStoreType = KeyStore.getDefaultType();
+		trustStoreType = KeyStore.getDefaultType();
 		authenticationType = config.getProperty(AUTHENTICATION_TYPE,"simple");
 		try {
 			principal = SecureClientLogin.getPrincipal(config.getProperty(PRINCIPAL,""), LOCAL_HOSTNAME);
@@ -170,7 +170,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
-		buildUserGroupInfo() ;
+		buildUserGroupInfo();
 	}
 	
 	private void buildUserGroupInfo() throws Throwable {
@@ -189,8 +189,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 						try {
 							buildGroupList();
 							buildUserList();
-							buildUserGroupLinkList() ;
-							rebuildUserGroupMap() ;
+							buildUserGroupLinkList();
+							rebuildUserGroupMap();
 						} catch (Exception e) {
 							LOG.error("Failed to build Group List : ", e);
 						}
@@ -203,8 +203,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		} else {
 			buildGroupList();
 			buildUserList();
-			buildUserGroupLinkList() ;
-			rebuildUserGroupMap() ;
+			buildUserGroupLinkList();
+			rebuildUserGroupMap();
 			if (LOG.isDebugEnabled()) {
 				this.print();
 			}
@@ -212,8 +212,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 	
 	private String getURL(String uri) {
-		String ret = null ;
-		ret = policyMgrBaseUrl + (uri.startsWith("/") ? uri : ("/" + uri)) ;
+		String ret = null;
+		ret = policyMgrBaseUrl + (uri.startsWith("/") ? uri : ("/" + uri));
 		return ret;
 	}
 	
@@ -239,19 +239,19 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private void addUserToList(XUserInfo aUserInfo) {
 		if (! xuserList.contains(aUserInfo)) {
-			xuserList.add(aUserInfo) ;
+			xuserList.add(aUserInfo);
 		}
 		
-		String userId = aUserInfo.getId() ;
+		String userId = aUserInfo.getId();
 		
 		if (userId != null) {
-			userId2XUserInfoMap.put(userId, aUserInfo) ;
+			userId2XUserInfoMap.put(userId, aUserInfo);
 		}
 		
 		String userName = aUserInfo.getName();
 		
 		if (userName != null) {
-			userName2XUserInfoMap.put(userName, aUserInfo) ;
+			userName2XUserInfoMap.put(userName, aUserInfo);
 		}
 	}
 	
@@ -259,25 +259,25 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private void addGroupToList(XGroupInfo aGroupInfo) {
 		
 		if (! xgroupList.contains(aGroupInfo) ) {
-			xgroupList.add(aGroupInfo) ;
+			xgroupList.add(aGroupInfo);
 		}
 
 		if (aGroupInfo.getName() != null) {
-			groupName2XGroupInfoMap.put(aGroupInfo.getName(), aGroupInfo) ;
+			groupName2XGroupInfoMap.put(aGroupInfo.getName(), aGroupInfo);
 		}
 
 	}
 	
 	private void addUserGroupToList(XUserGroupInfo ugInfo) {
-		String userId = ugInfo.getUserId() ;
+		String userId = ugInfo.getUserId();
 		
 		if (userId != null) {
-			XUserInfo user = userId2XUserInfoMap.get(userId) ;
+			XUserInfo user = userId2XUserInfoMap.get(userId);
 			
 			if (user != null) {
-				List<String> groups = user.getGroups() ;
+				List<String> groups = user.getGroups();
 				if (! groups.contains(ugInfo.getGroupName())) {
-					groups.add(ugInfo.getGroupName()) ;
+					groups.add(ugInfo.getGroupName());
 				}
 			}
 		}
@@ -287,30 +287,30 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		String userId = userInfo.getId();
 		
 		if (userId != null) {
-			XUserInfo user = userId2XUserInfoMap.get(userId) ;
+			XUserInfo user = userId2XUserInfoMap.get(userId);
 			
 			if (user != null) {
-				List<String> groups = user.getGroups() ;
+				List<String> groups = user.getGroups();
 				if (! groups.contains(groupInfo.getName())) {
-					groups.add(groupInfo.getName()) ;
+					groups.add(groupInfo.getName());
 				}
 			}
 		}
 	}
 
 	private void delUserGroupFromList(XUserInfo userInfo, XGroupInfo groupInfo) {
-		List<String> groups = userInfo.getGroups() ;
+		List<String> groups = userInfo.getGroups();
 		if (groups.contains(groupInfo.getName())) {
-			groups.remove(groupInfo.getName()) ;
+			groups.remove(groupInfo.getName());
 		}
 	}
 	
 	private void print() {
 		LOG.debug("Number of users read [" + xuserList.size() + "]");
 		for(XUserInfo user : xuserList) {
-			LOG.debug("USER: " + user.getName()) ;
+			LOG.debug("USER: " + user.getName());
 			for(String group : user.getGroups()) {
-				LOG.debug("\tGROUP: " + group) ;
+				LOG.debug("\tGROUP: " + group);
 			}
 		}
 	}
@@ -319,17 +319,17 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	public void addOrUpdateUser(String userName, List<String> groups) {
 		
 		UserGroupInfo ugInfo		  = new UserGroupInfo();
-		XUserInfo user = userName2XUserInfoMap.get(userName) ;
+		XUserInfo user = userName2XUserInfoMap.get(userName);
 		
 		if (groups == null) {
-			groups = new ArrayList<String>() ;
+			groups = new ArrayList<String>();
 		}
 		
 		if (user == null) {    // Does not exists
 
-			LOG.debug("INFO: addPMAccount(" + userName + ")" ) ;
+			LOG.debug("INFO: addPMAccount(" + userName + ")" );
 			if (! isMockRun) {
-				addMUser(userName) ;
+				addMUser(userName);
 			}
 			
 			//* Build the user group info object and do the rest call
@@ -339,14 +339,14 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 		}
 		else {					// Validate group memberships
-			List<String> oldGroups = user.getGroups() ;
-			List<String> addGroups = new ArrayList<String>() ;
-			List<String> delGroups = new ArrayList<String>() ;
-			List<String> updateGroups = new ArrayList<String>() ;
+			List<String> oldGroups = user.getGroups();
+			List<String> addGroups = new ArrayList<String>();
+			List<String> delGroups = new ArrayList<String>();
+			List<String> updateGroups = new ArrayList<String>();
 			XGroupInfo tempXGroupInfo=null;
 			for(String group : groups) {
 				if (! oldGroups.contains(group)) {
-					addGroups.add(group) ;
+					addGroups.add(group);
 				}else{
 					tempXGroupInfo=groupName2XGroupInfoMap.get(group);
 					if(tempXGroupInfo!=null && ! GROUP_SOURCE_EXTERNAL.equals(tempXGroupInfo.getGroupSource())){
@@ -357,12 +357,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			
 			for(String group : oldGroups) {
 				if (! groups.contains(group) ) {
-					delGroups.add(group) ;
+					delGroups.add(group);
 				}
 			}
 
  			for(String g : addGroups) {
- 				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" ) ;
+ 				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
  			}
  			if (! isMockRun) {
  				if (!addGroups.isEmpty()){
@@ -375,15 +375,15 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 						+ ", for user-group entry: " + ugInfo);
 					}
  				}
- 				addXUserGroupInfo(user, addGroups) ;
+ 				addXUserGroupInfo(user, addGroups);
  			}
  			
  			for(String g : delGroups) {
- 				LOG.debug("INFO: delPMXAGroupFromUser(" + userName + "," + g + ")" ) ;
+ 				LOG.debug("INFO: delPMXAGroupFromUser(" + userName + "," + g + ")" );
  			}
  			
  			if (! isMockRun ) {
- 				delXUserGroupInfo(user, delGroups) ;
+ 				delXUserGroupInfo(user, delGroups);
  			}
 			if (! isMockRun) {
 				if (!updateGroups.isEmpty()){
@@ -404,25 +404,25 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList");
 		}		
-		Client c = getClient() ;
+		Client c = getClient();
 		
-		int totalCount = 100 ;
-		int retrievedCount = 0 ;
+		int totalCount = 100;
+		int retrievedCount = 0;
 		 	
 		while (retrievedCount < totalCount) {
 			WebResource r = c.resource(getURL(PM_GROUP_LIST_URI))
 					.queryParam("pageSize", recordsToPullPerCall)
-					.queryParam("startIndex", String.valueOf(retrievedCount)) ;
+					.queryParam("startIndex", String.valueOf(retrievedCount));
 			
 		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		
-		LOG.debug("RESPONSE: [" + response + "]") ;
+		LOG.debug("RESPONSE: [" + response + "]");
 		    		
-		Gson gson = new GsonBuilder().create() ;
+		Gson gson = new GsonBuilder().create();
 
-		GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class) ;
+		GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class);
 				
-		totalCount = groupList.getTotalCount() ;
+		totalCount = groupList.getTotalCount();
 		
 			if (groupList.getXgroupInfoList() != null) {
 				xgroupList.addAll(groupList.getXgroupInfoList());
@@ -439,33 +439,33 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserList");
 		}
-		Client c = getClient() ;	
+		Client c = getClient();	
 	
-	    int totalCount = 100 ;
-	    int retrievedCount = 0 ;
+	    int totalCount = 100;
+	    int retrievedCount = 0;
 	
 	    while (retrievedCount < totalCount) {
 		
 		    WebResource r = c.resource(getURL(PM_USER_LIST_URI))
 		    					.queryParam("pageSize", recordsToPullPerCall)
-		    					.queryParam("startIndex", String.valueOf(retrievedCount)) ;
+		    					.queryParam("startIndex", String.valueOf(retrievedCount));
 		
 		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		
-		    Gson gson = new GsonBuilder().create() ;
+		    Gson gson = new GsonBuilder().create();
 	
-		    LOG.debug("RESPONSE: [" + response + "]") ;
+		    LOG.debug("RESPONSE: [" + response + "]");
 	
-		    GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class) ;
+		    GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class);
 		
-		    totalCount = userList.getTotalCount() ;
+		    totalCount = userList.getTotalCount();
 		
 		    if (userList.getXuserInfoList() != null) {
-		    	xuserList.addAll(userList.getXuserInfoList()) ;
-		    	retrievedCount = xuserList.size() ;
+		    	xuserList.addAll(userList.getXuserInfoList());
+		    	retrievedCount = xuserList.size();
 
 		    	for(XUserInfo u : userList.getXuserInfoList()) {
-			    	LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: " + u.getDescription()) ;
+			    	LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: " + u.getDescription());
 			    }
 		    }
 	    }
@@ -475,33 +475,33 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserGroupLinkList");
 	 	}
-		Client c = getClient() ;
+		Client c = getClient();
 	
-	    int totalCount = 100 ;
-	    int retrievedCount = 0 ;
+	    int totalCount = 100;
+	    int retrievedCount = 0;
 	
 	    while (retrievedCount < totalCount) {
 		
 		    WebResource r = c.resource(getURL(PM_USER_GROUP_MAP_LIST_URI))
 		    					.queryParam("pageSize", recordsToPullPerCall)
-		    					.queryParam("startIndex", String.valueOf(retrievedCount)) ;
+		    					.queryParam("startIndex", String.valueOf(retrievedCount));
 		
 		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		
-		    LOG.debug("RESPONSE: [" + response + "]") ;
+		    LOG.debug("RESPONSE: [" + response + "]");
 		
-		    Gson gson = new GsonBuilder().create() ;
+		    Gson gson = new GsonBuilder().create();
 	
-		    GetXUserGroupListResponse usergroupList = gson.fromJson(response, GetXUserGroupListResponse.class) ;
+		    GetXUserGroupListResponse usergroupList = gson.fromJson(response, GetXUserGroupListResponse.class);
 		
-		    totalCount = usergroupList.getTotalCount() ;
+		    totalCount = usergroupList.getTotalCount();
 		
 		    if (usergroupList.getXusergroupInfoList() != null) {
-		    	xusergroupList.addAll(usergroupList.getXusergroupInfoList()) ;
-		    	retrievedCount = xusergroupList.size() ;
+		    	xusergroupList.addAll(usergroupList.getXusergroupInfoList());
+		    	retrievedCount = xusergroupList.size();
 
 		    	for(XUserGroupInfo ug : usergroupList.getXusergroupInfoList()) {
-			    	LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName()) ;
+			    	LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName());
 			    }
 		    }
 	    }
@@ -514,16 +514,16 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		UserGroupInfo ret = null;
 		XUserInfo user = null;
 		
-		LOG.debug("INFO: addPMXAUser(" + userName + ")" ) ;
+		LOG.debug("INFO: addPMXAUser(" + userName + ")" );
 		if (! isMockRun) {
-			user = addXUserInfo(userName) ;
+			user = addXUserInfo(userName);
 		}
 		
 		for(String g : groups) {
-				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" ) ;
+				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
 		}
 		if (! isMockRun ) {
-			addXUserGroupInfo(user, groups) ;
+			addXUserGroupInfo(user, groups);
 		}
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
 			try {
@@ -561,9 +561,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		LOG.debug("USER GROUP MAPPING" + jsonString);
 		
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 		
-		LOG.debug("RESPONSE: [" + response + "]") ;
+		LOG.debug("RESPONSE: [" + response + "]");
 		
 		ret = gson.fromJson(response, UserGroupInfo.class);
 		
@@ -595,12 +595,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 		String response = null;
 		try{
-			response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+			response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 		}catch(Throwable t){
 			LOG.error("Failed to communicate Ranger Admin : ", t);
 		}
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug("RESPONSE: [" + response + "]") ;
+			LOG.debug("RESPONSE: [" + response + "]");
 		}
 		ret = gson.fromJson(response, UserGroupInfo.class);
 
@@ -651,31 +651,31 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	private XUserInfo addXUserInfo(String aUserName) {
 		
-		XUserInfo xuserInfo = new XUserInfo() ;
+		XUserInfo xuserInfo = new XUserInfo();
 
 		xuserInfo.setName(aUserName);
 		
-		xuserInfo.setDescription(aUserName + " - add from Unix box") ;
+		xuserInfo.setDescription(aUserName + " - add from Unix box");
 	   	
 		usergroupInfo.setXuserInfo(xuserInfo);
 		
-		return xuserInfo ;
+		return xuserInfo;
 	}
 	
 
 	private XGroupInfo addXGroupInfo(String aGroupName) {
 		
-		XGroupInfo addGroup = new XGroupInfo() ;
+		XGroupInfo addGroup = new XGroupInfo();
 		
 		addGroup.setName(aGroupName);
 		
-		addGroup.setDescription(aGroupName + " - add from Unix box") ;
+		addGroup.setDescription(aGroupName + " - add from Unix box");
 		
-		addGroup.setGroupType("1") ;
+		addGroup.setGroupType("1");
 
 		addGroup.setGroupSource(GROUP_SOURCE_EXTERNAL);
 
-		return addGroup ;
+		return addGroup;
 	}
 
 	
@@ -684,12 +684,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
 		
 		for(String groupName : aGroupList) {
-			XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+			XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 			if (group == null) {
-				group = addXGroupInfo(groupName) ;
+				group = addXGroupInfo(groupName);
 			}
 			xGroupInfoList.add(group);
-			addXUserGroupInfo(aUserInfo, group) ;
+			addXUserGroupInfo(aUserInfo, group);
 		}
 		
 		usergroupInfo.setXgroupInfo(xGroupInfoList);
@@ -699,9 +699,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
 		for(String groupName : aGroupList) {
-			XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+			XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 			if (group == null) {
-				group = addXGroupInfo(groupName) ;
+				group = addXGroupInfo(groupName);
 			}else if(!GROUP_SOURCE_EXTERNAL.equals(group.getGroupSource())){
 				group.setGroupSource(GROUP_SOURCE_EXTERNAL);
 			}
@@ -715,11 +715,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
    private XUserGroupInfo addXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
 		
 	
-	    XUserGroupInfo ugInfo = new XUserGroupInfo() ;
+	    XUserGroupInfo ugInfo = new XUserGroupInfo();
 		
 		ugInfo.setUserId(aUserInfo.getId());
 		
-		ugInfo.setGroupName(aGroupInfo.getName()) ;
+		ugInfo.setGroupName(aGroupInfo.getName());
 		
 		// ugInfo.setParentGroupId("1");
 		
@@ -729,7 +729,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private void delXUserGroupInfo(final XUserInfo aUserInfo, List<String> aGroupList) {
 		for(String groupName : aGroupList) {
-			final XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+			final XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 			if (group != null) {
 				if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 					try {
@@ -764,26 +764,26 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		try {
 
-			Client c = getClient() ;
+			Client c = getClient();
 
 			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
 					   UserSyncUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), UserSyncUtil.encodeURIParam(userName));
 
-			WebResource r = c.resource(getURL(uri)) ;
+			WebResource r = c.resource(getURL(uri));
 
-		    ClientResponse response = r.delete(ClientResponse.class) ;
+		    ClientResponse response = r.delete(ClientResponse.class);
 
 		    if ( LOG.isDebugEnabled() ) {
-		    	LOG.debug("RESPONSE: [" + response.toString() + "]") ;
+		    	LOG.debug("RESPONSE: [" + response.toString() + "]");
 		    }
 
 		    if (response.getStatus() == 200) {
-		    	delUserGroupFromList(aUserInfo, aGroupInfo) ;
+		    	delUserGroupFromList(aUserInfo, aGroupInfo);
 		    }
 
 		} catch (Exception e) {
 
-			LOG.warn( "ERROR: Unable to delete GROUP: " + groupName  + " from USER:" + userName , e) ;
+			LOG.warn( "ERROR: Unable to delete GROUP: " + groupName  + " from USER:" + userName , e);
 		}
 
 	}
@@ -824,23 +824,23 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	private MUserInfo getMUser(MUserInfo userInfo, MUserInfo ret) {		
-		Client c = getClient() ;
+		Client c = getClient();
 	
-	    WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI)) ;
+	    WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI));
 	
-	    Gson gson = new GsonBuilder().create() ;
+	    Gson gson = new GsonBuilder().create();
 
-	    String jsonString = gson.toJson(userInfo) ;
+	    String jsonString = gson.toJson(userInfo);
 	
-	    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+	    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 	
-	    LOG.debug("RESPONSE[" + response + "]") ;
+	    LOG.debug("RESPONSE[" + response + "]");
 	
-	    ret = gson.fromJson(response, MUserInfo.class) ;
+	    ret = gson.fromJson(response, MUserInfo.class);
 	
 	    LOG.debug("MUser Creation successful " + ret);
 		
-		return ret ;
+		return ret;
 	}
 
 	private synchronized Client getClient() {
@@ -861,12 +861,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				if (keyStoreFile != null && keyStoreFilepwd != null) {
 	
 					KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-					InputStream in = null ;
+					InputStream in = null;
 					try {
-						in = getFileInputStream(keyStoreFile) ;
+						in = getFileInputStream(keyStoreFile);
 						if (in == null) {
 							LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
-							return ret ;
+							return ret;
 						}
 						keyStore.load(in, keyStoreFilepwd.toCharArray());
 						KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -884,12 +884,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				if (trustStoreFile != null && trustStoreFilepwd != null) {
 	
 					KeyStore trustStore = KeyStore.getInstance(trustStoreType);
-					InputStream in = null ;
+					InputStream in = null;
 					try {
-						in = getFileInputStream(trustStoreFile) ;
+						in = getFileInputStream(trustStoreFile);
 						if (in == null) {
 							LOG.error("Unable to obtain keystore from file [" + trustStoreFile + "]");
-							return ret ;
+							return ret;
 						}
 						trustStore.load(in, trustStoreFilepwd.toCharArray());
 						TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -898,7 +898,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					}
 					finally {
 						if (in != null) {
-							in.close() ;
+							in.close();
 						}
 					}
 				}
@@ -943,7 +943,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				 }
 			}
 		}
-		return ret ;
+		return ret;
 	}
 	
 	private InputStream getFileInputStream(String path) throws FileNotFoundException {
@@ -964,7 +964,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			}
 			
 			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path) ;
+				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
 				if (ret == null) {
 					if (! path.startsWith("/")) {
 						ret = ClassLoader.getSystemResourceAsStream("/" + path);
@@ -979,7 +979,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	@Override
 	public void addOrUpdateGroup(String groupName) {
-		XGroupInfo group = groupName2XGroupInfoMap.get(groupName) ;
+		XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 		
 		if (group == null) {    // Does not exists
 			
@@ -997,9 +997,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
 		
-		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" ) ;
+		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" );
 		if (! isMockRun) {
-			group = addXGroupInfo(groupName) ;
+			group = addXGroupInfo(groupName);
 		}
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 			try {
@@ -1040,9 +1040,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		
 		LOG.debug("Group" + jsonString);
 		
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString) ;
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 		
-		LOG.debug("RESPONSE: [" + response + "]") ;
+		LOG.debug("RESPONSE: [" + response + "]");
 		
 		ret = gson.fromJson(response, XGroupInfo.class);
 		

@@ -123,7 +123,7 @@ public class HBaseConnectionMgr {
 					new Throwable());
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HBaseConnectionMgr.getHBaseConnection() HbaseClient : "+ client  ) ;
+			LOG.debug("<== HBaseConnectionMgr.getHBaseConnection() HbaseClient : "+ client  );
 		}	
 		return client;
 	}

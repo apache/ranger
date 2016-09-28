@@ -35,11 +35,11 @@ public class ConsolePromptCallbackHandler implements CallbackHandler {
 	@Override
 	public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
 		
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)) ;
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		
 		for(Callback cb : callbacks) {
 			if (cb instanceof NameCallback) {
-		          NameCallback nc = (NameCallback)cb ;
+		          NameCallback nc = (NameCallback)cb;
 		          System.out.print(nc.getPrompt());
 		          System.out.flush();
                   String line = null;
@@ -61,7 +61,7 @@ public class ConsolePromptCallbackHandler implements CallbackHandler {
 		          pc.setPassword(line.toCharArray());
 			}
 			else {
-				System.out.println("Unknown callbacl [" + cb.getClass().getName() + "]") ;
+				System.out.println("Unknown callbacl [" + cb.getClass().getName() + "]");
 			}
 		}
 	}

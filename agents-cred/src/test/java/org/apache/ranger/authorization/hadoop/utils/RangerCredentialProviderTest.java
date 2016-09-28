@@ -68,16 +68,16 @@ public class RangerCredentialProviderTest {
 		try {
 			if (ksFile != null) {
 				if (ksFile.exists()) {
-					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is available - and deleting") ;
-					ksFile.delete() ;
-					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is deleted.") ;
+					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is available - and deleting");
+					ksFile.delete();
+					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is deleted.");
 				}
 				else {
-					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is not available") ;
+					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is not available");
 				}
 			}
 			else {
-				System.out.println("Keystore File is NULL") ;
+				System.out.println("Keystore File is NULL");
 			}
 		}
 		catch(Throwable t) {
@@ -93,14 +93,14 @@ public class RangerCredentialProviderTest {
 			throw e;
 		}
 		assertEquals(0,ret);
-		System.out.println("(1) Number of active Threads : " + Thread.activeCount() ) ;
-		listThreads() ;
+		System.out.println("(1) Number of active Threads : " + Thread.activeCount() );
+		listThreads();
 	}
 	
 	@After
 	public void cleanup() throws Exception {
 		if (ksFile != null && ksFile.exists()) {
-			ksFile.delete() ;
+			ksFile.delete();
 		}
 	}
 	
@@ -112,8 +112,8 @@ public class RangerCredentialProviderTest {
 		if (providers != null) {
 			assertTrue(url.equals(providers.get(0).toString()));
 		}
-		System.out.println("(2) Number of active Threads : " + Thread.activeCount() ) ;
-		listThreads() ;
+		System.out.println("(2) Number of active Threads : " + Thread.activeCount() );
+		listThreads();
 	}
 	
 	@Test
@@ -124,14 +124,14 @@ public class RangerCredentialProviderTest {
 		if (providers != null) {
 			assertTrue("PassworD123".equals(new String(cp.getCredentialString(url,"TestCredential001"))));
 		}
-		System.out.println("(3) Number of active Threads : " + Thread.activeCount() ) ;
-		listThreads() ;
+		System.out.println("(3) Number of active Threads : " + Thread.activeCount() );
+		listThreads();
 	}
 
 	
 	@After
 	public void teardown() throws Exception {
-		System.out.println("In teardown : Number of active Threads : " + Thread.activeCount() ) ;
+		System.out.println("In teardown : Number of active Threads : " + Thread.activeCount() );
 		int ret;
 		Configuration conf = new Configuration();
 		CredentialShell cs = new CredentialShell();
@@ -142,42 +142,42 @@ public class RangerCredentialProviderTest {
 			throw e;
 		}
 		assertEquals(0,ret);	
-		listThreads() ;
+		listThreads();
 	}
 	
 	private static void 		listThreads() {
-		int ac = Thread.activeCount() ;
+		int ac = Thread.activeCount();
 		if (ac > 0) {
-			Thread[] tlist = new Thread[ac] ;
-			Thread.enumerate(tlist) ;
+			Thread[] tlist = new Thread[ac];
+			Thread.enumerate(tlist);
 			for(Thread t : tlist) {
-				System.out.println("Thread [" + t + "] => {" + t.getClass().getName() + "}") ;
+				System.out.println("Thread [" + t + "] => {" + t.getClass().getName() + "}");
 			}
 		}
 	}
 	
 	private static boolean isCredentialShellInteractiveEnabled() {
-		boolean ret = false ;
+		boolean ret = false;
 		
-		String fieldName = "interactive" ;
+		String fieldName = "interactive";
 		
-		CredentialShell cs = new CredentialShell() ;
+		CredentialShell cs = new CredentialShell();
 		
 		try {
-			Field interactiveField = cs.getClass().getDeclaredField(fieldName) ;
+			Field interactiveField = cs.getClass().getDeclaredField(fieldName);
 			
 			if (interactiveField != null) {
 				interactiveField.setAccessible(true);
-				ret = interactiveField.getBoolean(cs) ;
-				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]") ;
+				ret = interactiveField.getBoolean(cs);
+				System.out.println("FOUND value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "] = [" + ret + "]");
 			}
 		} catch (Throwable e) {
-			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option") ;
+			System.out.println("Unable to find the value of [" + fieldName + "] field in the Class [" + cs.getClass().getName() + "]. Skiping -f option");
 			e.printStackTrace();
 			ret = false;
 		}
 		
-		return ret ;
+		return ret;
 		
 		
 	}

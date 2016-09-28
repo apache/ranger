@@ -43,14 +43,14 @@ import org.apache.ranger.plugin.client.HadoopException;
 
 public class HdfsClient extends BaseClient {
 
-	private static final Log LOG = LogFactory.getLog(HdfsClient.class) ;
+	private static final Log LOG = LogFactory.getLog(HdfsClient.class);
   private Configuration conf;
   private static List<String> rangerInternalPropertyKeys = Arrays.asList("username",
     "password", "keytabfile");
 
 	public HdfsClient(String serviceName, Map<String,String> connectionProperties) {
-		super(serviceName,connectionProperties, "hdfs-client") ;
-    conf = new Configuration() ;
+		super(serviceName,connectionProperties, "hdfs-client");
+    conf = new Configuration();
     Set<String> rangerInternalPropertyKeys = getConfigHolder().getRangerInternalPropertyKeys();
     for (Map.Entry<String, String> entry: connectionProperties.entrySet())  {
       String key = entry.getKey();
@@ -63,47 +63,47 @@ public class HdfsClient extends BaseClient {
 	}
 	
 	private List<String> listFilesInternal(String baseDir, String fileMatching, final List<String> pathList) throws  HadoopException {
-		List<String> fileList = new ArrayList<String>() ;
+		List<String> fileList = new ArrayList<String>();
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
 		try {
-			String dirPrefix = (baseDir.endsWith("/") ? baseDir : (baseDir + "/")) ;
+			String dirPrefix = (baseDir.endsWith("/") ? baseDir : (baseDir + "/"));
 			String filterRegEx = null;
 			if (fileMatching != null && fileMatching.trim().length() > 0) {
-				filterRegEx = fileMatching.trim() ;
+				filterRegEx = fileMatching.trim();
 			}
 			
 
 			UserGroupInformation.setConfiguration(conf);
 
-			FileSystem fs = null ;
+			FileSystem fs = null;
 			try {
-				fs = FileSystem.get(conf) ;
+				fs = FileSystem.get(conf);
 
 				Path basePath = new Path(baseDir);
-				FileStatus[] fileStats = fs.listStatus(basePath) ;
+				FileStatus[] fileStats = fs.listStatus(basePath);
 
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsClient fileStatus : " + fileStats.length + " PathList :" + pathList) ;
+					LOG.debug("<== HdfsClient fileStatus : " + fileStats.length + " PathList :" + pathList);
 				}
 
 				if (fileStats != null) {
 					if (fs.exists(basePath) && ArrayUtils.isEmpty(fileStats))  {
-						fileList.add(basePath.toString()) ;
+						fileList.add(basePath.toString());
 					} else {
 						for(FileStatus stat : fileStats) {
-								Path path = stat.getPath() ;
-								String pathComponent = path.getName() ;
+								Path path = stat.getPath();
+								String pathComponent = path.getName();
 								String prefixedPath = dirPrefix + pathComponent;
 						        if ( pathList != null && pathList.contains(prefixedPath)) {
                                    continue;
 						        }
 								if (filterRegEx == null) {
-									fileList.add(prefixedPath) ;
+									fileList.add(prefixedPath);
 								}
 								else if (FilenameUtils.wildcardMatch(pathComponent, fileMatching)) {
-									fileList.add(prefixedPath) ;
+									fileList.add(prefixedPath);
 								}
 							}
 					}
@@ -115,7 +115,7 @@ public class HdfsClient extends BaseClient {
 				hdpException.generateResponseDataMap(false, getMessage(uhe),
 						msgDesc + errMsg, null, null);
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsClient listFilesInternal Error : " + uhe) ;
+					LOG.debug("<== HdfsClient listFilesInternal Error : " + uhe);
 				}
 				throw hdpException;
 			} catch (FileNotFoundException fne) {
@@ -126,7 +126,7 @@ public class HdfsClient extends BaseClient {
 						msgDesc + errMsg, null, null);
 				
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsClient listFilesInternal Error : " + fne) ;
+					LOG.debug("<== HdfsClient listFilesInternal Error : " + fne);
 				}
 				
 				throw hdpException;
@@ -141,7 +141,7 @@ public class HdfsClient extends BaseClient {
 			hdpException.generateResponseDataMap(false, getMessage(ioe),
 					msgDesc + errMsg, null, null);
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== HdfsClient listFilesInternal Error : " + ioe) ;
+				LOG.debug("<== HdfsClient listFilesInternal Error : " + ioe);
 			}
 			throw hdpException;
 
@@ -153,11 +153,11 @@ public class HdfsClient extends BaseClient {
 			hdpException.generateResponseDataMap(false, getMessage(iae),
 					msgDesc + errMsg, null, null);
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("<== HdfsClient listFilesInternal Error : " + iae) ;
+				LOG.debug("<== HdfsClient listFilesInternal Error : " + iae);
 			}
 			throw hdpException;
 		}
-		return fileList ;
+		return fileList;
 	}
 
 
@@ -166,24 +166,24 @@ public class HdfsClient extends BaseClient {
 		PrivilegedExceptionAction<List<String>> action = new PrivilegedExceptionAction<List<String>>() {
 			@Override
 			public List<String> run() throws Exception {
-				return listFilesInternal(baseDir, fileMatching, pathList) ;
+				return listFilesInternal(baseDir, fileMatching, pathList);
 			}
 		};
-		return Subject.doAs(getLoginSubject(),action) ;
+		return Subject.doAs(getLoginSubject(),action);
 	}
 	
 	public static final void main(String[] args) {
 		
 		if (args.length < 2) {
-			System.err.println("USAGE: java " + HdfsClient.class.getName() + " repositoryName  basedirectory  [filenameToMatch]") ;
-			System.exit(1) ;
+			System.err.println("USAGE: java " + HdfsClient.class.getName() + " repositoryName  basedirectory  [filenameToMatch]");
+			System.exit(1);
 		}
 		
-		String repositoryName = args[0] ;
-		String baseDir = args[1] ;
-		String fileNameToMatch = (args.length == 2 ? null : args[2]) ;
+		String repositoryName = args[0];
+		String baseDir = args[1];
+		String fileNameToMatch = (args.length == 2 ? null : args[2]);
 		
-		HdfsClient fs = new HdfsClient(repositoryName, new HashMap<String,String>()) ;
+		HdfsClient fs = new HdfsClient(repositoryName, new HashMap<String,String>());
 		List<String> fsList = null;
 		try {
 			fsList = fs.listFiles(baseDir, fileNameToMatch,null);
@@ -192,11 +192,11 @@ public class HdfsClient extends BaseClient {
 		}
 		if (fsList != null && fsList.size() > 0) {
 			for(String s : fsList) {
-				System.out.println(s) ;
+				System.out.println(s);
 			}
 		}
 		else {
-			System.err.println("Unable to get file listing for [" + baseDir + (baseDir.endsWith("/") ? "" : "/") + fileNameToMatch + "]  in repository [" + repositoryName + "]") ;
+			System.err.println("Unable to get file listing for [" + baseDir + (baseDir.endsWith("/") ? "" : "/") + fileNameToMatch + "]  in repository [" + repositoryName + "]");
 		}
 	}
 
@@ -261,25 +261,25 @@ public class HdfsClient extends BaseClient {
 	  String lookupKeytab = configs.get("lookupkeytab");
 	  if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){
 		  // username
-		  String username = configs.get("username") ;
+		  String username = configs.get("username");
 		  if ((username == null || username.isEmpty()))  {
 			  throw new IllegalArgumentException("Value for username not specified");
 		  }
 
 		  // password
-		  String password = configs.get("password") ;
+		  String password = configs.get("password");
 		  if ((password == null || password.isEmpty()))  {
 			  throw new IllegalArgumentException("Value for password not specified");
 		  }
 	  }
 
     // hadoop.security.authentication
-    String authentication = configs.get("hadoop.security.authentication") ;
+    String authentication = configs.get("hadoop.security.authentication");
     if ((authentication == null || authentication.isEmpty()))  {
       throw new IllegalArgumentException("Value for hadoop.security.authentication not specified");
     }
 
-    String fsDefaultName = configs.get("fs.default.name") ;
+    String fsDefaultName = configs.get("fs.default.name");
     fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
     if (fsDefaultName.isEmpty())  {
       throw new IllegalArgumentException("Value for neither fs.default.name is specified");

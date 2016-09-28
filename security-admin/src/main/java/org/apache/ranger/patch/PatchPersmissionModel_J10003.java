@@ -164,7 +164,7 @@ public class PatchPersmissionModel_J10003 extends BaseLoader {
 				}
 			}
 		}
-		return countUserPermissionUpdated ;
+		return countUserPermissionUpdated;
 	}
 
 	private List<String> readUserNamesFromFile(String aFileName) throws IOException {

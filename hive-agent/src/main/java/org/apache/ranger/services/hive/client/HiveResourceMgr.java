@@ -43,18 +43,18 @@ public class HiveResourceMgr {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HiveResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("==> HiveResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );
 		}	
 		
 		try {
 			ret = HiveClient.connectionTest(serviceName, configs);
 		} catch (HadoopException e) {
-			LOG.error("<== HiveResourceMgr.connectionTest Error: " + e) ;
+			LOG.error("<== HiveResourceMgr.connectionTest Error: " + e);
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveResourceMgr.connectionTest Result : "+ ret  ) ;
+			LOG.debug("<== HiveResourceMgr.connectionTest Result : "+ ret  );
 		}	
 		
 		return ret;
@@ -75,7 +75,7 @@ public class HiveResourceMgr {
 
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveResourceMgr.getHiveResources()  UserInput: \""+ userInput  + "\" resource : " + resource + " resourceMap: "  + resourceMap) ;
+			LOG.debug("<== HiveResourceMgr.getHiveResources()  UserInput: \""+ userInput  + "\" resource : " + resource + " resourceMap: "  + resourceMap);
 		}	
 		
 		if ( userInput != null && resource != null) {
@@ -104,7 +104,7 @@ public class HiveResourceMgr {
 				
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("==> HiveResourceMgr.getHiveResources() UserInput: "+ userInput  + " configs: " + configs + " databaseList: "  + databaseList + " tableList: "
-																				  + tableList + " columnList: " + columnList ) ;
+																				  + tableList + " columnList: " + columnList );
 				}
 				
 				final HiveClient hiveClient = new HiveConnectionMgr().getHiveConnection(serviceName, serviceType, configs);
@@ -181,7 +181,7 @@ public class HiveResourceMgr {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HiveResourceMgr.getHiveResources() UserInput: "+ userInput  + " configs: " + configs + " databaseList: "  + databaseList + " tableList: "
-																		  + tableList + " columnList: " + columnList + "Result :" + resultList ) ;
+																		  + tableList + " columnList: " + columnList + "Result :" + resultList );
 
 		}
 		return resultList;

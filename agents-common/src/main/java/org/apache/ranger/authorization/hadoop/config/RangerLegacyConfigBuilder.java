@@ -112,26 +112,26 @@ public class RangerLegacyConfigBuilder {
 
 
 	public  static URL getAuditResource(String fName) throws Throwable {
-		URL ret = null ;
+		URL ret = null;
 
 		try {
 			for(String  cfgFile : 	new String[] {  "hive-site.xml",  "hbase-site.xml",  "hdfs-site.xml" } ) {
-				String loc = getFileLocation(cfgFile) ;
+				String loc = getFileLocation(cfgFile);
 				if (loc != null) {
 					File f = new File(loc);
 					if ( f.exists() && f.canRead()) {
-						File parentFile = new File(loc).getParentFile() ;
+						File parentFile = new File(loc).getParentFile();
 								   ret  = new File(parentFile, RangerConfigConstants.XASECURE_AUDIT_FILE).toURI().toURL();
-						break ;
+						break;
 					}
 				}
 			}
 		}
 		catch(Throwable t) {
-			LOG.error("Unable to locate audit file location." + fName + " " + t) ;
+			LOG.error("Unable to locate audit file location." + fName + " " + t);
 			throw t;
 		}
-		return ret ;
+		return ret;
 	}
 
 	public static Configuration  buildRangerSecurityConf(String serviceType) {
@@ -191,21 +191,21 @@ public class RangerLegacyConfigBuilder {
 	}
 
 	public static String getFileLocation(String fileName) {
-		String ret = null ;
+		String ret = null;
 		
-		URL lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName) ;
+		URL lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName);
 		if (lurl == null ) {
-			lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource("/" + fileName) ;
+			lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource("/" + fileName);
 		}
 		if (lurl != null) {
-			ret = lurl.getFile() ;
+			ret = lurl.getFile();
 		}
-		return ret ;
+		return ret;
 	}
 
 	public static URL getFileURL(String fileName) {
-		URL lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName) ;
-		return lurl ;
+		URL lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName);
+		return lurl;
 	}
 
 	public static String getPropertyName(String rangerProp, String serviceType) {

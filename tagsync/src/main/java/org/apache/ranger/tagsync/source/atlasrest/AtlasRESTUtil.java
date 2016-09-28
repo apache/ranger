@@ -47,7 +47,7 @@ import java.util.Map;
 public class AtlasRESTUtil {
 	private static final Logger LOG = Logger.getLogger(AtlasRESTUtil.class);
 
-	private static final String REST_MIME_TYPE_JSON = "application/json" ;
+	private static final String REST_MIME_TYPE_JSON = "application/json";
 	private static final String API_ATLAS_TYPES    = "api/atlas/types";
 	private static final String API_ATLAS_ENTITIES = "api/atlas/entities?type=";
 	private static final String API_ATLAS_ENTITY   = "api/atlas/entities/";
@@ -251,7 +251,7 @@ public class AtlasRESTUtil {
 		try {
 			if (kerberized) {
 				LOG.debug("Using kerberos authentication");
-				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules) ;
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
 				}

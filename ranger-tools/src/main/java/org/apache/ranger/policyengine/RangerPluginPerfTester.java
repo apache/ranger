@@ -131,10 +131,10 @@ public class RangerPluginPerfTester {
 
 		try {
 
-			File file = File.createTempFile("ranger-plugin-test-site", ".xml") ;
+			File file = File.createTempFile("ranger-plugin-test-site", ".xml");
 			file.deleteOnExit();
 
-			String filePathStr =  file.getAbsolutePath() ;
+			String filePathStr =  file.getAbsolutePath();
 
 			Path filePath = new Path(filePathStr);
 

@@ -28,10 +28,10 @@ public class UnixAuthenticationTester {
 	}
 		
 	public void run() throws Throwable {
-		LoginContext loginContext =  new LoginContext("PolicyManager") ;
-		System.err.println("After login ...") ;
+		LoginContext loginContext =  new LoginContext("PolicyManager");
+		System.err.println("After login ...");
 		loginContext.login();
-		System.err.println("Subject:" + loginContext.getSubject() ) ;
+		System.err.println("Subject:" + loginContext.getSubject() );
 		loginContext.logout();
 	}
 

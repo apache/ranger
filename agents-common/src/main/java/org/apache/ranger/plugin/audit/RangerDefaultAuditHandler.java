@@ -38,13 +38,13 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
-	protected static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME) ;
+	protected static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
 
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 	static long sequenceNumber = 0;
 
 	private static String UUID 	= MiscUtil.generateUniqueId();
-	private static AtomicInteger  counter =  new AtomicInteger(0); ;
+	private static AtomicInteger  counter =  new AtomicInteger(0);;
 
 	public RangerDefaultAuditHandler() {
 	}

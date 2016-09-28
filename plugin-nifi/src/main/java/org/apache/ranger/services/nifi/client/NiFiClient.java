@@ -51,7 +51,7 @@ import java.util.List;
  */
 public class NiFiClient {
 
-    private static final Log LOG = LogFactory.getLog(NiFiClient.class) ;
+    private static final Log LOG = LogFactory.getLog(NiFiClient.class);
 
     static final String SUCCESS_MSG = "ConnectionTest Successful";
     static final String FAILURE_MSG = "Unable to retrieve any resources using given parameters. ";

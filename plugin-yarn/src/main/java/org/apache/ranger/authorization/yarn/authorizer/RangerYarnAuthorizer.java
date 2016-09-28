@@ -279,19 +279,19 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 	}
 	
 	private static String getRemoteIp() {
-		String ret = null ;
-		InetAddress ip = Server.getRemoteIp() ;
+		String ret = null;
+		InetAddress ip = Server.getRemoteIp();
 		if (ip != null) {
 			ret = ip.getHostAddress();
 		}
-		return ret ;
+		return ret;
 	}
 }
 
 class RangerYarnAuditHandler extends RangerDefaultAuditHandler {
 	private static final Log LOG = LogFactory.getLog(RangerYarnAuditHandler.class);
 
-	private static final String YarnModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_YARN_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_YARN_MODULE_ACL_NAME) ;
+	private static final String YarnModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_YARN_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_YARN_MODULE_ACL_NAME);
 
 	private boolean         isAuditEnabled = false;
 	private AuthzAuditEvent auditEvent     = null;

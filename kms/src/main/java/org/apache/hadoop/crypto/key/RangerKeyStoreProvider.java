@@ -117,7 +117,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    Configuration newConfig =  getConfiguration(true, DBKS_SITE_XML);
 		getFromJceks(newConfig,CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
 		getFromJceks(newConfig,CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
-		return newConfig ;
+		return newConfig;
 		
 	}
 	
@@ -154,7 +154,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	@Override
 	public KeyVersion createKey(String name, byte[] material, Options options)
 			throws IOException {
-		  reloadKeys() ;
+		  reloadKeys();
 		  if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
 			  throw new IOException("Key " + name + " already exists");
 		  }
@@ -296,7 +296,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	public List<String> getKeys() throws IOException {
 		ArrayList<String> list = new ArrayList<String>();
 		String alias = null;
-		reloadKeys() ;
+		reloadKeys();
 	    Enumeration<String> e = dbStore.engineAliases();
 		while (e.hasMoreElements()) {
 		   alias = e.nextElement();

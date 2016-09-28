@@ -24,10 +24,10 @@ import java.util.List;
 import com.google.gson.annotations.SerializedName;
 
 public class GetXGroupListResponse {
-	private int totalCount ;
+	private int totalCount;
 
 	@SerializedName("vXGroups")
-	List<XGroupInfo> xgroupInfoList ;
+	List<XGroupInfo> xgroupInfoList;
 
 	public int getTotalCount() {
 		return totalCount;

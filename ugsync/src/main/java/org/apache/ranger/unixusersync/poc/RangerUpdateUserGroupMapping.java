@@ -62,10 +62,10 @@ public class RangerUpdateUserGroupMapping {
 
 	  /*
 	//get user group mapping from DB
-	usergroupmapping = RangerUserGroupMapping.buildUserGroupMapping(url) ;
+	usergroupmapping = RangerUserGroupMapping.buildUserGroupMapping(url);
 	
 	//get user group mapping from client system file
-	clientusergroupmapping = RangerClientUserGroupMapping.buildClientUserGroupMapping(passwdfile) ;
+	clientusergroupmapping = RangerClientUserGroupMapping.buildClientUserGroupMapping(passwdfile);
 	
 	compare_and_update(usergroupmapping,clientusergroupmapping);
 	

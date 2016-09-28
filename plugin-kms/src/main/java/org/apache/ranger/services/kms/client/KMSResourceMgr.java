@@ -34,18 +34,18 @@ public class KMSResourceMgr {
 		HashMap<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> KMSResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs ) ;
+			LOG.debug("==> KMSResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );
 		}	
 		
 		try {
 			ret = KMSClient.testConnection(serviceName, configs);
 		} catch (Exception e) {
-			LOG.error("<== KMSResourceMgr.validateConfig Error: " + e) ;
+			LOG.error("<== KMSResourceMgr.validateConfig Error: " + e);
 		  throw e;
 		}
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== KMSResourceMgr.validateConfig Result : "+ ret  ) ;
+			LOG.debug("<== KMSResourceMgr.validateConfig Result : "+ ret  );
 		}	
 		return ret;
 	}
@@ -76,9 +76,9 @@ public class KMSResourceMgr {
                 String rangerKeytab = configs.get("rangerkeytab");
                 String nameRules = configs.get("namerules");
                 String authType = configs.get("authtype");
-                resultList = getKMSResource(url, username, password, rangerPrincipal, rangerKeytab, nameRules, authType, kmsKeyName,kmsKeyList) ;
+                resultList = getKMSResource(url, username, password, rangerPrincipal, rangerKeytab, nameRules, authType, kmsKeyName,kmsKeyList);
         }
-        return resultList ;
+        return resultList;
     }
 
     public static List<String> getKMSResource(String url, String username, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType, String kmsKeyName, List<String> kmsKeyList) {

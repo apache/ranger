@@ -66,18 +66,18 @@ public class TestTagStore {
 				"        </property>\n" +
 				"</configuration>\n";
 
-		File file = File.createTempFile("ranger-admin-test-site", ".xml") ;
+		File file = File.createTempFile("ranger-admin-test-site", ".xml");
 		file.deleteOnExit();
 
-		tagStoreDir = File.createTempFile("tagStore", "dir") ;
+		tagStoreDir = File.createTempFile("tagStore", "dir");
 
 		if (tagStoreDir.exists()) {
-			tagStoreDir.delete() ;
+			tagStoreDir.delete();
 		}
 
-		tagStoreDir.mkdirs() ;
+		tagStoreDir.mkdirs();
 
-		String tagStoreDirName =  tagStoreDir.getAbsolutePath() ;
+		String tagStoreDirName =  tagStoreDir.getAbsolutePath();
 
 		String text = String.format(textTemplate, tagStoreDirName, tagStoreDirName);
 

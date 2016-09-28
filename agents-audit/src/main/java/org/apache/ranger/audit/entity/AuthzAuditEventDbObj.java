@@ -192,7 +192,7 @@ public class AuthzAuditEventDbObj implements Serializable {
 
 	@Column(name = "repo_type")
 	public int getRepositoryType() {
-		return this.repositoryType ;
+		return this.repositoryType;
 	}
 
 	public void setRepositoryType(int repositoryType) {

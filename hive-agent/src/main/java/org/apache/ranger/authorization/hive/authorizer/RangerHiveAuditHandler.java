@@ -168,7 +168,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
 		auditEvent.setEventTime(new Date());
 		auditEvent.setRepositoryType(repositoryType);
-		auditEvent.setRepositoryName(repositoryName) ;
+		auditEvent.setRepositoryName(repositoryName);
 		auditEvent.setRequestData(dfsCommand);
 
 		auditEvent.setResourcePath(dfsCommand);

@@ -48,7 +48,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 
     public CustomSSLSocketFactory() {
     	SSLContext sslContext = null;
-    	String keyStoreFile =  config.getSSLKeyStorePath() ;
+    	String keyStoreFile =  config.getSSLKeyStorePath();
     	String keyStoreFilepwd = config.getSSLKeyStorePathPassword();
     	String trustStoreFile = config.getSSLTrustStorePath();
     	String trustStoreFilepwd = config.getSSLTrustStorePathPassword();
@@ -62,9 +62,9 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 			if (keyStoreFile != null && keyStoreFilepwd != null) {
 
 				KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-				InputStream in = null ;
+				InputStream in = null;
 				try {
-					in = getFileInputStream(keyStoreFile) ;
+					in = getFileInputStream(keyStoreFile);
 					if (in == null) {
 						LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
 						return;
@@ -85,9 +85,9 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 			if (trustStoreFile != null && trustStoreFilepwd != null) {
 
 				KeyStore trustStore = KeyStore.getInstance(trustStoreType);
-				InputStream in = null ;
+				InputStream in = null;
 				try {
-					in = getFileInputStream(trustStoreFile) ;
+					in = getFileInputStream(trustStoreFile);
 					if (in == null) {
 						LOG.error("Unable to obtain keystore from file [" + trustStoreFile + "]");
 						return;
@@ -99,7 +99,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 				}
 				finally {
 					if (in != null) {
-						in.close() ;
+						in.close();
 					}
 				}
 			}
@@ -171,7 +171,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 			}
 			
 			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path) ;
+				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
 				if (ret == null) {
 					if (! path.startsWith("/")) {
 						ret = ClassLoader.getSystemResourceAsStream("/" + path);

@@ -24,7 +24,7 @@ import java.net.Socket;
 
 public class StopEmbeddedServer extends EmbeddedServer {
 
-	private static final String SHUTDOWN_HOSTNAME = "localhost" ;
+	private static final String SHUTDOWN_HOSTNAME = "localhost";
 	
 	public static void main(String[] args) {
 		new StopEmbeddedServer(args).stop();
@@ -38,21 +38,21 @@ public class StopEmbeddedServer extends EmbeddedServer {
 		
 		try {
 			
-			int shutdownPort = getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT ) ;
-			String shutdownCommand = getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND ) ;
+			int shutdownPort = getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT );
+			String shutdownCommand = getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND );
 			
-			Socket sock = new Socket(SHUTDOWN_HOSTNAME,shutdownPort) ;
+			Socket sock = new Socket(SHUTDOWN_HOSTNAME,shutdownPort);
 			
-			PrintWriter out = new PrintWriter(sock.getOutputStream(), true) ;
+			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			
-			out.println(shutdownCommand) ;
+			out.println(shutdownCommand);
 			
 			out.flush();
 			
 			out.close();
 		}
 		catch(Throwable t) {
-			System.err.println("Server could not be shutdown due to exception:" +  t) ;
+			System.err.println("Server could not be shutdown due to exception:" +  t);
 			System.exit(1);
 		}
 	}

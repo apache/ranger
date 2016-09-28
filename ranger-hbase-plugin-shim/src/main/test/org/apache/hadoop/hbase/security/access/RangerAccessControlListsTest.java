@@ -48,14 +48,14 @@ public class RangerAccessControlListsTest {
 
 	@Test
 	public void testInit() {
-		IOException exceptionFound = null ;
+		IOException exceptionFound = null;
 		try {
-			MasterServices service = null ;
-			RangerAccessControlLists.init(service) ;
+			MasterServices service = null;
+			RangerAccessControlLists.init(service);
 		} catch (IOException e) {
-			exceptionFound = e ;
+			exceptionFound = e;
 		}
-		Assert.assertFalse("Expected to get a NullPointerExecution after init method Execution - Found [" + exceptionFound + "]",  (!(exceptionFound != null && exceptionFound.getCause() instanceof NullPointerException))) ;
+		Assert.assertFalse("Expected to get a NullPointerExecution after init method Execution - Found [" + exceptionFound + "]",  (!(exceptionFound != null && exceptionFound.getCause() instanceof NullPointerException)));
 	}
 
 }

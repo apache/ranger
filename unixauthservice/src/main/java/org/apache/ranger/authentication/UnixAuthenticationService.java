@@ -54,43 +54,43 @@ import org.w3c.dom.NodeList;
 
 public class UnixAuthenticationService {
 
-	private static final Logger LOG = Logger.getLogger(UnixAuthenticationService.class) ;
+	private static final Logger LOG = Logger.getLogger(UnixAuthenticationService.class);
 	
-	private static final String serviceName = "UnixAuthenticationService" ;
+	private static final String serviceName = "UnixAuthenticationService";
 	
-	private static final String SSL_ALGORITHM = "TLS" ;
-	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port" ;
+	private static final String SSL_ALGORITHM = "TLS";
+	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
 	
-	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file" ;
-	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file" ;
+	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
+	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
 	
-	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password" ;
-	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password" ;
+	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
+	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
 
-	private static final String CRED_VALIDATOR_PROG = "ranger.usersync.passwordvalidator.path" ;
-	private static final String ADMIN_USER_LIST_PARAM = "admin.users" ;
-	private static final String ADMIN_ROLE_LIST_PARAM = "admin.roleNames" ;
-	private static final String SSL_ENABLED_PARAM = "ranger.usersync.ssl" ;
+	private static final String CRED_VALIDATOR_PROG = "ranger.usersync.passwordvalidator.path";
+	private static final String ADMIN_USER_LIST_PARAM = "admin.users";
+	private static final String ADMIN_ROLE_LIST_PARAM = "admin.roleNames";
+	private static final String SSL_ENABLED_PARAM = "ranger.usersync.ssl";
 	
-	private static final String CREDSTORE_FILENAME_PARAM = "ranger.usersync.credstore.filename" ;
+	private static final String CREDSTORE_FILENAME_PARAM = "ranger.usersync.credstore.filename";
 	
-	private String keyStorePath ;
-	private String keyStorePathPassword ;
-	private String trustStorePath ;
-	private String trustStorePathPassword ;
-	private List<String>  adminUserList = new ArrayList<String>() ;
-	private String adminRoleNames ;
+	private String keyStorePath;
+	private String keyStorePathPassword;
+	private String trustStorePath;
+	private String trustStorePathPassword;
+	private List<String>  adminUserList = new ArrayList<String>();
+	private String adminRoleNames;
 	
-	private int  portNum ;
+	private int  portNum;
 	
-	private boolean SSLEnabled = false ;
+	private boolean SSLEnabled = false;
 	
 	static private boolean enableUnixAuth = false;
 	
-	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" } ;
-	private static final String    PROPERTY_ELEMENT_TAGNAME = "property" ;
-	private static final String    NAME_ELEMENT_TAGNAME = "name" ;
-	private static final String    VALUE_ELEMENT_TAGNAME = "value" ;
+	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" };
+	private static final String    PROPERTY_ELEMENT_TAGNAME = "property";
+	private static final String    NAME_ELEMENT_TAGNAME = "name";
+	private static final String    VALUE_ELEMENT_TAGNAME = "value";
 
 	public static void main(String[] args) {
 		if (args.length > 0) {
@@ -101,8 +101,8 @@ public class UnixAuthenticationService {
 				}
 			}
 		}
-		UnixAuthenticationService service = new UnixAuthenticationService() ;
-		service.run() ;
+		UnixAuthenticationService service = new UnixAuthenticationService();
+		service.run();
 	}
 
 	public UnixAuthenticationService() {
@@ -112,11 +112,11 @@ public class UnixAuthenticationService {
 	public void run() {
 		try {
 			LOG.info("Starting User Sync Service!");
-			startUnixUserGroupSyncProcess() ;
+			startUnixUserGroupSyncProcess();
 			if (enableUnixAuth) {
 				LOG.info("Enabling Unix Auth Service!");
-			    init() ;
-			    startService() ;
+			    init();
+			    startService();
 			} else {
 				LOG.info("Unix Auth Service Disabled!");
 			}
@@ -133,8 +133,8 @@ public class UnixAuthenticationService {
 		//
 		//  Start the synchronization service ...
 		//
-		UserGroupSync syncProc = new UserGroupSync() ;
-		Thread newSyncProcThread = new Thread(syncProc) ;
+		UserGroupSync syncProc = new UserGroupSync();
+		Thread newSyncProcThread = new Thread(syncProc);
 		newSyncProcThread.setName("UnixUserSyncThread");
 		newSyncProcThread.setDaemon(false);
 		newSyncProcThread.start();
@@ -143,11 +143,11 @@ public class UnixAuthenticationService {
 
 	//TODO: add more validation code
 	private void init() throws Throwable {
-		Properties prop = new Properties() ;
+		Properties prop = new Properties();
 		
 		for (String fn : UGSYNC_CONFIG_XML_FILES ) {
 		
-			InputStream in = getFileInputStream(fn) ;
+			InputStream in = getFileInputStream(fn);
 	
 			if (in != null) {
 				try {
@@ -185,7 +185,7 @@ public class UnixAuthenticationService {
 	
 							//LOG.info("Adding Property:[" + propertyName + "] Value:["+ propertyValue + "]");
 							if (prop.get(propertyName) != null ) {
-								prop.remove(propertyName) ;
+								prop.remove(propertyName);
 	 						}
 							prop.put(propertyName, propertyValue);
 						}
@@ -202,15 +202,15 @@ public class UnixAuthenticationService {
 			}
 		}
 		
-		String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM) ;
+		String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM);
 		
-		keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM) ;
+		keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
 		
 		if (credStoreFileName == null) {
-			throw new RuntimeException("Credential file is not defined. param = [" + CREDSTORE_FILENAME_PARAM + "]") ;
+			throw new RuntimeException("Credential file is not defined. param = [" + CREDSTORE_FILENAME_PARAM + "]");
 		}
 		
-		File credFile = new File(credStoreFileName) ;
+		File credFile = new File(credStoreFileName);
 		
 		if (! credFile.exists()) {
 			throw new RuntimeException("Credential file [" + credStoreFileName + "]: does not exists." );
@@ -220,37 +220,37 @@ public class UnixAuthenticationService {
 			throw new RuntimeException("Credential file [" + credStoreFileName + "]: can not be read." );
 		}
 		
-		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS) ;
-		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS) ;
+		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS);
+		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS);
 		
-		trustStorePath  = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM) ;
-		portNum = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM)) ;
-		String validatorProg = prop.getProperty(CRED_VALIDATOR_PROG) ;
+		trustStorePath  = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM);
+		portNum = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM));
+		String validatorProg = prop.getProperty(CRED_VALIDATOR_PROG);
 		if (validatorProg != null) {
 			PasswordValidator.setValidatorProgram(validatorProg);
 		}
 		
-		String adminUsers = prop.getProperty(ADMIN_USER_LIST_PARAM) ;
+		String adminUsers = prop.getProperty(ADMIN_USER_LIST_PARAM);
 		
 		if (adminUsers != null && adminUsers.trim().length() > 0) {
 			for(String u : adminUsers.split(",")) {
 				LOG.info("Adding Admin User:"  + u.trim());
-				adminUserList.add(u.trim()) ;
+				adminUserList.add(u.trim());
 			}
 			PasswordValidator.setAdminUserList(adminUserList);
 		}
 		
 		
-		adminRoleNames = prop.getProperty(ADMIN_ROLE_LIST_PARAM) ;
+		adminRoleNames = prop.getProperty(ADMIN_ROLE_LIST_PARAM);
 		
 		if (adminRoleNames != null) {
 			LOG.info("Adding Admin Group:" + adminRoleNames);
-			PasswordValidator.setAdminRoleNames(adminRoleNames) ;
+			PasswordValidator.setAdminRoleNames(adminRoleNames);
 		}
 		
-		String SSLEnabledProp = prop.getProperty(SSL_ENABLED_PARAM) ;
+		String SSLEnabledProp = prop.getProperty(SSL_ENABLED_PARAM);
 		
-		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true"))) ;
+		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true")));
 		
 //		LOG.info("Key:" + keyStorePath);
 //		LOG.info("KeyPassword:" + keyStorePathPassword);
@@ -264,20 +264,20 @@ public class UnixAuthenticationService {
 	
 	public void startService() throws Throwable {
 		
-		SSLContext context =  SSLContext.getInstance(SSL_ALGORITHM) ;
+		SSLContext context =  SSLContext.getInstance(SSL_ALGORITHM);
 		
-		KeyManager[] km = null ;
+		KeyManager[] km = null;
 
 		if (keyStorePath != null && ! keyStorePath.isEmpty()) {
-			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType()) ;
+			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
 			
-			InputStream in = null ;
+			InputStream in = null;
 			
-			in = getFileInputStream(keyStorePath) ;
+			in = getFileInputStream(keyStorePath);
 			
 			try {
 				if (keyStorePathPassword == null) {
-					keyStorePathPassword  = "" ;
+					keyStorePathPassword  = "";
 				}
 				ks.load(in, keyStorePathPassword.toCharArray());
 			}
@@ -287,26 +287,26 @@ public class UnixAuthenticationService {
 				}
 			}
 			
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()) ;
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmf.init(ks, keyStorePathPassword.toCharArray());
-			km = kmf.getKeyManagers() ;
+			km = kmf.getKeyManagers();
 		}
 		
 		
 		TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		
-		KeyStore trustStoreKeyStore = null ;
+		KeyStore trustStoreKeyStore = null;
 		
 		if (trustStorePath != null && ! trustStorePath.isEmpty()) {
-			trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) ;
+			trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			
-			InputStream in = null ;
+			InputStream in = null;
 			
-			in = getFileInputStream(trustStorePath) ;
+			in = getFileInputStream(trustStorePath);
 			
 			try {
 				if (trustStorePathPassword == null) {
-					trustStorePathPassword = "" ;
+					trustStorePathPassword = "";
 				}
 				trustStoreKeyStore.load(in, trustStorePathPassword.toCharArray());
 			}
@@ -319,24 +319,24 @@ public class UnixAuthenticationService {
 		
 		trustManagerFactory.init(trustStoreKeyStore);
 		
-		TrustManager[] tm = trustManagerFactory.getTrustManagers() ;
+		TrustManager[] tm = trustManagerFactory.getTrustManagers();
 				
-		SecureRandom random = new SecureRandom() ;
+		SecureRandom random = new SecureRandom();
 		
 		context.init(km, tm, random);
 		
-		SSLServerSocketFactory sf = context.getServerSocketFactory() ;
+		SSLServerSocketFactory sf = context.getServerSocketFactory();
 
-		ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) ) ;
+		ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) );
 		
 		if (SSLEnabled) {
-			SSLServerSocket secureSocket = (SSLServerSocket) socket ;
-			String[] protocols = secureSocket.getEnabledProtocols() ;
-			Set<String> allowedProtocols = new HashSet<String>() ;
+			SSLServerSocket secureSocket = (SSLServerSocket) socket;
+			String[] protocols = secureSocket.getEnabledProtocols();
+			Set<String> allowedProtocols = new HashSet<String>();
 			for(String ep : protocols) {
 				if (! ep.toUpperCase().startsWith("SSLV3")) {
 					LOG.info("Enabling Protocol: [" + ep + "]");
-					allowedProtocols.add(ep) ;
+					allowedProtocols.add(ep);
 				}
 				else {
 					LOG.info("Disabling Protocol: [" + ep + "]");
@@ -349,12 +349,12 @@ public class UnixAuthenticationService {
 		}
 		
 				
-		Socket client = null ;
+		Socket client = null;
 		
 		try {
 		
 			while ( (client = socket.accept()) != null ) {
-				Thread clientValidatorThread = new Thread(new PasswordValidator(client)) ;
+				Thread clientValidatorThread = new Thread(new PasswordValidator(client));
 				clientValidatorThread.start();
 			}
 		} catch (IOException e) {
@@ -368,19 +368,19 @@ public class UnixAuthenticationService {
 		
 		InputStream ret = null;
 		
-		File f = new File(path) ;
+		File f = new File(path);
 		
 		if (f.exists()) {
-			ret = new FileInputStream(f) ;
+			ret = new FileInputStream(f);
 		}
 		else {
-			ret = getClass().getResourceAsStream(path) ;
+			ret = getClass().getResourceAsStream(path);
 			if (ret == null) {
-				ret = getClass().getResourceAsStream("/" + path) ;
+				ret = getClass().getResourceAsStream("/" + path);
 			}
 		}
 		
-		return ret ;
+		return ret;
 	}
 
 }
