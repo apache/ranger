@@ -152,7 +152,7 @@ public class PasswordUtils {
 				}
 			}
 			catch(IOException ioe) {
-				ioe.printStackTrace(); 
+				ioe.printStackTrace();
 				System.out.println("Password verification failed for password [" + password + "]:" + ioe) ;
 			}			
 		}		

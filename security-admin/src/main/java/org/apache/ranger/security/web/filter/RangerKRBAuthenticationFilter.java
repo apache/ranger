@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -264,7 +264,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 					}			
 				}	
 			}
-			if((existingAuth == null || !existingAuth.isAuthenticated()) && (!StringUtils.isEmpty(userName))){ 
+			if((existingAuth == null || !existingAuth.isAuthenticated()) && (!StringUtils.isEmpty(userName))){
 				//--------------------------- To Create Ranger Session --------------------------------------			
 				String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
 				//if we get the userName from the token then log into ranger using the same user
@@ -294,7 +294,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	
 	private boolean isSpnegoEnable(String authType){
 		String principal = PropertiesUtil.getProperty(PRINCIPAL);
-		String keytabPath = PropertiesUtil.getProperty(KEYTAB); 
+		String keytabPath = PropertiesUtil.getProperty(KEYTAB);
 		return ((!StringUtils.isEmpty(authType)) && authType.equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(principal, keytabPath));
 	}
 	

@@ -528,7 +528,7 @@ public class RangerAPIMapping {
 	/**
 	 * @param apiName
 	 * @return
-	 * 
+	 *
 	 * @Note: apiName being passed to this function should strictly follow this format: {ClassName}.{apiMethodName} and also API should be listed into
 	 *        RangerAPIList and should be mapped properly with UI tabs in the current class.
 	 */

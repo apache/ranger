@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -41,7 +41,7 @@ public class HiveConnectionMgr {
 		 hiveConnectionCache = new ConcurrentHashMap<String, HiveClient>();
 		 repoConnectStatusMap = new ConcurrentHashMap<String, Boolean>();
 	 }
-	 
+	
 
 	 public HiveClient getHiveConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
 			HiveClient hiveClient  = null;
@@ -61,7 +61,7 @@ public class HiveConnectionMgr {
 						try {
 							hiveClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
 						} catch(Exception e){
-							LOG.error("Error connecting hive repository : "+ 
+							LOG.error("Error connecting hive repository : "+
 									serviceName +" using config : "+ configs, e);
 						}
 						HiveClient oldClient = hiveConnectionCache.putIfAbsent(serviceName, hiveClient);

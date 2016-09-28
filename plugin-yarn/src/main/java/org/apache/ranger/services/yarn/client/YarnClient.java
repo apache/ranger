@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -67,10 +67,10 @@ public class YarnClient extends BaseClient {
 		
 		if (this.yarnQUrl == null || this.yarnQUrl.isEmpty()) {
 			LOG.error("No value found for configuration 'yarn.url'. YARN resource lookup will fail");
-        } 
+        }
 		if (this.userName == null || this.userName.isEmpty()) {
             LOG.error("No value found for configuration 'usename'. YARN resource lookup will fail");
-        } 
+        }
 		if (this.password == null || this.password.isEmpty()) {
             LOG.error("No value found for configuration 'password'. YARN resource lookup will fail");
         }
@@ -188,7 +188,7 @@ public class YarnClient extends BaseClient {
 							}
 
 							if (client != null) {
-								client.destroy(); 
+								client.destroy();
 							}
 						}
 						return lret ;

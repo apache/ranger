@@ -315,7 +315,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 			activatePluginClassLoader();
 			implMasterObserver.preBalance(c);
 		} finally {
-			deactivatePluginClassLoader(); 
+			deactivatePluginClassLoader();
 		}
 		
 		if(LOG.isDebugEnabled()) {
@@ -1270,7 +1270,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	
 		try {
 			activatePluginClassLoader();
-			implAccessControlService.grant(controller, request, done); 
+			implAccessControlService.grant(controller, request, done);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -2163,7 +2163,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	}
 
 	@Override
-	public boolean preCheckAndPutAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp, 
+	public boolean preCheckAndPutAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOp compareOp,
 												ByteArrayComparable comparator, Put put, boolean result) throws IOException {
 		final boolean ret;
 		
@@ -2485,7 +2485,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	}
 
 	@Override
-	public Reader preStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs, Path p, FSDataInputStreamWrapper in, long size, 
+	public Reader preStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs, Path p, FSDataInputStreamWrapper in, long size,
 											CacheConfig cacheConf, Reference r, Reader reader) throws IOException {
 		final Reader ret;
 		
@@ -2554,7 +2554,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	@Override
 	public DeleteTracker postInstantiateDeleteTracker( ObserverContext<RegionCoprocessorEnvironment> ctx, DeleteTracker delTracker) throws IOException {
-		final DeleteTracker ret; 
+		final DeleteTracker ret;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postInstantiateDeleteTracker()");
@@ -3775,7 +3775,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 	}
 
 
- 
+
   // TODO : need override annotations for all of the following methods
 
   public void preMoveServers(final ObserverContext<MasterCoprocessorEnvironment> ctx, Set<HostAndPort> servers, String targetGroup) throws IOException {}

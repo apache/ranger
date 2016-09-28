@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -524,13 +524,13 @@ public class AssetREST {
 		
 		String            epoch       = request.getParameter("epoch");
 		X509Certificate[] certchain   = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		String            ipAddress   = request.getHeader("X-FORWARDED-FOR");  
+		String            ipAddress   = request.getHeader("X-FORWARDED-FOR");
 		boolean           isSecure    = request.isSecure();
 		String            policyCount = request.getParameter("policyCount");
 		String            agentId     = request.getParameter("agentId");
 		Long              lastKnowPolicyVersion = Long.valueOf(-1);
 
-		if (ipAddress == null) {  
+		if (ipAddress == null) {
 			ipAddress = request.getRemoteAddr();
 		}
 
@@ -571,20 +571,20 @@ public class AssetREST {
 
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xPolicyExportAudits.sortFields);
-		searchUtil.extractString(request, searchCriteria, "agentId", 
-				"The XA agent id pulling the policies.", 
+		searchUtil.extractString(request, searchCriteria, "agentId",
+				"The XA agent id pulling the policies.",
 				StringUtil.VALIDATION_TEXT);
-		searchUtil.extractString(request, searchCriteria, "clientIP", 
+		searchUtil.extractString(request, searchCriteria, "clientIP",
 				"The XA agent ip pulling the policies.",
 				StringUtil.VALIDATION_TEXT);		
-		searchUtil.extractString(request, searchCriteria, "repositoryName", 
+		searchUtil.extractString(request, searchCriteria, "repositoryName",
 				"Repository name for which export was done.",
 				StringUtil.VALIDATION_TEXT);
-		searchUtil.extractInt(request, searchCriteria, "httpRetCode", 
+		searchUtil.extractInt(request, searchCriteria, "httpRetCode",
 				"HTTP response code for exported policy.");
-		searchUtil.extractDate(request, searchCriteria, "startDate", 
+		searchUtil.extractDate(request, searchCriteria, "startDate",
 				"Start date for search", null);
-		searchUtil.extractDate(request, searchCriteria, "endDate", 
+		searchUtil.extractDate(request, searchCriteria, "endDate",
 				"End date for search", null);
 		return assetMgr.searchXPolicyExportAudits(searchCriteria);
 	}
@@ -598,13 +598,13 @@ public class AssetREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xTrxLogService.sortFields);
 		searchUtil.extractInt(request, searchCriteria, "objectClassType", "Class type for report.");
-		searchUtil.extractString(request, searchCriteria, "attributeName", 
+		searchUtil.extractString(request, searchCriteria, "attributeName",
 				"Attribute Name", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractString(request, searchCriteria, "action", 
+		searchUtil.extractString(request, searchCriteria, "action",
 				"CRUD Action Type", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractString(request, searchCriteria, "sessionId", 
+		searchUtil.extractString(request, searchCriteria, "sessionId",
 				"Session Id", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractString(request, searchCriteria, "owner", 
+		searchUtil.extractString(request, searchCriteria, "owner",
 				"Owner", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractDate(request, searchCriteria, "startDate", "Trasaction date since", "MM/dd/yyyy");
 		searchUtil.extractDate(request, searchCriteria, "endDate", "Trasaction date till", "MM/dd/yyyy");
@@ -615,7 +615,7 @@ public class AssetREST {
 	@Path("/report/{transactionId}")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_TRANSACTION_REPORT + "\")")
-	public VXTrxLogList getTransactionReport(@Context HttpServletRequest request, 
+	public VXTrxLogList getTransactionReport(@Context HttpServletRequest request,
 			@PathParam("transactionId") String transactionId){
 		return assetMgr.getTransactionReport(transactionId);
 	}
@@ -662,7 +662,7 @@ public class AssetREST {
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
 		
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
-		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME); 
+		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
 		if(isKeyAdmin && xxServiceDef != null){
 			searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
 		}

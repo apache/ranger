@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,7 @@
 
 /**
  * Resource
- * 
+ *
  */
 
 import java.util.List;
@@ -527,7 +527,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>topologies</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>topologies</b>.
 	 */
 	public String getTopologies() {
@@ -537,7 +537,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>topologies</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param topologies
 	 *            Value to set member attribute <b>topologies</b>
 	 */
@@ -547,7 +547,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>services</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>services</b>.
 	 */
 	public String getServices() {
@@ -557,7 +557,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>services</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param services
 	 *            Value to set member attribute <b>services</b>
 	 */
@@ -589,7 +589,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>guid</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>guid</b>.
 	 */
 	public String getGuid() {
@@ -599,7 +599,7 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>guid</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param guid - Value to set member attribute <b>guid</b>
 	 */
 	public void setGuid(String guid) {

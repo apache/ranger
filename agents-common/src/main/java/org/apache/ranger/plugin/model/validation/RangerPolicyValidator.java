@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -311,7 +311,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
-	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action, 
+	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action,
 			boolean isAdmin, final RangerServiceDef serviceDef) {
 		
 		if(LOG.isDebugEnabled()) {
@@ -385,10 +385,10 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.warn("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to a old/migrated service def!  Skipping this check!");
 		} else {
 			/*
-			 * A policy is for a single hierarchy however, it doesn't specify which one.  So we have to guess which hierarchy(s) it possibly be for.  First, see if the policy could be for 
+			 * A policy is for a single hierarchy however, it doesn't specify which one.  So we have to guess which hierarchy(s) it possibly be for.  First, see if the policy could be for
 			 * any of the known hierarchies?  A candidate hierarchy is one whose resource levels are a superset of those in the policy.
 			 * Why?  What we want to catch at this stage is policies that straddles multiple hierarchies, e.g. db, udf and column for a hive policy.
-			 * This has the side effect of catch spurious levels specified on the policy, e.g. having a level "blah" on a hive policy.  
+			 * This has the side effect of catch spurious levels specified on the policy, e.g. having a level "blah" on a hive policy.
 			 */
 			Set<List<RangerResourceDef>> candidateHierarchies = filterHierarchies_hierarchyHasAllPolicyResources(policyResources, hierarchies, defHelper);
 			if (candidateHierarchies.isEmpty()) {
@@ -450,7 +450,7 @@ public class RangerPolicyValidator extends RangerValidator {
 	}
 	
 	/**
-	 * String representation of mandatory resources of all the hierarchies suitable of showing to user.  Mandatory resources within a hierarchy are not ordered per the hierarchy. 
+	 * String representation of mandatory resources of all the hierarchies suitable of showing to user.  Mandatory resources within a hierarchy are not ordered per the hierarchy.
 	 * @param hierarchies
 	 * @param defHelper
 	 * @return
@@ -483,7 +483,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		return builder.toString();
 	}
 	/**
-	 * Returns the subset of all hierarchies that are a superset of the policy's resources. 
+	 * Returns the subset of all hierarchies that are a superset of the policy's resources.
 	 * @param policyResources
 	 * @param hierarchies
 	 * @return
@@ -502,7 +502,7 @@ public class RangerPolicyValidator extends RangerValidator {
 	}
 	
 	/**
-	 * Returns the subset of hierarchies all of whose mandatory resources were found in policy's resource set.  candidate hierarchies are expected to have passed 
+	 * Returns the subset of hierarchies all of whose mandatory resources were found in policy's resource set.  candidate hierarchies are expected to have passed
 	 * <code>filterHierarchies_hierarchyHasAllPolicyResources</code> check first.
 	 * @param policyResources
 	 * @param hierarchies

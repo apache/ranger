@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -79,7 +79,7 @@ public class TestRangerValidator {
 	@Test
 	public void test_ctor_firewalling() {
 		try {
-			// service store can't be null during construction  
+			// service store can't be null during construction
 			new RangerValidatorForTest(null);
 			Assert.fail("Should have thrown exception!");
 		} catch (IllegalArgumentException e) {
@@ -510,7 +510,7 @@ public class TestRangerValidator {
 		String fieldName = "value-field-Name";
 		String collectionName = "value-collection-Name";
 		Set<String> alreadySeen = new HashSet<String>();
-		// null/empty string value is invalid 
+		// null/empty string value is invalid
 		for (String value : new String[] { null, "", "  " }) {
 			Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
 			_utils.checkFailureForMissingValue(_failures, fieldName);
@@ -537,7 +537,7 @@ public class TestRangerValidator {
 		String collectionName = "field-collection-Name";
 		Set<Long> alreadySeen = new HashSet<Long>();
 		Long value = null;
-		// null value is invalid 
+		// null value is invalid
 		Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
 		_utils.checkFailureForMissingValue(_failures, fieldName);
 
@@ -558,7 +558,7 @@ public class TestRangerValidator {
 		String collectionName = "field-collection-Name";
 		Set<Integer> alreadySeen = new HashSet<Integer>();
 		Integer value = null;
-		// null value is invalid 
+		// null value is invalid
 		Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
 		_utils.checkFailureForMissingValue(_failures, fieldName);
 

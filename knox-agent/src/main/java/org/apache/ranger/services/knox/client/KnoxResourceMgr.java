@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -59,15 +59,15 @@ public class KnoxResourceMgr {
 		String 		 resource				  = context.getResourceName();
 		Map<String, List<String>> resourceMap = context.getResources();
 		List<String> resultList 			  = null;
-		List<String> knoxTopologyList		  = null; 
+		List<String> knoxTopologyList		  = null;
 		List<String> knoxServiceList		  = null;
 		String  	 knoxTopologyName		  = null;
 		String  	 knoxServiceName		  = null;
 		
 		if ( userInput != null && resource != null) {
 			if ( resourceMap != null && !resourceMap.isEmpty() ) {
-				knoxTopologyList = resourceMap.get(TOPOLOGY); 
-				knoxServiceList  = resourceMap.get(SERVICE); 
+				knoxTopologyList = resourceMap.get(TOPOLOGY);
+				knoxServiceList  = resourceMap.get(SERVICE);
 			}
 			switch (resource.trim().toLowerCase()) {
 			 case TOPOLOGY:
@@ -78,7 +78,7 @@ public class KnoxResourceMgr {
 				 break;
 			default:
 				 break;
-			}  
+			}
 		}
 		
 		String knoxUrl = configs.get("knox.url");
@@ -100,7 +100,7 @@ public class KnoxResourceMgr {
 			LOG.debug("<== KnoxResourceMgr.getKnoxResources()  knoxUrl: "+ knoxUrl  + " knoxAdminUser: " + knoxAdminUser + " topologyName: "  + knoxTopologyName + " KnoxServiceName: " + knoxServiceName) ;
 		}
 		
-		final KnoxClient knoxClient = new KnoxConnectionMgr().getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword); 
+		final KnoxClient knoxClient = new KnoxConnectionMgr().getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
 		if ( knoxClient != null) {
 			synchronized(knoxClient) {
 				resultList = KnoxClient.getKnoxResources(knoxClient, knoxTopologyName, knoxServiceName,knoxTopologyList,knoxServiceList);

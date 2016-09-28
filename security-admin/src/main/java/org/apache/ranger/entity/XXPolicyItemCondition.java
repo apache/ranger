@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -89,7 +89,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -99,7 +99,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -109,7 +109,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> policyItemId</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyItemId
 	 *            Value to set member attribute <b> policyItemId</b>
 	 */
@@ -119,7 +119,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>policyItemId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>policyItemId</b> .
 	 */
 	public Long getPolicyitemid() {
@@ -129,7 +129,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> type</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param type
 	 *            Value to set member attribute <b> type</b>
 	 */
@@ -139,7 +139,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>type</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>type</b> .
 	 */
 	public Long getType() {
@@ -149,7 +149,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> value</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param value
 	 *            Value to set member attribute <b> value</b>
 	 */
@@ -159,7 +159,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>value</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>value</b> .
 	 */
 	public String getValue() {
@@ -169,7 +169,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param order
 	 *            Value to set member attribute <b> order</b>
 	 */
@@ -179,7 +179,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>order</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>order</b> .
 	 */
 	public Integer getOrder() {
@@ -203,7 +203,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -268,7 +268,7 @@ public class XXPolicyItemCondition extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

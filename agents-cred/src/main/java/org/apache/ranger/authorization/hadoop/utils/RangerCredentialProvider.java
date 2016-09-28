@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -32,19 +32,19 @@ public final class RangerCredentialProvider {
 
   private static Log LOG = LogFactory.getLog(RangerCredentialProvider.class);
 
-  private static final RangerCredentialProvider CRED_PROVIDER = new RangerCredentialProvider(); 
-  
+  private static final RangerCredentialProvider CRED_PROVIDER = new RangerCredentialProvider();
+
   protected RangerCredentialProvider() {
-	  // 
+	  //
   }
-  
+
   public static RangerCredentialProvider getInstance()  {
 	  return CRED_PROVIDER;
   }
-  
+
   public char[] getCredentialString(String url, String alias)  {
-   List<CredentialProvider> providers =  getCredentialProviders(url); 
-   
+   List<CredentialProvider> providers =  getCredentialProviders(url);
+
    if(providers != null) {
 	   for(  CredentialProvider provider: providers) {
 		   try {
@@ -54,23 +54,23 @@ public final class RangerCredentialProvider {
 	            return credEntry.getCredential();
 	         }
 	        } catch(Exception ie) {
-	        	LOG.error("Unable to get the Credential Provider from the Configuration", ie);	 
+	        	LOG.error("Unable to get the Credential Provider from the Configuration", ie);	
 	       }
 	   }
    }
    return null;
   }
-  
+
   List<CredentialProvider>  getCredentialProviders(String url){
    try {
 	   Configuration conf = new Configuration();
 
 	   conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, url);
 
-	   return CredentialProviderFactory.getProviders(conf);   
+	   return CredentialProviderFactory.getProviders(conf);
       } catch(Exception ie) {
     	  LOG.error("Unable to get the Credential Provider from the Configuration", ie);
-      }     
+      }
    return null;
   }
 

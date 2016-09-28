@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -44,7 +44,7 @@ public class RangerTimeOfDayMatcherTest {
 	@Test
 	public void test_patterMatching_happyPath() {
 		// sensible values and some goofy ones work
-		String[] durations = new String[] { 
+		String[] durations = new String[] {
 				"9am-5pm", " 9Am -5 Pm", " 9Am -5 Pm", "9 AM -5 p.m.", "9a.M - 5Pm.",
 				"9:30am-5:30pm", " 9:00Am -5:59 Pm",
 				"   9   am   -  4 pm  ", "9pm-5AM",
@@ -160,8 +160,8 @@ public class RangerTimeOfDayMatcherTest {
 				{ 8, false },
 				{9, true },
 				{10, true },
-				{16, true}, 
-				{17, true}, 
+				{16, true},
+				{17, true},
 				{18, false },
 				{23, false },
 		};
@@ -199,9 +199,9 @@ public class RangerTimeOfDayMatcherTest {
 				{ 8, 0, false },
 				{ 9, 15, true },
 				{10, 0, true },
-				{17, 0, true}, 
-				{17, 30, true}, 
-				{17, 31, false}, 
+				{17, 0, true},
+				{17, 30, true},
+				{17, 31, false},
 				{18, 0, false },
 				{22, 59, false },
 				{23, 0, true },

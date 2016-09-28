@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -59,7 +59,7 @@ public class KMSResourceMgr {
 		
 		if ( resourceMap != null && !resourceMap.isEmpty() && resourceMap.get(KMSKEY) != null ) {
 			kmsKeyName = userInput;
-			kmsKeyList = resourceMap.get(KMSKEY); 
+			kmsKeyList = resourceMap.get(KMSKEY);
 		} else {
 			kmsKeyName = userInput;
 		}
@@ -68,7 +68,7 @@ public class KMSResourceMgr {
         if (configs == null || configs.isEmpty()) {
                 LOG.error("Connection Config is empty");
         } else {
-                
+
                 String url 		= configs.get("provider");
                 String username = configs.get("username");
                 String password = configs.get("password");

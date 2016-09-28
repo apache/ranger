@@ -23,9 +23,9 @@ import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessCont
 import org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor;
 /**
  * This class exists only to provide for seamless upgrade/downgrade capabilities.  Coprocessor name is in hbase config files in /etc/.../conf which
- * is not only out of bounds for any upgrade script but also must be of a form to allow for downgrad!  Thus when class names were changed XaSecure* -> Ranger* 
+ * is not only out of bounds for any upgrade script but also must be of a form to allow for downgrad!  Thus when class names were changed XaSecure* -> Ranger*
  * this shell class serves to allow for seamles upgrade as well as downgrade.
- * 
+ *
  * This class is final because if one needs to customize coprocessor it is expected that RangerAuthorizationCoprocessor would be modified/extended as that is
  * the "real" coprocessor!  This class, hence, should NEVER be more than an EMPTY shell!
  */

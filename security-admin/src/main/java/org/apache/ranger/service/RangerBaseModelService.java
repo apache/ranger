@@ -303,8 +303,8 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	}
 	
 	/*
-	 * Search Operations 
-	 * 
+	 * Search Operations
+	 *
 	 */
 	
 	public List<T> searchResources(SearchFilter searchCriteria,
@@ -379,11 +379,11 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return count.longValue();
 	}
 	
-	protected Query createQuery(String searchString, String sortString, SearchFilter searchCriteria, 
+	protected Query createQuery(String searchString, String sortString, SearchFilter searchCriteria,
 			List<SearchField> searchFieldList, boolean isCountQuery) {
 		
 		EntityManager em = getDao().getEntityManager();
-		Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, 
+		Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria,
 				searchFieldList, getClassType(), false, isCountQuery);
 		return query;
 	}

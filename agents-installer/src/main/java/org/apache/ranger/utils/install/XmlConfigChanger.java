@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -75,7 +75,7 @@ public class XmlConfigChanger {
 		XmlConfigChanger xmlConfigChanger = new XmlConfigChanger() ;
 		xmlConfigChanger.parseConfig(args);
 		try {
-			xmlConfigChanger.run(); 
+			xmlConfigChanger.run();
 		}
 		catch(Throwable t) {
 			System.err.println("*************************************************************************") ;
@@ -288,7 +288,7 @@ public class XmlConfigChanger {
 			FileOutputStream out = new FileOutputStream(outFile) ;
 			StreamResult result = new StreamResult(out) ;
 			transformer.transform(source, result);
-			out.close(); 
+			out.close();
 
 		}
 		finally {
@@ -364,7 +364,7 @@ public class XmlConfigChanger {
 						if (cnl.item(j).hasChildNodes()) {
 							valueNode = cnl.item(j).getChildNodes().item(0) ;
 						}
-						if (valueNode == null) {	// Value Node is defined with 
+						if (valueNode == null) {	// Value Node is defined with
 							ret = "" ;
 						}
 						else {
@@ -403,7 +403,7 @@ public class XmlConfigChanger {
 					if (nodeName.equals(NAME_NODE_NAME)) {
 						String pName = cnl.item(j).getChildNodes().item(0).getNodeValue() ;
 						found = pName.equals(propName) ;
-						if (found) 
+						if (found)
 							break ;
 					}
 				}

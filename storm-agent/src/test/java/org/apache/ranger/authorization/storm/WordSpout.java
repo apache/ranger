@@ -35,7 +35,7 @@ public class WordSpout extends BaseRichSpout {
     private final List<String> words;
     private SpoutOutputCollector collector;
     private int line = 0;
-    
+
     public WordSpout() throws Exception {
         java.io.File inputFile = new java.io.File(WordSpout.class.getResource("../../../../../words.txt").toURI());
         words = IOUtils.readLines(new java.io.FileInputStream(inputFile));
@@ -63,6 +63,6 @@ public class WordSpout extends BaseRichSpout {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields("word"));
     }
-    
-    
+
+
 }

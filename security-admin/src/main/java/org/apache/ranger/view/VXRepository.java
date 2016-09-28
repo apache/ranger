@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -76,7 +76,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>name</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b>name</b>
 	 */
@@ -86,7 +86,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>name</b>.
 	 */
 	public String getName() {
@@ -96,7 +96,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>description</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b>description</b>
 	 */
@@ -106,7 +106,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>description</b>.
 	 */
 	public String getDescription() {
@@ -116,7 +116,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>repositoryType</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param repositoryType
 	 *            Value to set member attribute <b>repositoryType</b>
 	 */
@@ -126,7 +126,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>repositoryType</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>repositoryType</b>.
 	 */
 	public String getRepositoryType() {
@@ -136,7 +136,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>config</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param config
 	 *            Value to set member attribute <b>config</b>
 	 */
@@ -146,7 +146,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>config</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>config</b>.
 	 */
 	public String getConfig() {
@@ -156,7 +156,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>isActive</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isActive
 	 *            Value to set member attribute <b>isActive</b>
 	 */
@@ -166,7 +166,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isActive</b>
-	 * 
+	 *
 	 * @return boolean - value of member attribute <b>isActive</b>.
 	 */
 	public boolean getIsActive() {
@@ -175,7 +175,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>version</b>.
 	 */
 	public String getVersion() {
@@ -185,7 +185,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>version</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b>version</b>
 	 */
@@ -200,7 +200,7 @@ public class VXRepository extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * This return the bean content in string format
-	 * 
+	 *
 	 * @return formatedStr
 	 */
 	public String toString() {

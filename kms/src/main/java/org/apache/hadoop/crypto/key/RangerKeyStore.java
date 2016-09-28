@@ -85,7 +85,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
     private Hashtable<String, Object> keyEntries = new Hashtable<String, Object>();
     private Hashtable<String, Object> deltaEntries = new Hashtable<String, Object>();
-    
+
     RangerKeyStore() {
     }
 
@@ -107,21 +107,21 @@ public class RangerKeyStore extends KeyStoreSpi {
         if (!(entry instanceof SecretKeyEntry)) {
             return null;
         }
-        
+
         Class<?> c = null;
     	Object o = null;
 		try {
 			c = Class.forName("com.sun.crypto.provider.KeyProtector");
 			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
 	        constructor.setAccessible(true);
-	        o = constructor.newInstance(password);	 
+	        o = constructor.newInstance(password);	
 	        Method m = c.getDeclaredMethod("unseal", SealedObject.class);
             m.setAccessible(true);
 			key = (Key) m.invoke(o, ((SecretKeyEntry)entry).sealedKey);
 		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			logger.error(e.getMessage());
 		}
-        return key;        
+        return key;
     }
 
     @Override
@@ -150,7 +150,7 @@ public class RangerKeyStore extends KeyStoreSpi {
         			c = Class.forName("com.sun.crypto.provider.KeyProtector");
         			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
         	        constructor.setAccessible(true);
-        	        o = constructor.newInstance(password);        	        
+        	        o = constructor.newInstance(password);        	
         		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
         			logger.error(e.getMessage());
         			throw new KeyStoreException(e.getMessage());
@@ -160,7 +160,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                 Method m = c.getDeclaredMethod("seal", Key.class);
                 m.setAccessible(true);
                 entry.sealedKey = (SealedObject) m.invoke(o, key);
-                
+
                 entry.cipher_field = cipher;
                 entry.bit_length = bitLength;
                 entry.description = description;
@@ -170,7 +170,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             } catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
-            }      
+            }
         }
         synchronized(keyEntries) {
         	try {
@@ -178,7 +178,7 @@ public class RangerKeyStore extends KeyStoreSpi {
         	}catch (Exception e) {
             	logger.error(e.getMessage());
             	throw new KeyStoreException(e.getMessage());
-            }  
+            }
         }
     }
 
@@ -195,13 +195,13 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
     }
 
-    
+
     private void dbOperationDelete(String alias) {
     	try{
 			  if(daoManager != null){
-				  RangerKMSDao rangerKMSDao = new RangerKMSDao(daoManager);			  
+				  RangerKMSDao rangerKMSDao = new RangerKMSDao(daoManager);			
 				  rangerKMSDao.deleteByAlias(alias);
-			  }			  
+			  }			
 		}catch(Exception e){
 			logger.error(e.getMessage());
 			e.printStackTrace();
@@ -235,12 +235,12 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
 
             MessageDigest md = getKeyedMessageDigest(password);
-            
-           	byte digest[] = md.digest();    
+
+           	byte digest[] = md.digest();
            	for (Enumeration<String> e = deltaEntries.keys(); e.hasMoreElements();) {           		
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
-                
+
                 ObjectOutputStream oos = null;
             	try{
             	
@@ -249,7 +249,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
                     oos = new ObjectOutputStream(dos);
                     oos.writeObject(((SecretKeyEntry)entry).sealedKey);
-                    
+
                     dos.write(digest);
                     dos.flush();
                     Long creationDate = ((SecretKeyEntry)entry).date.getTime();
@@ -262,7 +262,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     } else {
                         dos.close();
                     }
-                }                
+                }
             }
            	clearDeltaEntires();
         }
@@ -328,12 +328,12 @@ public class RangerKeyStore extends KeyStoreSpi {
         		
             DataInputStream dis;
             MessageDigest md = null;
-           
+
 			if(rangerKeyDetails == null || rangerKeyDetails.size() < 1){
         		return;
         	}
 			
-			keyEntries.clear();     
+			keyEntries.clear();
 			if(password!=null){
 				md = getKeyedMessageDigest(password);
 			}
@@ -352,8 +352,8 @@ public class RangerKeyStore extends KeyStoreSpi {
             		logger.error("No Key found for alias "+rangerKey.getAlias());
             	}
             	
-	             if (computed != null) {	                
-	                int counter = 0; 
+	             if (computed != null) {	
+	                int counter = 0;
 	                for (int i = computed.length-1; i >= 0; i--) {
 	                    if (computed[i] != data[data.length-(1+counter)]) {
 	                        Throwable t = new UnrecoverableKeyException
@@ -398,7 +398,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 					}
 					
 					//Add the entry to the list
-					keyEntries.put(alias, entry);		            
+					keyEntries.put(alias, entry);		
 				 }finally {
 	                if (ois != null) {
 	                    ois.close();
@@ -415,7 +415,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 			  if(daoManager != null){
 				  RangerKMSDao rangerKMSDao = new RangerKMSDao(daoManager);
 				  return rangerKMSDao.getAllKeys();
-			  }			  
+			  }			
     		}catch(Exception e){
     			e.printStackTrace();
     		}
@@ -426,9 +426,9 @@ public class RangerKeyStore extends KeyStoreSpi {
      * To guard against tampering with the keystore, we append a keyed
      * hash with a bit of whitener.
      */
-    
+
     private final String SECRET_KEY_HASH_WORD = "Apache Ranger" ;
-    
+
     private MessageDigest getKeyedMessageDigest(char[] aKeyPassword)
         throws NoSuchAlgorithmException, UnsupportedEncodingException
     {
@@ -503,14 +503,14 @@ public class RangerKeyStore extends KeyStoreSpi {
 				try {
 					ks = KeyStore.getInstance(fileFormat);
 					ks.load(stream, storePass);
-					deltaEntries.clear();     
+					deltaEntries.clear();
 					for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();){
 						  	  SecretKeyEntry entry = new SecretKeyEntry();
 							  String alias = (String) name.nextElement();
 							  Key k = ks.getKey(alias, keyPass);		
-							  
+							
 							  if (k instanceof JavaKeyStoreProvider.KeyMetadata) {
-								  JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata)k ; 
+								  JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata)k ;
 								  Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME) ;
 								  f.setAccessible(true);
 								  Metadata metadata = (Metadata)f.get(keyMetadata) ;
@@ -533,7 +533,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 		              			c = Class.forName("com.sun.crypto.provider.KeyProtector");
 		              			Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
 		              	        constructor.setAccessible(true);
-		              	        o = constructor.newInstance(masterKey);     
+		              	        o = constructor.newInstance(masterKey);
 		              	        // seal and store the key
 			                    Method m = c.getDeclaredMethod("seal", Key.class);
 			                    m.setAccessible(true);
@@ -542,7 +542,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 		                  		  logger.error(e.getMessage());
 		                  		  throw new IOException(e.getMessage());
 		                  	  }
-		                  	  
+		                  	
  	                          entry.date = ks.getCreationDate(alias);
 		                      entry.version = (alias.split("@").length == 2)?(Integer.parseInt(alias.split("@")[1])):0;
 		    				  entry.description = k.getFormat()+" - "+ks.getType();

@@ -65,23 +65,23 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
    * <code>KeyAuthorizationKeyProvider</code>.
    */
   public interface KeyACLs {
-    
+
     /**
      * This is called by the KeyProvider to check if the given user is
      * authorized to perform the specified operation on the given acl name.
      * @param aclName name of the key ACL
      * @param ugi User's UserGroupInformation
-     * @param opType Operation Type 
+     * @param opType Operation Type
      * @return true if user has access to the aclName and opType else false
      */
     boolean hasAccessToKey(String aclName, UserGroupInformation ugi,
         KeyOpType opType);
 
     /**
-     * 
+     *
      * @param aclName ACL name
      * @param opType Operation Type
-     * @return true if AclName exists else false 
+     * @return true if AclName exists else false
      */
     boolean isACLPresent(String aclName, KeyOpType opType);
 

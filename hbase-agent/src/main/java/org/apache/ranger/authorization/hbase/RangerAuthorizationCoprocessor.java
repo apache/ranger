@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -133,7 +133,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
 	private static volatile RangerHBasePlugin hbasePlugin = null;
 	
-	// Utilities Methods 
+	// Utilities Methods
 	protected byte[] getTableName(RegionCoprocessorEnvironment e) {
 		Region region = e.getRegion();
 		byte[] tableName = null;
@@ -163,7 +163,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		return isSpecialTable(Bytes.toString(tableName));
 	}
 	protected boolean isSpecialTable(String input) {
-		final String[] specialTables = new String[] { "hbase:meta", "-ROOT-", ".META."}; 
+		final String[] specialTables = new String[] { "hbase:meta", "-ROOT-", ".META."};
 		for (String specialTable : specialTables ) {
 			if (specialTable.equals(input)) {
 				return true;
@@ -208,7 +208,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		return strAddr;
 	}
 
-	// Methods that are used within the CoProcessor 
+	// Methods that are used within the CoProcessor
 	private void requireScannerOwner(InternalScanner s) throws AccessDeniedException {
      if (!RpcServer.isInRpcCallContext()) {
        return;
@@ -292,7 +292,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 	}
 	
-	ColumnFamilyAccessResult evaluateAccess(String operation, Action action, final RegionCoprocessorEnvironment env, 
+	ColumnFamilyAccessResult evaluateAccess(String operation, Action action, final RegionCoprocessorEnvironment env,
 			final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
 		
 		String access = _authUtils.getAccess(action);
@@ -326,7 +326,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		
 		// let's create a session that would be reused.  Set things on it that won't change.
-		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
+		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 				.operation(operation)
 				.remoteAddress(getRemoteAddress())
@@ -354,7 +354,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent(); // this could be null, of course, depending on audit settings of table.
 
 			// if authorized then pass captured events as access allowed set else as access denied set.
-			result = new ColumnFamilyAccessResult(authorized, authorized, 
+			result = new ColumnFamilyAccessResult(authorized, authorized,
 						authorized ? Collections.singletonList(event) : null,
 						null, authorized ? null : event, reason, null);
 			if (LOG.isDebugEnabled()) {
@@ -525,7 +525,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		return combinedFilter;
 	}
 
-	void requirePermission(final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap) 
+	void requirePermission(final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap)
 			throws AccessDeniedException {
 
 		ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, regionServerEnv, familyMap);
@@ -550,7 +550,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	 * @param columnFamily
 	 * @param column
 	 * @return
-	 * @throws AccessDeniedException 
+	 * @throws AccessDeniedException
 	 */
 	void authorizeAccess(String operation, String otherInformation, Action action, String table, String columnFamily, String column) throws AccessDeniedException {
 		
@@ -571,7 +571,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		User user = getActiveUser();
 		
-		HbaseAuditHandler auditHandler = _factory.getAuditHandler(); 
+		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 			.operation(operation)
 			.otherInformation(otherInformation)
@@ -595,13 +595,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		session.publishResults();
 	}
 	
-	boolean canSkipAccessCheck(final String operation, String access, final String table) 
+	boolean canSkipAccessCheck(final String operation, String access, final String table)
 			throws AccessDeniedException {
 		
 		User user = getActiveUser();
 		boolean result = false;
 		if (user == null) {
-			String message = "Unexpeceted: User is null: access denied, not audited!"; 
+			String message = "Unexpeceted: User is null: access denied, not audited!";
 			LOG.warn("canSkipAccessCheck: exiting" + message);
 			throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
 		} else if (isAccessForMetadataRead(access, table)) {

@@ -26,18 +26,18 @@ import org.junit.Test;
 public class Testbuildks {
   private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
   @Test
-  public void testBuildKSsuccess() throws Exception {   
+  public void testBuildKSsuccess() throws Exception {
 	buildks buildksOBJ=new buildks();
     String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-    int rc1=buildksOBJ.createCredential(argsCreateCommand); 
+    int rc1=buildksOBJ.createCredential(argsCreateCommand);
     assertEquals( 0, rc1);
     assertTrue(rc1==0);
-   
+
     String[] argsListCommand = {"list", "-provider","jceks://file@/" + keystoreFile};
     int rc2=buildksOBJ.listCredential(argsListCommand);
     assertEquals(0, rc2);
     assertTrue(rc2==0);
-    
+
     String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
     String pw=buildksOBJ.getCredential(argsGetCommand);
     assertEquals("PassworD123", pw);
@@ -50,7 +50,7 @@ public class Testbuildks {
     int rc3=buildksOBJ.deleteCredential(argsDeleteCommand, isSilentMode);
     assertEquals(0, rc3);
     assertTrue(rc3==0);
-   
+
     if(rc1==rc2 && rc2==rc3 && rc3==0 && getCredentialPassed){
     	System.out.println("Test Case has been completed successfully..");    	
     }
@@ -58,24 +58,24 @@ public class Testbuildks {
 
   @Test
   public void testInvalidProvider() throws Exception {
-	buildks buildksOBJ=new buildks(); 
-	String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};    
-    int rc1=buildksOBJ.createCredential(argsCreateCommand);   
+	buildks buildksOBJ=new buildks();
+	String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
+    int rc1=buildksOBJ.createCredential(argsCreateCommand);
     assertEquals(-1, rc1);
     assertTrue(rc1==-1);
-  } 
-  
+  }
+
   @Test
   public void testInvalidCommand() throws Exception {
-	buildks buildksOBJ=new buildks(); 
-	String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};    
-    int rc1=buildksOBJ.createCredential(argsCreateCommand);   
+	buildks buildksOBJ=new buildks();
+	String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
+    int rc1=buildksOBJ.createCredential(argsCreateCommand);
     assertEquals(-1, rc1);
     assertTrue(rc1==-1);
-  } 
+  }
   /*public static void main(String args[]) throws Exception{
 	  Testbuildks tTestbuildks=new Testbuildks();
 	  tTestbuildks.testBuildKSsuccess();
-  }*/  
-  
+  }*/
+
 }

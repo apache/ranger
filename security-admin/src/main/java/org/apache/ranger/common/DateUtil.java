@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -32,13 +32,13 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-public class DateUtil {    
+public class DateUtil {
 
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
     public Date getDateFromNow(int days) {
     	return getDateFromNow(days, 0, 0);
-    }   
+    }
 
     public Date getDateFromNow(int days, int hours, int minutes) {
 		Calendar cal = Calendar.getInstance();
@@ -47,7 +47,7 @@ public class DateUtil {
 		cal.add(Calendar.MINUTE, minutes);
 		return cal.getTime();
     }
-    
+
 	public static String dateToString(Date date, String dateFromat) {
 		SimpleDateFormat formatter = new SimpleDateFormat(dateFromat);
 		return formatter.format(date).toString();
@@ -63,7 +63,7 @@ public class DateUtil {
 		return cal.getTime();
 	}
 	/**
-	 * useful for converting client time zone Date to UTC Date 
+	 * useful for converting client time zone Date to UTC Date
 	 * @param date
 	 * @param mins
 	 * @return
@@ -100,7 +100,7 @@ public class DateUtil {
 		    int offset = local.getTimeZone().getOffset(epoh);
 		    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 		    utc.setTimeInMillis(epoh);
-		    utc.add(Calendar.MILLISECOND, -offset);	   
+		    utc.add(Calendar.MILLISECOND, -offset);	
 		    return utc.getTime();
 	    }catch(Exception ex){
 	    	return null;

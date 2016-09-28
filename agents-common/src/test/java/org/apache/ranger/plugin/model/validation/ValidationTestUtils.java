@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -200,7 +200,7 @@ public class ValidationTestUtils {
 		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
 		for (Object object : data) {
 			@SuppressWarnings("unchecked")
-			Map<String, Object[]> map = (Map<String, Object[]>) object; 
+			Map<String, Object[]> map = (Map<String, Object[]>) object;
 			RangerPolicyItem policyItem = mock(RangerPolicyItem.class);
 			
 			List<String> usersList = null;
@@ -222,7 +222,7 @@ public class ValidationTestUtils {
 				accessesList = new ArrayList<RangerPolicyItemAccess>();
 				for (int i = 0; i < accesses.length; i++) {
 					String access = accesses[i];
-					Boolean isAllowed = isAllowedFlags[i]; 
+					Boolean isAllowed = isAllowedFlags[i];
 					RangerPolicyItemAccess itemAccess = mock(RangerPolicyItemAccess.class);
 					when(itemAccess.getType()).thenReturn(access);
 					when(itemAccess.getIsAllowed()).thenReturn(isAllowed);

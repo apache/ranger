@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -218,7 +218,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XGroups
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -277,7 +277,7 @@ public class XUserREST {
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
 		return  xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
-	} 
+	}
 	
 	@POST
 	@Path("/secure/users")
@@ -329,7 +329,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XUsers
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -400,7 +400,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XGroupUsers
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -460,7 +460,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XGroupGroups
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -545,7 +545,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XPermMaps
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -629,7 +629,7 @@ public class XUserREST {
 
 	/**
 	 * Implements the traditional search functionalities for XAuditMaps
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -715,7 +715,7 @@ public class XUserREST {
 	@Path("/{userId}/groups")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_USER_GROUPS + "\")")
-	public VXGroupList getXUserGroups(@Context HttpServletRequest request, 
+	public VXGroupList getXUserGroups(@Context HttpServletRequest request,
 			@PathParam("userId") Long id){
 		return xUserMgr.getXUserGroups(id);
 	}
@@ -724,7 +724,7 @@ public class XUserREST {
 	@Path("/{groupId}/users")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USERS + "\")")
-	public VXUserList getXGroupUsers(@Context HttpServletRequest request, 
+	public VXUserList getXGroupUsers(@Context HttpServletRequest request,
 			@PathParam("groupId") Long id){
 		return xUserMgr.getXGroupUsers(id);
 	}

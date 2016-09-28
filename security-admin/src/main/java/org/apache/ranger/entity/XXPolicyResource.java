@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -78,7 +78,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -88,7 +88,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -98,7 +98,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> policyId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyId
 	 *            Value to set member attribute <b> policyId</b>
 	 */
@@ -108,7 +108,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>policyId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>policyId</b> .
 	 */
 	public Long getPolicyid() {
@@ -118,7 +118,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> resDefId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param resDefId
 	 *            Value to set member attribute <b> resDefId</b>
 	 */
@@ -128,7 +128,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>resDefId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>resDefId</b> .
 	 */
 	public Long getResdefid() {
@@ -138,7 +138,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> isExcludes</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isExcludes
 	 *            Value to set member attribute <b> isExcludes</b>
 	 */
@@ -148,7 +148,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isExcludes</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isExcludes</b> .
 	 */
 	public boolean getIsexcludes() {
@@ -158,7 +158,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> isRecursive</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isRecursive
 	 *            Value to set member attribute <b> isRecursive</b>
 	 */
@@ -168,7 +168,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isRecursive</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isRecursive</b> .
 	 */
 	public boolean getIsrecursive() {
@@ -177,7 +177,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -227,7 +227,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

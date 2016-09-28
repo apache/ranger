@@ -128,7 +128,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> version</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b> version</b>
 	 */
@@ -138,7 +138,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>version</b> .
 	 */
 	public Long getVersion() {
@@ -148,7 +148,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> service</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param service
 	 *            Value to set member attribute <b> service</b>
 	 */
@@ -158,7 +158,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>service</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>service</b> .
 	 */
 	public Long getService() {
@@ -168,7 +168,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -178,7 +178,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getName() {
@@ -188,7 +188,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> description</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b> description</b>
 	 */
@@ -198,7 +198,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>description</b> .
 	 */
 	public String getDescription() {
@@ -222,7 +222,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> isEnabled</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isEnabled
 	 *            Value to set member attribute <b> isEnabled</b>
 	 */
@@ -232,7 +232,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>isEnabled</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isEnabled</b> .
 	 */
 	public boolean getIsEnabled() {
@@ -242,7 +242,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> isAuditEnabled</b>
 	 * . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isAuditEnabled
 	 *            Value to set member attribute <b> isAuditEnabled</b>
 	 */
@@ -252,7 +252,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>isAuditEnabled</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isAuditEnabled</b> .
 	 */
 	public boolean getIsAuditEnabled() {
@@ -269,7 +269,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -347,7 +347,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

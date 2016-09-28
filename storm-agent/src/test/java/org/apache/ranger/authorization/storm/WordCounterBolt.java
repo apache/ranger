@@ -38,7 +38,7 @@ public class WordCounterBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String word = tuple.getString(0);
-        
+
         int count = 0;
         if (countMap.containsKey(word)) {
             count = countMap.get(word);
@@ -46,10 +46,10 @@ public class WordCounterBolt extends BaseRichBolt {
         }
         count++;
         countMap.put(word, count);
-        
+
         outputCollector.emit(new Values(word, count));
         outputCollector.ack(tuple);
-        
+
     }
 
     @Override
@@ -61,6 +61,6 @@ public class WordCounterBolt extends BaseRichBolt {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields("word", "count"));
     }
-    
-    
+
+
 }

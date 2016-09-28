@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -40,28 +40,28 @@ public class CSVFormatter implements JisqlFormatter {
     private char delimiter = ',';
     private boolean includeColumnNames = false;
 
-    
+
     /**
      * Sets a the supported option list for this formatter.  This formatter accepts
      * the following options:
-     * 
+     *
      * <p>&nbsp;</p>
-     * 
+     *
      * <ul>
      * <li><<b>delimiter</b> specifies the delimiter to use.  By default a comma is
      * used</li>
      * <li><b>colnames</b> if included then column names are printed as the first
      * line of output.  By default they are not included</li>
      * </ul>
-     * 
+     *
      * @param parser the OptionParser to use.
-     * 
+     *
      */
     public void setSupportedOptions( OptionParser parser ) {
         parser.accepts( "delimiter" ).withRequiredArg().ofType( String.class );
         parser.accepts( "colnames" );
     }
-    
+
     /**
      * Consumes any options that were specified on the command line.
      *
@@ -73,7 +73,7 @@ public class CSVFormatter implements JisqlFormatter {
     public void consumeOptions( OptionSet options ) throws Exception {
         if( options.has( "delimiter" ) )
             delimiter = ((String)(options.valueOf( "delimiter" ))).charAt( 0 );
-        
+
         if( options.has( "colnames" ) )
         	includeColumnNames = true;
     }
@@ -83,7 +83,7 @@ public class CSVFormatter implements JisqlFormatter {
      * message should contain information on how to call the formatter.
      *
      * @param out the PrintStream to display the usage message on.
-     * 
+     *
      */
     public void usage( PrintStream out ) {
         out.println("\t-delimiter specifies the character to use as the delimiter.  This defaults to \"" + delimiter + "\"" );
@@ -140,10 +140,10 @@ public class CSVFormatter implements JisqlFormatter {
             	else
             		csvWriter.write( "" );
             }
-            
+
             csvWriter.endRecord();
         }
-        
+
         csvWriter.flush();
     }
 

@@ -28,12 +28,12 @@ import org.junit.Test;
 public class TestCredentialReader {
   private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
   @Before
-  public void setup() throws Exception {   
+  public void setup() throws Exception {
 	buildks buildksOBJ=new buildks();	
     String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-    int rc2=buildksOBJ.createCredential(argsCreateCommand); 
+    int rc2=buildksOBJ.createCredential(argsCreateCommand);
     assertEquals( 0, rc2);
-    assertTrue(rc2==0);  
+    assertTrue(rc2==0);
   }
 
   @Test
@@ -42,12 +42,12 @@ public class TestCredentialReader {
     assertEquals( "PassworD123", password);
     assertTrue(password,"PassworD123".equals(password));
     //delete after use
-    
+
     String[] argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
-    
+
 	buildks buildksOBJ=new buildks();
 	buildksOBJ.deleteCredential(argsdeleteCommand, true);
-    
+
   }
-  
+
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -285,7 +285,7 @@ public class ServiceUtil {
 					if (! groupList.contains(groupName)) {
 						groupList.add(groupName);
 					}					
-				} 
+				}
 
 				String accessType = toAccessType(permMap.getPermType());
 				
@@ -385,7 +385,7 @@ public class ServiceUtil {
 		VXAsset ret = new VXAsset();
 		publicDataObjectTovXDataObject(vXRepository,ret);
 
-		Integer assetType = toAssetType(vXRepository.getRepositoryType()); 
+		Integer assetType = toAssetType(vXRepository.getRepositoryType());
 
 		ret.setAssetType(assetType == null ? -1 : assetType.intValue());
 		ret.setName(vXRepository.getName());
@@ -777,7 +777,7 @@ public class ServiceUtil {
 	
 	protected VXDataObject publicDataObjectTovXDataObject(VXDataObject publicDataObject,VXDataObject vXDataObject) {
 		
-		VXDataObject ret = vXDataObject; 
+		VXDataObject ret = vXDataObject;
 		
 		ret.setId(publicDataObject.getId());
 		ret.setCreateDate(publicDataObject.getCreateDate());
@@ -976,7 +976,7 @@ public class ServiceUtil {
 					if (!groupList.contains(permMap.getGroupName())) {
 						groupList.add(permMap.getGroupName());
 					}					
-				} 
+				}
 				String perm = AppConstants.getLabelFor_XAPermType(permMap
 						.getPermType());
 				if (!permList.contains(perm)) {
@@ -1057,7 +1057,7 @@ public class ServiceUtil {
 		
 		if (vXPolicy.getServices() != null) {
 			toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret.getResources());
-		}  
+		}
 		
 		if ( vXPolicy.getPermMapList() != null) {
 			List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
@@ -1085,7 +1085,7 @@ public class ServiceUtil {
 					}
 				}
 		
-				if (vXPermObj.getPermList() != null) { 
+				if (vXPermObj.getPermList() != null) {
 					for (String perm : vXPermObj.getPermList()) {
 						if ( AppConstants.getEnumFor_XAPermType(perm) != 0 ) {
 							if (perm.equalsIgnoreCase("Admin")) {
@@ -1130,7 +1130,7 @@ public class ServiceUtil {
 	
 	private String getUserName(String userName) {
 		if(userName == null || userName.isEmpty()) {
-		   
+		
 			XXUser xxUser = xaDaoMgr.getXXUser().findByUserName(userName);
 
 			if(xxUser != null) {
@@ -1204,14 +1204,14 @@ public class ServiceUtil {
 			try {
 				service = svcStore.getServiceByName(serviceName);
 			} catch (Exception e) {
-				  LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName ); 
+				  LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName );
 				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, e.getMessage() + serviceName, true);
 			}
 			
 			if ( service != null) {
 				serviceType = service.getType();
 			} else {
-			  LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName" + serviceName ); 
+			  LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName" + serviceName );
 			  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "No Service Found for ServiceName" + serviceName, true);
 			}
 			
@@ -1242,10 +1242,10 @@ public class ServiceUtil {
 				
 				String tableName = vXPolicy.getTables();
 					   tableName = StringUtil.isEmpty(tableName) ? "*" : tableName;
-					   
+					
 				String colFamily = vXPolicy.getColumnFamilies();
 					   colFamily = StringUtil.isEmpty(colFamily) ? "*": colFamily;
-					   
+					
 				String qualifier = vXPolicy.getColumns();
 					   qualifier = StringUtil.isEmpty(qualifier) ? "*" : qualifier;
 
@@ -1318,13 +1318,13 @@ public class ServiceUtil {
 		return ret;
 	}
 	
-   
-	public boolean isValidateHttpsAuthentication( String serviceName, HttpServletRequest request) {		  
+
+	public boolean isValidateHttpsAuthentication( String serviceName, HttpServletRequest request) {		
 		boolean isValidAuthentication=false;
 		boolean httpEnabled = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true);
 		X509Certificate[] certchain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");  
-		if (ipAddress == null) {  
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");
+		if (ipAddress == null) {
 			ipAddress = request.getRemoteAddr();
 		}
 		boolean isSecure = request.isSecure();
@@ -1340,7 +1340,7 @@ public class ServiceUtil {
 			service = svcStore.getServiceByName(serviceName);
 		} catch (Exception e) {
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
-			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",  
+			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		if(service==null){
@@ -1439,7 +1439,7 @@ public class ServiceUtil {
 					}
 
 					if (!isValidAuthentication) {
-						LOG.error("Unauthorized access. expected [" + cnFromConfigForTest + "], found [" 
+						LOG.error("Unauthorized access. expected [" + cnFromConfigForTest + "], found ["
 								+ commonName + "], serviceName=" + serviceName);
 						throw restErrorUtil.createRESTException(
 								"Unauthorized access. expected [" + cnFromConfigForTest
@@ -1449,7 +1449,7 @@ public class ServiceUtil {
 				}
 			}
 		} else {
-			isValidAuthentication = true;  
+			isValidAuthentication = true;
 		}
 		return isValidAuthentication;
 	}
@@ -1496,21 +1496,21 @@ public class ServiceUtil {
        if(target != null && source != null) {
            String names[] = (wildcardMatch ? new String[] { source } : source.split(","));
            for (String n:names) {
-               
+
                if (wildcardMatch) {
                    if(LOG.isDebugEnabled()) LOG.debug("Wildcard Matching [" + target + "] with [" + n + "]");
             	   if (wildcardMatch(target,n)) {
             		   if(LOG.isDebugEnabled()) LOG.debug("Matched target:" + target + " with " + n);
             		   matched = true;
             		   break;
-            	   }            	               	   
+            	   }            	               	
                } else {
                    if(LOG.isDebugEnabled()) LOG.debug("Matching [" + target + "] with [" + n + "]");
             	   if (target.equalsIgnoreCase(n)) {
             		   if(LOG.isDebugEnabled()) LOG.debug("Matched target:" + target + " with " + n);
             		   matched = true;
             		   break;
-            	   }            	   
+            	   }            	
                }
            }
        } else {
@@ -1518,11 +1518,11 @@ public class ServiceUtil {
        }
        return matched;
    }
-   
+
    private boolean matchNames(String target, String source) {
 	   return matchNames(target,source,false);
-   }   
-   
+   }
+
    private boolean wildcardMatch(String target, String source) {
 	   boolean matched = false;
 	   if(target != null && source != null) {
@@ -1536,7 +1536,7 @@ public class ServiceUtil {
        }
 	   return matched;
    }
-   
+
 	
 	private Boolean toBooleanReplacePerm(boolean isReplacePermission) {
 		
@@ -1555,7 +1555,7 @@ public class ServiceUtil {
 			try {
 				service = svcStore.getServiceByName(serviceName);
 			} catch (Exception e) {
-				  LOG.info( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName ); 
+				  LOG.info( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName );
 				  throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, e.getMessage() + serviceName, true);
 			}
 		}
@@ -1563,7 +1563,7 @@ public class ServiceUtil {
 		String serviceType = service != null ? service.getType() : null;
 
 		Integer assetType = toAssetType(serviceType);
-		 
+		
 		return assetType;
 	}
 }

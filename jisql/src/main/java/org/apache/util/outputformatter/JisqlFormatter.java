@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,14 +31,14 @@ import joptsimple.OptionSet;
  *
  */
 public interface JisqlFormatter {
-    
+
 	/**
      * Sets a the option list for this formatter.
-     * 
+     *
      * @param parser - the OptionParser to use.
      */
     void setSupportedOptions( OptionParser parser );
-    
+
     /**
      * Consumes any options that were specified on the command line.
      *
@@ -63,14 +63,14 @@ public interface JisqlFormatter {
      */
     void usage( PrintStream out );
 
-    
+
     /**
      * Outputs a header for a query.  This is called before any data is
      * output.
      *
      * @param out where to put header output.
      * @param metaData the ResultSetMetaData for the output.
-     *  
+     *
      */
     void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception;
 
@@ -90,7 +90,7 @@ public interface JisqlFormatter {
      *
      * @param out where to put footer output.
      * @param metaData the ResultSetMetaData for the output.
-     * 
+     *
      */
     void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception;
 }

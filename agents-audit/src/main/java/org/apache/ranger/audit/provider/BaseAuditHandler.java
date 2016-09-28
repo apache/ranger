@@ -131,7 +131,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger.
 	 * audit.model.AuditEventBase)
@@ -143,7 +143,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.apache.ranger.audit.provider.AuditProvider#logJSON(java.lang.String)
 	 */
@@ -156,7 +156,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.apache.ranger.audit.provider.AuditProvider#logJSON(java.util.Collection
 	 * )

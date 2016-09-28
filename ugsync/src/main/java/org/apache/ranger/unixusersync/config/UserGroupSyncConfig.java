@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -63,7 +63,7 @@ public class UserGroupSyncConfig  {
 
 	public static final String  UGSYNC_MIN_GROUPID_PROP =   "ranger.usersync.unix.minGroupId" ;
         public static final String  DEFAULT_UGSYNC_MIN_GROUPID =   "0" ;
-        
+
 	public static final String  UGSYNC_MAX_RECORDS_PER_API_CALL_PROP  = 	"ranger.usersync.policymanager.maxrecordsperapicall" ;
 
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun" ;
@@ -135,7 +135,7 @@ public class UserGroupSyncConfig  {
 	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none" ;
 	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower" ;
 	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper" ;
-	 
+	
 	private static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.username.caseconversion" ;
   private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_NONE_CASE_CONVERSION_VALUE;
 
@@ -152,12 +152,12 @@ public class UserGroupSyncConfig  {
 
   private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
-  
+
   private static final String LGSYNC_GROUP_SEARCH_FIRST_ENABLED = "ranger.usersync.group.search.first.enabled";
   private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = false;
-  
+
 /*This flag (ranger.usersync.user.searchenabled) is used only when group search first is enabled to get username either -
-  	* from the group member attribute of the group or 
+  	* from the group member attribute of the group or
   	* from the additional user search based on the user attribute configuration
   */
  private static final String LGSYNC_USER_SEARCH_ENABLED = "ranger.usersync.user.searchenabled";
@@ -215,7 +215,7 @@ public class UserGroupSyncConfig  {
 
     private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
     private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
-    
+
 	private Properties prop = new Properties() ;
 	
 	private static volatile UserGroupSyncConfig me = null ;
@@ -392,7 +392,7 @@ public class UserGroupSyncConfig  {
 		return prop.getProperty(UGSYNC_MIN_USERID_PROP) ;
 	}
 
-	public String getMinGroupId() { 
+	public String getMinGroupId() {
                 String mgid = prop.getProperty(UGSYNC_MIN_GROUPID_PROP);
                 if (mgid == null) {
                     mgid = DEFAULT_UGSYNC_MIN_GROUPID;
@@ -630,7 +630,7 @@ public class UserGroupSyncConfig  {
  		String ret = prop.getProperty(UGSYNC_USERNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE) ;
  		return ret.trim().toLowerCase() ;
  	}
- 
+
  	public String getGroupNameCaseConversion() {
  		String ret = prop.getProperty(UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE) ;
  		return ret.trim().toLowerCase() ;
@@ -675,7 +675,7 @@ public class UserGroupSyncConfig  {
     }
     return groupSearchEnabled;
   }
-  
+
   public boolean isGroupSearchFirstEnabled() {
 	boolean groupSearchFirstEnabled;
 	String val = prop.getProperty(LGSYNC_GROUP_SEARCH_FIRST_ENABLED);
@@ -686,7 +686,7 @@ public class UserGroupSyncConfig  {
 	}
 	return groupSearchFirstEnabled;
   }
-  
+
   public boolean isUserSearchEnabled() {
 	    boolean userSearchEnabled;
 	    String val = prop.getProperty(LGSYNC_USER_SEARCH_ENABLED);
@@ -767,7 +767,7 @@ public class UserGroupSyncConfig  {
   public String getProperty(String aPropertyName) {
  		return prop.getProperty(aPropertyName) ;
  	}
- 
+
  	public String getProperty(String aPropertyName, String aDefaultValue) {
  		return prop.getProperty(aPropertyName, aDefaultValue) ;
  	}
@@ -907,7 +907,7 @@ public class UserGroupSyncConfig  {
     public void setGroupSearchEnabled(boolean groupSearchEnabled) {
         prop.setProperty(LGSYNC_GROUP_SEARCH_ENABLED, String.valueOf(groupSearchEnabled));
     }
-    
+
     /* Used only for unit testing */
     public void setPagedResultsEnabled(boolean pagedResultsEnabled) {
         prop.setProperty(LGSYNC_PAGED_RESULTS_ENABLED, String.valueOf(pagedResultsEnabled));
@@ -922,32 +922,32 @@ public class UserGroupSyncConfig  {
     public void setUserSearchBase(String userSearchBase)  throws Throwable {
 	prop.setProperty(LGSYNC_USER_SEARCH_BASE, userSearchBase);
     }
-    
+
     /* Used only for unit testing */
     public void setGroupSearchBase(String groupSearchBase)  throws Throwable {
 	prop.setProperty(LGSYNC_GROUP_SEARCH_BASE, groupSearchBase);
     }
-    
+
     /* Used only for unit testing */
     public void setGroupSearchFirstEnabled(boolean groupSearchFirstEnabled) {
         prop.setProperty(LGSYNC_GROUP_SEARCH_FIRST_ENABLED, String.valueOf(groupSearchFirstEnabled));
     }
-    
+
     /* Used only for unit testing */
     public void setUserSearchEnabled(boolean userSearchEnabled) {
         prop.setProperty(LGSYNC_USER_SEARCH_ENABLED, String.valueOf(userSearchEnabled));
     }
-    
+
     /* Used only for unit testing */
     public void setUserGroupMemberAttributeName(String groupMemberAttrName) {
         prop.setProperty(LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME, groupMemberAttrName);
     }
-    
+
     /* Used only for unit testing */
     public void setUserObjectClass(String userObjectClass) {
         prop.setProperty(LGSYNC_USER_OBJECT_CLASS, userObjectClass);
     }
-    
+
     /* Used only for unit testing */
     public void setGroupObjectClass(String groupObjectClass) {
         prop.setProperty(LGSYNC_GROUP_OBJECT_CLASS, groupObjectClass);

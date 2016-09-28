@@ -152,7 +152,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> version</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b> version</b>
 	 */
@@ -162,7 +162,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>version</b> .
 	 */
 	public Long getVersion() {
@@ -172,7 +172,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> type</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param type
 	 *            Value to set member attribute <b> type</b>
 	 */
@@ -182,7 +182,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>type</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>type</b> .
 	 */
 	public Long getType() {
@@ -192,7 +192,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -202,7 +202,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getName() {
@@ -211,7 +211,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * This method sets the value to the member attribute <b> tagService</b> .
-	 * 
+	 *
 	 * @param tagService
 	 *            Value to set member attribute <b> tagService</b>
 	 */
@@ -221,7 +221,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>tagService</b>
-	 * 
+	 *
 	 * @return Long - value of member attribute <b>tagService</b> .
 	 */
 	public Long getTagService() {
@@ -231,7 +231,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> policyVersion</b>
 	 * . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyVersion
 	 *            Value to set member attribute <b> policyVersion</b>
 	 */
@@ -241,7 +241,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>policyVersion</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>policyVersion</b> .
 	 */
 	public Long getPolicyVersion() {
@@ -251,7 +251,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * policyUpdateTime</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyUpdateTime
 	 *            Value to set member attribute <b> policyUpdateTime</b>
 	 */
@@ -261,7 +261,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>policyUpdateTime</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>policyUpdateTime</b> .
 	 */
 	public Date getPolicyUpdateTime() {
@@ -271,7 +271,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> tagVersion</b>
 	 * . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param tagVersion
 	 *            Value to set member attribute <b> tagVersion</b>
 	 */
@@ -281,7 +281,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>tagVersion</b>
-	 * 
+	 *
 	 * @return Long - value of member attribute <b>tagVersion</b> .
 	 */
 	public Long getTagVersion() {
@@ -291,7 +291,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * tagUpdateTime</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param tagUpdateTime
 	 *            Value to set member attribute <b> tagUpdateTime</b>
 	 */
@@ -301,7 +301,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>tagUpdateTime</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>tagUpdateTime</b> .
 	 */
 	public Date getTagUpdateTime() {
@@ -311,7 +311,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> description</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b> description</b>
 	 */
@@ -321,7 +321,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>description</b> .
 	 */
 	public String getDescription() {
@@ -331,7 +331,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	/**
 	 * This method sets the value to the member attribute <b> isEnabled</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isEnabled
 	 *            Value to set member attribute <b> isEnabled</b>
 	 */
@@ -341,7 +341,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/**
 	 * Returns the value for the member attribute <b>isEnabled</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isEnabled</b> .
 	 */
 	public Boolean getIsenabled() {
@@ -350,7 +350,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -447,7 +447,7 @@ public abstract class XXServiceBase extends XXDBBase {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

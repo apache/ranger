@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -92,10 +92,10 @@ public class TestRangerPolicyValidator {
 				"isAllowed", new Boolean[] { true, true }),
 			ImmutableMap.of(   // no users, access type different case
 				"groups", new String[] {"group3", "group4"},
-				"accesses", new String[]{"W", "x"}, 
+				"accesses", new String[]{"W", "x"},
 				"isAllowed", new Boolean[] { true, true }),
 			ImmutableMap.of(   // no groups
-				"users", new String[] {"user3" ," user4"}, 
+				"users", new String[] {"user3" ," user4"},
 				"accesses", new String[] { "r", "x" },
 				"isAllowed", new Boolean[] { true, true }),
 			ImmutableMap.of( // isallowed on access types is null, case is different from that in definition
@@ -110,14 +110,14 @@ public class TestRangerPolicyValidator {
 		//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp,       parent-level }
 			{ "db",  null,              null,               true,      "db\\d+",      null },       // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
 			{ "tbl", true,              true,               true,      null,          "db" },       // regex == null => anything goes; excludes == true, recursive == true
-			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
+			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true
 	};
 	
 	private final Object[][] resourceDefData_multipleHierarchies = new Object[][] {
 		//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp,       parent-level }
 			{ "db",  null,              null,               true,      "db\\d+",      null },       // valid values: db1, db22, db983, etc.; invalid: db, db12x, ttx11, etc.; null => false for excludes and recursive
 			{ "tbl", true,              true,               true,      null,          "db" },       // regex == null => anything goes; excludes == true, recursive == true
-			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true 
+			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true
 			{ "udf", true,              true,               true,      null,          "db" }        // same parent as tbl (simulating hive's multiple resource hierarchies)
 	};
 		
@@ -135,15 +135,15 @@ public class TestRangerPolicyValidator {
 	
 	private final Object[][] policyResourceMap_bad = new Object[][] {
 			// resource-name, values, excludes, recursive
-			{ "db", new String[] { "db1", "db2" }, null, true },        // mandatory "tbl" missing; recursive==true specified when resource-def does not support it (null) 
+			{ "db", new String[] { "db1", "db2" }, null, true },        // mandatory "tbl" missing; recursive==true specified when resource-def does not support it (null)
 			{"col", new String[] { "col12", "col 1" }, true, true },    // wrong format of value for "col"; excludes==true specified when resource-def does not allow it (false)
 			{"extra", new String[] { "extra1", "extra2" }, null, null } // spurious "extra" specified
 	};
 
 	private final Object[][] policyResourceMap_bad_multiple_hierarchies = new Object[][] {
 			// resource-name, values, excludes, recursive
-			{  "db", new String[] { "db1", "db2" }, null, true }, 
-			{ "tbl", new String[] { "tbl11", "tbl2" }, null, true }, 
+			{  "db", new String[] { "db1", "db2" }, null, true },
+			{ "tbl", new String[] { "tbl11", "tbl2" }, null, true },
 			{ "col", new String[] { "col1", "col2" }, true, true },
 			{ "udf", new String[] { "extra1", "extra2" }, null, null } // either udf or tbl/db/col should be specified, not both
 	};
@@ -173,7 +173,7 @@ public class TestRangerPolicyValidator {
 		_failures.clear(); Assert.assertTrue(_validator.isValid(2L, Action.DELETE, _failures));
 		Assert.assertTrue(_failures.isEmpty());
 
-		// if policy exists then delete validation should pass, too! 
+		// if policy exists then delete validation should pass, too!
 		_failures.clear(); Assert.assertTrue(_validator.isValid(3L, Action.DELETE, _failures));
 		Assert.assertTrue(_failures.isEmpty());
 	}
@@ -224,7 +224,7 @@ public class TestRangerPolicyValidator {
 
 	@Test
 	public final void testIsValid_happyPath() throws Exception {
-		// valid policy has valid non-empty name and service name 
+		// valid policy has valid non-empty name and service name
 		when(_policy.getService()).thenReturn("service-name");
 		// service name exists
 		RangerService service = mock(RangerService.class);
@@ -503,7 +503,7 @@ public class TestRangerPolicyValidator {
 		RangerPolicyResourceSignature signature = mock(RangerPolicyResourceSignature.class);
 		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(signature);
 		when(signature.getSignature()).thenReturn("hash-1");
-		when(_store.getPoliciesByResourceSignature("service-name", "hash-1", true)).thenReturn(null); // store does not have any policies for that signature hash 
+		when(_store.getPoliciesByResourceSignature("service-name", "hash-1", true)).thenReturn(null); // store does not have any policies for that signature hash
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				_failures.clear(); Assert.assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
@@ -684,7 +684,7 @@ public class TestRangerPolicyValidator {
 			// { "resource-name", "values" "isExcludes", "isRecursive" }
 			// values collection is null as it isn't relevant to the part being tested with this data
 			{ "db", null, null, true },    // null should be treated as false
-			{ "tbl", null, false, false }, // set to false where def is null and def is true  
+			{ "tbl", null, false, false }, // set to false where def is null and def is true
 			{ "col", null, true, null}     // set to null where def is false
 	};
 	
@@ -704,8 +704,8 @@ public class TestRangerPolicyValidator {
 	private Object[][] policyResourceMap_failures = new Object[][] {
 			// { "resource-name", "values" "isExcludes", "isRecursive" }
 			// values collection is null as it isn't relevant to the part being tested with this data
-			{ "db", null, true, true },    // ok: def has true for both  
-			{ "tbl", null, true, null },   // excludes: definition does not allow excludes by resource has it set to true  
+			{ "db", null, true, true },    // ok: def has true for both
+			{ "tbl", null, true, null },   // excludes: definition does not allow excludes by resource has it set to true
 			{ "col", null, false, true }    // recursive: def==null (i.e. false), policy==true
 	};
 	
@@ -715,7 +715,7 @@ public class TestRangerPolicyValidator {
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDef_happyPath);
 		Map<String, RangerPolicyResource> resourceMap = _utils.createPolicyResourceMap(policyResourceMap_failures);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
-		// should not error out on 
+		// should not error out on
 		Assert.assertFalse(_validator.isValidResourceFlags(resourceMap, _failures, resourceDefs, "a-service-def", "a-policy", false));
 		_utils.checkFailureForSemanticError(_failures, "isExcludes", "tbl");
 		_utils.checkFailureForSemanticError(_failures, "isRecursive", "col");
@@ -738,10 +738,10 @@ public class TestRangerPolicyValidator {
 			Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
 			Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
 		}
-		/* 
+		/*
 		 * If store has a policy with matching signature then the check should fail with appropriate error message.
 		 * - For create any match is a problem
-		 * - Signature check can never fail for disabled policies! 
+		 * - Signature check can never fail for disabled policies!
 		 */
 		RangerPolicy policy1 = mock(RangerPolicy.class); policies.add(policy1);
 		when(_store.getPoliciesByResourceSignature("service-name", hash, true)).thenReturn(policies);

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -70,7 +70,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	    if (customHeader != null) {
 	      headerName = customHeader;
 	    }
-	    
+	
 	    String customMethodsToIgnore = PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM, METHODS_TO_IGNORE_DEFAULT);
         if (customMethodsToIgnore != null) {
           parseMethodsToIgnore(customMethodsToIgnore);
@@ -115,7 +115,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 		}
 		return false;
 	}
-	  
+	
 	public interface HttpInteraction {
 		/**
 		 * Returns the value of a header.
@@ -157,7 +157,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 		 */
 		void sendError(int code, String message) throws IOException;
 	}	
-	  
+	
 	public void handleHttpInteraction(HttpInteraction httpInteraction)
 			throws IOException, ServletException {
 		if (!isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))

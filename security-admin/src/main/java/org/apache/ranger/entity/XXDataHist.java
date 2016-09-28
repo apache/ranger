@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -149,7 +149,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -159,7 +159,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -198,7 +198,7 @@ public class XXDataHist implements java.io.Serializable {
 	
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>version</b> .
 	 */
 	public Long getVersion() {
@@ -208,7 +208,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> version</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b> version</b>
 	 */
@@ -219,7 +219,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> action</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param action
 	 *            Value to set member attribute <b> action</b>
 	 */
@@ -258,7 +258,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> type</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param objectClassType
 	 *            Value to set member attribute <b> type</b>
 	 */
@@ -268,7 +268,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>type</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>type</b> .
 	 */
 	public Integer getObjectClassType() {
@@ -278,7 +278,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -288,7 +288,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getObjectName() {
@@ -297,7 +297,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>action</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>action</b> .
 	 */
 	public String getAction() {
@@ -307,7 +307,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> fromTime</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param fromTime
 	 *            Value to set member attribute <b> fromTime</b>
 	 */
@@ -317,7 +317,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>fromTime</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>fromTime</b> .
 	 */
 	public Date getFromTime() {
@@ -327,7 +327,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> toTime</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param toTime
 	 *            Value to set member attribute <b> toTime</b>
 	 */
@@ -337,7 +337,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>toTime</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>toTime</b> .
 	 */
 	public Date getToTime() {
@@ -347,7 +347,7 @@ public class XXDataHist implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> content</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param content
 	 *            Value to set member attribute <b> content</b>
 	 */
@@ -357,7 +357,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>content</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>content</b> .
 	 */
 	public String getContent() {
@@ -366,7 +366,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -459,7 +459,7 @@ public class XXDataHist implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

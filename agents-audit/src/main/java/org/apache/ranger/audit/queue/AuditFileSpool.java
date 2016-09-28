@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -375,7 +375,7 @@ public class AuditFileSpool implements Runnable {
 	/**
 	 * If any files are still not processed. Also, if the destination is not
 	 * reachable
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isPending() {
@@ -390,7 +390,7 @@ public class AuditFileSpool implements Runnable {
 
 	/**
 	 * Milliseconds from last attempt time
-	 * 
+	 *
 	 * @return
 	 */
 	public long getLastAttemptTimeDelta() {
@@ -458,7 +458,7 @@ public class AuditFileSpool implements Runnable {
 	/**
 	 * This return the current file. If there are not current open output file,
 	 * then it will return null
-	 * 
+	 *
 	 * @return
 	 * @throws Exception
 	 */
@@ -567,7 +567,7 @@ public class AuditFileSpool implements Runnable {
 
 	/**
 	 * Load the index file
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	void loadIndexFile() throws IOException {
@@ -747,7 +747,7 @@ public class AuditFileSpool implements Runnable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override

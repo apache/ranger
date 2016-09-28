@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -273,7 +273,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 						.build());
 					valid = false;
 				}
-				// implied grant should not imply itself! 
+				// implied grant should not imply itself!
 				String name = def.getName(); // note: this name could be null/blank/empty!
 				if (impliedGrants.contains(name)) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_IMPLIED_GRANT_IMPLIES_ITSELF;
@@ -536,7 +536,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 					valid = false;
 				} else {
 					// enum-names and ids must non-blank and be unique to a service definition
-					String enumName = enumDef.getName(); 
+					String enumName = enumDef.getName();
 					valid = isUnique(enumName, names, "enum def name", "enum defs", failures) && valid;
 					valid = isUnique(enumDef.getItemId(), ids, "enum def itemId", "enum defs", failures) && valid;		
 					// enum must contain at least one valid value and those values should be non-blank and distinct

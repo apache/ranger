@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -170,7 +170,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -180,7 +180,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -190,7 +190,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> defId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param defId
 	 *            Value to set member attribute <b> defId</b>
 	 */
@@ -200,7 +200,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>itemId</b>
-	 * 
+	 *
 	 * @return Long - value of member attribute <b>itemId</b> .
 	 */
 	public Long getItemId() {
@@ -210,7 +210,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> itemId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param itemId
 	 *            Value to set member attribute <b> itemId</b>
 	 */
@@ -220,7 +220,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>defId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>defId</b> .
 	 */
 	public Long getDefid() {
@@ -230,7 +230,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -240,7 +240,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getName() {
@@ -250,7 +250,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> evaluator</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param evaluator
 	 *            Value to set member attribute <b> evaluator</b>
 	 */
@@ -260,7 +260,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>evaluator</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>evaluator</b> .
 	 */
 	public String getEvaluator() {
@@ -270,7 +270,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * evaluatorOptions</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param evaluatorOptions
 	 *            Value to set member attribute <b> evaluatorOptions</b>
 	 */
@@ -280,7 +280,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>evaluatorOptions</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>evaluatorOptions</b> .
 	 */
 	public String getEvaluatoroptions() {
@@ -332,7 +332,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> label</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param label
 	 *            Value to set member attribute <b> label</b>
 	 */
@@ -342,7 +342,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>label</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>label</b> .
 	 */
 	public String getLabel() {
@@ -352,7 +352,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> description</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b> description</b>
 	 */
@@ -362,7 +362,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>description</b> .
 	 */
 	public String getDescription() {
@@ -372,7 +372,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param rbKeyLabel
 	 *            Value to set member attribute <b> rbKeyLabel</b>
 	 */
@@ -382,7 +382,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyLabel</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyLabel</b> .
 	 */
 	public String getRbkeylabel() {
@@ -392,7 +392,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * rbKeyDescription</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param rbKeyDescription
 	 *            Value to set member attribute <b> rbKeyDescription</b>
 	 */
@@ -402,7 +402,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyDescription</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyDescription</b> .
 	 */
 	public String getRbkeydescription() {
@@ -426,7 +426,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param order
 	 *            Value to set member attribute <b> order</b>
 	 */
@@ -436,7 +436,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>order</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>order</b> .
 	 */
 	public Integer getOrder() {
@@ -445,7 +445,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -553,7 +553,7 @@ public class XXPolicyConditionDef extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -87,9 +87,9 @@ public class ValidationFailureDetails {
 			return false;
 		}
 		ValidationFailureDetails that = (ValidationFailureDetails)obj;
-		return Objects.equals(_fieldName, that._fieldName) && 
-				Objects.equals(_subFieldName, that._subFieldName) && 
-				Objects.equals(_reason, that._reason) && 
+		return Objects.equals(_fieldName, that._fieldName) &&
+				Objects.equals(_subFieldName, that._subFieldName) &&
+				Objects.equals(_reason, that._reason) &&
 				_internalError == that._internalError &&
 				_missing == that._missing &&
 				_semanticError == that._semanticError &&

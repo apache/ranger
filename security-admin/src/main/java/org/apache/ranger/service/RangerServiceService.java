@@ -256,7 +256,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 						if (!vConfig.containsKey(key)) {
 							oldConfig.put(key, entry.getValue());
 							newConfig.put(key,null);
-						} 
+						}
 					}
 					oldValue = jsonUtil.readMapToString(oldConfig);
 					value = jsonUtil.readMapToString(newConfig);

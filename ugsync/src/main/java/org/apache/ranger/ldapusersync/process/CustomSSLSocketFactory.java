@@ -49,7 +49,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
     public CustomSSLSocketFactory() {
     	SSLContext sslContext = null;
     	String keyStoreFile =  config.getSSLKeyStorePath() ;
-    	String keyStoreFilepwd = config.getSSLKeyStorePathPassword(); 
+    	String keyStoreFilepwd = config.getSSLKeyStorePathPassword();
     	String trustStoreFile = config.getSSLTrustStorePath();
     	String trustStoreFilepwd = config.getSSLTrustStorePathPassword();
     	String keyStoreType = KeyStore.getDefaultType();
@@ -76,10 +76,10 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 				}
 				finally {
 					if (in != null) {
-						in.close(); 
+						in.close();
 					}
 				}
-				 
+				
 			}
 
 			if (trustStoreFile != null && trustStoreFilepwd != null) {
@@ -152,7 +152,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
     public Socket createSocket(InetAddress address, int port, InetAddress localHost, int localPort) throws IOException {
         return sockFactory.createSocket(address, port, localHost, localPort);
     }
-    
+
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
 
 		InputStream ret = null;

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -68,7 +68,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see kafka.security.auth.Authorizer#configure(Map<String, Object>)
 	 */
 	@Override
@@ -213,7 +213,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * kafka.security.auth.Authorizer#addAcls(scala.collection.immutable.Set,
 	 * kafka.security.auth.Resource)
@@ -225,7 +225,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * kafka.security.auth.Authorizer#removeAcls(scala.collection.immutable.Set,
 	 * kafka.security.auth.Resource)
@@ -238,7 +238,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * kafka.security.auth.Authorizer#removeAcls(kafka.security.auth.Resource)
 	 */
@@ -250,7 +250,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see kafka.security.auth.Authorizer#getAcls(kafka.security.auth.Resource)
 	 */
 	@Override
@@ -263,7 +263,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * kafka.security.auth.Authorizer#getAcls(kafka.security.auth.KafkaPrincipal
 	 * )
@@ -278,7 +278,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see kafka.security.auth.Authorizer#getAcls()
 	 */
 	@Override

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -61,7 +61,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -71,7 +71,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -81,7 +81,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> atdId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param atdId
 	 *            Value to set member attribute <b> atdId</b>
 	 */
@@ -91,7 +91,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>atdId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>atdId</b> .
 	 */
 	public Long getAtdId() {
@@ -101,7 +101,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> impliedGrant</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param impliedGrant
 	 *            Value to set member attribute <b> impliedGrant</b>
 	 */
@@ -111,7 +111,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>impliedGrant</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>impliedGrant</b> .
 	 */
 	public String getImpliedGrant() {
@@ -120,7 +120,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -164,7 +164,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

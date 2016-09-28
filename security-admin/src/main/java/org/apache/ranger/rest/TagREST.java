@@ -1006,7 +1006,7 @@ public class TagREST {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getTagResourceMap(" + tagGuid + ", " + resourceGuid + ")");
         }
-        
+
         RangerTagResourceMap ret = null;
 
         try {
@@ -1125,7 +1125,7 @@ public class TagREST {
 
         return ret;
     }
-    
+
     @GET
     @Path(TagRESTConstants.TAGS_SECURE_DOWNLOAD + "{serviceName}")
     @Produces({ "application/json", "application/xml" })

@@ -27,7 +27,7 @@ public class SSOAuthenticationProperties {
 	  private RSAPublicKey publicKey = null;
 	  private String cookieName = "hadoop-jwt";
 	  private String originalUrlQueryParam = null;
-	  private String[] userAgentList = null; 
+	  private String[] userAgentList = null;
 
 	  public String getAuthenticationProviderUrl() {
 	    return authenticationProviderUrl;

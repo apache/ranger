@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -83,7 +83,7 @@ public class ServiceMgr {
 		
 		RangerService service = svcDBStore.getServiceByName(serviceName);
 		
-		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE); 
+		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE);
 		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
@@ -136,7 +136,7 @@ public class ServiceMgr {
 	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		VXResponse        ret = new VXResponse();
 		
-		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE); 
+		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE);
 		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);

@@ -83,10 +83,10 @@ public class KmsKeyMgr {
 	private static final String KMS_ROLL_KEY_URI 		= "v1/key/${alias}";			//POST
 	private static final String KMS_DELETE_KEY_URI 		= "v1/key/${alias}";			//DELETE
 	private static final String KMS_KEY_METADATA_URI 	= "v1/key/${alias}/_metadata";  //GET
-	private static final String KMS_URL_CONFIG 			= "provider"; 
+	private static final String KMS_URL_CONFIG 			= "provider";
 	private static final String KMS_PASSWORD 			= "password";
 	private static final String KMS_USERNAME 			= "username";
-	private static Map<String, String> providerList = new HashMap<String, String>(); 
+	private static Map<String, String> providerList = new HashMap<String, String>();
 	private static int nextProvider = 0;
 	static final String NAME_RULES = "hadoop.security.auth_to_local";
 	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";	
@@ -94,7 +94,7 @@ public class KmsKeyMgr {
     private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
     private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
     static final String HOST_NAME = "ranger.service.host";
-    
+
 	@Autowired
 	ServiceDBStore svcStore;	
 	
@@ -124,7 +124,7 @@ public class KmsKeyMgr {
 			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + repoName + ") failed", e1);
-		} 
+		}
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
@@ -228,7 +228,7 @@ public class KmsKeyMgr {
 			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
-		} 
+		}
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
@@ -282,7 +282,7 @@ public class KmsKeyMgr {
 			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
-		} 
+		}
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
@@ -334,7 +334,7 @@ public class KmsKeyMgr {
 			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
-		} 
+		}
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
@@ -387,7 +387,7 @@ public class KmsKeyMgr {
 			isKerberos = checkKerberos();
 		} catch (Exception e1) {
 			logger.error("checkKerberos(" + provider + ") failed", e1);
-		} 
+		}
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
@@ -595,7 +595,7 @@ public class KmsKeyMgr {
 	}
 
 	private synchronized Client getClient() {
-		Client ret = null; 
+		Client ret = null;
 		ClientConfig cc = new DefaultClientConfig();
 		cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
 		ret = Client.create(cc);	

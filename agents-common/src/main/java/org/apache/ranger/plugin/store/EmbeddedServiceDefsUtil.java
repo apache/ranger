@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -38,7 +38,7 @@ import com.google.gson.GsonBuilder;
  * library (hdfs/hbase/hive/knox/storm/..). If any of these service-defs
  * don't exist in the given service store, they will be created in the store
  * using the embedded definitions.
- * 
+ *
  * init() method should be called from ServiceStore implementations to
  * initialize embedded service-defs.
  */
@@ -115,7 +115,7 @@ public class EmbeddedServiceDefsUtil {
 
 			supportedServiceDefs =getSupportedServiceDef();
 			/*
-			 * Maintaining the following service-def create-order is critical for the 
+			 * Maintaining the following service-def create-order is critical for the
 			 * the legacy service-defs (HDFS/HBase/Hive/Knox/Storm) to be assigned IDs
 			 * that were used in earlier version (0.4) */
 			hdfsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HDFS_NAME);
@@ -128,7 +128,7 @@ public class EmbeddedServiceDefsUtil {
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
-			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME); 
+			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 
@@ -182,8 +182,8 @@ public class EmbeddedServiceDefsUtil {
 	}
 
     public long getAtlasServiceDefId() {
-        return getId(atlasServiceDef); 
-    } 
+        return getId(atlasServiceDef);
+    }
 
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 

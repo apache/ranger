@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -194,7 +194,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 				if(policyType != AppConstants.ASSET_KNOX){
 					if(fieldName.equals("ipAddress"))
 						continue;
-				} 
+				}
 				
 				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
 				
@@ -213,7 +213,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 //					value = xUser.getName();
 					if(fieldName.equals("ipAddress") && action.equalsIgnoreCase("update")){
 						prevValue = ""+field.get(mObj);
-						value = value.equalsIgnoreCase("null") ? "" : value; 
+						value = value.equalsIgnoreCase("null") ? "" : value;
 					}
 					else if(value == null || value.equalsIgnoreCase("null") || stringUtil.isEmpty(value)){
 						continue;

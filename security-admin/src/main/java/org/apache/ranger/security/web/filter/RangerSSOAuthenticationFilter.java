@@ -109,7 +109,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	 * doFilter of RangerSSOAuthenticationFilter is the first in the filter list so in this it check for the request
 	 * if the request is from browser, doesn't contain local login and sso is enabled then it process the request against knox sso
 	 * else if it's ssoenable and the request is with local login string then it show's the appropriate msg
-	 * else if ssoenable is false then it contiunes with further filters as it was before sso 
+	 * else if ssoenable is false then it contiunes with further filters as it was before sso
 	 */
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)throws IOException, ServletException {
@@ -139,7 +139,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			}
 		}		
 		
-		//If sso is enable and request is not for local login and is from browser then it will go inside and try for knox sso authentication 
+		//If sso is enable and request is not for local login and is from browser then it will go inside and try for knox sso authentication
 		if (ssoEnabled && !httpRequest.getRequestURI().contains(LOCAL_LOGIN_URL) && isWebUserAgent(userAgent)) {
 			//if jwt properties are loaded and is current not authenticated then it will go for sso authentication
 			//Note : Need to remove !isAuthenticated() after knoxsso solve the bug from cross-origin script
@@ -175,7 +175,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 							
 							filterChain.doFilter(servletRequest,httpServletResponse);
 						}
-						// if the token is not valid then redirect to knox sso  
+						// if the token is not valid then redirect to knox sso
 						else {
 							String ssourl = constructLoginURL(httpRequest);
 							if(LOG.isDebugEnabled())
@@ -186,7 +186,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 						LOG.warn("Unable to parse the JWT token", e);
 					}
 				}
-				// if the jwt token is not available then redirect it to knox sso 
+				// if the jwt token is not available then redirect it to knox sso
 				else {
 					String ssourl = constructLoginURL(httpRequest);
 					if(LOG.isDebugEnabled())
@@ -194,7 +194,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 					httpServletResponse.sendRedirect(ssourl);
 				}
 			}
-			//if property is not loaded or is already authenticated then proceed further with next filter 
+			//if property is not loaded or is already authenticated then proceed further with next filter
 			else {
 				filterChain.doFilter(servletRequest, servletResponse);
 			}
@@ -275,7 +275,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	/**
 	 * Do not try to validate JWT if user already authenticated via other
 	 * provider
-	 * 
+	 *
 	 * @return true, if JWT validation required
 	 */
 	private boolean isAuthenticated() {

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -126,7 +126,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 							predicate = criteriaBuilder.and(predicate, stringPredicate);
 							
 						}	
-					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || 
+					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST ||
 							isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
 						// build where clause for integer lists or integers datatypes
 						intValueList = null;
@@ -164,7 +164,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 									datePredicate = criteriaBuilder.equal(rootEntityType.get(attr), fieldValue);
 								}
 								predicate = criteriaBuilder.and(predicate, datePredicate);
-							} 
+							}
 						}
 						
 					}
@@ -251,7 +251,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 							predicate = criteriaBuilder.and(predicate, stringPredicate);
 							
 						}	
-					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || 
+					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST ||
 							isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
 						// build where clause for integer lists or integers datatypes
 						intValueList = null;
@@ -289,7 +289,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 									datePredicate = criteriaBuilder.equal(rootEntityType.get(attr), fieldValue);
 								}
 								predicate = criteriaBuilder.and(predicate, datePredicate);
-							} 
+							}
 						}
 						
 					}
@@ -309,7 +309,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Predicate buildWhereClause(Predicate predicate, Map<String, Object> paramList, EntityType<XXTrxLog> trxLogEntity, 
+	private Predicate buildWhereClause(Predicate predicate, Map<String, Object> paramList, EntityType<XXTrxLog> trxLogEntity,
 			CriteriaBuilder criteriaBuilder, Root<XXTrxLog> root){
 		
 		for(String key : paramList.keySet()) {
@@ -338,7 +338,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 							Predicate stringPredicate = criteriaBuilder.equal(root.get(attr), paramValue);
 							predicate = criteriaBuilder.and(predicate, stringPredicate);
 						}	
-					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || 
+					} else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST ||
 							isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
 						// build where clause for integer lists or integers datatypes
 						Collection<Number> intValueList = null;
@@ -375,7 +375,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 									datePredicate = criteriaBuilder.equal(root.get(attr), fieldValue);
 								}
 								predicate = criteriaBuilder.and(predicate, datePredicate);
-							} 
+							}
 						}
 					}
 				}

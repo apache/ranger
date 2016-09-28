@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -126,7 +126,7 @@ public abstract class BaseClient {
 					 loginSubject = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules) ;
 				 }else{
 					 LOG.info("Init Login: security not enabled, using username");
-					 loginSubject = SecureClientLogin.login(userName);					 
+					 loginSubject = SecureClientLogin.login(userName);					
 				 }
 			 }
 		} catch (IOException ioe) {

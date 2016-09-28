@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -26,12 +26,12 @@ import org.apache.log4j.Logger;
 public class KMSConnectionMgr {
 
 	private static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
-    
+
 	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType) {
 		KMSClient kmsClient = null;
         if (kmsURL == null || kmsURL.isEmpty()) {
         	LOG.error("Can not create KMSClient: kmsURL is empty");
-        } else if(StringUtils.isEmpty(rangerPrincipal)){ 
+        } else if(StringUtils.isEmpty(rangerPrincipal)){
         	if(userName == null || userName.isEmpty()) {
         		LOG.error("Can not create KMSClient: kmsuserName is empty");
         	} else if (password == null || password.isEmpty()) {

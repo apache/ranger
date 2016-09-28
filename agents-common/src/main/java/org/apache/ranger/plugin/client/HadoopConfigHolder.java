@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -223,10 +223,10 @@ public class HadoopConfigHolder  {
 						in.close();
 					} catch (IOException e) {
 						// Ignored exception when the stream is closed.
-					} 
+					}
 				}
 	
-				if (prop.size() == 0) 
+				if (prop.size() == 0)
 					return ;
 				
 				for(Object keyobj : prop.keySet()) {
@@ -244,7 +244,7 @@ public class HadoopConfigHolder  {
 					String propKey = key.substring(dotLocatedAt+1) ;
 					int resourceFoundAt =  propKey.indexOf(".") ;
 					if (resourceFoundAt > -1) {
-						String resourceName = propKey.substring(0, resourceFoundAt) + ".xml" ; 
+						String resourceName = propKey.substring(0, resourceFoundAt) + ".xml" ;
 						propKey = propKey.substring(resourceFoundAt+1) ;
 						addConfiguration(dataSource, resourceName, propKey, val) ;
 					}
@@ -265,7 +265,7 @@ public class HadoopConfigHolder  {
 						in.close();
 					} catch (IOException e) {
 						// Ignored exception when the stream is closed.
-					} 
+					}
 				}
 				globalLoginProp = tempLoginProp ;
 			}

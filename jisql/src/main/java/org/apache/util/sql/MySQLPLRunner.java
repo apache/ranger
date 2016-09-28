@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,7 @@
  */
 package org.apache.util.sql;
 
- 
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -33,10 +33,10 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
- 
+
 
 public class MySQLPLRunner {
- 
+
     private static final String DEFAULT_DELIMITER = ";";
     private Connection connection;
     private boolean stopOnError;
@@ -58,12 +58,12 @@ public class MySQLPLRunner {
         this.stopOnError = stopOnError;
         this.printDebug=printDebug;
     }
- 
+
     public void setDelimiter(String delimiter, boolean fullLineDelimiter) {
         this.delimiter = delimiter;
         this.fullLineDelimiter = fullLineDelimiter;
     }
- 
+
     /**
      * Setter for logWriter property
      *
@@ -73,7 +73,7 @@ public class MySQLPLRunner {
     public void setLogWriter(PrintWriter logWriter) {
         this.logWriter = logWriter;
     }
- 
+
     /**
      * Setter for errorLogWriter property
      *
@@ -83,7 +83,7 @@ public class MySQLPLRunner {
     public void setErrorLogWriter(PrintWriter errorLogWriter) {
         this.errorLogWriter = errorLogWriter;
     }
- 
+
     /**
      * Runs an SQL script (read in using the Reader parameter)
      *
@@ -109,7 +109,7 @@ public class MySQLPLRunner {
             throw new RuntimeException("Error running script.  Cause: " + e, e);
         }
     }
- 
+
     /**
      * Runs an SQL script (read in using the Reader parameter) using the
      * connection passed in
@@ -134,7 +134,7 @@ public class MySQLPLRunner {
                     command = new StringBuilder();
                 }
                 String trimmedLine = line.trim();
-                
+
                 if (trimmedLine.length() < 1 || trimmedLine.startsWith("--")
                     || trimmedLine.startsWith("//")) { //NOPMD
                     //println(trimmedLine);
@@ -143,8 +143,8 @@ public class MySQLPLRunner {
                         && trimmedLine.endsWith(getDelimiter())
                         || fullLineDelimiter
                         && trimmedLine.equals(getDelimiter())) {
- 
- 
+
+
                     Pattern pattern = Pattern.compile(DELIMITER_LINE_REGEX);
                     Matcher matcher = pattern.matcher(trimmedLine);
                     if (matcher.matches()) {
@@ -156,13 +156,13 @@ public class MySQLPLRunner {
                         }
                         trimmedLine = line.trim();*/
                     }
-                   
+
                     if(line!=null && line.endsWith(getDelimiter()) && !DEFAULT_DELIMITER.equalsIgnoreCase(getDelimiter())){
                     	 command.append(line.substring(0, line.lastIndexOf(getDelimiter())));
                     }else{
                     	command.append(line);
                     }
-                   
+
                     command.append(" ");
                     Statement statement = conn.createStatement();
                     if(printDebug)
@@ -180,11 +180,11 @@ public class MySQLPLRunner {
                             printlnError(e);
                         }
                     }
- 
+
                     if (autoCommit && !conn.getAutoCommit()) {
                         conn.commit();
                     }
- 
+
                     ResultSet rs = statement.getResultSet();
                     if (hasResults && rs != null) {
                         ResultSetMetaData md = rs.getMetaData();
@@ -202,7 +202,7 @@ public class MySQLPLRunner {
                             println("");
                         }
                     }
-                   
+
                     command = null;
                     try {
                     	if(rs!=null){
@@ -252,29 +252,29 @@ public class MySQLPLRunner {
             flush();
         }
     }
- 
+
     private String getDelimiter() {
         return delimiter;
     }
- 
+
     private void print(Object o) {
         if (logWriter != null) {
             System.out.print(o);
         }
     }
- 
+
     private void println(Object o) {
         if (logWriter != null) {
             logWriter.println(o);
         }
     }
- 
+
     private void printlnError(Object o) {
         if (errorLogWriter != null) {
             errorLogWriter.println(o);
         }
     }
- 
+
     private void flush() {
         if (logWriter != null) {
             logWriter.flush();
@@ -283,7 +283,7 @@ public class MySQLPLRunner {
             errorLogWriter.flush();
         }
     }
-    
+
     public static void main(String args[]){
     	// Creating object of ScriptRunner class
     	  Connection con = null;
@@ -294,12 +294,12 @@ public class MySQLPLRunner {
               props = new Properties();
 
               props.put("user", "root");
-             
+
               props.put("password", "root");
               String connectString = "jdbc:mysql://localhost:3306/ranger";
               con = DriverManager.getConnection(connectString, props);
-            
-          
+
+
     	MySQLPLRunner scriptRunner = new MySQLPLRunner(con, false, true,true);
      	String aSQLScriptFilePath = "/disk1/zero/jisql-2.0.11/xa_core_db.sql";
     	

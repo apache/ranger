@@ -1,11 +1,11 @@
  /* Copyright (C) 2004-2011 Scott Dunbar (scott@xigole.com)
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -42,11 +42,11 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * obviously, strong similarities to Microsoft SQL/Server isql and osql (as
  * Microsoft got SQL Server from Sybase).
  * <p>
- * 
+ *
  * The program can act in a similar way to Oracle's sqlplus and PostgreSQL's
  * psql.
  * <p>
- * 
+ *
  * A simple command line might look like (this should be all on one line) is: <br>
  * <code>
  *  java -classpath lib/jisql.jar:&lt;file containing native driver&gt;
@@ -54,7 +54,7 @@ import org.apache.util.outputformatter.JisqlFormatter;
  *       -cstring jdbc:postgresql://localhost:5432/scott -c \;
  * </code>
  * <p>
- * 
+ *
  * This logs into a PostgreSQL database as the user "scott", password "blah". It
  * connects to the database named "scott". It uses the command terminator of
  * ";", just like psql or sqlplus (which is escaped in the example so that it
@@ -65,8 +65,8 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * configuration. Additionally, if you are using the CSVFormatter then it is
  * dependent on <a href="http://sourceforge.net/projects/javacsv/">Java CSV</a>.
  * <p>
- * 
- * 
+ *
+ *
  * Options:
  * <ul>
  * <li><b>-driver </b> This option allows you to specify the JDBC driver class
@@ -94,10 +94,10 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * <li><b>mysqlcaucho </b>- short for <code>com.caucho.jdbc.mysql.Driver</code>-
  * the Caucho driver for MySQL</li>
  * </ul>
- * 
+ *
  * Alternatively, any class name can be specified here. The shortcuts only exist
  * for those of us who generate more typos than real text :)</li>
- * 
+ *
  * <li><b>-cstring </b> This option allows you to specify the connection string
  * to the database. This string is driver specific but almost always starts with
  * &quot;jdbc:&quot;. Connection strings for the drivers I have tested look
@@ -124,13 +124,13 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * <li><b>mysqlcaucho </b>- The MySQL Cahcho driver connection string looks like
  * &quot;jdbc:mysql-caucho://[hostname]:[port]/[db_name]&quot;</li>
  * </ul>
- * 
+ *
  * <b>Important </b>- each JDBC vendor has other flags and parameters that can
  * be passed on the connection string. You should look at the documentation for
  * your JDBC driver for more information. The strings listed are just a sample
  * and may change with a new release of the driver. None of these strings are
  * coded within the application - the list is provided for reference only.</li>
- * 
+ *
  * <li><b>-user or -u </b> The user name to use to log into the database with.</li>
  * <li><b>-password or -p </b> The password to use to log into the database
  * with. If this option is missing then the program asks for the password.</li>
@@ -223,7 +223,7 @@ public class Jisql {
     private static final String db2AppDriverName = "COM.ibm.db2.jdbc.app.DB2Driver";
     private static final String db2NetDriverName = "COM.ibm.db2.jdbc.net.DB2Driver";
     private static final String cloudscapeDriverName = "COM.cloudscape.core.JDBCDriver";
-    private static final String msqlDriverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";    
+    private static final String msqlDriverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     private static final String pointbaseDriverName = "com.pointbase.jdbc.jdbcUniversalDriver";
     private static final String postgresqlDriverName = "org.postgresql.Driver";
     private static final String mySQLConnectJDriverName = "com.mysql.jdbc.Driver";
@@ -253,7 +253,7 @@ public class Jisql {
 
     /**
      * Runs Jisql with the command line arguments provided.
-     * 
+     *
      */
     public static void main(String argv[]) {
         Jisql jisql = new Jisql();
@@ -354,10 +354,10 @@ public class Jisql {
      * The main loop for the Jisql program. This method handles the input from
      * either a command line or from a file. Output is handled through the
      * Formatter.
-     * 
+     *
      * @throws SQLException
      *             if an exception occurs.
-     * 
+     *
      */
     public void doIsql() throws IOException, SQLException {
         BufferedReader reader = null;
@@ -384,9 +384,9 @@ public class Jisql {
         statement = connection.createStatement();
         connection.clearWarnings();
         String trimmedLine=null;
-        
+
         try {
-        
+
         while (true) {
             int linecount = 1;
             query = new StringBuilder();
@@ -422,7 +422,7 @@ public class Jisql {
                     trimmedLine=line.trim();
                     if (trimmedLine.startsWith("--") ||trimmedLine.length()<1) {
                         continue;
-                    } 
+                    }
                     if(connectString.toLowerCase().startsWith("jdbc:oracle") && inputFileName!=null){
 	                    if (trimmedLine.startsWith("/") ||trimmedLine.length()<2) {
 	                        commandTerminator=";";
@@ -547,10 +547,10 @@ public class Jisql {
 
     /**
      * Prints some information about the JDBC driver in use.
-     * 
+     *
      * @throws SQLException
      *             if one of the methods called does.
-     * 
+     *
      */
     private void printDriverInfo() throws SQLException {
         System.out.println("driver.getMajorVersion() is " + driver.getMajorVersion());
@@ -583,11 +583,11 @@ public class Jisql {
     /**
      * Parse the command line arguments. This method parses what is needed for
      * the Jisql driver program and lets the configured formatter do the same.
-     * 
+     *
      * @param argv  the command line arguments.
-     * 
+     *
      * @throws Exception if there are any errors parsing the command line arguments.
-     * 
+     *
      */
     public void parseArgs(String argv[]) throws Throwable {
         //
@@ -760,9 +760,9 @@ public class Jisql {
 
     /**
      * Walks through a SQLException and prints out every exception.
-     * 
+     *
      * @param sqle the Exception to print
-     * 
+     *
      */
     private void printAllExceptions(SQLException sqle) {
         while (sqle != null) {
@@ -775,7 +775,7 @@ public class Jisql {
     /**
      * Prints out the usage message for the Jisql driver and the configured
      * formatter.
-     * 
+     *
      */
     private void usage() {
         System.err.println();

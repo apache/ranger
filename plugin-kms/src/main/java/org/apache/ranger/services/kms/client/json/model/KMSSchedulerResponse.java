@@ -40,7 +40,7 @@ public class KMSSchedulerResponse implements java.io.Serializable {
     private KMSScheduler scheduler = null;
 
     public KMSScheduler getScheduler() { return scheduler; }
-    
+
     public List<String> getQueueNames() {
     	List<String> ret = new ArrayList<String>();
 
@@ -50,7 +50,7 @@ public class KMSSchedulerResponse implements java.io.Serializable {
 
     	return ret;
     }
-    
+
 
     @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )

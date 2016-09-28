@@ -48,7 +48,7 @@ public class TestKeyAuthorizationKeyProvider {
   @Test
   public void testCreateKey() throws Exception {
     final Configuration conf = new Configuration();
-    KeyProvider kp = 
+    KeyProvider kp =
         new UserProvider.Factory().createProvider(new URI("user:///"), conf);
     KeyACLs mock = mock(KeyACLs.class);
     when(mock.isACLPresent("foo", KeyOpType.MANAGEMENT)).thenReturn(true);
@@ -107,7 +107,7 @@ public class TestKeyAuthorizationKeyProvider {
   @Test
   public void testOpsWhenACLAttributeExists() throws Exception {
     final Configuration conf = new Configuration();
-    KeyProvider kp = 
+    KeyProvider kp =
         new UserProvider.Factory().createProvider(new URI("user:///"), conf);
     KeyACLs mock = mock(KeyACLs.class);
     when(mock.isACLPresent("testKey", KeyOpType.MANAGEMENT)).thenReturn(true);
@@ -138,7 +138,7 @@ public class TestKeyAuthorizationKeyProvider {
             try {
               byte[] seed = new byte[16];
               SECURE_RANDOM.nextBytes(seed);
-              KeyVersion kv = 
+              KeyVersion kv =
                   kpExt.createKey("foo", seed, opt);
               kpExt.rollNewVersion(kv.getName());
               seed = new byte[16];
@@ -204,7 +204,7 @@ public class TestKeyAuthorizationKeyProvider {
             try {
               byte[] seed = new byte[16];
               SECURE_RANDOM.nextBytes(seed);
-              KeyVersion kv = 
+              KeyVersion kv =
                   kpExt.createKey("foo", seed, opt);
               kpExt.rollNewVersion(kv.getName());
               seed = new byte[16];

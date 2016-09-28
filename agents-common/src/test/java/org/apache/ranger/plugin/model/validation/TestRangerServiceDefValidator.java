@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -61,7 +61,7 @@ public class TestRangerServiceDefValidator {
 
 	final Object[][] enums_good = new Object[][] {
 			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } },
-			{ 2L, "time-unit", new String[] { "day", "hour", "minute" } }, 
+			{ 2L, "time-unit", new String[] { "day", "hour", "minute" } },
 	};
 	
 	@Test
@@ -78,7 +78,7 @@ public class TestRangerServiceDefValidator {
 	@Test
 	public final void testIsValid_Long_failures() throws Exception {
 		Long id = null;
-		// passing in wrong action type 
+		// passing in wrong action type
 		boolean result = _validator.isValid((Long)null, Action.CREATE, _failures);
 		assertFalse(result);
 		_utils.checkFailureForInternalError(_failures);
@@ -277,7 +277,7 @@ public class TestRangerServiceDefValidator {
 	
 	final Object[][] enums_bad_enumName_duplicate_differentCase = new Object[][] {
 			//  { id, enum-name,             enum-values }
-			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } }, 
+			{ 1L, "authentication-type", new String[] { "simple", "kerberos" } },
 			{ 1L, "time-unit", new String[] { "day", "hour", "minute" } },
 			{ 1L, "Authentication-Type", new String[] { } },// duplicate enum-name different in case
 	};
@@ -326,7 +326,7 @@ public class TestRangerServiceDefValidator {
 		// add an element with same name as the first element
 		String name = input.iterator().next().getName();
 		when(anEnumDef.getName()).thenReturn(name);
-		List<RangerEnumElementDef> elementDefs = _utils.createEnumElementDefs(new String[] {"val1", "val2"}); 
+		List<RangerEnumElementDef> elementDefs = _utils.createEnumElementDefs(new String[] {"val1", "val2"});
 		when(anEnumDef.getElements()).thenReturn(elementDefs);
 		input.add(anEnumDef);
 		_failures.clear(); assertFalse(_validator.isValidEnums(input, _failures));
@@ -419,7 +419,7 @@ public class TestRangerServiceDefValidator {
 				{ "db",            null, null, null, null, "" ,             10 },
 				{ "table",         null, null, null, null, "db",            20 },   // same as db's level
 				{ "column-family", null, null, null, null, "table",         null }, // level is null!
-				{ "column",        null, null, null, null, "column-family", 20 },   // level is duplicate for [db->table->column-family-> column] hierarchy 
+				{ "column",        null, null, null, null, "column-family", 20 },   // level is duplicate for [db->table->column-family-> column] hierarchy
 				{ "udf",           null, null, null, null, "db",            10 },   // udf's id conflicts with that of db in the [db->udf] hierarchy
 		};
 		
@@ -470,9 +470,9 @@ public class TestRangerServiceDefValidator {
 				{ null, null, "" }, // id and name both null, type is empty
 				{ 1L, "security", "blah" }, // bad type for service def
 				{ 1L, "port", "int" }, // duplicate id
-				{ 2L, "security", "string" }, // duplicate name 
-				{ 3L, "timeout", "enum", "units", null }, // , sub-type (units) is not among known enum types 
-				{ 4L, "auth", "enum", "authentication-type", "dimple" }, // default value is not among known values for the enum (sub-type) 
+				{ 2L, "security", "string" }, // duplicate name
+				{ 3L, "timeout", "enum", "units", null }, // , sub-type (units) is not among known enum types
+				{ 4L, "auth", "enum", "authentication-type", "dimple" }, // default value is not among known values for the enum (sub-type)
 		};
 		
 		List<RangerServiceConfigDef> configs = _utils.createServiceDefConfigs(config_def_data_bad);

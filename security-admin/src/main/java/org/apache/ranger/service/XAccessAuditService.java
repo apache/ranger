@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -85,9 +85,9 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 		searchFields.add(new SearchField("repoType", "obj.repoType",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 
-		searchFields.add(new SearchField("startDate", "obj.eventTime", 
+		searchFields.add(new SearchField("startDate", "obj.eventTime",
 				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField("endDate", "obj.eventTime", 
+		searchFields.add(new SearchField("endDate", "obj.eventTime",
 				DATA_TYPE.DATE, SEARCH_TYPE.LESS_EQUAL_THAN));
 		searchFields.add(new SearchField("tags", "obj.tags", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));

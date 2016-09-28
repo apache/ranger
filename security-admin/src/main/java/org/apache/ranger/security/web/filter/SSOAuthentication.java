@@ -70,5 +70,5 @@ public class SSOAuthentication implements Authentication {
   @Override
   public Object getPrincipal() {
 	  return null;
-  }  
+  }
 }

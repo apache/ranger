@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -64,7 +64,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 		filesourceUGBuilder.updateSink(ugSink);
 		
 		if ( LOG.isDebugEnabled()) {
-			filesourceUGBuilder.print(); 
+			filesourceUGBuilder.print();
 		}
 	}
 
@@ -137,7 +137,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	public void buildUserGroupInfo() throws Throwable {
 		buildUserGroupList();
 		if ( LOG.isDebugEnabled()) {
-			print(); 
+			print();
 		}
 	}
 	
@@ -197,7 +197,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 		Map<String, List<String>> ret = new HashMap<String, List<String>>();
 		
 		String delimiter = config.getUserSyncFileSourceDelimiter();
-		 
+		
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter.charAt(0));
 		
 		CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat);
@@ -216,12 +216,12 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 				for (int j = 1; j < i; j ++) {
 					String group = csvRecord.get(j);
 					if ( group != null && !group.isEmpty()) {
-						 group = group.replaceAll("^\"|\"$", ""); 
+						 group = group.replaceAll("^\"|\"$", "");
 						 groups.add(group);
 					}
 				}
 				ret.put(user,groups);
-			 } 
+			 }
 		}
 
 		csvParser.close();

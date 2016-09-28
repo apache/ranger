@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -120,7 +120,7 @@ public class XResourceService extends
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("fullPolicyName", "obj.policyName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("columns", "obj.columns", 
+		searchFields.add(new SearchField("columns", "obj.columns",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("columnFamilies",
 				"obj.columnFamilies", SearchField.DATA_TYPE.STRING,
@@ -162,7 +162,7 @@ public class XResourceService extends
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
 				"XXAsset xxAsset", "xxAsset.id = obj.assetId "));
 
-		searchFields.add(new SearchField("id", "obj.id", 
+		searchFields.add(new SearchField("id", "obj.id",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("topologies", "obj.topologies",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
@@ -187,7 +187,7 @@ public class XResourceService extends
 	@Override
 	protected void validateForCreate(VXResource vObj) {
 		if(vObj == null){
-			throw restErrorUtil.createRESTException("Policy not provided.", 
+			throw restErrorUtil.createRESTException("Policy not provided.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
 		Long assetId = vObj.getAssetId();
@@ -195,7 +195,7 @@ public class XResourceService extends
 			XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
 			if(xAsset == null){
 				throw restErrorUtil.createRESTException("The repository for which "
-						+ "the policy is created, doesn't exist in the system.", 
+						+ "the policy is created, doesn't exist in the system.",
 						MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 			}
 		} else {
@@ -221,7 +221,7 @@ public class XResourceService extends
 //						.findByResourceNameAndAssetIdAndRecursiveFlag(resName, assetId, isRecursive);			
 //			} else {
 //				xXResourceList = appDaoManager.getXXResource()
-//						.findByResourceNameAndAssetIdAndResourceType(vObj.getName(), 
+//						.findByResourceNameAndAssetIdAndResourceType(vObj.getName(),
 //								vObj.getAssetId(), vObj.getResourceType());
 //			}
 //			
@@ -229,7 +229,7 @@ public class XResourceService extends
 //				boolean similarPolicyFound = false;
 //				for(XXResource xxResource : xXResourceList){
 //					String dbResourceName = xxResource.getName();
-//					// Not checking dbResourceName to be null or empty 
+//					// Not checking dbResourceName to be null or empty
 //					// as this should never be the case
 //					String[] resources = stringUtil.split(dbResourceName, ",");
 //					for(String dbResource: resources){
@@ -272,7 +272,7 @@ public class XResourceService extends
 		}
 		if ((vObj != null && mObj != null) &&
 				(!vObj.getName().equalsIgnoreCase(mObj.getName()) ||
-				vObj.getIsRecursive()!=mObj.getIsRecursive() || 
+				vObj.getIsRecursive()!=mObj.getIsRecursive() ||
 				vObj.getResourceType() != mObj.getResourceType())) {
 			validateForCreate(vObj);
 		}
@@ -298,11 +298,11 @@ public class XResourceService extends
 		List<VXPermMap> vxPermMapList = vXResource.getPermMapList();
 		if (vxPermMapList != null) {
 			for (VXPermMap permMap : vxPermMapList) {
-				if (permMap.getUserId() == null && permMap.getGroupId() == null 
+				if (permMap.getUserId() == null && permMap.getGroupId() == null
 						&& vxAuditMapList == null){
 					if(vxAuditMapList == null){
 						throw restErrorUtil.createRESTException("Please provide"
-								+ " valid group/user permissions for policy.", 
+								+ " valid group/user permissions for policy.",
 								MessageEnums.INVALID_INPUT_DATA);
 					}
 				} else {
@@ -378,7 +378,7 @@ public class XResourceService extends
 					searchCriteria, searchFields, sortFields, returnList);
 			List<XXResource> adminPermResourceList = new ArrayList<XXResource>();
 			for (XXResource xXResource : resultList) {
-				VXResponse vXResponse = xaBizUtil.hasPermission(populateViewBean(xXResource), 
+				VXResponse vXResponse = xaBizUtil.hasPermission(populateViewBean(xXResource),
 						AppConstants.XA_PERM_TYPE_ADMIN);
 				if(vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS){
 					adminPermResourceList.add(xXResource);
@@ -520,12 +520,12 @@ public class XResourceService extends
 			
 			if (pathList != null && pathList.size() != 0) {
 				List<VXPermMap> vxPermMaps = vXResource.getPermMapList();
-				//update perm list and read and execute 
+				//update perm list and read and execute
 				vxPermMaps=updatePermMaps(vxPermMaps);
 				for (VXPermMap vxPermMap : vxPermMaps) {
 					//check only read and execution permission
 					if (vxPermMap.getPermFor() == AppConstants.XA_PERM_FOR_USER
-							&&(vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_READ || 
+							&&(vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_READ ||
 									vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_EXECUTE)) {
 						boolean access = checkUserAccess(vxPermMap, pathList,
 								vXResource.getAssetId(),
@@ -548,7 +548,7 @@ public class XResourceService extends
 					}
 					//check only read and execution permission
 					if (vxPermMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP
-							&&(vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_READ || 
+							&&(vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_READ ||
 							vxPermMap.getPermType()==AppConstants.XA_PERM_TYPE_EXECUTE)) {
 						boolean access = checkGroupAccess(vxPermMap, pathList,
 								vXResource.getAssetId(),
@@ -562,7 +562,7 @@ public class XResourceService extends
 									.getLabelFor_XAPermType(vxPermMap.getPermType()).toLowerCase()
 									+ " permission on parent folder. Do you want to save this policy?"
 									,
-									MessageEnums.OPER_NO_PERMISSION, null, 
+									MessageEnums.OPER_NO_PERMISSION, null,
 									"parentPermission", null);
 						}
 					}
@@ -574,7 +574,7 @@ public class XResourceService extends
 
 	/**
 	 * check user permission
-	 * 
+	 *
 	 * @param vxPermMap
 	 * @param pathList
 	 * @return
@@ -611,7 +611,7 @@ public class XResourceService extends
 
 	/**
 	 * check group permission on path
-	 * 
+	 *
 	 * @param vxPermMap
 	 * @param pathList
 	 * @return
@@ -845,7 +845,7 @@ public class XResourceService extends
 			}
 		}
 
-		HashMap<Long, HashMap<Integer, VXPermMap>> userPermMap = 
+		HashMap<Long, HashMap<Integer, VXPermMap>> userPermMap =
 				new HashMap<Long, HashMap<Integer, VXPermMap>>();
 		
 		for (Long userId : listOfUser) {
@@ -859,8 +859,8 @@ public class XResourceService extends
 			userPermMap.put(userId, userPerm);
 		}
 
-		//[2] : 
-		HashMap<Long, HashMap<Integer, VXPermMap>> groupPermMap = 
+		//[2] :
+		HashMap<Long, HashMap<Integer, VXPermMap>> groupPermMap =
 				new HashMap<Long, HashMap<Integer, VXPermMap>>();
 		
 		for (Long groupId : listOfGroup) {
@@ -972,7 +972,7 @@ public class XResourceService extends
 				
 				int policyType = vObj.getAssetType();
 				if(policyType == AppConstants.ASSET_HDFS){
-					String[] ignoredAttribs = {"tableType", "columnType", "isEncrypt", "databases", 
+					String[] ignoredAttribs = {"tableType", "columnType", "isEncrypt", "databases",
 							"tables", "columnFamilies",  "columns", "udfs"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;
@@ -983,13 +983,13 @@ public class XResourceService extends
 						continue;
 					}
 				} else if(policyType == AppConstants.ASSET_HBASE){
-					String[] ignoredAttribs = {"name", "tableType", "columnType", "isRecursive", "databases", 
+					String[] ignoredAttribs = {"name", "tableType", "columnType", "isRecursive", "databases",
 							"udfs"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;
 					}
 				} else if(policyType == AppConstants.ASSET_KNOX || policyType == AppConstants.ASSET_STORM){
-					String[] ignoredAttribs = {"name", "tableType", "columnType", "isEncrypt", "databases", 
+					String[] ignoredAttribs = {"name", "tableType", "columnType", "isEncrypt", "databases",
 							"tables", "columnFamilies",  "columns", "udfs"};
 					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
 						continue;

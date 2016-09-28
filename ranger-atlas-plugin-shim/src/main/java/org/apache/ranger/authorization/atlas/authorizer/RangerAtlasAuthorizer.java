@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,7 +31,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
     private static boolean isDebugEnabled = LOG.isDebugEnabled();
     private static volatile RangerBasePlugin atlasPlugin = null;
-    
+
     private static final String   RANGER_PLUGIN_TYPE                      = "atlas";
 	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-atlas-plugin"};
 	private static final String   RANGER_ATLAS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer";
@@ -77,8 +77,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     public void init() {
 		 if (isDebugEnabled) {
             LOG.debug("gautam init <===");
-        }    
-        
+        }
+
         try {
 			activatePluginClassLoader();
 
@@ -86,20 +86,20 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		} finally {
 			deactivatePluginClassLoader();
 		}
-        
+
         if (isDebugEnabled) {
             LOG.debug("gautam init ===> " );
         }
 
 	}
-    
+
     @Override
     public boolean isAccessAllowed(AtlasAccessRequest request) throws AtlasAuthorizationException {
         boolean isAccessAllowed = false;
         if (isDebugEnabled) {
             LOG.debug("isAccessAllowed <===");
-        }    
-        
+        }
+
         try {
 			activatePluginClassLoader();
 
@@ -107,7 +107,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		} finally {
 			deactivatePluginClassLoader();
 		}
-        
+
         if (isDebugEnabled) {
             LOG.debug("isAccessAllowed ===> Returning value :: " + isAccessAllowed);
         }
@@ -127,7 +127,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		}
 
     }
-    
+
     private void activatePluginClassLoader() {
 		if(rangerPluginClassLoader != null) {
 			rangerPluginClassLoader.activate();

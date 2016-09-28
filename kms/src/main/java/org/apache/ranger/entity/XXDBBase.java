@@ -19,7 +19,7 @@ package org.apache.ranger.entity;
 
 /**
  * Base JPA class with id, versionNumber and other common attributes
- * 
+ *
  */
 
 import java.util.Calendar;

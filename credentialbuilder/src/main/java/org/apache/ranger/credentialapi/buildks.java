@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -84,7 +84,7 @@ public class buildks {
 	    			return returnCode;
 	    		}	    		
 	    		tempCredential=CredentialReader.getDecryptedString(providerPath, alias);
-	    	}else{  
+	    	}else{
 	    		return returnCode;
 	    	}
 	    	
@@ -134,7 +134,7 @@ public class buildks {
 	    			return returnCode;
 	    		}	    		
 		    	displayCommand(args);
-	    	}else{  
+	    	}else{
 	    		return returnCode;
 	    	}	    	
 	    	
@@ -159,7 +159,7 @@ public class buildks {
     		ex.printStackTrace();
     	} catch(Exception ex){
     		ex.printStackTrace();
-    	}  
+    	}
 		return returnCode;
 	}
 	public int createCredentialFromUserInput(){
@@ -217,7 +217,7 @@ public class buildks {
     		ex.printStackTrace();
     	} catch(Exception ex){
     		ex.printStackTrace();
-    	}  
+    	}
 		return returnCode;
 	}	
 	
@@ -237,7 +237,7 @@ public class buildks {
 				}
 	    		//display command which need to be executed or entered
 	    		displayCommand(args);
-	    	}else{  
+	    	}else{
 	    		return returnCode;
 	    	}	    	
 	    	CredentialShell cs = new CredentialShell();
@@ -256,7 +256,7 @@ public class buildks {
     		ex.printStackTrace();
     	} catch(Exception ex){
     		ex.printStackTrace();
-    	}  
+    	}
 		return returnCode;
 	}	
 	
@@ -279,7 +279,7 @@ public class buildks {
 
 	    		//display command which need to be executed or entered
 	    		displayCommand(args);
-	    	}else{  
+	    	}else{
 	    		return returnCode;
 	    	}	    	
 	    	CredentialShell cs = new CredentialShell();
@@ -298,7 +298,7 @@ public class buildks {
     		ex.printStackTrace();
     	} catch(Exception ex){
     		ex.printStackTrace();
-    	}  
+    	}
 		return returnCode;
 	}	
 	
@@ -495,7 +495,7 @@ public class buildks {
 		}
 		return isValid;
 	}
-  
+
 	private static boolean isCredentialShellInteractiveEnabled() {
 		boolean ret = false ;
 		

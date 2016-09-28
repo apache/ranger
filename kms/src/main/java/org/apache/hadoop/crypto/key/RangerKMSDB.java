@@ -93,7 +93,7 @@ public class RangerKMSDB {
 	   	    	daoManager = new DaoManager();
 	   	    	daoManager.setEntityManagerFactory(entityManagerFactory);
 	   	    	daoManager.getEntityManager(); // this forces the connection to be made to DB
-	   	    	logger.info("Connected to DB : "+isDbConnected());	   	    
+	   	    	logger.info("Connected to DB : "+isDbConnected());	   	
 		} catch(Exception excp) {
 			excp.printStackTrace();
 		}

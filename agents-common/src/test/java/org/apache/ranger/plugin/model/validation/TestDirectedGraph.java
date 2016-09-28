@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -40,17 +40,17 @@ public class TestDirectedGraph {
 		 *             v
 		 *   AA -> BB -> CC
  		 *         ^     |
- 		 *         |     v 
+ 		 *         |     v
 		 *         EE <- DD -> FF
 		 *         |
 		 *         v
 		 *         HH
-		 * 
-		 * This directed graph has 
+		 *
+		 * This directed graph has
 		 * - 1 cycle [BB CC DD EE],
 		 * - 2 sources [AA GG],
 		 * - 2 sinks [HH FF]
-		 * - 4 hierarchies { [AA BB CC DD FF], [AA BB CC DD EE HH], [GG CC DD FF], [GG CC DD EE HH] }    
+		 * - 4 hierarchies { [AA BB CC DD FF], [AA BB CC DD EE HH], [GG CC DD FF], [GG CC DD EE HH] }
 		 */
 		DirectedGraph graph = new DirectedGraph();
 		// first add all of the arcs - from top row to bottom row and from left to right
@@ -59,7 +59,7 @@ public class TestDirectedGraph {
 		// 2nd row
 		graph.addArc("AA", "BB"); graph.addArc("BB", "CC");
 		// 3rd row
-		graph.addArc("EE", "BB"); graph.addArc("DD", "EE"); graph.addArc("CC", "DD"); graph.addArc("DD", "FF"); 
+		graph.addArc("EE", "BB"); graph.addArc("DD", "EE"); graph.addArc("CC", "DD"); graph.addArc("DD", "FF");
 		// 4th row
 		graph.addArc("EE", "HH");
 		

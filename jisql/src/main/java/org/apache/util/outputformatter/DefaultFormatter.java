@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -41,11 +41,11 @@ public class DefaultFormatter implements JisqlFormatter {
     private boolean debug = false;
 	private String delimiter = " | ";
 
-    
+
     /**
      * Sets a the option list for this formatter.  This formatter accepts the
      * following options:
-     * 
+     *
      * <li><b>-noheader</b> do not print the header column info.</li>
      * <li><b>-spacer</b> The character to use for &quot;empty&quot; space.  This
      * defaults to the space character.  From mrider - &quot;I added the ability to
@@ -62,9 +62,9 @@ public class DefaultFormatter implements JisqlFormatter {
      * <li><b>-w</b> specify the max width of a column.  The default is 2048</li>
      * <li><b>-debug</b> add debug headers to the output</li>
      * </ul>
-     * 
+     *
      * @param parser the OptionParser to use.
-     * 
+     *
      */
     public void setSupportedOptions( OptionParser parser ) {
         parser.accepts( "trim" );
@@ -80,7 +80,7 @@ public class DefaultFormatter implements JisqlFormatter {
     /**
      * Consumes any options that were specified on the command line.
      *
-     * @param options the OptionSet that the main driver is using.  
+     * @param options the OptionSet that the main driver is using.
      *
      * @throws Exception if there is a problem parsing the command line arguments.
      *
@@ -104,14 +104,14 @@ public class DefaultFormatter implements JisqlFormatter {
 
         if( options.has( "noheader" ) )
             printHeader = false;
-        
+
         if( options.has( "debug" ) )
             debug = true;
 
         if( options.hasArgument( "delimiter" ) )
             delimiter = (String)options.valueOf( "delimiter" );
     }
-    
+
 
 
     /**
@@ -119,7 +119,7 @@ public class DefaultFormatter implements JisqlFormatter {
      * message should contain information on how to call the formatter.
      *
      * @param out the stream to print the output on
-     * 
+     *
      */
     public void usage( PrintStream out ) {
         out.println("\t-w specifies the maximum field width for a column.  The default is to output the full width of the column");
@@ -222,12 +222,12 @@ public class DefaultFormatter implements JisqlFormatter {
 
     /**
      * Formats a label for output.
-     * 
+     *
      * @param s - the label to format
      * @param width - the width of the field
-     * 
+     *
      * @return the formated label
-     * 
+     *
      */
 	private String formatLabel(String s, int width) {
 		if (s == null)
@@ -260,12 +260,12 @@ public class DefaultFormatter implements JisqlFormatter {
 
 	/**
 	 * Formats a separator for display.
-	 * 
+	 *
 	 * @param s - the field for which the separator is being generated
 	 * @param width - the width of the field
-	 * 
+	 *
 	 * @return the formated separator
-	 * 
+	 *
 	 */
 	private String formatSeparator(String s, int width) {
 	    s = "NULL";
@@ -295,13 +295,13 @@ public class DefaultFormatter implements JisqlFormatter {
 
 	/**
 	 * Formats a value for display.
-	 * 
+	 *
 	 * @param label the label associated with the value (for width purposes)
 	 * @param s - the value to format
 	 * @param width - the width of the field from the db.
-	 * 
+	 *
 	 * @return the formatted field.
-	 * 
+	 *
 	 */
 	private String formatValue(String label, String s, int width) {
 		if (s == null) {

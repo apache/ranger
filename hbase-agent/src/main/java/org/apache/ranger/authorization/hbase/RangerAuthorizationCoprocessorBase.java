@@ -57,7 +57,7 @@ import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
 
 
 /**
- * This class exists only to prevent the clutter of methods that we don't intend to implement in the main co-processor class. 
+ * This class exists only to prevent the clutter of methods that we don't intend to implement in the main co-processor class.
  * @author alal
  *
  */

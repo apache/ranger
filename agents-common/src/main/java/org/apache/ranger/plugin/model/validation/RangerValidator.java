@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -82,7 +82,7 @@ public abstract class RangerValidator {
 	}
 	
 	/**
-	 * This method is expected to be overridden by sub-classes.  Default implementation provided to not burden implementers from having to implement methods that they know would never be called. 
+	 * This method is expected to be overridden by sub-classes.  Default implementation provided to not burden implementers from having to implement methods that they know would never be called.
 	 * @param id
 	 * @param action
 	 * @param failures
@@ -347,7 +347,7 @@ public abstract class RangerValidator {
 	}
 	
 	/**
-	 * Returns names of resource types set to lower-case to allow for case-insensitive comparison. 
+	 * Returns names of resource types set to lower-case to allow for case-insensitive comparison.
 	 * @param serviceDef
 	 * @return
 	 */

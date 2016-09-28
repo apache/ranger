@@ -518,7 +518,7 @@ public class MiscUtil {
 		return KerberosName.getRules();
 	}
 	/**
-	 * 
+	 *
 	 * @param principal
 	 *            This could be in the format abc/host@domain.com
 	 * @return

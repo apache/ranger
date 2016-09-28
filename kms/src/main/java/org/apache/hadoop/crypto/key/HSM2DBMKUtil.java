@@ -108,8 +108,8 @@ public class HSM2DBMKUtil {
 	            byte[] e=new byte[l];
 	            System.arraycopy(b,0, e, 0, l);
 	            ret = new String(e, Charset.defaultCharset());
-	        } 
-	    } else { 
+	        }
+	    } else {
 	    	char[] pwd = c.readPassword(prompt + " ") ;
 	    	if (pwd == null) {
 	    		ret = null ;

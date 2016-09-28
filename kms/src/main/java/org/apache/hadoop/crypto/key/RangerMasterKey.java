@@ -61,9 +61,9 @@ public class RangerMasterKey implements RangerKMSMKI{
 	
 	/**
 	 * To get Master Key
-	 * @param password password to be used for decryption 
+	 * @param password password to be used for decryption
 	 * @return Decrypted Master Key
-	 * @throws Throwable 
+	 * @throws Throwable
 	 */
 	@Override
 	public String getMasterKey(String password) throws Throwable{		
@@ -91,7 +91,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 	 * @param password password to be used for encryption
 	 * @return true if the master key was successfully created
 	 * 		   false if master key generation was unsuccessful or the master key already exists
-	 * @throws Throwable 
+	 * @throws Throwable
 	 */
 	@Override
 	public boolean generateMasterKey(String password) throws Throwable{
@@ -146,7 +146,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 					  String masterKeyStr = rangerMasterKey.getMasterKey();
 					  return Base64.decode(masterKeyStr) ;
 				  }
-			  }			  
+			  }			
 		  }catch(Exception e){
 			  e.printStackTrace();
 		  }
@@ -167,7 +167,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 					  XXRangerMasterKey rangerMasterKey = rangerKMSDao.create(xxRangerMasterKey);
 					  return rangerMasterKey.getId().toString();
 				  }
-			  }			  
+			  }			
 		  }catch(Exception e){
 			  e.printStackTrace();
 		  }
@@ -197,11 +197,11 @@ public class RangerMasterKey implements RangerKMSMKI{
 	
 	private PBEKeySpec getPBEParameterSpec(String password) throws Throwable {
 		MessageDigest md = MessageDigest.getInstance(MD_ALGO) ;
-		byte[] saltGen = md.digest(password.getBytes()) ;		 
-		byte[] salt = new byte[SALT_SIZE] ;		 
-		System.arraycopy(saltGen, 0, salt, 0, SALT_SIZE);		 
+		byte[] saltGen = md.digest(password.getBytes()) ;		
+		byte[] salt = new byte[SALT_SIZE] ;		
+		System.arraycopy(saltGen, 0, salt, 0, SALT_SIZE);		
 		int iteration = password.toCharArray().length + 1 ;
-		return new PBEKeySpec(password.toCharArray(), salt, iteration) ;		 
+		return new PBEKeySpec(password.toCharArray(), salt, iteration) ;		
 	}
 	private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec) ;

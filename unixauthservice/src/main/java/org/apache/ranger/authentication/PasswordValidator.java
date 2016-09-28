@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -68,7 +68,7 @@ public class PasswordValidator implements Runnable {
 			if (validatorProgram == null) {
 				String res = "FAILED: Unable to validate credentials." ;
 				writer.println(res) ;
-				writer.flush(); 
+				writer.flush();
 				LOG.error("Response [" + res + "] for user: " + userName + " as ValidatorProgram is not defined in configuration.") ;
 
 			}
@@ -85,7 +85,7 @@ public class PasswordValidator implements Runnable {
 					
 					pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream())) ;
 					
-					pWriter.println(request) ; pWriter.flush(); 
+					pWriter.println(request) ; pWriter.flush();
 	
 					String res = pReader.readLine() ;
 
@@ -100,7 +100,7 @@ public class PasswordValidator implements Runnable {
 
 					LOG.info("Response [" + res + "] for user: " + userName);
 					
-					writer.println(res) ; writer.flush(); 
+					writer.println(res) ; writer.flush();
 				}
 				finally {
 					if (p != null) {
@@ -120,7 +120,7 @@ public class PasswordValidator implements Runnable {
 		finally {
 			try {
 				if (client != null) {
-					client.close(); 
+					client.close();
 				}
 			}
 			catch(IOException ioe){

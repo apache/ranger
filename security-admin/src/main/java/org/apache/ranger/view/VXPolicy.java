@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -103,7 +103,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	protected String services;
 	/**
 	 * Resource/Policy Status, boolean values : true/false
-	 * 
+	 *
 	 */
 	protected boolean isEnabled;
 	/**
@@ -132,7 +132,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>policyName</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>policyName</b>.
 	 */
 	public String getPolicyName() {
@@ -142,7 +142,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>policyName</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyName
 	 *            Value to set member attribute <b>policyName</b>
 	 */
@@ -153,7 +153,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>resourceName</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b>resourceName</b>
 	 */
@@ -163,7 +163,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>resourceName</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>resourceName</b>.
 	 */
 	public String getResourceName() {
@@ -173,7 +173,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>description</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b>description</b>
 	 */
@@ -183,7 +183,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>description</b>.
 	 */
 	public String getDescription() {
@@ -193,7 +193,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>assetName</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param assetName
 	 *            Value to set member attribute <b>assetName</b>
 	 */
@@ -203,7 +203,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>repositoryName</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>repositoryName</b>.
 	 */
 	public String getRepositoryName() {
@@ -213,7 +213,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>assetType</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param assetType
 	 *            Value to set member attribute <b>assetType</b>
 	 */
@@ -223,7 +223,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>repositoryType</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>repositoryType</b>.
 	 */
 	public String getRepositoryType() {
@@ -233,7 +233,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>permMapList</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param permMapList
 	 *            Value to set member attribute <b>permMapList</b>
 	 */
@@ -243,7 +243,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>userPermList</b>
-	 * 
+	 *
 	 * @return List<VXPermObj> - value of member attribute <b>permMapList</b>.
 	 */
 	public List<VXPermObj> getPermMapList() {
@@ -253,7 +253,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>tables</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param tables
 	 *            Value to set member attribute <b>tables</b>
 	 */
@@ -263,7 +263,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>tables</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>tables</b>.
 	 */
 	public String getTables() {
@@ -273,7 +273,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>columnFamilies</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param columnFamilies
 	 *            Value to set member attribute <b>columnFamilies</b>
 	 */
@@ -283,7 +283,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>columnFamilies</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>columnFamilies</b>.
 	 */
 	public String getColumnFamilies() {
@@ -293,7 +293,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>columns</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param columns
 	 *            Value to set member attribute <b>columns</b>
 	 */
@@ -303,7 +303,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>columns</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>columns</b>.
 	 */
 	public String getColumns() {
@@ -313,7 +313,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>databases</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param databases
 	 *            Value to set member attribute <b>databases</b>
 	 */
@@ -323,7 +323,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>databases</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>databases</b>.
 	 */
 	public String getDatabases() {
@@ -333,7 +333,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>udfs</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param udfs
 	 *            Value to set member attribute <b>udfs</b>
 	 */
@@ -343,7 +343,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>udfs</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>udfs</b>.
 	 */
 	public String getUdfs() {
@@ -352,7 +352,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>tableType</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>tableType</b>.
 	 */
 	public String getTableType() {
@@ -362,7 +362,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>tableType</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param tableType
 	 *            Value to set member attribute <b>tableType</b>
 	 */
@@ -372,7 +372,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>columnType</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>columnType</b>.
 	 */
 	public String getColumnType() {
@@ -382,7 +382,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>columnType</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param columnType
 	 *            Value to set member attribute <b>columnType</b>
 	 */
@@ -392,7 +392,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>topologies</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>topologies</b>.
 	 */
 	public String getTopologies() {
@@ -402,7 +402,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>topologies</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param topologies
 	 *            Value to set member attribute <b>topologies</b>
 	 */
@@ -412,7 +412,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>services</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>services</b>.
 	 */
 	public String getServices() {
@@ -422,7 +422,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>services</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param services
 	 *            Value to set member attribute <b>services</b>
 	 */
@@ -433,7 +433,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>resourceStatus</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isEnabled
 	 *            Value to set member attribute <b>isEnable</b>
 	 */
@@ -443,7 +443,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isEnable</b>
-	 * 
+	 *
 	 * @return boolean - value of member attribute <b>isEnable</b>.
 	 */
 	public boolean getIsEnabled() {
@@ -453,7 +453,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>isRecursive</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isRecursive
 	 *            Value to set member attribute <b>isRecursive</b>
 	 */
@@ -463,7 +463,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isRecursive</b>
-	 * 
+	 *
 	 * @return boolean - value of member attribute <b>isRecursive</b>.
 	 */
 	public Boolean getIsRecursive() {
@@ -473,7 +473,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>isAuditEnabled</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isAuditEnabled
 	 *            Value to set member attribute <b>isAuditEnabled</b>
 	 */
@@ -483,7 +483,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isAuditEnabled</b>
-	 * 
+	 *
 	 * @return boolean - value of member attribute <b>isAuditEnabled</b>.
 	 */
 	public boolean getIsAuditEnabled() {
@@ -492,7 +492,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>version</b>.
 	 */
 	public String getVersion() {
@@ -502,7 +502,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>version</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b>version</b>
 	 */
@@ -533,7 +533,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 
 	/**
 	 * This return the bean content in string format
-	 * 
+	 *
 	 * @return formatedStr
 	 */
 	public String toString() {

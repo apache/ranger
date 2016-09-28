@@ -233,13 +233,13 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	          throw new IOException("No such algorithm storing key", e);
 	        } catch (CertificateException e) {
 	          throw new IOException("Certificate exception storing key", e);
-	        }	      
+	        }	
 	      changed = false;
 		 }catch (IOException ioe) {
 			  cache.clear();
 			  reloadKeys();
 	          throw ioe;
-	     }		 
+	     }		
 	}
 
 	@Override
@@ -366,7 +366,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 			String aliasValue=conf.get(alias);
 			if(pathValue!=null && aliasValue!=null){
 				String xaDBPassword=CredentialReader.getDecryptedString(pathValue.trim(),aliasValue.trim());		
-				if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() && 
+				if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() &&
 						!xaDBPassword.trim().equalsIgnoreCase("none")){
 					conf.set(key, xaDBPassword);
 				}else{
@@ -375,16 +375,16 @@ public class RangerKeyStoreProvider extends KeyProvider{
 			}
 		}
 	}
-    
+
     private void reloadKeys() throws IOException {
         try {
         	cache.clear();
-            loadKeys(masterKey);           
+            loadKeys(masterKey);
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Can't load Keys");
         }catch(CertificateException e){
             throw new IOException("Can't load Keys");
-        } 
+        }
     }
 	
 	/**

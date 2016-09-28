@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -387,7 +387,7 @@ public class RangerBizUtil {
 
 	/**
 	 * return response object if users is having permission on given resource
-	 * 
+	 *
 	 * @param vXResource
 	 * @param permission
 	 * @return
@@ -525,7 +525,7 @@ public class RangerBizUtil {
 
 	/**
 	 * return true id current logged in session is owned by admin
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isAdmin() {
@@ -544,7 +544,7 @@ public class RangerBizUtil {
 
 	/**
 	 * return username of currently logged in user
-	 * 
+	 *
 	 * @return
 	 */
 	public String getCurrentUserLoginId() {
@@ -561,7 +561,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns current user's userID from active user sessions
-	 * 
+	 *
 	 * @return
 	 */
 	public Long getXUserId() {
@@ -593,7 +593,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns true if user is having required permission on given Hdfs resource
-	 * 
+	 *
 	 * @param resourceName
 	 * @param xResourceList
 	 * @param xUserId
@@ -642,7 +642,7 @@ public class RangerBizUtil {
 	/**
 	 * returns true if user is having required permission on given Hbase
 	 * resource
-	 * 
+	 *
 	 * @param resourceName
 	 * @param xResourceList
 	 * @param vXResponse
@@ -731,7 +731,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns true if user is having required permission on given Hive resource
-	 * 
+	 *
 	 * @param resourceName
 	 * @param xResourceList
 	 * @param xUserId
@@ -847,7 +847,7 @@ public class RangerBizUtil {
 	/**
 	 * returns true if user is having required permission on given Hbase
 	 * resource
-	 * 
+	 *
 	 * @param resourceName
 	 * @param xResourceList
 	 * @param xUserId
@@ -855,7 +855,7 @@ public class RangerBizUtil {
 	 * @return
 	 */
 	private boolean matchKnoxPolicy(String resourceName,
-			List<XXResource> xResourceList, 
+			List<XXResource> xResourceList,
 			Long xUserId, int permission) {
 
 		String[] splittedResources = stringUtil.split(resourceName,
@@ -934,7 +934,7 @@ public class RangerBizUtil {
 	/**
 	 * returns true if user is having required permission on given STORM
 	 * resource
-	 * 
+	 *
 	 * @param resourceName
 	 * @param xResourceList
 	 * @param xUserId
@@ -1011,7 +1011,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns path without meta characters
-	 * 
+	 *
 	 * @param path
 	 * @return
 	 */
@@ -1033,7 +1033,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns random String of given length range
-	 * 
+	 *
 	 * @param minLen
 	 * @param maxLen
 	 * @return
@@ -1050,7 +1050,7 @@ public class RangerBizUtil {
 
 	/**
 	 * return random integer number for given range
-	 * 
+	 *
 	 * @param min
 	 * @param max
 	 * @return
@@ -1071,7 +1071,7 @@ public class RangerBizUtil {
 	/**
 	 * returns true if given userID is having specified permission on specified
 	 * resource
-	 * 
+	 *
 	 * @param xUserId
 	 * @param permission
 	 * @param resourceId
@@ -1115,7 +1115,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns true is given group id is in given group list
-	 * 
+	 *
 	 * @param groupId
 	 * @param xGroupList
 	 * @return
@@ -1132,7 +1132,7 @@ public class RangerBizUtil {
 	/**
 	 * returns true if given path matches in same level or sub directories with
 	 * given wild card pattern
-	 * 
+	 *
 	 * @param pathToCheck
 	 * @param wildcardPath
 	 * @return
@@ -1160,12 +1160,12 @@ public class RangerBizUtil {
 
 	/**
 	 * return List<Integer>
-	 * 
+	 *
 	 * List of all possible parent return type for some specific resourceType
-	 * 
+	 *
 	 * @param resourceType
 	 *            , assetType
-	 * 
+	 *
 	 */
 	public List<Integer> getResorceTypeParentHirearchy(int resourceType,
 			int assetType) {
@@ -1199,7 +1199,7 @@ public class RangerBizUtil {
 	/**
 	 * return true if both path matches exactly, wild card matching is not
 	 * checked
-	 * 
+	 *
 	 * @param path1
 	 * @param path2
 	 * @return
@@ -1218,7 +1218,7 @@ public class RangerBizUtil {
 	/**
 	 * return true if both path matches at same level path, this function does
 	 * not match sub directories
-	 * 
+	 *
 	 * @param pathToCheck
 	 * @param wildcardPath
 	 * @return
@@ -1253,7 +1253,7 @@ public class RangerBizUtil {
 
 	/**
 	 * returns true if first and second path are same
-	 * 
+	 *
 	 * @param pathToCheckFragment
 	 * @param wildCardPathFragment
 	 * @return
@@ -1302,7 +1302,7 @@ public class RangerBizUtil {
 	/**
 	 * This method returns true if first parameter value is equal to others
 	 * argument value passed
-	 * 
+	 *
 	 * @param checkValue
 	 * @param otherValues
 	 * @return

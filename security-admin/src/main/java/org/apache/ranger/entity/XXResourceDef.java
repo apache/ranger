@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -249,7 +249,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -259,7 +259,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -269,7 +269,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> defId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param defId
 	 *            Value to set member attribute <b> defId</b>
 	 */
@@ -279,7 +279,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>itemId</b>
-	 * 
+	 *
 	 * @return Long - value of member attribute <b>itemId</b> .
 	 */
 	public Long getItemId() {
@@ -289,7 +289,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> itemId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param itemId
 	 *            Value to set member attribute <b> itemId</b>
 	 */
@@ -299,7 +299,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>defId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>defId</b> .
 	 */
 	public Long getDefid() {
@@ -309,7 +309,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -319,7 +319,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getName() {
@@ -329,7 +329,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> type</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param type
 	 *            Value to set member attribute <b> type</b>
 	 */
@@ -339,7 +339,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>type</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>type</b> .
 	 */
 	public String getType() {
@@ -349,7 +349,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> level</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param level
 	 *            Value to set member attribute <b> level</b>
 	 */
@@ -359,7 +359,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>level</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>level</b> .
 	 */
 	public Integer getLevel() {
@@ -369,7 +369,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> parent</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param parent
 	 *            Value to set member attribute <b> parent</b>
 	 */
@@ -379,7 +379,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>parent</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>parent</b> .
 	 */
 	public Long getParent() {
@@ -389,7 +389,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> mandatory</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param mandatory
 	 *            Value to set member attribute <b> mandatory</b>
 	 */
@@ -399,7 +399,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>mandatory</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>mandatory</b> .
 	 */
 	public boolean getMandatory() {
@@ -409,7 +409,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * lookUpSupported</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param lookUpSupported
 	 *            Value to set member attribute <b> lookUpSupported</b>
 	 */
@@ -419,7 +419,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>lookUpSupported</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>lookUpSupported</b> .
 	 */
 	public boolean getLookupsupported() {
@@ -429,7 +429,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * recursiveSupported</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param recursiveSupported
 	 *            Value to set member attribute <b> recursiveSupported</b>
 	 */
@@ -439,7 +439,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>recursiveSupported</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>recursiveSupported</b> .
 	 */
 	public boolean getRecursivesupported() {
@@ -449,7 +449,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * excludesSupported</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param excludesSupported
 	 *            Value to set member attribute <b> excludesSupported</b>
 	 */
@@ -459,7 +459,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>excludesSupported</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>excludesSupported</b> .
 	 */
 	public boolean getExcludessupported() {
@@ -469,7 +469,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> matcher</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param matcher
 	 *            Value to set member attribute <b> matcher</b>
 	 */
@@ -479,7 +479,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>matcher</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>matcher</b> .
 	 */
 	public String getMatcher() {
@@ -489,7 +489,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> matcherOptions</b>
 	 * . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param matcherOptions
 	 *            Value to set member attribute <b> matcherOptions</b>
 	 */
@@ -499,7 +499,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>matcherOptions</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>matcherOptions</b> .
 	 */
 	public String getMatcheroptions() {
@@ -551,7 +551,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> label</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param label
 	 *            Value to set member attribute <b> label</b>
 	 */
@@ -561,7 +561,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>label</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>label</b> .
 	 */
 	public String getLabel() {
@@ -571,7 +571,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> description</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b> description</b>
 	 */
@@ -581,7 +581,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>description</b> .
 	 */
 	public String getDescription() {
@@ -591,7 +591,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param rbKeyLabel
 	 *            Value to set member attribute <b> rbKeyLabel</b>
 	 */
@@ -601,7 +601,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyLabel</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyLabel</b> .
 	 */
 	public String getRbkeylabel() {
@@ -611,7 +611,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>
 	 * rbKeyDescription</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param rbKeyDescription
 	 *            Value to set member attribute <b> rbKeyDescription</b>
 	 */
@@ -621,7 +621,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyDescription</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyDescription</b> .
 	 */
 	public String getRbkeydescription() {
@@ -645,7 +645,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param order
 	 *            Value to set member attribute <b> order</b>
 	 */
@@ -655,7 +655,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>order</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>order</b> .
 	 */
 	public Integer getOrder() {
@@ -676,7 +676,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -828,7 +828,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

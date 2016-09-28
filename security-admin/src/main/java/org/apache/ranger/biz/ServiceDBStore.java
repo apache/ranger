@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -191,7 +191,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RangerServiceDefService serviceDefService;
- 
+
 	@Autowired
 	RangerDaoManager daoMgr;
 
@@ -222,16 +222,16 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
-    
+
     @Autowired
     RangerBizUtil bizUtil;
-    
+
     @Autowired
     RangerPolicyWithAssignedIdService assignedIdPolicyService;
-    
+
     @Autowired
     RangerServiceWithAssignedIdService svcServiceWithAssignedId;
-    
+
     @Autowired
     RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
 
@@ -2619,7 +2619,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					lookupUser = krbName.getShortName();
 				} catch (IOException e) {
 					throw restErrorUtil.createRESTException("Please provide proper value of lookup user principal : "+ lookupPrincipal, MessageEnums.INVALID_INPUT_DATA);
-				}               
+				}
 				
 				if(LOG.isDebugEnabled()){
 					LOG.debug("Checking for Lookup User : "+lookupUser);

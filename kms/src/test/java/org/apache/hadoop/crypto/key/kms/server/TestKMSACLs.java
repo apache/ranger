@@ -26,7 +26,7 @@ import org.junit.Test;
 public class TestKMSACLs {
 
   String ipAddress = "192.168.90.1";
-  
+
   @Test
   public void testDefaults() {
     KMSACLs acls = new KMSACLs(new Configuration(false));

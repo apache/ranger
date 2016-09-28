@@ -65,14 +65,14 @@ public class RangerMasterKeyTest {
     	}
         DerbyTestUtils.startDerby();
     }
-    
+
     @AfterClass
     public static void stopServers() throws Exception {
     	if (UNRESTRICTED_POLICIES_INSTALLED) {
     		DerbyTestUtils.stopDerby();
     	}
     }
-    
+
     @Test
     public void testRangerMasterKey() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -82,26 +82,26 @@ public class RangerMasterKeyTest {
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
-        RangerKMSDB rangerkmsDb = new RangerKMSDB(RangerKeyStoreProvider.getDBKSConf());     
+        RangerKMSDB rangerkmsDb = new RangerKMSDB(RangerKeyStoreProvider.getDBKSConf());
         DaoManager daoManager = rangerkmsDb.getDaoManager();
-        
+
         String masterKeyPassword = "password0password0password0password0password0password0password0password0"
             + "password0password0password0password0password0password0password0password0password0password0"
             + "password0password0password0password0password0password0password0password0password0password0";
-        
+
         RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
         Assert.assertTrue(rangerMasterKey.generateMasterKey(masterKeyPassword));
         Assert.assertNotNull(rangerMasterKey.getMasterKey(masterKeyPassword));
-        
+
         try {
             rangerMasterKey.getMasterKey("badpass");
             Assert.fail("Failure expected on retrieving a key with the wrong password");
         } catch (Throwable t) {
             // expected
         }
-        
+
         Assert.assertNotNull(rangerMasterKey.getMasterSecretKey(masterKeyPassword));
-        
+
         try {
             rangerMasterKey.getMasterSecretKey("badpass");
             Assert.fail("Failure expected on retrieving a key with the wrong password");

@@ -136,7 +136,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> version</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param version
 	 *            Value to set member attribute <b> version</b>
 	 */
@@ -146,7 +146,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>version</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>version</b> .
 	 */
 	public Long getVersion() {
@@ -155,7 +155,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> name</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param name
 	 *            Value to set member attribute <b> name</b>
 	 */
@@ -165,7 +165,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>name</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>name</b> .
 	 */
 	public String getName() {
@@ -174,7 +174,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> implClassName</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param implClassName
 	 *            Value to set member attribute <b> implClassName</b>
 	 */
@@ -184,7 +184,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>implClassName</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>implClassName</b> .
 	 */
 	public String getImplclassname() {
@@ -193,7 +193,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> label</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param label
 	 *            Value to set member attribute <b> label</b>
 	 */
@@ -203,7 +203,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>label</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>label</b> .
 	 */
 	public String getLabel() {
@@ -212,7 +212,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> description</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param description
 	 *            Value to set member attribute <b> description</b>
 	 */
@@ -222,7 +222,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>description</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>description</b> .
 	 */
 	public String getDescription() {
@@ -250,7 +250,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> rbKeyLabel</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param rbKeyLabel
 	 *            Value to set member attribute <b> rbKeyLabel</b>
 	 */
@@ -260,7 +260,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyLabel</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyLabel</b> .
 	 */
 	public String getRbkeylabel() {
@@ -270,7 +270,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 	/**
 	 * This method sets the value to the member attribute <b> rbKeyDescription</b> . You cannot set null to the
 	 * attribute.
-	 * 
+	 *
 	 * @param rbKeyDescription
 	 *            Value to set member attribute <b> rbKeyDescription</b>
 	 */
@@ -280,7 +280,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>rbKeyDescription</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>rbKeyDescription</b> .
 	 */
 	public String getRbkeydescription() {
@@ -289,7 +289,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * This method sets the value to the member attribute <b> isEnabled</b> . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isEnabled
 	 *            Value to set member attribute <b> isEnabled</b>
 	 */
@@ -299,7 +299,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/**
 	 * Returns the value for the member attribute <b>isEnabled</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>isEnabled</b> .
 	 */
 	public boolean getIsEnabled() {
@@ -308,7 +308,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -391,7 +391,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

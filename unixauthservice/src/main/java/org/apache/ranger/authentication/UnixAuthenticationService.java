@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -87,7 +87,7 @@ public class UnixAuthenticationService {
 	
 	static private boolean enableUnixAuth = false;
 	
-	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" } ; 
+	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" } ;
 	private static final String    PROPERTY_ELEMENT_TAGNAME = "property" ;
 	private static final String    NAME_ELEMENT_TAGNAME = "name" ;
 	private static final String    VALUE_ELEMENT_TAGNAME = "value" ;
@@ -137,7 +137,7 @@ public class UnixAuthenticationService {
 		Thread newSyncProcThread = new Thread(syncProc) ;
 		newSyncProcThread.setName("UnixUserSyncThread");
 		newSyncProcThread.setDaemon(false);
-		newSyncProcThread.start(); 
+		newSyncProcThread.start();
 	}
 	
 
@@ -230,7 +230,7 @@ public class UnixAuthenticationService {
 			PasswordValidator.setValidatorProgram(validatorProg);
 		}
 		
-		String adminUsers = prop.getProperty(ADMIN_USER_LIST_PARAM) ; 
+		String adminUsers = prop.getProperty(ADMIN_USER_LIST_PARAM) ;
 		
 		if (adminUsers != null && adminUsers.trim().length() > 0) {
 			for(String u : adminUsers.split(",")) {
@@ -283,7 +283,7 @@ public class UnixAuthenticationService {
 			}
 			finally {
 				if (in != null) {
-					in.close(); 
+					in.close();
 				}
 			}
 			
@@ -293,7 +293,7 @@ public class UnixAuthenticationService {
 		}
 		
 		
-		TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());  
+		TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		
 		KeyStore trustStoreKeyStore = null ;
 		
@@ -312,12 +312,12 @@ public class UnixAuthenticationService {
 			}
 			finally {
 				if (in != null) {
-					in.close(); 
+					in.close();
 				}
 			}
 		}
 		
-		trustManagerFactory.init(trustStoreKeyStore);  
+		trustManagerFactory.init(trustStoreKeyStore);
 		
 		TrustManager[] tm = trustManagerFactory.getTrustManagers() ;
 				
@@ -325,7 +325,7 @@ public class UnixAuthenticationService {
 		
 		context.init(km, tm, random);
 		
-		SSLServerSocketFactory sf = context.getServerSocketFactory() ; 
+		SSLServerSocketFactory sf = context.getServerSocketFactory() ;
 
 		ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) ) ;
 		
@@ -355,7 +355,7 @@ public class UnixAuthenticationService {
 		
 			while ( (client = socket.accept()) != null ) {
 				Thread clientValidatorThread = new Thread(new PasswordValidator(client)) ;
-				clientValidatorThread.start(); 
+				clientValidatorThread.start();
 			}
 		} catch (IOException e) {
 			socket.close();

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -123,7 +123,7 @@ public class SecureClientLogin {
 				isValid = true;
 			}
 		} else {
-			LOG.warn("Can't find keyTab Path : "+keytabPath); 
+			LOG.warn("Can't find keyTab Path : "+keytabPath);
 		}
 		if (!(principal != null && !principal.isEmpty() && isValid)) {
 			isValid = false;
@@ -143,13 +143,13 @@ public class SecureClientLogin {
 			return replacePattern(components, hostName);
 		}
 	}
-		  
+		
 	private static String[] getComponents(String principalConfig) {
 		if (principalConfig == null)
 			return null;
 		return principalConfig.split("[/@]");
 	}
-		  
+		
 	private static String replacePattern(String[] components, String hostname)
 			throws IOException {
 		String fqdn = hostname;

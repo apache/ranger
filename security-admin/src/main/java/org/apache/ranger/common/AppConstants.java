@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -903,7 +903,7 @@ public class AppConstants extends RangerCommonEnums {
 			return "Trx Log Attribute"; //CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE
 		}
 		if( elementValue == 1015 ) {
-			return "XA AccessType Def"; //CLASS_TYPE_XA_ACCESS_TYPE_DEF 
+			return "XA AccessType Def"; //CLASS_TYPE_XA_ACCESS_TYPE_DEF
 		}
 		if( elementValue == 1016 ) {
 			return "XA AccessType Def Grants"; //CLASS_TYPE_XA_ACCESS_TYPE_DEF_GRANTS
@@ -936,7 +936,7 @@ public class AppConstants extends RangerCommonEnums {
 			return "RangerPolicy ItemGrp Map"; //CLASS_TYPE_RANGER_POLICY_ITEM_GRP_PERM
 		}
 		if( elementValue == 1026 ) {
-			return "RangerPolicy ItemUser Map"; //CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM 
+			return "RangerPolicy ItemUser Map"; //CLASS_TYPE_RANGER_POLICY_ITEM_USER_PERM
 		}
 		if( elementValue == 1027 ) {
 			return "RangerPolicy Resource"; //CLASS_TYPE_RANGER_POLICY_RESOURCE

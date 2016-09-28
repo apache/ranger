@@ -32,7 +32,7 @@ import org.apache.ranger.kms.dao.DaoManager;
 public class Ranger2JKSUtil {
 
 	private static final String DEFAULT_KEYSTORE_TYPE = "jceks" ;
-	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password" ; 
+	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password" ;
 	
 	public static void showUsage() {
 		System.err.println("USAGE: java " + Ranger2JKSUtil.class.getName() + " <KMS_FileName> [KeyStoreType]") ;
@@ -78,7 +78,7 @@ public class Ranger2JKSUtil {
 		try {
 			char[] keyStorePassword = getPasswordFromConsole("Enter Password for the keystore FILE :") ;
 			char[] keyPassword = getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:") ;
-			Configuration conf = RangerKeyStoreProvider.getDBKSConf(); 
+			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
 			RangerKeyStore dbStore = new RangerKeyStore(daoManager);
@@ -96,7 +96,7 @@ public class Ranger2JKSUtil {
 						out.close();
 					} catch (Exception e) {
 						throw new RuntimeException("ERROR:  Unable to close file stream for [" + keyStoreFileName + "]", e) ;
-					} 
+					}
 				}
 			}
 		}
@@ -119,8 +119,8 @@ public class Ranger2JKSUtil {
 	            byte[] e=new byte[l];
 	            System.arraycopy(b,0, e, 0, l);
 	            ret = new String(e, Charset.defaultCharset());
-	        } 
-	    } else { 
+	        }
+	    } else {
 	    	char[] pwd = c.readPassword(prompt + " ") ;
 	    	if (pwd == null) {
 	    		ret = null ;

@@ -64,21 +64,21 @@ public class RangerAdminClientImpl implements RangerAdminClient {
     }
 
     public void grantAccess(GrantRevokeRequest request) throws Exception {
-        
+
     }
 
     public void revokeAccess(GrantRevokeRequest request) throws Exception {
-        
+
     }
 
     public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception {
         return null;
-        
+
     }
 
     public List<String> getTagTypes(String tagTypePattern) throws Exception {
         return null;
     }
 
-    
+
 }

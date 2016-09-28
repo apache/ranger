@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -37,14 +37,14 @@ public class XMLFormatter implements JisqlFormatter {
     /**
      * Sets a the option list for this formatter.  This is a no-op in the
      * XMLFormatter.
-     * 
+     *
      * @param parser the OptionParser to use.
-     * 
+     *
      */
     public void setSupportedOptions( OptionParser parser ) {
     	/* no options for the XMLFormatter */
     }
-    
+
     /**
      * Consumes any options that were specified on the command line. There are
      * no options to set for the XMLFormatter so this method is a no-op.
@@ -57,7 +57,7 @@ public class XMLFormatter implements JisqlFormatter {
     public void consumeOptions( OptionSet options ) throws Exception {
     	/* no options for the XMLFormatter */
     }
-    
+
     /**
      * Called to output a usage message to the command line window.  This
      * message should contain information on how to call the formatter.
@@ -68,7 +68,7 @@ public class XMLFormatter implements JisqlFormatter {
     public void usage( PrintStream out ) {
     	/* no options for the XMLFormatter */
     }
-    
+
 
     /**
      * Outputs a header for a query.  For the XMLFormater this outputs the XML
@@ -85,7 +85,7 @@ public class XMLFormatter implements JisqlFormatter {
         out.println( "\" ?>" );
     }
 
-    
+
     /**
      * Called to output the data.  Note that for the XMLFormatter null fields are
      * just output as an empty field.
@@ -111,12 +111,12 @@ public class XMLFormatter implements JisqlFormatter {
             	out.print( metaData.getColumnName( i ).trim() );
             	out.print( ">" );
             }
-            
+
             out.println();
         }
     }
 
-    
+
     /**
      * Outputs a footer for a query. This method isn't used in the XMLFormatter.
      *

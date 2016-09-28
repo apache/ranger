@@ -130,7 +130,7 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("  KMS Hadoop Version: " + VersionInfo.getVersion());
       LOG.info("-------------------------------------------------------------");
 
-      
+
       kmsAcls = getAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
       kmsAcls.startReloader();
 
@@ -200,7 +200,7 @@ public class KMSWebApp implements ServletContextListener {
             new KeyAuthorizationKeyProvider(
                 keyProviderCryptoExtension, kmsAcls);
       }
-        
+
       LOG.info("Initialized KeyProviderCryptoExtension "
           + keyProviderCryptoExtension);
       final int defaultBitlength = kmsConf

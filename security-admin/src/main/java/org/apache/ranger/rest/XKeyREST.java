@@ -71,7 +71,7 @@ public class XKeyREST {
 	
 	/**
 	 * Implements the traditional search functionalities for Keys
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -90,7 +90,7 @@ public class XKeyREST {
 	}
 	
 	/**
-	 * Implements the Rollover key functionality 
+	 * Implements the Rollover key functionality
 	 * @param vXKey
 	 * @return
 	 */
@@ -165,7 +165,7 @@ public class XKeyREST {
 	}
 	
 	/**
-	 * 
+	 *
 	 * @param name
 	 * @param provider
 	 * @return
@@ -201,7 +201,7 @@ public class XKeyREST {
 				message = obj.getString("message");
 			} catch (JSONException e1) {
 				message = e1.getMessage();
-			}			 
+			}			
 		}			
 		if(!(message==null) && !(message.isEmpty()) && message.contains("Connection refused")){
 			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";			

@@ -49,7 +49,7 @@ public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContri
   }
 
   @Override
-  public void contributeFilter( DeploymentContext context, Provider provider, Service service, 
+  public void contributeFilter( DeploymentContext context, Provider provider, Service service,
       ResourceDescriptor resource, List<FilterParamDescriptor> params ) {
     if (params == null) {
       params = new ArrayList<FilterParamDescriptor>();

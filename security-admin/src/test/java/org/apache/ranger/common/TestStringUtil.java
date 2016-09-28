@@ -37,7 +37,7 @@ public class TestStringUtil {
 	
 	@Test
 	public void testNullValidatePassword(){
-		String password=null; 
+		String password=null;
 		String[] invalidValues={"aa","bb","aa12345dd"};
 		boolean value=stringUtil.validatePassword(password, invalidValues);
 		Assert.assertFalse(value);
@@ -45,7 +45,7 @@ public class TestStringUtil {
 	
 	@Test
 	public void testValidatePassword(){
-		String password="aa1234ddas12"; 
+		String password="aa1234ddas12";
 		String[] invalidValues={"aa","bb","aa12345dd"};
 		boolean value=stringUtil.validatePassword(password, invalidValues);
 		Assert.assertTrue(password.length() >= 8);
@@ -54,7 +54,7 @@ public class TestStringUtil {
 	
 	@Test
 	public void testNotValidatePassword(){
-		String password="aassasavcvcvc"; 
+		String password="aassasavcvcvc";
 		String[] invalidValues={"aa","bb","aa12345dd"};
 		boolean value=stringUtil.validatePassword(password, invalidValues);
 		Assert.assertTrue(password.length() >= 8);

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -161,7 +161,7 @@ public class TestRangerServiceValidator {
 
 	@Test
 	public void test_isValid_happyPath() throws Exception {
-		// create a service def with some required parameters 
+		// create a service def with some required parameters
 		Object[][] serviceDefInput = new Object[][] {
 				{ "param1", true },
 				{ "param2", true },
@@ -178,7 +178,7 @@ public class TestRangerServiceValidator {
 		when(service.getType()).thenReturn("aType");
 		// contains an extra parameter (param6) and one optional is missing(param4)
 		String[] configs = new String[] { "param1", "param2", "param3", "param5", "param6" };
-		Map<String, String> configMap = _utils.createMap(configs);  
+		Map<String, String> configMap = _utils.createMap(configs);
 		when(service.getConfigs()).thenReturn(configMap);
 		// wire then into the store
 		// service does not exists

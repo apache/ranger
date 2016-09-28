@@ -42,7 +42,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     private YarnScheduler scheduler = null;
 
     public YarnScheduler getScheduler() { return scheduler; }
-    
+
     public List<String> getQueueNames() {
     	List<String> ret = new ArrayList<String>();
 
@@ -52,7 +52,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
 
     	return ret;
     }
-    
+
 
     @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )

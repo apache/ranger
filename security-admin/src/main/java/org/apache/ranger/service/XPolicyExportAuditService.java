@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -42,9 +42,9 @@ public class XPolicyExportAuditService extends XPolicyExportAuditServiceBase<XXP
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("repositoryName", "obj.repositoryName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("startDate", "obj.createTime", 
+		searchFields.add(new SearchField("startDate", "obj.createTime",
 				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField("endDate", "obj.createTime", 
+		searchFields.add(new SearchField("endDate", "obj.createTime",
 				DATA_TYPE.DATE, SEARCH_TYPE.LESS_EQUAL_THAN));
 		
 		sortFields.add(new SortField("createDate", "obj.createTime", true, SORT_ORDER.DESC));

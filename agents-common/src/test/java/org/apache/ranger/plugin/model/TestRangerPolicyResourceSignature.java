@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -162,7 +162,7 @@ public class TestRangerPolicyResourceSignature {
 		String expectedVersion = "version=1";
 		String expectedType = "type=0";
 		String expectedResource = "{" +
-			"col={values=[col1, col2, col3],excludes=false,recursive=true}, " + 
+			"col={values=[col1, col2, col3],excludes=false,recursive=true}, " +
 			"db={values=[db1, db2],excludes=false,recursive=false}, " +
 			"table={values=[tbl1, tbl2, tbl3],excludes=true,recursive=false}" +
 		"}";

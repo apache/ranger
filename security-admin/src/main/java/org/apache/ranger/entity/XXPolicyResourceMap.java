@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -70,7 +70,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -80,7 +80,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -90,7 +90,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> resourceId</b> .
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param resourceId
 	 *            Value to set member attribute <b> resourceId</b>
 	 */
@@ -100,7 +100,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>resourceId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>resourceId</b> .
 	 */
 	public Long getResourceid() {
@@ -110,7 +110,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> value</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param value
 	 *            Value to set member attribute <b> value</b>
 	 */
@@ -120,7 +120,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>value</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>value</b> .
 	 */
 	public String getValue() {
@@ -130,7 +130,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param order
 	 *            Value to set member attribute <b> order</b>
 	 */
@@ -140,7 +140,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/**
 	 * Returns the value for the member attribute <b>order</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>order</b> .
 	 */
 	public Integer getOrder() {
@@ -149,7 +149,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -200,7 +200,7 @@ public class XXPolicyResourceMap extends XXDBBase implements
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

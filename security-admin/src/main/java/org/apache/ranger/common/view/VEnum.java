@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -48,7 +48,7 @@ public class VEnum extends ViewBaseBean implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>enumName</b>. You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param enumName
 	 *            Value to set member attribute <b>enumName</b>
 	 */
@@ -58,7 +58,7 @@ public class VEnum extends ViewBaseBean implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>enumName</b>
-	 * 
+	 *
 	 * @return String - value of member attribute <b>enumName</b>.
 	 */
 	public String getEnumName() {
@@ -68,7 +68,7 @@ public class VEnum extends ViewBaseBean implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b>elementList</b>.
 	 * You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param elementList
 	 *            Value to set member attribute <b>elementList</b>
 	 */
@@ -78,7 +78,7 @@ public class VEnum extends ViewBaseBean implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>elementList</b>
-	 * 
+	 *
 	 * @return List<VEnumElement> - value of member attribute
 	 *         <b>elementList</b>.
 	 */
@@ -93,7 +93,7 @@ public class VEnum extends ViewBaseBean implements java.io.Serializable {
 
 	/**
 	 * This return the bean content in string format
-	 * 
+	 *
 	 * @return formatedStr
 	 */
 	public String toString() {

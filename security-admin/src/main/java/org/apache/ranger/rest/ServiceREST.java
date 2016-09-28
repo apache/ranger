@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -160,7 +160,7 @@ public class ServiceREST {
 	GUIDUtil guidUtil;
 	
 	@Autowired
-	RangerValidatorFactory validatorFactory; 
+	RangerValidatorFactory validatorFactory;
 
 	@Autowired
 	RangerDaoManager daoManager;
@@ -1844,11 +1844,11 @@ public class ServiceREST {
 				throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
 			}
 		 }
- 
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
-   
+
 		return ret;
 	}
 	
@@ -1943,7 +1943,7 @@ public class ServiceREST {
 		try {
 			String ipAddress = request.getHeader("X-FORWARDED-FOR");
 
-			if (ipAddress == null) {  
+			if (ipAddress == null) {
 				ipAddress = request.getRemoteAddr();
 			}
 
@@ -2316,7 +2316,7 @@ public class ServiceREST {
 	}
 
 	private HashMap<String, Object> getCSRFPropertiesMap() {
-		HashMap<String, Object> map = new HashMap<String, Object>();  
+		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));
 		map.put(CUSTOM_HEADER_PARAM, PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM, RangerCSRFPreventionFilter.HEADER_DEFAULT));
 		map.put(BROWSER_USER_AGENT_PARAM, PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT));

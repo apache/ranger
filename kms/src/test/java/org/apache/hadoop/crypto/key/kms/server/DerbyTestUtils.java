@@ -24,26 +24,26 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public final class DerbyTestUtils {
-    
+
     public static void startDerby() throws Exception {
         // Start Apache Derby
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
-        
+
         Properties props = new Properties();
         Connection conn = DriverManager.getConnection("jdbc:derby:memory:derbyDB;create=true", props);
-        
+
         Statement statement = conn.createStatement();
         statement.execute("CREATE SCHEMA KMSADMIN");
-        
+
         statement.execute("SET SCHEMA KMSADMIN");
-        
+
         // Create masterkey table
         statement.execute("CREATE SEQUENCE RANGER_MASTERKEY_SEQ START WITH 1 INCREMENT BY 1");
         String tableCreationString = "CREATE TABLE ranger_masterkey (id VARCHAR(20) NOT NULL PRIMARY KEY, create_time DATE,"
             + "update_time DATE, added_by_id VARCHAR(20), upd_by_id VARCHAR(20),"
             + "cipher VARCHAR(255), bitlength VARCHAR(11), masterkey VARCHAR(2048))";
         statement.execute(tableCreationString);
-        
+
         // Create keys table
         statement.execute("CREATE SEQUENCE RANGER_KEYSTORE_SEQ START WITH 1 INCREMENT BY 1");
         statement.execute("CREATE TABLE ranger_keystore(id VARCHAR(20) NOT NULL PRIMARY KEY, create_time DATE,"
@@ -54,7 +54,7 @@ public final class DerbyTestUtils {
 
         conn.close();
     }
-    
+
     public static void stopDerby() throws Exception {
         try {
             DriverManager.getConnection("jdbc:derby:memory:derbyDB;drop=true");

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -234,7 +234,7 @@ public class RangerSearchUtil extends SearchUtil {
 		for (SearchField searchField : searchFields) {
 			int startWhereLen = whereClause.length();
 
-			if (searchField.getFieldName() == null && searchField.getCustomCondition() == null) { 
+			if (searchField.getFieldName() == null && searchField.getCustomCondition() == null) {
 				continue;
 			}
 
@@ -284,8 +284,8 @@ public class RangerSearchUtil extends SearchUtil {
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()), 
-						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA, 
+				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()),
+						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA,
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
@@ -353,8 +353,8 @@ public class RangerSearchUtil extends SearchUtil {
 					query.setParameter(searchField.getClientFieldName(), boolFieldValue);
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()), 
-						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA, 
+				Date fieldValue = restErrorUtil.parseDate(searchCriteria.getParam(searchField.getClientFieldName()),
+						"Invalid value for " + searchField.getClientFieldName(), MessageEnums.INVALID_INPUT_DATA,
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
 					query.setParameter(searchField.getClientFieldName(), fieldValue);

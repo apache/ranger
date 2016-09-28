@@ -42,13 +42,13 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 
 /**
- * InMemoryJAASConfiguration 
- * 
+ * InMemoryJAASConfiguration
+ *
  * An utility class - which has a static method init to load all JAAS configuration from Application properties file (eg: kafka.properties) and
  * set it as part of the default lookup configuration for all JAAS configuration lookup.
- * 
+ *
  * Example settings in application.properties:
- * 
+ *
  * xasecure.audit.jaas.KafkaClient.loginModuleName = com.sun.security.auth.module.Krb5LoginModule
  * xasecure.audit.jaas.KafkaClient.loginModuleControlFlag = required
  * xasecure.audit.jaas.KafkaClient.option.useKeyTab = true
@@ -64,7 +64,7 @@ import javax.security.auth.login.Configuration;
  * xasecure.audit.jaas.MyClient.0.option.serviceName = kafka
  * xasecure.audit.jaas.MyClient.0.option.keyTab = /etc/security/keytabs/kafka_client.keytab
  * xasecure.audit.jaas.MyClient.0.option.principal = kafka-client-1@EXAMPLE.COM
- * 
+ *
  * xasecure.audit.jaas.MyClient.1.loginModuleName = com.sun.security.auth.module.Krb5LoginModule
  * xasecure.audit.jaas.MyClient.1.loginModuleControlFlag = optional
  * xasecure.audit.jaas.MyClient.1.option.useKeyTab = true
@@ -176,27 +176,27 @@ public final class InMemoryJAASConfiguration extends Configuration {
         } else {
             throw new Exception("Failed to load JAAS application properties: configuration NULL or empty!");
         }
-        
+
         LOG.debug("<== InMemoryJAASConfiguration.init()");
     }
 
     public static void init(Properties properties) throws Exception {
     	LOG.debug("==> InMemoryJAASConfiguration.init()");
-        
+
     	if (properties != null && MapUtils.isNotEmpty(properties)) {
         	InMemoryJAASConfiguration conf = new InMemoryJAASConfiguration(properties);
             Configuration.setConfiguration(conf);
         } else {
             throw new Exception("Failed to load JAAS application properties: properties NULL or empty!");
         }
-        
+
         LOG.debug("<== InMemoryJAASConfiguration.init()");
     }
 
     @Override
     public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
         LOG.trace("==> InMemoryJAASConfiguration.getAppConfigurationEntry( {} )", name);
-       
+
         AppConfigurationEntry[] ret = null;
 		if (parent != null) {
         	ret = parent.getAppConfigurationEntry(name);

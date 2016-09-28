@@ -611,7 +611,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		}
 		return grantedAuths;
 	}
- 
+
 	public Authentication getAuthenticationWithGrantedAuthority(Authentication authentication){
 		UsernamePasswordAuthenticationToken result=null;
 		if(authentication!=null && authentication.isAuthenticated()){

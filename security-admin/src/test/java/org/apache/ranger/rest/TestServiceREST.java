@@ -998,7 +998,7 @@ public class TestServiceREST {
 	public void test30getPolicyFromEventTime() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 
-		String strdt = new Date().toString(); 
+		String strdt = new Date().toString();
 		String userName="Admin";
 		Set<String> userGroupsList = new HashSet<String>();
 		userGroupsList.add("group1");

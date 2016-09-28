@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -76,7 +76,7 @@ public class TestTimedExecutor {
 		 */
 		CountDownLatch latch = new CountDownLatch(10);
 		// Callables will record exception in this map
-		final ConcurrentMap<String, AtomicInteger> results = new ConcurrentHashMap<String, AtomicInteger>(); 
+		final ConcurrentMap<String, AtomicInteger> results = new ConcurrentHashMap<String, AtomicInteger>();
 		for (int i = 0; i < 10; i++) {
 			LookupTask lookupTask = new LookupTask(i, semaphore);
 			TimedTask timedTask = new TimedTask(_executor, lookupTask, 1, TimeUnit.SECONDS, results, latch);
@@ -186,5 +186,5 @@ public class TestTimedExecutor {
 	}
 	
 	private TimedExecutorConfigurator _configurator;
-	private TimedExecutor _executor = new TimedExecutor(); 
+	private TimedExecutor _executor = new TimedExecutor();
 }

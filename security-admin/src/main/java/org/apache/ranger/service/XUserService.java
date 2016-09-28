@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -104,7 +104,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		
 		searchFields.add(new SearchField("userRoleList", "xXPortalUserRole.userRole",
 				SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL,
-				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole", 
+				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole",
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 		
 		searchFields.add(new SearchField("isVisible", "obj.isVisible",

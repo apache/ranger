@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -66,15 +66,15 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	      "User:%s not allowed to do '%s'";
 
 	  public static final int RELOADER_SLEEP_MILLIS = 1000;
-	  
+	
 	  private static final Map<KMSACLsType.Type, String> ACCESS_TYPE_MAP = new HashMap<>();
-	  
+	
 	  private volatile Map<Type, AccessControlList> blacklistedAcls;
-	  
+	
 	  private long lastReload;
 
 	  private ScheduledExecutorService executorService;
-	  
+	
 	  public static final String ACCESS_TYPE_DECRYPT_EEK   	= "decrypteek";
 	  public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
 	  public static final String ACCESS_TYPE_GET_METADATA  	= "getmetadata";
@@ -83,7 +83,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  public static final String ACCESS_TYPE_SET_KEY_MATERIAL= "setkeymaterial";
 	  public static final String ACCESS_TYPE_ROLLOVER       = "rollover";
 	  public static final String ACCESS_TYPE_CREATE       	= "create";
-	  public static final String ACCESS_TYPE_DELETE       	= "delete";	  
+	  public static final String ACCESS_TYPE_DELETE       	= "delete";	
 
 	  private static volatile RangerKMSPlugin kmsPlugin = null;
 
@@ -101,7 +101,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	   * Constant for the configuration property that indicates the keytab file path.
 	   */
 	  public static final String KEYTAB = TYPE + ".keytab";
-	  
+	
 	  static {
 		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.CREATE, RangerKmsAuthorizer.ACCESS_TYPE_CREATE);
 		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.DELETE, RangerKmsAuthorizer.ACCESS_TYPE_DELETE);
@@ -117,7 +117,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  RangerKmsAuthorizer(Configuration conf) {
 		  LOG.info("RangerKmsAuthorizer(conf)...");
 		  if (conf == null) {
-		      conf = loadACLs();		      
+		      conf = loadACLs();		
 		  }
 		  authWithKerberos(conf);
 		  setKMSACLs(conf);	
@@ -149,7 +149,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  public RangerKmsAuthorizer() {
 	    this(null);
 	  }
-	  
+	
 	  @Override
 	  public void run() {
 		  try {
@@ -161,7 +161,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		          String.format("Could not reload ACLs file: '%s'", ex.toString()), ex);
 		  }
 	  }
-	  
+	
 	  private Configuration loadACLs() {
 		  LOG.debug("Loading ACLs file");
 		  lastReload = System.currentTimeMillis();
@@ -208,7 +208,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    if(!ret){
 		    	LOG.debug("Operation "+rangerAccessType+" blocked in the blacklist for user "+ugi.getUserName());
 		    }
-		    
+		
 			if(plugin != null && ret) {				
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
@@ -221,7 +221,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 			return ret;
 	  }
-	  
+	
 	  public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName, String clientIp) {
 		  if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + " , "+keyName+")");
@@ -234,7 +234,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    if(!ret){
 		    	LOG.debug("Operation "+rangerAccessType+" blocked in the blacklist for user "+ugi.getUserName());
 		    }
-		    
+		
 			if(plugin != null && ret) {				
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);

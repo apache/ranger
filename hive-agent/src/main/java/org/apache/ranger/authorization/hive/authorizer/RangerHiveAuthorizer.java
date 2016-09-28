@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -436,14 +436,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		List<HivePrivilegeObject> ret = null;
 
 		// bail out early if nothing is there to validate!
-		if (objs == null) { 
+		if (objs == null) {
 			LOG.debug("filterListCmdObjects: meta objects list was null!");
 		} else if (objs.isEmpty()) {
 			LOG.debug("filterListCmdObjects: meta objects list was empty!");
 			ret = objs;
 		} else if (getCurrentUserGroupInfo() == null) {
 			/*
-			 * This is null for metastore and there doesn't seem to be a way to tell if one is running as metastore or hiveserver2! 
+			 * This is null for metastore and there doesn't seem to be a way to tell if one is running as metastore or hiveserver2!
 			 */
 			LOG.warn("filterListCmdObjects: user information not available");
 			ret = objs;

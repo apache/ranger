@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -94,7 +94,7 @@ public class UserREST {
 
 	/**
 	 * Implements the traditional search functionalities for UserProfile
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -144,7 +144,7 @@ public class UserREST {
 
 	/**
 	 * Return the VUserProfile for the given userId
-	 * 
+	 *
 	 * @param userId
 	 * @return
 	 */
@@ -237,7 +237,7 @@ public class UserREST {
 
 	/**
 	 * Deactivate the user
-	 * 
+	 *
 	 * @param userId
 	 * @return
 	 */
@@ -258,7 +258,7 @@ public class UserREST {
 
 	/**
 	 * This method returns the VUserProfile for the current session
-	 * 
+	 *
 	 * @param request
 	 * @return
 	 */
@@ -287,7 +287,7 @@ public class UserREST {
 		return null;
 	}
 
-	/**	  
+	/**	
 	 * @param userId
 	 * @param changePassword
 	 * @return
@@ -313,8 +313,8 @@ public class UserREST {
 		return ret;
 	}
 
-	/**	 
-	 * 
+	/**	
+	 *
 	 * @param userId
 	 * @param changeEmail
 	 * @return

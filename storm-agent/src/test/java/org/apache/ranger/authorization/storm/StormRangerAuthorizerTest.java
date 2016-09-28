@@ -32,23 +32,23 @@ import org.junit.Test;
 /**
  * A simple test that wires a WordSpout + WordCounterBolt into a topology and runs it. The "RangerStormAuthorizer" takes care of authorization.
  * The policies state that "bob" can do anything with the "word-count" topology. In addition, "bob" can create/kill the "temp*" topologies, but do
- * nothing else. 
+ * nothing else.
  */
 public class StormRangerAuthorizerTest {
-    
+
     private static LocalCluster cluster;
-    
+
     @org.junit.BeforeClass
     public static void setup() throws Exception {
         cluster = new LocalCluster();
-        
+
         final Config conf = new Config();
         conf.setDebug(true);
-        
-        final TopologyBuilder builder = new TopologyBuilder();        
+
+        final TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("words", new WordSpout());
         builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
-        
+
         // bob can create a new topology
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
@@ -58,9 +58,9 @@ public class StormRangerAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
-    
+
     @org.junit.AfterClass
     public static void cleanup() throws Exception {
         final Subject subject = new Subject();
@@ -71,21 +71,21 @@ public class StormRangerAuthorizerTest {
                 return null;
             }
         });
-        
+
         cluster.shutdown();
         System.clearProperty("storm.conf.file");
     }
-    
+
     // "bob" can't create topologies other than "word-count" and "temp*"
     @Test
     public void testCreateTopologyBob() throws Exception {
         final Config conf = new Config();
         conf.setDebug(true);
-        
-        final TopologyBuilder builder = new TopologyBuilder();        
+
+        final TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("words", new WordSpout());
         builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
-        
+
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
         Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
@@ -96,7 +96,7 @@ public class StormRangerAuthorizerTest {
                 } catch (Throwable ex) {
                     // expected
                 }
-                
+
                 return null;
             }
         });
@@ -108,19 +108,19 @@ public class StormRangerAuthorizerTest {
         subject.getPrincipals().add(new SimplePrincipal("bob"));
         Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
-                
+
                 // Deactivate "word-count"
                 cluster.deactivate("word-count");
-                
+
                 // Create a new topology called "temp1"
                 final Config conf = new Config();
                 conf.setDebug(true);
-                
-                final TopologyBuilder builder = new TopologyBuilder();        
+
+                final TopologyBuilder builder = new TopologyBuilder();
                 builder.setSpout("words", new WordSpout());
                 builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
                 cluster.submitTopology("temp1", conf, builder.createTopology());
-                
+
                 // Try to deactivate "temp1"
                 try {
                     cluster.deactivate("temp1");
@@ -128,13 +128,13 @@ public class StormRangerAuthorizerTest {
                 } catch (Throwable ex) {
                     // expected
                 }
-                
+
                 // Re-activate "word-count"
                 cluster.activate("word-count");
-                
+
                 // Kill temp1
                 cluster.killTopology("temp1");
-                
+
                 return null;
             }
         });
@@ -147,16 +147,16 @@ public class StormRangerAuthorizerTest {
         Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 RebalanceOptions options = new RebalanceOptions();
-                
+
                 // Create a new topology called "temp2"
                 final Config conf = new Config();
                 conf.setDebug(true);
-                
-                final TopologyBuilder builder = new TopologyBuilder();        
+
+                final TopologyBuilder builder = new TopologyBuilder();
                 builder.setSpout("words", new WordSpout());
                 builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
                 cluster.submitTopology("temp2", conf, builder.createTopology());
-                
+
                 // Try to rebalance "temp2"
                 try {
                     cluster.rebalance("temp2", options);
@@ -164,20 +164,20 @@ public class StormRangerAuthorizerTest {
                 } catch (Throwable ex) {
                     // expected
                 }
-                
+
                 // Kill temp2
                 cluster.killTopology("temp2");
-                
+
                 return null;
             }
         });
     }
 
-    
+
     private static class SimplePrincipal implements Principal {
-        
+
         private final String name;
-        
+
         public SimplePrincipal(String name) {
             this.name = name;
         }
@@ -186,6 +186,6 @@ public class StormRangerAuthorizerTest {
         public String getName() {
             return name;
         }
-        
+
     }
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -106,7 +106,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> id</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param id
 	 *            Value to set member attribute <b> id</b>
 	 */
@@ -116,7 +116,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>id</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>id</b> .
 	 */
 	public Long getId() {
@@ -141,7 +141,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> policyId</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param policyId
 	 *            Value to set member attribute <b> policyId</b>
 	 */
@@ -151,7 +151,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>policyId</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>policyId</b> .
 	 */
 	public Long getPolicyid() {
@@ -161,7 +161,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> delegateAdmin</b>
 	 * . You cannot set null to the attribute.
-	 * 
+	 *
 	 * @param delegateAdmin
 	 *            Value to set member attribute <b> delegateAdmin</b>
 	 */
@@ -171,7 +171,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>delegateAdmin</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>delegateAdmin</b> .
 	 */
 	public Boolean getDelegateAdmin() {
@@ -181,7 +181,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> itemType</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param itemType
 	 *            Value to set member attribute <b> itemType</b>
 	 */
@@ -191,7 +191,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>itemType</b>
-	 * 
+	 *
 	 * @return Integer - value of member attribute <b>itemType</b> .
 	 */
 	public Integer getItemType() {
@@ -201,7 +201,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> isEnabled</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param isEnabled
 	 *            Value to set member attribute <b> isEnabled</b>
 	 */
@@ -211,7 +211,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>isEnabled</b>
-	 * 
+	 *
 	 * @return Boolean - value of member attribute <b>isEnabled</b> .
 	 */
 	public Boolean getIsEnabled() {
@@ -221,7 +221,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> comments</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param comments
 	 *            Value to set member attribute <b> comments</b>
 	 */
@@ -231,7 +231,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>comments</b>
-	 * 
+	 *
 	 * @return Boolean - value of member attribute <b>comments</b> .
 	 */
 	public String getComments() {
@@ -241,7 +241,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
-	 * 
+	 *
 	 * @param order
 	 *            Value to set member attribute <b> order</b>
 	 */
@@ -251,7 +251,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/**
 	 * Returns the value for the member attribute <b>order</b>
-	 * 
+	 *
 	 * @return Date - value of member attribute <b>order</b> .
 	 */
 	public Integer getOrder() {
@@ -260,7 +260,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -335,7 +335,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

@@ -111,7 +111,7 @@ public class RangerProperties extends  HashMap<String,String>  {
 						propertyValue = eElement.getElementsByTagName(XMLCONFIG_VALUE_TAGNAME).item(0).getTextContent().trim();
 					}
 					
-					if (get(propertyName) != null) 
+					if (get(propertyName) != null)
 						remove(propertyName) ;
 					
 					if (propertyValue != null)

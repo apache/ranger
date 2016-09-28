@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -64,7 +64,7 @@ public class HBaseClient extends BaseClient {
 
 	}
 
-	//TODO: temporary solution - to be added to the UI for HBase 
+	//TODO: temporary solution - to be added to the UI for HBase
 	private static Map<String,String> addDefaultHBaseProp(Map<String,String> connectionProp) {
 		if (connectionProp != null) {
 			String param = "zookeeper.znode.parent";
@@ -283,7 +283,7 @@ public class HBaseClient extends BaseClient {
 
 					} catch(IOException io) {
 						String msgDesc = "getTableList: Unable to get HBase table List for [repository:"
-								+ getConfigHolder().getDatasourceName() + ",table-match:" 
+								+ getConfigHolder().getDatasourceName() + ",table-match:"
 								+ tableNameMatching + "].";
 						HadoopException hdpException = new HadoopException(msgDesc, io);
 						hdpException.generateResponseDataMap(false, getMessage(io),
@@ -292,7 +292,7 @@ public class HBaseClient extends BaseClient {
 						throw hdpException;
 					} catch (Throwable e) {
 						String msgDesc = "getTableList : Unable to get HBase table List for [repository:"
-								+ getConfigHolder().getDatasourceName() + ",table-match:" 
+								+ getConfigHolder().getDatasourceName() + ",table-match:"
 								+ tableNameMatching + "].";
 						LOG.error(msgDesc + e);
 						HadoopException hdpException = new HadoopException(msgDesc, e);
@@ -395,7 +395,7 @@ public class HBaseClient extends BaseClient {
 							hdpException.generateResponseDataMap(false, getMessage(io),
 									msgDesc + errMsg, null, null);
 							LOG.error(msgDesc + io);
-							throw hdpException; 
+							throw hdpException;
 						} catch (SecurityException se) {
 							String msgDesc = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for "
 									+ "[repository:" +getConfigHolder().getDatasourceName() + ",table:" + tblName

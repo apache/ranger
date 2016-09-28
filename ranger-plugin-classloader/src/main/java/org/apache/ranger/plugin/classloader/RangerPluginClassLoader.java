@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -158,7 +158,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
         return ret;
     }
-    
+
     @Override
 	public Enumeration<URL> findResources(String name) throws IOException {
         Enumeration<URL> ret = null;
@@ -167,7 +167,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
             LOG.debug("==> RangerPluginClassLoader.findResources(" + name + ") ");
         }
 
-        ret =  new MergeEnumeration(findResourcesUsingChildClassLoader(name),findResourcesUsingComponentClassLoader(name)); 
+        ret =  new MergeEnumeration(findResourcesUsingChildClassLoader(name),findResourcesUsingComponentClassLoader(name));
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPluginClassLoader.findResources(" + name + ") ");
@@ -175,15 +175,15 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
         return ret;
     }
-    
+
     public Enumeration<URL> findResourcesUsingChildClassLoader(String name) {
 
         Enumeration<URL> ret = null;
 
         try {
             if(LOG.isDebugEnabled()) {
-                LOG.debug("RangerPluginClassLoader.findResourcesUsingChildClassLoader(" + name + "): calling childClassLoader.findResources()"); 
-            } 
+                LOG.debug("RangerPluginClassLoader.findResourcesUsingChildClassLoader(" + name + "): calling childClassLoader.findResources()");
+            }
 
 		    ret =  super.findResources(name);
 
@@ -261,7 +261,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
     	return  componentClassLoader;
         //return componentClassLoader.get();
    }
-   
+
    static class  MyClassLoader extends ClassLoader {
         public MyClassLoader(ClassLoader realClassLoader) {
            super(realClassLoader);

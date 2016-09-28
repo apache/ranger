@@ -83,7 +83,7 @@ public class KMS {
       KMSOp operation, String clientIp) throws AccessControlException {
     KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, null, clientIp);
   }
-  
+
   private void assertAccess(Type aclType, UserGroupInformation ugi,
       KMSOp operation, String key, String clientIp) throws AccessControlException {
     KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, key, clientIp);
@@ -109,7 +109,7 @@ public class KMS {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
     final String name = (String) jsonKey.get(KMSRESTConstants.NAME_FIELD);
-    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);  
+    KMSClientProvider.checkNotEmpty(name, KMSRESTConstants.NAME_FIELD);
     validateKeyName(name);
     assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name, request.getRemoteAddr());
     String cipher = (String) jsonKey.get(KMSRESTConstants.CIPHER_FIELD);
@@ -437,7 +437,7 @@ public class KMS {
     final String keyName = (String) jsonPayload.get(
         KMSRESTConstants.NAME_FIELD);
     String ivStr = (String) jsonPayload.get(KMSRESTConstants.IV_FIELD);
-    String encMaterialStr = 
+    String encMaterialStr =
         (String) jsonPayload.get(KMSRESTConstants.MATERIAL_FIELD);
     Object retJSON;
     if (eekOp.equals(KMSRESTConstants.EEK_DECRYPT)) {

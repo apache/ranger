@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -44,7 +44,7 @@ public class TestRangerServiceDefHelper {
 
 	@Before
 	public void before() {
-		_serviceDef = mock(RangerServiceDef.class); 
+		_serviceDef = mock(RangerServiceDef.class);
 		when(_serviceDef.getName()).thenReturn("a-service-def");
 		// wipe the cache clean
 		RangerServiceDefHelper._Cache.clear();
@@ -54,19 +54,19 @@ public class TestRangerServiceDefHelper {
 	public void test_getResourceHierarchies() {
 		/*
 		 * Create a service-def with following resource graph
-		 * 
+		 *
 		 *   Database -> UDF
 		 *       |
 		 *       v
 		 *      Table -> Column
 		 *         |
 		 *         v
-		 *        Table-Attribute 
-		 *  
+		 *        Table-Attribute
+		 *
 		 *  It contains following hierarchies
 		 *  - [ Database UDF]
 		 *  - [ Database Table Column ]
-		 *  - [ Database Table Table-Attribute ] 
+		 *  - [ Database Table Table-Attribute ]
 		 */
 		RangerResourceDef Database = createResourceDef("Database", "");
 		RangerResourceDef UDF = createResourceDef("UDF", "Database");
@@ -81,7 +81,7 @@ public class TestRangerServiceDefHelper {
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
 		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
-		// there should be 
+		// there should be
 		List<RangerResourceDef> hierarchy = Lists.newArrayList(Database, UDF);
 		assertTrue(hierarchies.contains(hierarchy));
 		hierarchy = Lists.newArrayList(Database, Table, Column);
@@ -97,7 +97,7 @@ public class TestRangerServiceDefHelper {
 		 *  A --> B --> C
 		 *  ^           |
 		 *  |           |
-		 *  |---- D <---  
+		 *  |---- D <---
 		 */
 		RangerResourceDef A = createResourceDef("A", "D"); // A's parent is D, etc.
 		RangerResourceDef B = createResourceDef("B", "C");
@@ -118,13 +118,13 @@ public class TestRangerServiceDefHelper {
 		 *       |
 		 *       v
 		 *      Table -> Column
-		 *      
+		 *
 		 *   Namespace -> package
 		 *       |
 		 *       v
 		 *     function
-		 *     
-		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.   
+		 *
+		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.
 		 */
 		RangerResourceDef database = createResourceDef("database", "");
 		RangerResourceDef tableSpace = createResourceDef("table-space", "database");
@@ -132,14 +132,14 @@ public class TestRangerServiceDefHelper {
 		RangerResourceDef column = createResourceDef("column", "table");
 		RangerResourceDef namespace = createResourceDef("namespace", "");
 		RangerResourceDef function = createResourceDef("function", "namespace");
-		RangerResourceDef Package = createResourceDef("package", "namespace"); 
+		RangerResourceDef Package = createResourceDef("package", "namespace");
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, tableSpace, table, column, namespace, function, Package);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
 		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
-		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
+		Set<List<String>> expectedHierarchies = new HashSet<List<String>>();
 		expectedHierarchies.add(Lists.newArrayList("database", "table-space"));
 		expectedHierarchies.add(Lists.newArrayList("database", "table", "column"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
@@ -157,30 +157,30 @@ public class TestRangerServiceDefHelper {
 	public final void test_isResourceGraphValid_forest_singleNodeTrees() {
 		/*
 		 * Create a service-def which is a forest with a few single node trees
-		 * 
+		 *
 		 *   Database
-		 *   
+		 *
 		 *   Server
-		 *      
+		 *
 		 *   Namespace -> package
 		 *       |
 		 *       v
 		 *     function
-		 *     
-		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.   
+		 *
+		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.
 		 */
 		RangerResourceDef database = createResourceDef("database", "");
 		RangerResourceDef server = createResourceDef("server", "");
 		RangerResourceDef namespace = createResourceDef("namespace", "");
 		RangerResourceDef function = createResourceDef("function", "namespace");
-		RangerResourceDef Package = createResourceDef("package", "namespace"); 
+		RangerResourceDef Package = createResourceDef("package", "namespace");
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, server, namespace, function, Package);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue(_helper.isResourceGraphValid());
 		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
-		Set<List<String>> expectedHierarchies = new HashSet<List<String>>(); 
+		Set<List<String>> expectedHierarchies = new HashSet<List<String>>();
 		expectedHierarchies.add(Lists.newArrayList("database"));
 		expectedHierarchies.add(Lists.newArrayList("server"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
@@ -222,7 +222,7 @@ public class TestRangerServiceDefHelper {
 		when(_serviceDef.getUpdateTime()).thenReturn(getLastMonth());
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue("Didn't get a delegate different than what was put in the cache", delegate != _helper._delegate);
-		// now that a new instance was added to the cache let's ensure that it got added to the cache 
+		// now that a new instance was added to the cache let's ensure that it got added to the cache
 		Delegate newDelegate = _helper._delegate;
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue("Didn't get a delegate different than what was put in the cache", newDelegate == _helper._delegate);

@@ -60,7 +60,7 @@ public class RangerKeyStoreProviderTest {
         }
         UNRESTRICTED_POLICIES_INSTALLED = ok;
     }
-    
+
     @BeforeClass
     public static void startServers() throws Exception {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -68,7 +68,7 @@ public class RangerKeyStoreProviderTest {
     	}
         DerbyTestUtils.startDerby();
     }
-    
+
     @AfterClass
     public static void stopServers() throws Exception {
     	if (UNRESTRICTED_POLICIES_INSTALLED) {
@@ -84,10 +84,10 @@ public class RangerKeyStoreProviderTest {
     	
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
-        
+
         Configuration conf = new Configuration();
         RangerKeyStoreProvider keyProvider = new RangerKeyStoreProvider(conf);
-        
+
         // Create a key
         Options options = new Options(conf);
         options.setBitLength(128);
@@ -96,14 +96,14 @@ public class RangerKeyStoreProviderTest {
         Assert.assertEquals("newkey1", keyVersion.getName());
         Assert.assertEquals(128 / 8, keyVersion.getMaterial().length);
         Assert.assertEquals("newkey1@0", keyVersion.getVersionName());
-        
+
         keyProvider.flush();
         Assert.assertEquals(1, keyProvider.getKeys().size());
         keyProvider.deleteKey("newkey1");
-        
+
         keyProvider.flush();
         Assert.assertEquals(0, keyProvider.getKeys().size());
-        
+
         // Try to delete a key that isn't there
         try {
             keyProvider.deleteKey("newkey2");
@@ -112,7 +112,7 @@ public class RangerKeyStoreProviderTest {
             // expected
         }
     }
-    
+
     @Test
     public void testRolloverKey() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -121,10 +121,10 @@ public class RangerKeyStoreProviderTest {
     	
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
-        
+
         Configuration conf = new Configuration();
         RangerKeyStoreProvider keyProvider = new RangerKeyStoreProvider(conf);
-        
+
         // Create a key
         Options options = new Options(conf);
         options.setBitLength(192);
@@ -133,9 +133,9 @@ public class RangerKeyStoreProviderTest {
         Assert.assertEquals("newkey1", keyVersion.getName());
         Assert.assertEquals(192 / 8, keyVersion.getMaterial().length);
         Assert.assertEquals("newkey1@0", keyVersion.getVersionName());
-        
+
         keyProvider.flush();
-        
+
         // Rollover a new key
         byte[] oldKey = keyVersion.getMaterial();
         keyVersion = keyProvider.rollNewVersion("newkey1");
@@ -143,12 +143,12 @@ public class RangerKeyStoreProviderTest {
         Assert.assertEquals(192 / 8, keyVersion.getMaterial().length);
         Assert.assertEquals("newkey1@1", keyVersion.getVersionName());
         Assert.assertFalse(Arrays.equals(oldKey, keyVersion.getMaterial()));
-        
+
         keyProvider.deleteKey("newkey1");
-        
+
         keyProvider.flush();
         Assert.assertEquals(0, keyProvider.getKeys().size());
-        
+
     }
-    
+
 }

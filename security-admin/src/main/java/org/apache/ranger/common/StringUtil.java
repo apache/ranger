@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -58,7 +58,7 @@ public class StringUtil implements Serializable {
 
 	/**
 	 * Checks if the string is null or empty string.
-	 * 
+	 *
 	 * @param str
 	 * @return true if it is empty string or null
 	 */
@@ -234,7 +234,7 @@ public class StringUtil implements Serializable {
 
 	/**
 	 * Checks if the list is null or empty list.
-	 * 
+	 *
 	 * @param list
 	 * @return true if it is empty list or null
 	 */
@@ -251,11 +251,11 @@ public class StringUtil implements Serializable {
 	 * @return
 	 */
 	public String getValidUserName(String str) {
-		return str.indexOf("/") >= 0 ? 
+		return str.indexOf("/") >= 0 ?
 				 str.substring(0,str.indexOf("/"))
-				:	str.indexOf("@") >= 0 ? 
-						str.substring(0,str.indexOf("@")) 
-						: str; 
+				:	str.indexOf("@") >= 0 ?
+						str.substring(0,str.indexOf("@"))
+						: str;
 	}
 
 }

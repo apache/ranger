@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -76,13 +76,13 @@ public class RangerLegacyConfigBuilder {
 	}
 
    private static  Configuration mapLegacyConfigToRanger(Configuration rangerInConf, Configuration legacyConf) {
-	   
+	
 	    Configuration ret 				   = rangerInConf;
-	   
+	
 	    HashMap<String,String>  chgMap     = getConfigChangeMap(serviceType);
 	    if(LOG.isDebugEnabled()) {
 			LOG.debug("<== mapLegacyConfigToRanger() MAP Size:  " + chgMap.size());
-		} 
+		}
 		for(Map.Entry<String, String> entry : chgMap.entrySet()) {
 			String legacyKey 	 = entry.getKey();
 			String rangerKey 	 = entry.getValue();
@@ -93,10 +93,10 @@ public class RangerLegacyConfigBuilder {
 				//For getting the service
 				String serviceURL = legacyConf.get(getPropertyName(RangerConfigConstants.XASECURE_POLICYMGR_URL,serviceType));
 				legacyConfVal = fetchLegacyValue(serviceURL,rangerKey);
-			} else if  ( rangerKey.equals(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_REST_URL,serviceType)) || 
+			} else if  ( rangerKey.equals(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_REST_URL,serviceType)) ||
 					     rangerKey.equals(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_CACHE_DIR,serviceType)) ) {
 				// For Getting Admin URL and CacheDir
-				legacyConfVal = fetchLegacyValue(legacyConf.get(legacyKey),rangerKey); 
+				legacyConfVal = fetchLegacyValue(legacyConf.get(legacyKey),rangerKey);
 			} else {
 				legacyConfVal = legacyConf.get(legacyKey);
 			}
@@ -108,9 +108,9 @@ public class RangerLegacyConfigBuilder {
 			ret.set(rangerKey, legacyConfVal);	
 		}
 		return ret;
-	} 
-   
-   
+	}
+
+
 	public  static URL getAuditResource(String fName) throws Throwable {
 		URL ret = null ;
 
@@ -254,11 +254,11 @@ public class RangerLegacyConfigBuilder {
 			ret = getServiceNameFromURL(legacyVal);
 		} else if ( rangerKey.equals(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_REST_URL,serviceType)) ) {
 		   // To Fetch PolicyMgr URL
-		   ret = getPolicyMgrURL(legacyVal);		  
+		   ret = getPolicyMgrURL(legacyVal);		
 		} else if  ( rangerKey.equals(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_CACHE_DIR,serviceType)) ) {
-			  ret = getCacheFileURL(legacyVal);  
+			  ret = getCacheFileURL(legacyVal);
 	   }
-	   
+	
 	   return ret;
 	}
 }

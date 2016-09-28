@@ -39,7 +39,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * Get the meta-data for the Ranger package.
-	 * 
+	 *
 	 * @return
 	 */
 	static Package getPackage() {
@@ -48,7 +48,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * Get the Ranger version.
-	 * 
+	 *
 	 * @return the Ranger version string, eg. "0.6.3-dev"
 	 */
 	public static String getVersion() {
@@ -57,7 +57,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * Get the Ranger short version, with major/minor/change version numbers.
-	 * 
+	 *
 	 * @return short version string, eg. "0.6.3"
 	 */
 	public static String getShortVersion() {
@@ -66,7 +66,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * Get the subversion revision number for the root directory
-	 * 
+	 *
 	 * @return the revision number, eg. "451451"
 	 */
 	public static String getRevision() {
@@ -75,7 +75,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * Get the branch on which this originated.
-	 * 
+	 *
 	 * @return The branch name, e.g. "trunk" or "branches/branch-0.20"
 	 */
 	public static String getBranch() {
@@ -84,7 +84,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * The date that Ranger was compiled.
-	 * 
+	 *
 	 * @return the compilation date in unix date format
 	 */
 	public static String getDate() {
@@ -93,7 +93,7 @@ public class RangerVersionInfo {
 
 	/**
 	 * The user that compiled Ranger.
-	 * 
+	 *
 	 * @return the username of the user
 	 */
 	public static String getUser() {

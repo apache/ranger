@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -56,7 +56,7 @@ public class CommandLineOptions {
             CommandLine cmd = parser.parse(options, args);
             // if (cmd.hasOption("h")) {
             //}
-            
+
             if (cmd.hasOption("p")) {
             	bindPassword = cmd.getOptionValue("p");
             	if (bindPassword.trim().isEmpty()) {
@@ -97,14 +97,14 @@ public class CommandLineOptions {
             if (cmd.hasOption("a") || discoverProperties == null || (discoverProperties != null && !discoverProperties.equalsIgnoreCase("all"))) {
                 isAuthEnabled = false;
             }
-            
+
             if (cmd.hasOption("i")) {
                 input = cmd.getOptionValue("i");
                 if (input == null || input.isEmpty()) {
                     System.out.println("Please specify the input properties file name");
                     help();
                 }
-                
+
                 if (bindPassword == null || bindPassword.trim().isEmpty()) {
             		System.out.println("Missing Ldap Bind Password!");
             	}
@@ -184,7 +184,7 @@ public class CommandLineOptions {
         userSearchBase = console.readLine();
         System.out.print("User Search Filter [cn=user1]: ");
         userSearchFilter = console.readLine();
-        
+
         if (isAuthEnabled) {
             do {
                 repeat = false;

@@ -66,7 +66,7 @@ public class TestRangerBizUtil {
 	RangerDaoManager daoManager;
 	
 	@Mock
-	StringUtil stringUtil; 
+	StringUtil stringUtil;
 	
 	@Before
 	public void setup(){
@@ -98,7 +98,7 @@ public class TestRangerBizUtil {
 		XXPortalUser portalUser = new XXPortalUser();
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
-		XXUser xxUser = new XXUser(); 
+		XXUser xxUser = new XXUser();
 		XXAsset xxAsset = new XXAsset();
 		List<XXResource> lst = new ArrayList<XXResource>();
 		XXResourceDao xxResourceDao = Mockito.mock(XXResourceDao.class);

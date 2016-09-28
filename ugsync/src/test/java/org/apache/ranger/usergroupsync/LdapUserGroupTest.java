@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -77,12 +77,12 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 
 	@Before
 	public void setup() throws Exception {
-		LdapServer ldapServer = new LdapServer(); 
+		LdapServer ldapServer = new LdapServer();
 		ldapServer.setSaslHost("127.0.0.1");
-		ldapServer.setSearchBaseDn("DC=ranger,DC=qe,DC=hortonworks,DC=com"); 
+		ldapServer.setSearchBaseDn("DC=ranger,DC=qe,DC=hortonworks,DC=com");
 		String ldapPort = System.getProperty("ldap.port");
 		Assert.assertNotNull("Property 'ldap.port' null", ldapPort);
-		ldapServer.setTransports(new TcpTransport("127.0.0.1", Integer.parseInt(ldapPort))); 
+		ldapServer.setTransports(new TcpTransport("127.0.0.1", Integer.parseInt(ldapPort)));
 		ldapServer.setDirectoryService(getService());
 		ldapServer.setMaxSizeLimit( LdapServer.NO_SIZE_LIMIT );
 		setLdapServer(ldapServer);

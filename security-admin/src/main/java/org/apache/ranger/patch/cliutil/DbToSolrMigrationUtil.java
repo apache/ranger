@@ -417,7 +417,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 								+ zkHosts + ", collection="
 								+ collectionName, e);
 				throw e;
-			} 
+			}
 		} else {
 			if (solrURL == null || solrURL.isEmpty()
 					|| solrURL.equalsIgnoreCase("none")) {

@@ -35,7 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 /**
- * This Class is for HSM Keystore 
+ * This Class is for HSM Keystore
  */
 public class RangerHSM implements RangerKMSMKI {
 	
@@ -67,11 +67,11 @@ public class RangerHSM implements RangerKMSMKI {
         try {
             ByteArrayInputStream is1 = new ByteArrayInputStream(("tokenlabel:" + partitionName).getBytes());
             logger.debug("Loading HSM tokenlabel : "+partitionName);
-            myStore = KeyStore.getInstance("Luna");    
+            myStore = KeyStore.getInstance("Luna");
             myStore.load(is1, passwd.toCharArray());
             if(myStore == null){ logger.error("Luna not found. Please verify the Ranger KMS HSM configuration setup."); }
         } catch (KeyStoreException kse) {
-        	logger.error("Unable to create keystore object : "+kse.getMessage());            
+        	logger.error("Unable to create keystore object : "+kse.getMessage());
         } catch (NoSuchAlgorithmException nsae) {
             logger.error("Unexpected NoSuchAlgorithmException while loading keystore : " + nsae.getMessage());
         } catch (CertificateException e) {
@@ -80,7 +80,7 @@ public class RangerHSM implements RangerKMSMKI {
             logger.error("Unexpected IOException while loading keystore : "+e.getMessage());
        }
     }
-        
+
 	@Override
 	public boolean generateMasterKey(String password) throws Throwable {
 		if(myStore != null && myStore.size() < 1){

@@ -106,7 +106,7 @@ public class RangerKrbFilter implements Filter {
       "signer.secret.provider.object";
 
   private static final String BROWSER_USER_AGENT_PARAM = "ranger.krb.browser-useragents-regex";	
-  
+
   private Set<Pattern> browserUserAgents;
 
   private Properties config;
@@ -135,9 +135,9 @@ public class RangerKrbFilter implements Filter {
     String authHandlerClassName;
     if (authHandlerName == null) {
       throw new ServletException("Authentication type must be specified: " +
-          PseudoAuthenticationHandler.TYPE + "|" + 
+          PseudoAuthenticationHandler.TYPE + "|" +
           KerberosAuthenticationHandler.TYPE + "|<class>");
-    }    
+    }
     if(StringUtils.equalsIgnoreCase(authHandlerName, PseudoAuthenticationHandler.TYPE)){
       authHandlerClassName = PseudoAuthenticationHandler.class.getName();
     }else if(StringUtils.equalsIgnoreCase(authHandlerName, KerberosAuthenticationHandler.TYPE)){
@@ -589,7 +589,7 @@ public class RangerKrbFilter implements Filter {
     sb.append("; HttpOnly");
     resp.addHeader("Set-Cookie", sb.toString());
   }
-  
+
   void parseBrowserUserAgents(String userAgents) {
 		String[] agentsArray = userAgents.split(",");
 		browserUserAgents = new HashSet<Pattern>();

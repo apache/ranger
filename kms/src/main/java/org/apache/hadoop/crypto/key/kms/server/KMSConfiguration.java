@@ -56,10 +56,10 @@ public class KMSConfiguration {
   // Delay for Audit logs that need aggregation
   public static final String KMS_AUDIT_AGGREGATION_WINDOW = CONFIG_PREFIX +
       "audit.aggregation.window.ms";
-  
+
   //for authorizer
   public static final String KMS_SECURITY_AUTHORIZER = CONFIG_PREFIX + "security.authorization.manager";
-  
+
   public static final boolean KEY_CACHE_ENABLE_DEFAULT = true;
   // 10 mins
   public static final long KEY_CACHE_TIMEOUT_DEFAULT = 10 * 60 * 1000;
@@ -70,7 +70,7 @@ public class KMSConfiguration {
 
   // Property to Enable/Disable per Key authorization
   public static final String KEY_AUTHORIZATION_ENABLE = CONFIG_PREFIX +
-      "key.authorization.enable"; 
+      "key.authorization.enable";
 
   public static final boolean KEY_AUTHORIZATION_ENABLE_DEFAULT = true;
 

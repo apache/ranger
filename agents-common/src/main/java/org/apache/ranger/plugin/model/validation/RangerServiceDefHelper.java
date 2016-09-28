@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -52,7 +52,7 @@ public class RangerServiceDefHelper {
 	}
 	
 	/**
-	 * Intended for use when serviceDef object is not-trusted, e.g. when service-def is being created or updated. 
+	 * Intended for use when serviceDef object is not-trusted, e.g. when service-def is being created or updated.
 	 * @param serviceDef
 	 * @param useCache
 	 */
@@ -89,14 +89,14 @@ public class RangerServiceDefHelper {
 	
 	/**
 	 * for a resource definition as follows:
-	 * 
+	 *
 	 *  /-> E -> F
 	 * A -> B -> C -> D
 	 *       \-> G -> H
-	 *        
+	 *
 	 * It would return a set with following ordered entries in it
 	 * { [A B C D], [A E F], [A B G H] }
-	 *  
+	 *
 	 * @return
 	 */
 	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
@@ -179,8 +179,8 @@ public class RangerServiceDefHelper {
 			}
 			_valid = isValid;
 			if (LOG.isDebugEnabled()) {
-				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName, 
-						_serviceDefFreshnessDate == null ? null : _serviceDefFreshnessDate.toString(), _hierarchies); 
+				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName,
+						_serviceDefFreshnessDate == null ? null : _serviceDefFreshnessDate.toString(), _hierarchies);
 				LOG.debug(message);
 			}
 		}
@@ -212,7 +212,7 @@ public class RangerServiceDefHelper {
 		}
 		/**
 		 * Builds a directed graph where each resource is node and arc goes from parent level to child level
-		 * 
+		 *
 		 * @param resourceDefs
 		 * @return
 		 */
@@ -263,15 +263,15 @@ public class RangerServiceDefHelper {
 			return resourceDefs;
 		}
 		/**
-		 * A valid resource graph is a forest, i.e. a disjoint union of trees.  In our case, given that node can have only one "parent" node, we can detect this validity simply by ensuring that 
+		 * A valid resource graph is a forest, i.e. a disjoint union of trees.  In our case, given that node can have only one "parent" node, we can detect this validity simply by ensuring that
 		 * the resource graph has:
 		 * - at least one sink AND
 		 * - and least one source.
-		 * 
-		 * A more direct method would have been ensure that the resulting graph does not have any cycles. 
-		 * 
+		 *
+		 * A more direct method would have been ensure that the resulting graph does not have any cycles.
+		 *
 		 * @param graph
-		 * 
+		 *
 		 * @return
 		 */
 		boolean isValid(DirectedGraph graph) {
@@ -284,7 +284,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Returns all valid resource hierarchies for the configured resource-defs. Behavior is undefined if it is called on and invalid graph. Use <code>isValid</code> to check validation first.
-		 * 
+		 *
 		 * @param graph
 		 * @return
 		 */
@@ -328,7 +328,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Converts resource list to resource map for efficient querying
-		 * 
+		 *
 		 * @param resourceList
 		 * @return
 		 */
@@ -349,7 +349,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Add a node to the graph
-		 * 
+		 *
 		 * @param node
 		 */
 		void add(String node) {
@@ -362,7 +362,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Connects node "from" to node "to". Being a directed graph, after this call "to" will be in the list of neighbor's of "from". While the converse need not be true.
-		 * 
+		 *
 		 * @param from
 		 * @param to
 		 */
@@ -379,7 +379,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Returns true if "to" is in the list of neighbors of "from"
-		 * 
+		 *
 		 * @param from
 		 * @param to
 		 * @return
@@ -402,7 +402,7 @@ public class RangerServiceDefHelper {
 		}
 		/**
 		 * Return the set of nodes with in degree of 0, i.e. those that are not in any other nodes' list of neighbors
-		 * 
+		 *
 		 * @return
 		 */
 		Set<String> getSources() {
@@ -419,7 +419,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Returns the set of nodes with out-degree of 0, i.e. those nodes whose list of neighbors is empty
-		 * 
+		 *
 		 * @return
 		 */
 		Set<String> getSinks() {
@@ -439,7 +439,7 @@ public class RangerServiceDefHelper {
 
 		/**
 		 * Attempts to do a depth first traversal of a graph and returns the resulting path. Note that there could be several paths that connect node "from" to node "to".
-		 * 
+		 *
 		 * @param from
 		 * @param to
 		 * @return

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -132,7 +132,7 @@ public class EmbeddedServer {
 			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 			
-			server.getService().addConnector(ssl); 
+			server.getService().addConnector(ssl);
 
 			//
 			// Making this as a default connector
@@ -251,29 +251,29 @@ public class EmbeddedServer {
 					e.printStackTrace();
 				}
 			}else{
-				try{                 
-					server.start(); 
+				try{
+					server.start();
 					server.getServer().await();
 					shutdownServer();
 				} catch (LifecycleException e) {
 					LOG.severe("Tomcat Server failed to start:" + e.toString());
-					e.printStackTrace(); 
+					e.printStackTrace();
 				} catch (Exception e) {
 					LOG.severe("Tomcat Server failed to start:" + e.toString());
-					e.printStackTrace(); 
+					e.printStackTrace();
 				}
 			}
 		}else{
-			try{                 
-				server.start(); 
+			try{
+				server.start();
 				server.getServer().await();
 				shutdownServer();
 			} catch (LifecycleException e) {
 				LOG.severe("Tomcat Server failed to start:" + e.toString());
-				e.printStackTrace(); 
+				e.printStackTrace();
 			} catch (Exception e) {
 				LOG.severe("Tomcat Server failed to start:" + e.toString());
-				e.printStackTrace(); 
+				e.printStackTrace();
 			}
 		}
 	}

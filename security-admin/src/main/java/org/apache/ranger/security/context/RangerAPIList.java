@@ -17,7 +17,7 @@
 package org.apache.ranger.security.context;
 
 /**
- * This class holds list of APIs available in the system. 
+ * This class holds list of APIs available in the system.
  * This Class needs to be updated when writing new API in any of the REST.
  */
 public class RangerAPIList {

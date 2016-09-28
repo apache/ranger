@@ -41,13 +41,13 @@ import org.junit.Test;
 
 /**
  * Policies available from admin via:
- * 
+ *
  * http://localhost:6080/service/plugins/policies/download/KMSTest
- * 
+ *
  * The user "bob" can do anything. The group "IT" can only call the "get" methods
  */
 public class RangerKmsAuthorizerTest {
-    
+
     private static KMSWebApp kmsWebapp;
     private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
     static {
@@ -69,14 +69,14 @@ public class RangerKmsAuthorizerTest {
         }
         UNRESTRICTED_POLICIES_INSTALLED = ok;
     }
-    
+
     @BeforeClass
     public static void startServers() throws Exception {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
         DerbyTestUtils.startDerby();
-        
+
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
@@ -89,12 +89,12 @@ public class RangerKmsAuthorizerTest {
         kmsWebapp = new KMSWebApp();
         kmsWebapp.contextInitialized(servletContextEvent);
     }
-    
+
     @AfterClass
     public static void stopServers() throws Exception {
         DerbyTestUtils.stopDerby();
     }
-    
+
     @Test
     public void testCreateKeys() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -110,7 +110,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to create
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -125,7 +125,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should not have permission to create
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -141,7 +141,7 @@ public class RangerKmsAuthorizerTest {
             }
         });
     }
-    
+
     @Test
     public void testDeleteKeys() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -157,7 +157,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to delete
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -172,7 +172,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should not have permission to delete
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -187,9 +187,9 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
-    
+
     @Test
     public void testRollover() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -205,7 +205,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to rollover
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -220,7 +220,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should not have permission to rollover
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -235,9 +235,9 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
-    
+
     @Test
     public void testGetKeys() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -253,7 +253,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to get keys
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -268,7 +268,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should have permission to get keys
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -279,7 +279,7 @@ public class RangerKmsAuthorizerTest {
             }
         });
     }
-    
+
     @Test
     public void testGetMetadata() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -295,7 +295,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to get the metadata
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -310,7 +310,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should have permission to get the metadata
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -320,9 +320,9 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
-  
+
     @Test
     public void testGenerateEEK() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -338,7 +338,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to generate EEK
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -353,7 +353,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should not have permission to generate EEK
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -368,9 +368,9 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
-    
+
     @Test
     public void testDecryptEEK() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
@@ -386,7 +386,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // "eve" should not have permission to decrypt EEK
         final UserGroupInformation ugi2 = UserGroupInformation.createRemoteUser("eve");
         ugi2.doAs(new PrivilegedExceptionAction<Void>() {
@@ -401,7 +401,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
         // the IT group should not have permission to decrypt EEK
         final UserGroupInformation ugi3 = UserGroupInformation.createUserForTesting("alice", new String[]{"IT"});
         ugi3.doAs(new PrivilegedExceptionAction<Void>() {
@@ -416,7 +416,7 @@ public class RangerKmsAuthorizerTest {
                 return null;
             }
         });
-        
+
     }
 
 }
