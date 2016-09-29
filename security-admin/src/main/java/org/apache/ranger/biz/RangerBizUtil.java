@@ -1386,12 +1386,12 @@ public class RangerBizUtil {
 				return AppConstants.DB_FLAVOR_SQLANYWHERE;
 			}else {
 				if(logger.isDebugEnabled()) {
-					logger.debug("DB Falvor could not be determined from property - " + propertyName + "=" + propertyValue);
+					logger.debug("DB Flavor could not be determined from property - " + propertyName + "=" + propertyValue);
 				}
 			}
 		}
 
-		logger.error("DB Falvor could not be determined");
+		logger.error("DB Flavor could not be determined");
 
 		return AppConstants.DB_FLAVOR_UNKNOWN;
 	}
