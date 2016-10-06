@@ -114,22 +114,15 @@ public class SolrAuditDestination extends AuditDestination {
 							// Instantiate
 							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
 							final String zkhosts =zkHosts;
-							PrivilegedExceptionAction<CloudSolrClient> action = new PrivilegedExceptionAction<CloudSolrClient>() {
+							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
 								@Override
 								public CloudSolrClient run()  throws Exception {
 									CloudSolrClient solrCloudClient = new CloudSolrClient(
 											zkhosts);
 									return solrCloudClient;
 								};
-							};
+							});
 
-							CloudSolrClient solrCloudClient = null;
-							UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-							if (ugi != null) {
-								solrCloudClient = ugi.doAs(action);
-							} else {
-								solrCloudClient = action.run();
-							}
 							solrCloudClient.setDefaultCollection(collectionName);
 							me = solrClient = solrCloudClient;
 						} catch (Throwable t) {
@@ -144,22 +137,15 @@ public class SolrAuditDestination extends AuditDestination {
 							LOG.info("Connecting to Solr using URLs=" + solrURLs);
 							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
 							final List<String> solrUrls = solrURLs;
-							PrivilegedExceptionAction<LBHttpSolrClient> action = new PrivilegedExceptionAction<LBHttpSolrClient>() {
+							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
 								@Override
 								public LBHttpSolrClient run()  throws Exception {
 									LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
 											solrUrls.get(0));
 									return lbSolrClient;
 								};
-							};
+							});
 
-							LBHttpSolrClient lbSolrClient = null;
-							UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-							if (ugi != null) {
-								lbSolrClient = ugi.doAs(action);
-							} else {
-								lbSolrClient = action.run();
-							}
 							lbSolrClient.setConnectionTimeout(1000);
 
 							for (int i = 1; i < solrURLs.size(); i++) {
@@ -235,21 +221,14 @@ public class SolrAuditDestination extends AuditDestination {
 				docs.add(document);
 			}
 			try {
-				PrivilegedExceptionAction<UpdateResponse> action = new PrivilegedExceptionAction<UpdateResponse>() {
+				final UpdateResponse response = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<UpdateResponse>() {
 					@Override
 					public UpdateResponse run()  throws Exception {
 						UpdateResponse response = solrClient.add(docs);
 						return response;
 					};
-				};
+				});
 
-				UpdateResponse response = null;
-				UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-				if (ugi != null) {
-					response = ugi.doAs(action);
-				} else {
-					response = action.run();
-				}
 				if (response.getStatus() != 0) {
 					addFailedCount(events.size());
 					logFailedEvent(events, response.toString());

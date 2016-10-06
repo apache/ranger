@@ -93,19 +93,14 @@ public class SolrAuditProvider extends AuditDestination {
 
 					try {
 						// TODO: Need to support SolrCloud also
-						PrivilegedExceptionAction<SolrClient> action = new PrivilegedExceptionAction<SolrClient>() {
+						solrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<SolrClient>() {
 							@Override
 							public SolrClient run()  throws Exception {
 								SolrClient solrClient = new HttpSolrClient(solrURL);
 								return solrClient;
 							};
-						};
-						UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-						if (ugi != null) {
-							solrClient = ugi.doAs(action);
-						} else {
-							solrClient = action.run();
-						}
+						});
+
 						me = solrClient;
 						if (solrClient instanceof HttpSolrClient) {
 							HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
@@ -173,20 +168,14 @@ public class SolrAuditProvider extends AuditDestination {
 			}
 			// Convert AuditEventBase to Solr document
 			final SolrInputDocument document = toSolrDoc(authzEvent);
-			UpdateResponse response = null;
-			PrivilegedExceptionAction<UpdateResponse> action = new PrivilegedExceptionAction<UpdateResponse>() {
+			final UpdateResponse response = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<UpdateResponse>() {
 				@Override
 				public UpdateResponse run()  throws Exception {
 					UpdateResponse response = solrClient.add(document);
 					return response;
 				};
-			};
-			UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-			if (ugi != null) {
-				response = ugi.doAs(action);
-			} else {
-				response = action.run();
-			}
+			});
+
 			if (response.getStatus() != 0) {
 				lastFailTime = System.currentTimeMillis();
 

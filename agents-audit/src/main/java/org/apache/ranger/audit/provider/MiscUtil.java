@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.dgc.VMID;
 import java.security.Principal;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -508,6 +510,30 @@ public class MiscUtil {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Execute the {@link PrivilegedExceptionAction} on the {@link UserGroupInformation} if it's set, otherwise call it directly
+	 */
+	public static <X> X executePrivilegedAction(final PrivilegedExceptionAction<X> action) throws Exception {
+		final UserGroupInformation ugi = getUGILoginUser();
+		if (ugi != null) {
+			return ugi.doAs(action);
+		} else {
+			return action.run();
+		}
+	}
+
+	/**
+	 * Execute the {@link PrivilegedAction} on the {@link UserGroupInformation} if it's set, otherwise call it directly.
+	 */
+	public static <X> X executePrivilegedAction(final PrivilegedAction<X> action) {
+		final UserGroupInformation ugi = getUGILoginUser();
+		if (ugi != null) {
+			return ugi.doAs(action);
+		} else {
+			return action.run();
+		}
 	}
 
 	public static Subject getSubjectLoginUser() {
