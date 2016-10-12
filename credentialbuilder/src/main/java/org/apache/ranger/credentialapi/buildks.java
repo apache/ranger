@@ -19,6 +19,7 @@
 
  package org.apache.ranger.credentialapi;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -82,7 +83,8 @@ public class buildks {
 	    		providerPath=args[5];
 				if(!isValidCreateCommand(command,alias,valueOption,credential,providerOption,providerPath)){
 	    			return returnCode;
-	    		}	    		
+				}
+				deleteInvalidKeystore(providerPath);
 	    		tempCredential=CredentialReader.getDecryptedString(providerPath, alias);
 	    	}else{
 	    		return returnCode;
@@ -519,5 +521,26 @@ public class buildks {
 		
 		return ret;
 		
+	}
+
+	public void deleteInvalidKeystore(String providerPath){
+		if(providerPath!=null){
+			String keystore=null;
+			if(providerPath.startsWith("jceks://file")){
+				keystore=providerPath.replace("jceks://file","");
+			}else if(providerPath.startsWith("localjceks://file")){
+				keystore=providerPath.replace("jceks://file","");
+			}else{
+				keystore=providerPath;
+			}
+			if(keystore!=null && !keystore.isEmpty()){
+				File file =new File(keystore);
+				if(file!=null && file.length()==0){
+					System.out.println("Provider file '"+keystore+"' is in invalid state or corrupt!! will try to delete first.");
+					file.delete();
+					file=null;
+				}
+			}
+		}
 	}
 }
