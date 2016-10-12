@@ -25,8 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -374,142 +374,108 @@ public class UserMgr {
 	 * @return
 	 */
 	public VXResponse changePassword(VXPasswordChange pwdChange) {
-		VXResponse ret = new VXResponse();
+        VXResponse ret = new VXResponse();
 
-		// First let's get the XXPortalUser for the current logged in user
-		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
-		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser()
-				.findByLoginId(currentUserLoginId);
-		checkAccess(gjUserCurrent);
+        // First let's get the XXPortalUser for the current logged in user
+        String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+        XXPortalUser gjUserCurrent = daoManager.getXXPortalUser().findByLoginId(currentUserLoginId);
+        checkAccessForUpdate(gjUserCurrent);
 
-		String encryptedOldPwd = encrypt(gjUserCurrent.getLoginId(),
-				pwdChange.getOldPassword());
+        // Get the user of whom we want to change the password
+        XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(pwdChange.getLoginId());
+        if (gjUser == null) {
+            logger.warn("SECURITY:changePassword(). User not found. LoginId="+ pwdChange.getLoginId());
+            throw restErrorUtil.createRESTException("serverMsg.userMgrInvalidUser",MessageEnums.DATA_NOT_FOUND, null, null,pwdChange.getLoginId());
+        }
 
-		if (!stringUtil.equals(encryptedOldPwd, gjUserCurrent.getPassword())) {
-			logger.info("changePassword(). Invalid old password. userId="
-					+ pwdChange.getId());
+        //check current password and provided old password is same or not
+        String encryptedOldPwd = encrypt(pwdChange.getLoginId(),pwdChange.getOldPassword());
+        if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
+            logger.info("changePassword(). Invalid old password. LoginId="+ pwdChange.getLoginId());
+            throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
+        }
 
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrPassword",
-					MessageEnums.OPER_NO_PERMISSION, null, null,
-					"" + pwdChange.getId());
-		}
+        //validate new password
+        if (!stringUtil.validatePassword(pwdChange.getUpdPassword(),new String[] { gjUser.getFirstName(),gjUser.getLastName(), gjUser.getLoginId()})) {
+            logger.warn("SECURITY:changePassword(). Invalid new password. LoginId="+ pwdChange.getLoginId());
+            throw restErrorUtil.createRESTException("serverMsg.userMgrNewPassword",MessageEnums.INVALID_PASSWORD, null, null,pwdChange.getLoginId());
+        }
 
-		// Get the user for whom we want to change the password
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(
-				pwdChange.getId());
-		if (gjUser == null) {
-			logger.warn("SECURITY:changePassword(). User not found. userId="
-					+ pwdChange.getId());
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidUser",
-					MessageEnums.DATA_NOT_FOUND, null, null,
-					"" + pwdChange.getId());
-		}
-
-		if (!stringUtil
-				.validatePassword(
-						pwdChange.getUpdPassword(),
-						new String[] { gjUser.getFirstName(),
-								gjUser.getLastName(), gjUser.getLoginId(),
-								gjUserCurrent.getFirstName(),
-								gjUserCurrent.getLastName(),
-								gjUserCurrent.getLoginId() })) {
-			logger.warn("SECURITY:changePassword(). Invalid new password. userId="
-					+ pwdChange.getId());
-
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrNewPassword",
-					MessageEnums.INVALID_PASSWORD, null, null,
-					"" + pwdChange.getId());
-		}
-
-		String encryptedNewPwd = encrypt(gjUser.getLoginId(),
-				pwdChange.getUpdPassword());
-
-		String currentPassword = gjUser.getPassword();
-
-		if (!encryptedNewPwd.equals(currentPassword)) {
-
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xTrxLog = new XXTrxLog();
-
-			xTrxLog.setAttributeName("Password");
-			xTrxLog.setPreviousValue(currentPassword);
-			xTrxLog.setNewValue(encryptedNewPwd);
-			xTrxLog.setAction("password change");
-			xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
-			xTrxLog.setObjectId(pwdChange.getId());
-			xTrxLog.setObjectName(pwdChange.getLoginId());
-			trxLogList.add(xTrxLog);
-
-			msBizUtil.createTrxLog(trxLogList);
-
-			gjUser.setPassword(encryptedNewPwd);
-			gjUser = daoManager.getXXPortalUser().update(gjUser);
-
-			ret.setMsgDesc("Password successfully updated");
-			ret.setStatusCode(VXResponse.STATUS_SUCCESS);
-		} else {
-			ret.setMsgDesc("Password update failed");
-			ret.setStatusCode(VXResponse.STATUS_ERROR);
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrOldPassword",
-					MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),
-					"password", gjUser.toString());
-		}
-		return ret;
-	}
+        String encryptedNewPwd = encrypt(pwdChange.getLoginId(),pwdChange.getUpdPassword());
+        String currentPassword = gjUser.getPassword();
+        if (!encryptedNewPwd.equals(currentPassword)) {
+            List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+            XXTrxLog xTrxLog = new XXTrxLog();
+            xTrxLog.setAttributeName("Password");
+            xTrxLog.setPreviousValue(currentPassword);
+            xTrxLog.setNewValue(encryptedNewPwd);
+            xTrxLog.setAction("password change");
+            xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
+            xTrxLog.setObjectId(pwdChange.getId());
+            xTrxLog.setObjectName(pwdChange.getLoginId());
+            trxLogList.add(xTrxLog);
+            msBizUtil.createTrxLog(trxLogList);
+            gjUser.setPassword(encryptedNewPwd);
+            gjUser = daoManager.getXXPortalUser().update(gjUser);
+            ret.setMsgDesc("Password successfully updated");
+            ret.setStatusCode(VXResponse.STATUS_SUCCESS);
+        } else {
+            ret.setMsgDesc("Password update failed");
+            ret.setStatusCode(VXResponse.STATUS_ERROR);
+            throw restErrorUtil.createRESTException("serverMsg.userMgrNewPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
+        }
+        return ret;
+    }
 
 	/**
 	 * @param gjUser
 	 * @param changeEmail
 	 * @return
 	 */
-	public VXPortalUser changeEmailAddress(XXPortalUser gjUser,
-			VXPasswordChange changeEmail) {
-		checkAccess(gjUser);
-		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidEmail",
-					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-					"emailAddress", changeEmail.toString());
-		}
+    public VXPortalUser changeEmailAddress(XXPortalUser gjUser,
+            VXPasswordChange changeEmail) {
+        checkAccessForUpdate(gjUser);
+        if (stringUtil.isEmpty(changeEmail.getEmailAddress())) {
+            throw restErrorUtil.createRESTException(
+                    "serverMsg.userMgrInvalidEmail",
+                    MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
+                    "emailAddress", changeEmail.toString());
+        }
 
-		String encryptedOldPwd = encrypt(gjUser.getLoginId(),
-				changeEmail.getOldPassword());
+        String encryptedOldPwd = encrypt(gjUser.getLoginId(),
+                changeEmail.getOldPassword());
 
-		if (!stringUtil.validateEmail(changeEmail.getEmailAddress())) {
-			logger.info("Invalid email address." + changeEmail);
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidEmail",
-					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-					"emailAddress", changeEmail.toString());
+        if (!stringUtil.validateEmail(changeEmail.getEmailAddress())) {
+            logger.info("Invalid email address." + changeEmail);
+            throw restErrorUtil.createRESTException(
+                    "serverMsg.userMgrInvalidEmail",
+                    MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
+                    "emailAddress", changeEmail.toString());
 
-		}
+        }
 
-		if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-			logger.info("changeEmailAddress(). Invalid  password. changeEmail="
-					+ changeEmail);
+        if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
+            logger.info("changeEmailAddress(). Invalid  password. changeEmail="
+                    + changeEmail);
 
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrWrongPassword",
-					MessageEnums.OPER_NO_PERMISSION, null, null, ""
-							+ changeEmail);
-		}
+            throw restErrorUtil.createRESTException(
+                    "serverMsg.userMgrWrongPassword",
+                    MessageEnums.OPER_NO_PERMISSION, null, null, ""
+                            + changeEmail);
+        }
 
-		// Normalize email. Make it lower case
-		gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail
-				.getEmailAddress()));
+        // Normalize email. Make it lower case
+        gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail
+                .getEmailAddress()));
 
-		String saltEncodedpasswd = encrypt(gjUser.getLoginId(),
-				changeEmail.getOldPassword());
+        String saltEncodedpasswd = encrypt(gjUser.getLoginId(),
+                changeEmail.getOldPassword());
 
-		gjUser.setPassword(saltEncodedpasswd);
+        gjUser.setPassword(saltEncodedpasswd);
 
-		daoManager.getXXPortalUser().update(gjUser);
-		return mapXXPortalUserVXPortalUser(gjUser);
-	}
+        daoManager.getXXPortalUser().update(gjUser);
+        return mapXXPortalUserVXPortalUser(gjUser);
+    }
 
 	/**
 	 * @param userId
@@ -529,7 +495,7 @@ public class UserMgr {
 	public VXPortalUser getUserProfile(Long id) {
 		XXPortalUser user = daoManager.getXXPortalUser().getById(id);
 		if (user != null) {
-			checkAccessForRead(user);
+			checkAccess(user);
 			return mapXXPortalUserVXPortalUser(user);
 		} else {
 			if (logger.isDebugEnabled()) {
@@ -1075,7 +1041,7 @@ public class UserMgr {
 
 	}
 
-	public void checkAccessForRead(XXPortalUser gjUser) {
+	public void checkAccessForUpdate(XXPortalUser gjUser) {
 		if (gjUser == null) {
 			throw restErrorUtil
 					.create403RESTException("serverMsg.userMgrWrongUser");
@@ -1084,7 +1050,7 @@ public class UserMgr {
 		if (sess != null) {
 
 			// Admin
-			if (sess != null && sess.isUserAdmin() || sess.isKeyAdmin()) {
+			if (sess != null && sess.isUserAdmin()) {
 				return;
 			}
 
@@ -1094,11 +1060,14 @@ public class UserMgr {
 			}
 
 		}
-		throw restErrorUtil.create403RESTException("User "
+		VXResponse vXResponse = new VXResponse();
+		vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+		vXResponse.setMsgDesc("User "
 				+ " access denied. loggedInUser="
 				+ (sess != null ? sess.getXXPortalUser().getId()
 						: "Not Logged In") + ", accessing user="
 				+ gjUser.getId());
+		throw restErrorUtil.createRESTException(vXResponse);
 
 	}
 

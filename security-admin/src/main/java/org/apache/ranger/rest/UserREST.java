@@ -296,22 +296,24 @@ public class UserREST {
 	@Path("{userId}/passwordchange")
 	@Produces({ "application/xml", "application/json" })
 	public VXResponse changePassword(@PathParam("userId") Long userId,
-			VXPasswordChange changePassword) {
-		logger.info("changePassword:" + userId);
+            VXPasswordChange changePassword) {
+        if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())){
+            logger.warn("SECURITY:changePassword(): Invalid loginId provided. loginId was empty or null");
+            throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
+        }
 
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
-		if (gjUser == null) {
-			logger.warn("SECURITY:changePassword(): Invalid userId provided: userId="
-					+ userId);
-			throw restErrorUtil.createRESTException("serverMsg.userRestUser",
-					MessageEnums.DATA_NOT_FOUND, null, null, "" + userId);
-		}
+        logger.info("changePassword:" + changePassword.getLoginId());
+        XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changePassword.getLoginId());
+        if (gjUser == null) {
+            logger.warn("SECURITY:changePassword(): Invalid loginId provided: loginId="+ changePassword.getLoginId());
+            throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null, changePassword.getLoginId());
+        }
 
-		userManager.checkAccess(gjUser);
-		changePassword.setId(userId);
- 		VXResponse ret = userManager.changePassword(changePassword);
-		return ret;
-	}
+        userManager.checkAccessForUpdate(gjUser);
+        changePassword.setId(gjUser.getId());
+        VXResponse ret = userManager.changePassword(changePassword);
+        return ret;
+    }
 
 	/**	 
 	 * 
@@ -322,22 +324,24 @@ public class UserREST {
 	@POST
 	@Path("{userId}/emailchange")
 	@Produces({ "application/xml", "application/json" })
-	public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
-			VXPasswordChange changeEmail) {
-		logger.info("changeEmail:" + userId);
+    public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
+            VXPasswordChange changeEmail) {
+        if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())){
+            logger.warn("SECURITY:changeEmail(): Invalid loginId provided. loginId was empty or null");
+            throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
+        }
 
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
-		if (gjUser == null) {
-			logger.warn("SECURITY:changeEmail(): Invalid userId provided: userId="
-					+ userId);
-			throw restErrorUtil.createRESTException("serverMsg.userRestUser",
-					MessageEnums.DATA_NOT_FOUND, null, null, "" + userId);
-		}
+        logger.info("changeEmail:" + changeEmail.getLoginId());
+        XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changeEmail.getLoginId());
+        if (gjUser == null) {
+            logger.warn("SECURITY:changeEmail(): Invalid loginId provided: loginId="+ changeEmail.getLoginId());
+            throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null, changeEmail.getLoginId());
+        }
 
-		userManager.checkAccess(gjUser);
-		changeEmail.setId(userId);
-		VXPortalUser ret = userManager.changeEmailAddress(gjUser, changeEmail);
-		return ret;
-	}
+        userManager.checkAccessForUpdate(gjUser);
+        changeEmail.setId(gjUser.getId());
+        VXPortalUser ret = userManager.changeEmailAddress(gjUser, changeEmail);
+        return ret;
+    }
 
 }
