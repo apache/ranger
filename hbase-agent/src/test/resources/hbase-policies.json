@@ -1,0 +1,378 @@
+{
+  "serviceName": "HBASETest",
+  "serviceId": 8,
+  "policyVersion": 26,
+  "policyUpdateTime": "20160622-11:01:03.000-+0100",
+  "policies": [
+    {
+      "service": "HBASETest",
+      "name": "HBASETest-1-20160620102221",
+      "description": "Default Policy for Service: HBASETest",
+      "resourceSignature": "e1b3b654519228996d282db63d795c7e",
+      "isAuditEnabled": true,
+      "resources": {
+        "column": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column-family": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "admin",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "${user.name}"
+          ],
+          "groups": [
+            "supergroup"
+          ],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 36,
+      "guid": "1466418141682_157_1833",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160620-11:22:21.000-+0100",
+      "updateTime": "20160621-12:32:00.000-+0100",
+      "version": 14
+    },
+    {
+      "service": "HBASETest",
+      "name": "ReadWriteTempColFam1",
+      "description": "",
+      "resourceSignature": "6ae42ce98505037fdaca33f6d6818cb4",
+      "isAuditEnabled": true,
+      "resources": {
+        "column": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column-family": {
+          "values": [
+            "colfam1"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "temp"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 37,
+      "guid": "1466509013694_902_2140",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160621-12:36:53.000-+0100",
+      "updateTime": "20160622-11:01:02.000-+0100",
+      "version": 19
+    }
+  ],
+  "serviceDef": {
+    "name": "hbase",
+    "implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
+    "label": "HBase",
+    "description": "HBase",
+    "options": {},
+    "configs": [
+      {
+        "itemId": 1,
+        "name": "username",
+        "type": "string",
+        "subType": "",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Username"
+      },
+      {
+        "itemId": 2,
+        "name": "password",
+        "type": "password",
+        "subType": "",
+        "mandatory": true,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Password"
+      },
+      {
+        "itemId": 3,
+        "name": "hadoop.security.authentication",
+        "type": "enum",
+        "subType": "authnType",
+        "mandatory": true,
+        "defaultValue": "simple",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 4,
+        "name": "hbase.master.kerberos.principal",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "defaultValue": ""
+      },
+      {
+        "itemId": 5,
+        "name": "hbase.security.authentication",
+        "type": "enum",
+        "subType": "authnType",
+        "mandatory": true,
+        "defaultValue": "simple",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 6,
+        "name": "hbase.zookeeper.property.clientPort",
+        "type": "int",
+        "subType": "",
+        "mandatory": true,
+        "defaultValue": "2181",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 7,
+        "name": "hbase.zookeeper.quorum",
+        "type": "string",
+        "subType": "",
+        "mandatory": true,
+        "defaultValue": "",
+        "validationRegEx": "",
+        "validationMessage": ""
+      },
+      {
+        "itemId": 8,
+        "name": "zookeeper.znode.parent",
+        "type": "string",
+        "subType": "",
+        "mandatory": true,
+        "defaultValue": "/hbase",
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": ""
+      },
+      {
+        "itemId": 9,
+        "name": "commonNameForCertificate",
+        "type": "string",
+        "subType": "",
+        "mandatory": false,
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Common Name for Certificate"
+      }
+    ],
+    "resources": [
+      {
+        "itemId": 1,
+        "name": "table",
+        "type": "string",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": false,
+        "excludesSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "HBase Table",
+        "description": "HBase Table"
+      },
+      {
+        "itemId": 2,
+        "name": "column-family",
+        "type": "string",
+        "level": 20,
+        "parent": "table",
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": false,
+        "excludesSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "HBase Column-family",
+        "description": "HBase Column-family"
+      },
+      {
+        "itemId": 3,
+        "name": "column",
+        "type": "string",
+        "level": 30,
+        "parent": "column-family",
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": false,
+        "excludesSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "HBase Column",
+        "description": "HBase Column"
+      }
+    ],
+    "accessTypes": [
+      {
+        "itemId": 1,
+        "name": "read",
+        "label": "Read",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 2,
+        "name": "write",
+        "label": "Write",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 3,
+        "name": "create",
+        "label": "Create",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 4,
+        "name": "admin",
+        "label": "Admin",
+        "impliedGrants": [
+          "read",
+          "write",
+          "create"
+        ]
+      }
+    ],
+    "policyConditions": [],
+    "contextEnrichers": [],
+    "enums": [
+      {
+        "itemId": 1,
+        "name": "authnType",
+        "elements": [
+          {
+            "itemId": 1,
+            "name": "simple",
+            "label": "Simple"
+          },
+          {
+            "itemId": 2,
+            "name": "kerberos",
+            "label": "Kerberos"
+          }
+        ],
+        "defaultIndex": 0
+      }
+    ],
+    "dataMaskDef": {
+      "maskTypes": [],
+      "accessTypes": [],
+      "resources": []
+    },
+    "rowFilterDef": {
+      "accessTypes": [],
+      "resources": []
+    },
+    "id": 2,
+    "guid": "d6cea1f0-2509-4791-8fc1-7b092399ba3b",
+    "isEnabled": true,
+    "createTime": "20160314-14:39:35.000-+0000",
+    "updateTime": "20160314-14:39:35.000-+0000",
+    "version": 1
+  }
+}
