@@ -71,16 +71,13 @@ public class RangerCredentialProviderTest {
 					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is available - and deleting");
 					ksFile.delete();
 					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is deleted.");
-				}
-				else {
+				} else {
 					System.out.println("Keystore File [" + ksFile.getAbsolutePath() + "] is not available");
 				}
-			}
-			else {
+			} else {
 				System.out.println("Keystore File is NULL");
 			}
-		}
-		catch(Throwable t) {
+		} catch(Throwable t) {
 			t.printStackTrace();
 		}
 		
@@ -88,12 +85,12 @@ public class RangerCredentialProviderTest {
 		CredentialShell cs = new CredentialShell();
 		cs.setConf(conf);
 		try {
-			 ret =cs.run(argsCreate);
+			 ret = cs.run(argsCreate);
 		} catch (Exception e) {
 			throw e;
 		}
-		assertEquals(0,ret);
-		System.out.println("(1) Number of active Threads : " + Thread.activeCount() );
+		assertEquals(0, ret);
+		System.out.println("(1) Number of active Threads : " + Thread.activeCount());
 		listThreads();
 	}
 	
@@ -112,7 +109,7 @@ public class RangerCredentialProviderTest {
 		if (providers != null) {
 			assertTrue(url.equals(providers.get(0).toString()));
 		}
-		System.out.println("(2) Number of active Threads : " + Thread.activeCount() );
+		System.out.println("(2) Number of active Threads : " + Thread.activeCount());
 		listThreads();
 	}
 	
@@ -122,9 +119,9 @@ public class RangerCredentialProviderTest {
 		cp = new RangerCredentialProvider();
 		providers = cp.getCredentialProviders(url);
 		if (providers != null) {
-			assertTrue("PassworD123".equals(new String(cp.getCredentialString(url,"TestCredential001"))));
+			assertTrue("PassworD123".equals(new String(cp.getCredentialString(url, "TestCredential001"))));
 		}
-		System.out.println("(3) Number of active Threads : " + Thread.activeCount() );
+		System.out.println("(3) Number of active Threads : " + Thread.activeCount());
 		listThreads();
 	}
 
@@ -145,7 +142,7 @@ public class RangerCredentialProviderTest {
 		listThreads();
 	}
 	
-	private static void 		listThreads() {
+	private static void listThreads() {
 		int ac = Thread.activeCount();
 		if (ac > 0) {
 			Thread[] tlist = new Thread[ac];
