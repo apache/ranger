@@ -274,7 +274,7 @@ public class YarnClient extends BaseClient {
 	}
 
 	public static List<String> getYarnResource (final YarnClient yarnClient,
-			String yanrQname, List<String> existingQueueName) {
+			String yarnQname, List<String> existingQueueName) {
 
 		List<String> resultList = new ArrayList<String>();
 		String errMsg = errMessage;
@@ -289,8 +289,8 @@ public class YarnClient extends BaseClient {
 				throw hdpException;
 			}
 
-			if (yanrQname != null) {
-				String finalyarnQueueName = yanrQname.trim();
+			if (yarnQname != null) {
+				String finalyarnQueueName = yarnQname.trim();
 				resultList = yarnClient
 						.getQueueList(finalyarnQueueName,existingQueueName);
 				if (resultList != null) {
