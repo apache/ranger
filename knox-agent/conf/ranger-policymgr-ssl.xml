@@ -26,24 +26,10 @@
 		</description>
 	</property>
 	<property>
-		<name>xasecure.policymgr.clientssl.keystore.password</name>
-		<value>none</value>
-		<description> 
-			password for keystore 
-		</description>
-	</property>
-	<property>
 		<name>xasecure.policymgr.clientssl.truststore</name>
 		<value>cacerts-xasecure.jks</value>
 		<description> 
 			java truststore file
-		</description>
-	</property>
-	<property>
-		<name>xasecure.policymgr.clientssl.truststore.password</name>
-		<value>none</value>
-		<description> 
-			java  truststore password
 		</description>
 	</property>
 	<property>

@@ -115,10 +115,6 @@ def rewriteConfig(props,newProps):
 	#
 	# Fix for KNOX ssl (missing) configuration
 	#
-	if ('xasecure.policymgr.clientssl.keystore.password' not in props):
-		props['xasecure.policymgr.clientssl.keystore.password'] = 'none'
-	if ('xasecure.policymgr.clientssl.truststore.password' not in props):
-		props['xasecure.policymgr.clientssl.truststore.password'] =  'none'
 	if ('xasecure.policymgr.clientssl.keystore.credential.file' not in props):
 		props['xasecure.policymgr.clientssl.keystore.credential.file'] = 'jceks://file/tmp/keystore-' + serviceName + '-ssl.jceks'
 	if ( 'xasecure.policymgr.clientssl.truststore.credential.file' not in props):

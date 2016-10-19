@@ -542,9 +542,7 @@ def port_ranger_hdfs_plugin_to_ambari():
 			'xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds']
 		advanced_ranger_hdfs_plugin_properties['XAAUDIT.HDFS.LOCAL_ARCHIVE_MAX_FILE_COUNT'] = hdfs_plugin_install_properties['xasecure.audit.hdfs.config.local.archive.max.file.count']
 		advanced_ranger_hdfs_plugin_properties['SSL_KEYSTORE_FILE_PATH'] = hdfs_plugin_install_properties['xasecure.policymgr.clientssl.keystore']
-		advanced_ranger_hdfs_plugin_properties['SSL_KEYSTORE_PASSWORD'] = hdfs_plugin_install_properties['xasecure.policymgr.clientssl.keystore.password']
 		advanced_ranger_hdfs_plugin_properties['SSL_TRUSTSTORE_FILE_PATH'] = hdfs_plugin_install_properties['xasecure.policymgr.clientssl.truststore']
-		advanced_ranger_hdfs_plugin_properties['SSL_TRUSTSTORE_PASSWORD'] = hdfs_plugin_install_properties['xasecure.policymgr.clientssl.truststore.password']
 
 		date_time_stamp = getDateTimeNow()
 		plugin_configuration_data = '[{"Clusters":{"desired_config":[{"type":"hdfs-site", "service_config_version_note": "Initial configuration for Ranger HDFS plugin" ,"tag":"' + str(date_time_stamp) + '","properties":' + str(
@@ -623,9 +621,7 @@ def port_ranger_hive_plugin_to_ambari():
 			'xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds']
 		advanced_ranger_hive_plugin_properties['XAAUDIT.HDFS.LOCAL_ARCHIVE_MAX_FILE_COUNT'] = hive_plugin_install_properties['xasecure.audit.hdfs.config.local.archive.max.file.count']
 		advanced_ranger_hive_plugin_properties['SSL_KEYSTORE_FILE_PATH'] = hive_plugin_install_properties['xasecure.policymgr.clientssl.keystore']
-		advanced_ranger_hive_plugin_properties['SSL_KEYSTORE_PASSWORD'] = hive_plugin_install_properties['xasecure.policymgr.clientssl.keystore.password']
 		advanced_ranger_hive_plugin_properties['SSL_TRUSTSTORE_FILE_PATH'] = hive_plugin_install_properties['xasecure.policymgr.clientssl.truststore']
-		advanced_ranger_hive_plugin_properties['SSL_TRUSTSTORE_PASSWORD'] = hive_plugin_install_properties['xasecure.policymgr.clientssl.truststore.password']
 		advanced_ranger_hive_plugin_properties['UPDATE_XAPOLICIES_ON_GRANT_REVOKE'] = hive_plugin_install_properties['xasecure.hive.update.xapolicies.on.grant.revoke']
 
 		date_time_stamp = getDateTimeNow()
@@ -701,9 +697,7 @@ def port_ranger_hbase_plugin_to_ambari():
 			'xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds']
 		advanced_ranger_hbase_plugin_properties['XAAUDIT.HDFS.LOCAL_ARCHIVE_MAX_FILE_COUNT'] = hbase_plugin_install_properties['xasecure.audit.hdfs.config.local.archive.max.file.count']
 		advanced_ranger_hbase_plugin_properties['SSL_KEYSTORE_FILE_PATH'] = hbase_plugin_install_properties['xasecure.policymgr.clientssl.keystore']
-		advanced_ranger_hbase_plugin_properties['SSL_KEYSTORE_PASSWORD'] = hbase_plugin_install_properties['xasecure.policymgr.clientssl.keystore.password']
 		advanced_ranger_hbase_plugin_properties['SSL_TRUSTSTORE_FILE_PATH'] = hbase_plugin_install_properties['xasecure.policymgr.clientssl.truststore']
-		advanced_ranger_hbase_plugin_properties['SSL_TRUSTSTORE_PASSWORD'] = hbase_plugin_install_properties['xasecure.policymgr.clientssl.truststore.password']
 		advanced_ranger_hbase_plugin_properties['UPDATE_XAPOLICIES_ON_GRANT_REVOKE'] = hbase_plugin_install_properties['xasecure.hbase.update.xapolicies.on.grant.revoke']
 
 		date_time_stamp = getDateTimeNow()
@@ -868,9 +862,7 @@ def port_ranger_storm_plugin_to_ambari():
 			'xasecure.audit.hdfs.config.local.buffer.rollover.interval.seconds']
 		advanced_ranger_storm_plugin_properties['XAAUDIT.HDFS.LOCAL_ARCHIVE_MAX_FILE_COUNT'] = storm_plugin_install_properties['xasecure.audit.hdfs.config.local.archive.max.file.count']
 		advanced_ranger_storm_plugin_properties['SSL_KEYSTORE_FILE_PATH'] = storm_plugin_install_properties['xasecure.policymgr.clientssl.keystore']
-		advanced_ranger_storm_plugin_properties['SSL_KEYSTORE_PASSWORD'] = storm_plugin_install_properties['xasecure.policymgr.clientssl.keystore.password']
 		advanced_ranger_storm_plugin_properties['SSL_TRUSTSTORE_FILE_PATH'] = storm_plugin_install_properties['xasecure.policymgr.clientssl.truststore']
-		advanced_ranger_storm_plugin_properties['SSL_TRUSTSTORE_PASSWORD'] = storm_plugin_install_properties['xasecure.policymgr.clientssl.truststore.password']
 
 		date_time_stamp = getDateTimeNow()
 		plugin_configuration_data = '[{"Clusters":{"desired_config":[{"type": "ranger-storm-plugin-properties", "service_config_version_note": "Initial configuration for Ranger STORM plugin" ,"tag":"' + str(date_time_stamp) + '", "properties":' + json.dumps(

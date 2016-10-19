@@ -515,9 +515,7 @@ def add_advanced_ranger_kms_configurations(ranger_kms_properties_from_file):
 	
 	
 	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/ranger-kms/conf/ranger-plugin-keystore.jks')
-	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/ranger-kms/conf/ranger-plugin-truststore.jks')
-	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 	advanced_ranger_kms_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = ranger_kms_properties_from_file.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 	
@@ -1052,9 +1050,7 @@ def port_ranger_hdfs_plugin_to_ambari():
 		
 		
 		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/hadoop-client/conf/ranger-plugin-keystore.jks')
-		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/hadoop-client/conf/ranger-plugin-truststore.jks')
-		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_hdfs_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = hdfs_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 		
@@ -1162,9 +1158,7 @@ def port_ranger_yarn_plugin_to_ambari():
 		advanced_ranger_yarn_audit_properties['xasecure.audit.provider.summary.enabled'] = yarn_plugin_installed_properties.get('xasecure.audit.provider.summary.enabled','false')
 
 		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/hadoop-client/conf/ranger-yarn-plugin-keystore.jks')
-		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/hadoop-client/conf/ranger-yarn-plugin-truststore.jks')
-		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_yarn_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = yarn_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 
@@ -1276,9 +1270,7 @@ def port_ranger_hive_plugin_to_ambari():
 		
 		
 		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/hive-server2/conf/ranger-plugin-keystore.jks')
-		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/hive-server2/conf/ranger-plugin-truststore.jks')
-		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_hive_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = hive_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 		
@@ -1401,9 +1393,7 @@ def port_ranger_hbase_plugin_to_ambari():
 		advanced_ranger_hbase_audit_properties['xasecure.audit.provider.summary.enabled'] = hbase_plugin_install_properties.get('xasecure.audit.provider.summary.enabled','true')
 		
 		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/hbase-client/conf/ranger-plugin-keystore.jks')
-		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/hbase-client/conf/ranger-plugin-truststore.jks')
-		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_hbase_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = hbase_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 		
@@ -1509,9 +1499,7 @@ def port_ranger_knox_plugin_to_ambari():
 		advanced_ranger_knox_audit_properties['xasecure.audit.provider.summary.enabled'] = knox_plugin_install_properties.get('xasecure.audit.provider.summary.enabled','false')
 
 		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/knox-server/conf/ranger-plugin-keystore.jks')
-		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/knox-server/conf/ranger-plugin-truststore.jks')
-		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_knox_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = knox_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 		
@@ -1614,9 +1602,7 @@ def port_ranger_storm_plugin_to_ambari():
 		
 		
 		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/storm-client/conf/ranger-plugin-keystore.jks')
-		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/storm-client/conf/ranger-plugin-truststore.jks')
-		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file{{credential_file}}')
 		advanced_ranger_storm_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = storm_plugin_install_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file{{credential_file}}')
 
@@ -1724,9 +1710,7 @@ def port_ranger_kafka_plugin_to_ambari():
 		advanced_ranger_kafka_audit_properties['xasecure.audit.provider.summary.enabled'] = kafka_plugin_installed_properties.get('xasecure.audit.db.is.enabled','true')
 		
 		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore','/usr/hdp/current/kafka-broker/config/ranger-plugin-keystore.jks')
-		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.password'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore.password','myKeyFilePassword')
 		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore','/usr/hdp/current/kafka-broker/config/ranger-plugin-truststore.jks')
-		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.password'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore.password','changeit')
 		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.keystore.credential.file'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.keystore.credential.file','jceks://file/{{credential_file}}')
 		advanced_ranger_kafka_policymgr_ssl_properties['xasecure.policymgr.clientssl.truststore.credential.file'] = kafka_plugin_installed_properties.get('xasecure.policymgr.clientssl.truststore.credential.file','jceks://file/{{credential_file}}')
 		
