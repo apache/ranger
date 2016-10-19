@@ -14,6 +14,7 @@
       {"name":"select","label":"Select"},
       {"name":"update","label":"Update"},
       {"name":"create","label":"Create"},
+      {"name":"grant","label":"Grant"},
       {"name":"drop","label":"Drop"},
       {"name":"alter","label":"Alter"},
       {"name":"index","label":"Index"},
@@ -23,6 +24,7 @@
           "select",
           "update",
           "create",
+          "grant",
           "drop",
           "alter",
           "index",
@@ -122,7 +124,18 @@
         {
           "itemId": 9,
           "name": "hive:all",
-          "label": "hive:all"
+          "label": "hive:all",
+          "impliedGrants":
+          [
+            "hive:select",
+            "hive:update",
+            "hive:create",
+            "hive:grant",
+            "hive:drop",
+            "hive:alter",
+            "hive:index",
+            "hive:lock"
+          ]
         }
       ],
       "contextEnrichers": [
@@ -174,7 +187,7 @@
       {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,
         "resources":{"tag":{"values":["PII-FINAL"],"isRecursive":false}},
         "denyPolicyItems":[
-          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":[""],"groups":["public"],"delegateAdmin":false}
+          {"accesses":[{"type":"hive:all","isAllowed":true}],"users":[""],"groups":["public"],"delegateAdmin":false}
         ]
         ,
         "denyExceptions":[
@@ -275,7 +288,7 @@
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     },
     {"name":"DENY 'desc default.table2;' for user1 using PII-FINAL tag",
       "request":{

@@ -27,7 +27,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
 public class RangerAccessRequestUtil {
@@ -40,7 +40,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_TOKEN_NAMESPACE = "token:";
 	public static final String KEY_USER = "USER";
 
-	public static void setRequestTagsInContext(Map<String, Object> context, List<RangerTag> tags) {
+	public static void setRequestTagsInContext(Map<String, Object> context, List<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
 			context.remove(KEY_CONTEXT_TAGS);
 		} else {
@@ -48,14 +48,14 @@ public class RangerAccessRequestUtil {
 		}
 	}
 
-	public static List<RangerTag> getRequestTagsFromContext(Map<String, Object> context) {
-		List<RangerTag> ret = null;
+	public static List<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
+		List<RangerTagForEval> ret = null;
 		Object          val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
 		if (val != null && val instanceof List<?>) {
 			try {
 				@SuppressWarnings("unchecked")
-				List<RangerTag> tags = (List<RangerTag>) val;
+				List<RangerTagForEval> tags = (List<RangerTagForEval>) val;
 
 				ret = tags;
 			} catch (Throwable t) {
@@ -66,16 +66,16 @@ public class RangerAccessRequestUtil {
 		return ret;
 	}
 
-	public static void setCurrentTagInContext(Map<String, Object> context, RangerTag tag) {
+	public static void setCurrentTagInContext(Map<String, Object> context, RangerTagForEval tag) {
 		context.put(KEY_CONTEXT_TAG_OBJECT, tag);
 	}
 
-	public static RangerTag getCurrentTagFromContext(Map<String, Object> context) {
-		RangerTag ret = null;
+	public static RangerTagForEval getCurrentTagFromContext(Map<String, Object> context) {
+		RangerTagForEval ret = null;
 		Object    val = context.get(KEY_CONTEXT_TAGS);
 
-		if(val != null && val instanceof RangerTag) {
-			ret = (RangerTag)val;
+		if(val != null && val instanceof RangerTagForEval) {
+			ret = (RangerTagForEval)val;
 		}
 
 		return ret;

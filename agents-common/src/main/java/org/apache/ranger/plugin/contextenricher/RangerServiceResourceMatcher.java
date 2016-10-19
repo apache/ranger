@@ -71,10 +71,9 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 		return Long.compare(getId(), other.getId());
 	}
 
-	public boolean isMatch(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
-		return policyResourceMatcher != null ? policyResourceMatcher.isExactHeadMatch(requestedResource, evalContext) : false;
+	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
+		return policyResourceMatcher != null ?  policyResourceMatcher.getMatchType(requestedResource, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
 	}
-
 	RangerServiceDef getServiceDef() {
 		return policyResourceMatcher != null ? policyResourceMatcher.getServiceDef() : null;
 	}

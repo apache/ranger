@@ -24,7 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -96,12 +96,12 @@ public final class RangerScriptExecutionContext {
 
 	public String getSessionId() { return accessRequest.getSessionId(); }
 
-	public RangerTag getCurrentTag() {
-		RangerTag ret = null;
+	public RangerTagForEval getCurrentTag() {
+		RangerTagForEval ret = null;
 		Object    val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT);
 
-		if(val != null && val instanceof RangerTag) {
-			ret = (RangerTag)val;
+		if(val != null && val instanceof RangerTagForEval) {
+			ret = (RangerTagForEval)val;
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
@@ -111,16 +111,16 @@ public final class RangerScriptExecutionContext {
 	}
 
 	public String getCurrentTagType() {
-		RangerTag tagObject = getCurrentTag();
+		RangerTagForEval tagObject = getCurrentTag();
 		return (tagObject != null) ? tagObject.getType() : null;
 	}
 
 	public Set<String> getAllTagTypes() {
 		Set<String>     allTagTypes   = null;
-		List<RangerTag> tagObjectList = getAllTags();
+		List<RangerTagForEval> tagObjectList = getAllTags();
 
 		if (CollectionUtils.isNotEmpty(tagObjectList)) {
-			for (RangerTag tag : tagObjectList) {
+			for (RangerTagForEval tag : tagObjectList) {
 				String tagType = tag.getType();
 				if (allTagTypes == null) {
 					allTagTypes = new HashSet<String>();
@@ -136,12 +136,12 @@ public final class RangerScriptExecutionContext {
 		Map<String, String> ret = null;
 
 		if (StringUtils.isNotBlank(tagType)) {
-			List<RangerTag> tagObjectList = getAllTags();
+			List<RangerTagForEval> tagObjectList = getAllTags();
 
 			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
 			// This will get attributes of the first tagType that matches
 			if (CollectionUtils.isNotEmpty(tagObjectList)) {
-				for (RangerTag tag : tagObjectList) {
+				for (RangerTagForEval tag : tagObjectList) {
 					if (tag.getType().equals(tagType)) {
 						ret = tag.getAttributes();
 						break;
@@ -181,7 +181,7 @@ public final class RangerScriptExecutionContext {
 		String ret = null;
 
 		if (StringUtils.isNotBlank(attributeName)) {
-			RangerTag tag = getCurrentTag();
+			RangerTagForEval tag = getCurrentTag();
 			Map<String, String> attributes = null;
 			if (tag != null) {
 				attributes = tag.getAttributes();
@@ -279,8 +279,8 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	private List<RangerTag> getAllTags() {
-		List<RangerTag> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
+	private List<RangerTagForEval> getAllTags() {
+		List<RangerTagForEval> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
 		
 		if(ret == null) {
 			if (LOG.isDebugEnabled()) {

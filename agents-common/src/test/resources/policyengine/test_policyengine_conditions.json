@@ -85,7 +85,7 @@
     {"name":"ALLOW 'create default.testTable;' country=US",
      "request":{
       "resource":{"elements":{"database":"default"}},
-      "accessType":"create","user":"user1","userGroups":["users"],"requestData":"create default.testTable",
+      "accessType":"create","user":"user1","userGroups":["users"],"requestData":"create default.testTable; country=US",
       "context":{"country":"US"}
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":2}

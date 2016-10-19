@@ -372,13 +372,15 @@ class RangerPolicyRepository {
                 normalizeAndPrunePolicyItems(policy.getAllowExceptions(), componentType);
                 normalizeAndPrunePolicyItems(policy.getDenyExceptions(), componentType);
                 normalizeAndPrunePolicyItems(policy.getDataMaskPolicyItems(), componentType);
+                normalizeAndPrunePolicyItems(policy.getRowFilterPolicyItems(), componentType);
 
                 if (!policy.getIsAuditEnabled() &&
                     CollectionUtils.isEmpty(policy.getPolicyItems()) &&
                     CollectionUtils.isEmpty(policy.getDenyPolicyItems()) &&
                     CollectionUtils.isEmpty(policy.getAllowExceptions()) &&
                     CollectionUtils.isEmpty(policy.getDenyExceptions()) &&
-                    CollectionUtils.isEmpty(policy.getDataMaskPolicyItems())) {
+                    CollectionUtils.isEmpty(policy.getDataMaskPolicyItems()) &&
+                    CollectionUtils.isEmpty(policy.getRowFilterPolicyItems())) {
 
                     if(policiesToPrune == null) {
                         policiesToPrune = new ArrayList<RangerPolicy>();

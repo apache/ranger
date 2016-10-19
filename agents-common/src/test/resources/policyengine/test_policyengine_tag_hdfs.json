@@ -187,7 +187,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 1 }
@@ -201,7 +201,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 101 }
@@ -215,7 +215,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -229,7 +229,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 1 }
@@ -243,7 +243,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 1 }
@@ -257,7 +257,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -271,7 +271,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 101 }
@@ -285,7 +285,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -299,7 +299,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
@@ -315,7 +315,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 1 }
@@ -329,7 +329,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 102 }
@@ -343,7 +343,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 102 }
@@ -357,7 +357,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 1 }
@@ -371,7 +371,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 1 }
@@ -385,7 +385,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 102 }
@@ -399,7 +399,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 102 }
@@ -413,7 +413,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 102 }
@@ -427,7 +427,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
@@ -443,7 +443,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 2 }
@@ -457,7 +457,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 101 }
@@ -471,7 +471,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -485,7 +485,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 2 }
@@ -499,7 +499,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 2 }
@@ -513,7 +513,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -527,7 +527,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": 101 }
@@ -541,7 +541,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -555,7 +555,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"PII\"}}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
@@ -571,7 +571,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": true, "policyId": 2 }
@@ -585,7 +585,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": true, "policyId": 102 }
@@ -599,7 +599,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": 102 }
@@ -613,7 +613,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": 2 }
@@ -627,7 +627,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": 2 }
@@ -641,7 +641,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": 102 }
@@ -655,7 +655,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": true, "policyId": 102 }
@@ -669,7 +669,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": 102 }
@@ -683,7 +683,7 @@
         "userGroups": [ ],
         "requestData": "read /unaudited-resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\"}]"
+          "TAGS": "[{\"tag\":{\"type\":\"Unaudited-TAG\"}}]"
         }
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": -1 }

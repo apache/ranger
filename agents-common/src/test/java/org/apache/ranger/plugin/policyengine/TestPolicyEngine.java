@@ -32,8 +32,8 @@ import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -250,6 +250,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_descendant_tags() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_descendant_tags.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveMasking() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_hive_mask_filter.json"};
 
@@ -343,9 +350,9 @@ public class TestPolicyEngine {
 
 				if(!StringUtils.isEmpty(tagsJsonString)) {
 					try {
-						Type listType = new TypeToken<List<RangerTag>>() {
+						Type listType = new TypeToken<List<RangerTagForEval>>() {
 						}.getType();
-						List<RangerTag> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+						List<RangerTagForEval> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
 
 						context.put(RangerAccessRequestUtil.KEY_CONTEXT_TAGS, tagList);
 					} catch (Exception e) {

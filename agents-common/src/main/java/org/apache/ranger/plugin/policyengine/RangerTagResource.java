@@ -17,11 +17,17 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyevaluator;
+package org.apache.ranger.plugin.policyengine;
 
-/*
- * this class is deprecated, as the functionality is moved to base class RangerOptimizedPolicyEvaluator.
- * Keeping the class simply for backward compatibility, in case this is used anywhere
- */
-public class RangerCachedPolicyEvaluator extends RangerOptimizedPolicyEvaluator {
+
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
+class RangerTagResource extends RangerAccessResourceImpl {
+	private static final String KEY_TAG = "tag";
+
+
+	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef) {
+		super.setValue(KEY_TAG, tagType);
+		super.setServiceDef(tagServiceDef);
+	}
 }

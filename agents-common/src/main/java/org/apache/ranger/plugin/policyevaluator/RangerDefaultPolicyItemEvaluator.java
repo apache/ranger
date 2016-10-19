@@ -20,6 +20,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +53,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 
 	private boolean hasCurrentUser = false;
 	private boolean hasResourceOwner = false;
+	private boolean hasAllPerms = false;
 
 	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
 		super(serviceDef, policy, policyItem, policyItemType, policyItemIndex, options);
@@ -60,6 +62,26 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	public void init() {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyItemEvaluator(policyId=" + policyId + ", policyItem=" + policyItem + ", serviceType=" + getServiceType() + ", conditionsDisabled=" + getConditionsDisabledOption() + ")");
+		}
+
+		Set<String> accessPerms    = new HashSet<String>();
+
+		List<RangerPolicy.RangerPolicyItemAccess> policyItemAccesses = policyItem.getAccesses();
+		for(RangerPolicy.RangerPolicyItemAccess policyItemAccess : policyItemAccesses) {
+
+			if (policyItemAccess.getIsAllowed()) {
+				accessPerms.add(policyItemAccess.getType());
+			}
+		}
+
+		hasAllPerms = true;
+		List<RangerServiceDef.RangerAccessTypeDef> serviceAccessTypes = serviceDef.getAccessTypes();
+		for (RangerServiceDef.RangerAccessTypeDef serviceAccessType : serviceAccessTypes) {
+			String serviceAccessTypeName = serviceAccessType.getName();
+			if (!accessPerms.contains(serviceAccessTypeName)) {
+				hasAllPerms = false;
+				break;
+			}
 		}
 
 		if (!getConditionsDisabledOption() && policyItem != null && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
@@ -138,10 +160,16 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 					boolean isAccessTypeMatched = false;
 
 					if (request.isAccessTypeAny()) {
-						for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
-							if (access.getIsAllowed()) {
+						if (getPolicyItemType() == POLICY_ITEM_TYPE_DENY || getPolicyItemType() == POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
+							if (hasAllPerms) {
 								isAccessTypeMatched = true;
-								break;
+							}
+						} else {
+							for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
+								if (access.getIsAllowed()) {
+									isAccessTypeMatched = true;
+									break;
+								}
 							}
 						}
 					} else {

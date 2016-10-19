@@ -76,6 +76,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         preprocessPolicyItems(policy.getAllowExceptions());
         preprocessPolicyItems(policy.getDenyExceptions());
         preprocessPolicyItems(policy.getDataMaskPolicyItems());
+        preprocessPolicyItems(policy.getRowFilterPolicyItems());
 
         hasAllPerms = checkIfHasAllPerms();
 

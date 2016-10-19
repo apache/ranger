@@ -49,6 +49,7 @@ import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
+import org.apache.ranger.plugin.policyengine.RangerTagAccessRequest;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -165,60 +166,36 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
         if (request != null && result != null) {
-            boolean isResourceMatch              = false;
-            boolean isResourceHeadMatch          = false;
-            boolean isResourceMatchAttempted     = false;
-            boolean isResourceHeadMatchAttempted = false;
-            final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
 
-            if (!result.getIsAuditedDetermined()) {
-                // Need to match request.resource first. If it matches (or head matches), then only more progress can be made
-                if (!isResourceMatchAttempted) {
-                    isResourceMatch = isMatch(request.getResource(), request.getContext());
-                    isResourceMatchAttempted = true;
-                }
+			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
+				RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 
-                // Try head match only if match was not found and ANY access was requested
-                if (!isResourceMatch) {
-                    if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-                        isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-                        isResourceHeadMatchAttempted = true;
-                    }
-                }
+				final boolean isMatched;
+				if (request.isAccessTypeAny()) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+				} else {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+				}
 
-                if (isResourceMatch || isResourceHeadMatch) {
-                    // We are done for determining if audit is needed for this policy
-                    if (isAuditEnabled()) {
-                        result.setIsAudited(true);
-                        result.setAuditPolicyId(getPolicy().getId());
-                    }
-                }
-            }
-
-            if (!result.getIsAccessDetermined()) {
-                // Attempt resource matching only if there may be a matchable policyItem
-                if (hasMatchablePolicyItem(request)) {
-                    // Try Match only if it was not attempted as part of evaluating Audit requirement
-                    if (!isResourceMatchAttempted) {
-                        isResourceMatch = isMatch(request.getResource(), request.getContext());
-                        isResourceMatchAttempted = true;
-                    }
-
-                    // Try Head Match only if no match was found so far AND a head match was not attempted as part of evaluating
-                    // Audit requirement
-                    if (!isResourceMatch) {
-                        if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-                            isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-                            isResourceHeadMatchAttempted = true;
-                        }
-                    }
-
-                    // Go further to evaluate access only if match or head match was found at this point
-                    if (isResourceMatch || isResourceHeadMatch) {
-                        evaluatePolicyItems(request, result, isResourceMatch);
-                    }
-                }
-            }
+				if (isMatched) {
+					if (RangerTagAccessRequest.class.isInstance(request)) {
+						matchType = ((RangerTagAccessRequest) request).getMatchType();
+					}
+					if (!result.getIsAuditedDetermined()) {
+						if (isAuditEnabled()) {
+							result.setIsAudited(true);
+							result.setAuditPolicyId(getPolicy().getId());
+						}
+					}
+					if (!result.getIsAccessDetermined()) {
+						if (hasMatchablePolicyItem(request)) {
+							evaluatePolicyItems(request, result, matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT);
+						}
+					}
+				}
+			}
         }
 
 		RangerPerfTracer.log(perf);
@@ -241,48 +218,31 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if (request != null && result != null && CollectionUtils.isNotEmpty(dataMaskEvaluators)) {
-			boolean isResourceMatchAttempted     = false;
-			boolean isResourceMatch              = false;
-			boolean isResourceHeadMatch          = false;
-			boolean isResourceHeadMatchAttempted = false;
-			final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
 
-			if (!result.getIsAuditedDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource(), request.getContext());
-					isResourceMatchAttempted = true;
+			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
+				RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
+
+				final boolean isMatched;
+				if (request.isAccessTypeAny()) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+				} else {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 				}
 
-				if (!isResourceMatch) {
-					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-						isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-						isResourceHeadMatchAttempted = true;
+				if (isMatched) {
+					if (!result.getIsAuditedDetermined()) {
+						if (isAuditEnabled()) {
+							result.setIsAudited(true);
+							result.setAuditPolicyId(getPolicy().getId());
+						}
 					}
-				}
-
-				if (isResourceMatch || isResourceHeadMatch) {
-					if (isAuditEnabled()) {
-						result.setIsAudited(true);
-						result.setAuditPolicyId(getPolicy().getId());
+					if (!result.getIsAccessDetermined()) {
+						if (hasMatchablePolicyItem(request)) {
+							evaluatePolicyItems(request, result);
+						}
 					}
-				}
-			}
-
-			if (!result.getIsAccessDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource(), request.getContext());
-					isResourceMatchAttempted = true;
-				}
-
-				if (!isResourceMatch) {
-					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-						isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-						isResourceHeadMatchAttempted = true;
-					}
-				}
-
-				if (isResourceMatch || isResourceHeadMatch) {
-					evaluatePolicyItems(request, result);
 				}
 			}
 
@@ -308,48 +268,30 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if (request != null && result != null && CollectionUtils.isNotEmpty(rowFilterEvaluators)) {
-			boolean isResourceMatchAttempted     = false;
-			boolean isResourceMatch              = false;
-			boolean isResourceHeadMatch          = false;
-			boolean isResourceHeadMatchAttempted = false;
-			final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
+			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
+				RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 
-			if (!result.getIsAuditedDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource(), request.getContext());
-					isResourceMatchAttempted = true;
+				final boolean isMatched;
+				if (request.isAccessTypeAny()) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+				} else {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 				}
 
-				if (!isResourceMatch) {
-					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-						isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-						isResourceHeadMatchAttempted = true;
+				if (isMatched) {
+					if (!result.getIsAuditedDetermined()) {
+						if (isAuditEnabled()) {
+							result.setIsAudited(true);
+							result.setAuditPolicyId(getPolicy().getId());
+						}
 					}
-				}
-
-				if (isResourceMatch || isResourceHeadMatch) {
-					if (isAuditEnabled()) {
-						result.setIsAudited(true);
-						result.setAuditPolicyId(getPolicy().getId());
+					if (!result.getIsAccessDetermined()) {
+						if (hasMatchablePolicyItem(request)) {
+							evaluatePolicyItems(request, result);
+						}
 					}
-				}
-			}
-
-			if (!result.getIsAccessDetermined()) {
-				if (!isResourceMatchAttempted) {
-					isResourceMatch = isMatch(request.getResource(), request.getContext());
-					isResourceMatchAttempted = true;
-				}
-
-				if (!isResourceMatch) {
-					if (attemptResourceHeadMatch && !isResourceHeadMatchAttempted) {
-						isResourceHeadMatch = matchResourceHead(request.getResource(), request.getContext());
-						isResourceHeadMatchAttempted = true;
-					}
-				}
-
-				if (isResourceMatch || isResourceHeadMatch) {
-					evaluatePolicyItems(request, result);
 				}
 			}
 		}
@@ -467,12 +409,19 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceAccessInfo(" + request + ", " + result + ")");
 		}
+		RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 
-		final boolean isResourceMatch          = isMatch(request.getResource(), request.getContext());
-		final boolean attemptResourceHeadMatch = request.isAccessTypeAny() || request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS;
-		final boolean isResourceHeadMatch      = (!isResourceMatch && attemptResourceHeadMatch) ? matchResourceHead(request.getResource(), request.getContext()) : false;
+		final boolean isMatched;
+		if (request.isAccessTypeAny()) {
+				isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+			} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+				isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+			} else {
+			isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+		}
 
-		if(isResourceMatch || isResourceHeadMatch) {
+		if (isMatched) {
+
 			if (CollectionUtils.isNotEmpty(allowEvaluators)) {
 				Set<String> users = new HashSet<String>();
 				Set<String> groups = new HashSet<String>();
@@ -492,27 +441,26 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				result.getAllowedUsers().addAll(users);
 				result.getAllowedGroups().addAll(groups);
 			}
-		}
+			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
+				if (CollectionUtils.isNotEmpty(denyEvaluators)) {
+					Set<String> users = new HashSet<String>();
+					Set<String> groups = new HashSet<String>();
 
-		if(isResourceMatch) {
-			if(CollectionUtils.isNotEmpty(denyEvaluators)) {
-				Set<String> users  = new HashSet<String>();
-				Set<String> groups = new HashSet<String>();
+					getResourceAccessInfo(request, denyEvaluators, users, groups);
 
-				getResourceAccessInfo(request, denyEvaluators, users, groups);
+					if (CollectionUtils.isNotEmpty(denyExceptionEvaluators)) {
+						Set<String> exceptionUsers = new HashSet<String>();
+						Set<String> exceptionGroups = new HashSet<String>();
 
-				if(CollectionUtils.isNotEmpty(denyExceptionEvaluators)) {
-					Set<String> exceptionUsers  = new HashSet<String>();
-					Set<String> exceptionGroups = new HashSet<String>();
+						getResourceAccessInfo(request, denyExceptionEvaluators, exceptionUsers, exceptionGroups);
 
-					getResourceAccessInfo(request, denyExceptionEvaluators, exceptionUsers, exceptionGroups);
+						users.removeAll(exceptionUsers);
+						groups.removeAll(exceptionGroups);
+					}
 
-					users.removeAll(exceptionUsers);
-					groups.removeAll(exceptionGroups);
+					result.getDeniedUsers().addAll(users);
+					result.getDeniedGroups().addAll(groups);
 				}
-
-				result.getDeniedUsers().addAll(users);
-				result.getDeniedGroups().addAll(groups);
 			}
 		}
 
@@ -652,25 +600,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-
-	protected boolean matchResourceHead(RangerAccessResource resource, Map<String, Object> evalContext) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.matchResourceHead(" + resource + ", " + evalContext + ")");
-		}
-
-		boolean ret = false;
-
-		if(resourceMatcher != null) {
-			ret = resourceMatcher.isHeadMatch(resource, evalContext);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.matchResourceHead(" + resource + ", " + evalContext + "): " + ret);
-		}
-
-		return ret;
-	}
-
 	protected boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + resources + ", " + evalContext + ")");
@@ -749,6 +678,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		preprocessPolicyItems(policy.getAllowExceptions(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getDenyExceptions(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getDataMaskPolicyItems(), impliedAccessGrants);
+		preprocessPolicyItems(policy.getRowFilterPolicyItems(), impliedAccessGrants);
 	}
 
 	private void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {

@@ -31,7 +31,7 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
@@ -219,12 +219,12 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 	protected final Set<String> getTags(RangerAccessRequest request) {
 		Set<String>     ret  = null;
-		List<RangerTag> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+		List<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 		if (CollectionUtils.isNotEmpty(tags)) {
 			ret = new HashSet<String>();
 
-			for (RangerTag tag : tags) {
+			for (RangerTagForEval tag : tags) {
 				ret.add(tag.getType());
 			}
 		}

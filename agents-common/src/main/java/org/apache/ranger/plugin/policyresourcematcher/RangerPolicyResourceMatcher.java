@@ -28,6 +28,9 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 public interface RangerPolicyResourceMatcher {
+	enum MatchScope { SELF_OR_ANCESTOR_OR_DESCENDANT, SELF, SELF_OR_DESCENDANT, SELF_OR_ANCESTOR, DESCENDANT, ANCESTOR };
+	enum MatchType { NONE, SELF, DESCENDANT, ANCESTOR };
+
 	void setServiceDef(RangerServiceDef serviceDef);
 
 	void setPolicy(RangerPolicy policy);
@@ -44,11 +47,11 @@ public interface RangerPolicyResourceMatcher {
 
 	boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
+	boolean isMatch(RangerAccessResource resource, MatchScope scope, Map<String, Object> evalContext);
+
+	MatchType getMatchType(RangerAccessResource resource, Map<String, Object> evalContext);
+
 	boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext);
-
-	boolean isHeadMatch(RangerAccessResource resource, Map<String, Object> evalContext);
-
-	boolean isExactHeadMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
 	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
