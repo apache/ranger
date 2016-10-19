@@ -39,6 +39,7 @@ public interface RangerPolicyEngine {
 	String AUDIT_DEFAULT = "audit-default";
 
 	String USER_CURRENT = "{" + RangerAccessRequestUtil.KEY_USER + "}";
+	String RESOURCE_OWNER = "{OWNER}";
 
 	String getServiceName();
 

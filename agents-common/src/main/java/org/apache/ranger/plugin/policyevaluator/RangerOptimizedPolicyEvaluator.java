@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
@@ -41,6 +42,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean     hasAllPerms    = false;
     private boolean     hasPublicGroup = false;
     private boolean     hasCurrentUser = false;
+    private boolean     hasResourceOwner = false;
 
     // For computation of priority
     private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING   = "*";
@@ -78,8 +80,13 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         hasAllPerms = checkIfHasAllPerms();
 
         for (String user : users) {
-            if (user.equalsIgnoreCase(RangerPolicyEngine.USER_CURRENT)) {
+            if (!hasCurrentUser && user.equalsIgnoreCase(RangerPolicyEngine.USER_CURRENT)) {
                 hasCurrentUser = true;
+            }
+            if (!hasResourceOwner && user.equalsIgnoreCase(RangerPolicyEngine.RESOURCE_OWNER)) {
+                hasResourceOwner = true;
+            }
+            if (hasCurrentUser && hasResourceOwner) {
                 break;
             }
         }
@@ -238,13 +245,29 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
         boolean ret = false;
 
-        if (hasPublicGroup || hasCurrentUser || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
+        if (hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups())) {
             if(request.isAccessTypeDelegatedAdmin()) {
                 ret = delegateAdmin;
             } else if(hasAllPerms) {
                 ret = true;
             } else {
                 ret = request.isAccessTypeAny() || accessPerms.contains(request.getAccessType());
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean isOwnerMatch(RangerAccessRequest request) {
+        boolean ret = false;
+
+        if (hasResourceOwner) {
+            RangerAccessResource accessedResource = request.getResource();
+            String resourceOwner = accessedResource != null ? accessedResource.getOwnerUser() : null;
+            String user = request.getUser();
+
+            if (user != null && resourceOwner != null && user.equals(resourceOwner)) {
+                ret = true;
             }
         }
 

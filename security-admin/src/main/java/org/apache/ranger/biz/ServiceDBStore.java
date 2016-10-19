@@ -284,7 +284,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							public Object doInTransaction(TransactionStatus status) {
 								EmbeddedServiceDefsUtil.instance().init(dbStore);
 								getServiceUpgraded();
-								createGenericUser();
+								createGenericUsers();
 								return null;
 							}
 						});
@@ -3833,10 +3833,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return RangerPolicyEngine.AUDIT_DEFAULT;
 	}
 
-	private void createGenericUser() {
+	private void createGenericUsers() {
 		VXUser genericUser = new VXUser();
+
 		genericUser.setName(RangerPolicyEngine.USER_CURRENT);
 		genericUser.setDescription(RangerPolicyEngine.USER_CURRENT);
+		xUserService.createXUserWithOutLogin(genericUser);
+
+		genericUser.setName(RangerPolicyEngine.RESOURCE_OWNER);
+		genericUser.setDescription(RangerPolicyEngine.RESOURCE_OWNER);
 		xUserService.createXUserWithOutLogin(genericUser);
 	}
 }

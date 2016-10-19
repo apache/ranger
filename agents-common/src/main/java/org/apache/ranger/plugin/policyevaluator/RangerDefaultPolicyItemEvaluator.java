@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -50,6 +51,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	private static final Log PERF_POLICYCONDITION_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policycondition.request");
 
 	private boolean hasCurrentUser = false;
+	private boolean hasResourceOwner = false;
 
 	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
 		super(serviceDef, policy, policyItem, policyItemType, policyItemIndex, options);
@@ -105,6 +107,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 
 		List<String> users = policyItem != null ? policyItem.getUsers() : null;
 		this.hasCurrentUser = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.USER_CURRENT);
+		this.hasResourceOwner = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.RESOURCE_OWNER);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyItemEvaluator(policyId=" + policyId + ", conditionsCount=" + getConditionEvaluators().size() + ")");
@@ -126,7 +129,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		}
 
 		if(policyItem != null) {
-			if(matchUserGroup(request.getUser(), request.getUserGroups())) {
+			if(matchUserGroupAndOwner(request)) {
 				if (request.isAccessTypeDelegatedAdmin()) { // used only in grant/revoke scenario
 					if (policyItem.getDelegateAdmin()) {
 						ret = true;
@@ -194,6 +197,34 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		return ret;
 	}
 
+	private boolean matchUserGroupAndOwner(RangerAccessRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroupAndOwner(" + request + ")");
+		}
+
+		boolean ret = false;
+
+		String user = request.getUser();
+		Set<String> userGroups = request.getUserGroups();
+
+		if (hasResourceOwner) {
+			RangerAccessResource accessedResource = request.getResource();
+			String resourceOwner = accessedResource != null ? accessedResource.getOwnerUser() : null;
+
+			if (user != null && resourceOwner != null && user.equals(resourceOwner)) {
+				ret = true;
+			}
+		}
+		if (!ret) {
+			ret = matchUserGroup(user, userGroups);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyItemEvaluator.matchUserGroupAndOwner(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
 	@Override
 	public boolean matchAccessType(String accessType) {
 		if(LOG.isDebugEnabled()) {
