@@ -30,7 +30,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 	private static final Log LOG  = LogFactory.getLog(RangerHdfsAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "hdfs";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-hdfs-plugin"};
 	private static final String   RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer";
 
 	private INodeAttributeProvider 	rangerHdfsAuthorizerImpl 		= null;

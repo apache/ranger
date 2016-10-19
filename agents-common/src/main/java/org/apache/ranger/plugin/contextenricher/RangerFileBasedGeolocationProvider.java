@@ -19,12 +19,7 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class RangerFileBasedGeolocationProvider extends RangerAbstractGeolocationProvider {
-
-	private static final Log LOG = LogFactory.getLog(RangerFileBasedGeolocationProvider.class);
 
 	public static final String GEOLOCATION_SOURCE_LOADER_FILELOADER = "org.apache.ranger.plugin.store.file.GeolocationFileStore";
 

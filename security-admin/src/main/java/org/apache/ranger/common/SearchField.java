@@ -137,6 +137,10 @@ public class SearchField {
 		this.regEx = regEx;
 	}
 
+    public String getRegEx() {
+        return regEx;
+    }
+
 	/**
 	 * @param enumName
 	 *            the enumName to set
@@ -145,6 +149,10 @@ public class SearchField {
 		this.enumName = enumName;
 	}
 
+    public String getEnumName() {
+        return enumName;
+    }
+
 	/**
 	 * @param maxValue
 	 *            the maxValue to set
@@ -152,6 +160,10 @@ public class SearchField {
 	public void setMaxValue(int maxValue) {
 		this.maxValue = maxValue;
 	}
+
+    public int getMaxValue() {
+        return maxValue;
+    }
 
 	/**
 	 * @return the joinTables

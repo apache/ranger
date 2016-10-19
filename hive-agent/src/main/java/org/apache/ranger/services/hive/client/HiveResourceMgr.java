@@ -35,7 +35,6 @@ public class HiveResourceMgr {
 	
 	private static final String  DATABASE 	  = "database";
 	private static final String  TABLE	 	  = "table";
-	private static final String  UDF	 	  = "udf";
 	private static final String  COLUMN	 	  = "column";
 
 	

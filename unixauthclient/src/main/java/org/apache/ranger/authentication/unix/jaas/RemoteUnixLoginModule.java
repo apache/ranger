@@ -53,8 +53,6 @@ import javax.security.auth.spi.LoginModule;
 	
 public class RemoteUnixLoginModule implements LoginModule {
 	
-	private static final String REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM = "configFile";
-
 	private static final String DEBUG_PARAM = "ranger.unixauth.debug";
 	private static final String REMOTE_LOGIN_HOST_PARAM = "ranger.unixauth.service.hostname";
 	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.unixauth.service.port";
@@ -528,8 +526,4 @@ public class RemoteUnixLoginModule implements LoginModule {
 		}
 	}
 	
-	private void logError(String msg) {
-		System.err.println("RemoteUnixLoginModule: <ERROR> " + msg);
-	}
-
 }

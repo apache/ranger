@@ -62,7 +62,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XAgentService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
@@ -113,9 +112,6 @@ public class AssetREST {
 
 	@Autowired
 	XCredentialStoreService xCredentialStoreService;
-
-	@Autowired
-	XAgentService xAgentService;
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;

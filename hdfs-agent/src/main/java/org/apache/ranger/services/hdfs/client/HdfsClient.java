@@ -45,8 +45,6 @@ public class HdfsClient extends BaseClient {
 
 	private static final Log LOG = LogFactory.getLog(HdfsClient.class);
   private Configuration conf;
-  private static List<String> rangerInternalPropertyKeys = Arrays.asList("username",
-    "password", "keytabfile");
 
 	public HdfsClient(String serviceName, Map<String,String> connectionProperties) {
 		super(serviceName,connectionProperties, "hdfs-client");

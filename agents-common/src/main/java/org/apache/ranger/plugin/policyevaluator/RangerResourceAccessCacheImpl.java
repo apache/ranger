@@ -34,23 +34,19 @@ public class RangerResourceAccessCacheImpl implements RangerResourceAccessCache 
     private static final Log LOG = LogFactory.getLog(RangerResourceAccessCacheImpl.class);
 
     public synchronized static RangerResourceAccessCache getInstance(RangerServiceDef serviceDef, RangerPolicy policy) {
-        return new RangerResourceAccessCacheImpl(serviceDef, policy);
+        return new RangerResourceAccessCacheImpl(policy);
     }
-
-    private RangerServiceDef serviceDef = null;
 
     private Map<String, String> matchedResourceCache    = null;
     private Map<String, String> notMatchedResourceCache = null;
 
-    private RangerResourceAccessCacheImpl(RangerServiceDef serviceDef, RangerPolicy policy) {
+    private RangerResourceAccessCacheImpl(RangerPolicy policy) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceAccessCacheImpl.constructor(), policyName:" + policy.getName());
         }
 
         int matchedCacheSize    = RangerConfiguration.getInstance().getInt("ranger.policyengine.matched.cached.count", 1000);
         int notMatchedCacheSize = RangerConfiguration.getInstance().getInt("ranger.policyengine.not.matched.cached.count", matchedCacheSize * 10);
-
-        this.serviceDef = serviceDef;
 
         matchedResourceCache    = new CacheMap<String, String>(matchedCacheSize);
         notMatchedResourceCache = new CacheMap<String, String>(notMatchedCacheSize);

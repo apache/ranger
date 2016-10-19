@@ -21,13 +21,8 @@ package org.apache.ranger.services.yarn.client;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
-
 public class YarnConnectionMgr {
 
-	private static final Logger LOG = Logger.getLogger(YarnConnectionMgr.class);
-	
 	public static YarnClient getYarnClient(String serviceName, Map<String, String> configs) {
         return  new YarnClient(serviceName, configs);
     }

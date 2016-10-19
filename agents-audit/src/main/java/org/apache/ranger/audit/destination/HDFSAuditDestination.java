@@ -62,9 +62,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	private String logFolder;
 
-	PrintWriter logWriter = null;
-
-	private Date fileCreateTime = null;
+	private PrintWriter logWriter = null;
 
 	private String currentFileName;
 
@@ -72,7 +70,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	private RollingTimeUtil rollingTimeUtil = null;
 
-	private Date  nextRollOverTime = null;
+	private Date nextRollOverTime = null;
 
 	private boolean rollOverByDuration  = false;
 
@@ -280,7 +278,6 @@ public class HDFSAuditDestination extends AuditDestination {
 			logger.info("Creating new log file. hdfPath=" + fullPath);
 			FSDataOutputStream ostream = fileSystem.create(hdfPath);
 			logWriter = new PrintWriter(ostream);
-			fileCreateTime = new Date();
 			currentFileName = fullPath;
 		}
 		return logWriter;

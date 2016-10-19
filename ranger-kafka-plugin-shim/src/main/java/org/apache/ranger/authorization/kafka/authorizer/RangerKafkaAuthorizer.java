@@ -38,7 +38,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	private static final Logger LOG  = Logger.getLogger(RangerKafkaAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "kafka";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-kafka-plugin"};
 	private static final String   RANGER_KAFKA_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer";
 
 	private Authorizer  rangerKakfaAuthorizerImpl 						  = null;

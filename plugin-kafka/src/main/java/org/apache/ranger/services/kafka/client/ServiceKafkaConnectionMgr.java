@@ -22,11 +22,7 @@ package org.apache.ranger.services.kafka.client;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 public class ServiceKafkaConnectionMgr {
-	private static final Logger LOG = Logger
-			.getLogger(ServiceKafkaConnectionMgr.class);
 
 	static public ServiceKafkaClient getKafkaClient(String serviceName,
 			Map<String, String> configs) throws Exception {

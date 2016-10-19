@@ -22,13 +22,10 @@ package org.apache.ranger.services.solr.client;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 public class ServiceSolrConnectionMgr {
-	private static final Logger LOG = Logger
-			.getLogger(ServiceSolrConnectionMgr.class);
 
 	static public ServiceSolrClient getSolrClient(String serviceName,
 			Map<String, String> configs) throws Exception {

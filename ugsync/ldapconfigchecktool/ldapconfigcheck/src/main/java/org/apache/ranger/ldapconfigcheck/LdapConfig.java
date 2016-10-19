@@ -38,10 +38,6 @@ public class LdapConfig {
 
     private static final String LGSYNC_LDAP_BIND_DN = "ranger.usersync.ldap.binddn";
 
-    private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ranger.usersync.credstore.filename";
-
-    private static final String LGSYNC_LDAP_BIND_ALIAS = "ranger.usersync.ldap.bindalias";
-
     private static final String LGSYNC_LDAP_BIND_PASSWORD = "ranger.usersync.ldap.ldapbindpassword";
 
     private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM = "ranger.usersync.ldap.authentication.mechanism";

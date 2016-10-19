@@ -23,17 +23,14 @@ import org.apache.atlas.authorize.AtlasAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
     private static boolean isDebugEnabled = LOG.isDebugEnabled();
-    private static volatile RangerBasePlugin atlasPlugin = null;
 
     private static final String   RANGER_PLUGIN_TYPE                      = "atlas";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-atlas-plugin"};
 	private static final String   RANGER_ATLAS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer";
 	
 	private AtlasAuthorizer  rangerAtlasAuthorizerImpl = null;

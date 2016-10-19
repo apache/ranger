@@ -1519,10 +1519,6 @@ public class ServiceUtil {
        return matched;
    }
 
-   private boolean matchNames(String target, String source) {
-	   return matchNames(target,source,false);
-   }
-
    private boolean wildcardMatch(String target, String source) {
 	   boolean matched = false;
 	   if(target != null && source != null) {

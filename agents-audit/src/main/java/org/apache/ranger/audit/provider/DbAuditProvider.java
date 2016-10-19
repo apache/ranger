@@ -62,7 +62,6 @@ public class DbAuditProvider extends AuditDestination {
 	
 	private int                 mCommitBatchSize      = 1;
 	private int                 mDbRetryMinIntervalMs = 60 * 1000;
-	private long                mLastCommitTime       = System.currentTimeMillis();
 	private ArrayList<AuditEventBase> mUncommitted    = new ArrayList<AuditEventBase>();
 	private Map<String, String> mDbProperties         = null;
 	private long                mLastDbFailedTime     = 0;
@@ -305,8 +304,6 @@ public class DbAuditProvider extends AuditDestination {
 
 			cleanUp(); // so that next insert will try to init()
 		} finally {
-			mLastCommitTime = System.currentTimeMillis();
-
 			clearEntityManager();
 		}
 

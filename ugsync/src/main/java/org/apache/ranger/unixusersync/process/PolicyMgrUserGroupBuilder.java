@@ -80,7 +80,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private static final String NAME_RULE = "hadoop.security.auth_to_local";
 	
 	public static final String PM_USER_LIST_URI  = "/service/xusers/users/";				// GET
-	private static final String PM_ADD_USER_URI  = "/service/xusers/users/";				// POST
 	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo";	// POST
 	
 	public static final String PM_GROUP_LIST_URI = "/service/xusers/groups/";				// GET
@@ -88,7 +87,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	
 	public static final String PM_USER_GROUP_MAP_LIST_URI = "/service/xusers/groupusers/";		// GET
-	private static final String PM_ADD_USER_GROUP_LINK_URI = "/service/xusers/groupusers/";	// POST
 	
 	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}"; // DELETE
 	

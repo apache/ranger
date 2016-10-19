@@ -30,10 +30,7 @@
 	<exclude name="DoubleCheckedLocking" />
 	<exclude name="OverrideBothEqualsAndHashcode" />
   </rule>
-  <rule ref="rulesets/java/unusedcode.xml">
-	<exclude name="UnusedPrivateField" />
-	<exclude name="UnusedPrivateMethod" />
-  </rule>
+  <rule ref="rulesets/java/unusedcode.xml" />
   <rule ref="rulesets/java/imports.xml" />
   <rule ref="rulesets/java/braces.xml">
 	<exclude name="ForLoopsMustUseBraces" />

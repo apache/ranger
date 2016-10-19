@@ -79,16 +79,6 @@ public class GeolocationMetadata {
 		return sb.toString();
 	}
 
-	private StringBuilder toString(StringBuilder sb) {
-		sb.append("locationDataItems={");
-
-		for (int i = 0; i < locationDataItemNames.length; i++) {
-			sb.append(locationDataItemNames[i]).append(", ");
-		}
-
-		sb.append("}");
-		return sb;
-	}
 	private StringBuilder toStringDump(StringBuilder sb) {
 		sb.append("FROM_IP,TO_IP,");
 

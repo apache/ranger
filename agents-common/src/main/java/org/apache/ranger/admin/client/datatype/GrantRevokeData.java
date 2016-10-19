@@ -47,9 +47,6 @@ public class GrantRevokeData implements java.io.Serializable {
 	private String        tables;
 	private String        columns;
 	private String        columnFamilies;
-	private boolean       isEnabled;
-	private boolean       isAuditEnabled;
-	private boolean       replacePerm;
 	private List<PermMap> permMapList = new ArrayList<PermMap>();
 	
 	private static String WILDCARD_ASTERISK = "*";
@@ -135,9 +132,6 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.databases      = StringUtil.isEmpty(databases) ? WILDCARD_ASTERISK : databases;
 		this.tables         = StringUtil.isEmpty(tables)    ? WILDCARD_ASTERISK : tables;
 		this.columns        = StringUtil.isEmpty(columns)   ? WILDCARD_ASTERISK : columns;
-		this.isAuditEnabled = true;
-		this.isEnabled      = true;
-		this.replacePerm    = false;
 		this.permMapList.add(permMap);
 	}
 
@@ -153,9 +147,6 @@ public class GrantRevokeData implements java.io.Serializable {
 		this.tables         = StringUtil.isEmpty(tables)         ? WILDCARD_ASTERISK : tables;
 		this.columns        = StringUtil.isEmpty(columns)        ? WILDCARD_ASTERISK : columns;
 		this.columnFamilies = StringUtil.isEmpty(columnFamilies) ? WILDCARD_ASTERISK : columnFamilies;
-		this.isAuditEnabled = true;
-		this.isEnabled      = true;
-		this.replacePerm    = true;
 		this.permMapList.add(permMap);
 	}
 	

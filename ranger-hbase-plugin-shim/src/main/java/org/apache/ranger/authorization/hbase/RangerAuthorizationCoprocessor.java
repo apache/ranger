@@ -106,9 +106,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 
 	public static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class);
 	private static final String   RANGER_PLUGIN_TYPE                      = "hbase";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-hbase-plugin"};
 	private static final String   RANGER_HBASE_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor";
-	private static final String   ACCESSCONTROLLISTS_CLASSNAME			  = "org.apache.hadoop.hbase.security.access.AccessControlLists";
 	
 	private static RangerPluginClassLoader rangerPluginClassLoader = null;
 	

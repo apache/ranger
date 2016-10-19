@@ -36,7 +36,6 @@ public class RangerHiveAuthorizerFactory implements HiveAuthorizerFactory {
 	private static final Log LOG  = LogFactory.getLog(RangerHiveAuthorizerFactory.class);
 	
 	private static final String   RANGER_PLUGIN_TYPE                      = "hive";
-	private static final String[] RANGER_PLUGIN_LIB_DIR                   = new String[] {"lib/ranger-hive-plugin"};
 	private static final String   RANGER_HIVE_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory";
 
 	private HiveAuthorizerFactory 	rangerHiveAuthorizerFactoryImpl		  = null;
@@ -123,3 +122,4 @@ public class RangerHiveAuthorizerFactory implements HiveAuthorizerFactory {
 	}
 
 }
+

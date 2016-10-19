@@ -19,15 +19,12 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.Map;
 
 public abstract class RangerTagRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerTagRetriever.class);
 
 	protected String serviceName;
 	protected RangerServiceDef serviceDef;
