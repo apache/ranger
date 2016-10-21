@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("public/v2")
@@ -280,6 +281,26 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json", "application/xml" })
 	public RangerPolicy getPolicy(@PathParam("id") Long id) {
 		return serviceREST.getPolicy(id);
+	}
+
+	@GET
+	@Path("/api/policy/")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
+
+		List<RangerPolicy> ret  = new ArrayList<RangerPolicy>();
+
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.getPolicies()");
+		}
+
+		ret = serviceREST.getPolicies(request).getPolicies();
+
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.getPolicies(Request: " + request.getQueryString() + " Result Size: "  + ret.size() );
+		}
+
+		return ret;
 	}
 
 	@GET
