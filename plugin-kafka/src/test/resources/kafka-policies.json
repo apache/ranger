@@ -1,0 +1,314 @@
+{
+  "serviceName": "KafkaTest",
+  "serviceId": 18,
+  "policyVersion": 4,
+  "policyUpdateTime": "20160907-16:45:05.000-+0100",
+  "policies": [
+    {
+      "service": "KafkaTest",
+      "name": "KafkaTest-1-20160831155857",
+      "description": "Default Policy for Service: KafkaTest",
+      "resourceSignature": "ed261a0b72557ee7d54162a527fd0ff6",
+      "isAuditEnabled": true,
+      "resources": {
+        "topic": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "publish",
+              "isAllowed": true
+            },
+            {
+              "type": "consume",
+              "isAllowed": true
+            },
+            {
+              "type": "configure",
+              "isAllowed": true
+            },
+            {
+              "type": "describe",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "delete",
+              "isAllowed": true
+            },
+            {
+              "type": "kafka_admin",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "admin"
+          ],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 53,
+      "guid": "1472659137721_930_1125",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160831-16:58:57.000-+0100",
+      "updateTime": "20160907-16:26:46.000-+0100",
+      "version": 2
+    },
+    {
+      "service": "KafkaTest",
+      "name": "TestPolicy",
+      "description": "",
+      "resourceSignature": "4f8b4e7296cd717f54eccea62d6080ed",
+      "isAuditEnabled": true,
+      "resources": {
+        "topic": {
+          "values": [
+            "test"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "publish",
+              "isAllowed": true
+            },
+            {
+              "type": "consume",
+              "isAllowed": true
+            },
+            {
+              "type": "configure",
+              "isAllowed": true
+            },
+            {
+              "type": "describe",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "delete",
+              "isAllowed": true
+            },
+            {
+              "type": "kafka_admin",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "consume",
+              "isAllowed": true
+            },
+            {
+              "type": "describe",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "public"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 54,
+      "guid": "1473261206991_302_1412",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": "20160907-16:13:26.000-+0100",
+      "updateTime": "20160907-16:45:05.000-+0100",
+      "version": 2
+    }
+  ],
+  "serviceDef": {
+    "name": "kafka",
+    "implClass": "org.apache.ranger.services.kafka.RangerServiceKafka",
+    "label": "Kafka",
+    "description": "Apache Kafka",
+    "options": {},
+    "configs": [
+      {
+        "itemId": 1,
+        "name": "username",
+        "type": "string",
+        "mandatory": true,
+        "label": "Username"
+      },
+      {
+        "itemId": 2,
+        "name": "password",
+        "type": "password",
+        "mandatory": true,
+        "label": "Password"
+      },
+      {
+        "itemId": 3,
+        "name": "zookeeper.connect",
+        "type": "string",
+        "mandatory": true,
+        "defaultValue": "localhost:2181",
+        "label": "Zookeeper Connect String"
+      },
+      {
+        "itemId": 4,
+        "name": "commonNameForCertificate",
+        "type": "string",
+        "mandatory": false,
+        "label": "Ranger Plugin SSL CName"
+      }
+    ],
+    "resources": [
+      {
+        "itemId": 1,
+        "name": "topic",
+        "type": "string",
+        "level": 1,
+        "mandatory": true,
+        "lookupSupported": true,
+        "recursiveSupported": false,
+        "excludesSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "true"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Topic",
+        "description": "Topic"
+      }
+    ],
+    "accessTypes": [
+      {
+        "itemId": 1,
+        "name": "publish",
+        "label": "Publish",
+        "impliedGrants": [
+          "describe"
+        ]
+      },
+      {
+        "itemId": 2,
+        "name": "consume",
+        "label": "Consume",
+        "impliedGrants": [
+          "describe"
+        ]
+      },
+      {
+        "itemId": 5,
+        "name": "configure",
+        "label": "Configure",
+        "impliedGrants": [
+          "describe"
+        ]
+      },
+      {
+        "itemId": 6,
+        "name": "describe",
+        "label": "Describe",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 8,
+        "name": "create",
+        "label": "Create",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 9,
+        "name": "delete",
+        "label": "Delete",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 7,
+        "name": "kafka_admin",
+        "label": "Kafka Admin",
+        "impliedGrants": [
+          "publish",
+          "consume",
+          "configure",
+          "describe",
+          "create",
+          "delete"
+        ]
+      }
+    ],
+    "policyConditions": [
+      {
+        "itemId": 1,
+        "name": "ip-range",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+        "evaluatorOptions": {},
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "IP Address Range",
+        "description": "IP Address Range"
+      }
+    ],
+    "contextEnrichers": [],
+    "enums": [],
+    "dataMaskDef": {
+      "maskTypes": [],
+      "accessTypes": [],
+      "resources": []
+    },
+    "rowFilterDef": {
+      "accessTypes": [],
+      "resources": []
+    },
+    "id": 9,
+    "guid": "1457966376181_361_1",
+    "isEnabled": true,
+    "createTime": "20160314-14:39:36.000-+0000",
+    "updateTime": "20160314-14:39:36.000-+0000",
+    "version": 1
+  },
+  "auditMode": "audit-default"
+}
