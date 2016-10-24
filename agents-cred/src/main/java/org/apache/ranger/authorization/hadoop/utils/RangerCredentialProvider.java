@@ -38,15 +38,15 @@ public final class RangerCredentialProvider {
 		//
 	}
 
-	public static RangerCredentialProvider getInstance()  {
+	public static RangerCredentialProvider getInstance() {
 		return CRED_PROVIDER;
 	}
 
-	public char[] getCredentialString(String url, String alias)  {
+	public char[] getCredentialString(String url, String alias) {
 		List<CredentialProvider> providers = getCredentialProviders(url);
 
 		if (providers != null) {
-			for (CredentialProvider provider: providers) {
+			for (CredentialProvider provider : providers) {
 				try {
 					CredentialProvider.CredentialEntry credEntry = provider.getCredentialEntry(alias);
 
@@ -61,7 +61,7 @@ public final class RangerCredentialProvider {
 		return null;
 	}
 
-	List<CredentialProvider>  getCredentialProviders(String url){
+	List<CredentialProvider> getCredentialProviders(String url) {
 		try {
 			Configuration conf = new Configuration();
 

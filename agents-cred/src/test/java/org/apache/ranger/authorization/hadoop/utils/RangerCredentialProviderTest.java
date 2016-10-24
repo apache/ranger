@@ -49,7 +49,7 @@ public class RangerCredentialProviderTest {
 		keystoreFile = ksFile.toURI().getPath();
 		url = "jceks://file@/" + keystoreFile;
 		
-		if ( isCredentialShellInteractiveEnabled() ) {
+		if (isCredentialShellInteractiveEnabled()) {
 			argsCreate = new String[] {"create", "TestCredential001", "-f",  "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
 			argsDelete = new String[] {"delete", "TestCredential001", "-f" , "-provider", "jceks://file@/" + keystoreFile};
 		} else {
@@ -134,11 +134,11 @@ public class RangerCredentialProviderTest {
 		CredentialShell cs = new CredentialShell();
 		cs.setConf(conf);
 		try {
-			 ret =cs.run(argsDelete);
+			 ret = cs.run(argsDelete);
 		} catch (Exception e) {
 			throw e;
 		}
-		assertEquals(0,ret);	
+		assertEquals(0, ret);
 		listThreads();
 	}
 	
@@ -147,7 +147,7 @@ public class RangerCredentialProviderTest {
 		if (ac > 0) {
 			Thread[] tlist = new Thread[ac];
 			Thread.enumerate(tlist);
-			for(Thread t : tlist) {
+			for (Thread t : tlist) {
 				System.out.println("Thread [" + t + "] => {" + t.getClass().getName() + "}");
 			}
 		}
