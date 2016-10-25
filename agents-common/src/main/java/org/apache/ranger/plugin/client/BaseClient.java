@@ -51,8 +51,8 @@ public abstract class BaseClient {
     this(svcName, connectionProperties, null);
   }
 
-	public BaseClient(String serivceName, Map<String,String> connectionProperties, String defaultConfigFile) {
-		this.serviceName = serivceName;
+	public BaseClient(String serviceName, Map<String,String> connectionProperties, String defaultConfigFile) {
+		this.serviceName = serviceName;
 		this.connectionProperties = connectionProperties;
 		this.defaultConfigFile = defaultConfigFile;
 		init();
