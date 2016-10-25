@@ -34,7 +34,6 @@ if (not 'JAVA_HOME' in os.environ):
 debugLevel = 1
 generateXML = 0
 installPropDirName = '.'
-pidFolderName = '/var/run/ranger'
 logFolderName = '/var/log/ranger'
 initdDirName = '/etc/init.d'
 
@@ -92,6 +91,8 @@ TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
 
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
+ENV_PID_FILE = 'ranger-tagsync-env-piddir.sh'
+
 globalDict = {}
 configure_security = False
 
@@ -339,6 +340,11 @@ def main():
 
 
 	hadoop_conf = globalDict['hadoop_conf']
+        pid_dir_path = globalDict['TAGSYNC_PID_DIR_PATH']
+        unix_user = globalDict['unix_user']
+
+        if pid_dir_path == "":
+                pid_dir_path = "/var/run/ranger"
 
 	dirList = [ rangerBaseDirName, tagsyncBaseDirFullName, confFolderName ]
 	for dir in dirList:
@@ -390,11 +396,11 @@ def main():
 	else:
 		os.makedirs(logFolderName,logFolderPermMode)
 
-	if (not os.path.isdir(pidFolderName)):
-		os.makedirs(pidFolderName,logFolderPermMode)
-
 	if (not os.path.isdir(tagsyncLogFolderName)):
 		os.makedirs(tagsyncLogFolderName,logFolderPermMode)
+
+        if (not os.path.isdir(pid_dir_path)):
+                os.makedirs(pid_dir_path,logFolderPermMode)
 
 	if (unixUserProp in mergeProps):
 		ownerName = mergeProps[unixUserProp]
@@ -420,7 +426,6 @@ def main():
 
 	os.chown(logFolderName,ownerId,groupId)
 	os.chown(tagsyncLogFolderName,ownerId,groupId)
-	os.chown(pidFolderName,ownerId,groupId)
 	os.chown(rangerBaseDirName,ownerId,groupId)
 
 	initializeInitD()
@@ -470,8 +475,15 @@ def main():
 				os.chmod(fn, 0755)
 
 	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE)
+        write_env_files("TAGSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
 	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+        os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
+        os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0755)
+
+        f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
+        f.write("\nexport {0}={1}".format("UNIX_TAGSYNC_USER",unix_user))
+        f.close()
 
 	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
 	tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)

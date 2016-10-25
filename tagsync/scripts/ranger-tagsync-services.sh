@@ -27,13 +27,19 @@ realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
 
-pidd=/var/run/ranger
+for custom_env_script in `find ${cdir}/conf/ -name "ranger-tagsync-env*"`; do
+        if [ -f $custom_env_script ]; then
+                . $custom_env_script
+        fi
+done
 
-if [ -d $pidd ]; then
-	mkdir -p $pidd
+if [ -z "${TAGSYNC_PID_DIR_PATH}" ]; then
+        pidf=/var/run/ranger
 fi
-
-pidf=${pidd}/tagsync.pid
+pidf=${TAGSYNC_PID_DIR_PATH}/tagsync.pid
+if [ -z "${UNIX_TAGSYNC_USER}" ]; then
+        UNIX_TAGSYNC_USER=ranger
+fi
 
 if [ "${action}" == "START" ]; then
 
@@ -82,7 +88,7 @@ if [ "${action}" == "START" ]; then
 	if ps -p $VALUE_OF_PID > /dev/null
 	then
 		echo $VALUE_OF_PID > ${pidf}
-		chown ranger ${pidf}
+                chown ${UNIX_TAGSYNC_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
 		echo "Apache Ranger Tagsync Service with pid ${pid} has started."

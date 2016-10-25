@@ -53,6 +53,16 @@ then
         RANGER_KMS_LOG_DIR=${RANGER_KMS_EWS_DIR}/logs
 fi
 
+if [ -z "${RANGER_KMS_PID_DIR_PATH}" ]
+then
+        RANGER_KMS_PID_DIR_PATH=/var/run/ranger_kms
+fi
+pidf=${RANGER_KMS_PID_DIR_PATH}/rangerkms.pid
+
+if [ -z "${KMS_USER}" ]
+then
+        KMS_USER=kms
+fi
 
 PROC_NAME=proc_rangerkms
 export PROC_NAME
@@ -75,7 +85,7 @@ then
 fi
 
 KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf
-pidf="/var/run/ranger_kms/rangerkms.pid"
+
 JAVA_OPTS="${JAVA_OPTS} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${RANGER_KMS_EWS_DIR}/webapp/lib/*:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH "
 createRangerKMSPid () {
 	SLEEP_TIME_AFTER_START=5
@@ -86,7 +96,7 @@ createRangerKMSPid () {
 	if ps -p $VALUE_OF_PID > /dev/null
 	then
 		echo $VALUE_OF_PID > ${pidf}
-		chown ranger ${pidf}
+                chown ${KMS_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
 		echo "Apache Ranger KMS Service with pid ${pid} has started."

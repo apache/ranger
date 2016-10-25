@@ -29,7 +29,6 @@ XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
 RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
-pidf=/var/run/ranger/rangeradmin.pid
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
 
 if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
@@ -52,6 +51,17 @@ then
 	RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_EWS_DIR}/logs
 fi
 
+if [ -z "${RANGER_PID_DIR_PATH}" ]
+then
+        RANGER_PID_DIR_PATH=/var/run/ranger
+fi
+pidf=${RANGER_PID_DIR_PATH}/rangeradmin.pid
+
+if [ -z "${RANGER_USER}" ]
+then
+        RANGER_USER=ranger
+fi
+
 start() {
 	SLEEP_TIME_AFTER_START=5
 	nohup  java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
@@ -61,7 +71,7 @@ start() {
 	if ps -p $VALUE_OF_PID > /dev/null
 	then
 		echo $VALUE_OF_PID > ${pidf}
-		chown ranger ${pidf}
+                chown ${RANGER_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
 		echo "Apache Ranger Admin Service with pid ${pid} has started."

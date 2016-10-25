@@ -27,8 +27,18 @@ realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
 
-pidf=/var/run/ranger/usersync.pid
-
+for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
+        if [ -f $custom_env_script ]; then
+                . $custom_env_script
+        fi
+done
+if [ -z "${USERSYNC_PID_DIR_PATH}" ]; then
+        pidf=/var/run/ranger
+fi
+pidf=${USERSYNC_PID_DIR_PATH}/usersync.pid
+if [ -z "${UNIX_USERSYNC_USER}" ]; then
+        UNIX_USERSYNC_USER=ranger
+fi
 
 if [ "${action}" == "START" ]; then
 
@@ -36,12 +46,6 @@ if [ "${action}" == "START" ]; then
 	if [ -f ${cdir}/conf/java_home.sh ]; then
 		. ${cdir}/conf/java_home.sh
 	fi
-
-	for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
-        	if [ -f $custom_env_script ]; then
-                	. $custom_env_script
-	        fi
-	done
 
 	if [ "$JAVA_HOME" != "" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
@@ -72,7 +76,7 @@ if [ "${action}" == "START" ]; then
     if ps -p $VALUE_OF_PID > /dev/null
     then
 		echo $VALUE_OF_PID > ${pidf}
-		chown ranger ${pidf}
+                chown ${UNIX_USERSYNC_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
 		echo "Apache Ranger Usersync Service with pid ${pid} has started."
@@ -85,7 +89,6 @@ elif [ "${action}" == "STOP" ]; then
 	WAIT_TIME_FOR_SHUTDOWN=2
 	NR_ITER_FOR_SHUTDOWN_CHECK=15
 	if [ -f $pidf ]; then
-		pidf=/var/run/ranger/usersync.pid
 		pid=`cat $pidf` > /dev/null 2>&1
 		kill -9 $pid > /dev/null 2>&1
 		sleep 1 #Give kill -9 sometime to "kill"

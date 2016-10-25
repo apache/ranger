@@ -88,6 +88,7 @@ sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
 cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
 KMS_BLACKLIST_DECRYPT_EEK=$(get_prop 'KMS_BLACKLIST_DECRYPT_EEK' $PROPFILE)
 RANGER_KMS_LOG_DIR=$(eval echo "$(get_prop 'RANGER_KMS_LOG_DIR' $PROPFILE)")
+RANGER_KMS_PID_DIR_PATH=$(eval echo "$(get_prop 'RANGER_KMS_PID_DIR_PATH' $PROPFILE)")
 HSM_TYPE=$(get_prop 'HSM_TYPE' $PROPFILE)
 HSM_ENABLED=$(get_prop 'HSM_ENABLED' $PROPFILE)
 HSM_PARTITION_NAME=$(get_prop 'HSM_PARTITION_NAME' $PROPFILE)
@@ -764,6 +765,17 @@ setup_install_files(){
         fi
         echo "export RANGER_KMS_LOG_DIR=${RANGER_KMS_LOG_DIR}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
     	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
+
+        if [ ! -d ${RANGER_KMS_PID_DIR_PATH} ]; then
+                log "[I] Creating KMS PID folder: ${RANGER_KMS_PID_DIR_PATH}"
+                mkdir -p ${RANGER_KMS_PID_DIR_PATH}
+        fi
+        if [ -d ${RANGER_KMS_PID_DIR_PATH} ]; then
+                chown -R ${unix_user} ${RANGER_KMS_PID_DIR_PATH}
+        fi
+        echo "export RANGER_KMS_PID_DIR_PATH=${RANGER_KMS_PID_DIR_PATH}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
+        echo "export KMS_USER=${unix_user}" >> ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
 
 	log "[I] Setting up installation files and directory DONE";
 
