@@ -314,7 +314,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	@Override
-	public void addOrUpdateUser(String userName, List<String> groups) {
+	public void addOrUpdateUser(String userName, List<String> groups) throws Throwable {
 		
 		UserGroupInfo ugInfo		  = new UserGroupInfo();
 		XUserInfo user = userName2XUserInfoMap.get(userName);
@@ -332,7 +332,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			
 			//* Build the user group info object and do the rest call
  			if ( ! isMockRun ) {
- 				addUserGroupInfo(userName,groups);
+ 				// If the rest call to ranger admin fails, 
+ 				// propagate the failure to the caller for retry in next sync cycle.
+ 				if (addUserGroupInfo(userName,groups) == null ) {
+ 					String msg = "Failed to add addorUpdate user group info";
+ 					LOG.error(msg);
+ 					throw new Exception(msg);
+ 				}
  			}
 
 		}
@@ -367,7 +373,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  					ugInfo.setXuserInfo(addXUserInfo(userName));
  				    ugInfo.setXgroupInfo(getXGroupInfoList(addGroups));
 					try{
-						addUserGroupInfo(ugInfo);
+						// If the rest call to ranger admin fails, 
+		 				// propagate the failure to the caller for retry in next sync cycle.
+						if (addUserGroupInfo(ugInfo) == null) {
+							String msg = "Failed to add add user group info";
+		 					LOG.error(msg);
+		 					throw new Exception(msg);
+						}
 					}catch(Throwable t){
 						LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: " + t.getMessage()
 						+ ", for user-group entry: " + ugInfo);
@@ -388,7 +400,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					ugInfo.setXuserInfo(addXUserInfo(userName));
 					ugInfo.setXgroupInfo(getXGroupInfoList(updateGroups));
 					try{
-						addUserGroupInfo(ugInfo);
+						// If the rest call to ranger admin fails, 
+		 				// propagate the failure to the caller for retry in next sync cycle.
+						if (addUserGroupInfo(ugInfo) == null) {
+							String msg = "Failed to add add user group info";
+		 					LOG.error(msg);
+		 					throw new Exception(msg);
+						}
 					}catch(Throwable t){
 						LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: " + t.getMessage()
 						+ ", for user-group entry: " + ugInfo);
@@ -614,7 +632,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 	}
 	
-	private void addUserGroupInfo(UserGroupInfo usergroupInfo){
+	private UserGroupInfo addUserGroupInfo(UserGroupInfo usergroupInfo){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> PolicyMgrUserGroupBuilder.addUserGroupInfo");
 	 	}
@@ -635,6 +653,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 						return null;
 					}
 				});
+				ret = result;
 			} catch (Exception e) {
 				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
 			}
@@ -645,6 +664,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				LOG.error("Failed to add User Group Info : ", t);
 			}
 		}
+		return ret;
 	}
 
 	private XUserInfo addXUserInfo(String aUserName) {
@@ -976,7 +996,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	@Override
-	public void addOrUpdateGroup(String groupName) {
+	public void addOrUpdateGroup(String groupName) throws Throwable{
 		XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 		
 		if (group == null) {    // Does not exists
@@ -986,6 +1006,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  				group = addGroupInfo(groupName);
  				if ( group != null) {
  					addGroupToList(group);
+ 				} else {
+ 					String msg = "Failed to add addorUpdate group info";
+ 					LOG.error(msg);
+ 					throw new Exception(msg);
  				}
  			}
 		}

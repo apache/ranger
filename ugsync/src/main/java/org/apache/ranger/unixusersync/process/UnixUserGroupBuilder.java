@@ -65,6 +65,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	static final String BACKEND_PASSWD = "passwd";
 
+	private boolean isUpdateSinkSucc = true;
 	private boolean enumerateGroupMembers = false;
 	private boolean useNss = false;
 
@@ -111,6 +112,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	@Override
 	public boolean isChanged() {
+		// If previous update to Ranger admin fails, 
+		// we want to retry the sync process even if there are no changes to the sync files
+		if (!isUpdateSinkSucc) {
+			LOG.info("Previous updateSink failed and hence retry!!");
+			return true;
+		}
+		
 		if (useNss)
 			return System.currentTimeMillis() - lastUpdateTime > timeout;
 
@@ -130,6 +138,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
+		isUpdateSinkSucc = true;
 		buildUserGroupInfo();
 
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
@@ -142,6 +151,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 				+ ", for user: " + user
 				+ ", groups: " + groups);
+				isUpdateSinkSucc = false;
 			}
 		}
 	}

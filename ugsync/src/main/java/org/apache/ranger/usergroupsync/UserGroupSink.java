@@ -24,7 +24,7 @@ import java.util.List;
 public interface UserGroupSink {
 	void init() throws Throwable;
 
-	void addOrUpdateUser(String user, List<String> groups);
+	void addOrUpdateUser(String user, List<String> groups) throws Throwable;
 	
-	void addOrUpdateGroup(String group);
+	void addOrUpdateGroup(String group) throws Throwable;
 }

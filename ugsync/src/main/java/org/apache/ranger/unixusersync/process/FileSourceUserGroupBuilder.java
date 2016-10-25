@@ -47,6 +47,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	private String                   userGroupFilename     = null;
 	private long                     usergroupFileModified = 0;
 
+	private boolean isUpdateSinkSucc = true;
 
 	public static void main(String[] args) throws Throwable {
 		FileSourceUserGroupBuilder filesourceUGBuilder = new FileSourceUserGroupBuilder();
@@ -83,6 +84,13 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	
 	@Override
 	public boolean isChanged() {
+		// If previous update to Ranger admin fails, 
+		// we want to retry the sync process even if there are no changes to the sync files
+		if (!isUpdateSinkSucc) {
+			LOG.info("Previous updateSink failed and hence retry!!");
+			return true;
+		}
+		
 		long TempUserGroupFileModifedAt = new File(userGroupFilename).lastModified();
 		if (usergroupFileModified != TempUserGroupFileModifedAt) {
 			return true;
@@ -92,6 +100,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
+		isUpdateSinkSucc = true;
 		buildUserGroupInfo();
 		String user=null;
 		List<String> groups=null;
@@ -114,6 +123,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 				+ ", for user: " + user
 				+ ", groups: " + groups);
+				isUpdateSinkSucc = false;
 			}
 		}
 	}
