@@ -48,9 +48,9 @@ public class HBaseClient extends BaseClient {
 
 	private Configuration conf;
 
-	public HBaseClient(String serivceName,Map<String,String> connectionProp) {
+	public HBaseClient(String serviceName,Map<String,String> connectionProp) {
 
-		super(serivceName, addDefaultHBaseProp(connectionProp));
+		super(serviceName, addDefaultHBaseProp(connectionProp));
 		conf = HBaseConfiguration.create();
 
 		Set<String> rangerInternalPropertyKeys = getConfigHolder().getRangerInternalPropertyKeys();
