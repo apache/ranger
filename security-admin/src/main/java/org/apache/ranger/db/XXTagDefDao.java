@@ -73,6 +73,19 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 		}
 	}
 
+	public List<XXTagDef> findForServicePlugin(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagDef>();
+		}
+
+		try {
+			return getEntityManager().createNamedQuery("XXTagDef.findForServicePlugin", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagDef>();
+		}
+	}
+
 	public List<String> getAllNames() {
 		try {
 			return getEntityManager().createNamedQuery("XXTagDef.getAllNames", String.class).getResultList();

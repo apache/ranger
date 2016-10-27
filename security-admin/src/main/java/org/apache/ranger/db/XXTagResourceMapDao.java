@@ -140,4 +140,16 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 			return new ArrayList<XXTagResourceMap>();
 		}
 	}
+
+	public List<XXTagResourceMap> findForServicePlugin(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagResourceMap>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagResourceMap.findForServicePlugin", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagResourceMap>();
+		}
+	}
 }

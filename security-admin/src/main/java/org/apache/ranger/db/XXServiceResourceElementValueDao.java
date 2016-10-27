@@ -72,12 +72,12 @@ public class XXServiceResourceElementValueDao extends BaseDao<XXServiceResourceE
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<XXServiceResourceElementValue> findForTaggedResourcesInServiceId(Long serviceId) {
+	public List<XXServiceResourceElementValue> findForServicePlugin(Long serviceId) {
 		if (serviceId == null) {
 			return new ArrayList<XXServiceResourceElementValue>();
 		}
 		try {
-			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findForTaggedResourcesInServiceId")
+			return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findForServicePlugin")
 					.setParameter("serviceId", serviceId).getResultList();
 		} catch (NoResultException e) {
 			return new ArrayList<XXServiceResourceElementValue>();

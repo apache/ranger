@@ -116,7 +116,7 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 	public List<RangerServiceResource> getTaggedResourcesInServiceId(Long serviceId) {
 		List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
 
-		List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findTaggedResourcesInServiceId(serviceId);
+		List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
 		
 		if(CollectionUtils.isNotEmpty(xxServiceResources)) {
 			for(XXServiceResource xxServiceResource : xxServiceResources) {

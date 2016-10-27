@@ -781,6 +781,20 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXServiceResourceElement.findForServicePlugin">
+		<query>
+			select obj from XXServiceResourceElement obj where obj.resourceId in
+			(select serviceRes.id from XXServiceResource serviceRes, XXService service where service.id = :serviceId and service.tagService is not null and serviceRes.serviceId = service.id and serviceRes.id in
+			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
+			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			)
+			)
+			order by obj.resourceId, obj.id
+		</query>
+	</named-query>
+
 	<named-query name="XXServiceResourceElement.findByServiceId">
 		<query>select obj from XXServiceResourceElement obj where obj.resourceId in
 					(select serviceresource.id from XXServiceResource serviceresource where serviceresource.serviceId = :serviceId)
@@ -805,6 +819,20 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXServiceResourceElementValue.findForServicePlugin">
+		<query>
+			select obj from XXServiceResourceElementValue obj, XXServiceResourceElement serviceResElem where obj.resElementId = serviceResElem.id and
+			serviceResElem.resourceId in
+			(select serviceRes.id from XXServiceResource serviceRes, XXService service where service.id = :serviceId and service.tagService is not null and serviceRes.serviceId = service.id and serviceRes.id in
+			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
+			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			)
+			)
+			order by serviceResElem.resourceId, serviceResElem.id
+		</query>
+	</named-query>
 	<named-query name="XXServiceResourceElementValue.findByServiceId">
 		<query>select obj from XXServiceResourceElementValue obj, XXServiceResourceElement resElem where obj.resElementId = resElem.id and resElem.resourceId in
 			(select res.id from XXServiceResource res where res.serviceId = :serviceId)
@@ -852,6 +880,17 @@
 				order by obj.resourceId</query>
 	</named-query>
 
+	<named-query name="XXTagResourceMap.findForServicePlugin">
+		<query>
+			select obj from XXTagResourceMap obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.tagId in
+			(select tag.id from XXTag tag, XXTagDef tagDef where tag.type = tagDef.id and tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			)
+			order by obj.resourceId
+		</query>
+	</named-query>
+
 	<named-query name="XXTagResourceMap.getTagIdsForResourceId">
 		<query>select obj.tagId from XXTagResourceMap obj
 				where obj.resourceId = :resourceId order by obj.id
@@ -873,6 +912,14 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXTagDef.findForServicePlugin">
+		<query>select obj from XXTagDef obj, XXService service where service.id = :serviceId and service.tagService is not null and
+			obj.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			order by obj.id
+		</query>
+	</named-query>
 	<named-query name="XXTagDef.findByResourceId">
 		<query>select obj from XXTagDef obj where obj.id in
 			(select tag.type from XXTag tag, XXTagResourceMap tagRes where tag.id = tagRes.tagId and tagRes.resourceId = :resourceId)
@@ -894,7 +941,16 @@
 			order by obj.tagDefId
 		</query>
 	</named-query>
-
+	<named-query name="XXTagAttributeDef.findForServicePlugin">
+		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
+			(select tagDef.id from XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
+			tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			)
+			order by obj.tagDefId
+		</query>
+	</named-query>
 	<named-query name="XXTagAttributeDef.findByResourceId">
 		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
 			(select tag.type from XXTag tag, XXTagResourceMap tagRes where tag.id = tagRes.tagId and tagRes.resourceId = :resourceId)
@@ -926,6 +982,16 @@
 	<named-query name="XXTag.findByServiceId">
 		<query>select obj from XXTag obj where obj.id in
 			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
+			order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXTag.findForServicePlugin">
+		<query>
+			select obj from XXTag obj, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
+			obj.type = tagDef.id and tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			order by obj.id
 		</query>
 	</named-query>
@@ -964,6 +1030,18 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXTagAttribute.findForServicePlugin">
+		<query>
+			select obj from XXTagAttribute obj where obj.tagId in
+			(select tag.id from XXTag tag, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
+			tag.type = tagDef.id and tagDef.name in
+			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			)
+			order by obj.tagId
+		</query>
+	</named-query>
+
 	<named-query name="XXServiceResource.findByGuid">
 		<query>select obj from XXServiceResource obj where obj.guid = :guid</query>
 	</named-query>
@@ -973,11 +1051,23 @@
 				order by obj.id
 		</query>
 	</named-query>
-	
+
 	<named-query name="XXServiceResource.findTaggedResourcesInServiceId">
 		<query>select obj from XXServiceResource obj where obj.serviceId = :serviceId and obj.id in
 					(select tagResMap.resourceId from XXTagResourceMap tagResMap)
 				order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXServiceResource.findForServicePlugin">
+		<query>
+			select obj from XXServiceResource obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.serviceId = service.id and obj.id in
+				(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
+					where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
+						(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
+							where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+				)
+			order by obj.id
 		</query>
 	</named-query>
 

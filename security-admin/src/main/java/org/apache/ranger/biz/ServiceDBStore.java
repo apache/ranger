@@ -34,11 +34,9 @@ import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.TreeMap;
 
@@ -1515,7 +1513,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.update(service);
 
 			if (hasTagServiceValueChanged || hasIsEnabledChanged) {
-				updatePolicyVersion(service);
+				updatePolicyVersion(service, false);
 			}
 		}
 
@@ -1786,7 +1784,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		createNewPolicyItemsForPolicy(policy, xCreatedPolicy, denyExceptions, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);
 		createNewDataMaskPolicyItemsForPolicy(policy, xCreatedPolicy, dataMaskItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK);
 		createNewRowFilterPolicyItemsForPolicy(policy, xCreatedPolicy, rowFilterItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER);
-		handlePolicyUpdate(service);
+		handlePolicyUpdate(service, true);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
@@ -1846,9 +1844,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setVersion(xxExisting.getVersion());
 
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
-		
+
 		updatePolicySignature(policy);
-		
+
+		boolean isTagVersionUpdateNeeded = false;
+		if (service.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			isTagVersionUpdateNeeded = existing.getIsEnabled() ? !policy.getIsEnabled() : policy.getIsEnabled();
+			isTagVersionUpdateNeeded = isTagVersionUpdateNeeded || !StringUtils.equals(existing.getResourceSignature(), policy.getResourceSignature());
+		}
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
@@ -1863,7 +1866,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		createNewDataMaskPolicyItemsForPolicy(policy, newUpdPolicy, dataMaskPolicyItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK);
 		createNewRowFilterPolicyItemsForPolicy(policy, newUpdPolicy, rowFilterItems, xServiceDef, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER);
 
-		handlePolicyUpdate(service);
+		handlePolicyUpdate(service, isTagVersionUpdateNeeded);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 		
@@ -1907,7 +1910,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		deleteExistingPolicyResources(policy);
 		
 		policyService.delete(policy);
-		handlePolicyUpdate(service);
+		handlePolicyUpdate(service, true);
 		
 		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
 		
@@ -2690,11 +2693,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return validConfigs;
 	}
 
-	private void handlePolicyUpdate(RangerService service) throws Exception {
-		updatePolicyVersion(service);
+	private void handlePolicyUpdate(RangerService service, boolean isTagVersionUpdateNeeded) throws Exception {
+		updatePolicyVersion(service, isTagVersionUpdateNeeded);
 	}
 
-	private void updatePolicyVersion(RangerService service) throws Exception {
+	private void updatePolicyVersion(RangerService service, boolean isTagVersionUpdateNeeded) throws Exception {
 		if(service == null || service.getId() == null) {
 			return;
 		}
@@ -2739,20 +2742,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			if(CollectionUtils.isNotEmpty(referringServices)) {
 				for(XXService referringService : referringServices) {
-
 					serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(referringService.getId());
 					if (serviceVersionInfoDbObj != null) {
 
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
 						serviceVersionInfoDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
 
+						if (isTagVersionUpdateNeeded) {
+							serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
+							serviceVersionInfoDbObj.setTagUpdateTime(service.getTagUpdateTime());
+						}
 						serviceVersionInfoDao.update(serviceVersionInfoDbObj);
 					} else {
 						LOG.warn("updatePolicyVersion(service=" + referringService.getName() + "): serviceVersionInfo not found, creating it..");
 						serviceVersionInfoDbObj = new XXServiceVersionInfo();
 						serviceVersionInfoDbObj.setServiceId(referringService.getId());
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-						serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());
+						if (isTagVersionUpdateNeeded) {
+							serviceVersionInfoDbObj.setTagVersion(getNextVersion(referringService.getTagVersion()));
+						} else {
+							serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());
+						}
 						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
 						serviceVersionInfoDbObj.setTagUpdateTime(referringService.getTagUpdateTime());
 
