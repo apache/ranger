@@ -187,7 +187,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		
 		switch(httpResponseCode) {
 		case -1:
-			LOG.warn("Unexpected: Null response from policy server while grating access! Returning null!");
+			LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
 			throw new Exception("unknown error!");
 		case 200:
 			LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);
@@ -222,7 +222,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		
 		switch(httpResponseCode) {
 		case -1:
-			LOG.warn("Unexpected: Null response from policy server while grating access! Returning null!");
+			LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
 			throw new Exception("unknown error!");
 		case 200:
 			LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);

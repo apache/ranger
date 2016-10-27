@@ -37,7 +37,7 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 		super(PluginConfiguration.ServiceType, PluginConfiguration.AuditApplicationType);
 	}
 	
-	// must be synchroized so that accidental double init of plugin does not happen .. in case servlet instantiates multiple filters.
+	// must be synchronized so that accidental double init of plugin does not happen .. in case servlet instantiates multiple filters.
 	@Override
 	synchronized public void init() {
 		if (!initialized) {
