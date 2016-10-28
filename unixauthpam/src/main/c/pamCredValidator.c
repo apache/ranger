@@ -71,12 +71,18 @@ int main(int ac, char **av, char **ev)
 	if (retval != PAM_SUCCESS) {
 		/* why expose this? */
 		fprintf(stdout, "FAILED: [%s] does not exists.\n", username) ;
+		if (pamh) {
+			pam_end(pamh, retval);
+		}
 		exit(1);
 	}
 
 	retval = pam_authenticate(pamh, 0);
 	if (retval != PAM_SUCCESS) {
 		fprintf(stdout, "FAILED: Password did not match.\n") ;
+		if (pamh) {
+			pam_end(pamh, retval);
+		}		
 		exit(1);
 	}
 
@@ -84,12 +90,18 @@ int main(int ac, char **av, char **ev)
 	retval = pam_acct_mgmt(pamh, 0);
 	if (retval != PAM_SUCCESS) {
 		fprintf(stdout, "FAILED: [%s] is not authorized.\n", username) ;
+		if (pamh) {
+			pam_end(pamh, retval);
+		}
 		exit(1);
 	}
 
 	/* establish the requested credentials */
 	if ((retval = pam_setcred(pamh, PAM_ESTABLISH_CRED)) != PAM_SUCCESS) {
 			fprintf(stdout, "FAILED: Error setting credentials for [%s].\n", username) ;
+			if (pamh) {
+				pam_end(pamh, retval);
+			}
     		exit(1);
 	}
 
