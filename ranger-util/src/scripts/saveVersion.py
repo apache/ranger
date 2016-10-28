@@ -31,6 +31,10 @@ import socket
 import subprocess
 from subprocess import Popen,PIPE
 from time import gmtime, strftime
+import platform
+
+def isWindowsSystem():
+    return 'Windows' in platform.system()
 
 def check_output(query):
 	p = subprocess.Popen(query, stdout=subprocess.PIPE)
@@ -57,6 +61,9 @@ def main():
 	dir = os.getcwd()
 	cwd = dir.strip('scripts')
 	cwd = os.path.join(cwd, "src")
+        if isWindowsSystem():
+                cwd = cwd.replace("\\", "/")
+
 	if revision == "" :
 		query = (["git","rev-parse","HEAD"])
 		output = check_output(query)
