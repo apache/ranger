@@ -2,14 +2,6 @@ Apache Ranger
 Copyright 2014-2016 The Apache Software Foundation
 
 This product includes software developed at The Apache Software Foundation (http://www.apache.org/).
-
-This product includes Bootstrap Datepicker (http://www.eyecon.ro/bootstrap-datepicker - Apache License - 2.0), Copyright 2012 Stefan Petre.
-This product includes bootstrap-transition.js v2.3.2 (http://twbs.github.com/bootstrap/javascript.html#transitions - Apache License - 2.0), Copyright 2013 Twitter, Inc.
-This product includes Select2 3.4.3 (http://ivaynberg.github.io/select2/ - Apache License - 2.0), Copyright 2012 Igor Vaynberg.
-This product includes bootstrap-notify v1.0 (http://goodybag.github.io/bootstrap-notify/ - Apache License - 2.0), Copyright 2012 Goodybag, Inc.
-This product includes Open Sans font (http://www.opensans.com/ - Apache License - 2.0), © 2016 OpenSans.com
-This product includes Jisql (https://bitbucket.org/stdunbar/jisql - Apache License - 2.0), © 2004-2011 Scott Dunbar
-This product includes PasswordComparisonAuthenticator.java in Spring Security (https://github.com/spring-projects/spring-security - Apache License - 2.0), Copyright 2004, 2005, 2006 Acegi Technology Pty Limited
 his product includes json2.js (https://github.com/douglascrockford/JSON-js - Public Domain license) by Douglas Crockford
 This product includes Font Awesome 3.2.1 (http://fontawesome.io/ - SIL Open Font License (OFL) licensee) by Dave Gandy
 This product includes software developed by Spring Security Project (http://www.springframework.org/security)
