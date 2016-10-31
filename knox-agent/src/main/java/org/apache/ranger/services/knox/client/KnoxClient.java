@@ -133,7 +133,7 @@ public class KnoxClient {
 
 				} else {
 					String msgDesc = "Unable to get a valid response for "
-							+ "isFileChanged() call for KnoxUrl : [" + knoxUrl
+							+ "getTopologyList() call for KnoxUrl : [" + knoxUrl
 							+ "] - got null response.";
 					LOG.error(msgDesc);
 					HadoopException hdpException = new HadoopException(msgDesc);
@@ -238,7 +238,7 @@ public class KnoxClient {
 
 				} else {
 					String msgDesc = "Unable to get a valid response for "
-							+ "isFileChanged() call for KnoxUrl : [" + knoxUrl
+							+ "getServiceList() call for KnoxUrl : [" + knoxUrl
 							+ "] - got null response.";
 					LOG.error(msgDesc);
 					HadoopException hdpException = new HadoopException(msgDesc);
