@@ -62,7 +62,7 @@ public class KnoxClient {
 		this.password = password;
 	}
 
-	public  List<String> getTopologyList(String topologyNameMatching,List<String> knoxTopologyList) {
+	public List<String> getTopologyList(String topologyNameMatching,List<String> knoxTopologyList) {
 		
 		// sample URI: https://hdp.example.com:8443/gateway/admin/api/v1/topologies
 		LOG.debug("Getting Knox topology list for topologyNameMatching : " +
@@ -71,17 +71,17 @@ public class KnoxClient {
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
-		if ( topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
+		if (topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
 			topologyNameMatching = "";
 		}
 		String decryptedPwd=null;
-		try{
+		try {
 			decryptedPwd=PasswordUtils.decryptPassword(password);
-		}catch(Exception ex){
+		} catch(Exception ex) {
 			LOG.info("Password decryption failed; trying knox connection with received password string");
 			decryptedPwd=null;
-		}finally{
-			if(decryptedPwd==null){
+		} finally {
+			if (decryptedPwd==null) {
 				decryptedPwd=password;
 			}
 		}
@@ -128,7 +128,7 @@ public class KnoxClient {
 
 						}
 					} else {
-						LOG.error("Got invalid  REST response from: "+ knoxUrl + ", responsStatus: " + response.getStatus());
+						LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatus());
 					}
 
 				} else {
@@ -173,17 +173,17 @@ public class KnoxClient {
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
-		if ( serviceNameMatching == null ||  serviceNameMatching.trim().isEmpty()) {
+		if (serviceNameMatching == null ||  serviceNameMatching.trim().isEmpty()) {
 			serviceNameMatching = "";
 		}
 		String decryptedPwd=null;
-		try{
+		try {
 			decryptedPwd=PasswordUtils.decryptPassword(password);
-		}catch(Exception ex){
+		} catch(Exception ex) {
 			LOG.info("Password decryption failed; trying knox connection with received password string");
 			decryptedPwd=null;
-		}finally{
-			if(decryptedPwd==null){
+		} finally {
+			if (decryptedPwd==null) {
 				decryptedPwd=password;
 			}
 		}
@@ -412,7 +412,7 @@ public class KnoxClient {
 					BaseClient.getMessage(e), msgDesc + errMsg, null, null);
 			throw hdpException;
 		}
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== KnoxClient.getKnoxResources() Result : "+ resultList  );
 		}
 		return resultList;
