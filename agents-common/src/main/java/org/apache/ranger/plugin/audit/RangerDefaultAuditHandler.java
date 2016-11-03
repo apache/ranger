@@ -219,7 +219,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 	protected final Set<String> getTags(RangerAccessRequest request) {
 		Set<String>     ret  = null;
-		List<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 		if (CollectionUtils.isNotEmpty(tags)) {
 			ret = new HashSet<String>();

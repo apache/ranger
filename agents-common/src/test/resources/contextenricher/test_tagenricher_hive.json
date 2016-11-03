@@ -26,13 +26,16 @@
   "tagDefinitions": {
     "1":{"name":"PII"},
     "2":{"name":"EXPIRES_ON","attributeDefs":[{"name":"expiry_date","type":"date"}]},
-    "3":{"name":"FINANCE"}
+    "3":{"name":"FINANCE"},
+    "4":{"name":"PCI"}
   },
 
   "tags": {
     "1":{"type":"PII"},
     "2":{"type":"EXPIRES_ON","attributes":{"expiry_date":"2015/12/31"}},
-    "3":{"type":"FINANCE"}
+    "3":{"type":"FINANCE"},
+    "4":{"type":"EXPIRES_ON","attributes":{"expiry_date":"2025/12/31"}},
+    "5":{"type":"PCI"}
   },
 
   "serviceResources": [
@@ -48,8 +51,9 @@
     "1":[1],
 	"2":[3],
     "3":[2],
-    "4":[1],
-    "5":[1]
+    "4":[1, 4],
+    "5":[1],
+    "6":[5]
   },
 
   "tests":[
@@ -62,13 +66,13 @@
     {"name":"finance-any",
       "resource":{"elements":{"database":"finance"}},
       "accessType": "",
-      "result":[{"type":"EXPIRES_ON"}, {"type":"FINANCE"}, {"type":"PII"}]
+      "result":[{"type":"EXPIRES_ON"}, {"type":"FINANCE"}, {"type":"PII"}, {"type":"EXPIRES_ON"}]
     }
     ,
     {"name":"finance-and-tax2010any",
       "resource":{"elements":{"database":"finance", "table":"tax_2010"}},
       "accessType": "",
-      "result":[{"type":"FINANCE"},{"type":"EXPIRES_ON"}, {"type":"PII"}]
+      "result":[{"type":"FINANCE"},{"type":"EXPIRES_ON"}, {"type":"PII"}, {"type":"EXPIRES_ON"}]
     }
     ,
     {"name":"hr-any",
@@ -80,7 +84,7 @@
     {"name":"none-any",
       "resource":{"elements":{}},
       "accessType": "",
-      "result":[{"type":"EXPIRES_ON"}, {"type":"FINANCE"}, {"type":"PII"}, {"type":"PII"}, {"type":"PII"}]
+      "result":[{"type":"EXPIRES_ON"}, {"type":"FINANCE"}, {"type":"PII"}, {"type":"EXPIRES_ON"}, {"type":"PCI"}]
     }
     ,
     {"name":"hr.employee.ssn",
@@ -104,7 +108,7 @@
     {"name":"finance.tax_2010.ssn",
       "resource":{"elements":{"database":"finance","table":"tax_2010","column":"ssn"}},
       "accessType": "read",
-      "result":[{"type":"EXPIRES_ON"},{"type":"PII"},{"type":"FINANCE"}]
+      "result":[{"type":"EXPIRES_ON"},{"type":"PII"},{"type":"FINANCE"}, {"type":"EXPIRES_ON"}]
     }
     ,
     {"name":"finance.tax_2010.id",

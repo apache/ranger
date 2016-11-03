@@ -117,7 +117,7 @@ public final class RangerScriptExecutionContext {
 
 	public Set<String> getAllTagTypes() {
 		Set<String>     allTagTypes   = null;
-		List<RangerTagForEval> tagObjectList = getAllTags();
+		Set<RangerTagForEval> tagObjectList = getAllTags();
 
 		if (CollectionUtils.isNotEmpty(tagObjectList)) {
 			for (RangerTagForEval tag : tagObjectList) {
@@ -136,7 +136,7 @@ public final class RangerScriptExecutionContext {
 		Map<String, String> ret = null;
 
 		if (StringUtils.isNotBlank(tagType)) {
-			List<RangerTagForEval> tagObjectList = getAllTags();
+			Set<RangerTagForEval> tagObjectList = getAllTags();
 
 			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
 			// This will get attributes of the first tagType that matches
@@ -279,9 +279,8 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	private List<RangerTagForEval> getAllTags() {
-		List<RangerTagForEval> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
-		
+	private Set<RangerTagForEval> getAllTags() {
+		Set<RangerTagForEval> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
 		if(ret == null) {
 			if (LOG.isDebugEnabled()) {
 				String resource = accessRequest.getResource().getAsString();

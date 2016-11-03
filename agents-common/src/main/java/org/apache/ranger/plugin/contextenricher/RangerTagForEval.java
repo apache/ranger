@@ -69,4 +69,59 @@ public class RangerTagForEval {
     public Long getVersion() {
         return tag.getVersion();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        toString(sb);
+
+        return sb.toString();
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerTagForEval={");
+        sb.append("tag={");
+        if (tag != null) {
+            tag.toString(sb);
+        }
+        sb.append("}");
+        sb.append(", {matchType={").append(matchType).append("}");
+        sb.append("}");
+        return sb;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((tag == null) ? 0 : tag.hashCode());
+        result = prime * result
+                + ((matchType == null) ? 0 : matchType.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RangerTagForEval other = (RangerTagForEval) obj;
+        if (tag == null) {
+            if (other.tag != null)
+                return false;
+        } else if (!tag.equals(other.tag))
+            return false;
+        if (matchType == null) {
+            if (other.matchType != null)
+                return false;
+        } else if (!matchType.equals(other.matchType))
+            return false;
+
+        return true;
+    }
 }

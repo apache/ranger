@@ -788,7 +788,7 @@
 			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
 			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			)
 			)
 			order by obj.resourceId, obj.id
@@ -827,7 +827,7 @@
 			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
 			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			)
 			)
 			order by serviceResElem.resourceId, serviceResElem.id
@@ -885,7 +885,7 @@
 			select obj from XXTagResourceMap obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.tagId in
 			(select tag.id from XXTag tag, XXTagDef tagDef where tag.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			)
 			order by obj.resourceId
 		</query>
@@ -916,7 +916,7 @@
 		<query>select obj from XXTagDef obj, XXService service where service.id = :serviceId and service.tagService is not null and
 			obj.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policyRes.policyId = policy.id and policy.isEnabled = TRUE and policyResMap.resourceId = policyRes.id)
 			order by obj.id
 		</query>
 	</named-query>
@@ -946,7 +946,7 @@
 			(select tagDef.id from XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
 			tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			)
 			order by obj.tagDefId
 		</query>
@@ -991,7 +991,7 @@
 			select obj from XXTag obj, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
 			obj.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			order by obj.id
 		</query>
 	</named-query>
@@ -1036,7 +1036,7 @@
 			(select tag.id from XXTag tag, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
 			tag.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 			)
 			order by obj.tagId
 		</query>
@@ -1065,7 +1065,7 @@
 				(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
 					where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
 						(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-							where policy.service = service.tagService and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
+							where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
 				)
 			order by obj.id
 		</query>

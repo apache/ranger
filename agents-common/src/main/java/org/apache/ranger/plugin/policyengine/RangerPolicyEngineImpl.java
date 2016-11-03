@@ -549,8 +549,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		List<RangerPolicyEvaluator> tagPolicyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
-			List<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
-
+			Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 			if(CollectionUtils.isNotEmpty(tags)) {
 				for (RangerTagForEval tag : tags) {
 					RangerAccessRequest tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
@@ -651,7 +650,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		List<RangerPolicyEvaluator> tagEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getPolicyEvaluators();
 
 		if (CollectionUtils.isNotEmpty(tagEvaluators)) {
-			List<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+			Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 			if (CollectionUtils.isNotEmpty(tags)) {
 				for (RangerTagForEval tag : tags) {

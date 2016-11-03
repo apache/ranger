@@ -20,8 +20,8 @@
 package org.apache.ranger.plugin.util;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -40,7 +40,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_TOKEN_NAMESPACE = "token:";
 	public static final String KEY_USER = "USER";
 
-	public static void setRequestTagsInContext(Map<String, Object> context, List<RangerTagForEval> tags) {
+	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
 			context.remove(KEY_CONTEXT_TAGS);
 		} else {
@@ -48,14 +48,14 @@ public class RangerAccessRequestUtil {
 		}
 	}
 
-	public static List<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
-		List<RangerTagForEval> ret = null;
+	public static Set<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
+		Set<RangerTagForEval> ret = null;
 		Object          val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
-		if (val != null && val instanceof List<?>) {
+		if (val != null && val instanceof Set<?>) {
 			try {
 				@SuppressWarnings("unchecked")
-				List<RangerTagForEval> tags = (List<RangerTagForEval>) val;
+				Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
 
 				ret = tags;
 			} catch (Throwable t) {

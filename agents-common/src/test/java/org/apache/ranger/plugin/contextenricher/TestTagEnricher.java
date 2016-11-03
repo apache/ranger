@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -107,7 +108,8 @@ public class TestTagEnricher {
             tagEnricher.enrich(request);
 
             List<RangerTag> expected = test.result;
-            List<RangerTagForEval> result   = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+
+            Set<RangerTagForEval> result   = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
             expectedTags.clear();
             if(expected != null) {

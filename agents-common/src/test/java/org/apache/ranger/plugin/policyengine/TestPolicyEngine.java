@@ -53,6 +53,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -350,11 +351,11 @@ public class TestPolicyEngine {
 
 				if(!StringUtils.isEmpty(tagsJsonString)) {
 					try {
-						Type listType = new TypeToken<List<RangerTagForEval>>() {
+						Type setType = new TypeToken<Set<RangerTagForEval>>() {
 						}.getType();
-						List<RangerTagForEval> tagList = gsonBuilder.fromJson(tagsJsonString, listType);
+						Set<RangerTagForEval> tags = gsonBuilder.fromJson(tagsJsonString, setType);
 
-						context.put(RangerAccessRequestUtil.KEY_CONTEXT_TAGS, tagList);
+						context.put(RangerAccessRequestUtil.KEY_CONTEXT_TAGS, tags);
 					} catch (Exception e) {
 						System.err.println("TestPolicyEngine.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
 								tagsJsonString + ", exception=" + e);

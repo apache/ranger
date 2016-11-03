@@ -43,6 +43,20 @@
         "id": 3,
         "guid": "tag-expires_on-3-guid"
       }
+      ,
+      "4": {
+        "type": "EXPIRES_ON",
+        "attributes": { "expiry_date": "2025/08/10" },
+        "id": 4,
+        "guid": "tag-expires_on-4-guid"
+      }
+      ,
+      "5": {
+        "type": "EXPIRES_ON",
+        "attributes": { "expiry_date": "2050/08/10" },
+        "id": 5,
+        "guid": "tag-expires_on-5-guid"
+      }
     },
     "serviceResources": [
       {
@@ -102,7 +116,7 @@
       "2": [ 2 ],
       "3": [1],
       "4": [2],
-      "5": [3]
+      "5": [3, 4, 5]
     }
 }
 

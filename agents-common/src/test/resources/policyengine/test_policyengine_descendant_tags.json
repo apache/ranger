@@ -142,12 +142,12 @@
         "resources":{"tag":{"values":["RESTRICTED"],"isRecursive":false}},
         "policyItems":[
           {
-            "accesses":[{"type":"hive:all","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
+            "accesses":[{"type":"hive:all","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
             "conditions":[]
           }
         ],
         "denyPolicyItems":[
-          {"accesses":[{"type":"hive:all","isAllowed":true}],"users":["user1","hive"],"groups":[],"delegateAdmin":false}
+          {"accesses":[{"type":"hive:all","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
         ],
         "denyExceptions":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["user3"],"groups":[],"delegateAdmin":false}
@@ -272,6 +272,24 @@
         "accessType":"select","user":"user1","userGroups":[],"requestData":"'select default.table2;' for user1"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+    ,
+    {
+      "name":"ALLOW 'show databases;' for user",
+      "request":{
+        "resource":{"elements":{}},
+        "accessType":"","user":"user","userGroups":[],"requestData":"'show databases;' for user"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+    ,
+    {
+      "name":"DENY 'show databases;' for hive",
+      "request":{
+        "resource":{"elements":{}},
+        "accessType":"","user":"hive","userGroups":[],"requestData":"'show databases;' for hive"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     }
   ]
 }
