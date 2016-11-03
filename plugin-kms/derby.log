@@ -1,4 +1,4 @@
-Thu Nov 03 02:11:31 PDT 2016 Thread[main,5,main] Cleanup action starting
+Thu Nov 03 09:55:03 PDT 2016 Thread[main,5,main] Cleanup action starting
 java.sql.SQLException: Database 'memory:derbyDB' not found.
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
 	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(Unknown Source)
