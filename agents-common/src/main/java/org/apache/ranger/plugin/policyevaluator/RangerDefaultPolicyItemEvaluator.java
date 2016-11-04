@@ -84,7 +84,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			}
 		}
 
-		if (!getConditionsDisabledOption() && policyItem != null && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
+		if (!getConditionsDisabledOption() && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
 			conditionEvaluators = new ArrayList<RangerConditionEvaluator>();
 
 			RangerPerfTracer perf = null;
@@ -127,7 +127,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			RangerPerfTracer.log(perf);
 		}
 
-		List<String> users = policyItem != null ? policyItem.getUsers() : null;
+		List<String> users = policyItem.getUsers();
 		this.hasCurrentUser = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.USER_CURRENT);
 		this.hasResourceOwner = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.RESOURCE_OWNER);
 
