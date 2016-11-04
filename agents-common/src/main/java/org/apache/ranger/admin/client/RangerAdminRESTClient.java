@@ -31,11 +31,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.plugin.util.RangerRESTUtils;
-import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.plugin.util.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -48,7 +44,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	private String           serviceName = null;
 	private String           pluginId    = null;
 	private RangerRESTClient restClient  = null;
-	private RangerRESTUtils restUtils   = new RangerRESTUtils();
+	private RangerRESTUtils  restUtils   = new RangerRESTUtils();
 
 	public RangerAdminRESTClient() {
 	}
@@ -86,9 +82,9 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
+	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
+			LOG.debug("==> RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ")");
 		}
 
 		ServicePolicies ret = null;
@@ -104,7 +100,6 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName)
 												.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
-												.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 												.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				};
@@ -116,7 +111,6 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			}
 			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName)
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
-                                                                                .queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
                                                                                 .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
@@ -131,7 +125,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
+			LOG.debug("<== RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + "): " + ret);
 		}
 
 		return ret;
@@ -249,9 +243,9 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServiceTags getServiceTagsIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
+	public ServiceTags getServiceTagsIfUpdated(final long lastKnownVersion) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): ");
+			LOG.debug("==> RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + "): ");
 		}
 
 		ServiceTags ret = null;
@@ -265,7 +259,6 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceName)
 							.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
-							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				};
@@ -277,7 +270,6 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		} else {
 			webResource = createWebResource(RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName)
 					.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
-					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
@@ -288,13 +280,12 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting taggedResources. secureMode=" + isSecureMode + ", user=" + user
 					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
-					+ ", " + "lastKnownVersion=" + lastKnownVersion
-					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+					+ ", " + "lastKnownVersion=" + lastKnownVersion);
 			throw new Exception(resp.getMessage());
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): ");
+			LOG.debug("<== RangerAdminRESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + "): ");
 		}
 
 		return ret;

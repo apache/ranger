@@ -76,8 +76,6 @@
 		<class>org.apache.ranger.entity.XXDataMaskTypeDef</class>
 		<class>org.apache.ranger.entity.XXPolicyItemDataMaskInfo</class>
 		<class>org.apache.ranger.entity.XXPolicyItemRowFilterInfo</class>
-		<class>org.apache.ranger.entity.XXServiceVersionInfo</class>
-		<class>org.apache.ranger.entity.XXPluginServiceVersionInfo</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 
 		<properties>

@@ -30,13 +30,13 @@ import java.util.List;
 public interface RangerAdminClient {
 	void init(String serviceName, String appId, String configPropertyPrefix);
 
-	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion) throws Exception;
 
 	void grantAccess(GrantRevokeRequest request) throws Exception;
 
 	void revokeAccess(GrantRevokeRequest request) throws Exception;
 
-	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion) throws Exception;
 
 	List<String> getTagTypes(String tagTypePattern) throws Exception;
 

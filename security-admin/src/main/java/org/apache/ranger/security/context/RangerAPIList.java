@@ -85,9 +85,6 @@ public class RangerAPIList {
 	public static final String GET_POLICY_FROM_EVENT_TIME = "ServiceREST.getPolicyFromEventTime";
 	public static final String GET_POLICY_VERSION_LIST = "ServiceREST.getPolicyVersionList";
 	public static final String GET_POLICY_FOR_VERSION_NO = "ServiceREST.getPolicyForVersionNumber";
-	public static final String GET_PLUGIN_SERVICE_VERSION_INFO = "ServiceREST.getPluginServiceVersions";
-
-
 
 	/**
 	 * List of APIs for UserREST

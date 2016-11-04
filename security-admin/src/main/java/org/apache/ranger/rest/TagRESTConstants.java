@@ -38,6 +38,5 @@ public class TagRESTConstants {
 
 	public static final String SERVICE_NAME_PARAM           = "serviceName";
 	public static final String LAST_KNOWN_TAG_VERSION_PARAM = "lastKnownVersion";
-	public static final String LAST_ACTIVATION_TIME = "lastActivationTime";
 	public static final String PATTERN_PARAM                = "pattern";
 }

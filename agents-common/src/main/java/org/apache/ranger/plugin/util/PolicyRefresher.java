@@ -49,8 +49,7 @@ public class PolicyRefresher extends Thread {
 	private final Gson              gson;
 
 	private long 	pollingIntervalMs   = 30 * 1000;
-	private long 	lastKnownVersion    = -1L;
-	private long	lastActivationTimeInMillis  = 0L;
+	private long 	lastKnownVersion    = -1;
 	private boolean policiesSetInPlugin = false;
 
 
@@ -131,13 +130,6 @@ public class PolicyRefresher extends Thread {
 		this.pollingIntervalMs = pollingIntervalMilliSeconds;
 	}
 
-	public long getLastActivationTimeInMillis() {
-		return lastActivationTimeInMillis;
-	}
-
-	public void setLastActivationTimeInMillis(long lastActivationTimeInMillis) {
-		this.lastActivationTimeInMillis = lastActivationTimeInMillis;
-	}
 
 	public void startRefresher() {
 
@@ -215,8 +207,6 @@ public class PolicyRefresher extends Thread {
 		if (svcPolicies != null) {
 			plugIn.setPolicies(svcPolicies);
 			policiesSetInPlugin = true;
-			setLastActivationTimeInMillis(System.currentTimeMillis());
-			lastKnownVersion = svcPolicies.getPolicyVersion();
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -239,7 +229,7 @@ public class PolicyRefresher extends Thread {
 		}
 
 		try {
-			svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
+			svcPolicies = rangerAdmin.getServicePoliciesIfUpdated(lastKnownVersion);
 
 			boolean isUpdated = svcPolicies != null;
 
@@ -253,6 +243,8 @@ public class PolicyRefresher extends Thread {
 				}
 
 				LOG.info("PolicyRefresher(serviceName=" + serviceName + "): found updated version. lastKnownVersion=" + lastKnownVersion + "; newVersion=" + newVersion);
+
+			   	lastKnownVersion = newVersion;
 
 			} else {
 				if(LOG.isDebugEnabled()) {

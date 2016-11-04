@@ -56,7 +56,6 @@ public class RangerRESTUtils {
 	public static final String REST_MIME_TYPE_JSON     = "application/json";
 
 	public static final String REST_PARAM_LAST_KNOWN_POLICY_VERSION = "lastKnownVersion";
-	public static final String REST_PARAM_LAST_ACTIVATION_TIME = "lastActivationTime";
 	public static final String REST_PARAM_PLUGIN_ID                 = "pluginId";
 
 	private static final int MAX_PLUGIN_ID_LEN = 255;
@@ -131,37 +130,4 @@ public class RangerRESTUtils {
 
         return ret ;
     }
-
-    public String getHostnameFromPluginId(String pluginId, String serviceName) {
-    	String ret = "";
-
-    	if (StringUtils.isNotBlank(pluginId)) {
-			int lastIndex;
-			String[] parts = pluginId.split("@");
-			int index = parts.length > 1 ? 1 : 0;
-			if (StringUtils.isNotBlank(serviceName)) {
-				lastIndex = StringUtils.lastIndexOf(parts[index], serviceName);
-				if (lastIndex > 1) {
-					ret = parts[index].substring(0, lastIndex-1);
-				}
-			} else {
-				lastIndex = StringUtils.lastIndexOf(parts[index], "-");
-				if (lastIndex > 0) {
-					ret = parts[index].substring(0, lastIndex);
-				}
-			}
-		}
-
-		return ret;
-	}
-	public String getAppIdFromPluginId(String pluginId) {
-		String ret = "**Unknown**";
-
-		if (StringUtils.isNotBlank(pluginId)) {
-			String[] parts = pluginId.split("@");
-			ret = parts[0];
-		}
-
-		return ret;
-	}
 }

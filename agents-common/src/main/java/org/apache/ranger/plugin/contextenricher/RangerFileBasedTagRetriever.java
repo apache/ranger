@@ -124,10 +124,10 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion) throws InterruptedException {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> retrieveTags(lastKnownVersion=" + lastKnownVersion + ", lastActivationTimeInMillis=" + lastActivationTimeInMillis + ", serviceTagsFilePath=" + serviceTagsFileName);
+			LOG.debug("==> retrieveTags(lastKnownVersion=" + lastKnownVersion + ", serviceTagsFilePath=" + serviceTagsFileName);
 		}
 
 		ServiceTags serviceTags = null;
@@ -152,7 +152,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== retrieveTags(lastKnownVersion=" + lastKnownVersion + ", lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			LOG.debug("<== retrieveTags(lastKnownVersion=" + lastKnownVersion);
 		}
 
 		return serviceTags;
