@@ -13,23 +13,23 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS x_plugin_info;
+DROP TABLE IF EXISTS x_plugin_info CASCADE;
 DROP SEQUENCE IF EXISTS x_plugin_info_seq;
 
 CREATE SEQUENCE x_plugin_info_seq;
 
 CREATE TABLE x_plugin_info (
 id BIGINT DEFAULT nextval('x_plugin_info_seq'::regclass),
-create_time TIMESTAMP NOT NULL,
-update_time TIMESTAMP NOT NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
 service_name varchar(255) NOT NULL,
 app_type varchar(128) NOT NULL,
-host_name varchar(64) NOT NULL,
+host_name varchar(255) NOT NULL,
 ip_address varchar(64) NOT NULL,
 info varchar(1024) NOT NULL,
-primary key (id)
+primary key (id),
+CONSTRAINT x_plugin_info_UK UNIQUE (service_name, host_name, app_type)
 );
-CREATE UNIQUE INDEX x_plugin_info_IDX_unique ON x_plugin_info(service_name, host_name, app_type);
 CREATE INDEX x_plugin_info_IDX_service_name ON x_plugin_info(service_name);
 CREATE INDEX x_plugin_info_IDX_host_name ON x_plugin_info(host_name);
 

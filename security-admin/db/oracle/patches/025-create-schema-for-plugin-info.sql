@@ -13,21 +13,20 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS `x_plugin_info`;
-
-
-CREATE TABLE IF NOT EXISTS `x_plugin_info`(
-`id` bigint(20) NOT NULL AUTO_INCREMENT,
-`create_time` datetime NULL DEFAULT NULL,
-`update_time` datetime NULL DEFAULT NULL,
-`service_name` varchar(255) NOT  NULL,
-`app_type` varchar(128) NOT NULL,
-`host_name` varchar(255) NOT NULL,
-`ip_address` varchar(64) NOT NULL,
-`info` varchar(1024) NOT NULL,
- PRIMARY KEY (`id`),
- UNIQUE KEY `x_plugin_info_UK`(`service_name`, `host_name`, `app_type`),
- KEY `x_plugin_info_IDX_service_name`(`service_name`),
- KEY `x_plugin_info_IDX_host_name`(`host_name`)
+/
+CREATE SEQUENCE X_PLUGIN_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE TABLE x_plugin_info(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+service_name VARCHAR(255) NOT NULL,
+app_type VARCHAR(128) NOT NULL,
+host_name VARCHAR(255) NOT NULL,
+ip_address VARCHAR(64) NOT NULL,
+info VARCHAR(1024) NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_plugin_info_UK UNIQUE (service_name, host_name, app_type)
 );
-
+CREATE INDEX x_plugin_info_IDX_service_name ON x_plugin_info(service_name);
+CREATE INDEX x_plugin_info_IDX_host_name ON x_plugin_info(host_name);
+commit;
