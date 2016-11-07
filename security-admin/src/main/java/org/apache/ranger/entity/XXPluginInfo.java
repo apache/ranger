@@ -178,8 +178,6 @@ public class XXPluginInfo implements java.io.Serializable {
 			return false;
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (getClass() != obj.getClass())
 			return false;
 		XXPluginInfo other = (XXPluginInfo) obj;

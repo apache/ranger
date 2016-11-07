@@ -214,7 +214,7 @@ public class AssetMgr extends AssetMgrBase {
 		if (epoch != null && !epoch.trim().isEmpty() && !epoch.equalsIgnoreCase("null")) {
 			policyExportAudit.setRequestedEpoch(Long.parseLong(epoch));
 		} else {
-			policyExportAudit.setRequestedEpoch(0l);
+			policyExportAudit.setRequestedEpoch(0L);
 		}
 
 		if (!httpEnabled) {
@@ -281,7 +281,7 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		if (policyCount == null) {
-			policyCount = 0l;
+			policyCount = 0L;
 		}
 
 		if (commonName != null) {
@@ -707,7 +707,7 @@ public class AssetMgr extends AssetMgrBase {
 		createOrUpdatePluginInfo(pluginSvcVersionInfo, httpCode);
 	}
 
-	void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final int httpCode) {
+	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final int httpCode) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
 		}
@@ -732,7 +732,7 @@ public class AssetMgr extends AssetMgrBase {
 
 	}
 
-	XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo) {
+	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo) {
 		XXPluginInfo ret = null;
 
 		if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
@@ -746,7 +746,7 @@ public class AssetMgr extends AssetMgrBase {
 					pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
 				}
 			} else {
-				if (pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
+				if (pluginInfo.getTagDownloadedVersion() != null && pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
 					// This is our best guess of when tags may have been downloaded
 					pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
 				}
@@ -776,16 +776,16 @@ public class AssetMgr extends AssetMgrBase {
 						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
 						needsUpdating = true;
 					}
-					long lastKnownPolicyVersion = pluginInfo.getPolicyActiveVersion();
-					long lastPolicyActivationTime = pluginInfo.getPolicyActivationTime();
+					Long lastKnownPolicyVersion = pluginInfo.getPolicyActiveVersion();
+					Long lastPolicyActivationTime = pluginInfo.getPolicyActivationTime();
 
-					if (lastKnownPolicyVersion > 0 && (dbObj.getPolicyActiveVersion() == null || !dbObj.getPolicyActiveVersion().equals(lastKnownPolicyVersion))) {
+					if (lastKnownPolicyVersion != null && lastKnownPolicyVersion > 0 && (dbObj.getPolicyActiveVersion() == null || !dbObj.getPolicyActiveVersion().equals(lastKnownPolicyVersion))) {
 						dbObj.setPolicyActiveVersion(lastKnownPolicyVersion);
-						if (lastPolicyActivationTime > 0) {
+						if (lastPolicyActivationTime != null && lastPolicyActivationTime > 0) {
 							dbObj.setPolicyActivationTime(lastPolicyActivationTime);
 						}
 						needsUpdating = true;
-					} else if (lastKnownPolicyVersion == -1) {
+					} else if (lastKnownPolicyVersion != null && lastKnownPolicyVersion == -1) {
 						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
 						dbObj.setPolicyActiveVersion(null);
 						dbObj.setPolicyActivationTime(null);
@@ -797,16 +797,16 @@ public class AssetMgr extends AssetMgrBase {
 						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
 						needsUpdating = true;
 					}
-					long lastKnownTagVersion = pluginInfo.getTagActiveVersion();
-					long lastTagActivationTime = pluginInfo.getTagActivationTime();
+					Long lastKnownTagVersion = pluginInfo.getTagActiveVersion();
+					Long lastTagActivationTime = pluginInfo.getTagActivationTime();
 
-					if (lastKnownTagVersion > 0 && (dbObj.getTagActiveVersion() == null || !dbObj.getTagActiveVersion().equals(lastKnownTagVersion))) {
+					if (lastKnownTagVersion != null && lastKnownTagVersion > 0 && (dbObj.getTagActiveVersion() == null || !dbObj.getTagActiveVersion().equals(lastKnownTagVersion))) {
 						dbObj.setTagActiveVersion(lastKnownTagVersion);
-						if (lastTagActivationTime > 0) {
+						if (lastTagActivationTime != null && lastTagActivationTime > 0) {
 							dbObj.setTagActivationTime(lastTagActivationTime);
 						}
 						needsUpdating = true;
-					} else if (lastKnownTagVersion == -1) {
+					} else if (lastKnownTagVersion != null && lastKnownTagVersion == -1) {
 						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
 						dbObj.setTagActiveVersion(null);
 						dbObj.setTagActivationTime(null);
