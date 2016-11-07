@@ -39,7 +39,11 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -178,12 +182,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 		}
 
-		Set<RangerTagForEval> allTagsForEval = new HashSet<RangerTagForEval>();
+		Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<RangerTagForEval>();
 		for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
-			allTagsForEval.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
+			tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
 		}
 
-		enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, allTagsForEval);
+		enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
 	}
 
 	@Override
@@ -218,7 +222,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		RangerAccessResource resource = request.getResource();
 
 		if ((resource == null || resource.getKeys() == null || resource.getKeys().size() == 0) && request.isAccessTypeAny()) {
-			ret = enrichedServiceTags.getAllTagsForEval();
+			ret = enrichedServiceTags.getTagsForEmptyResourceAndAnyAccess();
 		} else {
 
 			final List<RangerServiceResourceMatcher> serviceResourceMatchers = getEvaluators(resource, enrichedServiceTags);
@@ -368,19 +372,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		final private ServiceTags                        serviceTags;
 		final private List<RangerServiceResourceMatcher> serviceResourceMatchers;
 		final private Map<String, RangerResourceTrie<RangerServiceResourceMatcher>>    serviceResourceTrie;
-		final private Set<RangerTagForEval>              allTagsForEval;
+		final private Set<RangerTagForEval>              tagsForEmptyResourceAndAnyAccess; // Used only when accessed resource is empty and access type is 'any'
 
 		EnrichedServiceTags(ServiceTags serviceTags, List<RangerServiceResourceMatcher> serviceResourceMatchers,
-							Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie, Set<RangerTagForEval> allTagsForEval) {
+							Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie, Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess) {
 			this.serviceTags             = serviceTags;
 			this.serviceResourceMatchers = serviceResourceMatchers;
 			this.serviceResourceTrie     = serviceResourceTrie;
-			this.allTagsForEval          = allTagsForEval;
+			this.tagsForEmptyResourceAndAnyAccess          = tagsForEmptyResourceAndAnyAccess;
 		}
 		ServiceTags getServiceTags() {return serviceTags;}
 		List<RangerServiceResourceMatcher> getServiceResourceMatchers() { return serviceResourceMatchers;}
 		Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> getServiceResourceTrie() { return serviceResourceTrie;}
-		Set<RangerTagForEval> getAllTagsForEval() { return allTagsForEval;}
+		Set<RangerTagForEval> getTagsForEmptyResourceAndAnyAccess() { return tagsForEmptyResourceAndAnyAccess;}
 	}
 
 	static class RangerTagRefresher extends Thread {

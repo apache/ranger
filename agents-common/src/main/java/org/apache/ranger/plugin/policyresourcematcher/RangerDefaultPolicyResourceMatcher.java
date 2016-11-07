@@ -415,10 +415,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 		if (!isValid(resource)) {
 			ret = MatchType.NONE;
-		} else if (matchersSize == 0) {
+		} else if (matchersSize == 0 || lastNonAnyMatcherIndex == 0) {
 			ret = resourceKeysSize == 0 ? MatchType.SELF : MatchType.ANCESTOR;
-		} else if (lastNonAnyMatcherIndex == 0) {
-			ret = MatchType.ANCESTOR;
 		} else if (resourceKeysSize == 0) {
 			ret = MatchType.DESCENDANT;
 		} else {

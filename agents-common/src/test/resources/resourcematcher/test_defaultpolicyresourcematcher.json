@@ -133,8 +133,8 @@
         }
         ,
         {
-          "name": "MATCH for parent ''",
-          "type": "ancestorMatch",
+          "name": "MATCH for exact ''",
+          "type": "exactMatch",
           "resource": {
             "elements": {}
           },
@@ -371,8 +371,8 @@
         }
       ,
         {
-          "name": "MATCH for parent ''",
-          "type": "ancestorMatch",
+          "name": "MATCH for exact ''",
+          "type": "exactMatch",
           "resource": {
             "elements": {}
           },
@@ -420,8 +420,8 @@
         }
       ,
         {
-          "name": "MATCH for parent ''",
-          "type": "ancestorMatch",
+          "name": "MATCH for exact ''",
+          "type": "exactMatch",
           "resource": {
             "elements": {}
           },
