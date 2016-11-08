@@ -128,7 +128,8 @@ define(function(require) {
 			this.serviceDefList	= new RangerServiceDefList();
 			this.serviceDefList.fetch({ 
 				cache : false,
-				async:false
+				async:false,
+				data :{'pageSource':'Audit'}
 			});
 			return this.serviceDefList;
 		},

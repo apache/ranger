@@ -535,11 +535,16 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		int pageSize = searchFilter.getMaxRows();
 		searchFilter.setStartIndex(0);
 		searchFilter.setMaxRows(Integer.MAX_VALUE);
+	
+		boolean isAuditPage=false;
+		if(searchFilter.getParam("pageSource")!=null){
+			isAuditPage=true;
+		}
 		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields,
 				retList);
 		List<XXServiceDef> permittedServiceDefs = new ArrayList<XXServiceDef>();
 		for (XXServiceDef xSvcDef : xSvcDefList) {
-			if (bizUtil.hasAccess(xSvcDef, null)) {
+			if (bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage) ) {
 				permittedServiceDefs.add(xSvcDef);
 			}
 		}
@@ -549,6 +554,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return retList;
 
 	}
+	
 
 	private void populatePageList(List<XXServiceDef> xxObjList, int startIndex, int pageSize,
 			RangerServiceDefList retList) {

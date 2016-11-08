@@ -414,6 +414,10 @@ public class ServiceREST {
 		PList<RangerServiceDef> paginatedSvcDefs = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, serviceDefService.sortFields);
+		String pageSource= null;
+		pageSource=request.getParameter("pageSource");
+		if(pageSource!=null)
+			filter.setParam("pageSource",pageSource);
 
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
@@ -447,7 +451,7 @@ public class ServiceREST {
 		}
 		return ret;
 	}
-
+	
 	@POST
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
