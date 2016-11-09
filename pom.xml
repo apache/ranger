@@ -23,7 +23,7 @@
     </parent>
     <groupId>org.apache.ranger</groupId>
     <artifactId>ranger</artifactId>
-    <version>0.6.2</version>
+    <version>0.6.3-SNAPSHOT</version>
     <description>Security for Enforcing Enterprise Policies</description>
     <packaging>pom</packaging>
     <name>ranger</name>
