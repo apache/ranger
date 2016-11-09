@@ -31,12 +31,12 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 <ul>
 <li>
 <p>
-The current stable release is Apache Ranger 0.6.1:
+The current stable release is Apache Ranger 0.6.2:
 </p>
 <p>
-<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.1-incubating/apache-ranger-incubating-0.6.1.tar.gz">apache-ranger-incubating-0.6.1.tar.gz</a>
-(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.1-incubating/apache-ranger-incubating-0.6.1.tar.gz.asc">PGP</a>)
-(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.1-incubating/apache-ranger-incubating-0.6.1.tar.gz.mds">Digests</a>)
+<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz">apache-ranger-incubating-0.6.2.tar.gz</a>
+(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.asc">PGP</a>)
+(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.mds">Digests</a>)
 </p>
 </li>
 <li>
