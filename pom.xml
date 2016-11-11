@@ -181,6 +181,7 @@
         <jersey-server.version>1.9</jersey-server.version>
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
+        <joda-time.version>2.5</joda-time.version>
         <jsch.version>0.1.42</jsch.version>
         <json.version>3.2.11</json.version>
         <jsr305.version>1.3.9</jsr305.version>

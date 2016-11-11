@@ -76,6 +76,7 @@
 					<include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
 					<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
 					<include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
+					<include>joda-time:joda-time:jar:${joda-time.version}</include>
 					<include>log4j:log4j:jar:${log4j.version}</include>
 				</includes>
 				<unpack>false</unpack>
