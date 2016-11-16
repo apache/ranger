@@ -56,16 +56,16 @@ Deployment Process
 
 Installation Host Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1.	Ranger Admin Tool Component  (ranger-<version-number>-admin.tar.gz) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).
+1.  Ranger Admin Tool Component  (ranger-<version-number>-admin.tar.gz) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).
 2.  Ranger User Synchronization Component (ranger-<version-number>-usersync.tar.gz) should be installed on a host to synchronize the external user/group information into Ranger database via Ranger Admin Tool.
 3.  Ranger Component plugin should be installed on the component boxes:
-	(a)  HDFS Plugin needs to be installed on Name Node hosts
-	(b)  Hive Plugin needs to be installed on HiveServer2 hosts
-	(c)  HBase Plugin needs to be installed on both Master and Regional Server nodes.
-	(d)  Knox Plugin needs to be installed on Knox gateway host.
-	(e)  Storm Plugin needs to be installed on Storm hosts.
+    (a)  HDFS Plugin needs to be installed on Name Node hosts
+    (b)  Hive Plugin needs to be installed on HiveServer2 hosts
+    (c)  HBase Plugin needs to be installed on both Master and Regional Server nodes.
+    (d)  Knox Plugin needs to be installed on Knox gateway host.
+    (e)  Storm Plugin needs to be installed on Storm hosts.
     (f)  Kafka/Solr Plugin needs to be installed on their respective component hosts.
-	(g)  YARN plugin need to be installed on YARN Resource Manager hosts
+    (g)  YARN plugin need to be installed on YARN Resource Manager hosts
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
@@ -79,8 +79,8 @@ Installation Process
 4. Modify the install.properties file with appropriate variables
 
 5. If the module has setup.sh, 
-	Execute ./setup.sh
+       Execute ./setup.sh
 
    If the install.sh file does not exists, 
-	Execute ./enable-<component>-plugin.sh
+       Execute ./enable-<component>-plugin.sh
 
