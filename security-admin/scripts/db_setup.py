@@ -102,8 +102,6 @@ def password_validation(password):
 			log("[E] password contains one of the unsupported special characters like \" ' \ `","error")
 			sys.exit(1)
 
-ranger_version=check_output("ranger-admin version").split("\n")[1]
-
 class BaseDB(object):
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -130,7 +128,6 @@ class BaseDB(object):
 				for filename in sorted_files:
 					currentPatch = os.path.join(PATCHES_PATH, filename)
 					self.import_db_patches(db_name, db_user, db_password, currentPatch)
-                                self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
 			else:
 				log("[I] No patches to apply!","info")
 
@@ -270,11 +267,11 @@ class MysqlConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -357,11 +354,11 @@ class MysqlConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -495,11 +492,11 @@ class MysqlConf(BaseDB):
 								output = check_output(query)
 						else:
 							if os_name == "LINUX":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', now(), '%s', now(), '%s','N') ;\"" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -584,11 +581,11 @@ class MysqlConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -692,11 +689,11 @@ class MysqlConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret != 0:
@@ -755,36 +752,6 @@ class MysqlConf(BaseDB):
 							ret = subprocess.call(query)
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
-
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if os_name == "LINUX":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
-
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if os_name == "LINUX":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\"" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class OracleConf(BaseDB):
 	# Constructor
@@ -930,11 +897,11 @@ class OracleConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+						query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, client_host, client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -1016,11 +983,11 @@ class OracleConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd1 + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+							query = get_cmd1 + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, client_host, client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -1159,9 +1126,9 @@ class OracleConf(BaseDB):
 						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\"" %(version)
+							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\"" %(version)
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\" -c ;" %(version)
+							query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
 						jisql_log(query, db_password)
 						output = check_output(query)
 						if output.strip(version + " |"):
@@ -1172,11 +1139,11 @@ class OracleConf(BaseDB):
 								output = check_output(query)
 						else:
 							if os_name == "LINUX":
-                                                                query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+								query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, client_host, client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -1188,11 +1155,11 @@ class OracleConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-                                                        get_java_cmd = "%s -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
+							get_cmd = "%s -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 							if os_name == "LINUX":
-                                                                ret = subprocess.call(shlex.split(get_java_cmd))
+								ret = subprocess.call(shlex.split(get_cmd))
 							elif os_name == "WINDOWS":
-                                                                ret = subprocess.call(get_java_cmd)
+								ret = subprocess.call(get_cmd)
 							if ret == 0:
 								if os_name == "LINUX":
 									query = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and updated_by='%s';\"" %(version, client_host)
@@ -1261,11 +1228,11 @@ class OracleConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+							query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, client_host, client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -1369,11 +1336,11 @@ class OracleConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+						query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, client_host, client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret != 0:
@@ -1432,36 +1399,6 @@ class OracleConf(BaseDB):
 							ret = subprocess.call(query)
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
-
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password)
-                if os_name == "LINUX":
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
-
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password)
-                        if os_name == "LINUX":
-                                query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\"" %(version, ranger_version, client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\" -c ;" %(version, ranger_version, client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class PostgresConf(BaseDB):
 	# Constructor
@@ -1602,11 +1539,11 @@ class PostgresConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -1689,11 +1626,11 @@ class PostgresConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -1829,11 +1766,11 @@ class PostgresConf(BaseDB):
 								output = check_output(query)
 						else:
 							if os_name == "LINUX":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -1918,11 +1855,11 @@ class PostgresConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -2026,11 +1963,11 @@ class PostgresConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret != 0:
@@ -2089,36 +2026,6 @@ class PostgresConf(BaseDB):
 							ret = subprocess.call(query)
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
-
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if os_name == "LINUX":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
-
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if os_name == "LINUX":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\"" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class SqlServerConf(BaseDB):
 	# Constructor
@@ -2237,11 +2144,11 @@ class SqlServerConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -2324,11 +2231,11 @@ class SqlServerConf(BaseDB):
 					else:
 						get_cmd2 = self.get_jisql_cmd(db_user, db_password, audit_db_name)
 						if os_name == "LINUX":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -2447,11 +2354,11 @@ class SqlServerConf(BaseDB):
 								output = check_output(query)
 						else:
 							if os_name == "LINUX":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -2536,11 +2443,11 @@ class SqlServerConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -2644,11 +2551,11 @@ class SqlServerConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret != 0:
@@ -2707,36 +2614,6 @@ class SqlServerConf(BaseDB):
 							ret = subprocess.call(query)
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
-
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if os_name == "LINUX":
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
-
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if os_name == "LINUX":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
@@ -2855,11 +2732,11 @@ class SqlAnywhereConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -2933,11 +2810,11 @@ class SqlAnywhereConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd1 + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -3057,11 +2934,11 @@ class SqlAnywhereConf(BaseDB):
 								output = check_output(query)
 						else:
 							if os_name == "LINUX":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-                                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+								query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('J%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0:
@@ -3167,11 +3044,11 @@ class SqlAnywhereConf(BaseDB):
 							output = check_output(query)
 					else:
 						if os_name == "LINUX":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-                                                        query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
@@ -3275,11 +3152,11 @@ class SqlAnywhereConf(BaseDB):
 						output = check_output(query)
 				else:
 					if os_name == "LINUX":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-                                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+						query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,client_host,client_host)
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
 					if ret != 0:
@@ -3338,36 +3215,6 @@ class SqlAnywhereConf(BaseDB):
 							ret = subprocess.call(query)
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
-
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if os_name == "LINUX":
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
-
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if os_name == "LINUX":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 def main(argv):
 	populate_global_dict()
@@ -3559,13 +3406,8 @@ def main(argv):
 				if audit_db_user != "" and db_user != audit_db_user:
 					xa_sqlObj.create_synonym(db_name, db_user, db_password,audit_db_user)
 
-                applyDBPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "DB_PATCHES")
-                if applyDBPatches == True:
-                        log("[I] --------- Applying Ranger DB patches ---------","info")
-                        xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
-                else:
-                        log("[I] DB_PATCHES have already been applied","info")
-
+		log("[I] --------- Applying Ranger DB patches ---------","info")
+		xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
 		if audit_store == "db" and audit_db_password!='':
 			log("[I] --------- Starting Audit Operation ---------","info")
 			audit_sqlObj.auditdb_operation(xa_db_host, audit_db_host, db_name, audit_db_name, db_user, audit_db_user, db_password, audit_db_password, audit_db_file, xa_access_audit)
@@ -3575,13 +3417,7 @@ def main(argv):
 	if len(argv)>1:
 		for i in range(len(argv)):
 			if str(argv[i]) == "-javapatch":
-                                applyJavaPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "JAVA_PATCHES")
-                                if applyJavaPatches == True:
-                                        log("[I] ----------------- Applying java patches ------------", "info")
-                                        xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
-                                        xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
-                                else:
-                                        log("[I] JAVA_PATCHES have already been applied","info")
+				xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
 			if str(argv[i]) == "-changepassword":
 				if len(argv)==5:
 					userName=argv[2]

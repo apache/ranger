@@ -1178,24 +1178,24 @@ check_python_command
 run_dba_steps
 if [ "$?" == "0" ]
 then
+$PYTHON_COMMAND_INVOKER db_setup.py
+else
+	exit 1
+fi
+if [ "$?" == "0" ]
+then
 update_properties
 do_authentication_setup
 else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1
 fi
+$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
 if [ "$?" == "0" ]
 then
 echo "ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf"
 ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf
+echo "Installation of Ranger PolicyManager Web Application is completed."
 else
 	exit 1
 fi
-if [ "$?" == "0" ]
-then
-$PYTHON_COMMAND_INVOKER db_setup.py
-else
-        exit 1
-fi
-$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
-echo "Installation of Ranger PolicyManager Web Application is completed."
