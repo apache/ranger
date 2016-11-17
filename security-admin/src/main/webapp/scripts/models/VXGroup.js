@@ -70,7 +70,7 @@ define(function(require){
 					type		: 'Text',
 					title		: localization.tt("lbl.groupName") +' *',
 					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9_'&-]*[A-Za-z0-9]$/i,message :'Name must start with alphabet and must end with alphabet or number and must have atleast two chars.Allowed special characters _ ,\' ,& ,-'}],
-					editorAttrs 	:{ 'maxlength': 32},
+                                        editorAttrs 	:{ 'maxlength': 255},
 				},
 				description : {
 					type		: 'TextArea',
