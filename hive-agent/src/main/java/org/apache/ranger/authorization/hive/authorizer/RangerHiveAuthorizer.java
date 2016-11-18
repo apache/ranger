@@ -831,7 +831,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private HiveAccessType getAccessType(HivePrivilegeObject hiveObj, HiveOperationType hiveOpType, boolean isInput) {
 		HiveAccessType           accessType       = HiveAccessType.NONE;
 		HivePrivObjectActionType objectActionType = hiveObj.getActionType();
-		
 		switch(objectActionType) {
 			case INSERT:
 			case INSERT_OVERWRITE:
@@ -948,13 +947,28 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case QUERY:
 				case SHOW_TABLESTATUS:
 				case SHOW_CREATETABLE:
-				case SHOWCOLUMNS:
 				case SHOWINDEXES:
 				case SHOWPARTITIONS:
 				case SHOW_TBLPROPERTIES:
-				case DESCTABLE:
 				case ANALYZE_TABLE:
 					accessType = HiveAccessType.SELECT;
+				break;
+
+				case SHOWCOLUMNS:
+				case DESCTABLE:
+					switch (StringUtil.toLower(hivePlugin.DescribeShowTableAuth)){
+						case "show-allowed":
+							// This is not implemented so defaulting to current behaviour of blocking describe/show columns not to show any columns.
+							// This has to be implemented when hive provides the necessary filterListCmdObjects for
+							// SELECT/SHOWCOLUMS/DESCTABLE to filter the columns based on access provided in ranger.
+						case "none":
+						case "":
+							accessType = HiveAccessType.SELECT;
+							break;
+						case "show-all":
+							accessType = HiveAccessType.USE;
+							break;
+					}
 				break;
 
 				// any access done for metadata access of actions that have support from hive for filtering
@@ -1325,6 +1339,7 @@ enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, US
 class RangerHivePlugin extends RangerBasePlugin {
 	public static boolean UpdateXaPoliciesOnGrantRevoke             = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	public static boolean BlockUpdateIfRowfilterColumnMaskSpecified = RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE;
+	public static String DescribeShowTableAuth						= RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE;
 
 	public RangerHivePlugin(String appType) {
 		super("hive", appType);
@@ -1336,6 +1351,7 @@ class RangerHivePlugin extends RangerBasePlugin {
 
 		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke             = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 		RangerHivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_PROP, RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE);
+		RangerHivePlugin.DescribeShowTableAuth				   	   = RangerConfiguration.getInstance().get(RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP,RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE);
 	}
 }
 
