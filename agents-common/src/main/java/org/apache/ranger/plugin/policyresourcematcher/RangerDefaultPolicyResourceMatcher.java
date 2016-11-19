@@ -450,6 +450,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 						} else {
 							ret = MatchType.DESCENDANT;
 						}
+					} else {
+						// Common part of several possible hierarchies matched
+						if (resourceKeysSize > index) {
+							ret = MatchType.ANCESTOR;
+						}
 					}
 					break;
 				}
@@ -464,37 +469,90 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 		return ret;
 	}
 
+	private boolean isValidResourceDefHierachyForResource(List<RangerResourceDef> resourceHierarchy, RangerAccessResource resource) {
+		boolean foundAllResourceKeys = true;
+
+		for (String resourceKey : resource.getKeys()) {
+			boolean found = false;
+			for (RangerResourceDef resourceDef : resourceHierarchy) {
+				if (resourceDef.getName().equals(resourceKey)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				foundAllResourceKeys = false;
+				break;
+			}
+		}
+
+		return foundAllResourceKeys;
+	}
+
 	private boolean isValid(RangerAccessResource resource) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyResourceMatcher.isValid(" + resource + ")");
 		}
 
 		boolean ret = true;
-		boolean skipped = false;
 
 		if (matchers != null && resource != null && resource.getKeys() != null) {
 			if (matchers.keySet().containsAll(resource.getKeys()) || resource.getKeys().containsAll(matchers.keySet())) {
-				for (RangerResourceDef resourceDef : firstValidResourceDefHierarchy) {
 
-					String resourceName = resourceDef.getName();
-					String resourceValue = resource.getValue(resourceName);
+				List<RangerResourceDef> aValidHierarchy = null;
 
-					if (resourceValue == null) {
-						if (!skipped) {
-							skipped = true;
-						}
+				if (resource.getKeys().containsAll(matchers.keySet()) && resource.getKeys().size() > matchers.keySet().size()) {
+					if (isValidResourceDefHierachyForResource(firstValidResourceDefHierarchy, resource)) {
+						aValidHierarchy = firstValidResourceDefHierarchy;
 					} else {
-						if (skipped) {
-							ret = false;
-							break;
+						RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+						int policyType = policy != null && policy.getPolicyType() != null ? policy.getPolicyType() : RangerPolicy.POLICY_TYPE_ACCESS;
+						Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType);
+
+						for (List<RangerResourceDef> resourceHierarchy : validResourceHierarchies) {
+							if (resourceHierarchy == firstValidResourceDefHierarchy) { // Pointer comparison
+								// firstValidResourceDefHierarchy is already checked before and it does not match
+								continue;
+							}
+
+							if (isValidResourceDefHierachyForResource(resourceHierarchy, resource)) {
+								aValidHierarchy = resourceHierarchy;
+								break;
+							}
 						}
 					}
+				} else {
+					aValidHierarchy = firstValidResourceDefHierarchy;
+				}
 
+				if (aValidHierarchy != null) {
+					boolean skipped = false;
+
+					for (RangerResourceDef resourceDef : aValidHierarchy) {
+
+						String resourceName = resourceDef.getName();
+						String resourceValue = resource.getValue(resourceName);
+
+						if (resourceValue == null) {
+							if (!skipped) {
+								skipped = true;
+							}
+						} else {
+							if (skipped) {
+								ret = false;
+								break;
+							}
+						}
+
+					}
+				} else {
+					ret = false;
 				}
 			} else {
 				ret = false;
 			}
 		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isValid(" + resource + "): " + ret);
 		}

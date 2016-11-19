@@ -103,6 +103,26 @@
       },
       "tests": [
         {
+          "name": "NO MATCH for invalid resource level",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "invalid-resource-name":"any"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+        ,
+        {
+          "name": "NO MATCH for resource from different hierarchy 'finance:udf=some_udf",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "udf":"some_udf"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
           "name": "MATCH for parent 'finance.tax.ssn'",
           "type": "ancestorMatch",
           "resource": {
@@ -314,6 +334,16 @@
         }
       ,
         {
+          "name": "MATCH for parent 'finance:udf=compute_tax'",
+          "type": "ancestorMatch",
+          "resource": {
+            "elements": {"database": "finance","udf": "compute_tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ,
+        {
           "name": "MATCH for exact 'finance'",
           "type": "exactMatch",
           "resource": {
@@ -341,6 +371,16 @@
       },
       "tests": [
         {
+          "name": "NO MATCH for invalid resource level",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "invalid-resource-name":"any"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
           "name": "MATCH for parent 'finance.tax.ssn'",
           "type": "ancestorMatch",
           "resource": {
@@ -355,6 +395,16 @@
           "type": "ancestorMatch",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ,
+        {
+          "name": "MATCH for parent 'finance:udf=compute_tax'",
+          "type": "ancestorMatch",
+          "resource": {
+            "elements": {"database": "finance","udf": "compute_tax"}
           },
           "evalContext": {},
           "result": true
