@@ -34,7 +34,7 @@ for custom_env_script in `find ${cdir}/conf/ -name "ranger-tagsync-env*"`; do
 done
 
 if [ -z "${TAGSYNC_PID_DIR_PATH}" ]; then
-        pidf=/var/run/ranger
+        TAGSYNC_PID_DIR_PATH=/var/run/ranger
 fi
 pidf=${TAGSYNC_PID_DIR_PATH}/tagsync.pid
 if [ -z "${UNIX_TAGSYNC_USER}" ]; then

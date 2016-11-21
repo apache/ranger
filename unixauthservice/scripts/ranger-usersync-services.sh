@@ -33,7 +33,7 @@ for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
         fi
 done
 if [ -z "${USERSYNC_PID_DIR_PATH}" ]; then
-        pidf=/var/run/ranger
+        USERSYNC_PID_DIR_PATH=/var/run/ranger
 fi
 pidf=${USERSYNC_PID_DIR_PATH}/usersync.pid
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
