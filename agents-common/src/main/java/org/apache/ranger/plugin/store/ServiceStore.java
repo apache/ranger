@@ -34,18 +34,15 @@ public interface ServiceStore {
 
 	RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) throws Exception;
 
-	void deleteServiceDef(Long id) throws Exception;
 	void deleteServiceDef(Long id, Boolean forceDelete) throws Exception;
 
 	void updateTagServiceDefForAccessTypes() throws Exception;
-
 
 	RangerServiceDef getServiceDef(Long id) throws Exception;
 
 	RangerServiceDef getServiceDefByName(String name) throws Exception;
 
 	List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception;
-
 
 	PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception;
 
@@ -73,13 +70,11 @@ public interface ServiceStore {
 
 	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;
 
-
 	PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception;
 
 	List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception;
 
 	List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
-
 
 	PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception;
 
@@ -94,11 +89,6 @@ public interface ServiceStore {
 	ServicePolicies getServicePolicies(String serviceName) throws Exception;
 
 	RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId);
-
-	RangerPolicy getPolicyForVersionNumber(Long policyId, Integer versionNo);
-
-	String getPolicyForVersionNumber(Long policyId);
-
 
 	void setPopulateExistingBaseFields(Boolean populateExistingBaseFields);
 

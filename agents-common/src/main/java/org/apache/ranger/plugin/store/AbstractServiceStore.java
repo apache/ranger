@@ -31,11 +31,9 @@ import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public abstract class AbstractServiceStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(AbstractServiceStore.class);
@@ -44,6 +42,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 
+	// when a service-def is updated, the updated service-def should be made available to plugins
+	//   this is achieved by incrementing policyVersion of all its services
+	protected abstract void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception;
 
 	@Override
 	public void updateTagServiceDefForAccessTypes() throws Exception {
@@ -57,11 +58,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.updateTagServiceDefForAccessTypes()");
 		}
-	}
-
-	@Override
-	public void deleteServiceDef(Long id, Boolean forceDelete) throws Exception {
-		deleteServiceDef(id);   // Ignore forceDelete flag
 	}
 
 	@Override
@@ -105,39 +101,6 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	@Override
-	public RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId) {
-		RangerPolicy ret = null;
-		try {
-			ret = getPolicy(policyId);
-		} catch (Exception e) {
-			// Do nothing
-		}
-		return ret;
-	}
-
-	@Override
-	public RangerPolicy getPolicyForVersionNumber(Long policyId, Integer versionNo) {
-		RangerPolicy ret = null;
-		try {
-			ret = getPolicy(policyId);
-		} catch (Exception e) {
-			// Do nothing
-		}
-		return ret;
-	}
-
-	@Override
-	public String getPolicyForVersionNumber(Long policyId) {
-		RangerPolicy ret = null;
-		try {
-			ret = getPolicy(policyId);
-		} catch (Exception e) {
-			// Do nothing
-		}
-		return ret == null ? null : ret.getName();
-	}
-
-	@Override
 	public Long getServicePolicyVersion(String serviceName) {
 		RangerService service = null;
 		try {
@@ -148,55 +111,10 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		return service != null ? service.getPolicyVersion() : null;
 	}
 
-	protected void preCreate(RangerBaseModelObject obj) throws Exception {
-		obj.setId(0L);
-		if(obj.getGuid() == null) {
-			obj.setGuid(UUID.randomUUID().toString());
-		}
-		obj.setCreateTime(new Date());
-		obj.setUpdateTime(obj.getCreateTime());
-		obj.setVersion(1L);
-	}
-
-	protected void preCreate(RangerService service) throws Exception {
-		preCreate((RangerBaseModelObject)service);
-
-		service.setPolicyVersion(0L);
-		service.setPolicyUpdateTime(service.getCreateTime());
-
-		service.setTagVersion(0L);
-		service.setTagUpdateTime(service.getCreateTime());
-	}
-
 	protected void postCreate(RangerBaseModelObject obj) throws Exception {
 		if(obj instanceof RangerServiceDef) {
 			updateTagServiceDefForUpdatingAccessTypes((RangerServiceDef)obj);
 		}
-	}
-
-	protected void preUpdate(RangerBaseModelObject obj) throws Exception {
-		if(obj.getId() == null) {
-			obj.setId(0L);
-		}
-
-		if(obj.getGuid() == null) {
-			obj.setGuid(UUID.randomUUID().toString());
-		}
-
-		if(obj.getCreateTime() == null) {
-			obj.setCreateTime(new Date());
-		}
-
-		Long version = obj.getVersion();
-
-		if(version == null) {
-			version = 1L;
-		} else {
-			version = version + 1;
-		}
-
-		obj.setVersion(version);
-		obj.setUpdateTime(new Date());
 	}
 
 	protected void postUpdate(RangerBaseModelObject obj) throws Exception {
@@ -208,65 +126,14 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 	}
 
-	protected void preDelete(RangerBaseModelObject obj) throws Exception {
-		// TODO:
-	}
-
 	protected void postDelete(RangerBaseModelObject obj) throws Exception {
 		if(obj instanceof RangerServiceDef) {
 			updateTagServiceDefForDeletingAccessTypes(((RangerServiceDef) obj).getName());
 		}
 	}
 
-	protected long getMaxId(List<? extends RangerBaseModelObject> objs) {
-		long ret = -1;
-
-		if (objs != null) {
-			for (RangerBaseModelObject obj : objs) {
-				if (obj.getId() > ret) {
-					ret = obj.getId();
-				}
-			}
-		}
-		return ret;
-	}
-
-	// when a service-def is updated, the updated service-def should be made available to plugins
-	//   this is achieved by incrementing policyVersion of all its services
-	protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception {
-		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-
-		SearchFilter filter = new SearchFilter();
-
-		filter.setParam(SearchFilter.SERVICE_TYPE, serviceDef.getName());
-
-		List<RangerService> services = getServices(filter);
-
-		if(CollectionUtils.isNotEmpty(services)) {
-			for(RangerService service : services) {
-				service.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
-				service.setPolicyUpdateTime(serviceDef.getUpdateTime());
-
-				updateService(service);
-
-				if(isTagServiceDef) {
-					filter = new SearchFilter();
-
-					filter.setParam(SearchFilter.TAG_SERVICE_NAME, service.getName());
-
-					List<RangerService> referrringServices = getServices(filter);
-
-					if(CollectionUtils.isNotEmpty(referrringServices)) {
-						for(RangerService referringService : referrringServices) {
-							referringService.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-							referringService.setPolicyUpdateTime(serviceDef.getUpdateTime());
-
-							updateService(referringService);
-						}
-					}
-				}
-			}
-		}
+	protected final long getNextVersion(Long currentVersion) {
+		return currentVersion == null ? 1L : currentVersion + 1;
 	}
 
 	private RangerServiceDef.RangerAccessTypeDef findAccessTypeDef(long itemId, List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs) {
@@ -445,7 +312,4 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 	}
 
-	protected long getNextVersion(Long currentVersion) {
-		return currentVersion == null ? 1L : currentVersion + 1;
-	}
 }

@@ -1101,8 +1101,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	@Override
-	public void deleteServiceDef(Long serviceDefId) throws Exception {
+	public void deleteServiceDef(Long serviceDefId, Boolean forceDelete) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
+		}
 
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session == null) {
@@ -1115,14 +1117,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw restErrorUtil.createRESTException(
 					"User is not allowed to update service-def, only Admin can update service-def",
 					MessageEnums.OPER_NO_PERMISSION);
-		}
-
-		deleteServiceDef(serviceDefId, false);
-	}
-
-	public void deleteServiceDef(Long serviceDefId, Boolean forceDelete) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ")");
 		}
 
 		RangerServiceDef serviceDef = getServiceDef(serviceDefId);
@@ -1212,7 +1206,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		postDelete(serviceDef);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ")");
+			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
 		}
 	}
 
