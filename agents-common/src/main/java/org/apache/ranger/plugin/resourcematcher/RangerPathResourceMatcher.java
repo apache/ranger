@@ -92,7 +92,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 		final int len = policyValue != null ? policyValue.length() : 0;
 
-		if (len == 0) {
+		if (len == 0 || (optWildCard && policyValue.equals(WILDCARD_ASTERISK))) {
 			return null;
 		}
 
