@@ -173,6 +173,22 @@ define(function(require) {
 		});
 		return nvPairs;
 	};
+   //	Search Info it give popover box
+   XAUtils.searchInfoPopover = function(myArray, $infoEle, placement){
+		var msg = "";
+		myArray.map(function(m){
+                   msg += '<div><span><b>'+m.text+' : </b></span><span>'+m.info+'</span></div>'
+                })
+                $infoEle.popover({
+                   content: msg,
+               html: true,
+               trigger: 'hover',
+               placement: placement,
+               container: 'body'
+
+                })
+   };
+
 
 	/**
 	 * Notify Info the given title / text

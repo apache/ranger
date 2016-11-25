@@ -75,7 +75,8 @@ define(function(require){
 			'btnShowLess' : '[data-id="showLess"]',
 			'visualSearch' : '.visual_search',
 			'policyTypeTab' : 'div[data-id="policyTypeTab"]',
-			'addNewPolicy' : '[data-js="addNewPolicy"]'
+                        'addNewPolicy' : '[data-js="addNewPolicy"]',
+                        'iconSearchInfo' : '[data-id="searchInfo"]',
 		},
 
 		/** ui events hash */
@@ -112,7 +113,7 @@ define(function(require){
 			this.rangerServiceDefModel.fetch({
 				cache : false,
 				async : false
-			})
+                        });
 		},
 		
 		initializePolicies : function(policyType){
@@ -130,8 +131,9 @@ define(function(require){
 			this.addVisualSearch();
 			this.renderTable();
 			this.initializePolicies();
+                        XAUtil.searchInfoPopover(this.searchInfoArray , this.ui.iconSearchInfo , 'bottom');
+
 		},
-		
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
@@ -316,21 +318,47 @@ define(function(require){
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');
 		},
 		addVisualSearch : function(){
-			var that = this;
-			var resourceSearchOpt = _.map(this.rangerServiceDefModel.get('resources'), function(resource){ return XAUtil.capitaliseFirstLetter(resource.name) });
+
+                        var that = this, resources = this.rangerServiceDefModel.get('resources');
+                        var policyType = this.collection.queryParams['policyType'];
+                        if(XAUtil.isMaskingPolicy(policyType) ){
+                                resources = this.rangerServiceDefModel.get('dataMaskDef')['resources'];
+                        }else if(XAUtil.isRowFilterPolicy(policyType) ){
+                                resources = this.rangerServiceDefModel.get('rowFilterDef')['resources'];
+                        }
+                        var resourceSearchOpt = _.map(resources, function(resource){
+                                        return { 'name' : resource.name, 'label' : resource.label };
+                        });
 			var PolicyStatusValue = _.map(XAEnums.ActiveStatus, function(status) { return { 'label': status.label, 'value': Boolean(status.value)}; });
 	
 			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
-			searchOpt = _.union(searchOpt, resourceSearchOpt)
-			var serverAttrName  = [{text : "Policy Name", label :"policyNamePartial"},{text : "Group Name", label :"group"},
-			                       {text : "User Name", label :"user"}, {text : "Status", label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue}];
+                        searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt){ return opt.label }))
+                        var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg')},
+                                               {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg')},
+                                               {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue},
+                                               {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg')},
+                                               ];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];
+                        var info = { collection : localization.tt('h.collection')    , column   :localization.tt('lbl.columnName'),
+                                         'column-family':localization.tt('msg.columnfamily') , database :localization.tt('h.database'),
+                                          entity        :localization.tt('h.entity') , keyname  :localization.tt('lbl.keyName'),
+                                          operation:localization.tt('h.operation')   , path:localization.tt('h.path') ,
+                                          queue:localization.tt('h.queue')        , service:localization.tt('h.serviceNameMsg'),
+                                          table:localization.tt('lbl.tableName')   , tag : localization.tt('h.tagsMsg'),
+                                          taxonomy:localization.tt('h.taxonomy')  ,term: localization.tt('h.term') ,
+                                          topic:localization.tt('h.topic')    ,topology:localization.tt('lbl.topologyName'),
+                                          type:localization.tt('h.type')    ,udf:localization.tt('h.udf') ,
+                                                 };
 			var serverRsrcAttrName = _.map(resourceSearchOpt,function(opt){ 
-				return { 'text': XAUtil.capitaliseFirstLetter(opt), 
-					'label': 'resource:'+XAUtil.lowerCaseFirstLetter(opt) }; 
+                                        return {
+                                                'text': opt.label,
+                                                'label': 'resource:'+ opt.name,
+                                                'info' : info[opt.name],
+                                        };
 			});
 			serverAttrName = _.union(serverAttrName, serverRsrcAttrName)
+                    this.searchInfoArray = serverAttrName;
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForPolicy'),
 				      container : this.ui.visualSearch,
@@ -365,6 +393,7 @@ define(function(require){
 				};
 			window.vs = XAUtil.addVisualSearch(searchOpt,serverAttrName, this.collection,pluginAttr);
 		},
+
 		getActiveStatusNVList : function() {
 			var activeStatusList = _.filter(XAEnums.ActiveStatus, function(obj){
 				if(obj.label != XAEnums.ActiveStatus.STATUS_DELETED.label)

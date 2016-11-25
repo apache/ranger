@@ -84,7 +84,8 @@ define(function(require) {
 			tab 				: '.nav-tabs',
 			refreshTable		: '[data-id="refreshTable"]',
 			quickFilter			: '[data-id="quickFilter"]',
-			visualSearch		: '.visual_search'
+                        visualSearch		: '.visual_search',
+                        'iconSearchInfo' : '[data-id="searchInfo"]',
 			
 		},
 
@@ -143,6 +144,9 @@ define(function(require) {
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
+                        this.addSearchForBigDataTab();
+                        XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
+
 		 },
 		displayDatepicker : function ($el, callback) {
 			var input = $el.find('.search_facet.is_editing input.search_facet_input');
@@ -208,6 +212,7 @@ define(function(require) {
 					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
 					this.listenTo(this.accessAuditList, "request", that.updateLastRefresh)
+                                        this.ui.iconSearchInfo.show();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -220,6 +225,7 @@ define(function(require) {
 					}
 					this.addSearchForAdminTab();
 					this.listenTo(this.trxLogList, "request", that.updateLastRefresh)
+                                        this.ui.iconSearchInfo.hide();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
@@ -232,6 +238,7 @@ define(function(require) {
 					});
 					this.addSearchForLoginSessionTab();
 					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
+                                        this.ui.iconSearchInfo.hide();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
@@ -245,6 +252,7 @@ define(function(require) {
 					});
 					this.addSearchForAgentTab();
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
+                                        this.ui.iconSearchInfo.hide();
 					break;	
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -265,8 +273,20 @@ define(function(require) {
 			                      {text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'}];
             var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags'];//,'Policy ID'
-            this.clearVisualSearch(this.accessAuditList, serverAttrName);
-            
+		this.clearVisualSearch(this.accessAuditList, serverAttrName);
+		this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
+		                    {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
+		                    {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
+		                    {text :'End Date'       , info :localization.tt('h.endDate')},
+		                    {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
+		                    {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
+		                    {text :'Result'			, info :localization.tt('msg.resultMsg')},
+		                    {text :'Service Name' 	, info :localization.tt('h.serviceNameMsg')},
+	                        {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
+		                    {text :'Start Date'     , info :localization.tt('h.startDate')},
+		                    {text :'User' 			, info :localization.tt('h.userMsg')},
+		                    {text :'Tags' 			, info :localization.tt('h.tagsMsg')},];
+
 			//'Resource Type','Audit Type','Session IP','Client Type','Today',
             var query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
 			var pluginAttr = {

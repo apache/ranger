@@ -79,7 +79,8 @@ define(function(require) {'use strict';
 			downloadReport      : '[data-id="downloadReport"]',
 			policyType          : '[data-id="policyType"]',
 			btnShowMoreAccess 	: '[data-id="showMoreAccess"]',
-			btnShowLessAccess 	: '[data-id="showLessAccess"]'
+                        btnShowLessAccess 	: '[data-id="showLessAccess"]',
+                        'iconSearchInfo' 	: '[data-id="searchInfo"]',
 		},
 
 		/** ui events hash */
@@ -151,9 +152,17 @@ define(function(require) {'use strict';
 				urlString = urlString.slice(0,-1);
 			}
 			this.previousSearchUrl = urlString+"/service/plugins/policies/downloadExcel?";
-		},
+                        XAUtil.searchInfoPopover(this.getSearchInfoArray() , this.ui.iconSearchInfo , 'left');
 		
-		getResourceLists: function(collName, serviceDefName){
+                },
+                 getSearchInfoArray: function(){
+                         return [{text :'Policy Name' , info :localization.tt('msg.policyNameMsg')},
+                                 {text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
+                                 {text :'Component'   , info :localization.tt('msg.componentMsg')},
+                                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
+                                 {text :'Resource'    , info :localization.tt('msg.resourceMsg')}]
+                 },
+                 getResourceLists: function(collName, serviceDefName){
 
 			var that = this, coll = this[collName];
 			that.allowDownload = false;

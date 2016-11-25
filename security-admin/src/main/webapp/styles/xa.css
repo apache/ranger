@@ -384,6 +384,19 @@ body {
     padding: 62px 0 0 0;
   }
 }
+/*  Seach Info btn*/
+.searchInfo{
+        margin-left:12px;
+        color:#4c504b;
+        font-size:larger;
+}
+.searchInfoUserAccsss{
+        margin-left:12px;
+        color:#4c504b;
+        font-size:large;
+        margin-top:10px
+}
+
 /* overriding backgrid height property */
 .backgrid td {
   height: auto;

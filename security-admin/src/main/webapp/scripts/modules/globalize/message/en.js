@@ -302,9 +302,25 @@ define(function(require) {
 				searchForKeys				:"Search for your keys...",
 				encryption					: 'Encryption',
 				settings					: 'Settings',
-				
-				
-			},
+                                serviceNameMsg              :'Name of service.',
+                                serviceTypeMsg              :'Select type of service.',
+                                startDate                   :'Set start date.',
+                                userMsg                     :'Name of User.',
+                                tagsMsg                     :'Tag Name.',
+                                endDate                     :'Set end date.',
+                                groupNameMsg                :'Name of Group.',
+                                collection                  :'Solr collection.',
+                                database                    :'Hive database.',
+                                entity                      :'Atlas all-entity.',
+                                operation                   :'Atlas all-operation.',
+                                path                        :'Name of policy resource.',
+                                queue                       :'Yarn queue.',
+                                taxonomy                    :'Atlas all-taxonomy.',
+                                term                        :'Policy for all-term.',
+                                topic                       :'Kafka topic.',
+                                type                        :'Policy for all type.',
+                                udf                         :'Hive udf.',
+                        },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
 				areYouSureWantToDelete	  : 'Are you sure want to delete ?',
@@ -339,10 +355,21 @@ define(function(require) {
 				grpUpdatedSucc            : 'Group updated successfully',
 				grpCreatedSucc            : 'Group created successfully',
 				errorLoadingAuditLogs	  : 'Unable to connect to Audit store !!',
-				enterCustomMask			  : 'Please enter custom masked value or expression !!'
-				
-				
-				
+                                enterCustomMask			  : 'Please enter custom masked value or expression !!',
+                                    policyNameMsg         :'Enter name of policy.',
+                                        policyTypeMsg         :'Select Type of policy eg. access, masking, row level filter policies.',
+                                        componentMsg          :'Select Hadoop Component eg. HDFS, Hive etc.',
+                                        searchBy              :'Search by user name or group name.',
+                                        resourceMsg           :'Enter name of resource for eg. path, table/column name etc.',
+                                        accessEnforcer        :'Search by access enforcer name.',
+                                        accessTypeMsg         : 'Access type like READ_EXECUTE, WRITE_EXECUTE.',
+                                        clientIP              :'Search by IP address from where resource was accessed.',
+                                        resourceName          :'Resource name.',
+                                        resourceTypeMsg       :'Search by resource type based on component. eg. path in HDFS, database,table in Hive.',
+                                        resultMsg             :'Search by access result i.e Allowed/Denied logs.',
+                                        statusMsg             :'Status of Policy Enable/Disable.',
+                                        columnfamily          :'Hbase column-family',
+
 			},
 			plcHldr : {
 				search 						:'Search',
