@@ -180,6 +180,18 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 				</tr>');
 		},
+		modifyPluginStatusTableSubcolumns : function(){
+			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
+					<th class="renderable pid"></th>\
+					<th class="renderable ruser"></th>\
+					<th class="renderable ruser"></th>\
+					<th class="renderable ruser"></th>\
+					<th class="renderable cip">Policy Active</th>\
+					<th class="renderable name">Policy Download</th>\
+					<th class="renderable cip">Tag Active</th>\
+					<th class="renderable cip">Tag Download</th>\
+			 	</tr>');
+		},
 		renderDateFields : function(){
 			var that = this;
 
@@ -253,7 +265,20 @@ define(function(require) {
 					this.addSearchForAgentTab();
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
                                         this.ui.iconSearchInfo.hide();
-					break;	
+					break;
+				case "#pluginStatus":
+					 this.currentTab = '#pluginStatus';
+					 this.ui.visualSearch.show();
+					 this.pluginInfoList = new VXPolicyExportAuditList();
+					 this.renderPluginInfotable();
+					 this.modifyPluginStatusTableSubcolumns();
+					 //To use existing collection
+					 this.pluginInfoList.url = 'service/plugins/plugins/info';
+					 this.pluginInfoList.modelAttrName = 'pluginInfoList';
+					 this.pluginInfoList.fetch({cache : false});
+					 this.addSearchForPluginStatusTab();
+					 this.ui.iconSearchInfo.hide();
+					 break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
 			that.ui.lastUpdateTimeLabel.html(lastUpdateTime);
@@ -522,6 +547,19 @@ define(function(require) {
 				      }
 				};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.policyExportAuditList, pluginAttr);
+		},
+		addSearchForPluginStatusTab : function(){
+			var that = this;
+			var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),
+			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName")];
+			var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.serviceType"), label :"pluginAppType"},
+			                       {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"}];
+			var pluginAttr = {
+					placeholder    : localization.tt('msg.searchForPluginStatus'),
+					container         : this.ui.visualSearch,
+					query             : '',
+			}
+			this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.pluginInfoList, pluginAttr);
 		},
 		renderAdminTable : function(){
 			var that = this , self = this;
@@ -1122,6 +1160,124 @@ define(function(require) {
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},
+		renderPluginInfotable : function(){
+			this.ui.tableList.removeClass("clickable");
+			this.rTableList.show(new XATableLayout({
+				columns: this.getPluginInfoColums(),
+				collection: this.pluginInfoList,
+				includeFilter : false,
+				gridOpts : {
+					row : 	Backgrid.Row.extend({}),
+					header : XABackgrid,
+						emptyText : 'No plugin found!'
+				}
+			}));	
+		},
+		getPluginInfoColums : function(){
+			var that = this, cols ={
+				serviceName : {
+					cell 	: 'string',
+					label	: localization.tt("lbl.serviceName"),
+					editable:false,
+					sortable:false
+				},
+				appType : {
+					cell : 'string',
+					label	: localization.tt("lbl.serviceType"),
+					editable:false,
+					sortable:false
+				},
+				hostName : {
+					cell : 'html',
+					label	: localization.tt("lbl.hostName"),
+					editable:false,
+					sortable:false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							rawValue = _.escape(rawValue);
+							return '<span title="'+rawValue+'">'+rawValue+'</span>';
+						}
+					}),
+				},
+				ipAddress : {
+					cell 	: 'string',
+					label	: localization.tt("lbl.agentIp"),
+					editable:false,
+					sortable:false
+				},
+				policyActive: {
+					cell 	: 'html',
+					label	: localization.tt("lbl.versionTime"),
+					editable:false,
+					sortable:false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(_.isUndefined(model.get('info').policyActiveVersion)
+									|| _.isNull(model.get('info').policyActiveVersion)){
+								return '<center>--</center>';
+							}	
+							return that.getPluginInfoCell(model,'policyActiveVersion','policyActivationTime','label-success');
+							       
+						}
+					})
+				},
+									
+				policyDownloaded : {
+					cell 	: 'html',
+					label	: localization.tt("lbl.versionTime"),
+					editable:false,
+					sortable:false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(_.isUndefined(model.get('info').policyDownloadedVersion)
+									|| _.isNull(model.get('info').policyDownloadedVersion)){
+								return '<center>--</center>';
+							}
+							return that.getPluginInfoCell(model,'policyDownloadedVersion','policyDownloadTime','label-inverse');
+						}
+					})
+				},
+				
+				tagActive : {
+					cell 	: 'html',
+					label	: localization.tt("lbl.versionTime"),
+					editable:false,
+					sortable:false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(_.isUndefined(model.get('info').tagActiveVersion)
+									|| _.isNull(model.get('info').tagActiveVersion)){
+								return '<center>--</center>';
+							}
+							return that.getPluginInfoCell(model,'tagActiveVersion','tagActivationTime','label-success');
+						}
+					})
+				}, 
+				
+				tagDownloaded : {
+					cell 	: 'html',
+					label	:localization.tt("lbl.versionTime"),
+					editable:false,
+					sortable:false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(_.isUndefined(model.get('info').tagDownloadedVersion)
+									|| _.isNull(model.get('info').tagDownloadedVersion)){
+								return '<center>--</center>';
+							}
+							return that.getPluginInfoCell(model,'tagDownloadedVersion','tagDownloadTime','label-inverse');
+						}
+					})
+				},
+			}
+			return this.pluginInfoList.constructor.getTableCols(cols, this.pluginInfoList);
+	
+		},
+		getPluginInfoCell : function(model, versionAttr, timeAttr, klass){
+			return '<center><div><label class="label '+klass+'">'+model.get('info')[versionAttr]+
+			'</label></div>\  <div " style="border-top: 1px solid #ddd;">'
+			+Globalize.format(new Date(parseInt(model.get('info')[timeAttr])),  "MM/dd/yyyy hh:mm:ss tt")+'</div></center>'
+		},
 		onRefresh : function(){
 			var that =this, coll,params = {};
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1140,7 +1296,10 @@ define(function(require) {
 				//TODO
 				params = { 'priAcctId' : 1 };
 				coll = this.policyExportAuditList;
-				break;	
+				break;
+			case "#pluginStatus":
+				coll = this.pluginInfoList;
+				break;
 			}
 			coll.fetch({
 				reset : true,
@@ -1172,18 +1331,21 @@ define(function(require) {
 		},
 		setCurrentTabCollection : function(){
 			switch (this.currentTab) {
-			case "#admin":
-				this.collection = this.trxLogList;
-				break;
-			case "#bigData":
-				this.collection = this.accessAuditList;
-				break;
-			case "#loginSession":
-				this.collection = this.authSessionList;
-				break;
-			case "#agent":
-				this.collection = this.policyExportAuditList;
-				break;
+				case "#admin":
+					this.collection = this.trxLogList;
+					break;
+				case "#bigData":
+					this.collection = this.accessAuditList;
+					break;
+				case "#loginSession":
+					this.collection = this.authSessionList;
+					break;
+				case "#agent":
+					this.collection = this.policyExportAuditList;
+					break;
+				case "#pluginStatus":
+					this.collection = this.pluginInfoList;
+					break;
 			}
 		},
 		clearVisualSearch : function(collection, serverAttrNameList) {
