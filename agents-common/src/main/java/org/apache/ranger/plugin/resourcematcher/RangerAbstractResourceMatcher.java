@@ -267,7 +267,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	ResourceMatcher getMatcher(String policyValue) {
 		final int len = policyValue != null ? policyValue.length() : 0;
 
-		if (len == 0 || (optWildCard && policyValue.equals(WILDCARD_ASTERISK))) {
+		if (len == 0) {
 			return null;
 		}
 

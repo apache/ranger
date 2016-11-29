@@ -215,6 +215,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hbase_with_multiple_matching_policies() {
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_multiple_matching_policies.json" };
+
+		runTestsFromResourceFiles(hbaseTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_conditions() {
 		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_conditions.json" };
 
