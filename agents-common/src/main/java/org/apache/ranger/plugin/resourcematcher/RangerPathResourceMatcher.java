@@ -102,8 +102,13 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 		final int len = policyValue != null ? policyValue.length() : 0;
 
-		if (len == 0 || (optWildCard && policyValue.equals(WILDCARD_ASTERISK))) {
+		if (len == 0) {
 			return null;
+		}
+
+		// To ensure that when policyValue is single '*', ResourceMatcher created here returns true for isMatchAny()
+		if (optWildCard && policyValue.equals(WILDCARD_ASTERISK)) {
+			return new CaseInsensitiveStringMatcher("");
 		}
 
 		boolean isWildcardPresent = false;
