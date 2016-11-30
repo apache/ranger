@@ -22,6 +22,7 @@ package org.apache.ranger.authorization.hbase;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.security.AccessDeniedException;
@@ -159,7 +160,15 @@ public class AuthorizationSession {
 	boolean isProvided(String aString) {
 		return aString != null && !aString.isEmpty();
 	}
-	
+
+	boolean isNameSpaceOperation() {
+		return StringUtils.equals(_operation, "createNamespace") ||
+				StringUtils.equals(_operation, "deleteNamespace") ||
+				StringUtils.equals(_operation, "modifyNamespace") ||
+				StringUtils.equals(_operation, "setUserNamespaceQuota") ||
+				StringUtils.equals(_operation, "setNamespaceQuota");
+	}
+
 	AuthorizationSession buildRequest() {
 
 		verifyBuildable();
@@ -168,7 +177,11 @@ public class AuthorizationSession {
 		// TODO get this via a factory instead
 		RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
 		// policy engine should deal sensibly with null/empty values, if any
-		resource.setValue("table", _table);
+		if (isNameSpaceOperation() && StringUtils.isNotBlank(_otherInformation)) {
+				resource.setValue("table", _otherInformation + ":");
+		} else {
+			resource.setValue("table", _table);
+		}
 		resource.setValue("column-family", _columnFamily);
 		resource.setValue("column", _column);
 		

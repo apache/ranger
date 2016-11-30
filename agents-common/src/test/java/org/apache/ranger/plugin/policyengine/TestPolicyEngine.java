@@ -223,6 +223,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hbase_namespace() {
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_namespace.json" };
+
+		runTestsFromResourceFiles(hbaseTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_conditions() {
 		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_conditions.json" };
 
