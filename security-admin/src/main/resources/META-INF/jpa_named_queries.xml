@@ -413,6 +413,10 @@
 		<query>select obj from XXServiceVersionInfo obj where obj.serviceId = :serviceId</query>
 	</named-query>
 
+	<named-query name="XXServiceVersionInfo.getAllWithServiceNames">
+		<query>select obj, service.name from XXServiceVersionInfo obj, XXService service where obj.serviceId = service.id</query>
+	</named-query>
+
 	<named-query name="XXServiceVersionInfo.findByServiceResourceId">
 		<query>
 			select obj from XXServiceVersionInfo obj where obj.serviceId in

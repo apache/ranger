@@ -19,9 +19,13 @@ package org.apache.ranger.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -29,6 +33,7 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPluginInfo;
+import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -40,6 +45,8 @@ import javax.persistence.Query;
 
 @Service
 public class RangerPluginInfoService {
+
+	private static final Log LOG = LogFactory.getLog(RangerPluginInfoService.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;
@@ -83,8 +90,32 @@ public class RangerPluginInfoService {
 
 		List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
+		List<Object[]> objectsList = null;
+		if (CollectionUtils.isNotEmpty(xObjList)) {
+			objectsList = daoManager.getXXServiceVersionInfo().getAllWithServiceNames();
+		}
+
 		for (XXPluginInfo xObj : xObjList) {
-			RangerPluginInfo obj = populateViewObject(xObj);
+			XXServiceVersionInfo xxServiceVersionInfo = null;
+
+			if (CollectionUtils.isNotEmpty(objectsList)) {
+				for (Object[] objects : objectsList) {
+					if (objects.length == 2) {
+						if (xObj.getServiceName().equals(objects[1])) {
+							if (objects[0] instanceof XXServiceVersionInfo) {
+								xxServiceVersionInfo = (XXServiceVersionInfo) objects[0];
+							} else {
+								LOG.warn("Expected first object to be XXServiceVersionInfo, got " + objects[0]);
+							}
+							break;
+						}
+					} else {
+						LOG.warn("Expected 2 objects in the list returned by getAllWithServiceNames(), received " + objects.length);
+					}
+				}
+			}
+
+			RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo);
 			objList.add(obj);
 		}
 
@@ -102,7 +133,7 @@ public class RangerPluginInfoService {
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
-		ret.setInfo(jsonStringToMap(xObj.getInfo()));
+		ret.setInfo(jsonStringToMap(xObj.getInfo(), null));
 		return ret;
 	}
 
@@ -118,6 +149,20 @@ public class RangerPluginInfoService {
 		ret.setInfo(mapToJsonString(modelObj.getInfo()));
 		return ret;
 	}
+
+	private RangerPluginInfo populateViewObjectWithServiceVersionInfo(XXPluginInfo xObj, XXServiceVersionInfo xxServiceVersionInfo) {
+		RangerPluginInfo ret = new RangerPluginInfo();
+		ret.setId(xObj.getId());
+		ret.setCreateTime(xObj.getCreateTime());
+		ret.setUpdateTime(xObj.getUpdateTime());
+		ret.setServiceName(xObj.getServiceName());
+		ret.setHostName(xObj.getHostName());
+		ret.setAppType(xObj.getAppType());
+		ret.setIpAddress(xObj.getIpAddress());
+		ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo));
+		return ret;
+	}
+
 	private List<XXPluginInfo> searchRangerObjects(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, PList<RangerPluginInfo> pList) {
 
 		// Get total count of the rows which meet the search criteria
@@ -175,21 +220,40 @@ public class RangerPluginInfoService {
 			try {
 				ret = jsonUtil.readMapToString(map);
 			} catch(Exception excp) {
+				LOG.error("Failed to convert map to JSON string: '" + map + "'", excp);
 			}
 		}
 
 		return ret;
 	}
 
-	private Map<String, String> jsonStringToMap(String jsonStr) {
+	private Map<String, String> jsonStringToMap(String jsonStr, XXServiceVersionInfo xxServiceVersionInfo) {
+
 		Map<String, String> ret = null;
 
-			try {
-				ret = jsonUtil.jsonToMap(jsonStr);
-			} catch(Exception excp) {
+		try {
+			ret = jsonUtil.jsonToMap(jsonStr);
 
+			if (xxServiceVersionInfo != null) {
+				Long latestPolicyVersion = xxServiceVersionInfo.getPolicyVersion();
+				Date lastPolicyUpdateTime = xxServiceVersionInfo.getPolicyUpdateTime();
+				Long latestTagVersion = xxServiceVersionInfo.getTagVersion();
+				Date lastTagUpdateTime = xxServiceVersionInfo.getTagUpdateTime();
+				ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_POLICY_VERSION, Long.toString(latestPolicyVersion));
+				ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, Long.toString(lastPolicyUpdateTime.getTime()));
+				// Meaningful tag-versions start from 2
+				if (latestTagVersion.longValue() > 1L) {
+					ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION, Long.toString(latestTagVersion));
+					ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, Long.toString(lastTagUpdateTime.getTime()));
+				} else {
+					ret.remove(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION);
+					ret.remove(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
+				}
 			}
-
+		}
+		catch(Exception excp) {
+			LOG.error("Failed to convert JSON string to Map: '" + jsonStr + "'", excp);
+		}
 
 		return ret;
 	}

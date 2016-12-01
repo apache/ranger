@@ -62,6 +62,13 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Object[]> getAllWithServiceNames(){
+		return getEntityManager()
+				.createNamedQuery("XXServiceVersionInfo.getAllWithServiceNames")
+				.getResultList();
+	}
+
 	public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId, Date updateTime) {
 		if (resourceId == null) {
 			return;

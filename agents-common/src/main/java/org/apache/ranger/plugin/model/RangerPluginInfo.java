@@ -53,6 +53,12 @@ public class RangerPluginInfo implements Serializable {
 	public static final String PLUGIN_INFO_TAG_ACTIVATION_TIME       = "tagActivationTime";
 	public static final String PLUGIN_INFO_TAG_ACTIVE_VERSION        = "tagActiveVersion";
 
+
+	public static final String RANGER_ADMIN_LAST_POLICY_UPDATE_TIME  = "lastPolicyUpdateTime";
+	public static final String RANGER_ADMIN_LATEST_POLICY_VERSION    = "latestPolicyVersion";
+	public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME     = "lastTagUpdateTime";
+	public static final String RANGER_ADMIN_LATEST_TAG_VERSION       = "latestTagVersion";
+
 	private Long    id         = null;
 	private Date    createTime = null;
 	private Date    updateTime = null;
@@ -230,6 +236,30 @@ public class RangerPluginInfo implements Serializable {
 	public Long getTagActiveVersion() {
 		String activeVersionString = getInfo().get(PLUGIN_INFO_TAG_ACTIVE_VERSION);
 		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
+	}
+
+	@JsonIgnore
+	public Long getLatestPolicyVersion() {
+		String latestPolicyVersionString = getInfo().get(RANGER_ADMIN_LATEST_POLICY_VERSION);
+		return StringUtils.isNotBlank(latestPolicyVersionString) ? Long.valueOf(latestPolicyVersionString) : null;
+	}
+
+	@JsonIgnore
+	public Long getLastPolicyUpdateTime() {
+		String updateTimeString = getInfo().get(RANGER_ADMIN_LAST_POLICY_UPDATE_TIME);
+		return StringUtils.isNotBlank(updateTimeString) ? Long.valueOf(updateTimeString) : null;
+	}
+
+	@JsonIgnore
+	public Long getLatestTagVersion() {
+		String latestTagVersionString = getInfo().get(RANGER_ADMIN_LATEST_TAG_VERSION);
+		return StringUtils.isNotBlank(latestTagVersionString) ? Long.valueOf(latestTagVersionString) : null;
+	}
+
+	@JsonIgnore
+	public Long getLastTagUpdateTime() {
+		String updateTimeString = getInfo().get(RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
+		return StringUtils.isNotBlank(updateTimeString) ? Long.valueOf(updateTimeString) : null;
 	}
 
 	@Override
