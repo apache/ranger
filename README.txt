@@ -16,6 +16,12 @@
 Check Apache Ranger Wiki for up to date instruction: 
 https://cwiki.apache.org/confluence/display/RANGER/Index
 
+NOTE about using sending pull request on github:
+================================================
+Apache Ranger is currently NOT setup to use pull requests to take in the changes for commit.
+Please use the apache review board to submit your code changes for review and commit. https://reviews.apache.org
+Also create a jira to go along with the review and mention it in the review board review. https://issues.apache.org/jira/browse/RANGER
+
 Build Process
 =============
 
