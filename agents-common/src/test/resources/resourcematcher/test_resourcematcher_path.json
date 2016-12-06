@@ -1,6 +1,45 @@
 {
   "testCases":[
 	  {
+		  "name":"value=/a/b*y.txt; isRecursive=true; wildCard=true; ignoreCase=true",
+		  "resourceDef":{
+			  "matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			  "matcherOptions":{"wildCard":true, "ignoreCase":true}
+		  },
+		  "policyResource":{
+			  "values": ["/a/b*y.txt"],
+			  "isRecursive":true
+		  },
+		  "tests":[
+			  { "name":"exact-path","input":"/a/b*y.txt", "result":true},
+			  { "name":"child-path","input":"/a/b/y.txt", "result":true},
+			  { "name":"grand-child-path","input":"/a/b1/b2/y.txt", "result":true},
+			  { "name":"descendant-child-path","input":"/a/b1/c1/d1/any.txt", "result":true},
+			  { "name":"mismatche-path","input":"/a/any.txt", "result":false},
+
+		  ]
+	  }
+	  ,
+	  {
+		  "name":"value=/a/b*y.txt; isRecursive=false; wildCard=true; ignoreCase=true",
+		  "resourceDef":{
+			  "matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			  "matcherOptions":{"wildCard":true, "ignoreCase":true}
+		  },
+		  "policyResource":{
+			  "values": ["/a/b*y.txt"],
+			  "isRecursive":false
+		  },
+		  "tests":[
+			  { "name":"exact-path","input":"/a/b*y.txt", "result":true},
+			  { "name":"child-path","input":"/a/b/y.txt", "result":true},
+			  { "name":"grand-child-path","input":"/a/b1/b2/y.txt", "result":true},
+			  { "name":"descendant-child-path","input":"/a/b1/c1/d1/any.txt", "result":true},
+			  { "name":"mismatche-path","input":"/a/any.txt", "result":false},
+		  ]
+	  }
+	  ,
+	  {
 		  "name":"value=*; isRecursive=false; wildCard=true; ignoreCase=true",
 		  "resourceDef":{
 			  "matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
@@ -131,9 +170,31 @@
       	{ "name":"grand-child-path-camel-case","input":"/Path1/Path2/Path3", "result":true},
       	{ "name":"sibling-path","input":"/path2", "result":false},
       	{ "name":"invalid-path","input":"path1", "result":false},
+          { "name":"prefix-path","input":"/path12", "result":false},
+          { "name":"no-path","input":"", "result":false}
       ]
   	}
   	,
+      {
+          "name": "value=/path1/path2; isRecursive=true; wildCard=true; ignoreCase=true",
+          "resourceDef": {
+              "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+              "matcherOptions": {"wildCard": true, "ignoreCase": true
+              }
+          },
+          "policyResource": {"values": ["/path1/path2"], "isRecursive": true},
+          "tests": [
+              {"name": "exact-path", "input": "/path1/path2", "result": true},
+              {"name": "parent-path", "input": "/path1", "result": false},
+              {"name": "grand-parent-path", "input": "/", "result": false},
+              {"name": "child-path", "input": "/path1/path2/path3", "result": true},
+              {"name": "grandchild-path", "input": "/path1/path2/path3/path4", "result": true},
+              {"name": "sibling-path", "input": "/path1/path3", "result": false},
+              {"name": "prefix-path", "input": "/path1/path21", "result": false},
+              {"name": "invalid-path", "input": "path1/path2*", "result": false}
+          ]
+      }
+  ,
   	{
       "name":"value=/path*; isRecursive=true; wildCard=true; ignoreCase=true",
       "resourceDef":{
