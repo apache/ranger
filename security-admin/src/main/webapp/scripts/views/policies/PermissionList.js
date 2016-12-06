@@ -188,7 +188,7 @@ define(function(require) {
 			searchUrl   = (typeGroup) ? "service/xusers/groups" : "service/xusers/users",
 			getUrl 		= (typeGroup) ? "service/xusers/groups/groupName/" : "service/xusers/users/userName/";
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
-				var temp = $select.val().split(",");
+				var temp = this.model.attributes.userName;
 				_.each(temp , function(name){
 					if(_.isEmpty(list.where({ 'name' : name}))){
 						var model = typeGroup ? new VXGroup() : new VXUser();
