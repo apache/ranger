@@ -214,8 +214,11 @@ public class EmbeddedServiceDefsUtil {
 				LOG.info("creating embedded service-def " + serviceDefName);
 				if (ret.getId() != null) {
 					store.setPopulateExistingBaseFields(true);
-					ret = store.createServiceDef(ret);
-					store.setPopulateExistingBaseFields(false);
+					try {
+						ret = store.createServiceDef(ret);
+					} finally {
+						store.setPopulateExistingBaseFields(false);
+					}
 				} else {
 					ret = store.createServiceDef(ret);
 				}
