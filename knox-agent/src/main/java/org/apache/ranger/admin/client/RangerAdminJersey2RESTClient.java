@@ -113,6 +113,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 					public Response run() {
 						return _client.target(secureUrl)
 								.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+								.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 								.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 								.request(MediaType.APPLICATION_JSON_TYPE)
 								.get();
@@ -126,6 +127,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 				url = _utils.getUrlForPolicyUpdate(_baseUrl, _serviceName);
 				response = _client.target(url)
 						.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+						.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 						.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 						.request(MediaType.APPLICATION_JSON_TYPE)
 						.get();
@@ -242,8 +244,86 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	}
 
 	@Override
-	public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-		throw new Exception("RangerAdminjersey2RESTClient.getServiceTagsIfUpdated() -- *** NOT IMPLEMENTED *** ");
+	public ServiceTags getServiceTagsIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		String url = null;
+		try {
+			ServiceTags serviceTags = null;
+			Response response = null;
+			if(isSecureMode){
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Checking Service tags if updated as user : " + user);
+				}
+				url = _utils.getSecureUrlForTagUpdate(_baseUrl, _serviceName);
+				final String secureUrl = url;
+				PrivilegedAction<Response> action = new PrivilegedAction<Response>() {
+					public Response run() {
+						return _client.target(secureUrl)
+								.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
+								.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
+								.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+								.request(MediaType.APPLICATION_JSON_TYPE)
+								.get();
+					};
+				};
+				response = user.doAs(action);
+			}else{
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Checking Service tags if updated with old api call");
+				}
+				url = _utils.getUrlForTagUpdate(_baseUrl, _serviceName);
+				response = _client.target(url)
+						.queryParam(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion))
+						.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
+						.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+						.request(MediaType.APPLICATION_JSON_TYPE)
+						.get();
+			}
+
+			int httpResponseCode = response == null ? -1 : response.getStatus();
+			String body = null;
+
+			switch (httpResponseCode) {
+				case 200:
+					body = response.readEntity(String.class);
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Response from 200 server: " + body);
+					}
+
+					Gson gson = getGson();
+					serviceTags = gson.fromJson(body, ServiceTags.class);
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Deserialized response to: " + serviceTags);
+					}
+					break;
+				case 304:
+					LOG.debug("Got response: 304. Ok. Returning null");
+					break;
+				case -1:
+					LOG.warn("Unexpected: Null response from tag server while trying to get tags! Returning null!");
+					break;
+				default:
+					body = response.readEntity(String.class);
+					LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, url));
+					break;
+			}
+
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + serviceTags);
+			}
+			return serviceTags;
+		} catch (Exception ex) {
+			LOG.error("Failed getting tags from server. url=" + url + ", pluginId=" + _pluginId + ", lastKnownVersion=" + lastKnownVersion + ", " + lastActivationTimeInMillis);
+			throw ex;
+		}
 	}
 
 	@Override

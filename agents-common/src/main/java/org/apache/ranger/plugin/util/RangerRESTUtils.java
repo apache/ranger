@@ -93,6 +93,17 @@ public class RangerRESTUtils {
 		return url;
 	}
 
+	public String getUrlForTagUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName;
+
+		return url;
+	}
+
+	public String getSecureUrlForTagUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceName;
+		return url;
+	}
+
 	public boolean isSsl(String _baseUrl) {
 		return StringUtils.isEmpty(_baseUrl) ? false : _baseUrl.toLowerCase().startsWith("https");
 	}
