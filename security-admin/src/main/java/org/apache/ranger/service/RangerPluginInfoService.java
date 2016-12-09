@@ -33,6 +33,7 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPluginInfo;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
@@ -88,6 +89,8 @@ public class RangerPluginInfoService {
 		PList<RangerPluginInfo> retList = new PList<RangerPluginInfo>();
 		List<RangerPluginInfo> objList = new ArrayList<RangerPluginInfo>();
 
+		List<XXService> servicesWithTagService = daoManager.getXXService().getAllServicesWithTagService();
+
 		List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
 		List<Object[]> objectsList = null;
@@ -97,6 +100,7 @@ public class RangerPluginInfoService {
 
 		for (XXPluginInfo xObj : xObjList) {
 			XXServiceVersionInfo xxServiceVersionInfo = null;
+			boolean hasAssociatedTagService = false;
 
 			if (CollectionUtils.isNotEmpty(objectsList)) {
 				for (Object[] objects : objectsList) {
@@ -104,6 +108,12 @@ public class RangerPluginInfoService {
 						if (xObj.getServiceName().equals(objects[1])) {
 							if (objects[0] instanceof XXServiceVersionInfo) {
 								xxServiceVersionInfo = (XXServiceVersionInfo) objects[0];
+								for (XXService service : servicesWithTagService) {
+									if (service.getName().equals(xObj.getServiceName())) {
+										hasAssociatedTagService = true;
+										break;
+									}
+								}
 							} else {
 								LOG.warn("Expected first object to be XXServiceVersionInfo, got " + objects[0]);
 							}
@@ -115,7 +125,7 @@ public class RangerPluginInfoService {
 				}
 			}
 
-			RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo);
+			RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo, hasAssociatedTagService);
 			objList.add(obj);
 		}
 
@@ -133,7 +143,7 @@ public class RangerPluginInfoService {
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
-		ret.setInfo(jsonStringToMap(xObj.getInfo(), null));
+		ret.setInfo(jsonStringToMap(xObj.getInfo(), null, false));
 		return ret;
 	}
 
@@ -150,7 +160,7 @@ public class RangerPluginInfoService {
 		return ret;
 	}
 
-	private RangerPluginInfo populateViewObjectWithServiceVersionInfo(XXPluginInfo xObj, XXServiceVersionInfo xxServiceVersionInfo) {
+	private RangerPluginInfo populateViewObjectWithServiceVersionInfo(XXPluginInfo xObj, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
 		RangerPluginInfo ret = new RangerPluginInfo();
 		ret.setId(xObj.getId());
 		ret.setCreateTime(xObj.getCreateTime());
@@ -159,7 +169,7 @@ public class RangerPluginInfoService {
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
-		ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo));
+		ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo, hasAssociatedTagService));
 		return ret;
 	}
 
@@ -227,7 +237,7 @@ public class RangerPluginInfoService {
 		return ret;
 	}
 
-	private Map<String, String> jsonStringToMap(String jsonStr, XXServiceVersionInfo xxServiceVersionInfo) {
+	private Map<String, String> jsonStringToMap(String jsonStr, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
 
 		Map<String, String> ret = null;
 
@@ -241,8 +251,7 @@ public class RangerPluginInfoService {
 				Date lastTagUpdateTime = xxServiceVersionInfo.getTagUpdateTime();
 				ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_POLICY_VERSION, Long.toString(latestPolicyVersion));
 				ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, Long.toString(lastPolicyUpdateTime.getTime()));
-				// Meaningful tag-versions start from 2
-				if (latestTagVersion.longValue() > 1L) {
+				if (hasAssociatedTagService) {
 					ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION, Long.toString(latestTagVersion));
 					ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, Long.toString(lastTagUpdateTime.getTime()));
 				} else {

@@ -712,19 +712,30 @@ public class AssetMgr extends AssetMgrBase {
 			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
 		}
 
+		final boolean isTagVersionResetNeeded;
+
 		if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
 			// Create or update PluginInfo record after transaction is completed. If it is created in-line here
 			// then the TransactionManager will roll-back the changes because the HTTP return code is
 			// HttpServletResponse.SC_NOT_MODIFIED
+
+			boolean isPolicyInfo = pluginInfo.getPolicyDownloadedVersion() != null;
+			if (isPolicyInfo) {
+				isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
+			} else {
+				isTagVersionResetNeeded = false;
+			}
+
 			Runnable commitWork = new Runnable() {
 				@Override
 				public void run() {
-					doCreateOrUpdateXXPluginInfo(pluginInfo);
+					doCreateOrUpdateXXPluginInfo(pluginInfo, isTagVersionResetNeeded);
 				}
 			};
 			activityLogger.commitAfterTransactionComplete(commitWork);
 		} else {
-			doCreateOrUpdateXXPluginInfo(pluginInfo);
+			isTagVersionResetNeeded = false;
+			doCreateOrUpdateXXPluginInfo(pluginInfo, isTagVersionResetNeeded);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
@@ -732,7 +743,7 @@ public class AssetMgr extends AssetMgrBase {
 
 	}
 
-	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo) {
+	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isTagVersionResetNeeded) {
 		XXPluginInfo ret = null;
 
 		if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
@@ -812,6 +823,14 @@ public class AssetMgr extends AssetMgrBase {
 						dbObj.setTagActivationTime(null);
 						needsUpdating = true;
 					}
+				}
+
+				if (isTagVersionResetNeeded) {
+					dbObj.setTagDownloadedVersion(null);
+					dbObj.setTagDownloadTime(null);
+					dbObj.setTagActiveVersion(null);
+					dbObj.setTagActivationTime(null);
+					needsUpdating = true;
 				}
 
 				if (needsUpdating) {

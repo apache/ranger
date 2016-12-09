@@ -402,6 +402,21 @@
 		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
+	<named-query name="XXService.findAssociatedTagService">
+		<query>select obj from XXService obj
+			where obj.name = :serviceName
+			and obj.tagService is NOT null
+			and exists (select tagService from XXService tagService where obj.tagService = tagService.id and tagService.isEnabled = TRUE)
+		</query>
+	</named-query>
+
+	<named-query name="XXService.getAllServicesWithTagService">
+		<query>select obj from XXService obj
+			where obj.tagService is NOT null
+			and exists (select tagService from XXService tagService where obj.tagService = tagService.id and tagService.isEnabled = TRUE)
+		</query>
+	</named-query>
+
 	<!-- XXServiceVersionInfo -->
 	<named-query name="XXServiceVersionInfo.findByServiceName">
 		<query>

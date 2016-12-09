@@ -81,6 +81,24 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 	}
 
+	public XXService findAssociatedTagService(String serviceName) {
+		try {
+			return getEntityManager().createNamedQuery("XXService.findAssociatedTagService", tClass)
+					.setParameter("serviceName", serviceName).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
+	public List<XXService> getAllServicesWithTagService() {
+		try {
+			return getEntityManager().createNamedQuery("XXService.getAllServicesWithTagService", tClass)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXService>();
+		}
+	}
+
 	public void updateSequence() {
 		Long maxId = getMaxIdOfXXService();
 
