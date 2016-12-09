@@ -56,14 +56,14 @@ public class StormResourceMgr {
 		Map<String, List<String>> resourceMap = context.getResources();
 	    List<String> 		resultList        = null;
 		List<String> 		StormTopologyList = null;
-		String  			StromTopologyName = null;
+		String  			StormTopologyName = null;
 		
 		if ( resourceMap != null && !resourceMap.isEmpty() &&
 			resourceMap.get(TOPOLOGY) != null ) {
-			StromTopologyName = userInput;
+			StormTopologyName = userInput;
 			StormTopologyList = resourceMap.get(TOPOLOGY);
 		} else {
-			StromTopologyName = userInput;
+			StormTopologyName = userInput;
 		}
 		
 		
@@ -77,7 +77,7 @@ public class StormResourceMgr {
                 String lookupPrincipal = configs.get("lookupprincipal");
                 String lookupKeytab = configs.get("lookupkeytab");
                 String nameRules = configs.get("namerules");
-                resultList = getStormResources(url, username, password,lookupPrincipal, lookupKeytab, nameRules, StromTopologyName,StormTopologyList);
+                resultList = getStormResources(url, username, password,lookupPrincipal, lookupKeytab, nameRules, StormTopologyName,StormTopologyList);
         }
         return resultList;
     }
