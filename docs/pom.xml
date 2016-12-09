@@ -290,6 +290,7 @@
             <email>vel@apache.org</email>
             <timezone>-5</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
