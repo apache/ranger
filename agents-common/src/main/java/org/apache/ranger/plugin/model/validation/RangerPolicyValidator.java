@@ -27,12 +27,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -302,6 +305,7 @@ public class RangerPolicyValidator extends RangerValidator {
 
 			if (serviceNameValid) { // resource checks can't be done meaningfully otherwise
 				valid = isValidResources(policy, failures, action, isAdmin, serviceDef) && valid;
+				valid = isValidAccessTypeDef(policy, failures, action, isAdmin, serviceDef) && valid;
 			}
 		}
 		
@@ -311,6 +315,79 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 	
+	boolean isValidAccessTypeDef(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action,boolean isAdmin, final RangerServiceDef serviceDef) {
+		boolean valid = true;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidAccessTypeDef(%s, %s, %s,%s,%s)", policy, failures, action,isAdmin,serviceDef));
+		}
+		int policyType=policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+		//row filter policy
+		if (policyType==RangerPolicy.POLICY_TYPE_ROWFILTER){
+			List<String> rowFilterAccessTypeDefNames=new ArrayList<String>();
+			if(serviceDef!=null && serviceDef.getRowFilterDef()!=null){
+				if(!CollectionUtils.isEmpty(serviceDef.getRowFilterDef().getAccessTypes())){
+					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getRowFilterDef().getAccessTypes()){
+						rowFilterAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
+					}
+				}
+			}
+
+			if(!CollectionUtils.isEmpty(policy.getRowFilterPolicyItems())){
+				for(RangerRowFilterPolicyItem rangerRowFilterPolicyItem:policy.getRowFilterPolicyItems()){
+					if(!CollectionUtils.isEmpty(rangerRowFilterPolicyItem.getAccesses())){
+						for(RangerPolicyItemAccess rangerPolicyItemAccess : rangerRowFilterPolicyItem.getAccesses()){
+							if(!rowFilterAccessTypeDefNames.contains(rangerPolicyItemAccess.getType().toLowerCase())){
+								ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_INVALID;
+								failures.add(new ValidationFailureDetailsBuilder()
+									.field("row filter policy item access type")
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(rangerPolicyItemAccess.getType(), rowFilterAccessTypeDefNames))
+									.errorCode(error.getErrorCode())
+									.build());
+								valid = false;
+							}
+						}
+					}
+				}
+			}
+		}
+		//data mask policy
+		if (policyType==RangerPolicy.POLICY_TYPE_DATAMASK){
+			List<String> dataMaskAccessTypeDefNames=new ArrayList<String>();
+			if(serviceDef!=null && serviceDef.getDataMaskDef()!=null){
+				if(!CollectionUtils.isEmpty(serviceDef.getDataMaskDef().getAccessTypes())){
+					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getDataMaskDef().getAccessTypes()){
+						dataMaskAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
+					}
+				}
+			}
+
+			if(!CollectionUtils.isEmpty(policy.getDataMaskPolicyItems())){
+				for(RangerDataMaskPolicyItem rangerDataMaskPolicyItem:policy.getDataMaskPolicyItems()){
+					if(!CollectionUtils.isEmpty(rangerDataMaskPolicyItem.getAccesses())){
+						for(RangerPolicyItemAccess rangerPolicyItemAccess : rangerDataMaskPolicyItem.getAccesses()){
+							if(!dataMaskAccessTypeDefNames.contains(rangerPolicyItemAccess.getType().toLowerCase())){
+								ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_INVALID;
+								failures.add(new ValidationFailureDetailsBuilder()
+									.field("data masking policy item access type")
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(rangerPolicyItemAccess.getType(), dataMaskAccessTypeDefNames))
+									.errorCode(error.getErrorCode())
+									.build());
+								valid = false;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidAccessTypeDef(%s, %s, %s,%s,%s)", policy, failures, action,isAdmin,serviceDef));
+		}
+		return valid;
+	}
+
 	boolean isValidResources(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action,
 			boolean isAdmin, final RangerServiceDef serviceDef) {
 		
