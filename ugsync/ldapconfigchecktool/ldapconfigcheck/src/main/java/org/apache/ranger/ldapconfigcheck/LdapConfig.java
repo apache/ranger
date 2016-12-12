@@ -91,7 +91,7 @@ public class LdapConfig {
 
     private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
 
-    //Authentication relate properties
+    //Authentication related properties
     private static final String AUTHENTICATION_METHOD = "ranger.authentication.method";
     private static final String AD_DOMAIN = "ranger.ldap.ad.domain";
     private static final String USER_DN_PATTERN = "ranger.ldap.user.dnpattern";

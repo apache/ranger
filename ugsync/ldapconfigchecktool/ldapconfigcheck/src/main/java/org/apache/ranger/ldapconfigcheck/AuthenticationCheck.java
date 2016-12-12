@@ -73,8 +73,8 @@ public class AuthenticationCheck {
 
     public void discoverAuthProperties() {
 
-        ambariProps.println("\n# Possible values for authetication properties:");
-        installProps.println("\n# Possible values for authetication properties:");
+        ambariProps.println("\n# Possible values for authentication properties:");
+        installProps.println("\n# Possible values for authentication properties:");
         if (authMethod.equalsIgnoreCase("AD")) {
             installProps.println("xa_ldap_ad_url=" + ldapUrl);
             installProps.println("xa_ldap_ad_domain=" + adDomain);
@@ -187,10 +187,10 @@ public class AuthenticationCheck {
 
             LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator,defaultLdapAuthoritiesPopulator);
 
-            if (userName != null && userPassword != null && !userName.trim().isEmpty()&& !userPassword.trim().isEmpty()) {
+            if (userName != null && userPassword != null && !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
                 final List<GrantedAuthority> grantedAuths = new ArrayList<>();
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
-                final UserDetails principal = new User(userName, userPassword,grantedAuths);
+                final UserDetails principal = new User(userName, userPassword, grantedAuths);
                 final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 
                 result = ldapAuthenticationProvider.authenticate(finalAuthentication);
