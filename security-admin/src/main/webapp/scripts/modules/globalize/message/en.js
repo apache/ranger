@@ -237,7 +237,9 @@ define(function(require) {
 				selectMaskingOption             : 'Select Masking Option',
 				versionTime                     : 'Version / Time',
 				serviceType                     : 'Service Type',
-				hostName						: 'Host Name'
+                                hostName						: 'Host Name',
+                                selectAndAddUser                                : 'Select and Add User',
+                                selectAndAddGroup                               : 'Select and Add Group',
 			},
 			btn : {
 				add							: 'Add',
@@ -373,7 +375,10 @@ define(function(require) {
                 resultMsg               :'Search by access result i.e Allowed/Denied logs.',
                 statusMsg               :'Status of Policy Enable/Disable.',
                 columnfamily            :'Hbase column-family',
-                searchForPluginStatus   : "Search for Plugin Status...."
+                searchForPluginStatus   : "Search for Plugin Status....",
+                pleaseSelectUser        : 'Please select user.',
+                pleaseSelectGroup       : 'Please select group.',
+                addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.'
 
 			},
 			plcHldr : {

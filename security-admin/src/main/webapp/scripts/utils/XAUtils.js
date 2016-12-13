@@ -537,19 +537,10 @@ define(function(require) {
 	};
 
 	XAUtils.showGroupsOrUsers = function(rawValue, model, userOrGroups) {
-		var showMoreLess = false, objArr = [];
+                var showMoreLess = false, objArr;
 		if (!_.isArray(rawValue) && rawValue.length == 0)
 			return '--';
-		if (userOrGroups == 'groups') {
-			_.each(rawValue, function(perm) {
-				objArr = _.union(objArr, _.escape(perm.groupName))
-			});
-		} else if (userOrGroups == 'users') {
-			_.each(rawValue, function(perm) {
-				objArr = _.union(objArr, _.escape(perm.userName))
-			});
-		}
-
+                objArr = (userOrGroups == 'groups') ? _.pluck(rawValue, 'groupName') : _.pluck(rawValue, 'userName');
 		var newObjArr = _.map(objArr, function(name, i) {
 			if (i >= 4) {
 				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
@@ -579,7 +570,6 @@ define(function(require) {
 		newObjArr.unshift('<div data-id="groupsDiv">');
 		newObjArr.push('</div>');
 		return newObjArr.length ? newObjArr.join(' ') : '--';
-
 	};
 
 	XAUtils.defaultErrorHandler = function(model, error) {

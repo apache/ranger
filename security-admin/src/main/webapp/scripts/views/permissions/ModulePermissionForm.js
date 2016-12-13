@@ -48,20 +48,35 @@ define(function(require) {
 		templateHelpers :function(){
 		},
 		templateData : function(){
-			return { 'id' : this.model.id, 'permHeaders' : this.getPermHeaders() };
+                        return {
+                                'id' : this.model.id,
+                                'permHeaders' : this.getPermHeaders(),
+                                'userList' : this.model.get('userPermList'),
+                                'groupList' : this.model.get('groupPermList')
+                        };
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','userList'));
+                        _.extend(this, _.pick(options));
+
 			if (!this.model.isNew()){
 				this.setupFieldsforEditModule();
 			}
 			Backbone.Form.prototype.initialize.call(this, options);
 		},
 		ui : {
-			/*selectGroups	: 'div[data-fields="selectGroups"]',
-			selectUsers		: 'div[data-fields="selectUsers"]',*/
+                        selectGroups	: 'div[data-editors="selectGroups"]',
+                        selectUsers		: 'div[data-editors="selectUsers"]',
+                        addGroupBtn		: '[data-id="addGroupBtn"]',
+                        addUserBtn		: '[data-id="addUserBtn"]',
 		},
-		events : {
+                events : function(){
+                        var events = {};
+                        events['click ' + this.ui.addGroupBtn ] = 'onAddGroup';
+                        events['click ' + this.ui.addUserBtn ] = 'onAddUser';
+                        events['click ' + '[data-js="addUser"]']  = 'onAddUserClick';
+                        events['click ' + '[data-js="selectedGroupSpan"]']  = 'onRemovedGroupClick';
+
+                        return events;
 		},
 		/** fields for the form
 		*/
@@ -81,13 +96,13 @@ define(function(require) {
 				selectGroups : {
 					type : 'Select2Remote',
 					editorAttrs  : {'placeholder' :'Select Group','tokenSeparators': [",", " "],multiple:true},
-					pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/groups",'permList':that.model.get('groupPermList'),'idKey':'groupId','textKey':'groupName'}),
+                                        pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/groups",'idKey':'groupId','textKey':'groupName'}),
 					title : localization.tt('lbl.selectGroup')+' *'
 				},
 				selectUsers : {
 					type : 'Select2Remote',
 					editorAttrs  : {'placeholder' :'Select User','tokenSeparators': [",", " "],multiple:true},
-					pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/users",'permList':that.model.get('userPermList'),'idKey':'userId','textKey':'userName'}),
+                                        pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/users",'idKey':'userId','textKey':'userName'}),
 					title : localization.tt('lbl.selectUser')+' *',
 				},
 				isAllowed : {
@@ -100,27 +115,28 @@ define(function(require) {
 		render: function(options) {
 			var that = this;
 			Backbone.Form.prototype.render.call(this, options);
+                        this.$el.find('[data-js="selectedGroupList"] span i').on('click', this.removeGroup.bind(this));
+                        this.$el.find('[data-js="selectedUserList"] span i').on('click', this.removeUser.bind(this));
 			
+                        if(this.model.get('groupPermList').length <= 0){
+                                this.$el.find('.emptySelectedGroups').show();
+                        }else{
+                                this.$el.find('.emptySelectedGroups').hide();
+                        }
+                        if(this.model.get('userPermList').length <= 0){
+                                this.$el.find('.emptySelectedUsers').show();
+                        }else{
+                                this.$el.find('.emptySelectedUsers').hide();
+                        }
 		},
 		setupFieldsforEditModule : function(){
-			var groupsNVList=[],usersNVList =[];
-			groupsNVList = _.map(this.model.get('groupPermList'),function(gPerm){
-				return {'id': Number(gPerm.groupId), 'text':_.escape(gPerm.groupName)};
-			});
-			this.model.set('selectGroups', groupsNVList);
-
-			usersNVList = _.map(this.model.get('userPermList'),function(uPerm){
-				return {'id': Number(uPerm.userId), 'text':_.escape(uPerm.userName)};
-			});
-			this.model.set('selectUsers', usersNVList);
-
+                        this.addedGroups = _.map(this.model.get('groupPermList'), function(g){ return { 'id' : g.groupId, 'text' : g.groupName} });
+                        this.addedUsers = _.map(this.model.get('userPermList'), function(u){ return { 'id' : u.userId, 'text' : u.userName} });
 		},
 		getPermHeaders : function(){
 			var permList = [];
-			permList.unshift(localization.tt('lbl.allowAccess'));
-			permList.unshift(localization.tt('lbl.selectUser'));
-			permList.unshift(localization.tt('lbl.selectGroup'));
-//			permList.push("");
+                        permList.unshift(localization.tt('lbl.selectAndAddUser'));
+                        permList.unshift(localization.tt('lbl.selectAndAddGroup'));
 			return permList;
 		},
 		getPlugginAttr :function(autocomplete, options){
@@ -131,25 +147,7 @@ define(function(require) {
 				return {
 					closeOnSelect : true,
 					multiple: true,
-					minimumInputLength: 0,
 					tokenSeparators: [",", " "],
-					initSelection : function (element, callback) {
-						var data = [];
-						_.each(options.permList,function (elem) {
-							data.push({id: elem[options.idKey], text: _.escape(elem[options.textKey])});
-						});
-						callback(data);
-					},
-					createSearchChoice: function(term, data) {
-						if ($(data).filter(function() {
-							return this.text.localeCompare(term) === 0;
-						}).length === 0) {
-							return {
-								id : term,
-								text: term
-							};
-						}
-					},
 					ajax: {
 						url: options.lookupURL,
 						type : 'GET',
@@ -169,12 +167,12 @@ define(function(require) {
 							selectedVals = that.getSelectedValues(options);
 							if(data.resultSize != "0"){
 								if(!_.isUndefined(data.vXGroups)){
-									results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
+                                                                        results = data.vXGroups.map(function(m, i){	return {id : m.id, text: _.escape(m.name) };	});
 								} else if(!_.isUndefined(data.vXUsers)){
-									results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
-									if(!_.isEmpty(selectedVals)){
+                                                                        results = data.vXUsers.map(function(m, i){	return {id : m.id, text: _.escape(m.name) };	});
+                                                                }
+                                                                if(!_.isEmpty(selectedVals)){
 										results = XAUtil.filterResultByText(results, selectedVals);
-									}
 								}
 							}
 							return { results : results};
@@ -202,74 +200,129 @@ define(function(require) {
 		},
 		getSelectedValues : function(options){
 			var vals = [],selectedVals = [];
-			var type = options.textKey == 'groupName' ? 'selectGroups' : 'selectUsers';
-			var $select = this.$('[name="'+type+'"]');
-			if(!_.isEmpty($select.select2('data'))){
-				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text; });
+                        var added = options.textKey == 'groupName' ? this.addedGroups : this.addedUsers;
+                        if(!_.isEmpty(added)){
+                                selectedVals = _.map(added, function(obj){ return obj.text; });
 			}
 			vals.push.apply(vals , selectedVals);
-			vals = $.unique(vals);
 			return vals;
 		},
 		beforeSaveModulePermissions : function(){
-			if(this.model.get('module') != ''){
-				var groupValStr = this.fields.selectGroups.getValue();
-				var userValStr = this.fields.selectUsers.getValue();
-				this.compareAndUpdateObj(groupValStr,{'mode':'groups','permList':this.model.get('groupPermList'),'idKey':'groupId','textKey':'groupName'});
-				this.compareAndUpdateObj(userValStr,{'mode':'users','permList':this.model.get('userPermList'),'idKey':'userId','textKey':'userName'});
+                        if(!_.isEmpty(this.fields.selectGroups.editor.$el.select2('data'))
+                                        || !_.isEmpty(this.fields.selectUsers.editor.$el.select2('data'))){
+                                XAUtil.alertPopup({
+                                        msg :localization.tt('msg.addSelectedUserGroup'),
+                                });
+                                return false;
 			}
+                        this.model.unset('selectUsers');
+                        this.model.unset('selectGroups');
+
 			return true;
 		},
-		compareAndUpdateObj: function(objValsStr,options){
+                onAddGroup : function(e){
+                        var that = this, newPerms = [];
+                        var selectedGroups = this.fields.selectGroups.editor.$el.select2('data');
+                        _.each(selectedGroups, function(obj){
+                                var self = that;
+                                this.$el.find('[data-js="selectedGroupList"]').append('<span class="selected-widget"  ><i class="icon remove icon-remove" data-js="selectedGroupIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
+                                this.addedGroups.push(obj)
+                                this.$el.find('[data-js="selectedGroupList"] :last').on('click',this.removeGroup.bind(this));
+                                this.fields.selectGroups.editor.$el.select2('data',[]);
+                                var addedGroupPerm =_.findWhere(this.model.get('groupPermList'), {'groupId': parseInt(obj.id) });
+                                if(!_.isUndefined(addedGroupPerm)){
+                                        addedGroupPerm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value;
+                                }else{
+                                        var perm = {};
+                                        perm['moduleId'] = that.model.get('id');
+                                        perm['groupId'] = obj['id'];
+                                        perm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value;
+                                        newPerms.push(perm);
+                                }
+                        }, this);
+                        if(!_.isEmpty(newPerms)){
+                                var permissions = this.model.get('groupPermList');
+                                this.model.set('groupPermList', permissions.concat(newPerms));
+                        }
 
-			var selectedVals = (!_.isNull(objValsStr)) ? objValsStr.toString().split(',') : [];
-			var selectedIdList=[];
-			selectedVals = _.each(selectedVals, function(eachVal){
-				//Ignoring any non existing Group Name
-				if(_.isNumber(parseInt(eachVal))  && !_.isNaN(parseInt(eachVal))){
-					selectedIdList.push(Number(eachVal));
-				}
-			});
-			var modelPermList = options.permList;
-			var modelPerms = _.unique(_.pluck(options.permList, options.idKey));
-			if(!_.isEmpty(selectedIdList)){
-				//Look for equals
-				if(_.isEqual(selectedIdList,modelPerms)) {
-					//No changes in Selected Users
-				} else {
-					//look for new values -
-					//loop through each new element and check if it has any non matching ids
-					var diff = _.filter(selectedIdList, function(value){ return !_.contains(modelPerms, value); });
-					var that = this;
-					if(!_.isEmpty(diff)){
-						//push new elements to model groupPermList
-						_.each(diff, function(newEl){
-							var newObj = {};
-							newObj[options.idKey] = newEl;
-							newObj['moduleId'] = that.model.get('id');
-							newObj['isAllowed'] = 1;
-							options.permList.push(newObj);
-						});
-					}
-					//Look for removed users/groups
-					//loop through each model element and check new selected groups is missing from any original list  of group ids
-					var updDiff = _.filter(modelPerms, function(value){ return !_.contains(selectedIdList, value); });
-					if(!_.isEmpty(updDiff)){
-						_.each(options.permList, function(origElem){
-							if(_.contains(updDiff, origElem[options.idKey]))
-								origElem.isAllowed = 0;
-						});
-					}
-				}
+                        this.emptyCheck();
+                        if(_.isEmpty(selectedGroups))	alert(localization.tt("msg.pleaseSelectGroup"));
+                        return false;
 
-			} else {
-				//Remove permissions from all objects which earlier had permission
-				_.each(options.permList, function(perm){
-					perm.isAllowed = 0;
-				});
+                },
+
+                removeGroup : function(e){
+                        var ele = $(e.currentTarget);
+                        var id = ele.attr('data-id');
+                        ele.parent().remove();
+                        this.addedGroups = _.reject(this.addedGroups, function(d){ return d.id == id; });
+                        var removedGroupPerm =_.findWhere(this.model.get('groupPermList'), {'groupId': parseInt(id) });
+                        if(!_.isUndefined(removedGroupPerm)){
+                                if(!_.has(removedGroupPerm, 'id')){
+                                        this.model.set('groupPermList', _.reject(this.model.get('groupPermList'), function(perm){ return perm.groupId == removedGroupPerm.groupId }));
+                                }else{
+                                        removedGroupPerm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_DENIED.value;
+				}
+                        }
+                        this.emptyCheck();
+                },
+                onAddUser : function(e){
+                        var that = this, newPerms = [];
+                        var selectedUsers = this.fields.selectUsers.editor.$el.select2('data');
+                        _.each(selectedUsers, function(obj){
+                                var self = that;
+                                this.$el.find('[data-js="selectedUserList"]').append('<span class="selected-widget"  ><i class="icon remove icon-remove" data-js="selectedUserIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
+                                this.addedUsers.push(obj)
+                                this.$el.find('[data-js="selectedUserList"] :last').on('click',this.removeUser.bind(this));
+                                this.fields.selectUsers.editor.$el.select2('data', []);
+                                var addedUserPerm =_.findWhere(this.model.get('userPermList'), {'userId': parseInt(obj.id) });
+                                if(!_.isUndefined(addedUserPerm)){
+                                        addedUserPerm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value;
+                                }else{
+                                        var perm = {};
+                                        perm['moduleId'] = that.model.get('id');
+                                        perm['userId'] = obj['id'];
+                                        perm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value;
+                                        newPerms.push(perm);
+				}
+                        }, this);
+                        if(!_.isEmpty(newPerms)){
+                                var permissions = this.model.get('userPermList');
+                                this.model.set('userPermList', permissions.concat(newPerms));
+                        }
+                        this.emptyCheck();
+                        if(_.isEmpty(selectedUsers))	alert(localization.tt("msg.pleaseSelectUser"));
+                        return false;
+                },
+                removeUser : function(e){
+                        var ele = $(e.currentTarget);
+                        var id = ele.attr('data-id');
+                        ele.parent().remove();
+                        this.addedUsers = _.reject(this.addedUsers, function(d){ return d.id == id; });
+                        var removedUserPerm =_.findWhere(this.model.get('userPermList'), {'userId': parseInt(id) });
+                        if(!_.isUndefined(removedUserPerm)){
+                                if(!_.has(removedUserPerm, 'id')){
+                                        this.model.set('userPermList', _.reject(this.model.get('userPermList'), function(perm){ return perm.userId == removedUserPerm.userId }));
+                                }else{
+                                        removedUserPerm.isAllowed = XAEnums.AccessResult.ACCESS_RESULT_DENIED.value;
+                                }
+                        }
+                        this.emptyCheck();
+                },
+                emptyCheck : function(type){
+                        if(this.$el.find('[data-js="selectedGroupList"] span').length > 0){
+                                this.$el.find('.emptySelectedGroups').hide();
+                        }else{
+                                this.$el.find('.emptySelectedGroups').show();
 			}
 
+                        if(this.$el.find('[data-js="selectedUserList"] span').length > 0){
+                                this.$el.find('.emptySelectedUsers').hide();
+                        }else{
+                                this.$el.find('.emptySelectedUsers').show();
+                        }
 		}
+
 	});
 	
 	return ModulePermissionForm;

@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
@@ -41,6 +42,7 @@ import org.apache.ranger.view.VXGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @Scope("singleton")
@@ -253,5 +255,18 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	protected VXGroup mapEntityToViewBean(VXGroup vObj, XXGroup mObj) {
 		super.mapEntityToViewBean(vObj, mObj);
 		return vObj;
-	}	
+        }
+
+        public Map<Long, XXGroup> getXXGroupIdXXGroupMap(){
+                Map<Long, XXGroup> xXGroupMap=new HashMap<Long, XXGroup>();
+                try{
+                        List<XXGroup> xXGroupList=rangerDaoManager.getXXGroup().getAll();
+                        if(!CollectionUtils.isEmpty(xXGroupList)){
+                                for(XXGroup xXGroup:xXGroupList){
+                                        xXGroupMap.put(xXGroup.getId(), xXGroup);
+                                }
+                        }
+                }catch(Exception ex){}
+                return xXGroupMap;
+        }
 }
