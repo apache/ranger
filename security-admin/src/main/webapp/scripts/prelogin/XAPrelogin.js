@@ -49,8 +49,10 @@ function doLogin() {
 	
 	if(!regexPlain.test(userName)){
 		if(!regexEmail.test(userName)){
+                    $('#errorBox').show();
+                    $('#signInLoading').hide();
+                    $('#signIn').removeAttr('disabled');
 			$('#errorBox .errorMsg').text("Invalid username.");
-			$('#errorBox').show();
 			return false;
 		}
 	}	
