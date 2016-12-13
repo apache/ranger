@@ -1032,16 +1032,17 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                 FileStatus[] filestat = fs.globStatus(filePath);
 
                 if(filestat != null && filestat.length > 0) {
-                    ret = true;
+                    boolean isDenied = false;
 
                     for(FileStatus file : filestat) {
-                        ret = FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
-                              FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action);
-
-                        if(! ret) {
-                            break;
-                        }
+                        if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
+							FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action)) {
+								continue;
+						}
+						isDenied = true;
+						break;
                      }
+                     ret = !isDenied;
                 } else { // if given path does not exist then check for parent
                     FileStatus file = FileUtils.getPathOrParentThatExists(fs, filePath);
 
@@ -1049,6 +1050,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                     ret = true;
                 }
             } catch(Exception excp) {
+				ret = false;
                 LOG.error("Error getting permissions for " + uri, excp);
             }
         }
