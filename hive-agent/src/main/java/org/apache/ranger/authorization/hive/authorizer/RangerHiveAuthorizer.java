@@ -1015,9 +1015,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                         if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
 							FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action)) {
 								continue;
+						} else {
+							isDenied = true;
+							break;
 						}
-						isDenied = true;
-						break;
                      }
                      ret = !isDenied;
                 } else { // if given path does not exist then check for parent
