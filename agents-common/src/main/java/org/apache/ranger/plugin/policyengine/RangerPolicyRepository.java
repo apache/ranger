@@ -681,10 +681,44 @@ class RangerPolicyRepository {
             }
         }
 
+        scrubPolicyItems(policyId, policy.getPolicyItems());
+        scrubPolicyItems(policyId, policy.getAllowExceptions());
+        scrubPolicyItems(policyId, policy.getDenyPolicyItems());
+        scrubPolicyItems(policyId, policy.getDenyExceptions());
+        scrubPolicyItems(policyId, policy.getRowFilterPolicyItems());
+        scrubPolicyItems(policyId, policy.getDataMaskPolicyItems());
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.scrubPolicy(" + policy + "): " + altered);
         }
         return altered;
+    }
+
+    private void scrubPolicyItems(final Long policyId, final List<? extends RangerPolicy.RangerPolicyItem> policyItems) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyRepository.scrubPolicyItems(" + policyId + "): ");
+        }
+
+        for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+            removeNulls(policyItem.getUsers(), policyId, policyItem);
+            removeNulls(policyItem.getGroups(), policyId, policyItem);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyRepository.scrubPolicyItems(" + policyId + "): ");
+        }
+    }
+
+    private void removeNulls(Collection<String> strings, final Long policyId, final RangerPolicy.RangerPolicyItem policyItem) {
+        Iterator<String> iterator = strings.iterator();
+
+        while (iterator.hasNext()) {
+            String value = iterator.next();
+            if (value == null) {
+                LOG.warn("RangerPolicyRepository.removeNulls: found null user/group in policyItem '" + policyItem + "' in policy " + policyId + "!  Removing...");
+                iterator.remove();
+            }
+        }
     }
 
     void reorderPolicyEvaluators() {

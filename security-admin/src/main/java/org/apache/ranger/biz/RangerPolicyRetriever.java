@@ -637,7 +637,10 @@ public class RangerPolicyRetriever {
 						XXPolicyItemUserPerm xUserPerm = iterUserPerms.next();
 
 						if(xUserPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
-							policyItem.getUsers().add(lookupCache.getUserName(xUserPerm.getUserid()));
+							String userName = lookupCache.getUserName(xUserPerm.getUserid());
+							if (userName != null) {
+								policyItem.getUsers().add(userName);
+							}
 						} else {
 							if(iterUserPerms.hasPrevious()) {
 								iterUserPerms.previous();
@@ -650,7 +653,10 @@ public class RangerPolicyRetriever {
 						XXPolicyItemGroupPerm xGroupPerm = iterGroupPerms.next();
 
 						if(xGroupPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
-							policyItem.getGroups().add(lookupCache.getGroupName(xGroupPerm.getGroupid()));
+							String groupName = lookupCache.getGroupName(xGroupPerm.getGroupid());
+							if (groupName != null) {
+								policyItem.getGroups().add(groupName);
+							}
 						} else {
 							if(iterGroupPerms.hasPrevious()) {
 								iterGroupPerms.previous();

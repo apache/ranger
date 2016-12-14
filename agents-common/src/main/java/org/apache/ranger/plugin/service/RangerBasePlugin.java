@@ -184,7 +184,7 @@ public class RangerBasePlugin {
 				LOG.error("preCleanup() failed on the previous policy engine instance !!");
 			}
 		} catch (Exception e) {
-			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is.");
+			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is. Exception : ", e);
 		}
 	}
 
