@@ -672,7 +672,7 @@ public class AssetMgr extends AssetMgrBase {
 	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode) {
 		RangerRESTUtils restUtils = new RangerRESTUtils();
 
-		final String ipAddress = request != null ? request.getRemoteAddr() : null;
+		final String ipAddress = getRemoteAddress(request);
 		final String appType = restUtils.getAppIdFromPluginId(pluginId);
 
 		String tmpHostName = null;
@@ -827,6 +827,25 @@ public class AssetMgr extends AssetMgrBase {
 			logger.error("Invalid parameters: pluginInfo=" + pluginInfo + ")");
 		}
 
+		return ret;
+	}
+
+	private String getRemoteAddress(final HttpServletRequest request) {
+		String ret = null;
+
+		if (request != null) {
+			String xForwardedAddress = request.getHeader("X-Forwarded-For");
+			if (StringUtils.isNotBlank(xForwardedAddress)) {
+				String[] forwardedAddresses = xForwardedAddress.split(",");
+				if (forwardedAddresses.length > 0) {
+					// Use first one. Hope it is the IP of the originating client
+					ret = forwardedAddresses[0].trim();
+				}
+			}
+			if (ret == null) {
+				ret = request.getRemoteAddr();
+			}
+		}
 		return ret;
 	}
 
