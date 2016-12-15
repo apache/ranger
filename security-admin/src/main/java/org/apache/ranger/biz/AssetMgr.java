@@ -750,23 +750,23 @@ public class AssetMgr extends AssetMgrBase {
 
 			boolean isPolicyInfo = pluginInfo.getPolicyDownloadedVersion() != null;
 
-			// If the ranger-admin is restarted, plugin contains latest version and there is no row for this pluginInfo
-			if (isPolicyInfo) {
-				if (pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
-					// This is our best guess of when policies may have been downloaded
-					pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
-				}
-			} else {
-				if (pluginInfo.getTagDownloadedVersion() != null && pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
-					// This is our best guess of when tags may have been downloaded
-					pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
-				}
-			}
-
 			XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().find(pluginInfo.getServiceName(),
 					pluginInfo.getHostName(), pluginInfo.getAppType());
 
 			if (xObj == null) {
+				// ranger-admin is restarted, plugin contains latest versions and no earlier record for this plug-in client
+				if (isPolicyInfo) {
+					if (pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
+						// This is our best guess of when policies may have been downloaded
+						pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
+					}
+				} else if (pluginInfo.getTagDownloadedVersion() != null) {
+					if (pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
+						// This is our best guess of when tags may have been downloaded
+						pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
+					}
+				}
+
 				xObj = pluginInfoService.populateDBObject(pluginInfo);
 
 				if (logger.isDebugEnabled()) {
@@ -790,37 +790,42 @@ public class AssetMgr extends AssetMgrBase {
 					Long lastKnownPolicyVersion = pluginInfo.getPolicyActiveVersion();
 					Long lastPolicyActivationTime = pluginInfo.getPolicyActivationTime();
 
+					if (lastKnownPolicyVersion != null && lastKnownPolicyVersion == -1) {
+						// First download request after plug-in's policy-refresher starts
+						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
+						needsUpdating = true;
+					}
 					if (lastKnownPolicyVersion != null && lastKnownPolicyVersion > 0 && (dbObj.getPolicyActiveVersion() == null || !dbObj.getPolicyActiveVersion().equals(lastKnownPolicyVersion))) {
 						dbObj.setPolicyActiveVersion(lastKnownPolicyVersion);
-						if (lastPolicyActivationTime != null && lastPolicyActivationTime > 0) {
-							dbObj.setPolicyActivationTime(lastPolicyActivationTime);
-						}
 						needsUpdating = true;
-					} else if (lastKnownPolicyVersion != null && lastKnownPolicyVersion == -1) {
-						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
-						dbObj.setPolicyActiveVersion(null);
-						dbObj.setPolicyActivationTime(null);
+					}
+					if (lastPolicyActivationTime != null && lastPolicyActivationTime > 0 && (dbObj.getPolicyActivationTime() == null || !dbObj.getPolicyActivationTime().equals(lastPolicyActivationTime))) {
+						dbObj.setPolicyActivationTime(lastPolicyActivationTime);
 						needsUpdating = true;
 					}
 				} else {
 					if (dbObj.getTagDownloadedVersion() == null || !dbObj.getTagDownloadedVersion().equals(pluginInfo.getTagDownloadedVersion())) {
+						// First download for tags after tag-service is associated with resource-service
 						dbObj.setTagDownloadedVersion(pluginInfo.getTagDownloadedVersion());
 						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
 						needsUpdating = true;
 					}
+
 					Long lastKnownTagVersion = pluginInfo.getTagActiveVersion();
 					Long lastTagActivationTime = pluginInfo.getTagActivationTime();
 
+					if (lastKnownTagVersion != null && lastKnownTagVersion == -1) {
+						// First download request after plug-in's tag-refresher restarts
+						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
+						needsUpdating = true;
+					}
 					if (lastKnownTagVersion != null && lastKnownTagVersion > 0 && (dbObj.getTagActiveVersion() == null || !dbObj.getTagActiveVersion().equals(lastKnownTagVersion))) {
 						dbObj.setTagActiveVersion(lastKnownTagVersion);
-						if (lastTagActivationTime != null && lastTagActivationTime > 0) {
-							dbObj.setTagActivationTime(lastTagActivationTime);
-						}
 						needsUpdating = true;
-					} else if (lastKnownTagVersion != null && lastKnownTagVersion == -1) {
-						dbObj.setTagDownloadTime(pluginInfo.getTagDownloadTime());
-						dbObj.setTagActiveVersion(null);
-						dbObj.setTagActivationTime(null);
+					}
+
+					if (lastTagActivationTime != null && lastTagActivationTime > 0 && (dbObj.getTagActivationTime() == null || !dbObj.getTagActivationTime().equals(lastTagActivationTime))) {
+						dbObj.setTagActivationTime(lastTagActivationTime);
 						needsUpdating = true;
 					}
 				}
