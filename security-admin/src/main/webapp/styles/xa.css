@@ -2055,7 +2055,9 @@ td.subgrid-custom-cell{
 .VS-search .search_facet_input_container{
 	margin-top: 1px;
 }
-.selected-widget {
+.padding-right-10{
+        padding-right: 10px;
+}.selected-widget {
     padding: 3px 5px 3px 4px;
     border-radius: 3px;
     border: 1px solid #aaaaaa;

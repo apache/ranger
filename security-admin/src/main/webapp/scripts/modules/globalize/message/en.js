@@ -237,9 +237,9 @@ define(function(require) {
 				selectMaskingOption             : 'Select Masking Option',
 				versionTime                     : 'Version / Time',
 				serviceType                     : 'Service Type',
-                                hostName						: 'Host Name',
-                                selectAndAddUser                                : 'Select and Add User',
-                                selectAndAddGroup                               : 'Select and Add Group',
+                hostName						: 'Host Name',
+                selectAndAddUser                : 'Select and Add User',
+                selectAndAddGroup               : 'Select and Add Group',
 			},
 			btn : {
 				add							: 'Add',
@@ -368,7 +368,7 @@ define(function(require) {
                 searchBy                :'Search by user name or group name.',
                 resourceMsg             :'Enter name of resource for eg. path, table/column name etc.',
                 accessEnforcer          :'Search by access enforcer name.',
-                accessTypeMsg           :'Access type like READ_EXECUTE, WRITE_EXECUTE.',
+                accessTypeMsg           :'Search by access Type like READ_EXECUTE, WRITE_EXECUTE.',
                 clientIP                :'Search by IP address from where resource was accessed.',
                 resourceName            :'Resource name.',
                 resourceTypeMsg         :'Search by resource type based on component. eg. path in HDFS, database    ,table in Hive.',
@@ -378,7 +378,11 @@ define(function(require) {
                 searchForPluginStatus   : "Search for Plugin Status....",
                 pleaseSelectUser        : 'Please select user.',
                 pleaseSelectGroup       : 'Please select group.',
-                addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.'
+                addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.',
+                maskingPolicyInfoMsg   	: 'Please ensure that users/groups listed in this policy have access to the column via an <b>Access Policy</b>. This policy does not implicitly grant access to the column.',
+                rowFilterPolicyInfoMsg 	: 'Please ensure that users/groups listed in this policy have access to the table via an <b>Access Policy</b>. This policy does not implicitly grant access to the table.',
+                udfPolicyViolation      : '<b> Warning !!</b>  : UDF create is a privileged operation. Please make sure you grant them to only trusted users.'
+
 
 			},
 			plcHldr : {

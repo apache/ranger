@@ -224,7 +224,7 @@ define(function(require) {
 					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
 					this.listenTo(this.accessAuditList, "request", that.updateLastRefresh)
-                                        this.ui.iconSearchInfo.show();
+                    this.ui.iconSearchInfo.show();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -238,6 +238,7 @@ define(function(require) {
 					this.addSearchForAdminTab();
 					this.listenTo(this.trxLogList, "request", that.updateLastRefresh)
                                         this.ui.iconSearchInfo.hide();
+                                        $('.popover').remove();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
@@ -251,6 +252,7 @@ define(function(require) {
 					this.addSearchForLoginSessionTab();
 					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
                                         this.ui.iconSearchInfo.hide();
+                                        $('.popover').remove();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
@@ -265,6 +267,7 @@ define(function(require) {
 					this.addSearchForAgentTab();
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
                                         this.ui.iconSearchInfo.hide();
+                                        $('.popover').remove();
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
@@ -278,6 +281,7 @@ define(function(require) {
 					 this.pluginInfoList.fetch({cache : false});
 					 this.addSearchForPluginStatusTab();
 					 this.ui.iconSearchInfo.hide();
+                                         $('.popover').remove();
 					 break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1366,6 +1370,7 @@ define(function(require) {
 			clearInterval(this.timerId);
 			clearInterval(this.clearTimeUpdateInterval);
 			$('.datepicker').remove();
+                        $('.popover').remove();
 		}
 	});
 

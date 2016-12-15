@@ -20,10 +20,14 @@
 	<h4> {{tt 'h.createPolicy'}} </h4>
 {{/if}}
 <div class="wrap non-collapsible ">
-<div class="alert alert-danger" data-id="policyDisabledAlert" style="display:none;">
-  <button type="button" class="close" data-dismiss="alert">&times;</button>
-  <strong>Warning !</strong> {{tt 'msg.policyDisabledMsg'}}
-</div>
+        <div class="alert alert-danger" data-id="policyDisabledAlert" style="display:none;">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <strong>Warning !</strong> {{tt 'msg.policyDisabledMsg'}}
+        </div>
+        <div class="alert alert-warning {{displayClass}}" data-id="policyInfoAlert">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <i class="icon-info-sign searchInfoUserAccsss padding-right-10"></i>{{{infoMsg}}}
+        </div>
 	<div data-id="r_form"></div>
 	<div class="form-actions form-policy" class="row-fluid">
 	{{#if editPolicy}}

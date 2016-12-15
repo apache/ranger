@@ -283,7 +283,7 @@ define(function(require) {
 		RESOURCE_COL_FAM:{value:4, label:'Column Family', rbkey:'xa.enum.ResourceType.RESOURCE_COL_FAM', tt: 'lbl.ResourceType_RESOURCE_COL_FAM'},
 		RESOURCE_COLUMN:{value:5, label:'Column', rbkey:'xa.enum.ResourceType.RESOURCE_COLUMN', tt: 'lbl.ResourceType_RESOURCE_COLUMN'},
 		RESOURCE_VIEW:{value:6, label:'VIEW', rbkey:'xa.enum.ResourceType.RESOURCE_VIEW', tt: 'lbl.ResourceType_RESOURCE_VIEW'},
-		RESOURCE_UDF:{value:7, label:'UDF', rbkey:'xa.enum.ResourceType.RESOURCE_UDF', tt: 'lbl.ResourceType_RESOURCE_UDF'},
+                RESOURCE_UDF:{value:7, label:'Udf', rbkey:'xa.enum.ResourceType.RESOURCE_UDF', tt: 'lbl.ResourceType_RESOURCE_UDF'},
 		RESOURCE_VIEW_COL:{value:8, label:'View Column', rbkey:'xa.enum.ResourceType.RESOURCE_VIEW_COL', tt: 'lbl.ResourceType_RESOURCE_VIEW_COL'},
 		RESOURCE_TOPOLOGY:{value:9, label:'Topology', rbkey:'xa.enum.ResourceType.RESOURCE_TOPOLOGY', tt: 'lbl.RESOURCE_TOPOLOGY'},
 		RESOURCE_SERVICE:{value:10, label:'Service', rbkey:'xa.enum.ResourceType.RESOURCE_SERVICE', tt: 'lbl.RESOURCE_SERVICE'},

@@ -458,7 +458,8 @@
 			  	}
 		  },
 		  renderSameLevelResource : function() {
-			  var that = this, dirtyFieldValue = null
+                          var that = this, dirtyFieldValue = null;
+                          var XAUtil = require('utils/XAUtils'), localization	= require('utils/XALangSupport');;
 			  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 			  		if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 			  			this.$resourceType.val(this.value.resourceType);
@@ -479,6 +480,12 @@
 			  			//resource are shown if parent is selected or showned
 			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
 			  			that.formView.trigger('policyForm:parentChildHideShow',true);
+						if(!_.isUndefined(this.value)
+								&& ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_TABLE.label
+										|| XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
+							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
+						}
+
 					});
 			  	}
 		  },

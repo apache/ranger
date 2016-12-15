@@ -175,7 +175,7 @@ define(function(require) {
 	};
    //	Search Info it give popover box
    XAUtils.searchInfoPopover = function(myArray, $infoEle, placement){
-		var msg = "";
+		var msg = "<span> ( <b> *</b> ) Indicates wildcard support.</span>";
 		myArray.map(function(m){
                    msg += '<div><span><b>'+m.text+' : </b></span><span>'+m.info+'</span></div>'
                 })
@@ -537,22 +537,36 @@ define(function(require) {
 	};
 
 	XAUtils.showGroupsOrUsers = function(rawValue, model, userOrGroups) {
-                var showMoreLess = false, objArr;
+                var showMoreLess = false, objArr, lastShowMoreCnt = 1, j = 1, listShownCnt = 5000;
 		if (!_.isArray(rawValue) && rawValue.length == 0)
 			return '--';
                 objArr = (userOrGroups == 'groups') ? _.pluck(rawValue, 'groupName') : _.pluck(rawValue, 'userName');
 		var newObjArr = _.map(objArr, function(name, i) {
 			if (i >= 4) {
-				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
-						+ '-id="' + model.id + '" style="display:none;">'
-						+ name + '</span>';
+                                var eleStr = '', span = '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
+                                        + '-id="' + model.id +'">'
+                                        +  _.escape(name) + '</span>';
+                                if( (i + listShownCnt ) === (listShownCnt*j) + 4){
+                                        eleStr = '<div data-id="moreSpans" style="display:none;">'+span;
+                                        if(i == objArr.length - 1){
+                                                eleStr += '</div>';
+                                        }
+                                        lastShowMoreCnt = ( listShownCnt*j) + 4;
+                                        j++;
+                                }else if(i === lastShowMoreCnt - 1 || i == objArr.length - 1){
+                                        eleStr = span + '</div>';
+
+                                }else{
+                                        eleStr = span;
+                                }
+                                return eleStr;
 			} else if (i == 3 && objArr.length > 4) {
 				showMoreLess = true;
 				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
-						+ '-id="' + model.id + '">' + name + '</span>';
+                                                + '-id="' + model.id + '">' +  _.escape(name) + '</span>';
 			} else {
 				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
-						+ '-id="' + model.id + '">' + name + '</span>';
+                                                + '-id="' + model.id + '">' +  _.escape(name) + '</span>';
 			}
 		});
 		if (showMoreLess) {

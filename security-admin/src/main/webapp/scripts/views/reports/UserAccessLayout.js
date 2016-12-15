@@ -840,6 +840,7 @@ define(function(require) {'use strict';
 		},
 		/** on close */
 		onClose : function() {
+                        $('.popover').remove();
 		}
 	});
 

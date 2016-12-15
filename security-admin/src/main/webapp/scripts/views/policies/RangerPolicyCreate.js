@@ -43,8 +43,16 @@ define(function(require){
 		
     	template : RangerPolicycreateTmpl,
     	templateHelpers : function(){
+		var infoMsg = '', displayClass = 'hide';
+		if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
+			infoMsg = localization.tt('msg.maskingPolicyInfoMsg'), displayClass = 'show';
+		}else if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
+			infoMsg = localization.tt('msg.rowFilterPolicyInfoMsg'), displayClass = 'show';
+		}
     		return {
-    			editPolicy : this.editPolicy
+			editPolicy : this.editPolicy,
+			infoMsg : infoMsg,
+			displayClass : displayClass
     		};
     	},
     	breadCrumbs :function(){
