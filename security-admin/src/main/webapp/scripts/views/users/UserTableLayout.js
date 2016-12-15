@@ -159,7 +159,7 @@ define(function(require){
 						if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 							XAUtil.notifyError('Error', resp.responseJSON.msgDesc);
 						}else{
-							XAUtil.notifyError('Error', "Error occunred while updating user");
+							XAUtil.notifyError('Error', "Error occurred while updating user");
 						}
 						collection.trigger('error','',resp)
 					},
@@ -174,7 +174,7 @@ define(function(require){
 						if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 							XAUtil.notifyError('Error', resp.responseJSON.msgDesc);
 						}else{
-							XAUtil.notifyError('Error', "Error occunred while updating user");
+							XAUtil.notifyError('Error', "Error occurred while updating user");
 						}
 						collection.trigger('error','',resp)
 					},
