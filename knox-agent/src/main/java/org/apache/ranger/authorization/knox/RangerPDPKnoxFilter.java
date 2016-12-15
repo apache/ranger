@@ -171,7 +171,7 @@ public class RangerPDPKnoxFilter implements Filter {
 		try {
 			res.sendError(code);
 		} catch (IOException e) {
-			LOG.error("Error while redireting:", e);
+			LOG.error("Error while redirecting:", e);
 		}
 	}
 
@@ -202,7 +202,7 @@ public class RangerPDPKnoxFilter implements Filter {
 
 			ret = lc.getSubject();
 		} catch (Exception excp) {
-			LOG.error("Failed to get Storm server login subject", excp);
+			LOG.error("Failed to get Knox server login subject", excp);
 		}
 
 		return ret;
