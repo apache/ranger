@@ -171,7 +171,7 @@ public class RangerPDPKnoxFilter implements Filter {
 		try {
 			res.sendError(code);
 		} catch (IOException e) {
-			LOG.error("Error while redirecting:", e);
+			LOG.error("Error while redireting:", e);
 		}
 	}
 
