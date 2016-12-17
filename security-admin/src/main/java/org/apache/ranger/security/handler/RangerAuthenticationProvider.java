@@ -165,7 +165,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				}
 				if(authentication!=null && authentication.isAuthenticated()){
 					if("false".equalsIgnoreCase(sha256PasswordUpdateDisable)){
-						userMgr.updatePasswordInSHA256(userName,userPassword);
+                                                userMgr.updatePasswordInSHA256(userName,userPassword,false);
 					}
 					return authentication;
 				}else{

@@ -295,7 +295,6 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		str += "firstName={" + firstName + "} ";
 		str += "lastName={" + lastName + "} ";
 		str += "emailAddress={" + emailAddress + "} ";
-		str += "password={" + password + "} ";
 		str += "description={" + description + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
 		str += "isVisible={" + isVisible + "} ";

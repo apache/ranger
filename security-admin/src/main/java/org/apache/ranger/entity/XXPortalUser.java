@@ -325,7 +325,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 		str += "lastName={" + lastName + "} ";
 		str += "publicScreenName={" + publicScreenName + "} ";
 		str += "loginId={" + loginId + "} ";
-		str += "password={***length=" + (password == null? 0 : password.length()) + "***} ";
 		str += "emailAddress={" + emailAddress + "} ";
 		str += "status={" + status + "} ";
 		str += "userSource={" + userSource + "} ";

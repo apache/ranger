@@ -300,7 +300,6 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		String str = "VXPortalUser={";
 		str += super.toString();
 		str += "loginId={" + loginId + "} ";
-		str += "password={***length=" + (password == null? 0 : password.length()) + "***} ";
 		str += "status={" + status + "} ";
 		str += "emailAddress={" + emailAddress + "} ";
 		str += "firstName={" + firstName + "} ";

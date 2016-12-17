@@ -41,16 +41,22 @@ public class ChangePasswordUtil extends BaseLoader {
 	public static String userLoginId;
 	public static String currentPassword;
 	public static String newPassword;
+        public static boolean defaultPwdChangeRequest=false;
 
 	public static void main(String[] args) {
 		logger.info("main()");
 		try {
 			ChangePasswordUtil loader = (ChangePasswordUtil) CLIUtil.getBean(ChangePasswordUtil.class);
 			loader.init();
-			if (args.length == 3) {
+                        if (args.length == 3 || args.length == 4) {
 				userLoginId = args[0];
 				currentPassword = args[1];
 				newPassword = args[2];
+                                if (args.length == 4) {
+                                        if("-default".equalsIgnoreCase(args[3])){
+                                                defaultPwdChangeRequest=true;
+                                        }
+                                }
 				if(StringUtils.isEmpty(userLoginId)){
 					System.out.println("Invalid login ID. Exiting!!!");
 					logger.info("Invalid login ID. Exiting!!!");
@@ -106,8 +112,12 @@ public class ChangePasswordUtil extends BaseLoader {
 			try {
 				currentEncryptedPassword=userMgr.encrypt(userLoginId, currentPassword);
 				if (currentEncryptedPassword.equals(dbPassword)){
-					userMgr.updatePasswordInSHA256(userLoginId,newPassword);
+                                        userMgr.updatePasswordInSHA256(userLoginId,newPassword,true);
 					logger.info("User '"+userLoginId+"' Password updated sucessfully.");
+                                }else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest){
+                                        System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
+                                        logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+                                        System.exit(2);
 				}
 				else{
 					System.out.println("Invalid user password");

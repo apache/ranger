@@ -1301,7 +1301,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.update(user)).thenReturn(user);
 		XXPortalUser dbXXPortalUser = userMgr.updatePasswordInSHA256(userName,
-				userPassword);
+                                userPassword,false);
 		Assert.assertNotNull(dbXXPortalUser);
 	 }
 

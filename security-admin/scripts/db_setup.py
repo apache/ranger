@@ -599,12 +599,12 @@ class MysqlConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
+                                                get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
 						if os_name == "LINUX":
-							ret = subprocess.call(shlex.split(get_java_cmd))
+                                                        status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
-							ret = subprocess.call(get_java_cmd)
-						if ret == 0:
+                                                        status = subprocess.call(get_java_cmd)
+                                                if status == 0 or status==2:
 							if os_name == "LINUX":
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
 								jisql_log(query, db_password)
@@ -613,8 +613,10 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							if ret == 0:
+                                                        if ret == 0 and status == 0:
 								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                        elif ret == 0 and status == 2:
+                                                                log ("[I] Ranger admin default password change request process skipped!","info")
 							else:
 								if os_name == "LINUX":
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -1276,12 +1278,12 @@ class OracleConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
+                                                get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
 						if os_name == "LINUX":
-							ret = subprocess.call(shlex.split(get_java_cmd))
+                                                        status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
-							ret = subprocess.call(get_java_cmd)
-						if ret == 0:
+                                                        status = subprocess.call(get_java_cmd)
+                                                if status == 0 or status==2:
 							if os_name == "LINUX":
 								query = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
 								jisql_log(query, db_password)
@@ -1290,8 +1292,10 @@ class OracleConf(BaseDB):
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							if ret == 0:
+                                                        if ret == 0 and status == 0:
 								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                        elif ret == 0 and status == 2:
+                                                                log ("[I] Ranger admin default password change request process skipped!","info")
 							else:
 								if os_name == "LINUX":
 									query = get_cmd + " -c \; -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -1933,12 +1937,12 @@ class PostgresConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
+                                                get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
 						if os_name == "LINUX":
-							ret = subprocess.call(shlex.split(get_java_cmd))
+                                                        status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
-							ret = subprocess.call(get_java_cmd)
-						if ret == 0:
+                                                        status = subprocess.call(get_java_cmd)
+                                                if status == 0 or status==2:
 							if os_name == "LINUX":
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
 								jisql_log(query, db_password)
@@ -1947,8 +1951,10 @@ class PostgresConf(BaseDB):
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							if ret == 0:
+                                                        if ret == 0 and status == 0:
 								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                        elif ret == 0 and status == 2:
+                                                                log ("[I] Ranger admin default password change request process skipped!","info")
 							else:
 								if os_name == "LINUX":
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -2551,12 +2557,12 @@ class SqlServerConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
+                                                get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
 						if os_name == "LINUX":
-							ret = subprocess.call(shlex.split(get_java_cmd))
+                                                        status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
-							ret = subprocess.call(get_java_cmd)
-						if ret == 0:
+                                                        status = subprocess.call(get_java_cmd)
+                                                if status == 0 or status==2:
 							if os_name == "LINUX":
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
 								jisql_log(query, db_password)
@@ -2565,8 +2571,10 @@ class SqlServerConf(BaseDB):
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							if ret == 0:
+                                                        if ret == 0 and status == 0:
 								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                        elif ret == 0 and status == 2:
+                                                                log ("[I] Ranger admin default password change request process skipped!","info")
 							else:
 								if os_name == "LINUX":
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
@@ -3182,12 +3190,12 @@ class SqlAnywhereConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
+                                                get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,userName,oldPassword,newPassword)
 						if os_name == "LINUX":
-							ret = subprocess.call(shlex.split(get_java_cmd))
+                                                        status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
-							ret = subprocess.call(get_java_cmd)
-						if ret == 0:
+                                                        status = subprocess.call(get_java_cmd)
+                                                if status == 0 or status==2:
 							if os_name == "LINUX":
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
 								jisql_log(query, db_password)
@@ -3196,8 +3204,10 @@ class SqlAnywhereConf(BaseDB):
 								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							if ret == 0:
+                                                        if ret == 0 and status == 0:
 								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                        elif ret == 0 and status == 2:
+                                                                log ("[I] Ranger admin default password change request process skipped!","info")
 							else:
 								if os_name == "LINUX":
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)

@@ -1205,7 +1205,7 @@ public class UserMgr {
 		return xXPortalUser;
 	}
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-	public XXPortalUser updatePasswordInSHA256(String userName,String userPassword) {
+        public XXPortalUser updatePasswordInSHA256(String userName,String userPassword,boolean logAudits) {
 		if (userName == null || userPassword == null
 				|| userName.trim().isEmpty() || userPassword.trim().isEmpty()){
 				return null;
@@ -1216,14 +1216,30 @@ public class UserMgr {
 		if (xXPortalUser == null) {
 			return null;
 		}
-
+                String dbOldPwd =xXPortalUser.getPassword();
 		String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),userPassword);
 		xXPortalUser.setPassword(encryptedNewPwd);
 		xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
+                if(xXPortalUser!=null && logAudits){
+                        String dbNewPwd=xXPortalUser.getPassword();
+                        if (!dbOldPwd.equals(dbNewPwd)) {
+                                List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+                                XXTrxLog xTrxLog = new XXTrxLog();
+                                xTrxLog.setAttributeName("Password");
+                                xTrxLog.setPreviousValue(dbOldPwd);
+                                xTrxLog.setNewValue(dbNewPwd);
+                                xTrxLog.setAction("password change");
+                                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
+                                xTrxLog.setObjectId(xXPortalUser.getId());
+                                xTrxLog.setObjectName(xXPortalUser.getLoginId());
+                                trxLogList.add(xTrxLog);
+                                msBizUtil.createTrxLog(trxLogList);
+                        }
+                }
 
 		return xXPortalUser;
 	}
-	
+
 	public void checkAdminAccess() {
 		UserSessionBase sess = ContextUtil.getCurrentUserSession();
 		if (sess != null && sess.isUserAdmin()) {
