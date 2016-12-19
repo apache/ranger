@@ -64,7 +64,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			rangerHdfsAuthorizerImpl = cls.newInstance();
 		} catch (Exception e) {
 			// check what need to be done
-			LOG.error("Error Enabling RangerHdfsPluing", e);
+			LOG.error("Error Enabling RangerHdfsPlugin", e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
