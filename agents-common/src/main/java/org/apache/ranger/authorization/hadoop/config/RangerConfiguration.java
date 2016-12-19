@@ -184,7 +184,7 @@ public class RangerConfiguration extends Configuration {
 			addResource(rangerConf);
 		} else {
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("Unable to add the Security Config for" + serviceType + "Pluing won't be enabled!");
+				LOG.debug("Unable to add the Security Config for " + serviceType + ". Plugin won't be enabled!");
 			}
 		}
 
