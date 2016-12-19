@@ -317,7 +317,11 @@ public class UserMgr {
 		if (rolesList == null || rolesList.size() == 0) {
 			return false;
 		}
-
+                for (String userRole : rolesList) {
+                        if(!VALID_ROLE_LIST.contains(userRole.toUpperCase())){
+                                throw restErrorUtil.createRESTException("Invalid user role, please provide valid user role.",MessageEnums.INVALID_INPUT_DATA);
+                        }
+                }
 		// Let's first delete old roles
 		List<XXPortalUserRole> gjUserRoles = daoManager.getXXPortalUserRole()
 				.findByUserId(userId);
@@ -984,6 +988,9 @@ public class UserMgr {
 			}
 		}
 		XXPortalUserRole userRoleObj = new XXPortalUserRole();
+                if(!VALID_ROLE_LIST.contains(userRole.toUpperCase())){
+                        throw restErrorUtil.createRESTException("Invalid user role, please provide valid user role.",MessageEnums.INVALID_INPUT_DATA);
+                }
 		userRoleObj.setUserRole(userRole.toUpperCase());
 		userRoleObj.setUserId(userId);
 		userRoleObj.setStatus(RangerConstants.STATUS_ENABLED);
