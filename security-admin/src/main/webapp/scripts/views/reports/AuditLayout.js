@@ -186,10 +186,8 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
-					<th class="renderable cip">Policy Active</th>\
-					<th class="renderable name">Policy Download</th>\
-					<th class="renderable cip">Tag Active</th>\
-					<th class="renderable cip">Tag Download</th>\
+                                        <th class="renderable cip" colspan="3">Policy ( Time )</th>\
+                                        <th class="renderable cip" colspan="3">Tag ( Time )</th>\
 			 	</tr>');
 		},
 		renderDateFields : function(){
@@ -273,7 +271,7 @@ define(function(require) {
 					 this.currentTab = '#pluginStatus';
 					 this.ui.visualSearch.show();
 					 this.pluginInfoList = new VXPolicyExportAuditList();
-					 this.renderPluginInfotable();
+                                         this.renderPluginInfoTable();
 					 this.modifyPluginStatusTableSubcolumns();
 					 //To use existing collection
 					 this.pluginInfoList.url = 'service/plugins/plugins/info';
@@ -1164,7 +1162,7 @@ define(function(require) {
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},
-		renderPluginInfotable : function(){
+                renderPluginInfoTable : function(){
 			this.ui.tableList.removeClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getPluginInfoColums(),
@@ -1211,16 +1209,24 @@ define(function(require) {
 				},
 				policyActive: {
 					cell 	: 'html',
-					label	: localization.tt("lbl.versionTime"),
+                                        label	: localization.tt("lbl.active"),
 					editable:false,
 					sortable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(_.isUndefined(model.get('info').policyActiveVersion)
-									|| _.isNull(model.get('info').policyActiveVersion)){
+                                                        if(_.isUndefined(model.get('info').policyActivationTime)
+                                                                        || _.isNull(model.get('info').policyActivationTime)){
 								return '<center>--</center>';
-							}	
-							return that.getPluginInfoCell(model,'policyActiveVersion','policyActivationTime','label-success');
+                                                        }
+                                                        var activeDate = new Date(parseInt(model.get('info')['policyActivationTime']));
+                                                        if(!_.isUndefined(model.get('info')['lastPolicyUpdateTime'])){
+                                                                var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
+                                                                if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
+                                                                        return '<i class="icon-exclamation-sign activePolicyAlert"></i>'
+                                                                        + Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                                }
+                                                        }
+                                                        return Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
 							       
 						}
 					})
@@ -1228,48 +1234,88 @@ define(function(require) {
 									
 				policyDownloaded : {
 					cell 	: 'html',
-					label	: localization.tt("lbl.versionTime"),
+                                        label	: localization.tt("lbl.download"),
 					editable:false,
 					sortable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(_.isUndefined(model.get('info').policyDownloadedVersion)
-									|| _.isNull(model.get('info').policyDownloadedVersion)){
+                                                        if(_.isUndefined(model.get('info').policyDownloadTime)
+                                                                        || _.isNull(model.get('info').policyDownloadTime)){
 								return '<center>--</center>';
 							}
-							return that.getPluginInfoCell(model,'policyDownloadedVersion','policyDownloadTime','label-inverse');
+                                                        return Globalize.format(new Date(parseInt(model.get('info')['policyDownloadTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+                                                }
+                                        })
+                                },
+                                lastPolicyUpdateTime : {
+                                        cell 	: 'html',
+                                        label	: localization.tt("lbl.lastUpdate"),
+                                        editable:false,
+                                        sortable:false,
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(_.isUndefined(model.get('info').lastPolicyUpdateTime)
+                                                                        || _.isNull(model.get('info').lastPolicyUpdateTime)){
+                                                                return '<center>--</center>';
+                                                        }
+                                                        return Globalize.format(new Date(parseInt(model.get('info')['lastPolicyUpdateTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+
 						}
 					})
 				},
-				
 				tagActive : {
 					cell 	: 'html',
-					label	: localization.tt("lbl.versionTime"),
+                                        label	: localization.tt("lbl.active"),
 					editable:false,
 					sortable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(_.isUndefined(model.get('info').tagActiveVersion)
-									|| _.isNull(model.get('info').tagActiveVersion)){
+                                                        if(_.isUndefined(model.get('info').tagActivationTime)
+                                                                        || _.isNull(model.get('info').tagActivationTime)){
 								return '<center>--</center>';
 							}
-							return that.getPluginInfoCell(model,'tagActiveVersion','tagActivationTime','label-success');
+                                                        var activeDate = new Date(parseInt(model.get('info')['tagActivationTime']));
+                                                        if(!_.isUndefined(model.get('info')['lastTagUpdateTime'])){
+                                                                var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
+                                                                if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
+                                                                        return '<i class="icon-exclamation-sign activePolicyAlert"></i>'
+                                                                        + Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                                }
+                                                        }
+                                                        return Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
 						}
 					})
 				}, 
 				
 				tagDownloaded : {
 					cell 	: 'html',
-					label	:localization.tt("lbl.versionTime"),
+                                        label	:localization.tt("lbl.download"),
+                                        editable:false,
+                                        sortable:false,
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(_.isUndefined(model.get('info').tagDownloadTime)
+                                                                        || _.isNull(model.get('info').tagDownloadTime)){
+                                                                return '<center>--</center>';
+                                                        }
+                                                        return Globalize.format(new Date(parseInt(model.get('info')['tagDownloadTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+
+                                                }
+                                        })
+                                },
+                                lastTagUpdateTime : {
+                                        cell 	: 'html',
+                                        label	:localization.tt("lbl.lastUpdate"),
 					editable:false,
 					sortable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-							if(_.isUndefined(model.get('info').tagDownloadedVersion)
-									|| _.isNull(model.get('info').tagDownloadedVersion)){
+                                                        if(_.isUndefined(model.get('info').lastTagUpdateTime)
+                                                                        || _.isNull(model.get('info').lastTagUpdateTime)){
 								return '<center>--</center>';
 							}
-							return that.getPluginInfoCell(model,'tagDownloadedVersion','tagDownloadTime','label-inverse');
+                                                        return Globalize.format(new Date(parseInt(model.get('info')['lastTagUpdateTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+
 						}
 					})
 				},
@@ -1277,10 +1323,9 @@ define(function(require) {
 			return this.pluginInfoList.constructor.getTableCols(cols, this.pluginInfoList);
 	
 		},
-		getPluginInfoCell : function(model, versionAttr, timeAttr, klass){
-			return '<center><div><label class="label '+klass+'">'+model.get('info')[versionAttr]+
-			'</label></div>\  <div " style="border-top: 1px solid #ddd;">'
-			+Globalize.format(new Date(parseInt(model.get('info')[timeAttr])),  "MM/dd/yyyy hh:mm:ss tt")+'</div></center>'
+                isDateDifferenceMoreThanHr : function(date1, date2){
+                        var diff = Math.abs(date1 - date2) / 36e5;
+                        return parseInt(diff) >= 1 ? true : false;
 		},
 		onRefresh : function(){
 			var that =this, coll,params = {};

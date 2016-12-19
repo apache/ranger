@@ -1581,7 +1581,7 @@ background-color: #dc6343;
   display: inline-block;
   margin-right: 3px;
 }
-table.table.backgrid thead th.repoName, .policyActive, .policyDownloaded, .tagActive, .tagDownloaded { 
+table.table.backgrid thead th.repoName, .policyActive, .policyDownloaded, .lastPolicyUpdateTime, .tagActive, .tagDownloaded, .lastTagUpdateTime {
  border-top: 1px solid #ddd !important;
 }
 table.table.backgrid thead th.resourceType {
@@ -2057,7 +2057,8 @@ td.subgrid-custom-cell{
 }
 .padding-right-10{
         padding-right: 10px;
-}.selected-widget {
+}
+.selected-widget {
     padding: 3px 5px 3px 4px;
     border-radius: 3px;
     border: 1px solid #aaaaaa;
@@ -2070,11 +2071,20 @@ td.subgrid-custom-cell{
     max-height: 270px;
     overflow: auto;
 }
-
 .inline {
     display: inline;
 }
 .vertAlignInitial{
         vertical-align: initial !important;
         text-align: left;
+}
+.activePolicyAlert {
+    color: #ec7337;
+    margin-right: 5px;
+}
+.padding-right-10{
+    padding-right: 10px;
+}
+.selected-widget .remove{
+    cursor:pointer;
 }

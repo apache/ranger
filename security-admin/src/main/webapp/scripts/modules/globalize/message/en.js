@@ -240,6 +240,9 @@ define(function(require) {
                 hostName						: 'Host Name',
                 selectAndAddUser                : 'Select and Add User',
                 selectAndAddGroup               : 'Select and Add Group',
+                download                        : 'Download',
+                lastUpdate                      : 'Last Update',
+
 			},
 			btn : {
 				add							: 'Add',
