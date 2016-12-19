@@ -154,7 +154,7 @@ public class RangerAuthorizationCoprocessor implements MasterObserver, RegionObs
 			
 		} catch (Exception e) {
 			// check what need to be done
-			LOG.error("Error Enabling RangerHdfsPluing", e);
+			LOG.error("Error Enabling RangerHbasePlugin", e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
