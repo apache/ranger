@@ -26,6 +26,7 @@ import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -572,25 +573,24 @@ public class MiscUtil {
 	 * @return
 	 */
 	static public Set<String> getGroupsForRequestUser(String userName) {
-		if (userName == null) {
-			return null;
-		}
-		try {
-			UserGroupInformation ugi = UserGroupInformation
-					.createRemoteUser(userName);
-			String groups[] = ugi.getGroupNames();
-			if (groups != null && groups.length > 0) {
-				Set<String> groupsSet = new java.util.HashSet<String>();
-				for (int i = 0; i < groups.length; i++) {
-					groupsSet.add(groups[i]);
+		if (userName != null) {
+			try {
+				UserGroupInformation ugi = UserGroupInformation
+						.createRemoteUser(userName);
+				String[] groups = ugi.getGroupNames();
+				if (groups != null && groups.length > 0) {
+					Set<String> groupsSet = new java.util.HashSet<String>();
+					for (String group : groups) {
+						groupsSet.add(group);
+					}
+					return groupsSet;
 				}
-				return groupsSet;
+			} catch (Throwable e) {
+				logErrorMessageByInterval(logger,
+						"Error getting groups for users. userName=" + userName, e);
 			}
-		} catch (Throwable e) {
-			logErrorMessageByInterval(logger,
-					"Error getting groups for users. userName=" + userName, e);
 		}
-		return null;
+		return Collections.emptySet();
 	}
 
 	static public boolean logErrorMessageByInterval(Log useLogger,
