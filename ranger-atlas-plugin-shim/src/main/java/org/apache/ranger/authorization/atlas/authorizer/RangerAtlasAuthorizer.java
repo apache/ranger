@@ -61,7 +61,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 			rangerAtlasAuthorizerImpl = cls.newInstance();
 		} catch (Exception e) {
 			// check what need to be done
-			LOG.error("Error Enabling RangerAtlasPluing", e);
+			LOG.error("Error Enabling RangerAtlasPlugin", e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
