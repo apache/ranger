@@ -72,7 +72,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 			yarnAuthorizationProviderImpl = cls.newInstance();
 		} catch (Exception e) {
 			// check what need to be done
-			LOG.error("Error Enabling RangerYarnPluing", e);
+			LOG.error("Error Enabling RangerYarnPlugin", e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
