@@ -55,6 +55,13 @@ if [ -z "${RANGER_PID_DIR_PATH}" ]
 then
         RANGER_PID_DIR_PATH=/var/run/ranger
 fi
+
+if [ ! -d "${RANGER_PID_DIR_PATH}" ]
+then  
+	mkdir -p  $RANGER_PID_DIR_PATH
+	chmod 660 $RANGER_PID_DIR_PATH
+fi
+
 pidf=${RANGER_PID_DIR_PATH}/rangeradmin.pid
 
 if [ -z "${RANGER_USER}" ]
