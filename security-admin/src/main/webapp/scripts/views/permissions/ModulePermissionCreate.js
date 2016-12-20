@@ -92,29 +92,9 @@ define(function(require){
 		initializePlugins: function(){
 		},
 		renderForm : function(){
-			var VXGroupList		= require('collections/VXGroupList');
-			var VXUserList		= require('collections/VXUserList');
-		    var params = {sortBy : 'name'};
-		    this.userList = new VXUserList();
-		    this.userList.setPageSize(100,{fetch:true});
-		    this.userList.fetch({
-		    	cache :false,
-				data: params,
-				async : false
-		   });
-		   this.groupList = new VXGroupList();
-		   this.groupList.setPageSize(100,{fetch:true});
-		   this.groupList.fetch({
-			   cache :false,
-			   data : params,
-			   async : false
-		   });
-		   var that = this;
 		   this.form = new ModulePermissionForm({
 			   template  : require('hbs!tmpl/permissions/ModulePermissionForm_tmpl'),
-			   model 	  : that.model,
-			   groupList : that.groupList,
-			   userList  : that.userList
+                           model 	  : this.model,
 		   });
 		   this.rForm.show(this.form);
 		},

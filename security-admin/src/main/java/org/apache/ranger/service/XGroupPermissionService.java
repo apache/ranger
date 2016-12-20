@@ -17,12 +17,17 @@
 
 package org.apache.ranger.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.view.VXGroupPermission;
+import org.apache.ranger.view.VXModuleDef;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -77,4 +82,25 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
 		vObj.setGroupName(xGroup.getName());
 		return vObj;
 	}
+
+        public List<VXGroupPermission> getPopulatedVXGroupPermissionList(List<XXGroupPermission> xgroupPermissionList,Map<Long, XXGroup> xXGroupMap,VXModuleDef vModuleDef){
+                List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
+                XXGroup xXGroup=null;
+                for(XXGroupPermission xgroupPermission:xgroupPermissionList){
+                        if(xXGroupMap.containsKey(xgroupPermission.getGroupId())){
+                                xXGroup =xXGroupMap.get(xgroupPermission.getGroupId());
+                                VXGroupPermission vXGrpPerm=new VXGroupPermission();
+                                vXGrpPerm.setId(xgroupPermission.getId());
+                                vXGrpPerm.setGroupId(xgroupPermission.getGroupId());
+                                vXGrpPerm.setModuleId(xgroupPermission.getModuleId());
+                                vXGrpPerm.setIsAllowed(xgroupPermission.getIsAllowed());
+                                vXGrpPerm.setCreateDate(xgroupPermission.getCreateTime());
+                                vXGrpPerm.setUpdateDate(xgroupPermission.getUpdateTime());
+                                vXGrpPerm.setGroupName(xXGroup.getName());
+                                vXGrpPerm.setModuleName(vModuleDef.getModule());
+                                vXGroupPermissionList.add(vXGrpPerm);
+                        }
+                }
+                return vXGroupPermissionList;
+        }
 }

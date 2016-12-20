@@ -842,18 +842,26 @@ public class XUserMgr extends XUserMgrBase {
 		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef);
 
 		List<XXGroupPermission> xgroupPermissionList = daoManager.getXXGroupPermission().findByModuleId(vXModuleDef.getId(), true);
-
-		for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
-			VXGroupPermission vXGrpPerm = xGroupPermissionService.populateViewBean(xGrpPerm);
-			groupPermListOld.add(vXGrpPerm);
+                Map<Long, XXGroup> xXGroupMap=xGroupService.getXXGroupIdXXGroupMap();
+                if(xXGroupMap==null || xXGroupMap.isEmpty()){
+                        for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
+                                VXGroupPermission vXGrpPerm = xGroupPermissionService.populateViewBean(xGrpPerm);
+                                groupPermListOld.add(vXGrpPerm);
+                        }
+                }else{
+                        groupPermListOld=xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList,xXGroupMap,vModuleDefPopulateOld);
 		}
 		vModuleDefPopulateOld.setGroupPermList(groupPermListOld);
 
 		List<XXUserPermission> xuserPermissionList = daoManager.getXXUserPermission().findByModuleId(vXModuleDef.getId(), true);
-
-		for (XXUserPermission xUserPerm : xuserPermissionList) {
-			VXUserPermission vUserPerm = xUserPermissionService.populateViewBean(xUserPerm);
-			userPermListOld.add(vUserPerm);
+                Map<Long, XXUser> xXPortalUserIdXXUserMap=xUserService.getXXPortalUserIdXXUserMap();
+                if(xXPortalUserIdXXUserMap==null || xXPortalUserIdXXUserMap.isEmpty()){
+                        for (XXUserPermission xUserPerm : xuserPermissionList) {
+                                VXUserPermission vUserPerm = xUserPermissionService.populateViewBean(xUserPerm);
+                                userPermListOld.add(vUserPerm);
+                        }
+                }else{
+                        userPermListOld=xUserPermissionService.getPopulatedVXUserPermissionList(xuserPermissionList,xXPortalUserIdXXUserMap,vModuleDefPopulateOld);
 		}
 		vModuleDefPopulateOld.setUserPermList(userPermListOld);
 

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.biz.RangerBizUtil;
@@ -47,6 +48,7 @@ import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @Scope("singleton")
@@ -383,5 +385,27 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 		return trxLogList;
 	}
+        public Map<Long, XXUser> getXXPortalUserIdXXUserMap(){
+                Map<Long, XXUser> xXPortalUserIdXXUserMap=new HashMap<Long, XXUser>();
+                try{
+                        Map<String, XXUser> xXUserMap=new HashMap<String, XXUser>();
+                        List<XXUser> xXUserList=daoManager.getXXUser().getAll();
+                        if(!CollectionUtils.isEmpty(xXUserList)){
+                                for(XXUser xxUser:xXUserList){
+                                        xXUserMap.put(xxUser.getName(), xxUser);
+                                }
+                        }
+                        xXUserList=null;
+                        List<XXPortalUser> xXPortalUserList=daoManager.getXXPortalUser().getAll();
+                        if(!CollectionUtils.isEmpty(xXPortalUserList)){
+                                for(XXPortalUser xXPortalUser:xXPortalUserList){
+                                        if(xXUserMap.containsKey(xXPortalUser.getLoginId())){
+                                                xXPortalUserIdXXUserMap.put(xXPortalUser.getId(),xXUserMap.get(xXPortalUser.getLoginId()));
+                                        }
+                                }
+                        }
+                }catch(Exception ex){}
+                return xXPortalUserIdXXUserMap;
+        }
 
 }

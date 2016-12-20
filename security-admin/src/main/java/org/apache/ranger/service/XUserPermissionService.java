@@ -17,11 +17,17 @@
 
 package org.apache.ranger.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -71,4 +77,25 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 		return vObj;
 	}
 
+        public List<VXUserPermission> getPopulatedVXUserPermissionList(List<XXUserPermission> xuserPermissionList,Map<Long, XXUser> xXPortalUserIdXXUserMap,VXModuleDef vModuleDef){
+                List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
+                XXUser xXUser=null;
+                for(XXUserPermission xuserPermission:xuserPermissionList){
+                        if(xXPortalUserIdXXUserMap.containsKey(xuserPermission.getUserId())){
+                                xXUser =xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
+                                VXUserPermission vXUserPerm=new VXUserPermission();
+                                vXUserPerm.setId(xuserPermission.getId());
+                                vXUserPerm.setUserId(xXUser.getId());
+                                vXUserPerm.setModuleId(xuserPermission.getModuleId());
+                                vXUserPerm.setIsAllowed(xuserPermission.getIsAllowed());
+                                vXUserPerm.setCreateDate(xuserPermission.getCreateTime());
+                                vXUserPerm.setUpdateDate(xuserPermission.getUpdateTime());
+                                vXUserPerm.setModuleName(vModuleDef.getModule());
+                                vXUserPerm.setLoginId(xXUser.getName());
+                                vXUserPerm.setUserName(xXUser.getName());
+                                vXUserPermissionList.add(vXUserPerm);
+                        }
+                }
+                return vXUserPermissionList;
+        }
 }

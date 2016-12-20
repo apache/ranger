@@ -16,7 +16,7 @@
 --}}
 <form class="form-horizontal">
 	<fieldset>
-		<p class="formHeader"> Policy Details : </p>
+                <p class="formHeader"> Module Details : </p>
 	<div class="clearfix"></div>
 	<b class="policy-form">
 		<fieldset>
@@ -35,21 +35,48 @@
 					<thead>
 						<tr>
 							{{#each permHeaders}}
-							<th>{{./this}}</th>
+                                                        <th width="49%">{{./this}}</th>
 							{{/each}}
 						</tr>
 					</thead>
 					<tbody class="js-formInput">
 						<tr>
 							<td>
-								<div data-editors="selectGroups"></div>
+                                                                <div data-editors="selectGroups" class="inline"></div>
+                                                                <button data-id="addGroupBtn" class="icon icon-plus icon-2x btn btn-default" title="Add Group"></button>
 							</td>
 							<td>
-								<div data-editors="selectUsers"></div>
+                                                                <div data-editors="selectUsers" class="inline"></div>
+                                                                <button data-id="addUserBtn" class="icon icon-plus icon-2x btn btn-default" title="Add User"></button>
+
 							</td>
-							<td>
-								<div data-editors="isAllowed"></div>
-							</td>
+                                                        <!--<td>
+                                                                 <div data-editors="isAllowed"></div>
+                                                        </td>-->
+                                                </tr>
+                                                <tr>
+                                                        <td class="vertAlignInitial">
+                                                                <div class="selected-list clearfix" data-js="selectedGroupList">
+                                                                <label class="editable-empty emptySelectedGroups">No Selected Groups</label>
+                                                                {{#each groupList}}
+                                                                        <span class="selected-widget">
+                                                                                <i class="icon remove icon-remove" data-id="{{./this.groupId}}"></i>&nbsp;
+                                                                                {{./this.groupName}}
+                                                                        </span>
+                                                                {{/each}}
+
+                                                                </div></td>
+                                                        <td class="vertAlignInitial" width="100%">
+                                                                <div class="selected-list clearfix" data-js="selectedUserList">
+                                                                        <label class="editable-empty emptySelectedUsers" style="text-align: center;">No Selected Users</label>
+
+                                                                        {{#each userList}}
+                                                                        <span class="selected-widget">
+                                                                                <i class="icon remove icon-remove" data-id="{{./this.userId}}"></i>&nbsp;
+                                                                                {{./this.userName}}
+                                                                        </span>
+                                                                {{/each}}
+                                                                </div></td>
 						</tr>
 					</tbody>
 				</table>

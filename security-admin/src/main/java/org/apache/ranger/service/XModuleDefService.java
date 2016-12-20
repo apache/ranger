@@ -19,12 +19,14 @@ package org.apache.ranger.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
@@ -32,6 +34,7 @@ import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @Scope("singleton")
@@ -49,6 +52,11 @@ public class XModuleDefService extends
 	@Autowired
 	XGroupPermissionService xGrpPermService;
 
+        @Autowired
+        XUserService xUserService;
+
+        @Autowired
+        XGroupService xGroupService;
 	public XModuleDefService() {
 		searchFields.add(new SearchField("module", "obj.module",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
@@ -84,34 +92,33 @@ public class XModuleDefService extends
 
 	@Override
 	public VXModuleDef populateViewBean(XXModuleDef xObj) {
-
 		VXModuleDef vModuleDef = super.populateViewBean(xObj);
+                Map<Long, XXUser> xXPortalUserIdXXUserMap=xUserService.getXXPortalUserIdXXUserMap();
+                Map<Long, XXGroup> xXGroupMap=xGroupService.getXXGroupIdXXGroupMap();
 		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
 		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
-
 		List<XXUserPermission> xuserPermissionList = rangerDaoManager
 				.getXXUserPermission().findByModuleId(xObj.getId(), false);
 		List<XXGroupPermission> xgroupPermissionList = rangerDaoManager
 				.getXXGroupPermission().findByModuleId(xObj.getId(), false);
-		for (XXUserPermission xUserPerm : xuserPermissionList) {
-
-			VXUserPermission vXUserPerm = xUserPermService
-					.populateViewBean(xUserPerm);
-			vXUserPermissionList.add(vXUserPerm);
-
+                if(CollectionUtils.isEmpty(xXPortalUserIdXXUserMap)){
+                        for (XXUserPermission xUserPerm : xuserPermissionList) {
+                                VXUserPermission vXUserPerm = xUserPermService.populateViewBean(xUserPerm);
+                                vXUserPermissionList.add(vXUserPerm);
+                        }
+                }else{
+                        vXUserPermissionList=xUserPermService.getPopulatedVXUserPermissionList(xuserPermissionList,xXPortalUserIdXXUserMap,vModuleDef);
 		}
-
-		for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
-
-			VXGroupPermission vXGrpPerm = xGrpPermService
-					.populateViewBean(xGrpPerm);
-			vXGroupPermissionList.add(vXGrpPerm);
-
+                if(CollectionUtils.isEmpty(xXGroupMap)){
+                        for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
+                                VXGroupPermission vXGrpPerm = xGrpPermService.populateViewBean(xGrpPerm);
+                                vXGroupPermissionList.add(vXGrpPerm);
+                        }
+                }else{
+                        vXGroupPermissionList=xGrpPermService.getPopulatedVXGroupPermissionList(xgroupPermissionList,xXGroupMap,vModuleDef);
 		}
-
 		vModuleDef.setUserPermList(vXUserPermissionList);
 		vModuleDef.setGroupPermList(vXGroupPermissionList);
 		return vModuleDef;
 	}
-
 }

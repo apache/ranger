@@ -2027,3 +2027,26 @@ td.subgrid-custom-cell{
 .customMask{
 	width: 95px;
 }
+.selected-widget {
+    padding: 3px 5px 3px 4px;
+    border-radius: 3px;
+    border: 1px solid #aaaaaa;
+    background-color: #e4e4e4;
+    margin: 3px 3px;
+    float: left;
+}
+.selected-list {
+    margin: 5px;
+        max-height: 270px;
+    overflow: auto;
+}
+.inline {
+    display: inline;
+}
+.vertAlignInitial{
+    vertical-align: initial !important;
+    text-align: left;
+}
+.selected-widget .remove{
+        cursor:pointer;
+}

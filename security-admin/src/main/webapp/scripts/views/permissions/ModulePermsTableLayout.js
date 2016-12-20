@@ -184,9 +184,21 @@ define(function(require){
 				attrName = 'policy-users-id';
 			}
 			var $td = $(e.currentTarget).parents('td');
-			$td.find('['+attrName+'="'+id+'"]').show();
-			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
-			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').hide();
+                        var show = false, shownCnt = 1;
+                        $.each($td.find('[data-id="moreSpans"]'), function(i, div){
+                                if($(div).is(':hidden') && !show){
+                                        $(div).show();
+                                        show = true;
+                                        return false;
+                                }
+                                if(!$(div).is(':hidden')){
+                                        shownCnt++;
+                                }
+                        })
+                        if($td.find('[data-id="moreSpans"]').length == shownCnt){
+                                $td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
+                                $td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').hide();
+                        }
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
 		},
 		onShowLess : function(e){
@@ -197,7 +209,7 @@ define(function(require){
 				attrName = 'policy-users-id';
 			}
 			var $td = $(e.currentTarget).parents('td');
-			$td.find('['+attrName+'="'+id+'"]').slice(4).hide();
+                        $td.find('[data-id="moreSpans"]').hide();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').hide();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');

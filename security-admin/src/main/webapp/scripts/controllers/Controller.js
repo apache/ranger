@@ -346,7 +346,7 @@ define(function(require) {
 		   var modulePermission 	= new ModulePermission({id : moduleId});
 		   var that = this
 		   modulePermission.collection = new ModulePermissionList();
-		   modulePermission.fetch({cache : true}).done(function(){
+                   modulePermission.fetch({cache : false}).done(function(){
 			   App.rContent.show(new view({
 				   model : modulePermission,
 				   groupList : that.groupList,
