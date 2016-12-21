@@ -19,14 +19,6 @@
 #
 # This script will install policymanager webapplication under tomcat and also, initialize the database with ranger users/tables.
 
-PROPFILE=$PWD/install.properties
-pidFolderName='/var/run/ranger'
-mkdir -p ${pidFolderName}
-propertyValue=''
-if [ ! $? = "0" ];then
-	log "$PROPFILE file not found....!!";
-	exit 1;
-fi
 usage() {
   [ "$*" ] && echo "$0: $*"
   sed -n '/^##/,/^$/s/^## \{0,1\}//p' "$0"
@@ -49,6 +41,20 @@ get_prop(){
                 echo $value | tr -d \'\"
         fi
 }
+
+PROPFILE=$PWD/install.properties
+if [ ! -f "${PROPFILE}" ]; then
+    echo "$PROPFILE file not found....!!"
+    exit 1;
+fi
+
+LOGFILE=$(eval echo " $(get_prop 'LOGFILE' $PROPFILE)")
+pidFolderName='/var/run/ranger'
+mkdir -p ${pidFolderName}
+if [ ! $? = "0" ];then
+    log "Make $pidFolderName failure....!!";
+    exit 1;
+fi
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
@@ -96,7 +102,6 @@ xa_ldap_ad_userSearchFilter=$(get_prop 'xa_ldap_ad_userSearchFilter' $PROPFILE)
 XAPOLICYMGR_DIR=$(eval echo "$(get_prop 'XAPOLICYMGR_DIR' $PROPFILE)")
 app_home=$(eval echo "$(get_prop 'app_home' $PROPFILE)")
 TMPFILE=$(eval echo "$(get_prop 'TMPFILE' $PROPFILE)")
-LOGFILE=$(eval echo " $(get_prop 'LOGFILE' $PROPFILE)")
 LOGFILES=$(eval echo "$(get_prop 'LOGFILES' $PROPFILE)")
 JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
 JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
