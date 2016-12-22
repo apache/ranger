@@ -47,6 +47,7 @@ import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XPortalUserService;
@@ -1239,6 +1240,8 @@ public class UserMgr {
                                 xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
                                 xTrxLog.setObjectId(xXPortalUser.getId());
                                 xTrxLog.setObjectName(xXPortalUser.getLoginId());
+                                xTrxLog.setAddedByUserId(xXPortalUser.getId());
+                                xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
                                 trxLogList.add(xTrxLog);
                                 msBizUtil.createTrxLog(trxLogList);
                         }
@@ -1281,4 +1284,40 @@ public class UserMgr {
 		}
 		return roleList;
 	}
+
+        @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+        public XXPortalUser updateOldUserName(String userLoginId,String newUserName, String currentPassword) {
+                if (userLoginId == null || newUserName == null
+                                || userLoginId.trim().isEmpty() || newUserName.trim().isEmpty()){
+                        return null;
+                }
+
+                XXPortalUser xXPortalUser = this.findByLoginId(userLoginId);
+        XXUser xXUser = daoManager.getXXUser().findByUserName(userLoginId);
+                if (xXPortalUser == null || xXUser == null) {
+                        return null;
+                }
+                xXUser.setName(newUserName);
+                daoManager.getXXUser().update(xXUser);
+
+                xXPortalUser.setLoginId(newUserName);
+                // The old password needs to be encrypted by the new user name
+                String updatedPwd = encrypt(newUserName,currentPassword);
+                xXPortalUser.setPassword(updatedPwd);
+                xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
+                List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+                XXTrxLog xTrxLog = new XXTrxLog();
+                xTrxLog.setAttributeName("User Name");
+                xTrxLog.setPreviousValue(userLoginId);
+                xTrxLog.setNewValue(newUserName);
+                xTrxLog.setAction("update");
+                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_USER_PROFILE);
+                xTrxLog.setObjectId(xXPortalUser.getId());
+                xTrxLog.setObjectName(xXPortalUser.getLoginId());
+                xTrxLog.setAddedByUserId(xXPortalUser.getId());
+                xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
+                trxLogList.add(xTrxLog);
+                msBizUtil.createTrxLog(trxLogList);
+                return xXPortalUser;
+        }
 }
