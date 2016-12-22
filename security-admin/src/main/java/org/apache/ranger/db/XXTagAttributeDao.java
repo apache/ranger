@@ -45,6 +45,18 @@ public class XXTagAttributeDao extends BaseDao<XXTagAttribute> {
 		}
 	}
 
+	public List<XXTagAttribute> findByServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return new ArrayList<XXTagAttribute>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXTagAttribute.findByServiceId", tClass)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXTagAttribute>();
+		}
+	}
+
 	public List<XXTagAttribute> findForServicePlugin(Long serviceId) {
 		if (serviceId == null) {
 			return new ArrayList<XXTagAttribute>();

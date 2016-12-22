@@ -2681,6 +2681,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
+		boolean filterForServicePlugin = RangerConfiguration.getInstance().getBoolean("ranger.filter.tags.for.service.plugin", true);
+
 		XXServiceDao serviceDao = daoMgr.getXXService();
 
 		XXService serviceDbObj = serviceDao.getById(service.getId());
@@ -2727,7 +2729,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
 						serviceVersionInfoDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
 
-						if (isTagVersionUpdateNeeded) {
+						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
 							serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
 							serviceVersionInfoDbObj.setTagUpdateTime(service.getTagUpdateTime());
 						}
@@ -2737,7 +2739,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						serviceVersionInfoDbObj = new XXServiceVersionInfo();
 						serviceVersionInfoDbObj.setServiceId(referringService.getId());
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-						if (isTagVersionUpdateNeeded) {
+						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
 							serviceVersionInfoDbObj.setTagVersion(getNextVersion(referringService.getTagVersion()));
 						} else {
 							serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());

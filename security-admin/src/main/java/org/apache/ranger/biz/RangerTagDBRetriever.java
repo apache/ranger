@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.*;
@@ -49,6 +50,7 @@ public class RangerTagDBRetriever {
 	private Map<Long, RangerTag> tags;
 	private List<RangerTagResourceMap> tagResourceMaps;
 
+	private boolean filterForServicePlugin;
 
 	public RangerTagDBRetriever(final RangerDaoManager daoMgr, final XXService xService) {
 		this.daoMgr = daoMgr;
@@ -64,6 +66,7 @@ public class RangerTagDBRetriever {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver.getTags(serviceName=" + xService.getName());
 			}
 
+			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean("ranger.filter.tags.for.service.plugin", true);
 			TagRetrieverServiceResourceContext serviceResourceContext = new TagRetrieverServiceResourceContext(xService);
 			TagRetrieverTagDefContext tagDefContext = new TagRetrieverTagDefContext(xService);
 			TagRetrieverTagContext tagContext = new TagRetrieverTagContext(xService);
@@ -96,7 +99,8 @@ public class RangerTagDBRetriever {
 
 	private List<RangerTagResourceMap> getAllTagResourceMaps() {
 
-		List<XXTagResourceMap> xTagResourceMaps = daoMgr.getXXTagResourceMap().findForServicePlugin(xService.getId());
+		List<XXTagResourceMap> xTagResourceMaps = filterForServicePlugin ? daoMgr.getXXTagResourceMap().findForServicePlugin(xService.getId()) : daoMgr.getXXTagResourceMap().findByServiceId(xService.getId());
+
 		ListIterator<XXTagResourceMap> iterTagResourceMap = xTagResourceMaps.listIterator();
 
 		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
@@ -203,9 +207,9 @@ public class RangerTagDBRetriever {
 		TagRetrieverServiceResourceContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
 
-			List<XXServiceResource> xServiceResources = daoMgr.getXXServiceResource().findForServicePlugin(serviceId);
-			List<XXServiceResourceElement> xServiceResourceElements = daoMgr.getXXServiceResourceElement().findForServicePlugin(serviceId);
-			List<XXServiceResourceElementValue> xServiceResourceElementValues = daoMgr.getXXServiceResourceElementValue().findForServicePlugin(serviceId);
+			List<XXServiceResource> xServiceResources = filterForServicePlugin ? daoMgr.getXXServiceResource().findForServicePlugin(serviceId) : daoMgr.getXXServiceResource().findTaggedResourcesInServiceId(serviceId);
+			List<XXServiceResourceElement> xServiceResourceElements = filterForServicePlugin ? daoMgr.getXXServiceResourceElement().findForServicePlugin(serviceId) : daoMgr.getXXServiceResourceElement().findTaggedResourcesInServiceId(serviceId);
+			List<XXServiceResourceElementValue> xServiceResourceElementValues = filterForServicePlugin ? daoMgr.getXXServiceResourceElementValue().findForServicePlugin(serviceId) : daoMgr.getXXServiceResourceElementValue().findTaggedResourcesInServiceId(serviceId);
 
 			this.service = xService;
 			this.iterServiceResource = xServiceResources.listIterator();
@@ -318,7 +322,7 @@ public class RangerTagDBRetriever {
 			List<RangerServiceResource> ret = null;
 
 			if (service != null) {
-				List<XXServiceResource> xServiceResources = daoMgr.getXXServiceResource().findForServicePlugin(service.getId());
+				List<XXServiceResource> xServiceResources = filterForServicePlugin ? daoMgr.getXXServiceResource().findForServicePlugin(service.getId()) : daoMgr.getXXServiceResource().findTaggedResourcesInServiceId(service.getId());
 
 				if (CollectionUtils.isNotEmpty(xServiceResources)) {
 					ret = new ArrayList<RangerServiceResource>(xServiceResources.size());
@@ -348,8 +352,8 @@ public class RangerTagDBRetriever {
 		TagRetrieverTagDefContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
 
-			List<XXTagDef> xTagDefs = daoMgr.getXXTagDef().findForServicePlugin(serviceId);
-			List<XXTagAttributeDef> xTagAttributeDefs = daoMgr.getXXTagAttributeDef().findForServicePlugin(serviceId);
+			List<XXTagDef> xTagDefs = filterForServicePlugin ? daoMgr.getXXTagDef().findForServicePlugin(serviceId) : daoMgr.getXXTagDef().findByServiceId(serviceId);
+			List<XXTagAttributeDef> xTagAttributeDefs = filterForServicePlugin ? daoMgr.getXXTagAttributeDef().findForServicePlugin(serviceId) : daoMgr.getXXTagAttributeDef().findByServiceId(serviceId);
 
 			this.service = xService;
 			this.iterTagDef = xTagDefs.listIterator();
@@ -473,8 +477,8 @@ public class RangerTagDBRetriever {
 		TagRetrieverTagContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
 
-			List<XXTag> xTags = daoMgr.getXXTag().findForServicePlugin(serviceId);
-			List<XXTagAttribute> xTagAttributes = daoMgr.getXXTagAttribute().findForServicePlugin(serviceId);
+			List<XXTag> xTags = filterForServicePlugin ? daoMgr.getXXTag().findForServicePlugin(serviceId) : daoMgr.getXXTag().findByServiceId(serviceId);
+			List<XXTagAttribute> xTagAttributes = filterForServicePlugin ? daoMgr.getXXTagAttribute().findForServicePlugin(serviceId) : daoMgr.getXXTagAttribute().findByServiceId(serviceId);
 
 			this.service = xService;
 			this.iterTag = xTags.listIterator();
