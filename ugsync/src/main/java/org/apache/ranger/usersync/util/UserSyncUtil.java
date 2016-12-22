@@ -29,7 +29,7 @@ public class UserSyncUtil {
 		String ret = null;
 
 		try {
-			ret = URLEncoder.encode(s, "UTF-8");
+			ret = URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
 		} catch (UnsupportedEncodingException e) {
 			throw e;
 		}
