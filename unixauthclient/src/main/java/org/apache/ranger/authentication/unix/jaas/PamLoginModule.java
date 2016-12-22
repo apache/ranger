@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class PamLoginModule extends Object implements LoginModule
+public class PamLoginModule implements LoginModule
 {
     public static final String SERVICE_KEY = "ranger.pam.service";
 
