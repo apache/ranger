@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -34,6 +36,7 @@ import java.util.concurrent.Future;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -81,6 +84,7 @@ public class KafkaRangerAuthorizerTest {
     private static String serviceKeystorePath;
     private static String clientKeystorePath;
     private static String truststorePath;
+    private static Path tempDir;
     
     @org.junit.BeforeClass
     public static void setup() throws Exception {
@@ -105,12 +109,14 @@ public class KafkaRangerAuthorizerTest {
         ServerSocket serverSocket = new ServerSocket(0);
         port = serverSocket.getLocalPort();
         serverSocket.close();
+
+        tempDir = Files.createTempDirectory("kafka");
         
         final Properties props = new Properties();
         props.put("broker.id", 1);
         props.put("host.name", "localhost");
         props.put("port", port);
-        props.put("log.dir", "/tmp/kafka");
+        props.put("log.dir", tempDir.toString());
         props.put("zookeeper.connect", zkServer.getConnectString());
         props.put("replica.socket.timeout.ms", "1500");
         props.put("controlled.shutdown.enable", Boolean.TRUE.toString());
@@ -163,6 +169,9 @@ public class KafkaRangerAuthorizerTest {
         File truststoreFile = new File(truststorePath);
         if (truststoreFile.exists()) {
             truststoreFile.delete();
+        }
+        if (tempDir != null) {
+            FileUtils.deleteDirectory(tempDir.toFile());
         }
     }
     
