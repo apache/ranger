@@ -408,6 +408,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 					}
 				} else {
 					everythingIsAccessible = false;
+					if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
+						LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
+						deniedEvent = auditEvent;
+					}
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("evaluateAccess: no family level access [" + family + "].  Checking if has partial access (of any type)...");
 					}

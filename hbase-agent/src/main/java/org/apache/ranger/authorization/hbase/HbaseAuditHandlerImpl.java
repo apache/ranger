@@ -52,6 +52,9 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 		}
 		_mostRecentEvent = event;
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> getAuthzEvents: mostRecentEvent:" + _mostRecentEvent);
+		}
 		// We return null because we don't want default audit handler to audit anything!
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents(" + result + "): null");
@@ -134,13 +137,14 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 	
 	void applySuperUserOverride(AuthzAuditEvent event) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(" + event + ")");
+			LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride(" + event + ")");
 		}
 		if (event != null && _superUserOverride) {
-			event.setAccessResult((short)1);
+			event.setAccessResult((short) 1);
+			event.setPolicyId(-1);
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride(...)");
+			LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
 		}
 	}
 }
