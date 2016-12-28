@@ -1200,6 +1200,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.SELECT.name()) ||
 			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
 				ret.getAccessTypes().add(privName.toLowerCase());
+			} else if (StringUtils.equalsIgnoreCase(privName, "Insert") ||
+							StringUtils.equalsIgnoreCase(privName, "Delete")) {
+				// Mapping Insert/Delete to Update
+				ret.getAccessTypes().add(HiveAccessType.UPDATE.name().toLowerCase());
 			} else {
 				LOG.warn("grant/revoke: unexpected privilege type '" + privName + "'. Ignored");
 			}
