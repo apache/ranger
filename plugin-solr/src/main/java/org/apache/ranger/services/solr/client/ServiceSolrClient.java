@@ -42,6 +42,7 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 import org.apache.solr.common.util.SimpleOrderedMap;
+import org.apache.commons.collections.CollectionUtils;
 
 public class ServiceSolrClient {
 	private static final Logger LOG = Logger.getLogger(ServiceSolrClient.class);
@@ -103,10 +104,14 @@ public class ServiceSolrClient {
 		SolrResponse response = request.process(solrClient);
 
 		List<String> list = new ArrayList<String>();
-		for (int i = 0; i < response.getResponse().size(); i++) {
+		List<String> responseCollectionList = (ArrayList<String>)response.getResponse().get("collections");
+		if(CollectionUtils.isEmpty(responseCollectionList)) {
+			return list;
+		}
+		for (int i = 0; i < responseCollectionList.size(); i++) {
 			if (ignoreCollectionList == null
-					|| !ignoreCollectionList.contains(list.get(i))) {
-				list.add(list.get(i));
+					|| !ignoreCollectionList.contains(responseCollectionList.get(i))) {
+				list.add(responseCollectionList.get(i));
 			}
 		}
 		return list;
