@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -44,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
@@ -66,11 +68,19 @@ public class TestPublicAPIsv2 {
 
 	private static Long Id = 8L;
 	
+	private static Long Id2 =10L;
+
 	@InjectMocks
 	PublicAPIsv2 publicAPIsv2 = new PublicAPIsv2();
-	
+
 	@Mock
 	ServiceREST serviceREST;
+
+	@Mock
+	RangerSearchUtil searchUtil;
+
+	@Mock
+	RangerPolicyService policyService;
 
 	@Mock
 	RESTErrorUtil restErrorUtil;
@@ -185,6 +195,46 @@ public class TestPublicAPIsv2 {
 		return policy;
 	}
 	
+	private RangerPolicy rangerPolicy1() {
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+		List<String> users = new ArrayList<String>();
+		List<String> groups = new ArrayList<String>();
+		List<RangerPolicyItemCondition> conditions = new ArrayList<RangerPolicyItemCondition>();
+		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
+		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
+		rangerPolicyItem.setAccesses(accesses);
+		rangerPolicyItem.setConditions(conditions);
+		rangerPolicyItem.setGroups(groups);
+		rangerPolicyItem.setUsers(users);
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		policyItems.add(rangerPolicyItem);
+
+		Map<String, RangerPolicyResource> policyResource = new HashMap<String, RangerPolicyResource>();
+		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource();
+		rangerPolicyResource.setIsExcludes(true);
+		rangerPolicyResource.setIsRecursive(true);
+		rangerPolicyResource.setValue("2");
+		rangerPolicyResource.setValues(users);
+		policyResource.put("resource", rangerPolicyResource);
+		RangerPolicy policy = new RangerPolicy();
+		policy.setId(Id2);
+		policy.setCreateTime(new Date());
+		policy.setDescription("policy");
+		policy.setGuid("policyguid");
+		policy.setIsEnabled(true);
+		policy.setName("HDFS_1-1-20150316062454");
+		policy.setUpdatedBy("Admin");
+		policy.setUpdateTime(new Date());
+		policy.setService("HDFS_1-1-20150316062454");
+		policy.setIsAuditEnabled(true);
+		policy.setPolicyItems(policyItems);
+		policy.setResources(policyResource);
+		policy.setService("HDFS_2");
+
+		return policy;
+	}
+
 	@Test
 	public void test1getServiceDef() throws Exception {
 		RangerServiceDef rangerServiceDef = rangerServiceDef();
@@ -536,5 +586,22 @@ public class TestPublicAPIsv2 {
 		publicAPIsv2.deletePolicyByName(serviceName, policyName, request);
 		Mockito.verify(serviceREST).getPolicies((SearchFilter) Mockito.anyObject());
 		Mockito.verify(serviceREST).deletePolicy(Id);
+	}
+
+	@Test
+	public void test26getPolicies() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerPolicyList policyList = Mockito.mock(RangerPolicyList.class);
+		List<RangerPolicy> rangerPolicies = new ArrayList<RangerPolicy>();
+		RangerPolicy rangerpolicy1 = rangerPolicy();
+		RangerPolicy rangerpolicy2 = rangerPolicy1();
+		rangerPolicies.add(rangerpolicy1);
+		rangerPolicies.add(rangerpolicy2);
+		Mockito.when(serviceREST.getPolicies(request)).thenReturn(policyList);
+		Mockito.when(policyList.getPolicies()).thenReturn(rangerPolicies);
+		List<RangerPolicy> dbRangerPolicies = publicAPIsv2.getPolicies(request);
+		Assert.assertNotNull(dbRangerPolicies);
+		Assert.assertEquals(dbRangerPolicies.size(), rangerPolicies.size());
+		Mockito.verify(serviceREST).getPolicies(request);
 	}
 }

@@ -50,7 +50,7 @@ public class SpringEventListener implements
 		process((AuthenticationFailureBadCredentialsEvent) event);
 	    } else if (event instanceof AuthenticationFailureDisabledEvent) {
 		process((AuthenticationFailureDisabledEvent) event);
-	    } else {
+	    // } else {
 		// igonre all other events
 	    }
 
