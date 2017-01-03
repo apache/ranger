@@ -65,6 +65,9 @@ db_host=$(get_prop 'db_host' $PROPFILE)
 db_name=$(get_prop 'db_name' $PROPFILE)
 db_user=$(get_prop 'db_user' $PROPFILE)
 db_password=$(get_prop 'db_password' $PROPFILE)
+db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
+db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
+db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 audit_store=$(get_prop 'audit_store' $PROPFILE)
 audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
@@ -233,6 +236,26 @@ init_variables(){
 		audit_db_name=$(get_prop 'audit_db_name' $PROPFILE)
 		audit_db_user=$(get_prop 'audit_db_user' $PROPFILE)
 		audit_db_password=$(get_prop 'audit_db_password' $PROPFILE)
+	fi
+	db_ssl_enabled=`echo $db_ssl_enabled | tr '[:upper:]' '[:lower:]'`
+	if [ "${db_ssl_enabled}" != "true" ]
+	then
+		db_ssl_enabled="false"
+		db_ssl_required="false"
+		db_ssl_verifyServerCertificate="false"
+	fi
+	if [ "${db_ssl_enabled}" == "true" ]
+	then
+		db_ssl_required=`echo $db_ssl_required | tr '[:upper:]' '[:lower:]'`
+		db_ssl_verifyServerCertificate=`echo $db_ssl_verifyServerCertificate | tr '[:upper:]' '[:lower:]'`
+		if [ "${db_ssl_required}" != "true" ]
+		then
+			db_ssl_required="false"
+		fi
+		if [ "${db_ssl_verifyServerCertificate}" != "true" ]
+		then
+			db_ssl_verifyServerCertificate="false"
+		fi
 	fi
 }
 
@@ -436,6 +459,21 @@ update_properties() {
                propertyName=ranger.lookup.kerberos.keytab
                newPropertyValue="${lookup_keytab}"
                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${db_ssl_enabled}" != "" ]
+	then
+		propertyName=ranger.db.ssl.enabled
+		newPropertyValue="${db_ssl_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.db.ssl.required
+		newPropertyValue="${db_ssl_required}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.db.ssl.verifyServerCertificate
+		newPropertyValue="${db_ssl_verifyServerCertificate}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
@@ -1149,6 +1187,22 @@ setup_install_files(){
         echo "export RANGER_USER=${unix_user}" >> ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-piddir.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-piddir.sh
 
+	if [ "${db_ssl_verifyServerCertificate}" == "true" ]
+	then
+		javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
+		javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
+		javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
+		javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
+		DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
+	else
+		if [ -f ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh ]; then
+			DB_SSL_PARAM=""
+			echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
+			chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
+		fi
+	fi
 	log "[I] Setting up installation files and directory DONE";
 
 	if [ ! -f ${INSTALL_DIR}/rpm ]; then

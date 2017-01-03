@@ -426,7 +426,7 @@ fi
 			if [ $? -eq 0 ]
 			then
 				echo "	${JAVA} -cp ${INSTALL_CP} org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} -p  ${INSTALL_ARGS}"
-				${JAVA} -cp "${INSTALL_CP}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} -p  ${INSTALL_ARGS}
+				${JAVA} ${DB_SSL_PARAM} -cp "${INSTALL_CP}" org.apache.ranger.utils.install.XmlConfigChanger -i ${archivefn} -o ${newfn} -c ${f} -p  ${INSTALL_ARGS}
 				if [ $? -eq 0 ]
                 then
                 	diff -w ${newfn} ${fullpathorgfn} > /dev/null 2>&1

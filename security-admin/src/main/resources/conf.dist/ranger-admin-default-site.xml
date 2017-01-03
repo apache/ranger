@@ -487,4 +487,16 @@
 		<name>ranger.krb.browser-useragents-regex</name>
 		<value>^Mozilla.*,^Opera.*,^Chrome.*</value>
 	</property>
+	<property>
+		<name>ranger.db.ssl.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.db.ssl.required</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.db.ssl.verifyServerCertificate</name>
+		<value>false</value>
+	</property>
 </configuration>

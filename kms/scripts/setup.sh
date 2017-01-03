@@ -63,6 +63,9 @@ db_host=$(get_prop 'db_host' $PROPFILE)
 db_name=$(get_prop 'db_name' $PROPFILE)
 db_user=$(get_prop 'db_user' $PROPFILE)
 db_password=$(get_prop 'db_password' $PROPFILE)
+db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
+db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
+db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 KMS_MASTER_KEY_PASSWD=$(get_prop 'KMS_MASTER_KEY_PASSWD' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
@@ -251,6 +254,26 @@ init_variables(){
 
    #     log "Create link of conf -> /etc/ranger/kms/conf"
    #     ln -sf ${ETC_CONF_FILE} ${CONF_FILE}	
+	db_ssl_enabled=`echo $db_ssl_enabled | tr '[:upper:]' '[:lower:]'`
+	if [ "${db_ssl_enabled}" != "true" ]
+	then
+		db_ssl_enabled="false"
+		db_ssl_required="false"
+		db_ssl_verifyServerCertificate="false"
+	fi
+	if [ "${db_ssl_enabled}" == "true" ]
+	then
+		db_ssl_required=`echo $db_ssl_required | tr '[:upper:]' '[:lower:]'`
+		db_ssl_verifyServerCertificate=`echo $db_ssl_verifyServerCertificate | tr '[:upper:]' '[:lower:]'`
+		if [ "${db_ssl_required}" != "true" ]
+		then
+			db_ssl_required="false"
+		fi
+		if [ "${db_ssl_verifyServerCertificate}" != "true" ]
+		then
+			db_ssl_verifyServerCertificate="false"
+		fi
+	fi
 }
 
 
@@ -412,6 +435,21 @@ update_properties() {
 	else
 		log "[E] $to_file does not exists" ; exit 1;
     fi
+
+	if [ "${db_ssl_enabled}" != "" ]
+	then
+		propertyName=ranger.db.ssl.enabled
+		newPropertyValue="${db_ssl_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.db.ssl.required
+		newPropertyValue="${db_ssl_required}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.db.ssl.verifyServerCertificate
+		newPropertyValue="${db_ssl_verifyServerCertificate}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+	fi
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
@@ -777,6 +815,22 @@ setup_install_files(){
         echo "export KMS_USER=${unix_user}" >> ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
 
+	if [ "${db_ssl_verifyServerCertificate}" == "true" ]
+	then
+		javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
+		javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
+		javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
+		javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
+		DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
+        chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
+    else
+		if [ -f ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh ]; then
+			DB_SSL_PARAM=""
+			echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
+			chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
+		fi
+	fi
 	log "[I] Setting up installation files and directory DONE";
 
 	if [ ! -f ${INSTALL_DIR}/rpm ]; then

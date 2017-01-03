@@ -138,19 +138,32 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
+		self.db_ssl_enabled=db_ssl_enabled.lower()
+		self.db_ssl_required=db_ssl_required.lower()
+		self.db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.lower()
+		self.javax_net_ssl_keyStore=javax_net_ssl_keyStore
+		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
+		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
+		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
 		path = RANGER_ADMIN_HOME
+		db_ssl_param=''
+		db_ssl_cert_param=''
+		if self.db_ssl_enabled == 'true':
+			db_ssl_param="?useSSL=%s&requireSSL=%s&verifyServerCertificate=%s" %(self.db_ssl_enabled,self.db_ssl_required,self.db_ssl_verifyServerCertificate)
+			if self.db_ssl_verifyServerCertificate == 'true':
+				db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 		if os_name == "LINUX":
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,self.SQL_CONNECTOR_JAR,path,self.host,db_name,user,password)
+			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
 			self.JAVA_BIN = self.JAVA_BIN.strip("'")
-			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
+			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param,user, password)
 		return jisql_cmd
 
 	def verify_user(self, root_user, db_root_password, host, db_user, get_cmd,dryMode):
@@ -1637,9 +1650,45 @@ def main(argv):
 	xa_access_audit = 'xa_access_audit'
 	x_user = 'x_portal_user'
 
+	db_ssl_enabled='false'
+	db_ssl_required='false'
+	db_ssl_verifyServerCertificate='false'
+	javax_net_ssl_keyStore=''
+	javax_net_ssl_keyStorePassword=''
+	javax_net_ssl_trustStore=''
+	javax_net_ssl_trustStorePassword=''
 	if XA_DB_FLAVOR == "MYSQL":
+		if 'db_ssl_enabled' in globalDict:
+			db_ssl_enabled=globalDict['db_ssl_enabled'].lower()
+			if db_ssl_enabled == 'true':
+				if 'db_ssl_required' in globalDict:
+					db_ssl_required=globalDict['db_ssl_required'].lower()
+				if 'db_ssl_verifyServerCertificate' in globalDict:
+					db_ssl_verifyServerCertificate=globalDict['db_ssl_verifyServerCertificate'].lower()
+				if db_ssl_verifyServerCertificate == 'true':
+					if 'javax_net_ssl_keyStore' in globalDict:
+						javax_net_ssl_keyStore=globalDict['javax_net_ssl_keyStore']
+					if 'javax_net_ssl_keyStorePassword' in globalDict:
+						javax_net_ssl_keyStorePassword=globalDict['javax_net_ssl_keyStorePassword']
+					if 'javax_net_ssl_trustStore' in globalDict:
+						javax_net_ssl_trustStore=globalDict['javax_net_ssl_trustStore']
+					if 'javax_net_ssl_trustStorePassword' in globalDict:
+						javax_net_ssl_trustStorePassword=globalDict['javax_net_ssl_trustStorePassword']
+					if not os.path.exists(javax_net_ssl_keyStore):
+						log("[E] Invalid file Name! Unable to find keystore file:"+javax_net_ssl_keyStore,"error")
+						sys.exit(1)
+					if not os.path.exists(javax_net_ssl_trustStore):
+						log("[E] Invalid file Name! Unable to find truststore file:"+javax_net_ssl_trustStore,"error")
+						sys.exit(1)
+					if javax_net_ssl_keyStorePassword is None or javax_net_ssl_keyStorePassword =="":
+						log("[E] Invalid ssl keystore password!","error")
+						sys.exit(1)
+					if javax_net_ssl_trustStorePassword is None or javax_net_ssl_trustStorePassword =="":
+						log("[E] Invalid ssl truststore password!","error")
+						sys.exit(1)
+
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
-		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,mysql_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,mysql_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,mysql_patches)
@@ -1686,7 +1735,7 @@ def main(argv):
 
 	if AUDIT_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
-		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN)
+		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,mysql_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "ORACLE":

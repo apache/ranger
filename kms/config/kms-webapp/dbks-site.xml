@@ -155,4 +155,16 @@
   	<description></description>
   </property>  
   
+  <property>
+	<name>ranger.ks.db.ssl.enabled</name>
+	<value>false</value>
+  </property>
+    <property>
+	<name>ranger.ks.db.ssl.required</name>
+	<value>false</value>
+  </property>
+    <property>
+	<name>ranger.ks.db.ssl.verifyServerCertificate</name>
+	<value>false</value>
+  </property>
 </configuration>

@@ -22,6 +22,9 @@
  */
 package org.apache.ranger.common;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -73,6 +76,25 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 		System.setProperty("javax.net.ssl.trustStore", propertiesMap.get("ranger.truststore.file"));
 		System.setProperty("javax.net.ssl.trustStorePassword", propertiesMap.get("ranger.truststore.password"));
 		System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
+		if(!StringUtils.isEmpty(propertiesMap.get("ranger.truststore.file"))){
+			Path path = Paths.get(propertiesMap.get("ranger.truststore.file"));
+			if (!Files.exists(path) || !Files.isReadable(path)) {
+				logger.debug("Could not find or read truststore file '"+propertiesMap.get("ranger.truststore.file")+"'");
+			}
+		}
+	}
+
+	// update system key store path with custom key store.
+	if (propertiesMap!=null && propertiesMap.containsKey("ranger.keystore.file")) {
+		System.setProperty("javax.net.ssl.keyStore", propertiesMap.get("ranger.keystore.file"));
+		System.setProperty("javax.net.ssl.keyStorePassword", propertiesMap.get("ranger.keystore.password"));
+		System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
+		if(!StringUtils.isEmpty(propertiesMap.get("ranger.keystore.file"))){
+			Path path = Paths.get(propertiesMap.get("ranger.keystore.file"));
+			if (!Files.exists(path) || !Files.isReadable(path)) {
+				logger.debug("Could not find or read keystore file '"+propertiesMap.get("ranger.keystore.file")+"'");
+			}
+		}
 	}
 
 	//update credential from keystore
@@ -171,6 +193,41 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 		}
 		propertiesMap.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
 		props.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
+	}
+	if(RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL){
+		if(propertiesMap!=null && propertiesMap.containsKey("ranger.db.ssl.enabled")){
+			String db_ssl_enabled=propertiesMap.get("ranger.db.ssl.enabled");
+			if(StringUtils.isEmpty(db_ssl_enabled)|| !"true".equalsIgnoreCase(db_ssl_enabled)){
+				db_ssl_enabled="false";
+			}
+			db_ssl_enabled=db_ssl_enabled.toLowerCase();
+			if("true".equalsIgnoreCase(db_ssl_enabled)){
+				String db_ssl_required=propertiesMap.get("ranger.db.ssl.required");
+				if(StringUtils.isEmpty(db_ssl_required)|| !"true".equalsIgnoreCase(db_ssl_required)){
+					db_ssl_required="false";
+				}
+				db_ssl_required=db_ssl_required.toLowerCase();
+				String db_ssl_verifyServerCertificate=propertiesMap.get("ranger.db.ssl.verifyServerCertificate");
+				if(StringUtils.isEmpty(db_ssl_verifyServerCertificate)|| !"true".equalsIgnoreCase(db_ssl_verifyServerCertificate)){
+					db_ssl_verifyServerCertificate="false";
+				}
+				db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.toLowerCase();
+				propertiesMap.put("ranger.db.ssl.enabled", db_ssl_enabled);
+				props.put("ranger.db.ssl.enabled", db_ssl_enabled);
+				propertiesMap.put("ranger.db.ssl.required", db_ssl_required);
+				props.put("ranger.db.ssl.required", db_ssl_required);
+				propertiesMap.put("ranger.db.ssl.verifyServerCertificate", db_ssl_verifyServerCertificate);
+				props.put("ranger.db.ssl.verifyServerCertificate", db_ssl_verifyServerCertificate);
+				String ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
+				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
+					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
+					ranger_jpa_jdbc_url_ssl.append("?useSSL="+db_ssl_enabled+"&requireSSL="+db_ssl_required+"&verifyServerCertificate="+db_ssl_verifyServerCertificate);
+					propertiesMap.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url_ssl.toString());
+					props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url_ssl.toString());
+					logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url_ssl.toString());
+				}
+			}
+		}
 	}
 	super.processProperties(beanFactory, props);
     }
