@@ -29,10 +29,11 @@ globalDict = {}
 
 os_name = platform.system()
 os_name = os_name.upper()
+is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
 jisql_debug=True
 masked_pwd_string='********'
-if os_name == "LINUX":
+if is_unix:
 	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 	if RANGER_KMS_HOME is None:
 		RANGER_KMS_HOME = os.getcwd()
@@ -40,7 +41,7 @@ elif os_name == "WINDOWS":
 	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 
 def check_output(query):
-	if os_name == "LINUX":
+	if is_unix:
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
@@ -61,7 +62,7 @@ def log(msg,type):
 
 def populate_global_dict():
 	global globalDict
-	if os_name == "LINUX":
+	if is_unix:
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
@@ -153,7 +154,7 @@ class MysqlConf(BaseDB):
 			db_ssl_param="?useSSL=%s&requireSSL=%s&verifyServerCertificate=%s" %(self.db_ssl_enabled,self.db_ssl_required,self.db_ssl_verifyServerCertificate)
 			if self.db_ssl_verifyServerCertificate == 'true':
 				db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
 			self.JAVA_BIN = self.JAVA_BIN.strip("'")
@@ -163,7 +164,7 @@ class MysqlConf(BaseDB):
 	def verify_user(self, root_user, db_root_password, host, db_user, get_cmd,dryMode):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user+ " for Host "+ host, "info")
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"select user from mysql.user where user='%s' and host='%s';\"" %(db_user,host)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select user from mysql.user where user='%s' and host='%s';\" -c ;" %(db_user,host)
@@ -177,7 +178,7 @@ class MysqlConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		#log("[I] Checking connection..", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT version();\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT version();\" -c ;"
@@ -203,7 +204,7 @@ class MysqlConf(BaseDB):
 					if db_password == "":
 						if dryMode == False:
 							log("[I] MySQL user " + db_user + " does not exists for host " + host, "info")
-							if os_name == "LINUX":
+							if is_unix:
 								query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
 								jisql_log(query, db_root_password)
 								ret = subprocess.call(shlex.split(query))
@@ -222,7 +223,7 @@ class MysqlConf(BaseDB):
 					else:
 						if dryMode == False:
 							log("[I] MySQL user " + db_user + " does not exists for host " + host, "info")
-							if os_name == "LINUX":
+							if is_unix:
 								query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
 								query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host,masked_pwd_string )
 								jisql_log(query_with_masked_pwd, db_root_password)
@@ -249,7 +250,7 @@ class MysqlConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying database " + db_name , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"show databases like '%s';\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"show databases like '%s';\" -c ;" %(db_name)
@@ -266,14 +267,14 @@ class MysqlConf(BaseDB):
 				log("[I] Database "+db_name + " already exists.","info")
 		else:
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -query \"create database %s;\"" %(db_name)
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"create database %s;\" -c ;" %(db_name)
 			if dryMode == False:
 				log("[I] Database does not exist, Creating database " + db_name,"info")
 				jisql_log(query, db_root_password)
-				if os_name == "LINUX":
+				if is_unix:
 					ret = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
 					ret = subprocess.call(query)
@@ -297,7 +298,7 @@ class MysqlConf(BaseDB):
 			if dryMode == False:
 				log("[I] ---------- Granting privileges TO user '"+db_user+"'@'"+host+"' on db '"+db_name+"'----------" , "info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -307,7 +308,7 @@ class MysqlConf(BaseDB):
 					ret = subprocess.call(query)
 				if ret == 0:
 					log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
 						jisql_log(query, db_root_password)
 						ret = subprocess.call(shlex.split(query))
@@ -359,7 +360,7 @@ class OracleConf(BaseDB):
 			#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
 			cstring="jdbc:oracle:thin:@//%s" %(self.host)
 
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, cstring, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
@@ -368,7 +369,7 @@ class OracleConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select * from v$version;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select * from v$version;\" -c ;"
@@ -385,7 +386,7 @@ class OracleConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user ,"info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password)		
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select username from all_users where upper(username)=upper('%s');\"" %(db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select username from all_users where upper(username)=upper('%s');\" -c ;" %(db_user)
@@ -405,7 +406,7 @@ class OracleConf(BaseDB):
 				if dryMode == False:
 					log("[I] User does not exists, Creating user : " + db_user, "info")
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password)
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
@@ -419,7 +420,7 @@ class OracleConf(BaseDB):
 						if self.verify_user(root_user, db_user, db_root_password,dryMode):
 							log("[I] User " + db_user + " created", "info")
 							log("[I] Granting permission to " + db_user, "info")
-							if os_name == "LINUX":
+							if is_unix:
 								query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 								jisql_log(query, db_root_password)
 								ret = subprocess.call(shlex.split(query))
@@ -445,7 +446,7 @@ class OracleConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying tablespace " + db_name, "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password)		
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT DISTINCT UPPER(TABLESPACE_NAME) FROM USER_TablespaceS where UPPER(Tablespace_Name)=UPPER(\'%s\');\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT DISTINCT UPPER(TABLESPACE_NAME) FROM USER_TablespaceS where UPPER(Tablespace_Name)=UPPER(\'%s\');\" -c ;" %(db_name)
@@ -462,7 +463,7 @@ class OracleConf(BaseDB):
 				log("[I] Tablespace " + db_name + " already exists.","info")
 				if self.verify_user(root_user, db_user, db_root_password,dryMode):
 					get_cmd = self.get_jisql_cmd(db_user ,db_password)
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query 'select default_tablespace from user_users;'"
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"select default_tablespace from user_users;\" -c ;"
@@ -480,7 +481,7 @@ class OracleConf(BaseDB):
 			if dryMode == False:
 				log("[I] Tablespace does not exist. Creating tablespace: " + db_name,"info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password)
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\"" %(db_name, db_name)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -508,7 +509,7 @@ class OracleConf(BaseDB):
 			log("[I] Assign default tablespace " +db_name + " to " + db_user, "info")
 			# Assign default tablespace db_name
 			get_cmd = self.get_jisql_cmd(root_user , db_root_password)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(db_user, db_name)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
@@ -518,7 +519,7 @@ class OracleConf(BaseDB):
 				ret = subprocess.call(query)
 			if ret == 0:
 				log("[I] Granting permission to " + db_user, "info")
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -543,7 +544,7 @@ class OracleConf(BaseDB):
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, invoke,dryMode):
 		if dryMode == False:
 			get_cmd = self.get_jisql_cmd(root_user ,db_root_password)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
@@ -579,7 +580,7 @@ class PostgresConf(BaseDB):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
@@ -589,7 +590,7 @@ class PostgresConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT rolname FROM pg_roles WHERE rolname='%s';\"" %(db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT rolname FROM pg_roles WHERE rolname='%s';\" -c ;" %(db_user)
@@ -603,7 +604,7 @@ class PostgresConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		#log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -625,7 +626,7 @@ class PostgresConf(BaseDB):
 				if dryMode == False:
 					log("[I] User does not exists, Creating user : " + db_user, "info")
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
@@ -651,7 +652,7 @@ class PostgresConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying database " + db_name , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT datname FROM pg_database where datname='%s';\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT datname FROM pg_database where datname='%s';\" -c ;" %(db_name)
@@ -671,7 +672,7 @@ class PostgresConf(BaseDB):
 			if dryMode == False:
 				log("[I] Database does not exist, Creating database : " + db_name,"info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -query \"create database %s with OWNER %s;\"" %(db_name, db_user)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -696,7 +697,7 @@ class PostgresConf(BaseDB):
 		if dryMode == False:
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"'" , "info")
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\"" %(db_name, db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
@@ -708,7 +709,7 @@ class PostgresConf(BaseDB):
 				log("[E] Granting all privileges on database "+db_name+" to user "+db_user+" failed..", "error")
 				sys.exit(1)
 
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\"" %(db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
@@ -720,7 +721,7 @@ class PostgresConf(BaseDB):
 				log("[E] Granting all privileges on schema public to user "+db_user+" failed..", "error")
 				sys.exit(1)
 
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\""
 				jisql_log(query, db_root_password)
 				output = check_output(query)
@@ -733,7 +734,7 @@ class PostgresConf(BaseDB):
 				if re.search(' |', each_line):
 					tablename , value = each_line.strip().split(" |",1)
 					tablename = tablename.strip()
-					if os_name == "LINUX":
+					if is_unix:
 						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\"" %(tablename,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(shlex.split(query1))
@@ -749,7 +750,7 @@ class PostgresConf(BaseDB):
 							sys.exit(1)
 
 
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\""
 				jisql_log(query, db_root_password)
 				output = check_output(query)
@@ -762,7 +763,7 @@ class PostgresConf(BaseDB):
 				if re.search(' |', each_line):
 					sequence_name , value = each_line.strip().split(" |",1)
 					sequence_name = sequence_name.strip()
-					if os_name == "LINUX":
+					if is_unix:
 						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\"" %(sequence_name,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(shlex.split(query1))
@@ -803,7 +804,7 @@ class SqlServerConf(BaseDB):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
@@ -813,7 +814,7 @@ class SqlServerConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select name from sys.sql_logins where name = '%s';\"" %(db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select name from sys.sql_logins where name = '%s';\" -c ;" %(db_user)
@@ -827,7 +828,7 @@ class SqlServerConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -849,7 +850,7 @@ class SqlServerConf(BaseDB):
 				if dryMode == False:
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
 					log("[I] User does not exists, Creating Login user " + db_user, "info")
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
@@ -875,7 +876,7 @@ class SqlServerConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying database " + db_name, "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT name from sys.databases where name='%s';\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT name from sys.databases where name='%s';\" -c ;" %(db_name)
@@ -894,7 +895,7 @@ class SqlServerConf(BaseDB):
 			if dryMode == False:
 				log("[I] Database does not exist. Creating database : " + db_name,"info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'master')
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query \"create database %s;\"" %(db_name)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -918,7 +919,7 @@ class SqlServerConf(BaseDB):
 
 	def create_user(self, root_user, db_name ,db_user, db_password, db_root_password,dryMode):
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"USE %s SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_name, db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"USE %s SELECT name FROM sys.database_principals WHERE name = N'%s';\" -c ;" %(db_name, db_user)
@@ -929,7 +930,7 @@ class SqlServerConf(BaseDB):
 				log("[I] User "+db_user+" exist ","info")
 		else:
 			if dryMode == False:
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query \"USE %s CREATE USER %s for LOGIN %s;\"" %(db_name ,db_user, db_user)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
@@ -938,7 +939,7 @@ class SqlServerConf(BaseDB):
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(query)
 				if ret == 0:
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query \"USE %s SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_name ,db_user)
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"USE %s SELECT name FROM sys.database_principals WHERE name = N'%s';\" -c ;" %(db_name ,db_user)
@@ -959,7 +960,7 @@ class SqlServerConf(BaseDB):
 		if dryMode == False:
 			log("[I] Granting permission to admin user '" + db_user + "' on db '" + db_name + "'" , "info")
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -c \; -query \" EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
@@ -991,7 +992,7 @@ class SqlAnywhereConf(BaseDB):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
@@ -1001,7 +1002,7 @@ class SqlAnywhereConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying user " + db_user , "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select name from syslogins where name = '%s';\"" %(db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select name from syslogins where name = '%s';\" -c ;" %(db_user)
@@ -1015,7 +1016,7 @@ class SqlAnywhereConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -1036,7 +1037,7 @@ class SqlAnywhereConf(BaseDB):
 				if dryMode == False:
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
 					log("[I] User does not exists, Creating Login user " + db_user, "info")
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
@@ -1062,7 +1063,7 @@ class SqlAnywhereConf(BaseDB):
 		if dryMode == False:
 			log("[I] Verifying database " + db_name, "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select alias from sa_db_info() where alias='%s';\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select alias from sa_db_info() where alias='%s';\" -c ;" %(db_name)
@@ -1080,7 +1081,7 @@ class SqlAnywhereConf(BaseDB):
 			if dryMode == False:
 				log("[I] Database does not exist. Creating database : " + db_name,"info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
@@ -1107,7 +1108,7 @@ class SqlAnywhereConf(BaseDB):
 
 	def create_user(self, root_user, db_name ,db_user, db_password, db_root_password,dryMode):
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
@@ -1118,7 +1119,7 @@ class SqlAnywhereConf(BaseDB):
 				log("[I] User "+db_user+" exist ","info")
 		else:
 			if dryMode == False:
-				if os_name == "LINUX":
+				if is_unix:
 					query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
@@ -1129,7 +1130,7 @@ class SqlAnywhereConf(BaseDB):
 					jisql_log(query_with_masked_pwd, db_root_password)
 					ret = subprocess.call(query)
 				if ret == 0:
-					if os_name == "LINUX":
+					if is_unix:
 						query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
@@ -1150,7 +1151,7 @@ class SqlAnywhereConf(BaseDB):
 		if dryMode == False:
 			log("[I] Granting permission to user '" + db_user + "' on db '" + db_name + "'" , "info")
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -c \; -query \"GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
 				query_with_masked_pwd = get_cmd + " -c \; -query \"GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user, masked_pwd_string)
 				jisql_log(query_with_masked_pwd, db_root_password)
@@ -1169,7 +1170,7 @@ class SqlAnywhereConf(BaseDB):
 		if dryMode == False:
 			log("[I] Starting database " + db_name, "info")
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, '')
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"start database '%s' autostop off;\"" %(db_name)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"start database '%s' autostop off;\" -c ;" %(db_name)

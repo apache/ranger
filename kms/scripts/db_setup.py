@@ -30,10 +30,11 @@ globalDict = {}
 
 os_name = platform.system()
 os_name = os_name.upper()
+is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
 jisql_debug=True
 
-if os_name == "LINUX":
+if is_unix:
 	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 	if RANGER_KMS_HOME is None:
 		RANGER_KMS_HOME = os.getcwd()
@@ -41,7 +42,7 @@ elif os_name == "WINDOWS":
 	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
 
 def check_output(query):
-	if os_name == "LINUX":
+	if is_unix:
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
@@ -62,7 +63,7 @@ def log(msg,type):
 
 def populate_global_dict():
 	global globalDict
-	if os_name == "LINUX":
+	if is_unix:
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'install.properties'))
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_KMS_HOME,'bin','install_config.properties'))
@@ -122,7 +123,7 @@ class MysqlConf(BaseDB):
 			if self.db_ssl_verifyServerCertificate == 'true':
 				db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param, user, password)
@@ -131,7 +132,7 @@ class MysqlConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection..", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT version();\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT version();\" -c ;"
@@ -151,7 +152,7 @@ class MysqlConf(BaseDB):
 		if os.path.isfile(file_name):
 			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -input %s" %file_name
 				jisql_log(query, db_password)
 				ret = subprocess.call(shlex.split(query))
@@ -171,7 +172,7 @@ class MysqlConf(BaseDB):
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"show tables like '%s';\"" %(TABLE_NAME)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"show tables like '%s';\" -c ;" %(TABLE_NAME)
@@ -206,7 +207,7 @@ class OracleConf(BaseDB):
 			#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
 			cstring="jdbc:oracle:thin:@//%s" %(self.host)
 
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, cstring, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
@@ -215,7 +216,7 @@ class OracleConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"select * from v$version;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select * from v$version;\" -c ;"
@@ -234,7 +235,7 @@ class OracleConf(BaseDB):
 		if os.path.isfile(file_name):
 			log("[I] Importing script " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -input %s -c \;" %file_name
 				jisql_log(query, db_password)
 				ret = subprocess.call(shlex.split(query))
@@ -254,7 +255,7 @@ class OracleConf(BaseDB):
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user ,db_password)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query 'select default_tablespace from user_users;'"
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select default_tablespace from user_users;\" -c ;"
@@ -266,7 +267,7 @@ class OracleConf(BaseDB):
 			log("[I] User name " + db_user + " and tablespace " + db_name + " already exists.","info")
 			log("[I] Verifying table " + TABLE_NAME +" in tablespace " + db_name, "info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -c \; -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\"" %(db_name ,TABLE_NAME)
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\" -c ;" %(db_name ,TABLE_NAME)
@@ -295,7 +296,7 @@ class PostgresConf(BaseDB):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,self.host, db_name, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
@@ -304,7 +305,7 @@ class PostgresConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -322,7 +323,7 @@ class PostgresConf(BaseDB):
 		if os.path.isfile(file_name):
 			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -input %s" %file_name
 				jisql_log(query, db_password)
 				ret = subprocess.call(shlex.split(query))
@@ -343,7 +344,7 @@ class PostgresConf(BaseDB):
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		log("[I] Verifying table " + TABLE_NAME +" in database " + db_name, "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\"" %(db_name , TABLE_NAME)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;\" -c ;" %(db_name , TABLE_NAME)
@@ -368,7 +369,7 @@ class SqlServerConf(BaseDB):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
@@ -377,7 +378,7 @@ class SqlServerConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -395,7 +396,7 @@ class SqlServerConf(BaseDB):
 		if os.path.isfile(file_name):
 			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -input %s" %file_name
 				jisql_log(query, db_password)
 				ret = subprocess.call(shlex.split(query))
@@ -414,7 +415,7 @@ class SqlServerConf(BaseDB):
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\"" %(TABLE_NAME)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT TABLE_NAME FROM information_schema.tables where table_name = '%s';\" -c ;" %(TABLE_NAME)
@@ -437,7 +438,7 @@ class SqlAnywhereConf(BaseDB):
 	def get_jisql_cmd(self, user, password, db_name):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
-		if os_name == "LINUX":
+		if is_unix:
 			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
@@ -446,7 +447,7 @@ class SqlAnywhereConf(BaseDB):
 	def check_connection(self, db_name, db_user, db_password):
 		log("[I] Checking connection", "info")
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT 1;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT 1;\" -c ;"
@@ -464,7 +465,7 @@ class SqlAnywhereConf(BaseDB):
 		if os.path.isfile(file_name):
 			log("[I] Importing db schema to database " + db_name + " from file: " + name,"info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-			if os_name == "LINUX":
+			if is_unix:
 				query = get_cmd + " -input %s" %file_name
 				jisql_log(query, db_password)
 				ret = subprocess.call(shlex.split(query))
@@ -484,7 +485,7 @@ class SqlAnywhereConf(BaseDB):
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
 		self.set_options(db_name, db_user, db_password, TABLE_NAME)
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"SELECT name FROM sysobjects where name = '%s' and type='U';\"" %(TABLE_NAME)
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"SELECT name FROM sysobjects where name = '%s' and type='U';\" -c ;" %(TABLE_NAME)
@@ -499,19 +500,19 @@ class SqlAnywhereConf(BaseDB):
 
 	def set_options(self, db_name, db_user, db_password, TABLE_NAME):
 		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"set option public.reserved_keywords='LIMIT';\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.reserved_keywords='LIMIT';\" -c ;"
 		jisql_log(query, db_password)
 		ret = subprocess.call(shlex.split(query))
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"set option public.max_statement_count=0;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.max_statement_count=0;\" -c;"
 		jisql_log(query, db_password)
 		ret = subprocess.call(shlex.split(query))
-		if os_name == "LINUX":
+		if is_unix:
 			query = get_cmd + " -c \; -query \"set option public.max_cursor_count=0;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.max_cursor_count=0;\" -c;"
