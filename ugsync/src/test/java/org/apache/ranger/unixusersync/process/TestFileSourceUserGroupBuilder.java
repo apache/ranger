@@ -24,7 +24,7 @@ import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
 import org.junit.Test;
 
-public class FileSourceUserGroupBuilderTest {
+public class TestFileSourceUserGroupBuilder {
 
     private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 

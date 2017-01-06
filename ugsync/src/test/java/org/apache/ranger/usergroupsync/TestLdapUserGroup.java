@@ -71,7 +71,7 @@ partitions =
 	"ADSchema.ldif"
 }
 		)
-public class LdapUserGroupTest extends AbstractLdapTestUnit{
+public class TestLdapUserGroup extends AbstractLdapTestUnit{
 	private UserGroupSyncConfig config;
 	private LdapUserGroupBuilder ldapBuilder;
 

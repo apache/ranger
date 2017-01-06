@@ -29,7 +29,7 @@ import java.util.Map;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 
-public class UnixUserGroupBuilderTest {
+public class TestUnixUserGroupBuilder {
     private UserGroupSyncConfig config;
 
     @Before

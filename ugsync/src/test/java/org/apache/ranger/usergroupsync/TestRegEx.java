@@ -27,7 +27,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RegExTest {
+public class TestRegEx {
 	protected String userNameBaseProperty = "ranger.usersync.mapping.username.regex";
     protected String groupNameBaseProperty = "ranger.usersync.mapping.groupname.regex";
     protected RegEx userNameRegEx = null;
