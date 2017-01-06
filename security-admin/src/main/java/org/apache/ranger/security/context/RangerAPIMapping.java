@@ -91,7 +91,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_FOR_VERSION_NO);
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_FROM_EVENT_TIME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_POLICY_VERSION_LIST);
-		apiAssociatedWithReports.add(RangerAPIList.GET_PLUGINS_INFO);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_BY_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEF);
