@@ -406,7 +406,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				if(result != null && !result.getIsAllowed()) {
 					String path = resource.getAsString();
-
+					if (hiveOpType == HiveOperationType.DESCTABLE) {
+						path = path + "/*";
+					}
 					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
 														 user, request.getHiveAccessType().name(), path));
 				}
