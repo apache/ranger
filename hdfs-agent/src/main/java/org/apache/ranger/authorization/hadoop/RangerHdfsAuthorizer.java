@@ -57,8 +57,15 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerHdfsAuthorizer extends INodeAttributeProvider {
+	public static final String KEY_FILENAME = "FILENAME";
+	public static final String KEY_BASE_FILENAME = "BASE_FILENAME";
+	public static final String DEFAULT_FILENAME_EXTENSION_SEPARATOR = ".";
+
+	public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
+
 	private static final Log LOG = LogFactory.getLog(RangerHdfsAuthorizer.class);
 
 	private RangerHdfsPlugin           rangerPlugin            = null;
@@ -438,7 +445,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			for(String accessType : accessTypes) {
-				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(path, pathOwner, access, accessType, user, groups);
+				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessType, user, groups);
 
 				RangerAccessResult result = plugin.isAccessAllowed(request, auditHandler);
 
@@ -471,6 +478,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 class RangerHdfsPlugin extends RangerBasePlugin {
 	private static boolean hadoopAuthEnabled = RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT;
+	private static String fileNameExtensionSeparator;
+
 
 	public RangerHdfsPlugin() {
 		super("hdfs", "hdfs");
@@ -480,10 +489,14 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 		super.init();
 		
 		RangerHdfsPlugin.hadoopAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
+		RangerHdfsPlugin.fileNameExtensionSeparator = RangerConfiguration.getInstance().get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
 	}
 
 	public static boolean isHadoopAuthEnabled() {
 		return RangerHdfsPlugin.hadoopAuthEnabled;
+	}
+	public static String getFileNameExtensionSeparator() {
+		return RangerHdfsPlugin.fileNameExtensionSeparator;
 	}
 }
 
@@ -498,7 +511,8 @@ class RangerHdfsResource extends RangerAccessResourceImpl {
 }
 
 class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
-	public RangerHdfsAccessRequest(String path, String pathOwner, FsAction access, String accessType, String user, Set<String> groups) {
+
+	public RangerHdfsAccessRequest(INode inode, String path, String pathOwner, FsAction access, String accessType, String user, Set<String> groups) {
 		super.setResource(new RangerHdfsResource(path, pathOwner));
 		super.setAccessType(accessType);
 		super.setUser(user);
@@ -506,6 +520,10 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
+
+		if (inode != null) {
+			buildRequestContext(inode);
+		}
 	}
 	
 	private static String getRemoteIp() {
@@ -515,6 +533,17 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 			ret = ip.getHostAddress();
 		}
 		return ret;
+	}
+	private void buildRequestContext(final INode inode) {
+		if (inode.isFile()) {
+			String fileName = inode.getLocalName();
+			RangerAccessRequestUtil.setTokenInContext(getContext(), RangerHdfsAuthorizer.KEY_FILENAME, fileName);
+			int lastExtensionSeparatorIndex = fileName.lastIndexOf(RangerHdfsPlugin.getFileNameExtensionSeparator());
+			if (lastExtensionSeparatorIndex != -1) {
+				String baseFileName = fileName.substring(0, lastExtensionSeparatorIndex);
+				RangerAccessRequestUtil.setTokenInContext(getContext(), RangerHdfsAuthorizer.KEY_BASE_FILENAME, baseFileName);
+			}
+		}
 	}
 }
 

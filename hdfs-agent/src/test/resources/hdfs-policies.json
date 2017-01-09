@@ -191,6 +191,49 @@
       "updateTime": "20160530-12:34:17.000-+0100",
       "version": 3
     }
+    ,
+    {
+      "service": "HDFSTest",
+      "name": "HDFSFileNameTokensReadTest",
+      "isAuditEnabled": true,
+      "resources": {
+        "path": {
+          "values": [
+            "/tmp/tmpdir4/{FILENAME}", "/tmp/tmpdir5/{BASE_FILENAME}.txt"
+          ],
+          "isExcludes": false,
+          "isRecursive": true
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [
+            "IT"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 30,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "version": 1
+    }
   ],
   "serviceDef": {
     "name": "hdfs",
