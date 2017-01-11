@@ -26,11 +26,13 @@ define(function(require){
 	var XAEnums 			= require('utils/XAEnums');
 	var XAUtil				= require('utils/XAUtils');
 	var SessionMgr 			= require('mgrs/SessionMgr');
-	
+	var localization	= require('utils/XALangSupport');
 	var RangerServiceList 	= require('collections/RangerServiceList');
 	var RangerService 		= require('models/RangerService');
-	
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
+	var vUploadServicePolicy		= require('views/UploadServicePolicy');
+	var vDownloadServicePolicy		= require('views/DownloadServicePolicy');
+	require('Backbone.BootstrapModal');
 	return Backbone.Marionette.Layout.extend(
 	/** @lends Servicemanagerlayout */
 	{
@@ -42,8 +44,10 @@ define(function(require){
 			return {
 				operation 	: SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,
-				services 	: this.services.groupBy("type")
+				services 	: this.services.groupBy("type"),
+				showImportExportBtn : SessionMgr.isUser() ? false : true
 			};
+			
 		},
     	breadCrumbs :function(){
     		if(this.type == "tag"){
@@ -58,12 +62,20 @@ define(function(require){
     	/** ui selector cache */
     	ui: {
     		'btnDelete' : '.deleteRepo',
+    		'downloadReport'      : '[data-id="downloadBtnOnService"]',
+    		'uploadServiceReport' :'[data-id="uploadBtnOnServices"]',
+    		'exportReport'      : '[data-id="exportBtn"]',
+        	'importServiceReport' :'[data-id="importBtn"]'
     	},
 
 		/** ui events hash */
 		events : function(){
 			var events = {};
 			events['click ' + this.ui.btnDelete]	= 'onDelete';
+			events['click ' + this.ui.downloadReport]	= 'downloadReport';
+			events['click ' + this.ui.uploadServiceReport]	= 'uploadServiceReport';
+			events['click ' + this.ui.exportReport]	= 'downloadReport';
+			events['click ' + this.ui.importServiceReport]	= 'uploadServiceReport';
 			return events;
 		},
     	/**
@@ -103,6 +115,52 @@ define(function(require){
 			   cache : false,
 			   async : false
 			});
+
+		},
+		downloadReport : function(e){
+			var that = this;
+			var el = $(e.currentTarget);
+			var serviceType = el.attr('data-servicetype');
+			var componentServices = this.services.where({'type' : serviceType });
+            if(serviceType !== undefined && componentServices.length == 0 ){
+            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
+            	return
+            }
+			 var view = new vDownloadServicePolicy({
+              	serviceType		:serviceType,
+				collection 		: new Backbone.Collection([""]),
+				serviceDefList	: this.collection,
+				services		: this.services
+			});
+            var modal = new Backbone.BootstrapModal({
+				content	: view,
+				title	: 'Export Policy',
+				okText  :"Export",
+				animate : true
+			}).open();
+			
+		},
+		uploadServiceReport :function(e){
+		    var that = this;
+			var el = $(e.currentTarget);
+			var serviceType = el.attr('data-servicetype');
+			var componentServices = this.services.where({'type' : serviceType });
+            if(serviceType !== undefined && componentServices.length == 0 ){
+            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
+            	return
+            }
+			var view = new vUploadServicePolicy({
+                serviceType		: serviceType,
+				collection 		: new Backbone.Collection([""]),
+				serviceDefList	: this.collection,
+				services		: this.services
+			});	
+			var modal = new Backbone.BootstrapModal({
+				content	: view,	
+				okText 	:"Import",
+				title	: 'Import Policy',
+				animate : true
+			}).open();
 
 		},
 		onDelete : function(e){

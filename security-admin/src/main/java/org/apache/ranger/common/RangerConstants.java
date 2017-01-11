@@ -148,7 +148,6 @@ public class RangerConstants extends RangerCommonEnums {
 	// public static final String EMAIL_APPROVAL_NEEDED_MSG =
 	// "New objects pending approval";
 	// public static final String EMAIL_PWD_RESET_CODE_MSG =
-	// "iSchoolCircle - Password Reset";
 
 	public final static String PWD_RESET_FAILED_MSG = "Invalid password reset request";
 

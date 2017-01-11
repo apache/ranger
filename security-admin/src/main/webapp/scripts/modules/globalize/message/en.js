@@ -384,9 +384,12 @@ define(function(require) {
                 addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.',
                 maskingPolicyInfoMsg   	: 'Please ensure that users/groups listed in this policy have access to the column via an <b>Access Policy</b>. This policy does not implicitly grant access to the column.',
                 rowFilterPolicyInfoMsg 	: 'Please ensure that users/groups listed in this policy have access to the table via an <b>Access Policy</b>. This policy does not implicitly grant access to the table.',
-                udfPolicyViolation      : '<b> Warning !!</b>  : UDF create is a privileged operation. Please make sure you grant them to only trusted users.'
-
-
+                udfPolicyViolation      : '<b> Warning !!</b>  : UDF create is a privileged operation. Please make sure you grant them to only trusted users.',
+                noServiceToExport       :'No service found to export policies.',
+                noServiceToImport       :'No service found to import policies.',
+                noPolicytoExport        :'No policies found to export!',
+                importingFiles          :'Importing policies from file is started...'
+ 
 			},
 			plcHldr : {
 				search 						:'Search',

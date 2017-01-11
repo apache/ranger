@@ -73,9 +73,4 @@ public class Testbuildks {
     assertEquals(-1, rc1);
     assertTrue(rc1==-1);
   }
-  /*public static void main(String args[]) throws Exception{
-	  Testbuildks tTestbuildks=new Testbuildks();
-	  tTestbuildks.testBuildKSsuccess();
-  }*/
-
 }

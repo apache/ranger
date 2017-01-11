@@ -276,16 +276,6 @@
             	return options.fn(this);
 			return options.inverse(this);
 	});
-	Handlebars.registerHelper('isSchoolAdmin', function(context, options) {
-            if(SessionMgr.isSchoolAdmin() || SessionMgr.isSystemAdmin())
-            	return options.fn(this);
-			return options.inverse(this);
-	});
-	Handlebars.registerHelper('isTeacher', function(context, options) {
-            if(SessionMgr.isTeacher())
-            	return options.fn(this);
-			return options.inverse(this);
-	});
 	Handlebars.registerHelper('getAvatar', function(options,size) {
 		var path;
 			if(_.has(options,'profileImageGId')){

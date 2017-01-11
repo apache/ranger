@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class StringTokenReplacer {
@@ -89,38 +88,5 @@ public class StringTokenReplacer {
         }
 
         return ret.toString();
-    }
-
-    public static void main(String[] args) {
-        char                startChar  = '%';
-        char                endChar    = '%';
-        char                escapeChar = '\\';
-        String              tokenPrefix = "ranger:";
-        Map<String, Object> tokens     = new HashMap<String, Object>();
-
-        tokens.put("USER", "testUser");
-        tokens.put("COUNTRY", "USA");
-        tokens.put("STATE", "CA");
-        tokens.put("CITY", "Santa Clara");
-
-        StringTokenReplacer tokenReplacer = new StringTokenReplacer(startChar, endChar, escapeChar, tokenPrefix);
-
-        if(args.length == 0) {
-            args = new String[] {
-                    "/home/%USER%/*",
-                    "/home/%ranger:USER%/*",
-                    "tmp_%USER%",
-                    "tmp_%ranger:USER%",
-                    "%USER%_db",
-                    "%ranger:USER%_db",
-                    "\\%USER_db",
-                    "\\%ranger:USER_db",
-                    "\\%USER%_db",
-                    "\\%ranger:USER%_db",
-            };
-        }
-
-        for(String str : args) {
-            System.out.println(str + " ==> " + tokenReplacer.replaceTokens(str, tokens));
-        }
-    }}
+    }  
+}

@@ -317,7 +317,6 @@ public class RemoteUnixLoginModule implements LoginModule {
 			
 			log("userName:" + userName);
 			log("modified UserName:" + modifiedUserName);
-			// log("password:" + new String(password));
 
 			String modifiedPassword;
 			if (password != null) {

@@ -129,32 +129,4 @@ public class PasswordUtils {
 		}
 		return ret;
 	}
-	
-	public static void main(String[] args) {		
-		String[] testPasswords = { "a", "a123", "dsfdsgdg", "*7263^5#", "", null };		
-		for(String password : testPasswords) {
-			try {
-				String ePassword = PasswordUtils.encryptPassword(password);
-				String dPassword = PasswordUtils.decryptPassword(ePassword);
-				if (password == null ) {
-					if (dPassword != null) {
-						throw new RuntimeException("The password expected [" + password + "]. Found [" + dPassword + "]");
-					}
-					else {
-						System.out.println("Password: [" + password + "] matched after decrypt. Encrypted: [" + ePassword + "]");
-					}
-				}
-				else if (! password.equals(dPassword)) {
-					throw new RuntimeException("The password expected [" + password + "]. Found [" + dPassword + "]");
-				}
-				else {
-					System.out.println("Password: [" + password + "] matched after decrypt. Encrypted: [" + ePassword + "]");
-				}
-			}
-			catch(IOException ioe) {
-				ioe.printStackTrace();
-				System.out.println("Password verification failed for password [" + password + "]:" + ioe);
-			}			
-		}		
-	}
 }

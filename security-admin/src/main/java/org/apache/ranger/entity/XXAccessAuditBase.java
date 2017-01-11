@@ -579,7 +579,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 		str += "repoName={" + repoName + "} ";
 		str += "repoType={" + repoType + "} ";
 		str += "resultReason={" + resultReason + "} ";
-		str += "sessionId={" + sessionId + "} ";
 		str += "eventTime={" + eventTime + "} ";
 		str += "requestUser={" + requestUser + "} ";
 		str += "action={" + action + "} ";

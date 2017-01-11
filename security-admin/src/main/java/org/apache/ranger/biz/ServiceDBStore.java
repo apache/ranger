@@ -20,13 +20,13 @@
 package org.apache.ranger.biz;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,30 +37,35 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MultiHashMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.RangerServicePoliciesCache;
+import org.apache.ranger.common.RangerVersionInfo;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -154,10 +159,13 @@ import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerServiceWithAssignedIdService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXTrxLog;
+import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -173,6 +181,9 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.codehaus.jettison.json.JSONException;
+
+import com.google.gson.Gson;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
@@ -186,6 +197,25 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	
 	private static final String KERBEROS_TYPE = "kerberos";
+	
+	private static final String POLICY_ALLOW_EXCLUDE = "Policy Allow:Exclude";
+	private static final String POLICY_ALLOW_INCLUDE = "Policy Allow:Include";
+	private static final String POLICY_DENY_EXCLUDE = "Policy Deny:Exclude";
+	private static final String POLICY_DENY_INCLUDE = "Policy Deny:Include";
+	
+	private static String LOCAL_HOSTNAME = "unknown";
+	private static final String HOSTNAME = "Host name";
+	private static final String USER_NAME = "Exported by";
+	private static final String RANGER_VERSION = "Ranger apache version";
+	private static final String TIMESTAMP = "Export time";
+	
+	static {
+		try {
+			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			LOCAL_HOSTNAME = "unknown";
+		}
+	}
 
 	@Autowired
 	RangerServiceDefService serviceDefService;
@@ -235,6 +265,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Autowired
     RangerFactory factory;
+    
+    @Autowired
+    JSONUtil jsonUtil;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -1931,64 +1964,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	public List<RangerPolicy> getPoliciesForReports(SearchFilter filter) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getPoliciesForReports()");
-		}
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
-		List<RangerPolicy> retTemp = new ArrayList<RangerPolicy>();
-		Map<Long, RangerPolicy> orderedPolicies = new TreeMap<Long, RangerPolicy>();
-		String serviceTypeNames = filter.getParam("serviceType");
-		if (serviceTypeNames != null) {
-			List<String> serviceTypeList = new ArrayList<String>(Arrays.asList(serviceTypeNames.split("_")));
-			if (!CollectionUtils.isEmpty(serviceTypeList)) {
-				for (String serviceType : serviceTypeList) {
-					filter.setParam("serviceType", serviceType);
-					RangerPolicyList policyList = searchRangerPolicies(filter);
-					if (policyList!=null){
-						retTemp = policyList.getPolicies();
-						if(!CollectionUtils.isEmpty(retTemp)) {
-							ret.addAll(retTemp);
-						}
-					}
-				}
-				if (!CollectionUtils.isEmpty(ret)){
-					for (RangerPolicy policy : ret) {
-						if(policy!=null){
-							orderedPolicies.put(policy.getId(), policy);
-						}
-					}
-					if (orderedPolicies.size()>0) {
-						ret.clear();
-						ret.addAll(orderedPolicies.values());
-					}
-				}
-			}
-		} else {
-			RangerPolicyList policyList = searchRangerPolicies(filter);
-			ret = policyList.getPolicies();
-			if (!CollectionUtils.isEmpty(ret)) {
-				for (RangerPolicy policy : ret) {
-					if (policy != null) {
-						orderedPolicies.put(policy.getId(), policy);
-					}
-				}
-				if (orderedPolicies.size() > 0) {
-					ret.clear();
-					ret.addAll(orderedPolicies.values());
-				}
-			}
-			if (policyList != null) {
-				ret = policyList.getPolicies();
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.getPoliciesForReports()");
-		}
-
-		return ret;
-	}
-
 	public void getPoliciesInExcel(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPoliciesInExcel()");
@@ -2038,6 +2013,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 			}
+	
+	public void getPoliciesInJson(List<RangerPolicy> policies,
+			HttpServletResponse response) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPoliciesInJson()");
+		}
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+		writeJson(policies, jsonFileName, response);
+	}
 
 	public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -3200,26 +3185,54 @@ public class ServiceDBStore extends AbstractServiceStore {
 					List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 					List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
 					List<RangerDataMaskPolicyItem> dataMaskPolicyItems = policy.getDataMaskPolicyItems();
+					List<RangerPolicyItem> allowExceptions = policy.getAllowExceptions();
+					List<RangerPolicyItem> denyExceptions = policy.getDenyExceptions();
+					List<RangerPolicyItem> denyPolicyItems = policy.getDenyPolicyItems();
 
 					if (CollectionUtils.isNotEmpty(policyItems)) {
 						for (RangerPolicyItem policyItem : policyItems) {
 							Row row = sheet.createRow(++rowCount);
-							writeBookForPolicyItems(policy, policyItem, null, null, row);
+							writeBookForPolicyItems(policy, policyItem, null, null, row, null);
 						}
 					} else if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
 						for (RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
 							Row row = sheet.createRow(++rowCount);
-							writeBookForPolicyItems(policy, null, dataMaskPolicyItem, null, row);
+							writeBookForPolicyItems(policy, null, dataMaskPolicyItem, null, row, null);
 						}
 					} else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
 						for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
 							Row row = sheet.createRow(++rowCount);
-							writeBookForPolicyItems(policy, null, null, rowFilterPolicyItem, row);
+							writeBookForPolicyItems(policy, null, null, rowFilterPolicyItem, row, null);
 						}
 					} else if (serviceType == 100) {
+						if (CollectionUtils.isEmpty(policyItems)) {
+							Row row = sheet.createRow(++rowCount);
+							RangerPolicyItem policyItem = new RangerPolicyItem();
+							writeBookForPolicyItems(policy, policyItem, null, null, row, null);
+						}
+					} else if (CollectionUtils.isEmpty(policyItems)) {
 						Row row = sheet.createRow(++rowCount);
-						writeBookForTag(policy, row);
+						RangerPolicyItem policyItem = new RangerPolicyItem();
+						writeBookForPolicyItems(policy, policyItem, null, null, row, null);
 					}
+					if (CollectionUtils.isNotEmpty(allowExceptions)) {
+						for (RangerPolicyItem policyItem : allowExceptions) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, policyItem, null, null, row, POLICY_ALLOW_EXCLUDE);
+						}
+					}
+					if (CollectionUtils.isNotEmpty(denyExceptions)) {
+						for (RangerPolicyItem policyItem : denyExceptions) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, policyItem, null, null, row, POLICY_DENY_EXCLUDE);
+						}
+					}
+					if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
+						for (RangerPolicyItem policyItem : denyPolicyItems) {
+							Row row = sheet.createRow(++rowCount);
+							writeBookForPolicyItems(policy, policyItem, null, null, row, POLICY_DENY_INCLUDE);
+						}
+					}	
 				}
 			}
 			ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
@@ -3229,6 +3242,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			response.setContentLength(outArray.length);
 			response.setHeader("Expires:", "0");
 			response.setHeader("Content-Disposition", "attachment; filename=" + excelFileName);
+			response.setStatus(HttpServletResponse.SC_OK);
 			outStream = response.getOutputStream();
 			outStream.write(outArray);
 			outStream.flush();
@@ -3295,6 +3309,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			case 0:
 				policyItems0 = policy.getPolicyItems();
 				policyItems.addAll(policyItems0);
+				if (CollectionUtils.isNotEmpty(policy.getAllowExceptions())){
+					policyItems.addAll(policy.getAllowExceptions());
+				}
+				if (CollectionUtils.isNotEmpty(policy.getDenyExceptions())){
+					policyItems.addAll(policy.getDenyExceptions());
+				}
+				if (CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())){
+					policyItems.addAll(policy.getDenyPolicyItems());
+				}
 				break;
 			case 1:
 				policyItems1 = policy.getDataMaskPolicyItems();
@@ -3461,11 +3484,89 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		response.setHeader("Content-Disposition", "attachment; filename=" + cSVFileName);
+		response.setStatus(HttpServletResponse.SC_OK);
 		return csvBuffer;
+	}
+	
+	public void putMetaDataInfo(RangerExportPolicyList rangerExportPolicyList){
+		Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+		UserSessionBase usb = ContextUtil.getCurrentUserSession();
+		String userId = usb.getLoginId();
+		
+		metaDataInfo.put(HOSTNAME, LOCAL_HOSTNAME);
+		metaDataInfo.put(USER_NAME, userId);
+		metaDataInfo.put(TIMESTAMP, MiscUtil.getUTCDateForLocalDate(new Date()));
+		metaDataInfo.put(RANGER_VERSION, RangerVersionInfo.getVersion());
+		
+		rangerExportPolicyList.setMetaDataInfo(metaDataInfo);
+	}
+	
+	private void writeJson(List<RangerPolicy> policies, String jsonFileName,
+			HttpServletResponse response) throws JSONException, IOException {
+		response.setContentType("text/json");
+		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
+		StringBuffer sb = new StringBuffer();
+		InputStream in = null;
+		ServletOutputStream out = null;
+		RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+		putMetaDataInfo(rangerExportPolicyList);
+		rangerExportPolicyList.setPolicies(policies);
+		
+		Gson gson = new Gson();
+		String json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
+
+		try {
+			out = response.getOutputStream();
+			sb = sb.append(json);
+			in = new ByteArrayInputStream(sb.toString().getBytes());
+			byte[] outputByte = new byte[sb.length()];
+			response.setStatus(HttpServletResponse.SC_OK);
+			while (in.read(outputByte, 0, sb.length()) != -1) {
+				out.write(outputByte, 0, sb.length());
+			}
+		} catch (Exception e) {
+			LOG.error(e);
+		} finally {
+			try {
+				if (in != null) {
+					in.close();
+					in = null;
+				}
+			} catch (Exception ex) {
+			}
+			try {
+				if (out != null) {
+					out.flush();
+					out.close();
+				}
+			} catch (Exception ex) {
+			}
+		}
+	}
+	
+	public Map<String, String> getServiceMap(InputStream serviceMapStream)
+			throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServiceMap()");
+		}
+		Map<String, String> serviceMap = new LinkedHashMap<String, String>();
+		String serviceMapString = IOUtils.toString(serviceMapStream);
+		if (StringUtils.isNotEmpty(serviceMapString)) {
+			serviceMap = jsonUtil.jsonToMap(serviceMapString);
+		}
+		if(!CollectionUtils.sizeIsEmpty(serviceMap)){
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== ServiceDBStore.getServiceMap()");
+			}
+			return serviceMap;
+		}else{
+			LOG.error("Provided service map is empty!!");
+			throw restErrorUtil.createRESTException("Provided service map is empty!!");
+		}
 	}
 
 	private void writeBookForPolicyItems(RangerPolicy policy, RangerPolicyItem policyItem,
-			RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row) {
+			RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row, String policyConditonType) {
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
 		String groupNames = "";
@@ -3549,100 +3650,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		cell.setCellValue(policyStatus);
 	}
-
-	private void writeBookForTag(RangerPolicy policy, Row row) {
-		String policyStatus = "";
-		Cell cell = row.createCell(0);
-		cell.setCellValue(policy.getId());
-		cell = row.createCell(1);
-		cell.setCellValue(policy.getName());
-		cell = row.createCell(2);
-		String resValue = "";
-		String resourceKeyVal = "";
-		String resKey = "";
-		String groupNames = "";
-		String userNames = "";
-		String accessType = "";
-		Map<String, RangerPolicyResource> resources = policy.getResources();
-		if (resources!=null) {
-			for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
-				resKey = resource.getKey();
-				RangerPolicyResource policyResource = resource.getValue();
-				List<String> resvalueList = policyResource.getValues();
-				resValue = resvalueList.toString();
-				resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
-			}
-		}
-		cell.setCellValue(resourceKeyVal);
-		cell = row.createCell(3);
-		int policyType=policy.getPolicyType();
-		List<RangerPolicyItem> policyItems=new ArrayList<RangerPolicyItem>();
-		List<RangerPolicyItem> policyItems0=new ArrayList<RangerPolicyItem>();
-		List<RangerDataMaskPolicyItem> policyItems1=new ArrayList<RangerDataMaskPolicyItem>();
-		List<RangerRowFilterPolicyItem> policyItems2=new ArrayList<RangerRowFilterPolicyItem>();
-		switch (policyType) {
-		case 0:
-			policyItems0 = policy.getPolicyItems();
-			policyItems.addAll(policyItems0);
-			break;
-		case 1:
-			policyItems1 = policy.getDataMaskPolicyItems();
-			policyItems.addAll(policyItems1);
-			break;
-		case 2:
-			policyItems2 = policy.getRowFilterPolicyItems();
-			policyItems.addAll(policyItems2);
-			break;
-		}
-
-		List<String> groups = new ArrayList<String>();
-		List<String> users = new ArrayList<String>();
-
-		if (!CollectionUtils.isEmpty(policyItems)) {
-			for (RangerPolicyItem policyItem : policyItems) {
-				groupNames = "";
-				userNames = "";
-				accessType = "";
-				groups = policyItem.getGroups();
-				List<RangerPolicyItemAccess> accesses = policyItem.getAccesses();
-				for (RangerPolicyItemAccess access : accesses) {
-					accessType = accessType + access.getType() + " ,";
-				}
-				accessType = accessType.substring(0,accessType.lastIndexOf(","));
-				if (!groups.isEmpty()) {
-					groupNames = groupNames + groups.toString();
-				}
-				users = policyItem.getUsers();
-				if (!users.isEmpty()) {
-					userNames = userNames + users.toString();
-				}
-			}
-		}
-		cell.setCellValue(groupNames);
-		cell = row.createCell(4);
-		cell.setCellValue(userNames);
-		cell = row.createCell(5);
-		cell.setCellValue(accessType.trim());
-		cell = row.createCell(6);
-		XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
-		String ServiceType = "";
-		if (xxservice != null) {
-			Long ServiceId = xxservice.getType();
-			XXServiceDef xxservDef = daoMgr.getXXServiceDef().getById(ServiceId);
-			if (xxservDef != null) {
-				ServiceType = xxservDef.getName();
-			}
-		}
-		cell.setCellValue(ServiceType);
-		cell = row.createCell(7);
-		if (policy.getIsEnabled()) {
-			policyStatus = "Enabled";
-		} else {
-			policyStatus = "Disabled";
-		}
-		cell.setCellValue(policyStatus);
-	}
-
 
 	private void createHeaderRow(Sheet sheet) {
 		CellStyle cellStyle = sheet.getWorkbook().createCellStyle();

@@ -55,14 +55,12 @@ public class RESTErrorUtil {
 				errorResponse);
 		restException.fillInStackTrace();
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionId = userSession.getSessionId();
 		}
 
-		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
 				restException);
 
@@ -78,14 +76,12 @@ public class RESTErrorUtil {
 				errorResponse);
 		restException.fillInStackTrace();
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionId = userSession.getSessionId();
 		}
 
-		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
 				restException);
 
@@ -108,13 +104,9 @@ public class RESTErrorUtil {
 		// block list if this is deliberate
 		// Get user information
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
-		String sessionInfo = "";
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionInfo = userSession.toString();
-			sessionId = userSession.getSessionId();
 		}
 
 		String requestInfo = "";
@@ -130,9 +122,9 @@ public class RESTErrorUtil {
 			logger.error("Error getting request info", contextEx);
 		}
 
-		logger.error("Access restricted. SessionId=" + sessionId + ", loginId="
+		logger.error("Access restricted. loginId="
 				+ loginId + ", logMessage=" + logMessage + ", requestInfo="
-				+ requestInfo + ", sessionInfo=" + sessionInfo, restException);
+				+ requestInfo, restException);
 
 		return restException;
 	}
@@ -149,14 +141,12 @@ public class RESTErrorUtil {
 				errorResponse);
 		restException.fillInStackTrace();
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionId = userSession.getSessionId();
 		}
 
-		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + logMessage,
 				restException);
 
@@ -346,15 +336,13 @@ public class RESTErrorUtil {
 				errorResponse);
 		restException.fillInStackTrace();
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionId = userSession.getSessionId();
 		}
 
 		if (logError) {
-			logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+			logger.info("Request failed. loginId="
 					+ loginId + ", logMessage=" + logMessage,
 					restException);
 		}
@@ -415,13 +403,11 @@ public class RESTErrorUtil {
 		WebApplicationException restException = new WebApplicationException(errorResponse);
 		restException.fillInStackTrace();
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		Long sessionId = null;
 		String loginId = null;
 		if (userSession != null) {
 			loginId = userSession.getLoginId();
-			sessionId = userSession.getSessionId();
 		}
-		logger.info("Request failed. SessionId=" + sessionId + ", loginId="
+		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + vResponse.getMsgDesc(),
 				restException);
 		return restException;

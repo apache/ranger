@@ -52,6 +52,9 @@ define(function(require){
 			}, options);
 			
 			return this.constructor.nonCrudOperation.call(this, url, 'GET', options);
+		},
+		comparator : function(model) {
+			  return -model.get("id");
 		}
 	},{
 		// static class members

@@ -720,8 +720,6 @@ public class Jisql {
 
         if ((password == null) && (passwordFileName == null)) {
             password="";
-            //java.io.Console console = System.console();
-            //password = new String( console.readPassword("Password (hit enter for no password): ") );
         }
         else if (password == null) {
             File passwordFile = null;

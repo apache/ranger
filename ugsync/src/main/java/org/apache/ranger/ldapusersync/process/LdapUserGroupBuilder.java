@@ -172,7 +172,6 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
     ldapUrl = config.getLdapUrl();
     ldapBindDn = config.getLdapBindDn();
     ldapBindPassword = config.getLdapBindPassword();
-    //ldapBindPassword = "admin-password";
     ldapAuthenticationMechanism = config.getLdapAuthenticationMechanism();
     ldapReferral = config.getContextReferral();
 		searchBase = config.getSearchBase();

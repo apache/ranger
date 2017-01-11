@@ -255,7 +255,6 @@ public class UnixAuthenticationService {
 //		LOG.info("Key:" + keyStorePath);
 //		LOG.info("KeyPassword:" + keyStorePathPassword);
 //		LOG.info("TrustStore:" + trustStorePath);
-//		LOG.info("TrustStorePassword:" + trustStorePathPassword);
 //		LOG.info("PortNum:" + portNum);
 //		LOG.info("ValidatorProg:" + validatorProg);
 		

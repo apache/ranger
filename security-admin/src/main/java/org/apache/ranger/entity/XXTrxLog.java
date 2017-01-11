@@ -460,9 +460,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 		str += "newValue={" + newValue + "} ";
 		str += "transactionId={" + transactionId + "} ";
 		str += "action={" + action + "} ";
-		str += "sessionId={" + sessionId + "} ";
 		str += "requestId={" + requestId + "} ";
-		str += "sessionType={" + sessionType + "} ";
 		str += "}";
 		return str;
 	}

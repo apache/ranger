@@ -152,17 +152,16 @@ define(function(require) {'use strict';
 				urlString = urlString.slice(0,-1);
 			}
 			this.previousSearchUrl = urlString+"/service/plugins/policies/downloadExcel?";
-                        XAUtil.searchInfoPopover(this.getSearchInfoArray() , this.ui.iconSearchInfo , 'left');
-		
-                },
-                 getSearchInfoArray: function(){
-                         return [{text :'Policy Name' , info :localization.tt('msg.policyNameMsg')},
-                                 {text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
-                                 {text :'Component'   , info :localization.tt('msg.componentMsg')},
-                                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
-                                 {text :'Resource'    , info :localization.tt('msg.resourceMsg')}]
-                 },
-                 getResourceLists: function(collName, serviceDefName){
+            XAUtil.searchInfoPopover(this.getSearchInfoArray() , this.ui.iconSearchInfo , 'left');
+        },
+         getSearchInfoArray: function(){
+	         return [{text :'Policy Name' , info :localization.tt('msg.policyNameMsg')},
+	                 {text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
+	                 {text :'Component'   , info :localization.tt('msg.componentMsg')},
+	                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
+	                 {text :'Resource'    , info :localization.tt('msg.resourceMsg')}]
+         },
+         getResourceLists: function(collName, serviceDefName){
 
 			var that = this, coll = this[collName];
 			that.allowDownload = false;
@@ -473,10 +472,8 @@ define(function(require) {'use strict';
 		onDownload: function(e){
 			var that = this, url = '';
 			if(!this.allowDownload){
-				XAUtil.alertPopup({
-					msg :"No policies found to download!",
-				});
-				return;
+				XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
+				
 			}
 			if(!this.searchedFlag) {
 				url =  this.previousSearchUrl;
@@ -487,9 +484,11 @@ define(function(require) {'use strict';
 				}
 				url = url + urlString;
 				if (e === "xlsFormat") {
-						url = url + '/service/plugins/policies/downloadExcel?';
-				} else {
-						url = url + '/service/plugins/policies/csv?';
+					url = url + '/service/plugins/policies/downloadExcel?';
+				}else if (e === "csvFormat") {
+					url = url + '/service/plugins/policies/csv?';
+				}else{
+					url = url + '/service/plugins/policies/exportJson?';
 				}
 				url = url + this.searchedParamsString + this.searchedComponentString;
 				this.previousSearchUrl = url;
@@ -502,7 +501,7 @@ define(function(require) {'use strict';
 			var compString = '', url = '';
 			if(!_.isUndefined(component)) {
 				_.each(component,function(comp){
-					compString = compString + comp + '_';
+					compString = compString + comp + ',';
 					});
 			}
 			if (!_.isEmpty(compString)) {
@@ -744,21 +743,22 @@ define(function(require) {'use strict';
 		setDownloadFormatFilter : function(e){
 			var that = this;
 			var el = $(e.currentTarget);
+			var urlString = XAUtil.getBaseUrl();
+			if(urlString.slice(-1) === "/") {
+				urlString = urlString.slice(0,-1);
+			}
 			if(el.data('id') === "xlsFormat") {
 				if(!that.searchedFlag) {
-					var urlString = XAUtil.getBaseUrl();
-					if(urlString.slice(-1) === "/") {
-						urlString = urlString.slice(0,-1);
-					}
+					this.previousSearchUrl = urlString + "/service/plugins/policies/downloadExcel?";
 				}
-				this.previousSearchUrl = urlString + "/service/plugins/policies/downloadExcel?";
+			}
+			else if(el.data('id') === "csvFormat") {
+				if(!that.searchedFlag) {
+					this.previousSearchUrl = urlString + "/service/plugins/policies/csv?";
+				}
 			} else {
 				if(!that.searchedFlag) {
-					var urlString = XAUtil.getBaseUrl();
-					if(urlString.slice(-1) === "/") {
-						urlString = urlString.slice(0,-1);
-					}
-					this.previousSearchUrl = urlString + "/service/plugins/policies/csv?";
+					this.previousSearchUrl = urlString + "/service/plugins/policies/exportJson?";
 				}
 			}
 			this.onDownload(el.data('id'));

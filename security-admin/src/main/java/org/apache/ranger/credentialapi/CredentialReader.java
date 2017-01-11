@@ -78,11 +78,4 @@ public class CredentialReader {
 		  }
 		  return credential;
 	  }
-
-  /*
-  public static void main(String args[]) throws Exception{
-	  String keystoreFile =new String("/tmp/mykey3.jceks");
-	  String password=CredentialReader.getDecryptedString(keystoreFile, "mykey3");
-	   System.out.println(password);
-  }*/
 }

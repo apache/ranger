@@ -2088,3 +2088,41 @@ td.subgrid-custom-cell{
 .selected-widget .remove{
     cursor:pointer;
 }
+.uploadSet {
+	margin-top: 20px;
+}
+.margin-left130{
+    margin-left:130px
+}
+.margin-left12{
+    margin-left:12px
+}
+
+.text-color-red{
+    color:#b85355
+}
+.margin-left6{
+    margin-left:6px
+}
+.float-right{
+    float : right;
+    margin-right:190px
+}
+.icon-remove-btn{
+    color: #c03932;
+    text-decoration: none;
+    margin-left: 10px;
+    cursor:pointer;
+}
+.margin-bottom-11{
+    margin-bottom: 11px
+}
+.margin-left-170{
+    margin-left:170px
+}
+.margin-left-213{
+    margin-left:213px
+}
+.margin-left-75{
+    margin-left:75px
+}

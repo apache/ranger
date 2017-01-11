@@ -1,0 +1,58 @@
+{{!-- Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements. See the NOTICE file distributed with
+this work for additional information regarding copyright ownership. The
+ASF licenses this file to You under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable
+law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License. --}}
+
+<div>
+	<div class="seviceFiled">
+		<label><b>Service Type : </b></label>
+		<div class="form-inline">
+			<input type="text" data-id="componentType" />
+			<span class="seviceFiledValidationFile hide text-color-red"> Required</span>
+		</div>
+	</div>
+	<div>
+		<div>
+			<b>Select File : </b>
+		</div>
+		<label class="btn btn-default btn-file" data-id="importFile">Select
+			file <i class="icon-upload-alt"> </i> <input type="file" name="image"
+			data-id="uploadPolicyFile" style="display: none;"
+			accept=" .json " />
+		</label> <span class="selectFileValidationMsg text-color-red">Please
+			select file </span> <label class="float-right" for="override">
+			Override Policy : <input id="override" type="checkbox"
+			data-id="source" data-name="override" class="margin-left12">
+		</label>
+		<div class="selectFile margin-left6">No file chosen</div>
+		<div class="fileValidation text-color-red margin-left6">Please
+			Select Json file format</div>
+		<hr>
+		<div class="uploadSet">
+			<span><b>Specify Service Mapping : </b></span>
+			<div>
+				<span class="margin-left-75">Source</span> 
+				<span class="margin-left-213">Destination</span>
+			</div>
+			<div class="serviceMapErrorMsg text-color-red hide margin-bottom-11">Please
+				select/enter service name.</div>
+			<div class="serviceMapTextError text-color-red hide margin-bottom-11" >Source 
+			    service name should not be same.</div>
+		</div>
+	</div>
+	<div class="js-serviceMappingItems"></div>
+	<button type="button" class="btn btn-small" data-id="addServiceMaping"
+		title="Add">
+		<i class="icon-plus"></i>
+	</button>
+</div>
+
+

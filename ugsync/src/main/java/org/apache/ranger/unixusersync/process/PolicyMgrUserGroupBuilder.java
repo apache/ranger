@@ -134,14 +134,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	public static void main(String[] args) throws Throwable {
 		PolicyMgrUserGroupBuilder  ugbuilder = new PolicyMgrUserGroupBuilder();
 		ugbuilder.init();
-//		ugbuilder.print();
-//		ugbuilder.addMUser("testuser");
-//		ugbuilder.addXUserInfo("testuser");
-//		ugbuilder.addXGroupInfo("testgroup");
-// 		XUserInfo u = ugbuilder.addXUserInfo("testuser");
-//		XGroupInfo g = ugbuilder.addXGroupInfo("testgroup");
-//		 ugbuilder.addXUserGroupInfo(u, g);
-		
 	}
 
 	

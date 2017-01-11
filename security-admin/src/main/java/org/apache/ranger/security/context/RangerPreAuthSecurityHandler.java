@@ -102,4 +102,12 @@ public class RangerPreAuthSecurityHandler {
 		}
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not allowed to access the API", true);
 	}
+	
+	public boolean isAdminOrKeyAdminRole(){
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null && (userSession.isKeyAdmin() || userSession.isUserAdmin())) {
+			return true;
+		}
+		throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User is not allowed to access the API", true);
+	}
 }

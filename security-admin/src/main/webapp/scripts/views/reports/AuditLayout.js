@@ -602,9 +602,11 @@ define(function(require) {
 					}).done(function(coll,mm){
 						XAUtils.blockUI('unblock');
 						fullTrxLogListForTrxId = new VXTrxLogList(coll.vXTrxLogs);
-						
 						//diff view to support new plugable service model
-						if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value){
+						if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_NONE.value){
+							var view  = that.getExportImportTemplate(fullTrxLogListForTrxId);
+						}
+						else if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value){
 							var view = new vPlugableServiceDiffDetail({
 								collection : fullTrxLogListForTrxId,
 								classType : self.model.get('objectClassType'),
@@ -650,6 +652,35 @@ define(function(require) {
 				}
 			}));	
 		},
+		getExportImportTemplate : function(trxLogs){
+			var log = trxLogs.models[0],fields = '', values = '', infoJson = {};
+			if(log.get("action")=="IMPORT START"){
+				return '<center>'+(localization.tt('msg.importingFiles'))+'</center>';
+			}
+			if(!_.isUndefined(log.get('previousValue')) && !_.isEmpty(log.get('previousValue'))){
+				infoJson = JSON.parse(log.get('previousValue'))
+			}
+			_.each(infoJson, function(val, key){
+				fields +='<li class="change-row">'+key+'</li>';
+				if(key == 'Export time'){
+					val = Globalize.format(new Date(val), "MM/dd/yyyy hh:mm:ss tt");
+				}
+				values +='<li class="change-row">'+val+'</li>'
+			});
+			return  '<div class="diff-content">\
+				<h5> Details :</h5>\
+				<div class="diff">\
+					<div class="diff-left">\
+						<ol class="attr">'+fields+'\
+						</ol>\
+					</div>\
+					<div class="diff-right">\
+						<ol class="unstyled data">'+values+'\
+						</ol>\
+					</div>\
+				</div>\
+			</div>';
+		},
 		getAdminTableColumns : function(){
 			var auditList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
@@ -676,16 +707,20 @@ define(function(require) {
 								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
 							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
 								html = 	'Service '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
+							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
 								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
+							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
 								html = 	'User '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
+							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
 								html = 	'Group '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
+							else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
 								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
-							if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
+							else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
 								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
+							else if(action == "EXPORT JSON" || action == "EXPORT EXCEL" || action == "EXPORT CSV")
+								html = 	'Exported policies';
+							else
+								html = 	action;
 							return html;
 						}
 					})
@@ -698,7 +733,11 @@ define(function(require) {
 					sortable:false,
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue) {
+						fromRaw: function (rawValue, model) {
+							var action = model.get('action');
+							if(action == "EXPORT JSON" || "EXPORT EXCEL" || "EXPORT CSV" || "IMPORT START" || action == "IMPORT END"){
+								rawValue = XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value
+							}
 							var label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue);
 							return label;
 						}
@@ -745,7 +784,6 @@ define(function(require) {
 							} else {
 								html = 	'<label class="label">'+rawValue+'</label>';
 							}
-
 							return html;
 						}
 					})

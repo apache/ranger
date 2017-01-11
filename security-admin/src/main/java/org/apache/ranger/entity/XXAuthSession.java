@@ -414,7 +414,6 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 		str += super.toString();
 		str += "loginId={" + loginId + "} ";
 		str += "userId={" + userId + "} ";
-		str += "extSessionId={" + extSessionId + "} ";
 		str += "authTime={" + authTime + "} ";
 		str += "authStatus={" + authStatus + "} ";
 		str += "authType={" + authType + "} ";

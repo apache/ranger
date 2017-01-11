@@ -390,7 +390,13 @@ define(function(require) {
 			bootbox.alert(params.msg, params.callback);
 		}
 	};
-
+     
+	//Alert box with time set 
+	XAUtils.alertBoxWithTimeSet = function(msg) {
+		var alert = bootbox.alert(msg);
+    	return(setTimeout(function(){alert.modal('hide'); }, 4000));
+	}
+	
 	/**
 	 * Bootbox wrapper for confirm
 	 * 
@@ -398,6 +404,7 @@ define(function(require) {
 	 *            params - The params
 	 */
 	XAUtils.confirmPopup = function(params) {
+		bootbox.hideAll();
 		bootbox.confirm(params.msg, function(result) {
 			if (result) {
 				params.callback();

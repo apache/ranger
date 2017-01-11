@@ -14,6 +14,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
+{{#if showImportExportBtn}}
+	<button type="button" title="Export" class=" btn btn-small btn-right" data-id="exportBtn"> <i class="icon-download-alt"></i>
+	 Export
+	</button>
+	<button type="button" title="Import" class="btn btn-success btn btn-small btn-right" data-id="importBtn" > <i class="icon-upload-alt"></i>
+	 Import
+	</button>
+{{/if}}
 <h3 class="wrap-header bold">{{tt 'h.serviceManager'}}</h3>
 
 <div class="wrap non-collapsible policy-manager">
@@ -30,7 +38,17 @@
 									<img alt="HDFS" src="images/folder-grey.png">
 									{{./this.attributes.name}} 
 									{{#if ../operation}} 
-										<a href="#!/service/{{./this.id}}/create"class="pull-right" title="Add"> <i class="icon-plus"></i></a> 
+									
+									  <a href="javascript:void(0)" title="Export" type="button" class="download  pull-right " data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" > 
+                                          <i class=" icon-download-alt"> </i>
+	                                   </a>
+	                                   
+	                                   <a href="javascript:void(0)" title="Import"  data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right" style="margin-right: 5px ; margin-top:-2px;">
+									    <i class=" icon-upload-alt"> </i>
+									   </a>
+									   
+									   <a href="#!/service/{{./this.id}}/create"class="pull-right" title="Add" style="margin-right: 2px;"> <i class="icon-plus"></i></a> <!--  -->
+									 
 									{{/if}}
 								</span>	
 							</th>
