@@ -17,10 +17,13 @@
 
 if [[ -z $1 ]]; then
 	echo "Invalid argument [$1];"
-	echo "Usage: Only start | stop | restart | version, are supported."
+	echo "Usage: Only start | stop | restart | metric | version , are supported."
+	echo "For Metric Usage: metric -type policies | audits | usergroup | services | database | contextenrichers | denyconditions"
 	exit;
 fi
 action=$1
+arg2=$2
+arg3=$3
 action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
@@ -132,6 +135,11 @@ stop(){
 	fi
 
 }
+
+metric(){
+	java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/META-INF:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/META-INF:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.patch.cliutil.MetricUtil ${arg2} ${arg3} 2>/dev/null
+}
+
 if [ "${action}" == "START" ]; then
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf`
@@ -153,12 +161,15 @@ elif [ "${action}" == "RESTART" ]; then
 	echo "Restarting Apache Ranger Admin"
 	stop;
 	start;
+elif [ "${action}" == "METRIC" ]; then
+	metric;
 elif [ "${action}" == "VERSION" ]; then
 	cd ${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit;
 else
     echo "Invalid argument [$1];"
-    echo "Usage: Only start | stop | restart | version, are supported."
+    echo "Usage: Only start | stop | restart | metric | version, are supported."
+    echo "For metric Usage: metric -type policies | audits | usergroup | services | database | contextenrichers | denyconditions"
     exit;
 fi

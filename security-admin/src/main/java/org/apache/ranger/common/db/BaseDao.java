@@ -250,4 +250,27 @@ public abstract class BaseDao<T> {
 		}
 	}
 
+	public String getDBVersion(){
+		String dbVersion="Not Available";
+		String query ="SELECT 1";
+		try{
+			if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
+				query="SELECT version()";
+				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE){
+				query="SELECT * from v$version where rownum<2";
+				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES){
+				query="SELECT version()";
+				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLSERVER){
+				query="SELECT @@version";
+				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLANYWHERE){
+				query="SELECT @@version";
+				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+			}
+		}catch(Exception ex){}
+		return dbVersion;
+	}
 }

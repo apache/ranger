@@ -1396,6 +1396,10 @@ public class RangerBizUtil {
 		return AppConstants.DB_FLAVOR_UNKNOWN;
 	}
 
+	public String getDBVersion(){
+		return daoManager.getXXUser().getDBVersion();
+    }
+
 	public String getAuditDBType() {
 		return auditDBType;
 	}
