@@ -21,12 +21,17 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
@@ -36,6 +41,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Assert;
@@ -47,13 +53,16 @@ import org.junit.Test;
  * 
  * a) The "logged in" user can do anything
  * b) The IT group can read and write to the "temp" table, but only the "colfam1" column family.
- * 
+ * c) The QA group can read and write to tables in "test_namespace" namespace.
+ *
  * Policies available from admin via:
  * 
  * http://localhost:6080/service/plugins/policies/download/HBASETest
  */
 public class HBaseRangerAuthorizationTest {
-    
+
+    private static final Log LOG = LogFactory.getLog(HBaseRangerAuthorizationTest.class.getName());
+
     private static int port;
     private static HBaseTestingUtility utility;
     
@@ -110,6 +119,32 @@ public class HBaseRangerAuthorizationTest {
         put.addColumn(Bytes.toBytes("colfam2"), Bytes.toBytes("col1"), Bytes.toBytes("val2"));
         table.put(put);
 
+        // Create a namespace
+        NamespaceDescriptor ns = NamespaceDescriptor.create("test_namespace").build();
+        admin.createNamespace(ns);
+
+        // Create a table
+        if (!admin.tableExists(TableName.valueOf("test_namespace", "temp"))) {
+            HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf("test_namespace", "temp"));
+
+            // Adding column families to table descriptor
+            tableDescriptor.addFamily(new HColumnDescriptor("colfam1"));
+            tableDescriptor.addFamily(new HColumnDescriptor("colfam2"));
+
+            admin.createTable(tableDescriptor);
+        }
+
+        table = conn.getTable(TableName.valueOf("test_namespace", "temp"));
+
+        // Add a new row
+        put = new Put(Bytes.toBytes("row1"));
+        put.addColumn(Bytes.toBytes("colfam1"), Bytes.toBytes("col1"), Bytes.toBytes("val1"));
+        table.put(put);
+
+        put = new Put(Bytes.toBytes("row1"));
+        put.addColumn(Bytes.toBytes("colfam2"), Bytes.toBytes("col1"), Bytes.toBytes("val2"));
+        table.put(put);
+
         conn.close();
     }
     
@@ -129,12 +164,15 @@ public class HBaseRangerAuthorizationTest {
         Admin admin = conn.getAdmin();
 
         HTableDescriptor[] tableDescriptors = admin.listTables();
-        Assert.assertEquals(1, tableDescriptors.length);
+        for (HTableDescriptor desc : tableDescriptors) {
+            LOG.info("Found table:[" + desc.getTableName().getNameAsString() + "]");
+        }
+        Assert.assertEquals(2, tableDescriptors.length);
 
         conn.close();
     }
     
-    // This should fail, as the "IT" group only has read privileges, not admin privileges, on the table "temp"
+    // This should fail as the "IT" group only has read privileges, not admin privileges, on the table "temp"
     @Test
     public void testReadTablesAsGroupIT() throws Exception {
         final Configuration conf = HBaseConfiguration.create();
@@ -142,10 +180,8 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
         
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -153,6 +189,9 @@ public class HBaseRangerAuthorizationTest {
                 Admin admin = conn.getAdmin();
                 
                 HTableDescriptor[] tableDescriptors = admin.listTables();
+                for (HTableDescriptor desc : tableDescriptors) {
+                    LOG.info("Found table:[" + desc.getTableName().getNameAsString() + "]");
+                }
                 Assert.assertEquals(0, tableDescriptors.length);
         
                 conn.close();
@@ -183,10 +222,8 @@ public class HBaseRangerAuthorizationTest {
         conn.close();
         
         // Try to disable + delete the table as the "IT" group
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -240,11 +277,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -270,11 +305,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -321,11 +354,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -368,11 +399,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -396,11 +425,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -429,11 +456,9 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.quorum", "localhost");
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -490,10 +515,8 @@ public class HBaseRangerAuthorizationTest {
         conn.close();
         
         // Now try to read the row as group "IT" - it should fail as "IT" can only read from table "temp"
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -559,11 +582,9 @@ public class HBaseRangerAuthorizationTest {
         Put put = new Put(Bytes.toBytes("row5"));
         put.addColumn(Bytes.toBytes("colfam1"), Bytes.toBytes("col1"), Bytes.toBytes("val2"));
         table.put(put);
-        
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+
+        String user = getNotCurrentUser();
+
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -590,11 +611,118 @@ public class HBaseRangerAuthorizationTest {
         
         conn.close();
     }
-    
+
+    @Test
+    public void testCloneSnapshotAsGroupQA() throws Exception {
+        final Configuration conf = HBaseConfiguration.create();
+        conf.set("hbase.zookeeper.quorum", "localhost");
+        conf.set("hbase.zookeeper.property.clientPort", "" + port);
+        conf.set("zookeeper.znode.parent", "/hbase-unsecure");
+
+        Connection conn = ConnectionFactory.createConnection(conf);
+        Admin admin = conn.getAdmin();
+
+        List<HBaseProtos.SnapshotDescription> snapshots = admin.listSnapshots("test_snapshot");
+        if (CollectionUtils.isNotEmpty(snapshots)) {
+            admin.deleteSnapshot("test_snapshot");
+        }
+        String user = getNotCurrentUser();
+
+        UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[]{"QA"});
+
+        ugi.doAs(new PrivilegedExceptionAction<Void>() {
+            public Void run() throws Exception {
+                Connection conn = ConnectionFactory.createConnection(conf);
+                Admin admin = conn.getAdmin();
+                Table table = conn.getTable(TableName.valueOf("test_namespace", "temp"));
+                TableName tableName = table.getName();
+
+                admin.disableTable(tableName);
+
+                // Create a snapshot
+                admin.snapshot("test_snapshot", tableName);
+
+                // Clone snapshot
+                HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf("test_namespace", "temp_cloned"));
+                TableName newTableName = tableDescriptor.getTableName();
+                admin.cloneSnapshot("test_snapshot", newTableName);
+                admin.disableTable(newTableName);
+                admin.deleteTable(newTableName);
+
+                admin.enableTable(tableName);
+
+                conn.close();
+                return null;
+            }
+        });
+
+        snapshots = admin.listSnapshots("test_snapshot");
+        if (CollectionUtils.isNotEmpty(snapshots)) {
+            admin.deleteSnapshot("test_snapshot");
+        }
+    }
+    @Test
+    public void testCloneSnapshotAsNonQAGroup() throws Exception {
+        final Configuration conf = HBaseConfiguration.create();
+        conf.set("hbase.zookeeper.quorum", "localhost");
+        conf.set("hbase.zookeeper.property.clientPort", "" + port);
+        conf.set("zookeeper.znode.parent", "/hbase-unsecure");
+
+        Connection conn = ConnectionFactory.createConnection(conf);
+        Admin admin = conn.getAdmin();
+        TableName tableName = conn.getTable(TableName.valueOf("test_namespace", "temp")).getName();
+
+        admin.disableTable(tableName);
+
+        // Create a snapshot
+        List<HBaseProtos.SnapshotDescription> snapshots = admin.listSnapshots("test_snapshot");
+        if (CollectionUtils.isEmpty(snapshots)) {
+            admin.snapshot("test_snapshot", tableName);
+        }
+
+        admin.enableTable(tableName);
+
+        String user = getNotCurrentUser();
+
+        UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
+
+        ugi.doAs(new PrivilegedExceptionAction<Void>() {
+            public Void run() throws Exception {
+                Connection conn = ConnectionFactory.createConnection(conf);
+                Admin admin = conn.getAdmin();
+
+                try {
+                    TableName clone = TableName.valueOf("test_namespace", "temp_cloned_public");
+                    if (admin.tableExists(clone)) {
+                        // Delete it
+                        admin.deleteTable(clone);
+                    }
+                    // Clone snapshot
+                    admin.cloneSnapshot("test_snapshot", clone);
+                    Assert.fail("Failure expected on an unauthorized group public");
+                } catch(Exception e) {
+                    // Expected
+                }
+                conn.close();
+                return null;
+            }
+        });
+        TableName clone = TableName.valueOf("test_namespace", "temp_cloned_public");
+
+        if (admin.tableExists(clone)) {
+            admin.deleteTable(clone);
+        }
+        admin.deleteSnapshot("test_snapshot");
+    }
+
     private static int getFreePort() throws IOException {
         ServerSocket serverSocket = new ServerSocket(0);
         int port = serverSocket.getLocalPort();
         serverSocket.close();
         return port;
+    }
+
+    private static String getNotCurrentUser() {
+        return "not-" + System.getProperty("user.name");
     }
 }

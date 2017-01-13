@@ -140,6 +140,61 @@
       "updateTime": "20160622-11:01:02.000-+0100",
       "version": 19
     }
+    ,
+    {
+      "service": "HBASETest",
+      "name": "HBASETest-3-namespace",
+      "description": "Default Policy for Service: HBASETest for namespace test_namespace",
+      "isAuditEnabled": true,
+      "resources": {
+        "column": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column-family": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "test_namespace:*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "admin",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+          ],
+          "groups": [
+            "QA"
+          ],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 38,
+      "isEnabled": true,
+      "version": 1
+    }
   ],
   "serviceDef": {
     "name": "hbase",

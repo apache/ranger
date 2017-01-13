@@ -752,7 +752,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		requirePermission("cloneSnapshot", Permission.Action.ADMIN);
+		requirePermission("cloneSnapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
 	}
 	@Override
 	public void preClose(ObserverContext<RegionCoprocessorEnvironment> e, boolean abortRequested) throws IOException {
@@ -770,7 +770,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 	@Override
 	public void preCreateTable(ObserverContext<MasterCoprocessorEnvironment> c, HTableDescriptor desc, HRegionInfo[] regions) throws IOException {
-		requirePermission("createTable", desc.getName(), Permission.Action.CREATE);
+		requirePermission("createTable", desc.getTableName().getName(), Permission.Action.CREATE);
 	}
 	@Override
 	public void preDelete(ObserverContext<RegionCoprocessorEnvironment> c, Delete delete, WALEdit edit, Durability durability) throws IOException {
@@ -879,7 +879,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		requirePermission("restoreSnapshot", hTableDescriptor.getName(), Permission.Action.ADMIN);
+		requirePermission("restoreSnapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
 	}
 
 	@Override
@@ -928,7 +928,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	@Override
 	public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, HTableDescriptor hTableDescriptor) throws IOException {
-		requirePermission("snapshot", hTableDescriptor.getName(), Permission.Action.ADMIN);
+		requirePermission("snapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
 	}
 	@Override
 	public void preSplit(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
