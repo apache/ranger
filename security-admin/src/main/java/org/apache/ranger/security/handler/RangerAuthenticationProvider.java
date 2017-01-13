@@ -138,9 +138,13 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			try{
 				authentication=getJDBCAuthentication(authentication,encoder);
 			}catch (BadCredentialsException e) {
+				logger.info("Get JDBC Authentication fail: ", e);
 			}catch (AuthenticationServiceException e) {
+				logger.info("Get JDBC Authentication fail: ", e);
 			}catch (AuthenticationException e) {
+				logger.info("Get JDBC Authentication fail: ", e);
 			}catch (Exception e) {
+				logger.info("Get JDBC Authentication fail: ", e);
 			}
 			if(authentication!=null && authentication.isAuthenticated()){
 				return authentication;
