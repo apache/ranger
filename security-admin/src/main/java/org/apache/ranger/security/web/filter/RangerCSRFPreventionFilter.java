@@ -42,7 +42,6 @@ public class RangerCSRFPreventionFilter implements Filter {
 	
 	private static final Logger LOG = Logger.getLogger(RangerCSRFPreventionFilter.class);
 		
-	public static final boolean isCSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
 	public static final String BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*,^Chrome.*";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
@@ -50,6 +49,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
 	public static final String HEADER_DEFAULT = "X-XSRF-HEADER";
 	public static final String HEADER_USER_AGENT = "User-Agent";
+	private static final boolean IS_CSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 
 	private String  headerName = HEADER_DEFAULT;
 	private Set<String> methodsToIgnore = null;
@@ -57,7 +57,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	
 	public RangerCSRFPreventionFilter() {
 		try {
-			if (isCSRF_ENABLED){
+			if (IS_CSRF_ENABLED){
 				init(null);
 			}
 		} catch (Exception e) {
@@ -170,7 +170,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	}
 	
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		if (isCSRF_ENABLED){
+		if (IS_CSRF_ENABLED) {
 			final HttpServletRequest httpRequest = (HttpServletRequest)request;
 		    final HttpServletResponse httpResponse = (HttpServletResponse)response;
 		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain));
