@@ -24,7 +24,7 @@ CREATE TABLE `ranger_masterkey` (
 `bitlength` int DEFAULT NULL ,
 `masterkey` varchar(2048),
 PRIMARY KEY ( `id` )
-)DEFAULT CHARSET=latin1;
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `ranger_keystore`;
 CREATE TABLE `ranger_keystore` (
@@ -42,4 +42,4 @@ CREATE TABLE `ranger_keystore` (
   `kms_attributes` varchar(1024) DEFAULT NULL,
   `kms_encoded`varchar(2048),
   PRIMARY KEY (`id`)
-)DEFAULT CHARSET=latin1;
+)ROW_FORMAT=DYNAMIC;

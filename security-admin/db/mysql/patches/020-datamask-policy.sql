@@ -73,7 +73,7 @@ primary key (`id`),
 CONSTRAINT `x_datamask_type_def_FK_def_id` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`) ,
 CONSTRAINT `x_datamask_type_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_datamask_type_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 CREATE INDEX x_datamask_type_def_IDX_def_id ON x_datamask_type_def(def_id);
 
 DROP TABLE IF EXISTS `x_policy_item_datamask`;
@@ -93,7 +93,7 @@ CONSTRAINT `x_policy_item_datamask_FK_policy_item_id` FOREIGN KEY (`policy_item_
 CONSTRAINT `x_policy_item_datamask_FK_type` FOREIGN KEY (`type`) REFERENCES `x_datamask_type_def` (`id`),
 CONSTRAINT `x_policy_item_datamask_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_datamask_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 CREATE INDEX x_policy_item_datamask_IDX_policy_item_id ON x_policy_item_datamask(policy_item_id);
 
 DROP TABLE IF EXISTS `x_policy_item_rowfilter`;
@@ -110,5 +110,5 @@ primary key (id),
 CONSTRAINT `x_policy_item_rowfilter_FK_policy_item_id` FOREIGN KEY (`policy_item_id`) REFERENCES `x_policy_item` (`id`) ,
 CONSTRAINT `x_policy_item_rowfilter_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_rowfilter_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 CREATE INDEX x_policy_item_rowfilter_IDX_policy_item_id ON x_policy_item_rowfilter(policy_item_id);

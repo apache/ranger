@@ -29,5 +29,5 @@ CREATE TABLE IF NOT EXISTS `x_plugin_info`(
  UNIQUE KEY `x_plugin_info_UK`(`service_name`, `host_name`, `app_type`),
  KEY `x_plugin_info_IDX_service_name`(`service_name`),
  KEY `x_plugin_info_IDX_host_name`(`host_name`)
-);
+)ROW_FORMAT=DYNAMIC;
 

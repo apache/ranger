@@ -24,6 +24,6 @@ CREATE TABLE `x_service_version_info` (
 `tag_update_time` datetime NULL DEFAULT NULL,
 primary key (`id`),
 CONSTRAINT `x_service_version_info_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`) 
-);
+)ROW_FORMAT=DYNAMIC;
 CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(service_id);
 

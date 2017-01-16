@@ -20,7 +20,7 @@
 DELIMITER $$
 
 DROP FUNCTION if exists removeTrailingSlash $$
-CREATE FUNCTION `removeTrailingSlash`(resName varchar(4000), resId bigint, assetId bigint, policyName varchar(1000)) RETURNS varchar(4000) CHARSET latin1
+CREATE FUNCTION `removeTrailingSlash`(resName varchar(4000), resId bigint, assetId bigint, policyName varchar(1000)) RETURNS varchar(4000)
 BEGIN
 
 DECLARE noOfCommas int;

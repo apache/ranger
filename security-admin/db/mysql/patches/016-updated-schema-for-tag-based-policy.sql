@@ -42,7 +42,7 @@ KEY `x_tag_def_IDX_added_by_id` (`added_by_id`),
 KEY `x_tag_def_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_tag_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_tag`
 -- -----------------------------------------------------
@@ -63,7 +63,7 @@ KEY `x_tag_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_tag_FK_type` FOREIGN KEY (`type`) REFERENCES `x_tag_def` (`id`),
 CONSTRAINT `x_tag_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_service_resource`
 -- -----------------------------------------------------
@@ -85,7 +85,7 @@ KEY `x_service_res_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`),
 CONSTRAINT `x_service_res_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_res_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_service_resource_element`
 -- -----------------------------------------------------
@@ -106,7 +106,7 @@ CONSTRAINT `x_srvc_res_el_FK_res_def_id` FOREIGN KEY (`res_def_id`) REFERENCES `
 CONSTRAINT `x_srvc_res_el_FK_res_id` FOREIGN KEY (`res_id`) REFERENCES `x_service_resource` (`id`),
 CONSTRAINT `x_srvc_res_el_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_srvc_res_el_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_tag_attr_def`
 -- -----------------------------------------------------
@@ -126,7 +126,7 @@ KEY `x_tag_attr_def_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_tag_attr_def_FK_tag_def_id` FOREIGN KEY (`tag_def_id`) REFERENCES `x_tag_def` (`id`),
 CONSTRAINT `x_tag_attr_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_attr_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_tag_attr`
 -- -----------------------------------------------------
@@ -146,7 +146,7 @@ KEY `x_tag_attr_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_tag_attr_FK_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `x_tag` (`id`),
 CONSTRAINT `x_tag_attr_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_attr_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_tag_resource_map`
 -- -----------------------------------------------------
@@ -169,7 +169,7 @@ CONSTRAINT `x_tag_res_map_FK_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `x_tag` (
 CONSTRAINT `x_tag_res_map_FK_res_id` FOREIGN KEY (`res_id`) REFERENCES `x_service_resource` (`id`),
 CONSTRAINT `x_tag_res_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_res_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 -- -----------------------------------------------------
 -- Table `x_service_resource_element_val`
 -- -----------------------------------------------------
@@ -189,7 +189,7 @@ KEY `x_srvc_res_el_val_IDX_updby_id` (`upd_by_id`),
 CONSTRAINT `x_srvc_res_el_val_FK_res_el_id` FOREIGN KEY (`res_element_id`) REFERENCES `x_service_resource_element` (`id`),
 CONSTRAINT `x_srvc_res_el_val_FK_add_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_srvc_res_el_val_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 INSERT INTO `x_modules_master` VALUES (6,now(),now(),1,1,'Tag Based Policies','');
 -- ---------------------------------------
 -- add column in x_service_def.def_options

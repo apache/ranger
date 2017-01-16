@@ -39,7 +39,7 @@ KEY `x_service_def_cr_time` (`create_time`),
 KEY `x_service_def_up_time` (`update_time`),
 CONSTRAINT `x_service_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_service`;
@@ -67,7 +67,7 @@ KEY `x_service_type` (`type`),
 CONSTRAINT `x_service_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_FK_type` FOREIGN KEY (`type`) REFERENCES `x_service_def` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_policy`;
 CREATE TABLE  `x_policy` (
@@ -95,7 +95,7 @@ KEY `x_policy_resource_signature` (`resource_signature`),
 CONSTRAINT `x_policy_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_service` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_service_config_def`;
@@ -126,7 +126,7 @@ primary key (`id`),
 CONSTRAINT `x_service_config_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_service_config_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_config_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_resource_def`;
@@ -164,7 +164,7 @@ CONSTRAINT `x_resource_def_FK_parent` FOREIGN KEY (`parent`) REFERENCES `x_resou
 CONSTRAINT `x_resource_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_resource_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_resource_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_access_type_def`;
 CREATE TABLE `x_access_type_def` (
@@ -184,7 +184,7 @@ primary key (`id`)   ,
 CONSTRAINT `x_access_type_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_access_type_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_access_type_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_access_type_def_grants`;
 CREATE TABLE `x_access_type_def_grants` (
@@ -200,7 +200,7 @@ primary key (`id`),
 CONSTRAINT `x_atd_grants_FK_atdid` FOREIGN KEY (`atd_id`) REFERENCES `x_access_type_def` (`id`),
 CONSTRAINT `x_atd_grants_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_atd_grants_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_policy_condition_def`;
 CREATE TABLE `x_policy_condition_def` (
@@ -228,7 +228,7 @@ primary key (`id`)   ,
 CONSTRAINT `x_policy_condition_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_policy_condition_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_condition_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_context_enricher_def`;
 CREATE TABLE `x_context_enricher_def` (
@@ -248,7 +248,7 @@ primary key (`id`)   ,
 CONSTRAINT `x_context_enricher_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_context_enricher_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_context_enricher_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_enum_def`;
 CREATE TABLE `x_enum_def` (
@@ -266,7 +266,7 @@ primary key (`id`),
 CONSTRAINT `x_enum_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
 CONSTRAINT `x_enum_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_enum_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_enum_element_def`;
@@ -287,7 +287,7 @@ primary key (`id`),
 CONSTRAINT `x_enum_element_def_FK_defid` FOREIGN KEY (`enum_def_id`) REFERENCES `x_enum_def` (`id`),
 CONSTRAINT `x_enum_element_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_enum_element_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_service_config_map`;
@@ -305,7 +305,7 @@ primary key (`id`),
 CONSTRAINT `x_service_config_map_FK_` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`),
 CONSTRAINT `x_service_config_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_config_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_policy_resource`;
@@ -325,7 +325,7 @@ CONSTRAINT `x_policy_resource_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES
 CONSTRAINT `x_policy_resource_FK_res_def_id` FOREIGN KEY (`res_def_id`) REFERENCES `x_resource_def` (`id`),
 CONSTRAINT `x_policy_resource_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_resource_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_policy_resource_map`;
@@ -343,7 +343,7 @@ primary key (`id`),
 CONSTRAINT `x_policy_resource_map_FK_resource_id` FOREIGN KEY (`resource_id`) REFERENCES `x_policy_resource` (`id`),
 CONSTRAINT `x_policy_resource_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_resource_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 
@@ -362,7 +362,7 @@ primary key (`id`),
 CONSTRAINT `x_policy_item_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES `x_policy` (`id`),
 CONSTRAINT `x_policy_item_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_policy_item_access`;
@@ -382,7 +382,7 @@ CONSTRAINT `x_policy_item_access_FK_pi_id` FOREIGN KEY (`policy_item_id`) REFERE
 CONSTRAINT `x_policy_item_access_FK_atd_id` FOREIGN KEY (`type`) REFERENCES `x_access_type_def` (`id`),
 CONSTRAINT `x_policy_item_access_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_access_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_policy_item_condition`;
 CREATE TABLE `x_policy_item_condition` (
@@ -401,7 +401,7 @@ CONSTRAINT `x_policy_item_condition_FK_pi_id` FOREIGN KEY (`policy_item_id`) REF
 CONSTRAINT `x_policy_item_condition_FK_pcd_id` FOREIGN KEY (`type`) REFERENCES `x_policy_condition_def` (`id`),
 CONSTRAINT `x_policy_item_condition_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_condition_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_policy_item_user_perm`;
 CREATE TABLE `x_policy_item_user_perm` (
@@ -419,7 +419,7 @@ CONSTRAINT `x_policy_item_user_perm_FK_pi_id` FOREIGN KEY (`policy_item_id`) REF
 CONSTRAINT `x_policy_item_user_perm_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_user` (`id`),
 CONSTRAINT `x_policy_item_user_perm_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_user_perm_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 
 DROP TABLE IF EXISTS `x_policy_item_group_perm`;
@@ -438,7 +438,7 @@ CONSTRAINT `x_policy_item_group_perm_FK_pi_id` FOREIGN KEY (`policy_item_id`) RE
 CONSTRAINT `x_policy_item_group_perm_FK_group_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`),
 CONSTRAINT `x_policy_item_group_perm_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_item_group_perm_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_data_hist`;
 CREATE TABLE `x_data_hist` (
@@ -455,5 +455,5 @@ CREATE TABLE `x_data_hist` (
 `to_time` datetime DEFAULT NULL,
 `content` text NOT NULL,
 primary key (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 

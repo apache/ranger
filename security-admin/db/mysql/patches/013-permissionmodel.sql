@@ -23,7 +23,7 @@ CREATE TABLE `x_modules_master` (
 `module` varchar(1024) NOT NULL,
 `url` varchar(1024) NULL DEFAULT NULL,
 PRIMARY KEY (`id`)
-);
+)ROW_FORMAT=DYNAMIC;
 
 INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Resource Based Policies',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Reports',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'Key Manager','');
 
@@ -42,7 +42,7 @@ KEY `x_user_module_perm_idx_module_id` (`module_id`),
 KEY `x_user_module_perm_idx_user_id` (`user_id`),
 CONSTRAINT `x_user_module_perm_FK_module_id` FOREIGN KEY (`module_id`) REFERENCES `x_modules_master` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
 CONSTRAINT `x_user_module_perm_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_portal_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ;
+)ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_group_module_perm`;
 CREATE TABLE `x_group_module_perm` (
@@ -59,4 +59,4 @@ KEY `x_group_module_perm_idx_group_id` (`group_id`),
 KEY `x_group_module_perm_idx_module_id` (`module_id`),
 CONSTRAINT `x_group_module_perm_FK_module_id` FOREIGN KEY (`module_id`) REFERENCES `x_modules_master` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
 CONSTRAINT `x_group_module_perm_FK_user_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ;
+)ROW_FORMAT=DYNAMIC;
