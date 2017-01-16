@@ -31,6 +31,7 @@ import javax.security.auth.login.Configuration;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -209,19 +210,6 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			ldapContextSource.setCacheEnvironmentProperties(false);
 			ldapContextSource.setAnonymousReadOnly(true);
 
-			// Creating LDAP authorities populator using Ldap context source and
-			// Ldap group search base.
-			// populating LDAP authorities populator with group search
-			// base,group role attribute, group search filter.
-			DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator = new DefaultLdapAuthoritiesPopulator(
-					ldapContextSource, rangerLdapGroupSearchBase);
-			defaultLdapAuthoritiesPopulator
-					.setGroupRoleAttribute(rangerLdapGroupRoleAttribute);
-			defaultLdapAuthoritiesPopulator
-					.setGroupSearchFilter(rangerLdapGroupSearchFilter);
-			defaultLdapAuthoritiesPopulator
-					.setIgnorePartialResultException(true);
-
 			// Creating BindAuthenticator using Ldap Context Source.
 			BindAuthenticator bindAuthenticator = new BindAuthenticator(
 					ldapContextSource);
@@ -229,10 +217,25 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String[] userDnPatterns = rangerLdapUserDNPattern.split(";");
 			bindAuthenticator.setUserDnPatterns(userDnPatterns);
 
-			// Creating Ldap authentication provider using BindAuthenticator and
-			// Ldap authentication populator
-			LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(
-					bindAuthenticator, defaultLdapAuthoritiesPopulator);
+			LdapAuthenticationProvider ldapAuthenticationProvider = null;
+
+			if (!StringUtil.isEmpty(rangerLdapGroupSearchBase) && !StringUtil.isEmpty(rangerLdapGroupSearchFilter)) {
+				// Creating LDAP authorities populator using Ldap context source and
+				// Ldap group search base.
+				// populating LDAP authorities populator with group search
+				// base,group role attribute, group search filter.
+				DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator = new DefaultLdapAuthoritiesPopulator(
+						ldapContextSource, rangerLdapGroupSearchBase);
+				defaultLdapAuthoritiesPopulator.setGroupRoleAttribute(rangerLdapGroupRoleAttribute);
+				defaultLdapAuthoritiesPopulator.setGroupSearchFilter(rangerLdapGroupSearchFilter);
+				defaultLdapAuthoritiesPopulator.setIgnorePartialResultException(true);
+
+				// Creating Ldap authentication provider using BindAuthenticator and Ldap authentication populator
+				ldapAuthenticationProvider = new LdapAuthenticationProvider(
+						bindAuthenticator, defaultLdapAuthoritiesPopulator);
+			} else {
+				ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
+			}
 
 			// getting user authenticated
 			if (userName != null && userPassword != null
