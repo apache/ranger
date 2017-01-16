@@ -537,21 +537,6 @@ define(function(require){
 							return false;
 						}
 					},
-					focus: function(event, ui) {
-						var terms = split( this.value );
-						terms.pop();
-						terms.push( ui.item.value );
-						this.value = terms.join( ", " );
-						return false;
-					},
-					select: function( event, ui ) {
-						var terms = split( this.value );
-						terms.pop();
-						terms.push( ui.item.value );
-						terms.push( "" );
-						this.value = terms.join( ", " );
-						return false;
-					}
 					
 				},
 				beforeTagAdded: function(event, ui) {

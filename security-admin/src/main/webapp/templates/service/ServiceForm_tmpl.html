@@ -21,25 +21,25 @@
 		</p>
 		<div class="serviceDetail" data-fields={{serviceDetail}}></div>
 	</fieldset>
-	{{#compare this.serviceConfig "neq" ''}}
-		<fieldset class="configProp">
-			<p class="formHeader">
-				Config Properties : 
-			</p>
+	<fieldset class="configProp">
+		<p class="formHeader">
+			Config Properties : 
+		</p>
+		{{#compare this.serviceConfig "neq" ''}}
 			<div class="serviceConfig" data-fields={{serviceConfig}}></div>
-			<div class="extraServiceConfigs" ></div>
-		</fieldset>
-		
-		<div>
-			<div class="control-group field-username hdfs hive knox storm" style="display: block;">
-				<label class="control-label" for="c12_username"></label>
-				<div class="controls">
-					<span data-editor="">
-						<input data-id="testConn" type="button" value="Test Connection" class="btn" />
-					</span>
-		
-				</div>
+		{{/compare}}
+		<div class="extraServiceConfigs" ></div>
+	</fieldset>
+	
+	<div>
+		<div class="control-group field-username hdfs hive knox storm" style="display: block;">
+			<label class="control-label" for="c12_username"></label>
+			<div class="controls">
+				<span data-editor="">
+					<input data-id="testConn" type="button" value="Test Connection" class="btn" />
+				</span>
+	
 			</div>
 		</div>
-	{{/compare}}
+	</div>
 </form>
