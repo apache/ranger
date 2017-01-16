@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Properties;
@@ -30,7 +28,6 @@ import java.util.concurrent.Future;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
-import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -62,8 +59,10 @@ import kafka.utils.ZkUtils;
  * Policies available from admin via:
  * 
  * http://localhost:6080/service/plugins/policies/download/KafkaTest
+ * 
+ * Clients and services authenticate to Kafka using the SASL SSL protocol as part of this test.
  */
-public class KafkaRangerAuthorizerTest {
+public class KafkaRangerAuthorizerSASLSSLTest {
     
     private static KafkaServerStartable kafkaServer;
     private static TestingServer zkServer;
@@ -71,10 +70,18 @@ public class KafkaRangerAuthorizerTest {
     private static String serviceKeystorePath;
     private static String clientKeystorePath;
     private static String truststorePath;
-    private static Path tempDir;
     
     @org.junit.BeforeClass
     public static void setup() throws Exception {
+    	// JAAS Config file
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
+
+        File f = new File(basedir + "/src/test/resources/kafka_plain.jaas");
+        System.setProperty("java.security.auth.login.config", f.getPath());
+        
     	// Create keys
     	String serviceDN = "CN=Service,O=Apache,L=Dublin,ST=Leinster,C=IE";
     	String clientDN = "CN=Client,O=Apache,L=Dublin,ST=Leinster,C=IE";
@@ -100,33 +107,32 @@ public class KafkaRangerAuthorizerTest {
         ServerSocket serverSocket = new ServerSocket(0);
         port = serverSocket.getLocalPort();
         serverSocket.close();
-
-        tempDir = Files.createTempDirectory("kafka");
         
         final Properties props = new Properties();
         props.put("broker.id", 1);
         props.put("host.name", "localhost");
         props.put("port", port);
-        props.put("log.dir", tempDir.toString());
+        props.put("log.dir", "/tmp/kafka");
         props.put("zookeeper.connect", zkServer.getConnectString());
         props.put("replica.socket.timeout.ms", "1500");
         props.put("controlled.shutdown.enable", Boolean.TRUE.toString());
-        // Enable SSL
-        props.put("listeners", "SSL://localhost:" + port);
+        // Enable SASL_SSL
+        props.put("listeners", "SASL_SSL://localhost:" + port);
+        props.put("security.inter.broker.protocol", "SASL_SSL");
+        props.put("sasl.enabled.mechanisms", "PLAIN");
+        props.put("sasl.mechanism.inter.broker.protocol", "PLAIN");
+        
         props.put("ssl.keystore.location", serviceKeystorePath);
         props.put("ssl.keystore.password", "sspass");
         props.put("ssl.key.password", "skpass");
         props.put("ssl.truststore.location", truststorePath);
         props.put("ssl.truststore.password", "security");
-        props.put("security.inter.broker.protocol", "SSL");
-        props.put("ssl.client.auth", "required");
         
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
         
         // Create users for testing
-        UserGroupInformation.createUserForTesting(clientDN, new String[] {"public"});
-        UserGroupInformation.createUserForTesting(serviceDN, new String[] {"IT"});
+        UserGroupInformation.createUserForTesting("alice", new String[] {"IT"});
         
         KafkaConfig config = new KafkaConfig(props);
         kafkaServer = new KafkaServerStartable(config);
@@ -161,12 +167,8 @@ public class KafkaRangerAuthorizerTest {
         if (truststoreFile.exists()) {
             truststoreFile.delete();
         }
-        if (tempDir != null) {
-            FileUtils.deleteDirectory(tempDir.toFile());
-        }
     }
     
-    // The "public" group can read from "test"
     @Test
     public void testAuthorizedRead() throws Exception {
         // Create the Producer
@@ -175,7 +177,9 @@ public class KafkaRangerAuthorizerTest {
         producerProps.put("acks", "all");
         producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        producerProps.put("sasl.mechanism", "PLAIN");
+        
         producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
         producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
         producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
@@ -195,7 +199,9 @@ public class KafkaRangerAuthorizerTest {
         consumerProps.put("session.timeout.ms", "30000");
         consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        consumerProps.put("sasl.mechanism", "PLAIN");
+        
         consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
         consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
         consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
@@ -229,7 +235,6 @@ public class KafkaRangerAuthorizerTest {
         consumer.close();
     }
     
-    // The "IT" group can write to any topic
     @Test
     public void testAuthorizedWrite() throws Exception {
         // Create the Producer
@@ -238,7 +243,9 @@ public class KafkaRangerAuthorizerTest {
         producerProps.put("acks", "all");
         producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        producerProps.put("sasl.mechanism", "PLAIN");
+        
         producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
         producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
         producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
@@ -257,46 +264,4 @@ public class KafkaRangerAuthorizerTest {
         producer.close();
     }
     
-    // The "public" group can't write to "test" or "dev"
-    @Test
-    public void testUnauthorizedWrite() throws Exception {
-        // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
-        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
-        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "ckpass");
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
-        
-        // Send a message
-        try {
-            Future<RecordMetadata> record = 
-                producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
-            producer.flush();
-            record.get();
-            Assert.fail("Authorization failure expected");
-        } catch (Exception ex) {
-            Assert.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
-        }
-        
-        try {
-            Future<RecordMetadata> record = 
-                producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
-            producer.flush();
-            record.get();
-            Assert.fail("Authorization failure expected");
-        } catch (Exception ex) {
-            Assert.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
-        }
-        
-        producer.close();
-    }
 }

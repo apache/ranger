@@ -578,6 +578,7 @@
                         <exclude>atlassian-ide-plugin.xml</exclude>
                         <exclude>**/.pydevproject</exclude>
                         <exclude>**/derby.log</exclude>
+                        <exclude>**/*.jaas</exclude>
                     </excludes>
                 </configuration>
             </plugin>
