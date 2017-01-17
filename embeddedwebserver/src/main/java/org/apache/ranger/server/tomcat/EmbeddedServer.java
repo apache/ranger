@@ -288,12 +288,14 @@ public class EmbeddedServer {
 	}
 	
 	protected int getIntConfig(String key, int defaultValue) {
-		int ret = 0;
+		int ret = defaultValue;
 		String retStr = getConfig(key);
-		if (retStr == null) {
-			ret = defaultValue;
-		} else {
-			ret = Integer.parseInt(retStr);
+		try {
+			if (retStr != null) {
+				ret = Integer.parseInt(retStr);
+			}
+		}catch(Exception err){
+			LOG.warning(retStr + " can't be parsed to int. Reason: " + err.toString());
 		}
 		return ret;
 	}
@@ -399,17 +401,19 @@ public class EmbeddedServer {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.severe("Load configuration fail. Reason: " + e.toString() );
 		}
 
 	}
 	protected long getLongConfig(String key, long defaultValue) {
-		long ret = 0;
+		long ret = defaultValue;
 		String retStr = getConfig(key);
-		if (retStr == null) {
-			ret = defaultValue;
-		} else {
-			ret = Long.parseLong(retStr);
+		try{
+			if (retStr != null) {
+				ret = Long.parseLong(retStr);
+			}
+		}catch(Exception err){
+			LOG.warning(retStr + " can't be parsed to long. Reason: " + err.toString());
 		}
 		return ret;
 	}
