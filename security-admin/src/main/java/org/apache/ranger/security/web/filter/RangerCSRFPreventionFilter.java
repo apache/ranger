@@ -160,9 +160,9 @@ public class RangerCSRFPreventionFilter implements Filter {
 	
 	public void handleHttpInteraction(HttpInteraction httpInteraction)
 			throws IOException, ServletException {
-		if (!isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
-				|| methodsToIgnore.contains(httpInteraction.getMethod())
-				|| httpInteraction.getHeader(headerName) != null) {
+		if (httpInteraction.getHeader(headerName) != null
+				|| !isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
+				|| methodsToIgnore.contains(httpInteraction.getMethod())) {
 			httpInteraction.proceed();
 		}else {
 			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing Required Header for CSRF Vulnerability Protection");
