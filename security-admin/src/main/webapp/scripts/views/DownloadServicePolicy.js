@@ -70,11 +70,11 @@ define(function(require){
 			XAUtil.blockUI();
 			$.ajax({
 		        type: "GET",
-		        url:urlString +urls+ '?serviceName='+serviceName ,
+		        url:urlString +urls+ '?serviceName='+serviceName+'&checkPoliciesExists=true',
 		        success:function(data,status,response){
 		        	XAUtil.blockUI('unblock');
 		        	if(response.status == 200 || response.statusText == "ok"){
-		        		that.ui.downloadReport.attr("href", urlString + urls+ '?serviceName='+serviceName )[0].click();
+		        		that.ui.downloadReport.attr("href", urlString + urls+ '?serviceName='+serviceName+'&checkPoliciesExists=false')[0].click();
 		        	}else{
 		        		XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
 		        	}

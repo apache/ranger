@@ -3565,6 +3565,45 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw restErrorUtil.createRESTException("Provided service map is empty!!");
 		}
 	}
+	
+	public Map<String, RangerPolicy> setPolicyMapKeyValue(Map<String, RangerPolicy> policiesMap, RangerPolicy policy){
+		if (StringUtils.isNotEmpty(policy.getName().trim())
+				&& StringUtils.isNotEmpty(policy.getService().trim())
+				&& StringUtils.isNotEmpty(policy.getResources().toString().trim())) {
+			policiesMap.put(policy.getName().trim() + " " + policy.getService().trim() + " " + policy.getResources().toString().trim(), policy);
+		}else if (StringUtils.isEmpty(policy.getName().trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
+			LOG.error("Policy Name is not provided for service : " + policy.getService().trim());
+			throw restErrorUtil.createRESTException("Policy Name is not provided for service : " + policy.getService().trim());
+		}else if (StringUtils.isNotEmpty(policy.getName().trim()) && StringUtils.isEmpty(policy.getService().trim())){
+			LOG.error("Service Name is not provided for policy : " + policy.getName().trim());
+			throw restErrorUtil.createRESTException("Service Name is not provided for policy : " + policy.getName().trim());
+		}else{
+			LOG.error("Service Name or Policy Name is not provided!!");
+			throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
+		}
+		return policiesMap;
+	}
+	
+	public Map<String, RangerPolicy> createPolicyMap(
+			Map<String, String> servicesMappingMap,
+			List<String> sourceServices, List<String> destinationServices,
+			RangerPolicy policy, Map<String, RangerPolicy> policiesMap) {
+		if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
+			if (!StringUtils.isEmpty(policy.getService().trim())){
+				if (sourceServices.contains(policy.getService().trim())) {
+					int index = sourceServices.indexOf(policy.getService().trim());
+					policy.setService(destinationServices.get(index));
+					policiesMap = setPolicyMapKeyValue(policiesMap, policy);
+				}
+			}else{
+				LOG.error("Service Name or Policy Name is not provided!!");
+				throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
+			}
+		} else if (CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
+			policiesMap = setPolicyMapKeyValue(policiesMap, policy);
+		}
+		return policiesMap;
+	}
 
 	private void writeBookForPolicyItems(RangerPolicy policy, RangerPolicyItem policyItem,
 			RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row, String policyConditonType) {

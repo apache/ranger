@@ -272,7 +272,7 @@ public class RangerServicePoliciesCache {
 					policy.setUpdateTime(null);
 					policy.setGuid(null);
 					// policy.setName(null); /* this is used by GUI in policy list page */
-					policy.setDescription(null);
+					// policy.setDescription(null); /* this is used by export policy */
 					policy.setResourceSignature(null);
 				}
 			}

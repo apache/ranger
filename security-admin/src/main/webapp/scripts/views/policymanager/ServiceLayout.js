@@ -119,13 +119,38 @@ define(function(require){
 		},
 		downloadReport : function(e){
 			var that = this;
-			var el = $(e.currentTarget);
-			var serviceType = el.attr('data-servicetype');
-			var componentServices = this.services.where({'type' : serviceType });
-            if(serviceType !== undefined && componentServices.length == 0 ){
-            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
-            	return
-            }
+			if(SessionMgr.isKeyAdmin()){
+				if(this.services.length == 0){
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
+					return;
+				}
+			}
+			var el = $(e.currentTarget), serviceType = el.attr('data-servicetype');
+			if(serviceType){
+				var componentServices = this.services.where({'type' : serviceType });
+	            if(serviceType !== undefined && componentServices.length == 0 ){
+	            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
+	            	return;
+	            }
+			}else{
+				if(SessionMgr.isSystemAdmin()){
+					if(location.hash == "#!/policymanager/resource"){
+						var servicesList = _.omit(this.services.groupBy('type'),'tag','kms');
+						if(_.isEmpty(servicesList)){
+							XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
+							return;
+						}
+					}else{
+						var servicesList = _.pick(this.services.groupBy('type'),'tag');
+						if(_.isEmpty(servicesList)){
+							XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
+							return;
+						}
+						
+					}
+				}
+			}
+			
 			 var view = new vDownloadServicePolicy({
               	serviceType		:serviceType,
 				collection 		: new Backbone.Collection([""]),
@@ -142,13 +167,38 @@ define(function(require){
 		},
 		uploadServiceReport :function(e){
 		    var that = this;
-			var el = $(e.currentTarget);
-			var serviceType = el.attr('data-servicetype');
-			var componentServices = this.services.where({'type' : serviceType });
-            if(serviceType !== undefined && componentServices.length == 0 ){
-            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
-            	return
-            }
+		    if(SessionMgr.isKeyAdmin()){
+				if(this.services.length == 0){
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
+					return;
+				}
+			}
+		    var el = $(e.currentTarget), serviceType = el.attr('data-servicetype');
+			if(serviceType){
+				var componentServices = this.services.where({'type' : serviceType });
+	            if(serviceType !== undefined && componentServices.length == 0 ){
+	            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
+	            	return;
+	            }	
+			}else{
+				if(SessionMgr.isSystemAdmin()){
+	            	if(location.hash=="#!/policymanager/resource"){
+	                	var servicesList = _.omit(this.services.groupBy('type'),'tag','kms')
+	                	if(_.isEmpty(servicesList)){
+	                		XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
+	    					return;
+	                	}
+	                }else{
+	                	var servicesList = _.pick(this.services.groupBy('type'),'tag')
+	                	if(_.isEmpty(servicesList)){
+	                		XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
+	    					return;
+	                	}
+	                	
+	                }
+	            }
+				
+			}
 			var view = new vUploadServicePolicy({
                 serviceType		: serviceType,
 				collection 		: new Backbone.Collection([""]),

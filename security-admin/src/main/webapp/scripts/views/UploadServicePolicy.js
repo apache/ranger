@@ -49,7 +49,8 @@ define(function(require){
 			
 		},
 		onSourceChange : function(e){
-			this.model.set('source', _.isEmpty(e.currentTarget.value) ? undefined : e.currentTarget.value);
+			var sourceValue = e.currentTarget.value.trim();
+			this.model.set('source', _.isEmpty(sourceValue) ? undefined : sourceValue);
 		},
 		onDestinationSelect : function(e) {
 		   this.model.set('destination', _.isEmpty(e.currentTarget.value) ? undefined : e.currentTarget.value);

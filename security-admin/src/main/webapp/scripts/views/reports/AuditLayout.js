@@ -659,13 +659,20 @@ define(function(require) {
 			}
 			if(!_.isUndefined(log.get('previousValue')) && !_.isEmpty(log.get('previousValue'))){
 				infoJson = JSON.parse(log.get('previousValue'))
+				if(_.isUndefined(infoJson) || _.isEmpty(infoJson)){
+					return '<h5> No User details found !!</h5>';
+				} 
 			}
 			_.each(infoJson, function(val, key){
 				fields +='<li class="change-row">'+key+'</li>';
-				if(key == 'Export time'){
-					val = Globalize.format(new Date(val), "MM/dd/yyyy hh:mm:ss tt");
+				if(_.isEmpty(val) && !_.isNumber(val)){
+					values +='<li class="change-row">--</li>';
+				}else{
+					if(key == 'Export time'){
+						val = Globalize.format(new Date(val), "MM/dd/yyyy hh:mm:ss tt");
+					}
+					values +='<li class="change-row">'+val+'</li>'
 				}
-				values +='<li class="change-row">'+val+'</li>'
 			});
 			return  '<div class="diff-content">\
 				<h5> Details :</h5>\
@@ -735,11 +742,11 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							var action = model.get('action');
-							if(action == "EXPORT JSON" || "EXPORT EXCEL" || "EXPORT CSV" || "IMPORT START" || action == "IMPORT END"){
+							var hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"]
+							if($.inArray(action,hasAction) >= 0){
 								rawValue = XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value
 							}
-							var label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue);
-							return label;
+							return XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue);
 						}
 					})
 				},
