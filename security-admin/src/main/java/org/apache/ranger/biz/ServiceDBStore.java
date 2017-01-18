@@ -45,7 +45,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -2681,7 +2680,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
-		boolean filterForServicePlugin = RangerConfiguration.getInstance().getBoolean("ranger.filter.tags.for.service.plugin", true);
+		boolean filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(RangerTagDBRetriever.OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, true);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
 

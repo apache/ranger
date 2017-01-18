@@ -40,6 +40,7 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 public class RangerTagDBRetriever {
 	static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
 	static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
+	public static final String OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN = "ranger.filter.tags.for.service.plugin";
 
 	private final RangerDaoManager daoMgr;
 	private final XXService xService;
@@ -66,7 +67,7 @@ public class RangerTagDBRetriever {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver.getTags(serviceName=" + xService.getName());
 			}
 
-			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean("ranger.filter.tags.for.service.plugin", true);
+			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, true);
 			TagRetrieverServiceResourceContext serviceResourceContext = new TagRetrieverServiceResourceContext(xService);
 			TagRetrieverTagDefContext tagDefContext = new TagRetrieverTagDefContext(xService);
 			TagRetrieverTagContext tagContext = new TagRetrieverTagContext(xService);
