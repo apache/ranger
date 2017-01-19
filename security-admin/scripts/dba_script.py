@@ -68,10 +68,14 @@ def populate_global_dict():
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_ADMIN_HOME,'bin','install_config.properties'))
 		library_path = os.path.join(RANGER_ADMIN_HOME,"cred","lib","*")
-	for each_line in read_config_file.read().split('\n') :
-		if len(each_line) == 0 : continue
+	for cireach_line in read_config_file.read().split('\n') :
+		each_line = cireach_line.strip()
+		if len(each_line) == 0:
+			continue
+		elif each_line[0] == "#":
+			continue
 		if re.search('=', each_line):
-			key , value = each_line.strip().split("=",1)
+			key , value = each_line.split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
 				jceks_file_path = os.path.join(RANGER_ADMIN_HOME, 'jceks','ranger_db.jceks')
