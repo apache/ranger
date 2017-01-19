@@ -154,6 +154,7 @@ public class EmbeddedServer {
 		valve.setEnabled(true);
 		valve.setFileDateFormat(getConfig("ranger.accesslog.dateformat", "yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
+		valve.setRotatable(true);
 		valve.setSuffix(".log");
 		
 		String logPattern = getConfig("ranger.accesslog.pattern", "%h %l %u %t \"%r\" %s %b");
@@ -230,8 +231,18 @@ public class EmbeddedServer {
 					Subject.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
 						public Void run() {
-							LOG.info("Starting Server using kerberos crendential");
-							startServer(server);
+							try{
+								LOG.info("Starting Server using kerberos crendential");
+								server.start();
+								server.getServer().await();
+								shutdownServer();
+							}catch (LifecycleException e) {
+								LOG.severe("Tomcat Server failed to start:" + e.toString());
+								e.printStackTrace();
+							}catch (Exception e) {
+								LOG.severe("Tomcat Server failed to start:" + e.toString());
+								e.printStackTrace();
+							}
 							return null;
 						}
 					});
@@ -240,24 +251,30 @@ public class EmbeddedServer {
 					e.printStackTrace();
 				}
 			}else{
-				startServer(server);
+				try{
+					server.start();
+					server.getServer().await();
+					shutdownServer();
+				} catch (LifecycleException e) {
+					LOG.severe("Tomcat Server failed to start:" + e.toString());
+					e.printStackTrace();
+				} catch (Exception e) {
+					LOG.severe("Tomcat Server failed to start:" + e.toString());
+					e.printStackTrace();
+				}
 			}
 		}else{
-			startServer(server);
-		}
-	}
-
-	private void startServer(final Tomcat server) {
-		try{
-			server.start();
-			server.getServer().await();
-			shutdownServer();
-		} catch (LifecycleException e) {
-			LOG.severe("Tomcat Server failed to start:" + e.toString());
-			e.printStackTrace();
-		} catch (Exception e) {
-			LOG.severe("Tomcat Server failed to start:" + e.toString());
-			e.printStackTrace();
+			try{
+				server.start();
+				server.getServer().await();
+				shutdownServer();
+			} catch (LifecycleException e) {
+				LOG.severe("Tomcat Server failed to start:" + e.toString());
+				e.printStackTrace();
+			} catch (Exception e) {
+				LOG.severe("Tomcat Server failed to start:" + e.toString());
+				e.printStackTrace();
+			}
 		}
 	}
 
