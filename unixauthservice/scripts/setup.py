@@ -19,6 +19,7 @@ import StringIO
 import xml.etree.ElementTree as ET
 import ConfigParser
 import os,errno,sys,getopt
+import sys
 from os import listdir
 from os.path import isfile, join, dirname, basename
 from urlparse import urlparse
@@ -60,13 +61,11 @@ installTemplateDirName = join(installPropDirName,'templates')
 confDistDirName = join(installPropDirName, confDistBaseDirName)
 #ugsyncLogFolderName = join(logFolderName, 'usersync')
 nativeAuthFolderName = join(installPropDirName, 'native')
+localConfFolderName = join(installPropDirName, confBaseDirName)
+
 nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
 pamAuthProgramName = join(nativeAuthFolderName, 'pamCredValidator.uexe')
-usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
-confFolderName = join(usersyncBaseDirFullName, confBaseDirName)
-localConfFolderName = join(installPropDirName, confBaseDirName)
-certFolderName = join(confFolderName, certBaseDirName)
-defaultKSFileName = join(certFolderName, defaultCertFileName)
+
 defaultKSPassword = 'UnIx529p'
 defaultDNAME = 'cn=unixauthservice,ou=authenticator,o=mycompany,c=US'
 
@@ -107,6 +106,25 @@ def populate_global_dict():
                 value = ''
             value = value.strip()
             globalDict[key] = value
+
+def initvariable():
+	global usersyncBaseDirFullName
+	global confFolderName
+	global certFolderName
+	global defaultKSFileName
+	global rangerBaseDirName
+	try:
+		ranger_base_dir = globalDict['ranger_base_dir']
+		if (len(ranger_base_dir.strip())>1):
+			rangerBaseDirName = ranger_base_dir
+	except:
+		info = sys.exc_info()
+		print info[0], ":",info[1]
+
+	usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
+	confFolderName = join(usersyncBaseDirFullName, confBaseDirName)
+	certFolderName = join(confFolderName, certBaseDirName)
+	defaultKSFileName = join(certFolderName, defaultCertFileName)
 
 def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
@@ -321,6 +339,7 @@ def write_env_files(exp_var_name, log_path, file_name):
 def main():
 
 	populate_global_dict()
+	initvariable()
 	logFolderName = globalDict['logdir']
 	hadoop_conf = globalDict['hadoop_conf']
         pid_dir_path = globalDict['USERSYNC_PID_DIR_PATH']
@@ -333,7 +352,7 @@ def main():
                 logFolderName = os.path.join(os.getcwd(),"logs")
 	ugsyncLogFolderName = logFolderName
 
-	dirList = [ rangerBaseDirName, usersyncBaseDirName, confFolderName, certFolderName ]
+	dirList = [ rangerBaseDirName, usersyncBaseDirFullName, confFolderName, certFolderName ]
 	for dir in dirList:
 		if (not os.path.isdir(dir)):
 			os.makedirs(dir,0750)
@@ -473,7 +492,7 @@ def main():
 
 	writeXMLUsingProperties(fn, mergeProps, outfn)
 
-	fixPermList = [ ".", usersyncBaseDirName, confFolderName, certFolderName ]
+	fixPermList = [ ".", usersyncBaseDirFullName, confFolderName, certFolderName ]
 
 	for dir in fixPermList:
 		for root, dirs, files in os.walk(dir):
