@@ -87,7 +87,8 @@ public class EmbeddedServer {
 
 		String logDir =  null;
 		logDir = getConfig("logdir");
-		if(logDir == null) {
+		if(logDir == null)
+		{
 			logDir = getConfig("kms.log.dir");
 		}		
 		String hostName = getConfig("ranger.service.host");
@@ -212,7 +213,7 @@ public class EmbeddedServer {
 			lce.printStackTrace();
 		}
 		
-		if (getConfig("logdir") != null) {
+		if(getConfig("logdir") != null){
 			String keytab = getConfig(ADMIN_USER_KEYTAB);
 	//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
 			String principal = null;
@@ -222,32 +223,32 @@ public class EmbeddedServer {
 				 // do nothing
 			}
 			String nameRules = getConfig(ADMIN_NAME_RULES);
-			if (getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
+			if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
 				try{
 					LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
 					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 					Subject.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
 						public Void run() {
-							LOG.info("Starting Server using kerberos credential");
+							LOG.info("Starting Server using kerberos crendential");
 							startServer(server);
 							return null;
 						}
 					});
-				} catch(Exception e) {
+				}catch(Exception e){
 					LOG.severe("Tomcat Server failed to start:" + e.toString());
 					e.printStackTrace();
 				}
-			} else {
+			}else{
 				startServer(server);
 			}
-		} else {
+		}else{
 			startServer(server);
 		}
 	}
 
 	private void startServer(final Tomcat server) {
-		try {
+		try{
 			server.start();
 			server.getServer().await();
 			shutdownServer();
@@ -407,31 +408,31 @@ public class EmbeddedServer {
 		long ret = 0;
 		String retStr = getConfig(key);
 		if (retStr == null) {
-			ret = defaultValue;
+		        ret = defaultValue;
 		} else {
-			ret = Long.parseLong(retStr);
+		        ret = Long.parseLong(retStr);
 		}
 		return ret;
 	}
 	public void updateHttpConnectorAttribConfig(Tomcat server) {
-		server.getConnector().setAllowTrace(Boolean.valueOf(getConfig("ranger.service.http.connector.attrib.allowTrace", "false")));
+		server.getConnector().setAllowTrace(Boolean.valueOf(getConfig("ranger.service.http.connector.attrib.allowTrace","false")));
 		server.getConnector().setAsyncTimeout(getLongConfig("ranger.service.http.connector.attrib.asyncTimeout", 10000));
-		server.getConnector().setEnableLookups(Boolean.valueOf(getConfig("ranger.service.http.connector.attrib.enableLookups", "false")));
+		server.getConnector().setEnableLookups(Boolean.valueOf(getConfig("ranger.service.http.connector.attrib.enableLookups","false")));
 		server.getConnector().setMaxHeaderCount(getIntConfig("ranger.service.http.connector.attrib.maxHeaderCount", 100));
 		server.getConnector().setMaxParameterCount(getIntConfig("ranger.service.http.connector.attrib.maxParameterCount", 10000));
 		server.getConnector().setMaxPostSize(getIntConfig("ranger.service.http.connector.attrib.maxPostSize", 2097152));
 		server.getConnector().setMaxSavePostSize(getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
 		server.getConnector().setParseBodyMethods(getConfig("ranger.service.http.connector.attrib.methods", "POST"));
-		Iterator<Object> iterator = serverConfigProperties.keySet().iterator();
-		String key = null;
-		String property = null;
-		while (iterator.hasNext()) {
-			key = iterator.next().toString();
-			if (key!=null && key.startsWith("ranger.service.http.connector.property.")) {
-				property = key.replace("ranger.service.http.connector.property.","");
-				server.getConnector().setProperty(property, getConfig(key));
-				LOG.info(property + ":" + server.getConnector().getProperty(property));
-			}
+		Iterator<Object> iterator=serverConfigProperties.keySet().iterator();
+		String key=null;
+		String property=null;
+		while (iterator.hasNext()){
+		        key=iterator.next().toString();
+		        if(key!=null && key.startsWith("ranger.service.http.connector.property.")){
+		                property=key.replace("ranger.service.http.connector.property.","");
+		                server.getConnector().setProperty(property,getConfig(key));
+		                LOG.info(property+":"+server.getConnector().getProperty(property));
+		        }
 		}
 	}
 }
