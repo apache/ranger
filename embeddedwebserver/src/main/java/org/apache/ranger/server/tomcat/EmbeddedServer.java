@@ -212,20 +212,19 @@ public class EmbeddedServer {
 			lce.printStackTrace();
 		}
 		
-		String authType = getConfig(AUTHENTICATION_TYPE);
-		if (authType != null && authType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)) {
+		if (getConfig("logdir") != null) {
 			String keytab = getConfig(ADMIN_USER_KEYTAB);
+	//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
 			String principal = null;
 			try {
 				principal = SecureClientLogin.getPrincipal(getConfig(ADMIN_USER_PRINCIPAL), hostName);
 			} catch (IOException ignored) {
-				LOG.warning("Failed to get ranger.admin.kerberos.principal. Reason: " + ignored.toString());
+				 // do nothing
 			}
-
-			if (SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+			String nameRules = getConfig(ADMIN_NAME_RULES);
+			if (getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
 				try{
 					LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
-					String nameRules = getConfig(ADMIN_NAME_RULES);
 					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 					Subject.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
