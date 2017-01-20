@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -62,7 +63,9 @@ public final class KafkaTestUtils {
     	keystore.setKeyEntry(keystoreAlias, keyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[] {certificate});
     	
     	File keystoreFile = File.createTempFile("kafkakeystore", ".jks");
-    	keystore.store(new FileOutputStream(keystoreFile), keystorePassword.toCharArray());
+    	try (OutputStream output = new FileOutputStream(keystoreFile)) {
+    		keystore.store(output, keystorePassword.toCharArray());
+    	}
     	
     	// Now store the Certificate in the truststore
     	trustStore.setCertificateEntry(keystoreAlias, certificate);

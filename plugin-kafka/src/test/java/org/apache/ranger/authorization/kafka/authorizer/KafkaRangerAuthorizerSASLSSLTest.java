@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.security.KeyStore;
@@ -28,6 +29,7 @@ import java.util.concurrent.Future;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -98,7 +100,9 @@ public class KafkaRangerAuthorizerSASLSSLTest {
     					"cspass", "myclientkey", "ckpass", keystore);
     	
     	File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
-    	keystore.store(new FileOutputStream(truststoreFile), "security".toCharArray());
+    	try (OutputStream output = new FileOutputStream(truststoreFile)) {
+    		keystore.store(output, "security".toCharArray());
+    	}
     	truststorePath = truststoreFile.getPath();
     			
         zkServer = new TestingServer();
@@ -157,15 +161,15 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         
         File clientKeystoreFile = new File(clientKeystorePath);
         if (clientKeystoreFile.exists()) {
-            clientKeystoreFile.delete();
+        	FileUtils.forceDelete(clientKeystoreFile);
         }
         File serviceKeystoreFile = new File(serviceKeystorePath);
         if (serviceKeystoreFile.exists()) {
-            serviceKeystoreFile.delete();
+        	FileUtils.forceDelete(serviceKeystoreFile);
         }
         File truststoreFile = new File(truststorePath);
         if (truststoreFile.exists()) {
-            truststoreFile.delete();
+        	FileUtils.forceDelete(truststoreFile);
         }
     }
     

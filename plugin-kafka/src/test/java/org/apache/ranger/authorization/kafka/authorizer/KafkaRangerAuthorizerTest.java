@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.nio.file.Files;
@@ -91,7 +92,9 @@ public class KafkaRangerAuthorizerTest {
     					"cspass", "myclientkey", "ckpass", keystore);
     	
     	File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
-    	keystore.store(new FileOutputStream(truststoreFile), "security".toCharArray());
+    	try (OutputStream output = new FileOutputStream(truststoreFile)) {
+    		keystore.store(output, "security".toCharArray());
+    	}
     	truststorePath = truststoreFile.getPath();
     			
         zkServer = new TestingServer();
@@ -151,15 +154,15 @@ public class KafkaRangerAuthorizerTest {
         
         File clientKeystoreFile = new File(clientKeystorePath);
         if (clientKeystoreFile.exists()) {
-            clientKeystoreFile.delete();
+        	FileUtils.forceDelete(clientKeystoreFile);
         }
         File serviceKeystoreFile = new File(serviceKeystorePath);
         if (serviceKeystoreFile.exists()) {
-            serviceKeystoreFile.delete();
+        	FileUtils.forceDelete(serviceKeystoreFile);
         }
         File truststoreFile = new File(truststorePath);
         if (truststoreFile.exists()) {
-            truststoreFile.delete();
+        	FileUtils.forceDelete(truststoreFile);
         }
         if (tempDir != null) {
             FileUtils.deleteDirectory(tempDir.toFile());
