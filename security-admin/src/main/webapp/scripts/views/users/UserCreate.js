@@ -100,7 +100,7 @@ define(function(require){
 			this.renderForm();
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavUserForm'),this.rForm.$el);
-		},
+			},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
@@ -131,6 +131,7 @@ define(function(require){
 			this.form.fields.passwordConfirm.setValue('');
 		},
 		onSave: function(){
+			var self= this;
 			var errors = this.form.commit({validate : false});
 			if(! _.isEmpty(errors)){
 				if(this.showBasicFields)

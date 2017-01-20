@@ -47,17 +47,19 @@ define(function(require){
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
 				firstName : {
-					type		: 'Text',
+					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'First name should start with alphabets & can have number,underscore, hyphen, space, dot.'}],
-					editorAttrs : { 'placeholder' : localization.tt("lbl.firstName")}
+					validators  : ['required',{type:'regexp',regexp:/^([a-zA-Z0-9]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i,message :'Invalid first name.'}],
+					editorAttrs : { 'placeholder' : localization.tt("lbl.firstName")},
+					errorMsg    :localization.tt('validationMessages.firstNameValidationMsg'),
 					
 				},
 				lastName : {
-					type		: 'Text',
+					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.lastName"),
-					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have number,underscore, hyphen, space, dot.'}],
-					editorAttrs : { 'placeholder' : localization.tt("lbl.lastName")}
+					validators  : ['required',{type:'regexp',regexp:/^([a-zA-Z0-9]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i,message :'Invalid last name.'}],
+					editorAttrs : { 'placeholder' : localization.tt("lbl.lastName")},
+					errorMsg    :localization.tt('validationMessages.lastNameValidationMsg'),
 				},
 				emailAddress : {
 					type		: 'Text',
@@ -67,27 +69,30 @@ define(function(require){
 					
 				},
 				oldPassword : {
-					type		: 'Password',
+					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.oldPassword")+' *',
 				//	validators  : ['required'],
 					fieldAttrs : {style : 'display:none;'},
-					editorAttrs : { 'placeholder' : localization.tt("lbl.oldPassword"),'oncopy':'return false;','autocomplete':'off'}
+					editorAttrs : { 'placeholder' : localization.tt("lbl.oldPassword"),'oncopy':'return false;','autocomplete':'off'},
+					errorMsg    : localization.tt('validationMessages.passwordError')
 					
 				},
 				newPassword : {
-					type		: 'Password',
+					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.newPassword")+' *',
 				//	validators  : ['required'],
 					fieldAttrs : {style : 'display:none;'},
-					editorAttrs : { 'placeholder' : localization.tt("lbl.newPassword"),'oncopy':'return false;','autocomplete':'off'}
+					editorAttrs : { 'placeholder' : localization.tt("lbl.newPassword"),'oncopy':'return false;','autocomplete':'off'},
+					errorMsg    : localization.tt('validationMessages.passwordError')
 					
 				},
 				reEnterPassword : {
-					type		: 'Password',
+					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.reEnterPassword")+' *',
 				//	validators  : ['required'],
 					fieldAttrs : {style : 'display:none;'},
-					editorAttrs : { 'placeholder' : localization.tt("lbl.reEnterPassword"),'oncopy':'return false;','autocomplete':'off'}
+					editorAttrs : { 'placeholder' : localization.tt("lbl.reEnterPassword"),'oncopy':'return false;','autocomplete':'off'},
+					errorMsg    : localization.tt('validationMessages.passwordError')
 					
 				},
 				userRoleList : {

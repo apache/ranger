@@ -103,9 +103,9 @@ define(function(require){
 				this.fields.newPassword.$el.show();
 				this.fields.reEnterPassword.$el.show();
 				this.fields.oldPassword.editor.validators = ['required'];
-				this.fields.newPassword.editor.validators = ['required',{type : 'regexp' ,regexp :/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/, message : localization.tt('validationMessages.newPasswordError')}];
+				this.fields.newPassword.editor.validators = ['required',{type : 'regexp' ,regexp :/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/, message : ' Invalid password '}];
 				this.fields.reEnterPassword.editor.validators = ['required',
-				                                                 {type : 'regexp' ,regexp :/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/, message : localization.tt('validationMessages.newPasswordError')},
+				                                                 {type : 'regexp' ,regexp :/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/, message : ' Invalid password '},
 				                                                 { type: 'match', field: 'newPassword', message: 'Passwords must match!' }];
 			}
 		},

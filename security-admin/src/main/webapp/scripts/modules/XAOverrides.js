@@ -22,6 +22,7 @@
 	var App 			= require('App');
 	var vBreadCrumbs 	= require('views/common/BreadCrumbs');
 	var XAEnums			= require('utils/XAEnums');
+	var XAUtil			= require('utils/XAUtils');
 	
 	require('backgrid');
 	require('jquery-toggles');
@@ -283,7 +284,7 @@
 	   *
 	   */
 	  Form.editors.Switch = Form.editors.Base.extend({
-			ui : {
+	    	ui : {
 				
 			},
 			  events: {
@@ -353,7 +354,109 @@
 			    this.$el.blur();
 			  }
 			
-			});
+		});
+	  
+	  //costume text filed
+	  
+	    Form.editors.TextFiledWithIcon = Form.editors.Base.extend({
+
+	  	      tagName: 'span',
+	  
+	  		  defaultValue: '',
+	  
+	  		  previousValue: '',
+	  
+	  		  events: {
+	  			  'keyup':    'determineChanges',
+	  		      'keypress': function(event) {
+	  		    	  var self = this;
+	  		    	  setTimeout(function() {
+	  		    		  self.determineChanges();
+	  		    	  }, 0);
+	  		      },
+	  		      'select [data-id="textFiledInput"]': "select",
+	  		      'focus [data-id="textFiledInput"]': "focus",
+	  		      'blur [data-id="textFiledInput"]':   "blur"
+	  	        
+	  		  },
+	  
+	  	   
+	  		 
+	  		   
+	  		 initialize: function(options) {
+		  		  Form.editors.Base.prototype.initialize.call(this, options);
+		  	      this.template = _.template('<input type="text" class="textFiledInputPadding " data-id="textFiledInput"><span><i class="icon-info-sign customTextFiledIcon" data-id="infoTextFiled"></i></span>');
+		          var schema = this.schema;
+		  		//Allow customising text type (email, phone etc.) for HTML5 browsers
+		  		  var type = 'text';
+		          if (schema && schema.editorAttrs && schema.editorAttrs.type) type = schema.editorAttrs.type;
+		  		  if (schema && schema.dataType) type = schema.dataType;
+		          this.$el.attr('type', type);
+		  		  this.$el.html( this.template );
+	  		  },
+
+	  		 /**
+	  		 * Adds the editor to the DOM
+	  	     */
+	  		  render: function() {
+	  			  if(this.schema.editorAttrs){
+	  				  this.$el.find('input').attr(this.schema.editorAttrs);
+	  		      }
+	  			  this.setValue(this.value);
+	  		      XAUtil.errorsInfoPopover(this.$el.find('[data-id="infoTextFiled"]'),this.schema.errorMsg);
+	  
+	  		      return this;
+	  		   },
+	  	  	  determineChanges: function(event) {
+	  		     var currentValue = this.$el.find('input').val();
+	  		     var changed = (currentValue !== this.previousValue);
+	  	  		 if (changed) {
+	  		         this.previousValue = currentValue;
+	  	  		     this.trigger('change', this);
+	  		      }
+	  	  	  },
+	  	  	  
+	  		   /**
+	  		   * Returns the current editor value
+	  		   * @return {String}
+	  		   */
+	  		  getValue: function() {
+	  		     return this.$el.find('input').val();
+	  	       },
+	  
+	  		   /**
+	  	       * Sets the value of the form element
+	  		   * @param {String}
+	  		   */
+	  		  setValue: function(value) {
+	  		    this.$el.find('input').val(value);
+	  		   },
+	          focus: function() {
+	        	  if (this.hasFocus) return;
+              },
+	          blur: function() {
+	        	  var trimmedVal = $.trim(this.$el.find('input').val());
+	        	  this.$el.find('input').val(trimmedVal);
+	  	      },
+	          select: function() {
+	  	         this.$el.find('input').select();
+	  		   }
+	  
+	  	});
+	  	 
+	  	 
+	  /**
+	    * Password editor
+	   	*/
+	  Form.editors.PasswordFiled = Form.editors.TextFiledWithIcon.extend({
+          initialize: function(options) {
+	  	        Form.editors.TextFiledWithIcon.prototype.initialize.call(this, options);
+	  	        this.$el.find('input').attr('type', 'password');
+		  	    
+	  	    },
+
+	  	});
+	  
 	  
 	  /**
 	   * #RANGER RESOURCE

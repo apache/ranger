@@ -440,6 +440,7 @@ public class EmbeddedServer {
 		server.getConnector().setMaxPostSize(getIntConfig("ranger.service.http.connector.attrib.maxPostSize", 2097152));
 		server.getConnector().setMaxSavePostSize(getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
 		server.getConnector().setParseBodyMethods(getConfig("ranger.service.http.connector.attrib.methods", "POST"));
+		server.getConnector().setURIEncoding(getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
 		Iterator<Object> iterator=serverConfigProperties.keySet().iterator();
 		String key=null;
 		String property=null;

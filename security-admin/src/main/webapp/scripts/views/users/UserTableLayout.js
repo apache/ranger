@@ -456,8 +456,8 @@ define(function(require){
 			var selArr = [];
 			var message = '';
 			_.each(collection.selected,function(obj){
-				selArr.push(_.escape(obj.get('name')));
-			});
+				 selArr.push(_.escape(obj.get('name')));
+            });
 			var  vXStrings = [];
 			var jsonUsers  = {};
 			for(var i in selArr) {

@@ -269,7 +269,7 @@ define(function(require) {
 				source: this.perms,
 				value : this.permsIds,
 				display: function(values,srcData) {
-					if(_.isNull(values) || _.isEmpty(values)){
+					if(_.isNull(values) || _.isEmpty(values) || (_.contains(values,"-1")  &&  values.length == 1)){
 						$(this).empty();
 						that.model.unset('accesses');
 						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
@@ -278,6 +278,7 @@ define(function(require) {
 					}
 					if(_.contains(values,"-1")){
 						values = _.without(values,"-1")
+
 					}
 //			    	that.checkDirtyFieldForGroup(values);
 					

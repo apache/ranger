@@ -32,12 +32,13 @@ define(function(require){
 	
 	require('backbone-forms');
 	require('backbone-forms.templates');
+	require('bootbox');
 	var UserForm = Backbone.Form.extend(
 	/** @lends UserForm */
 	{
 		_viewName : 'UserForm',
-
-    	/**
+         
+		/**
 		* intialize a new UserForm Form View 
 		* @constructs
 		*/
@@ -55,40 +56,49 @@ define(function(require){
 				//this.userRoleListChange(form, fieldEditor);
     		});
 		},
-		/** fields for the form
+		
+	    /** fields for the form
 		*/
 		fields: ['name', 'description'],
 		schema :function(){
 			return{
 				name : {
-					type		: 'Text',
+					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.userName") +' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-z0-9][a-z0-9,._\-'+/@= ]+$/i,message :"Name should start with alpha/numeric letters and can have special characters ,.+_'-/@= and space"}],
-					editorAttrs :{'maxlength': 255}
+					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i, 
+						            message :' Invalid user name'}],
+					editorAttrs : {'maxlength': 255},
+			        errorMsg    :localization.tt('validationMessages.userNameValidationMsg')
 				},
 				password : {
-					type		: 'Password',
+					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.newPassword") +' *',
-					validators  : ['required', {type: 'match', field: 'passwordConfirm', message: 'Passwords must match!'},
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'oncopy':'return false;','autocomplete':'off'}               
+					validators  : ['required',
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
+					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
 				passwordConfirm : {
-					type		: 'Password',
+					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.passwordConfirm") +' *',
-					validators  : ['required',
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :localization.tt('validationMessages.passwordError')}],
-					editorAttrs  : {'oncopy':'return false;','autocomplete':'off'}
+					validators  : ['required',{type: 'match', field: 'password', message: 'Passwords must match !'},
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
+					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
 				firstName : { 
-					type		: 'Text',
+					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'First name should start with alphabets & can have number,underscore, hyphen, space, dot.'}]
+					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i, 
+						            message :' Invalid first name'}],
+					errorMsg    :localization.tt('validationMessages.firstNameValidationMsg'),
 				},
 				lastName : { 
-					type		: 'Text',
+					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.lastName"),
-					validators  : [{type:'regexp',regexp:/^[a-zA-Z][a-zA-Z0-9\s_.-]*[a-zA-Z0-9]+$/,message :'Last name should start with alphabets & can have number,underscore, hyphen, space, dot.'}]
+					validators  : [{type:'regexp',regexp:/^([A-Za-z0-9]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i, 
+						            message :' Invalid last name'}],
+					errorMsg    :localization.tt('validationMessages.lastNameValidationMsg'),
 				},
 				emailAddress : {
 					type		: 'Text',
@@ -108,6 +118,7 @@ define(function(require){
 						});
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
+						editor.$el.val("0");
 					},
 					title : localization.tt('lbl.selectRole')+' *'
 				}
@@ -121,7 +132,7 @@ define(function(require){
 			this.initializePlugins();
 			this.showCustomFields();
 			if(!that.model.isNew()){
-				this.fields.name.editor.$el.attr('disabled',true);
+				this.fields.name.editor.$el.find('input').attr('disabled',true);
 				if(this.model.has('userRoleList')){
 					var roleList = this.model.get('userRoleList');
 					if(!_.isUndefined(roleList) && roleList.length > 0){
@@ -135,13 +146,13 @@ define(function(require){
 					}
 				}
 				if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
-					this.fields.password.editor.$el.attr('disabled',true);
-					this.fields.passwordConfirm.editor.$el.attr('disabled',true);
-					this.fields.firstName.editor.$el.attr('disabled',true);
-					this.fields.lastName.editor.$el.attr('disabled',true);
+					this.fields.password.editor.$el.find('input').attr('disabled',true);
+					this.fields.passwordConfirm.editor.$el.find('input').attr('disabled',true);
+					this.fields.firstName.editor.$el.find('input').attr('disabled',true);
+					this.fields.lastName.editor.$el.find('input').attr('disabled',true);
 					this.fields.emailAddress.editor.$el.attr('disabled',true);
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
-					
+					return
 				}
 				
 				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
@@ -164,7 +175,7 @@ define(function(require){
 				if(this.model.get('name') == SessionMgr.getUserProfile().get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
-			}			
+			}	
 		},
 		renderCustomFields: function(){
 			var that = this;

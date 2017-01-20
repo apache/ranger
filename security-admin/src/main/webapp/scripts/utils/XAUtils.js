@@ -377,6 +377,20 @@ define(function(require) {
 		}
 	};
 
+	/*
+	 * icon Info
+	 */
+	XAUtils.errorsInfoPopover = function(filed, msg) {
+		filed.popover({
+			content : '<span class="popoverTextMsg" >'+msg+'</span>',
+			html    : true,
+			trigger : 'hover',
+			placement : 'right',
+			container : 'body'
+
+		 })
+	};
+	
 	/**
 	 * Bootbox wrapper for alert
 	 * 

@@ -2088,7 +2088,19 @@ td.subgrid-custom-cell{
 .selected-widget .remove{
     cursor:pointer;
 }
-.uploadSet {
+.customTextFiledIcon{
+	color: #808080;
+    font-size: small;
+    margin-left: -17px;
+    margin-right:5px;
+}
+.textFiledInputPadding{
+	padding-right: 20px !important;
+    width: 192px !important;
+}
+.popoverTextMsg{
+	font-size:11px;
+}.uploadSet {
 	margin-top: 20px;
 }
 .margin-left130{

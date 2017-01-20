@@ -84,6 +84,7 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			var that = this
 			this.initializePlugins();
 			this.form = new GroupForm({
 				template : require('hbs!tmpl/users/GroupForm_tmpl'),

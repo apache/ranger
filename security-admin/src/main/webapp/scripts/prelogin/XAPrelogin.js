@@ -45,7 +45,7 @@ function doLogin() {
 	}
 
 	var regexEmail = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-	var regexPlain = /^[a-z0-9][a-z0-9,._\-'+/@= ]+$/i;
+	var regexPlain = /^([A-Za-z0-9]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i;
 	
 	if(!regexPlain.test(userName)){
 		if(!regexEmail.test(userName)){
