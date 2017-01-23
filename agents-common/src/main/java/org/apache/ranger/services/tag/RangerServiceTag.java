@@ -63,6 +63,8 @@ public class RangerServiceTag extends RangerBaseService {
 
 		HashMap<String, Object> ret = new HashMap<String, Object>();
 
+		ret.put("connectivityStatus", true);
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceTag.validateConfig(" + serviceName + " ): " + ret);
 		}
