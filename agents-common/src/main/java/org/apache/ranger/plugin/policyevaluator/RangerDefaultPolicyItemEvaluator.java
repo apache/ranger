@@ -384,7 +384,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 
 			evaluator = matcherClass.newInstance();
 		} catch(Throwable t) {
-			LOG.error("RangerDefaultPolicyItemEvaluator.newConditionEvaluator(" + className + "): error instantiating evaluator");
+			LOG.error("RangerDefaultPolicyItemEvaluator.newConditionEvaluator(" + className + "): error instantiating evaluator", t);
 		}
 
 		if(LOG.isDebugEnabled()) {
