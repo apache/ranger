@@ -64,6 +64,7 @@ public class EmbeddedServer {
     private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
 
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
+	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	
 	private Properties serverConfigProperties = new Properties();
 
@@ -87,10 +88,10 @@ public class EmbeddedServer {
 
 		String logDir =  null;
 		logDir = getConfig("logdir");
-		if(logDir == null)
-		{
+		if (logDir == null) {
 			logDir = getConfig("kms.log.dir");
-		}		
+		}
+		String servername = getConfig("servername");
 		String hostName = getConfig("ranger.service.host");
 		int serverPort = getIntConfig("ranger.service.http.port", 6181);
 		int sslPort = getIntConfig("ranger.service.https.port", -1);
@@ -154,7 +155,6 @@ public class EmbeddedServer {
 		valve.setEnabled(true);
 		valve.setFileDateFormat(getConfig("ranger.accesslog.dateformat", "yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
-		valve.setRotatable(true);
 		valve.setSuffix(".log");
 		
 		String logPattern = getConfig("ranger.accesslog.pattern", "%h %l %u %t \"%r\" %s %b");
@@ -214,67 +214,53 @@ public class EmbeddedServer {
 			lce.printStackTrace();
 		}
 		
-		if(getConfig("logdir") != null){
+		if(servername.equalsIgnoreCase(ADMIN_SERVER_NAME)){
 			String keytab = getConfig(ADMIN_USER_KEYTAB);
-	//		String principal = getConfig(ADMIN_USER_PRINCIPAL);
 			String principal = null;
 			try {
 				principal = SecureClientLogin.getPrincipal(getConfig(ADMIN_USER_PRINCIPAL), hostName);
 			} catch (IOException ignored) {
-				 // do nothing
+				LOG.warning("Failed to get ranger.admin.kerberos.principal. Reason: " + ignored.toString());
 			}
 			String nameRules = getConfig(ADMIN_NAME_RULES);
-			if(getConfig(AUTHENTICATION_TYPE) != null && getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){			
+			if (getConfig(AUTHENTICATION_TYPE) != null
+					&& getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
+					&& SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 				try{
-					LOG.info("Provided Kerberos Credential : Principal = "+principal+" and Keytab = "+keytab);
+					LOG.info("Provided Kerberos Credential : Principal = "
+							+ principal + " and Keytab = " + keytab);
 					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 					Subject.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
 						public Void run() {
-							try{
-								LOG.info("Starting Server using kerberos crendential");
-								server.start();
-								server.getServer().await();
-								shutdownServer();
-							}catch (LifecycleException e) {
-								LOG.severe("Tomcat Server failed to start:" + e.toString());
-								e.printStackTrace();
-							}catch (Exception e) {
-								LOG.severe("Tomcat Server failed to start:" + e.toString());
-								e.printStackTrace();
-							}
+							LOG.info("Starting Server using kerberos credential");
+							startServer(server);
 							return null;
 						}
 					});
-				}catch(Exception e){
-					LOG.severe("Tomcat Server failed to start:" + e.toString());
-					e.printStackTrace();
-				}
-			}else{
-				try{
-					server.start();
-					server.getServer().await();
-					shutdownServer();
-				} catch (LifecycleException e) {
-					LOG.severe("Tomcat Server failed to start:" + e.toString());
-					e.printStackTrace();
 				} catch (Exception e) {
 					LOG.severe("Tomcat Server failed to start:" + e.toString());
 					e.printStackTrace();
 				}
+			} else {
+				startServer(server);
 			}
-		}else{
-			try{
-				server.start();
-				server.getServer().await();
-				shutdownServer();
-			} catch (LifecycleException e) {
-				LOG.severe("Tomcat Server failed to start:" + e.toString());
-				e.printStackTrace();
-			} catch (Exception e) {
-				LOG.severe("Tomcat Server failed to start:" + e.toString());
-				e.printStackTrace();
-			}
+		} else {
+			startServer(server);
+		}
+	}
+
+	private void startServer(final Tomcat server) {
+		try {
+			server.start();
+			server.getServer().await();
+			shutdownServer();
+		} catch (LifecycleException e) {
+			LOG.severe("Tomcat Server failed to start:" + e.toString());
+			e.printStackTrace();
+		} catch (Exception e) {
+			LOG.severe("Tomcat Server failed to start:" + e.toString());
+			e.printStackTrace();
 		}
 	}
 
@@ -306,12 +292,14 @@ public class EmbeddedServer {
 	}
 	
 	protected int getIntConfig(String key, int defaultValue) {
-		int ret = 0;
+		int ret = defaultValue;
 		String retStr = getConfig(key);
-		if (retStr == null) {
-			ret = defaultValue;
-		} else {
-			ret = Integer.parseInt(retStr);
+		try {
+			if (retStr != null) {
+				ret = Integer.parseInt(retStr);
+			}
+		} catch (Exception err) {
+			LOG.warning(retStr + " can't be parsed to int. Reason: " + err.toString());
 		}
 		return ret;
 	}
@@ -417,17 +405,19 @@ public class EmbeddedServer {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.severe("Load configuration fail. Reason: " + e.toString());
 		}
 
 	}
 	protected long getLongConfig(String key, long defaultValue) {
-		long ret = 0;
+		long ret = defaultValue;
 		String retStr = getConfig(key);
-		if (retStr == null) {
-		        ret = defaultValue;
-		} else {
+		try{
+			if (retStr != null) {
 		        ret = Long.parseLong(retStr);
+			}
+		}catch(Exception err){
+			LOG.warning(retStr + " can't be parsed to long. Reason: " + err.toString());
 		}
 		return ret;
 	}
@@ -441,16 +431,16 @@ public class EmbeddedServer {
 		server.getConnector().setMaxSavePostSize(getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
 		server.getConnector().setParseBodyMethods(getConfig("ranger.service.http.connector.attrib.methods", "POST"));
 		server.getConnector().setURIEncoding(getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
-		Iterator<Object> iterator=serverConfigProperties.keySet().iterator();
-		String key=null;
-		String property=null;
+		Iterator<Object> iterator = serverConfigProperties.keySet().iterator();
+		String key = null;
+		String property = null;
 		while (iterator.hasNext()){
-		        key=iterator.next().toString();
-		        if(key!=null && key.startsWith("ranger.service.http.connector.property.")){
-		                property=key.replace("ranger.service.http.connector.property.","");
-		                server.getConnector().setProperty(property,getConfig(key));
-		                LOG.info(property+":"+server.getConnector().getProperty(property));
-		        }
+			key = iterator.next().toString();
+			if(key != null && key.startsWith("ranger.service.http.connector.property.")){
+				property = key.replace("ranger.service.http.connector.property.","");
+				server.getConnector().setProperty(property,getConfig(key));
+				LOG.info(property + ":" + server.getConnector().getProperty(property));
+			}
 		}
 	}
 }
