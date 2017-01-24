@@ -68,6 +68,8 @@ public class UserGroupSyncConfig  {
 
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun";
 
+	public static final String  UGSYNC_TEST_RUN_PROP  = 	"ranger.usersync.policymanager.testrun";
+	
 	public static final String UGSYNC_SOURCE_FILE_PROC =	"ranger.usersync.filesource.file";
 
 	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiter";
@@ -97,9 +99,16 @@ public class UserGroupSyncConfig  {
 
 	private static final String UGSYNC_SINK_CLASS = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
 
+	private static final String LGSYNC_DELTASYNC_SINK_CLASS = "org.apache.ranger.ldapusersync.process.LdapPolicyMgrUserGroupBuilder";
+	
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
 
+	private static final String LGSYNC_DELTASYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapDeltaUserGroupBuilder";
+
 	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
+	
+	private static final String LGSYNC_LDAP_DELTASYNC_ENABLED = "ranger.usersync.ldap.deltasync";
+	private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED = false;
 
 	private static final String LGSYNC_LDAP_STARTTLS_ENABLED = "ranger.usersync.ldap.starttls";
 	private static final boolean DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED = false;
@@ -382,6 +391,11 @@ public class UserGroupSyncConfig  {
 		String val = prop.getProperty(UGSYNC_MOCK_RUN_PROP);
 		return (val != null && val.trim().equalsIgnoreCase("true"));
 	}
+	
+	public boolean isTestRunEnabled() {
+		String val = prop.getProperty(UGSYNC_TEST_RUN_PROP);
+		return (val != null && val.trim().equalsIgnoreCase("true"));
+	}
 
 	public String getPolicyManagerBaseURL() {
 		return prop.getProperty(UGSYNC_PM_URL_PROP);
@@ -456,7 +470,7 @@ public class UserGroupSyncConfig  {
 			} else {
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE;
 			}
-			if(ret < min_interval)
+			if((!isTestRunEnabled()) && (ret < min_interval))
 			{
 				LOG.info("Sleep Time Between Cycle can not be lower than [" + min_interval  + "] millisec. resetting to min value.");
 				ret = min_interval;
@@ -465,27 +479,40 @@ public class UserGroupSyncConfig  {
 		}
 	}
 
-
-	public UserGroupSource getUserGroupSource() throws Throwable {
-
+	private String getUserGroupSourceClassName() {
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM);
-
+		String className = null;
+		
 		String syncSource = null;
 
 		if(val == null || val.trim().isEmpty()) {
 			syncSource=getSyncSource();
 		}
 		else {
+			if (val.equalsIgnoreCase(LGSYNC_SOURCE_CLASS) && isDeltaSyncEnabled()) {
+				val = LGSYNC_DELTASYNC_SOURCE_CLASS;
+			}
 			syncSource = val;
 		}
 
-		String className = val;
+		className = val;
 
 		if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
 			className = UGSYNC_SOURCE_CLASS;
 		}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
-			className = LGSYNC_SOURCE_CLASS;
-		}
+			if (!isDeltaSyncEnabled()) {
+				className = LGSYNC_SOURCE_CLASS;
+			} else {
+				className = LGSYNC_DELTASYNC_SOURCE_CLASS;
+			}
+		} 
+
+		return className;
+	}
+	
+	public UserGroupSource getUserGroupSource() throws Throwable {
+
+		String className = getUserGroupSourceClassName();
 
 		Class<UserGroupSource> ugSourceClass = (Class<UserGroupSource>)Class.forName(className);
 
@@ -494,12 +521,16 @@ public class UserGroupSyncConfig  {
 		return ret;
 	}
 
-
 	public UserGroupSink getUserGroupSink() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SINK_CLASS_PARAM);
+		String className = getUserGroupSourceClassName();
 
-		if(val == null || val.trim().isEmpty()) {
-			val = UGSYNC_SINK_CLASS;
+		if (className.equals(LGSYNC_DELTASYNC_SOURCE_CLASS)) {
+			val = LGSYNC_DELTASYNC_SINK_CLASS;
+		} else {
+			if(val == null || val.trim().isEmpty()) {
+				val = UGSYNC_SINK_CLASS;
+			}
 		}
 
 		Class<UserGroupSink> ugSinkClass = (Class<UserGroupSink>)Class.forName(val);
@@ -892,6 +923,17 @@ public class UserGroupSyncConfig  {
 		}
 		return starttlsEnabled;
 	}
+	
+	public boolean isDeltaSyncEnabled() {
+		boolean deltaSyncEnabled;
+		String val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
+		if(val == null || val.trim().isEmpty()) {
+			deltaSyncEnabled = DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED;
+		} else {
+			deltaSyncEnabled  = Boolean.valueOf(val);
+		}
+		return deltaSyncEnabled;
+	}
 
 	/* Used only for unit testing */
 	public void setUserSearchFilter(String filter) {
@@ -952,4 +994,9 @@ public class UserGroupSyncConfig  {
 	public void setGroupObjectClass(String groupObjectClass) {
 		prop.setProperty(LGSYNC_GROUP_OBJECT_CLASS, groupObjectClass);
 	}
+	
+	/* Used only for unit testing */
+    public void setDeltaSync(boolean deltaSyncEnabled) {
+        prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
+    }
 }

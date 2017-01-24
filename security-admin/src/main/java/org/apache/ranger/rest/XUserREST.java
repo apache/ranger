@@ -67,6 +67,7 @@ import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXGroupPermissionList;
 import org.apache.ranger.view.VXGroupUser;
+import org.apache.ranger.view.VXGroupUserInfo;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXModuleDef;
@@ -172,6 +173,14 @@ public class XUserREST {
 		return xUserMgr.createXGroupWithoutLogin(vXGroup);
 	}
 
+	@POST
+	@Path("/groups/groupinfo")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public VXGroupUserInfo createXGroupUserFromMap(VXGroupUserInfo vXGroupUserInfo) {
+		return  xUserMgr.createXGroupUserFromMap(vXGroupUserInfo);
+	}
+	
 	@POST
 	@Path("/secure/groups")
 	@Produces({ "application/xml", "application/json" })
@@ -412,6 +421,21 @@ public class XUserREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xGroupUserService.sortFields);
 		return xUserMgr.searchXGroupUsers(searchCriteria);
+	}
+	
+	/**
+	 * Implements the traditional search functionalities for XGroupUsers by Group name
+	 *
+	 * @param request
+	 * @return
+	 */
+	@GET
+	@Path("/groupusers/groupName/{groupName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USERS_BY_GROUP_NAME + "\")")
+	public VXGroupUserInfo getXGroupUsersByGroupName(@Context HttpServletRequest request,
+			@PathParam("groupName") String groupName) {
+		return xUserMgr.getXGroupUserFromMap(groupName);
 	}
 
 	@GET

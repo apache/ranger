@@ -88,6 +88,7 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupGroup;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupUser;
+import org.apache.ranger.view.VXGroupUserInfo;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXPermMap;
@@ -541,6 +542,71 @@ public class XUserMgr extends XUserMgrBase {
 
 		return vxUGInfo;
 	}
+	
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	public VXGroupUserInfo createXGroupUserFromMap(
+			VXGroupUserInfo vXGroupUserInfo) {
+		checkAdminAccess();
+		VXGroupUserInfo vxGUInfo = new VXGroupUserInfo();
+
+		VXGroup vXGroup = vXGroupUserInfo.getXgroupInfo();
+		// Add the group user mappings for a given group to x_group_user table
+		/*XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vXGroup.getName());
+		if (xGroup == null) {
+			return vxGUInfo;
+		}*/
+
+		List<VXUser> vxu = new ArrayList<VXUser>();
+
+		for (VXUser vXUser : vXGroupUserInfo.getXuserInfo()) {
+			XXUser xUser = daoManager.getXXUser().findByUserName(vXUser.getName());
+			if (xUser != null) {
+				// Add or update group user mapping only if the user already exists in x_user table.
+				vXGroup = xGroupService.createXGroupWithOutLogin(vXGroup);
+				vxGUInfo.setXgroupInfo(vXGroup);
+				vxu.add(vXUser);
+				VXGroupUser vXGroupUser = new VXGroupUser();
+				vXGroupUser.setUserId(xUser.getId());
+				vXGroupUser.setName(vXGroup.getName());
+				vXGroupUser = xGroupUserService
+						.createXGroupUserWithOutLogin(vXGroupUser);
+			}
+		}
+
+		vxGUInfo.setXuserInfo(vxu);
+
+		return vxGUInfo;
+	}
+	
+	public VXGroupUserInfo getXGroupUserFromMap(
+			String groupName) {
+		checkAdminAccess();
+		VXGroupUserInfo vxGUInfo = new VXGroupUserInfo();
+
+		XXGroup xGroup = daoManager.getXXGroup().findByGroupName(groupName);
+		if (xGroup == null) {
+			return vxGUInfo;
+		}
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchCriteria.addParam("xGroupId", xGroup.getId());
+
+		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
+		List<VXUser> vxu = new ArrayList<VXUser>();
+		logger.debug("removing all the group user mapping for : " + xGroup.getName());
+		for (VXGroupUser groupUser : vxGroupUserList.getList()) {
+			XXUser xUser = daoManager.getXXUser().getById(groupUser.getUserId());
+			if (xUser != null) {
+				VXUser vxUser = new VXUser();
+				vxUser.setName(xUser.getName());
+				vxu.add(vxUser);
+			}
+			
+		}
+		vxGUInfo.setXuserInfo(vxu);
+
+		return vxGUInfo;
+	}
+
 
 	public VXUser createXUserWithOutLogin(VXUser vXUser) {
 		checkAdminAccess();

@@ -17,18 +17,24 @@
  * under the License.
  */
 
- package org.apache.ranger.usergroupsync;
+package org.apache.ranger.unixusersync.model;
 
 import java.util.List;
 
-public interface UserGroupSink {
-	void init() throws Throwable;
+public class GroupUserInfo {
+	XGroupInfo xgroupInfo;
+	List<XUserInfo> xuserInfo;
 
-	void addOrUpdateUser(String user, List<String> groups) throws Throwable;
-	
-	void addOrUpdateUser(String user) throws Throwable;
-	
-	void addOrUpdateGroup(String group) throws Throwable;
-	
-	void addOrUpdateGroup(String group, List<String> users) throws Throwable;
+	public XGroupInfo getXgroupInfo() {
+		return xgroupInfo;
+	}
+	public void setXgroupInfo(XGroupInfo xgroupInfo) {
+		this.xgroupInfo = xgroupInfo;
+	}
+	public List<XUserInfo> getXuserInfo() {
+		return xuserInfo;
+	}
+	public void setXuserInfo(List<XUserInfo> xuserInfo) {
+		this.xuserInfo = xuserInfo;
+	}
 }

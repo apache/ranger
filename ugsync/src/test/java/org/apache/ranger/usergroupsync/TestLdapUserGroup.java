@@ -73,7 +73,7 @@ partitions =
 		)
 public class TestLdapUserGroup extends AbstractLdapTestUnit{
 	private UserGroupSyncConfig config;
-	private LdapUserGroupBuilder ldapBuilder;
+	private UserGroupSource ldapBuilder;
 
 	@Before
 	public void setup() throws Exception {
@@ -552,6 +552,111 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		ldapBuilder.updateSink(sink);
 		assertEquals(110, sink.getTotalUsers());
 		assertEquals(0, sink.getTotalGroups());
+	}
+	
+	@Test
+	public void testDeltaUpdateSinkTotalGroups() throws Throwable {
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+		config.setDeltaSync(true);
+		//UserGroupSource ldapDeltaBuilder = config.getUserGroupSource();
+		ldapBuilder = config.getUserGroupSource();
+		ldapBuilder.init();
+		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(10, sink.getTotalGroups());
+	}
+	
+	@Test
+	public void testDeltaUpdateSinkMultipleOUGroups() throws Throwable {
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com;ou=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;ou=BusinessUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("cn=*");
+		config.setGroupSearchBase("OU=HdpGroups,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=*Group10");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+		config.setDeltaSync(true);
+		ldapBuilder = config.getUserGroupSource();
+		ldapBuilder.init();
+		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(111, sink.getTotalUsers());
+		assertEquals(2, sink.getTotalGroups());
+	}
+	
+	@Test
+	public void testDeltaGroupBasedWithUserFilter() throws Throwable {
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com;");
+		config.setUserSearchFilter("cn=User*");
+		config.setGroupSearchBase("OU=HdpGroups,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=*Group10");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchFirstEnabled(true);
+		config.setUserSearchEnabled(true);
+		config.setDeltaSync(true);
+		ldapBuilder = config.getUserGroupSource();
+		ldapBuilder.init();
+		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(1, sink.getTotalUsers());
+		assertEquals(2, sink.getTotalGroups());
+	}
+
+	@Test
+	public void testDeltaGroupBasedWithNoUsers() throws Throwable {
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com;");
+		config.setUserSearchFilter("cn=*");
+		config.setGroupSearchBase("OU=HdpGroups,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=Group2*");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchFirstEnabled(true);
+		config.setUserSearchEnabled(true);
+		config.setDeltaSync(true);
+		ldapBuilder = config.getUserGroupSource();
+		ldapBuilder.init();
+		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(0, sink.getTotalUsers());
+		assertEquals(2, sink.getTotalGroups());
+	}
+	
+	@Test
+	public void testDeltaGBWithUserSearchDisabled() throws Throwable {
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com;");
+		config.setUserSearchFilter("cn=User*");
+		config.setGroupSearchBase("OU=HdpGroups,OU=HadoopUsers,DC=ranger,DC=qe,DC=hortonworks,DC=com;OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setGroupSearchFilter("cn=*Group10");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchFirstEnabled(true);
+		config.setUserSearchEnabled(false);
+		config.setDeltaSync(true);
+		ldapBuilder = config.getUserGroupSource();
+		ldapBuilder.init();
+		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(2, sink.getTotalUsers());
+		assertEquals(2, sink.getTotalGroups());
 	}
 
 	@After

@@ -162,4 +162,19 @@
       <name>ranger.usersync.pagedresultssize</name>
       <value>50</value>
     </property>
+    
+    <property>
+      <name>ranger.usersync.sink.impl.class</name>
+      <value>org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder</value>
+    </property>
+
+    <property>
+      <name>ranger.usersync.source.impl.class</name>
+      <value>LDAP</value>
+    </property>
+    
+    <property>
+      <name>ranger.usersync.ldap.deltasync</name>
+      <value>false</value>
+    </property>
   </configuration>

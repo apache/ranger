@@ -1063,5 +1063,19 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return ret;	
 	}
 
+
+	@Override
+	public void addOrUpdateUser(String user) throws Throwable {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void addOrUpdateGroup(String group, List<String> users) throws Throwable {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }

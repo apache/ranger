@@ -154,6 +154,7 @@ public class RangerAPIList {
 	public static final String UPDATE_X_GROUP_USER = "XUserREST.updateXGroupUser";
 	public static final String DELETE_X_GROUP_USER = "XUserREST.deleteXGroupUser";
 	public static final String SEARCH_X_GROUP_USERS = "XUserREST.searchXGroupUsers";
+	public static final String GET_X_GROUP_USERS_BY_GROUP_NAME = "XUserREST.getXGroupUsersByGroupName";
 	public static final String COUNT_X_GROUP_USERS = "XUserREST.countXGroupUsers";
 	public static final String GET_X_GROUP_GROUP = "XUserREST.getXGroupGroup";
 	public static final String CREATE_X_GROUP_GROUP = "XUserREST.createXGroupGroup";
