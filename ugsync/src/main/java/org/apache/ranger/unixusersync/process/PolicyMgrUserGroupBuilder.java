@@ -319,7 +319,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 			LOG.debug("INFO: addPMAccount(" + userName + ")" );
 			if (! isMockRun) {
-				addMUser(userName);
+				if (addMUser(userName) == null) {
+					String msg = "Failed to add portal user";
+					LOG.error(msg);
+					throw new Exception(msg);
+				}
 			}
 			
 			//* Build the user group info object and do the rest call
