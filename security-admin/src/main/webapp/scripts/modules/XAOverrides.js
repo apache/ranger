@@ -374,7 +374,6 @@
 	  		    		  self.determineChanges();
 	  		    	  }, 0);
 	  		      },
-	  		      'select [data-id="textFiledInput"]': "select",
 	  		      'focus [data-id="textFiledInput"]': "focus",
 	  		      'blur [data-id="textFiledInput"]':   "blur"
 	  	        
@@ -399,12 +398,19 @@
 	  		 * Adds the editor to the DOM
 	  	     */
 	  		  render: function() {
+	  			  var that = this, attrs = { 'name': this.key };
 	  			  if(this.schema.editorAttrs){
-	  				  this.$el.find('input').attr(this.schema.editorAttrs);
+	  				  attrs = _.extend(attrs , this.schema.editorAttrs);
 	  		      }
+	  			  this.$el.find('input').attr(attrs);
+	  			  _.each(attrs,function(val, key){
+	  				  if(key != 'id'){
+	  					  that.$el.removeAttr(key);
+	  				  }
+	  			  });
+	  			  this.$el.removeAttr('type');	
 	  			  this.setValue(this.value);
 	  		      XAUtil.errorsInfoPopover(this.$el.find('[data-id="infoTextFiled"]'),this.schema.errorMsg);
-	  
 	  		      return this;
 	  		   },
 	  	  	  determineChanges: function(event) {

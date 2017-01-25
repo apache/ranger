@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -163,8 +162,6 @@ import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXString;
-import org.apache.ranger.view.VXTrxLog;
-import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -1972,46 +1969,32 @@ public class ServiceDBStore extends AbstractServiceStore {
 		writeExcel(policies, excelFileName, response);
 	}
 
-	public void getPoliciesInCSV(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
+	public void getPoliciesInCSV(List<RangerPolicy> policies,
+			HttpServletResponse response) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
+		}
+		ServletOutputStream out = null;
+		String CSVFileName = null;
+		try {
+			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+			CSVFileName = "Ranger_Policies_" + timeStamp + ".csv";
+			out = response.getOutputStream();
+			StringBuffer sb = writeCSV(policies, CSVFileName, response);
+			IOUtils.write(sb.toString(), out, "UTF-8");
+		} catch (Exception e) {
+			LOG.error("Error while generating report file " + CSVFileName, e);
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.flush();
+					out.close();
 				}
-				InputStream in=null;
-				ServletOutputStream out=null;
-				String CSVFileName=null;
-				try {
-					String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-					CSVFileName = "Ranger_Policies_" + timeStamp + ".csv";
-					out = response.getOutputStream();
-					StringBuffer sb = writeCSV(policies, CSVFileName, response);
-					in = new ByteArrayInputStream(sb.toString().getBytes());
-					byte[] outputByte = new byte[sb.length()];
-					while (in.read(outputByte, 0, sb.length()) != -1) {
-						out.write(outputByte, 0, sb.length());
-					}
+			} catch (Exception ex) {
 			}
-				catch (Exception e) {
-					 LOG.error("Error while generating report file " + CSVFileName, e);
-					 e.printStackTrace();
-
-				}
-				finally {
-					try{
-						if(in!=null){
-							in.close();
-							in=null;
-						}
-					}catch(Exception ex){
-					}
-					try{
-						if(out!=null){
-							out.flush();
-							out.close();
-						}
-					}catch(Exception ex){
-					}
-				}
-			}
+		}
+	}
 	
 	public void getPoliciesInJson(List<RangerPolicy> policies,
 			HttpServletResponse response) throws Exception {
@@ -3282,6 +3265,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			String accessType = "";
 			String resValue = "";
 			String resourceKeyVal = "";
+			StringBuffer resKeyVal = new StringBuffer();
 			String resKey = "";
 			policyName = policy.getName();
 			policyName=policyName.replace("|", "");
@@ -3339,10 +3323,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 						RangerPolicyResource policyResource = resource.getValue();
 						List<String> resvalueList = policyResource.getValues();
 						resValue = resvalueList.toString();
-						resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
-						resourceKeyVal = resourceKeyVal.replace("|", "");
+						resKeyVal = resKeyVal.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
 					}
 				}
+				resourceKeyVal = resKeyVal.toString();
+				resourceKeyVal = resourceKeyVal.substring(1);
 
 				if (!CollectionUtils.isEmpty(policyItems)) {
 					for (RangerPolicyItem policyItem : policyItems) {
@@ -3426,10 +3411,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 						RangerPolicyResource policyResource = resource.getValue();
 						List<String> resvalueList = policyResource.getValues();
 						resValue = resvalueList.toString();
-						resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
-						resourceKeyVal = resourceKeyVal.replace("|", "");
+						resKeyVal = resKeyVal.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
 					}
 				}
+				resourceKeyVal = resKeyVal.toString();
+				resourceKeyVal = resourceKeyVal.substring(1);
 
 				for (RangerPolicyItem policyItem : policyItems) {
 					groups = null;
@@ -3506,8 +3492,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			HttpServletResponse response) throws JSONException, IOException {
 		response.setContentType("text/json");
 		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
-		StringBuffer sb = new StringBuffer();
-		InputStream in = null;
 		ServletOutputStream out = null;
 		RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 		putMetaDataInfo(rangerExportPolicyList);
@@ -3518,23 +3502,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		try {
 			out = response.getOutputStream();
-			sb = sb.append(json);
-			in = new ByteArrayInputStream(sb.toString().getBytes());
-			byte[] outputByte = new byte[sb.length()];
-			response.setStatus(HttpServletResponse.SC_OK);
-			while (in.read(outputByte, 0, sb.length()) != -1) {
-				out.write(outputByte, 0, sb.length());
-			}
+			IOUtils.write(json, out, "UTF-8");
 		} catch (Exception e) {
-			LOG.error(e);
+			LOG.error("Error while exporting json file " + jsonFileName, e);
 		} finally {
-			try {
-				if (in != null) {
-					in.close();
-					in = null;
-				}
-			} catch (Exception ex) {
-			}
 			try {
 				if (out != null) {
 					out.flush();
@@ -3622,6 +3593,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		String resValue = "";
 		String resourceKeyVal = "";
 		String resKey = "";
+		StringBuffer sb = new StringBuffer();
 		Map<String, RangerPolicyResource> resources = policy.getResources();
 		if (resources != null) {
 			for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
@@ -3629,9 +3601,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 				RangerPolicyResource policyResource = resource.getValue();
 				List<String> resvalueList = policyResource.getValues();
 				resValue = resvalueList.toString();
-				resourceKeyVal = resourceKeyVal + " " + resKey + "=" + resValue;
+				sb = sb.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
 			}
-
+			resourceKeyVal = sb.toString();
+			resourceKeyVal = resourceKeyVal.substring(1);
 			cell.setCellValue(resourceKeyVal);
 			if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
 				groups = policyItem.getGroups();

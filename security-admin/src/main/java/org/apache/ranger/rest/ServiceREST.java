@@ -1804,7 +1804,8 @@ public class ServiceREST {
 			List<String> dataFileSourceServices = new ArrayList<String>();
 			if (fileName.endsWith("json")) {
 				try {
-					RangerExportPolicyList rangerExportPolicyList = null;
+					RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+					List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
 					Gson gson = new Gson();
 					
 					String policiesString = IOUtils.toString(uploadedInputStream);
@@ -1812,8 +1813,13 @@ public class ServiceREST {
 						gson.fromJson(policiesString, RangerExportPolicyList.class);
 						rangerExportPolicyList = new ObjectMapper().readValue(policiesString, RangerExportPolicyList.class);
 					}
-					metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
-					List<RangerPolicy> policies = rangerExportPolicyList.getPolicies();
+					if (!CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())){
+						metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
+					}
+					if (!CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getPolicies())){
+						policies = rangerExportPolicyList.getPolicies();
+					}
+					
 					if (CollectionUtils.sizeIsEmpty(servicesMappingMap) && isOverride){
 						if(!CollectionUtils.sizeIsEmpty(policies)){
 							for (RangerPolicy policyInJson: policies){
@@ -1900,7 +1906,7 @@ public class ServiceREST {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Total Policy Created From Json file : " + totalPolicyCreate);
 						}
-						if(!(totalPolicyCreate > 1)){
+						if(!(totalPolicyCreate > 0)){
 							LOG.error("zero policy is created from provided data file!!");
 							throw restErrorUtil.createRESTException("zero policy is created from provided data file!!");
 						}
