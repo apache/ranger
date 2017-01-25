@@ -128,7 +128,7 @@ public class RangerLegacyConfigBuilder {
 			}
 		}
 		catch(Throwable t) {
-			LOG.error("Unable to locate audit file location." + fName + " " + t);
+			LOG.error("Missing Ranger Audit configuration files...");
 			throw t;
 		}
 		return ret;
