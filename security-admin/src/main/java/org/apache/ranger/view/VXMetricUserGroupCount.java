@@ -31,49 +31,91 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class VXMetricUserGroupCount implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	protected Long userCount;
 	protected Long groupCount;
-	
+	protected Long userCountOfUserRole;
+	protected Long userCountOfKeyAdminRole;
+	protected Long userCountOfSysAdminRole;
+	protected Long userTotalCount;
+		
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	*/
 	public VXMetricUserGroupCount() {
 	}
-
-	/**
-	 * @return the userCount
-	 */
-	public Long getUserCount() {
-		return userCount;
-	}
-
-	/**
-	 * @param userCount the userCount to set
-	 */
-	public void setUserCount(Long userCount) {
-		this.userCount = userCount;
-	}
-
 	/**
 	 * @return the groupCount
 	 */
 	public Long getGroupCount() {
 		return groupCount;
 	}
-
 	/**
 	 * @param groupCount the groupCount to set
 	 */
 	public void setGroupCount(Long groupCount) {
 		this.groupCount = groupCount;
 	}
-
+	/**
+	 * @return the userTotalCount
+	 */
+	public Long getUserTotalCount() {
+		return userTotalCount;
+	}
+	/**
+	 * @param userTotalCount the userTotalCount to set
+	 */
+	public void setUserTotalCount(Long userTotalCount) {
+		this.userTotalCount = userTotalCount;
+	}
+	/**
+	 * @return the userCountOfUserRole
+	 */
+	public Long getUserCountOfUserRole() {
+		return userCountOfUserRole;
+	}
+	/**
+	 * @param userCountOfUserRole the userCountOfUserRole to set
+	 */
+	public void setUserCountOfUserRole(Long userCountOfUserRole) {
+		this.userCountOfUserRole = userCountOfUserRole;
+	}
+	/**
+	 * @return the userCountOfKeyAdminRole
+	 */
+	public Long getUserCountOfKeyAdminRole() {
+		return userCountOfKeyAdminRole;
+	}
+	/**
+	 * @param userCountOfKeyAdminRole the userKeyAdminRoleCount to set
+	 */
+	public void setUserCountOfKeyAdminRole(Long userCountOfKeyAdminRole) {
+		this.userCountOfKeyAdminRole = userCountOfKeyAdminRole;
+	}
+	/**
+	 * @return the userCountOfSysAdminRole
+	 */
+	public Long getUserCountOfSysAdminRole() {
+		return userCountOfSysAdminRole;
+	}
+	/**
+	 * @param userCountOfSysAdminRole the userCountOfSysAdminRole to set
+	 */
+	public void setUserCountOfSysAdminRole(Long userCountOfSysAdminRole) {
+		this.userCountOfSysAdminRole = userCountOfSysAdminRole;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
-		String str = "VXMetricUserGroupCount={";
-		str += "userCount={" + userCount + "} ";
-		str += "groupCount={" + groupCount + "} ";
-		str += "}";
-		return str;
+		return "VXMetricUserGroupCount [groupCount=" + groupCount
+				+ ", userCountBasedOnUserRole=" + userCountOfUserRole
+				+ ", userKeyAdminRoleCount=" + userCountOfKeyAdminRole
+				+ ", userSysAdminCount=" + userCountOfSysAdminRole
+				+ ", userTotalCount=" + userTotalCount + "]";
 	}
+	
+	
 }

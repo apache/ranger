@@ -16,19 +16,26 @@
  */
 package org.apache.ranger.patch.cliutil;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
+import org.apache.ranger.common.DateUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.patch.BaseLoader;
@@ -40,6 +47,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.util.CLIUtil;
+import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXMetricContextEnricher;
@@ -73,6 +81,9 @@ public class MetricUtil extends BaseLoader  {
 	@Autowired
 	RangerBizUtil xaBizUtil;
 	
+	@Autowired
+	RESTErrorUtil restErrorUtil;
+	
 	public static void main(String[] args) {
 		logger.getRootLogger().setLevel(Level.OFF);
 		logger.info("MetricUtil : main()");
@@ -82,7 +93,7 @@ public class MetricUtil extends BaseLoader  {
 			if(args.length != 2){
 				System.out.println("type: Incorrect Arguments usage : -type policies | audits | usergroup | services | database | contextenrichers | denyconditions");
 			}else {
-				if((!args[0].equalsIgnoreCase("-type")) && (!args[1].equalsIgnoreCase("policies") || !args[1].equalsIgnoreCase("audits") || !args[1].equalsIgnoreCase("usergroup") || !args[1].equalsIgnoreCase("services") || !args[1].equalsIgnoreCase("database") || !args[1].equalsIgnoreCase("contextenrichers") || !args[1].equalsIgnoreCase("denyconditions"))){
+				if(!(args[0].equalsIgnoreCase("-type")) || !(args[1].equalsIgnoreCase("policies") || args[1].equalsIgnoreCase("audits") || args[1].equalsIgnoreCase("usergroup") || args[1].equalsIgnoreCase("services") || args[1].equalsIgnoreCase("database") || args[1].equalsIgnoreCase("contextenrichers") || args[1].equalsIgnoreCase("denyconditions"))){
 					System.out.println("type: Incorrect Arguments usage : -type policies | audits | usergroup | services | database | contextenrichers | denyconditions");	
 				}else{
 					metricType = args[1];
@@ -119,7 +130,7 @@ public class MetricUtil extends BaseLoader  {
 	public void printStats() {		
 	}
 	
-	private Object metricCalculation(String caseValue) {
+	private void metricCalculation(String caseValue) {
 		logger.info("Metric Type : " + caseValue);		
 		try {
 			SearchCriteria searchCriteria = new SearchCriteria();
@@ -131,42 +142,92 @@ public class MetricUtil extends BaseLoader  {
 			switch (caseValue.toLowerCase()) {
 				case "usergroup":
 					try {
-						VXGroupList VXGroupList = xUserMgr.searchXGroups(searchCriteria);
+						VXGroupList vxGroupList = xUserMgr.searchXGroups(searchCriteria);
 
-						long groupCount = VXGroupList.getTotalCount();
-
-						ArrayList<String> userRoleList = new ArrayList<String>();
-						userRoleList.add(RangerConstants.ROLE_SYS_ADMIN);
-						userRoleList.add(RangerConstants.ROLE_KEY_ADMIN);
-						userRoleList.add(RangerConstants.ROLE_USER);
-						searchCriteria.addParam("userRoleList", userRoleList);
-						VXUserList VXUserList = xUserMgr.searchXUsers(searchCriteria);
-						long userCount = VXUserList.getTotalCount();
-
+						long groupCount = vxGroupList.getTotalCount();
+						
+						ArrayList<String> userKeyAdminRoleCount = new ArrayList<String>();
+						userKeyAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
+						long userSysAdminCount = getUserCountBasedOnUserRole(userKeyAdminRoleCount);
+						
+						ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<String>();
+						userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
+						long userKeyAdminCount = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
+						
+						ArrayList<String> userRoleListUser = new ArrayList<String>();
+						userRoleListUser.add(RangerConstants.ROLE_USER);
+						long userRoleCount = getUserCountBasedOnUserRole(userRoleListUser);
+						 	
+						long userTotalCount = userSysAdminCount + userKeyAdminCount + userRoleCount;
+						
 						VXMetricUserGroupCount metricUserGroupCount = new VXMetricUserGroupCount();
-						metricUserGroupCount.setUserCount(userCount);
+						metricUserGroupCount.setUserCountOfUserRole(userRoleCount);
+						metricUserGroupCount.setUserCountOfKeyAdminRole(userKeyAdminCount);
+						metricUserGroupCount.setUserCountOfSysAdminRole(userSysAdminCount);
+						metricUserGroupCount.setUserTotalCount(userTotalCount);
 						metricUserGroupCount.setGroupCount(groupCount);
 						Gson gson = new GsonBuilder().create();
 						final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
 						System.out.println(jsonUserGroupCount);
 					} catch (Exception e) {
-						logger.error("Error for calculating Metric for usergroup : "+ e.getMessage());
+						logger.error("Error calculating Metric for usergroup : "+ e.getMessage());
 					}
 					break;								
 				case "audits":
 					try{
+						 int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+						String defaultDateFormat="MM/dd/yyyy";
+						DateFormat formatter = new SimpleDateFormat(defaultDateFormat);
+						
 						VXMetricAuditDetailsCount auditObj = new VXMetricAuditDetailsCount();
-						VXMetricServiceCount deniedCountObj =  getAuditsCount(0);
-						auditObj.setDenialEventsCount(deniedCountObj);
-						VXMetricServiceCount allowedCountObj = getAuditsCount(1);
-						auditObj.setAccessEventsCount(allowedCountObj);
-						long totalAuditsCount = deniedCountObj.getTotalCount() + allowedCountObj.getTotalCount();				
-						auditObj.setSolrIndexCount(totalAuditsCount);
+						DateUtil dateUtilTwoDays = new DateUtil();
+						Date startDateUtilTwoDays = dateUtilTwoDays.getDateFromNow(-2);
+						Date dStart2 = restErrorUtil.parseDate(formatter.format(startDateUtilTwoDays),
+								"Invalid value for startDate",
+								MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
+						
+						Date endDateTwoDays = MiscUtil.getUTCDate();
+						Date dEnd2 = restErrorUtil.parseDate(formatter.format(endDateTwoDays),
+								"Invalid value for endDate",
+								MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+						dEnd2 = dateUtilTwoDays.getDateFromGivenDate(dEnd2, 0, 23, 59, 59);
+						dEnd2 = dateUtilTwoDays.addTimeOffset(dEnd2, clientTimeOffsetInMinute);
+						VXMetricServiceCount deniedCountObj = getAuditsCount(0,dStart2,dEnd2);
+						auditObj.setDenialEventsCountTwoDays(deniedCountObj);
+						
+						VXMetricServiceCount allowedCountObj = getAuditsCount(1,dStart2,dEnd2);
+						auditObj.setAccessEventsCountTwoDays(allowedCountObj);
+						
+						long totalAuditsCountTwoDays = deniedCountObj.getTotalCount() + allowedCountObj.getTotalCount();	
+						auditObj.setSolrIndexCountTwoDays(totalAuditsCountTwoDays);
+						
+						DateUtil dateUtilWeek = new DateUtil();
+						Date startDateUtilWeek = dateUtilWeek.getDateFromNow(-7);
+						Date dStart7 = restErrorUtil.parseDate(formatter.format(startDateUtilWeek),
+								"Invalid value for startDate",
+								MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
+						
+						Date endDateWeek = MiscUtil.getUTCDate();
+						DateUtil dateUtilweek = new DateUtil();
+						Date dEnd7 = restErrorUtil.parseDate(formatter.format(endDateWeek),
+								"Invalid value for endDate",
+								MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+						dEnd7 = dateUtilweek.getDateFromGivenDate(dEnd7,0, 23, 59, 59 );
+						dEnd7 = dateUtilweek.addTimeOffset(dEnd7, clientTimeOffsetInMinute);
+						VXMetricServiceCount deniedCountObjWeek =  getAuditsCount(0,dStart7,dEnd7);
+						auditObj.setDenialEventsCountWeek(deniedCountObjWeek);
+						
+						VXMetricServiceCount allowedCountObjWeek = getAuditsCount(1,dStart7,dEnd7);
+						auditObj.setAccessEventsCountWeek(allowedCountObjWeek);
+						
+						long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();	
+						auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
+						
 						Gson gson = new GsonBuilder().create();
 						final String jsonAudit = gson.toJson(auditObj);
 						System.out.println(jsonAudit);
 					}catch (Exception e) {
-						logger.error("Error for calculating Metric for audits : "+e.getMessage());
+						logger.error("Error calculating Metric for audits : "+e.getMessage());
 					}
 					break;	
 				case "services" : 	
@@ -198,7 +259,7 @@ public class MetricUtil extends BaseLoader  {
 						final String jsonServices = gson.toJson(vXMetricServiceCount);
 						System.out.println(jsonServices);
 					}catch (Exception e) {
-						logger.error("Error for calculating Metric for services : "+e.getMessage());
+						logger.error("Error calculating Metric for services : "+e.getMessage());
 					}
 					break;					
 				case "policies" :   
@@ -229,7 +290,7 @@ public class MetricUtil extends BaseLoader  {
 						{
 							policyFilter.setParam("serviceType","tag");
 							PList<RangerPolicy> policiestype = svcStore.getPaginatedPolicies(policyFilter);
-							Map<String,Long> tagMap= new HashMap<String,Long>();
+							Map<String,Long> tagMap = new HashMap<String,Long>();
 							long tagCount = policiestype.getTotalCount();
 							tagMap.put("tag",tagCount);
 							VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
@@ -243,7 +304,7 @@ public class MetricUtil extends BaseLoader  {
 						final String jsonPolicies = gson.toJson(vXMetricPolicyCount);
 						System.out.println(jsonPolicies);
 					}catch (Exception e) {
-						logger.error("Error for calculating Metric for policies : "+e.getMessage());
+						logger.error("Error calculating Metric for policies : "+e.getMessage());
 					}				
 					break;
 				case "database" :
@@ -266,7 +327,7 @@ public class MetricUtil extends BaseLoader  {
 						final String jsonDBDetail = gson.toJson(dbDetail);
 						System.out.println(jsonDBDetail);						
 					}catch (Exception e) {
-						logger.error("Error for calculating Metric for database : "+e.getMessage());
+						logger.error("Error calculating Metric for database : "+e.getMessage());
 					}
 					break;
 				case "contextenrichers":
@@ -274,7 +335,7 @@ public class MetricUtil extends BaseLoader  {
 					{
 						SearchFilter filter = new SearchFilter();
 					    filter.setStartIndex(0);
-					    VXMetricContextEnricher serviceWithContextEnrichers= new VXMetricContextEnricher();
+					    VXMetricContextEnricher serviceWithContextEnrichers = new VXMetricContextEnricher();
 					    PList<RangerServiceDef> paginatedSvcDefs = svcStore.getPaginatedServiceDefs(filter);
 					    List<RangerServiceDef> repoTypeList = paginatedSvcDefs.getList();
 					    if(repoTypeList != null){
@@ -294,7 +355,7 @@ public class MetricUtil extends BaseLoader  {
 						System.out.println(jsonContextEnrichers);
 					}
 					catch (Exception e) {
-						logger.error("Error for calculating Metric for contextenrichers : "+e.getMessage());
+						logger.error("Error calculating Metric for contextenrichers : "+e.getMessage());
 					}
 					break;
 				case "denyconditions":
@@ -324,7 +385,7 @@ public class MetricUtil extends BaseLoader  {
 		                        				int policyListCount = policiesList.getListSize();
 		                        				if (policyListCount > 0 && policiesList.getList() != null) {
 		                        					List<RangerPolicy> policies = policiesList.getList();
-		                        					for(int j=0; j<policies.size(); j++){
+		                        					for(int j = 0; j < policies.size(); j++){
 		                        						if(policies.get(j) != null){
 		                        							List<RangerPolicyItem> policyItem = policies.get(j).getDenyPolicyItems();
 		                        							if(policyItem != null && policyItem.size() > 0){
@@ -358,7 +419,7 @@ public class MetricUtil extends BaseLoader  {
 	                    String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
 	                    System.out.println(jsonContextDenyCondtionOn);
 	                } catch (Exception e) {
-	                    logger.error("Error for calculating Metric for denyconditions : "+ e.getMessage());
+	                    logger.error("Error calculating Metric for denyconditions : "+ e.getMessage());
 	                }
 	                break;
 				default:
@@ -367,9 +428,8 @@ public class MetricUtil extends BaseLoader  {
 					break;
 			}
 		} catch(Exception e) {
-			logger.error("Error for calculating Metric : "+e.getMessage());
+			logger.error("Error calculating Metric : "+e.getMessage());
 		}		
-		return null;		
 	}
 	
 	private  VXMetricServiceCount getVXMetricServiceCount(String serviceType) throws Exception 
@@ -402,7 +462,7 @@ public class MetricUtil extends BaseLoader  {
 						servicesforPolicyType.put(serviceName,count);
 					}
 					else{
-						tagCount=count;
+						tagCount = count;
 					}
 				}
 			}
@@ -414,12 +474,11 @@ public class MetricUtil extends BaseLoader  {
 		return vXMetricServiceCount;
 	}
 	
-	private VXMetricServiceCount getAuditsCount(int accessResult) throws Exception {
-	
+	private VXMetricServiceCount getAuditsCount(int accessResult, Date startDate, Date endDate) throws Exception 
+	{
 		long totalCountOfAudits = 0;
 		SearchFilter filter = new SearchFilter();
 		filter.setStartIndex(0);
-		
 		Map<String,Long> servicesRepoType = new HashMap<String,Long>();
 		VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
 		PList<RangerServiceDef> paginatedSvcDefs = svcStore.getPaginatedServiceDefs(filter);
@@ -431,6 +490,8 @@ public class MetricUtil extends BaseLoader  {
 			SearchCriteria searchCriteriaWithType = new SearchCriteria();
 			searchCriteriaWithType.getParamList().put("repoType",id);
 			searchCriteriaWithType.getParamList().put("accessResult", accessResult);
+			searchCriteriaWithType.addParam("startDate",startDate);
+			searchCriteriaWithType.addParam("endDate",endDate);
 			VXAccessAuditList vXAccessAuditListwithType = assetMgr.getAccessLogs(searchCriteriaWithType);
 			long toltalCountOfRepo = vXAccessAuditListwithType.getTotalCount();
 			if(toltalCountOfRepo != 0)
@@ -442,5 +503,16 @@ public class MetricUtil extends BaseLoader  {
 		vXMetricServiceCount.setServiceCountList(servicesRepoType);
 		vXMetricServiceCount.setTotalCount(totalCountOfAudits);
 		return vXMetricServiceCount;
+	}
+	private Long getUserCountBasedOnUserRole(@SuppressWarnings("rawtypes") List userRoleList) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchCriteria.setStartIndex(0);
+		searchCriteria.setMaxRows(100);
+		searchCriteria.setGetCount(true);
+		searchCriteria.setSortType("asc");	
+		searchCriteria.addParam("userRoleList", userRoleList);
+		VXUserList VXUserListKeyAdmin = xUserMgr.searchXUsers(searchCriteria);
+		long userCount = VXUserListKeyAdmin.getTotalCount();
+		return userCount;
 	}
 }

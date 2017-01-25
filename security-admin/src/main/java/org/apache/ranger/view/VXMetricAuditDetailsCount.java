@@ -30,65 +30,102 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class VXMetricAuditDetailsCount implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	protected Long solrIndexCount;
-	protected VXMetricServiceCount accessEventsCount;
-	protected VXMetricServiceCount denialEventsCount;
-	
+	protected Long solrIndexCountTwoDays;
+	protected VXMetricServiceCount accessEventsCountTwoDays;
+	protected VXMetricServiceCount denialEventsCountTwoDays;
+	protected Long solrIndexCountWeek;
+	protected VXMetricServiceCount accessEventsCountWeek;
+	protected VXMetricServiceCount denialEventsCountWeek;
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXMetricAuditDetailsCount() {
 	}
-	
 	/**
-	 * @return the solrIndexCount
+	 * @return the solrIndexCountTwoDays
 	 */
-	public Long getSolrIndexCount() {
-		return solrIndexCount;
+	public Long getSolrIndexCountTwoDays() {
+		return solrIndexCountTwoDays;
 	}
-
 	/**
-	 * @param solrIndexCount the solrIndexCount to set
+	 * @param solrIndexCountTwoDays the solrIndexCountTwoDays to set
 	 */
-	public void setSolrIndexCount(Long solrIndexCount) {
-		this.solrIndexCount = solrIndexCount;
+	public void setSolrIndexCountTwoDays(Long solrIndexCountTwoDays) {
+		this.solrIndexCountTwoDays = solrIndexCountTwoDays;
 	}
-
 	/**
-	 * @return the accessEventsCount
+	 * @return the accessEventsCountTwoDays
 	 */
-	public VXMetricServiceCount getAccessEventsCount() {
-		return accessEventsCount;
+	public VXMetricServiceCount getAccessEventsCountTwoDays() {
+		return accessEventsCountTwoDays;
 	}
-
 	/**
-	 * @param accessEventsCount the accessEventsCount to set
+	 * @param accessEventsCountTwoDays the accessEventsCountTwoDays to set
 	 */
-	public void setAccessEventsCount(VXMetricServiceCount accessEventsCount) {
-		this.accessEventsCount = accessEventsCount;
+	public void setAccessEventsCountTwoDays(
+			VXMetricServiceCount accessEventsCountTwoDays) {
+		this.accessEventsCountTwoDays = accessEventsCountTwoDays;
 	}
-
 	/**
-	 * @return the denialEventsCount
+	 * @return the denialEventsCountTwoDays
 	 */
-	public VXMetricServiceCount getDenialEventsCount() {
-		return denialEventsCount;
+	public VXMetricServiceCount getDenialEventsCountTwoDays() {
+		return denialEventsCountTwoDays;
 	}
-
 	/**
-	 * @param denialEventsCount the denialEventsCount to set
+	 * @param denialEventsCountTwoDays the denialEventsCountTwoDays to set
 	 */
-	public void setDenialEventsCount(VXMetricServiceCount denialEventsCount) {
-		this.denialEventsCount = denialEventsCount;
+	public void setDenialEventsCountTwoDays(
+			VXMetricServiceCount denialEventsCountTwoDays) {
+		this.denialEventsCountTwoDays = denialEventsCountTwoDays;
 	}
-
+	/**
+	 * @return the solrIndexCountWeek
+	 */
+	public Long getSolrIndexCountWeek() {
+		return solrIndexCountWeek;
+	}
+	/**
+	 * @param solrIndexCountWeek the solrIndexCountWeek to set
+	 */
+	public void setSolrIndexCountWeek(Long solrIndexCountWeek) {
+		this.solrIndexCountWeek = solrIndexCountWeek;
+	}
+	/**
+	 * @return the accessEventsCountWeek
+	 */
+	public VXMetricServiceCount getAccessEventsCountWeek() {
+		return accessEventsCountWeek;
+	}
+	/**
+	 * @param accessEventsCountWeek the accessEventsCountWeek to set
+	 */
+	public void setAccessEventsCountWeek(VXMetricServiceCount accessEventsCountWeek) {
+		this.accessEventsCountWeek = accessEventsCountWeek;
+	}
+	/**
+	 * @return the denialEventsCountWeek
+	 */
+	public VXMetricServiceCount getDenialEventsCountWeek() {
+		return denialEventsCountWeek;
+	}
+	/**
+	 * @param denialEventsCountWeek the denialEventsCountWeek to set
+	 */
+	public void setDenialEventsCountWeek(VXMetricServiceCount denialEventsCountWeek) {
+		this.denialEventsCountWeek = denialEventsCountWeek;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
-		String str = "VXMetricAuditDetailsCount=[";
-		str += "solrIndexCount={" + solrIndexCount + "},";
-		str += "accessEventsCount={" + accessEventsCount.toString() + "}, ";
-		str += "denialEventsCount={" + denialEventsCount.toString() + "} ";
-		str += "]";
-		return str;
-	}
+		return "VXMetricAuditDetailsCount [solrIndexCountTwoDays="
+				+ solrIndexCountTwoDays + ", accessEventsCountTwoDays="
+				+ accessEventsCountTwoDays + ", denialEventsCountTwoDays="
+				+ denialEventsCountTwoDays + ", solrIndexCountWeek="
+				+ solrIndexCountWeek + ", accessEventsCountWeek="
+				+ accessEventsCountWeek + ", denialEventsCountWeek="
+				+ denialEventsCountWeek + "]";
+	}	
 }

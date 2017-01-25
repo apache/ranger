@@ -19,9 +19,12 @@ if [ -z "$1" ]
 then
 	echo "Invalid argument [$1];"
 	echo "Usage: Only start | stop | restart | version, are supported."
+	echo "For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm"
 	exit;
 fi
 action=$1
+arg2=$2
+arg3=$3
 action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
@@ -138,6 +141,9 @@ killRangerKMSPid () {
 		echo "Apache Ranger KMS Service is not running"
 	fi
 }
+metric(){
+	java  ${JAVA_OPTS} org.apache.hadoop.crypto.key.kms.server.KMSMetricUtil ${arg2} ${arg3} 2>/dev/null
+}
 if [ "${action}" == "START" ]; then
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf`
@@ -160,11 +166,15 @@ elif [ "${action}" == "RESTART" ]; then
 	killRangerKMSPid
 	createRangerKMSPid
 	exit
+elif [ "${action}" == "METRIC" ]; then
+	metric;
+	exit
 elif [ "${action}" == "VERSION" ]; then
 	( cd ${RANGER_KMS_LIB_DIR} ; java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo )
 	exit
 else
         echo "Invalid argument [$1];"
         echo "Usage: Only start | stop | restart | version, are supported."
+        echo "For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm"
         exit;
 fi

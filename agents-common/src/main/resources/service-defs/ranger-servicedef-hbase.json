@@ -52,7 +52,7 @@
 			"level": 30,
 			"parent": "column-family",
 			"mandatory": true,
-			"lookupSupported": true,
+			"lookupSupported": false,
 			"recursiveSupported": false,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
