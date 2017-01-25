@@ -34,9 +34,9 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 The current stable release is Apache Ranger 0.6.2:
 </p>
 <p>
-<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz">apache-ranger-incubating-0.6.2.tar.gz</a>
-(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.asc">PGP</a>)
-(<a href="https://dist.apache.org/repos/dist/release/incubator/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.mds">Digests</a>)
+<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz">apache-ranger-incubating-0.6.2.tar.gz</a>
+(<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.asc">PGP</a>)
+(<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.2-incubating/apache-ranger-incubating-0.6.2.tar.gz.mds">Digests</a>)
 </p>
 </li>
 <li>
@@ -65,7 +65,7 @@ An older branch release is Apache Ranger 0.4.0:
 <p>
 When downloading from a mirror please check the SHA1/MD5 checksums as well
 as verifying the OpenPGP compatible signature available from the main Apache
-site. The <a href="https://www.apache.org/dist/incubator/ranger/KEYS">KEYS</a>
+site. The <a href="https://www.apache.org/dist/ranger/KEYS">KEYS</a>
 file contains the public keys used for signing the release. It is recommended
 that a web of trust is used to confirm the identity of these keys.
 </p>

@@ -44,7 +44,7 @@ remote_home=
 container_name="--name ranger_build"
 
 if [ ! -d security-admin ]; then
-    echo "ERROR: Run the script from root folder of source. e.g. $HOME/git/incubator-ranger"
+    echo "ERROR: Run the script from root folder of source. e.g. $HOME/git/ranger"
     exit 1
 fi
 
@@ -116,4 +116,4 @@ src_folder=`pwd`
 LOCAL_M2="$HOME/.m2"
 mkdir -p $LOCAL_M2
 set -x
-docker run --rm  -v "${src_folder}:/incubator-ranger" -w "/incubator-ranger" -v "${LOCAL_M2}:${remote_home}/.m2" $container_name $image_name $params
+docker run --rm  -v "${src_folder}:/ranger" -w "/ranger" -v "${LOCAL_M2}:${remote_home}/.m2" $container_name $image_name $params

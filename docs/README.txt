@@ -17,7 +17,7 @@
 # Build Instruction for Apache Ranger Documentation
 # ---------------------------------------------------------------------
 
-$ export DOC_SRC_DIR=incubator-ranger/docs
+$ export DOC_SRC_DIR=ranger/docs
 $ cd ${DOC_SRC_DIR}
 
 $ mvn site
@@ -29,7 +29,7 @@ $ mvn site
 
 DOC_DEPLOY_DIR=/tmp/doc_deploy_dir.$$
 mkdir -p ${DOC_DEPLOY_DIR}
-svn co https://svn.apache.org/repos/asf/incubator/ranger/site/trunk ranger
+svn co https://svn.apache.org/repos/asf/ranger/site/trunk ranger
 
 cd ${DOC_SRC_DIR}/target
 rsync -avcn * ${DOC_DEPLOY_DIR}/ranger

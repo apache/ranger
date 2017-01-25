@@ -31,15 +31,15 @@
                 1. Check out the code from GIT repository
             </p>
             <ul>
-               <source>git clone https://git-wip-us.apache.org/repos/asf/incubator-ranger.git</source>
-               <source>cd incubator-ranger </source>
+               <source>git clone https://git-wip-us.apache.org/repos/asf/ranger.git</source>
+               <source>cd ranger </source>
             </ul>
             <p>
                 Alternatively, you can checkout the code from github:
             </p>
             <ul>
-               <source>git clone https://github.com/apache/incubator-ranger</source>
-               <source>cd incubator-ranger </source>
+               <source>git clone https://github.com/apache/ranger</source>
+               <source>cd ranger </source>
             </ul>
             
             <p>
@@ -92,30 +92,30 @@
             <p>
                5. Now, the following files are ready to be published for release:
                 <source>
-        ./target/apache-ranger-incubating-%version-number%.tar.gz
-        ./target/apache-ranger-incubating-%version-number%.tar.gz.asc
-        ./target/apache-ranger-incubating-%version-number%.tar.gz.mds
+        ./target/apache-ranger-%version-number%.tar.gz
+        ./target/apache-ranger-%version-number%.tar.gz.asc
+        ./target/apache-ranger-%version-number%.tar.gz.mds
                 </source>
             </p>
             </subsection>
 
         <subsection name = "Verifying Build (also called as a Release)">
             <p>
-                1. Download the release source file, apache-ranger-incubating-%version-number%.tar.gz  (from URL provided in the release email)
+                1. Download the release source file, apache-ranger-%version-number%.tar.gz  (from URL provided in the release email)
            
 			</p>
 			<p>
-            	2. Download the PGP signature for, apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.asc (from URL provided in the release email)
+            	2. Download the PGP signature for, apache-ranger-%version-number%.tar.gz which usaully named as apache-ranger-%version-number%.tar.gz.asc (from URL provided in the release email)
 			</p>
 			<p>
             	3. Execute the following command to verify the release
-        <source> $ gpg --verify apache-ranger-incubating-%version-number%.tar.gz.asc apache-ranger-incubating-%version-number%.tar.gz </source>
+        <source> $ gpg --verify apache-ranger-%version-number%.tar.gz.asc apache-ranger-%version-number%.tar.gz </source>
         
 			</p>
         <p>
-            4. Download MD5/SHA hash for apache-ranger-incubating-%version-number%.tar.gz which usaully named as apache-ranger-incubating-%version-number%.tar.gz.mds (from URL provided in the release email)
-            <source>$ gpg --print-mds apache-ranger-incubating-%version-number%.tar.gz </source>
-            Compare MD5, SHA hash generated from the above command and the signature available in the apache-ranger-incubating-%version-number%.tar.gz.mds.
+            4. Download MD5/SHA hash for apache-ranger-%version-number%.tar.gz which usaully named as apache-ranger-%version-number%.tar.gz.mds (from URL provided in the release email)
+            <source>$ gpg --print-mds apache-ranger-%version-number%.tar.gz </source>
+            Compare MD5, SHA hash generated from the above command and the signature available in the apache-ranger-%version-number%.tar.gz.mds.
         </p>
 
         </subsection>

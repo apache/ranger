@@ -64,7 +64,7 @@ ${project.name}
   concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem.
   
   Contributors can check out the source codefrom our
-  {{{http://git.apache.org/incubator-ranger.git/}Git repository}}
+  {{{http://git.apache.org/ranger.git/}Git repository}}
 
 * Disclaimer
 
