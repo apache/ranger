@@ -105,6 +105,7 @@
       "label": "Common Name for Certificate"
     }
   ],
+  "options": { "enableDenyAndExceptionsInPolicies": "true" },
   "contextEnrichers": [],
 	"policyConditions": []
 }
