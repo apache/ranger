@@ -122,7 +122,7 @@ function set_ownership {
     user=$1
     group=$2
     folder=$3
-    chown -R $user:$group $folder 
+    chown -R $user:$group $folder
     if [ $is_root -eq 1 ]; then
 	parent_folder=`dirname $folder`
 	while [ "$parent_folder" != "/" ]; do
@@ -158,7 +158,7 @@ if [ $is_root -ne 1 ]; then
 	run_root_usage
 	exit 1
     fi
-    
+
     test_file=${SOLR_RANGER_HOME}/testfile_${ts}.txt
     touch $test_file 2> /dev/null
     if [ $? -ne 0 ]; then
@@ -166,7 +166,7 @@ if [ $is_root -ne 1 ]; then
 	run_root_usage
 	exit 1
     fi
-    
+
     chown $SOLR_USER:$SOLR_USER $test_file 2> /dev/null
     if [ $? -ne 0 ]; then
 	echo "`date`|ERROR|User $curr_user doesn't have permission chown to $SOLR_USER in $SOLR_RANGER_HOME"
@@ -174,7 +174,7 @@ if [ $is_root -ne 1 ]; then
 	exit 1
     fi
     rm -f $test_file
-    
+
     #Solr on first time startup, it creates the webapp folder. So the $SOLR_USER needs permission to create webapp
     test_file=$SOLR_INSTALL_FOLDER/testfile_${ts}.txt
     touch $test_file 2> /dev/null
@@ -221,7 +221,7 @@ if [ "$SOLR_INSTALL" = "true" ]; then
     if [ -d $SOLR_INSTALL_FOLDER ]; then
 	echo "`date`|WARN|$SOLR_INSTALL_FOLDER exists. This script will overwrite some files"
     fi
-    
+
     echo "`date`|INFO|Downloading solr from $SOLR_DOWNLOAD_URL"
     #Temporary create a folder to untar the folder
     tmp_folder=/tmp/solr_untar_${ts}
@@ -234,14 +234,14 @@ if [ "$SOLR_INSTALL" = "true" ]; then
 	echo "`date`|ERROR|Downloaded file <`pwd`/$tgz_file> not found"
 	exit 1
     fi
-    
+
     mkdir tmp
     tar xfz $tgz_file -C tmp
     cd tmp
-    
+
     #Assuming there will only one folder begining with "s"
     solr_folder=`ls | grep "^solr"`
-    
+
     if [ ! -d $solr_folder ]; then
 	echo "`date`|ERROR|Solr temporary folder `pwd`/<$solr_folder> not found"
 	exit 1
@@ -282,10 +282,19 @@ if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
     mkdir -p $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf
     cp -r conf/* $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf
 
-    sed  -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml
     sed  "s#{{RANGER_AUDITS_DATA_FOLDER}}#$SOLR_RANGER_DATA_FOLDER#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/core.properties
     sed  -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g"  -e "s#{{SOLR_MAX_MEM}}#$SOLR_MAX_MEM#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/solr.in.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.in.sh
-    
+
+    #Update Solr version in luceneMatchVersion tag of solrconfig.xml
+    #Remove AdminHandlers block from solrconfig.xml if SOLR_VERSION >= 5.5
+    #use awk because we're comparing decimals
+    if echo "$SOLR_VERSION" "5.5" | awk '{exit $1>=$2?0:1}'
+    then
+        sed -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" -e "s#{{SOLR_VERSION}}#$SOLR_VERSION#g" -e "s#<!-- Admin Handlers#<!-- Admin Handlers Disabled for Solr 5.5+#g" -e "s#{{ADMIN_HANDLERS_OPEN}}#<!--  #g" -e "s#{{ADMIN_HANDLERS_CLOSE}}#  -->#g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml
+    else
+      sed -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" -e "s#{{SOLR_VERSION}}#$SOLR_VERSION#g" -e "s#{{ADMIN_HANDLERS_OPEN}}# #g" -e "s#{{ADMIN_HANDLERS_CLOSE}}# #g" $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/${SOLR_RANGER_COLLECTION}/conf/solrconfig.xml
+    fi
+
 else
     echo "`date`|INFO|Configuring SolrCloud instance"
     cp -r solr_cloud/* $SOLR_RANGER_HOME
@@ -296,14 +305,21 @@ else
     #FIRST_SOLR_ZK=$(IFS="," ; set -- $SOLR_ZK ; echo $1)
     FIRST_SOLR_ZK=$SOLR_ZK
 
-    sed  -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" $SOLR_RANGER_HOME/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/conf/solrconfig.xml
-
     sed  -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g"  -e "s#{{SOLR_MAX_MEM}}#$SOLR_MAX_MEM#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/scripts/solr.in.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.in.sh
 
     sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_ZK}}#$FIRST_SOLR_ZK#g" $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh.j2 > $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh
     sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_HOST_URL}}#$SOLR_HOST_URL#g"  -e "s#{{SOLR_SHARDS}}#$SOLR_SHARDS#g"  -e "s#{{SOLR_REPLICATION}}#$SOLR_REPLICATION#g"  $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh.j2 > $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh
     sed -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" $SOLR_RANGER_HOME/solr.xml.j2 > $SOLR_RANGER_HOME/solr.xml
 
+    #Update Solr version in luceneMatchVersion tag of solrconfig.xml
+    #Remove AdminHandlers block from solrconfig.xml if SOLR_VERSION >= 5.5
+    #use awk because we're comparing decimals
+    if echo "$SOLR_VERSION" "5.5" | awk '{exit $1>=$2?0:1}'
+    then
+        sed -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" -e "s#{{SOLR_VERSION}}#$SOLR_VERSION#g" -e "s#<!-- Admin Handlers#<!-- Admin Handlers Disabled for Solr 5.5+#g" -e "s#{{ADMIN_HANDLERS_OPEN}}#<!--  #g" -e "s#{{ADMIN_HANDLERS_CLOSE}}#  -->#g" $SOLR_RANGER_HOME/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/conf/solrconfig.xml
+    else
+      sed -e "s#{{MAX_AUDIT_RETENTION_DAYS}}#$MAX_AUDIT_RETENTION_DAYS#g" -e "s#{{SOLR_VERSION}}#$SOLR_VERSION#g" -e "s#{{ADMIN_HANDLERS_OPEN}}# #g" -e "s#{{ADMIN_HANDLERS_CLOSE}}# #g" $SOLR_RANGER_HOME/conf/solrconfig.xml.j2 > $SOLR_RANGER_HOME/conf/solrconfig.xml
+    fi
 fi
 
 #Common overrides
@@ -380,14 +396,14 @@ if [ "$SOLR_REPLICATION" != "1" ]; then
 4. Create Ranger Audit collection: $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh (only once from any node)
 
 EOF
-else 
+else
     cat >> $SOLR_INSTALL_NOTES <<EOF
 1. Add Ranger Audit config to ZooKeeper: $SOLR_RANGER_HOME/scripts/add_ranger_audits_conf_to_zk.sh
 2. Start Solr: $SOLR_RANGER_HOME/scripts/start_solr.sh
 3. Create Ranger Audit collection: $SOLR_RANGER_HOME/scripts/create_ranger_audits_collection.sh
 
 EOF
-    
+
 fi
 fi
 
