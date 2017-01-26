@@ -78,6 +78,10 @@
 		<value></value>
 	</property>
 	<property>
+                <name>ranger.usersync.ldap.deltasync</name>
+                <value></value>
+        </property>
+	<property>
 		<name>ranger.usersync.ldap.user.groupnameattribute</name>
 		<value></value>
 	</property>
