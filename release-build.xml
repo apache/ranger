@@ -21,7 +21,7 @@
     </description>
 	
     <property name="release-dir"  value="target" />
-    <property name="incubationstr" value="-incubating" />
+    <property name="incubationstr" value="" />     <!-- value="-incubating" -->
 	<property name="release-name" value="apache-ranger${incubationstr}-${ranger-release-version}" />
 
 	<property name="build-release-tar-file" value="${release-name}.tar.gz" />

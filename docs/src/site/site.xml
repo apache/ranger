@@ -36,14 +36,6 @@ under the License.
     <href></href>
 </bannerLeft>
 
-<bannerRight>
-	<name>Apache Incubator</name>
-    <src>http://incubator.apache.org/images/egg-logo.png</src>
-	<height>200px</height>
-	<width>400px</width>
-	<href>http://incubator.apache.org/</href>
-</bannerRight>
-
 <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>

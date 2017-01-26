@@ -21,9 +21,9 @@
         Apache Ranger is a framework to enable, monitor and manage comprehensive data security across the Hadoop platform. Apache Ranger currently provides a centralized security adminstration, fine grain access control and detailed auditing for user access within Apache Hadoop, Apache Hive, Apache HBase and other Apache components
         
     </description>
-    <url>http://ranger.incubator.apache.org/</url>
+    <url>http://ranger.apache.org/</url>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.incubator.apache.ranger</groupId>
+    <groupId>org.apache.ranger</groupId>
     <version>0.6.3</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>
@@ -35,10 +35,10 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/ranger/site/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/ranger/site/trunk</developerConnection>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/ranger/site/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/ranger/site/trunk</developerConnection>
         <tag>HEAD</tag>
-        <url>http://svn.apache.org/repos/asf/incubator/ranger/site/trunk</url>
+        <url>http://svn.apache.org/repos/asf/ranger/site/trunk</url>
     </scm>
     <issueManagement>
         <system>Jira</system>
@@ -47,29 +47,29 @@
     <mailingLists>
         <mailingList>
             <name>User list</name>
-            <subscribe>mailto:user-subscribe@ranger.incubator.apache.org
+            <subscribe>mailto:user-subscribe@ranger.apache.org
             </subscribe>
-            <unsubscribe>mailto:user-unsubscribe@ranger.incubator.apache.org
+            <unsubscribe>mailto:user-unsubscribe@ranger.apache.org
             </unsubscribe>
-            <post>mailto:user@ranger.incubator.apache.org</post>
+            <post>mailto:user@ranger.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/ranger-user/</archive>
         </mailingList>
         <mailingList>
             <name>Development list</name>
-            <subscribe>mailto:dev-subscribe@ranger.incubator.apache.org
+            <subscribe>mailto:dev-subscribe@ranger.apache.org
             </subscribe>
-            <unsubscribe>mailto:dev-unsubscribe@ranger.incubator.apache.org
+            <unsubscribe>mailto:dev-unsubscribe@ranger.apache.org
             </unsubscribe>
-            <post>mailto:dev@ranger.incubator.apache.org</post>
+            <post>mailto:dev@ranger.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/ranger-dev/</archive>
         </mailingList>
         <mailingList>
             <name>Commit list</name>
-            <subscribe>mailto:commits-subscribe@ranger.incubator.apache.org
+            <subscribe>mailto:commits-subscribe@ranger.apache.org
             </subscribe>
-            <unsubscribe>mailto:commits-unsubscribe@ranger.incubator.apache.org
+            <unsubscribe>mailto:commits-unsubscribe@ranger.apache.org
             </unsubscribe>
-            <post>mailto:commits@ranger.incubator.apache.org</post>
+            <post>mailto:commits@ranger.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/ranger-commits/</archive>
         </mailingList>
     </mailingLists>
@@ -108,7 +108,6 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
             </organization>
         </developer>
         <developer>
@@ -170,7 +169,6 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
             </organization>
         </developer>
         <developer>
@@ -207,7 +205,6 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
             </organization>
         </developer>
         <developer>
@@ -293,6 +290,7 @@
             <email>vel@apache.org</email>
             <timezone>-5</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -462,7 +460,7 @@
         <site>
             <id>apache-website</id>
             <name>Apache website</name>
-            <url>scpexe://people.apache.org/www/incubator.apache.org/ranger</url>
+            <url>scpexe://people.apache.org/www/apache.org/ranger</url>
         </site>
     </distributionManagement>
 </project>
