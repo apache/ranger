@@ -174,11 +174,15 @@ public class RangerBasePlugin {
 		try {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 
-			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
-			policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-			policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+			if (policies == null) {
+				this.policyEngine = null;
+			} else {
+				RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
+				policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+				policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
-			this.policyEngine = policyEngine;
+				this.policyEngine = policyEngine;
+			}
 
 			if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
 				LOG.error("preCleanup() failed on the previous policy engine instance !!");

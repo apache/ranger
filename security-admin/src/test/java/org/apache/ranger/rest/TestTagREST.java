@@ -1432,7 +1432,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 
 		} catch (Exception e) {
 		}
@@ -1485,7 +1485,7 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1548,7 +1548,7 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1614,7 +1614,7 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1680,7 +1680,7 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1801,7 +1801,7 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1, lastKnownVersion, 1, 0);
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());

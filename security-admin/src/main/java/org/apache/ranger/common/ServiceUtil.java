@@ -50,6 +50,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAuditMap;
@@ -147,7 +148,7 @@ public class ServiceUtil {
 		}
 
 		if(ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(name), true);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1175,7 +1176,7 @@ public class ServiceUtil {
 					throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
 				}
 				if(service  == null) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(policy.getService()), true);
 				}
 				VXPolicy vXPolicy = toVXPolicy(policy,service);
 				if(vXPolicy != null) {
@@ -1345,8 +1346,8 @@ public class ServiceUtil {
 		}
 		if(service==null){
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
-			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
-					MessageEnums.DATA_NOT_FOUND);
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
+					false);
 		}
 		if(!service.getIsEnabled()){
 			LOG.error("Requested Service is disabled. serviceName=" + serviceName);
@@ -1479,8 +1480,8 @@ public class ServiceUtil {
 		if(service==null){
 			isValid = false;
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
-			throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
-					MessageEnums.DATA_NOT_FOUND);
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
+					false);
 		}
 		if(!service.getIsEnabled()){
 			isValid = false;

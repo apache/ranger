@@ -34,9 +34,11 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.PrivilegedAction;
@@ -81,7 +83,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		String sslConfigFileName 		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
-		
+
 		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs);
 	}
 
@@ -97,37 +99,56 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ClientResponse response = null;
 		if (isSecureMode) {
-			if(LOG.isDebugEnabled()) {
+			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking Service policy if updated as user : " + user);
 			}
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName)
-												.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
-												.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
-												.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+							.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
+							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-				};
-			};				
+				}
+			};
 			response = user.doAs(action);
-		}else{
-			if(LOG.isDebugEnabled()) {
+		} else {
+			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking Service policy if updated with old api call");
 			}
 			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName)
-                                                                                .queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
-                                                                                .queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
-                                                                                .queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+					.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
+					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
+					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
-		
-		if(response != null && response.getStatus() == 200) {
-			ret = response.getEntity(ServicePolicies.class);
-		} else if(!(response != null && response.getStatus() == 304)) {
-			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
 
-			throw new Exception(resp.getMessage());
+		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+			if (response == null) {
+				LOG.error("Error getting policies; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+			} else {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+				}
+			}
+			ret = null;
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+			ret = response.getEntity(ServicePolicies.class);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			LOG.error("Error getting policies; service not found. secureMode=" + isSecureMode + ", user=" + user
+					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
+					+ ", " + "lastKnownVersion=" + lastKnownVersion
+					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+			ret = null;
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -153,7 +174,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SECURE_SERVICE_GRANT_ACCESS + serviceName)
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
-				};
+				}
 			};
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("grantAccess as user " + user);
@@ -198,7 +219,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SECURE_SERVICE_REVOKE_ACCESS + serviceName)
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
-				};
+				}
 			};
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("revokeAccess as user " + user);
@@ -268,7 +289,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-				};
+				}
 			};
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getServiceTagsIfUpdated as user " + user);
@@ -282,15 +303,35 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
 
-		if(response != null && response.getStatus() == 200) {
+		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+			if (response == null) {
+				LOG.error("Error getting tags; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+			} else {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in tags. secureMode=" + isSecureMode + ", user=" + user
+							+ ", response=" + resp.toString() + ", serviceName=" + serviceName
+							+ ", " + "lastKnownVersion=" + lastKnownVersion
+							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+				}
+			}
+			ret = null;
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			ret = response.getEntity(ServiceTags.class);
-		} else if(!(response != null && response.getStatus() == 304)) {
-			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting taggedResources. secureMode=" + isSecureMode + ", user=" + user
-					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			LOG.error("Error getting tags; service not found. secureMode=" + isSecureMode + ", user=" + user
+					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
 					+ ", " + "lastKnownVersion=" + lastKnownVersion
 					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-			throw new Exception(resp.getMessage());
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+			ret = null;
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -320,7 +361,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
 					return webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-				};
+				}
 			};
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getTagTypes as user " + user);
@@ -334,7 +375,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			ret = response.getEntity(getGenericType(emptyString));
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting taggedResources. request=" + webResource.toString()
+			LOG.error("Error getting tags. request=" + webResource.toString()
 					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
 					+ ", " + "pattern=" + pattern);
 			throw new Exception(resp.getMessage());

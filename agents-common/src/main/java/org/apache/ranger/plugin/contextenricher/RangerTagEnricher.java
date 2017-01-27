@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerResourceTrie;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.io.File;
@@ -65,6 +66,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private RangerTagRetriever                 tagRetriever               = null;
 	private boolean                            disableTrieLookupPrefilter = false;
 	private EnrichedServiceTags                enrichedServiceTags;
+	private boolean                            disableCacheIfServiceNotFound = true;
 
 	@Override
 	public void init() {
@@ -100,6 +102,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (tagRetriever != null) {
 				String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
+				disableCacheIfServiceNotFound = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 				String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
 				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
 				cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
@@ -136,7 +139,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerTagEnricher.enrich(" + request + ")");
 		}
 
-		final Set<RangerTagForEval> matchedTags = findMatchingTags(request);
+		final Set<RangerTagForEval> matchedTags = enrichedServiceTags == null ? null : findMatchingTags(request);
 
 		RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 
@@ -147,47 +150,53 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 	public void setServiceTags(final ServiceTags serviceTags) {
 
-		List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<RangerServiceResourceMatcher>();
+		if (serviceTags == null || CollectionUtils.isEmpty(serviceTags.getServiceResources())) {
+			LOG.info("ServiceTags is null or there are no tagged resources for service " + serviceName);
+			enrichedServiceTags = null;
+		} else {
 
-		List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
+			List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<RangerServiceResourceMatcher>();
 
-		if (CollectionUtils.isNotEmpty(serviceResources)) {
+			List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 
-			for (RangerServiceResource serviceResource : serviceResources) {
-				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+			if (CollectionUtils.isNotEmpty(serviceResources)) {
 
-				matcher.setServiceDef(this.serviceDef);
-				matcher.setPolicyResources(serviceResource.getResourceElements());
+				for (RangerServiceResource serviceResource : serviceResources) {
+					RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource
-							+ ", serviceDef=" + this.serviceDef.getName() + ")");
+					matcher.setServiceDef(this.serviceDef);
+					matcher.setPolicyResources(serviceResource.getResourceElements());
 
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource
+								+ ", serviceDef=" + this.serviceDef.getName() + ")");
+
+					}
+					matcher.init();
+
+					RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);
+					resourceMatchers.add(serviceResourceMatcher);
 				}
-				matcher.init();
 
-				RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);
-				resourceMatchers.add(serviceResourceMatcher);
 			}
 
-		}
+			Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
 
-		Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
+			if (!disableTrieLookupPrefilter) {
+				serviceResourceTrie = new HashMap<String, RangerResourceTrie<RangerServiceResourceMatcher>>();
 
-		if(!disableTrieLookupPrefilter) {
-			serviceResourceTrie = new HashMap<String, RangerResourceTrie<RangerServiceResourceMatcher>>();
-
-			for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-				serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie<RangerServiceResourceMatcher>(resourceDef, resourceMatchers));
+				for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
+					serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie<RangerServiceResourceMatcher>(resourceDef, resourceMatchers));
+				}
 			}
-		}
 
-		Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<RangerTagForEval>();
-		for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
-			tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
-		}
+			Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<RangerTagForEval>();
+			for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
+				tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
+			}
 
-		enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
+			enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
+		}
 	}
 
 	@Override
@@ -468,27 +477,43 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (tagEnricher != null) {
 				ServiceTags serviceTags = null;
 
-				serviceTags = tagRetriever.retrieveTags(lastKnownVersion, lastActivationTimeInMillis);
+				try {
+					serviceTags = tagRetriever.retrieveTags(lastKnownVersion, lastActivationTimeInMillis);
 
-				if (serviceTags == null) {
-					if (!hasProvidedTagsToReceiver) {
-						serviceTags = loadFromCache();
+					if (serviceTags == null) {
+						if (!hasProvidedTagsToReceiver) {
+							serviceTags = loadFromCache();
+						}
+					} else {
+						saveToCache(serviceTags);
 					}
-				} else {
-					saveToCache(serviceTags);
-				}
 
-				if (serviceTags != null) {
-					tagEnricher.setServiceTags(serviceTags);
-					LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion="
-							+ (serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion()));
-					hasProvidedTagsToReceiver = true;
-					lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
-					setLastActivationTimeInMillis(System.currentTimeMillis());
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+					if (serviceTags != null) {
+						tagEnricher.setServiceTags(serviceTags);
+						LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion="
+								+ (serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion()));
+						hasProvidedTagsToReceiver = true;
+						lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
+						setLastActivationTimeInMillis(System.currentTimeMillis());
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+						}
 					}
+				} catch (RangerServiceNotFoundException snfe) {
+					LOG.error("Caught ServiceNotFound exception :", snfe);
+
+					// Need to clean up local tag cache
+					if (tagEnricher.disableCacheIfServiceNotFound) {
+						disableCache();
+						tagEnricher.setServiceTags(null);
+						setLastActivationTimeInMillis(System.currentTimeMillis());
+						lastKnownVersion = -1L;
+					}
+				} catch (InterruptedException interruptedException) {
+					throw interruptedException;
+				} catch (Exception e) {
+					LOG.error("Encountered unexpected exception. Ignoring", e);
 				}
 
 			} else {
@@ -609,6 +634,31 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerTagRetriever(serviceName=" + tagEnricher.getServiceName() + ").saveToCache()");
+			}
+		}
+
+		final void disableCache() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RangerTagRetriever.disableCache(serviceName=" + tagEnricher.getServiceName() + ")");
+			}
+
+			File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+			if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
+				LOG.warn("Cleaning up local tags cache");
+				String renamedCacheFile = cacheFile.getAbsolutePath() + "_" + System.currentTimeMillis();
+				if (!cacheFile.renameTo(new File(renamedCacheFile))) {
+					LOG.error("Failed to move " + cacheFile.getAbsolutePath() + " to " + renamedCacheFile);
+				} else {
+					LOG.warn("moved " + cacheFile.getAbsolutePath() + " to " + renamedCacheFile);
+				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No local TAGS cache found. No need to disable it!");
+				}
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerTagRetriever.disableCache(serviceName=" + tagEnricher.getServiceName() + ")");
 			}
 		}
 	}

@@ -52,6 +52,7 @@ import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerAuditFields;
@@ -61,6 +62,8 @@ import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.service.RangerServiceResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletResponse;
 
 @Component
 public class TagDBStore extends AbstractTagStore {
@@ -90,6 +93,8 @@ public class TagDBStore extends AbstractTagStore {
 	@Autowired
 	GUIDUtil guidUtil;
 
+	@Autowired
+	RESTErrorUtil restErrorUtil;
 
 	@Override
 	public RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception {
@@ -907,7 +912,9 @@ public class TagDBStore extends AbstractTagStore {
 		XXService xxService = daoManager.getXXService().findByName(serviceName);
 
 		if (xxService == null) {
-			throw new Exception("service does not exist. name=" + serviceName);
+			LOG.error("Requested Service not found. serviceName=" + serviceName);
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
+					false);
 		}
 
 		XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);

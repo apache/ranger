@@ -48,21 +48,16 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
 
 		ServiceTags serviceTags = null;
 
 		if (adminClient != null) {
 			try {
 				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
-			} catch (InterruptedException interruptedException) {
-				LOG.error("Tag-retriever thread was interrupted");
-				throw interruptedException;
 			} catch (ClosedByInterruptException closedByInterruptException) {
 				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
 				throw new InterruptedException();
-			} catch (Exception exception) {
-				LOG.error("RangerAdminTagRetriever.retrieveTags() - Error retrieving resources, exception=", exception);
 			}
 		}
 		return serviceTags;

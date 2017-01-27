@@ -28,6 +28,7 @@ import java.util.List;
 
 
 public interface RangerAdminClient {
+
 	void init(String serviceName, String appId, String configPropertyPrefix);
 
 	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;

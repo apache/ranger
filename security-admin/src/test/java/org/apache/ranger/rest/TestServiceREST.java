@@ -29,6 +29,7 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
@@ -174,7 +175,10 @@ public class TestServiceREST {
 
 	@Mock
 	StringUtils stringUtils;
-	
+
+	@Mock
+	AssetMgr assetMgr;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -961,6 +965,11 @@ public class TestServiceREST {
 		String serviceName = "HDFS_1";
 		Long lastKnownVersion = 1L;
 		String pluginId = "1";
+		try {
+			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
+
+		} catch (Exception e) {
+		}
 		ServicePolicies dbServicePolicies = serviceREST
 				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
 						pluginId, request);

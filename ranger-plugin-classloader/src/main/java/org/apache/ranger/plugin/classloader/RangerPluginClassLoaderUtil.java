@@ -105,6 +105,10 @@ public class RangerPluginClassLoaderUtil {
 				if(dirFiles != null) {
 					for(File dirFile : dirFiles) {
 						try {
+							if (!dirFile.canRead()) {
+								LOG.error("getFilesInDirectory('" + dirPath + "'): " + dirFile.getAbsolutePath() + " is not readable!");
+							}
+
 							URL jarPath = dirFile.toURI().toURL();
 
 							LOG.info("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());

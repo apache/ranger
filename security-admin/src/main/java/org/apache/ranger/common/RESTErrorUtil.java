@@ -330,7 +330,7 @@ public class RESTErrorUtil {
 	public WebApplicationException createRESTException(int responseCode,
 			String logMessage, boolean logError) {
 		Response errorResponse = Response
-				.status(responseCode).build();
+				.status(responseCode).entity(logMessage).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);

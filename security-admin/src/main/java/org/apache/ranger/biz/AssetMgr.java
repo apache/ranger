@@ -669,7 +669,7 @@ public class AssetMgr extends AssetMgrBase {
 		return ret;
 	}
 
-	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode) {
+	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode) {
 		RangerRESTUtils restUtils = new RangerRESTUtils();
 
 		final String ipAddress = getRemoteAddress(request);
@@ -704,12 +704,12 @@ public class AssetMgr extends AssetMgrBase {
 			pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
 		}
 
-		createOrUpdatePluginInfo(pluginSvcVersionInfo, httpCode);
+		createOrUpdatePluginInfo(pluginSvcVersionInfo, entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES, httpCode);
 	}
 
-	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final int httpCode) {
+	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final int httpCode) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
+			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", isPolicyDownloadRequest=" + isPolicyDownloadRequest + ", httpCode=" + httpCode + ")");
 		}
 
 		final boolean isTagVersionResetNeeded;
@@ -719,8 +719,7 @@ public class AssetMgr extends AssetMgrBase {
 			// then the TransactionManager will roll-back the changes because the HTTP return code is
 			// HttpServletResponse.SC_NOT_MODIFIED
 
-			boolean isPolicyInfo = pluginInfo.getPolicyDownloadedVersion() != null;
-			if (isPolicyInfo) {
+			if (isPolicyDownloadRequest) {
 				isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
 			} else {
 				isTagVersionResetNeeded = false;
@@ -729,42 +728,58 @@ public class AssetMgr extends AssetMgrBase {
 			Runnable commitWork = new Runnable() {
 				@Override
 				public void run() {
-					doCreateOrUpdateXXPluginInfo(pluginInfo, isTagVersionResetNeeded);
+					doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded);
 				}
 			};
 			activityLogger.commitAfterTransactionComplete(commitWork);
+		} else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
+			Runnable commitWork;
+			if ((isPolicyDownloadRequest && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
+				|| (!isPolicyDownloadRequest && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))) {
+				commitWork = new Runnable() {
+					@Override
+					public void run() {
+						doDeleteXXPluginInfo(pluginInfo);
+					}
+				};
+			} else {
+				commitWork = new Runnable() {
+					@Override
+					public void run() {
+						doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, false);
+					}
+				};
+			}
+			activityLogger.commitAfterTransactionComplete(commitWork);
+
 		} else {
 			isTagVersionResetNeeded = false;
-			doCreateOrUpdateXXPluginInfo(pluginInfo, isTagVersionResetNeeded);
+			doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", httpCode=" + httpCode + ")");
+			logger.debug("<== createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", isPolicyDownloadRequest=" + isPolicyDownloadRequest + ", httpCode=" + httpCode + ")");
 		}
 
 	}
 
-	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isTagVersionResetNeeded) {
+	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final boolean isTagVersionResetNeeded) {
 		XXPluginInfo ret = null;
 
 		if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
-
-			boolean isPolicyInfo = pluginInfo.getPolicyDownloadedVersion() != null;
 
 			XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().find(pluginInfo.getServiceName(),
 					pluginInfo.getHostName(), pluginInfo.getAppType());
 
 			if (xObj == null) {
 				// ranger-admin is restarted, plugin contains latest versions and no earlier record for this plug-in client
-				if (isPolicyInfo) {
-					if (pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
+				if (isPolicyDownloadRequest) {
+					if (pluginInfo.getPolicyDownloadedVersion() != null && pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
 						// This is our best guess of when policies may have been downloaded
 						pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
 					}
-				} else if (pluginInfo.getTagDownloadedVersion() != null) {
-					if (pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
-						// This is our best guess of when tags may have been downloaded
-						pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
-					}
+				} else if (pluginInfo.getTagDownloadedVersion() != null && pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
+					// This is our best guess of when tags may have been downloaded
+					pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
 				}
 
 				xObj = pluginInfoService.populateDBObject(pluginInfo);
@@ -781,7 +796,7 @@ public class AssetMgr extends AssetMgrBase {
 					dbObj.setIpAddress(pluginInfo.getIpAddress());
 					needsUpdating = true;
 				}
-				if (isPolicyInfo) {
+				if (isPolicyDownloadRequest) {
 					if (dbObj.getPolicyDownloadedVersion() == null || !dbObj.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyDownloadedVersion())) {
 						dbObj.setPolicyDownloadedVersion(pluginInfo.getPolicyDownloadedVersion());
 						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
@@ -852,6 +867,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		return ret;
+	}
+
+	private void doDeleteXXPluginInfo(RangerPluginInfo pluginInfo) {
+		XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().find(pluginInfo.getServiceName(),
+				pluginInfo.getHostName(), pluginInfo.getAppType());
+		if (xObj != null) {
+			rangerDaoManager.getXXPluginInfo().remove(xObj.getId());
+		}
 	}
 
 	private String getRemoteAddress(final HttpServletRequest request) {

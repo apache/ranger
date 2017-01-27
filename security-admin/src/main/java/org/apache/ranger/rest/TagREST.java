@@ -61,6 +61,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.List;
@@ -1113,32 +1114,34 @@ public class TagREST {
 		ServiceTags ret      = null;
 		int         httpCode = HttpServletResponse.SC_OK;
 		String      logMsg   = null;
+        Long downloadedVersion = null;
 
         try {
             ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
-            Long downloadedVersion;
 
-			if(ret == null) {
+            if (ret == null) {
                 downloadedVersion = lastKnownVersion;
-				httpCode = HttpServletResponse.SC_NOT_MODIFIED;
-				logMsg   = "No change since last update";
-			} else {
+                httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+                logMsg = "No change since last update";
+            } else {
                 downloadedVersion = ret.getTagVersion();
-				httpCode = HttpServletResponse.SC_OK;
-				logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
-			}
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+                httpCode = HttpServletResponse.SC_OK;
+                logMsg = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
+            }
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg = webException.getResponse().getEntity().toString();
         } catch(Exception excp) {
-            LOG.error("getServiceTagsIfUpdated(" + serviceName + ") failed", excp);
-
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
+        } finally {
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
         }
 
-		if(httpCode != HttpServletResponse.SC_OK) {
-			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
-			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
-		}
+        if(httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
@@ -1165,9 +1168,15 @@ public class TagREST {
 		boolean isAllowed = false;
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+        Long downloadedVersion = null;
 
         try {
         	XXService xService = daoManager.getXXService().findByName(serviceName);
+        	if (xService == null) {
+                LOG.error("Requested Service not found. serviceName=" + serviceName);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Service:" + serviceName + " not found",
+                        false);
+            }
         	XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
         	RangerService rangerService = svcStore.getServiceByName(serviceName);
         	
@@ -1186,7 +1195,6 @@ public class TagREST {
         	}
         	if (isAllowed) {
 	            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
-                Long downloadedVersion;
 
 				if(ret == null) {
                     downloadedVersion = lastKnownVersion;
@@ -1197,29 +1205,25 @@ public class TagREST {
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg   = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
 				}
-                assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
 			}else{
 				LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed as User doesn't have permission to download tags");
 				httpCode = HttpServletResponse.SC_UNAUTHORIZED;
 				logMsg = "User doesn't have permission to download tags";
 			}
-        } catch(Exception excp) {
-            LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ") failed", excp);
-
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg = webException.getResponse().getEntity().toString();
+        } catch (Exception excp) {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         }  finally {
-            // Placeholder to avoid PMD violations
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("httpCode=" + httpCode);
-            }
-            // createOrUpdatePluginTagVersion(serviceName, lastKnownVersion, pluginId, lastActivationTime);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
-			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
-			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
-		}
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");

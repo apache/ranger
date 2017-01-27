@@ -124,7 +124,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 	}
 
 	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
+	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> retrieveTags(lastKnownVersion=" + lastKnownVersion + ", lastActivationTimeInMillis=" + lastActivationTimeInMillis + ", serviceTagsFilePath=" + serviceTagsFileName);
@@ -146,9 +146,11 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 				}
 			} catch (IOException e) {
 				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName);
+				throw e;
 			}
 		} else {
 			LOG.error("Error reading file: " + serviceTagsFileName);
+			throw new Exception("serviceTagsFileURL is null!");
 		}
 
 		if (LOG.isDebugEnabled()) {

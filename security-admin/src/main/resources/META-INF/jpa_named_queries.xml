@@ -901,7 +901,9 @@
 
 	<named-query name="XXTagResourceMap.findForServicePlugin">
 		<query>
-			select obj from XXTagResourceMap obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.tagId in
+			select obj from XXTagResourceMap obj, XXService service, XXServiceResource serviceRes where service.id = :serviceId and service.tagService is not null
+			and obj.resourceId = serviceRes.id and serviceRes.serviceId = :serviceId
+			and obj.tagId in
 			(select tag.id from XXTag tag, XXTagDef tagDef where tag.type = tagDef.id and tagDef.name in
 			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
 			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
