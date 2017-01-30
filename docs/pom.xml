@@ -80,6 +80,7 @@
             <email>alok@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -116,6 +117,7 @@
             <email>coheigea@apache.org</email>
             <timezone>+0</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -177,6 +179,7 @@
             <email>gautam@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
