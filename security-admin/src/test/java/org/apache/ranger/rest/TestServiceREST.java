@@ -965,11 +965,9 @@ public class TestServiceREST {
 		String serviceName = "HDFS_1";
 		Long lastKnownVersion = 1L;
 		String pluginId = "1";
-		try {
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 
-		} catch (Exception e) {
-		}
+		Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
+
 		ServicePolicies dbServicePolicies = serviceREST
 				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
 						pluginId, request);
