@@ -695,7 +695,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 					LOG.info("LdapDeltaUserGroupBuilder.getGroups() completed with group count: "
 							+ counter);
 				} catch (Throwable t) {
-					LOG.error("LdapDeltaUserGroupBuilder.getGroups() failed with exception: " + t.getStackTrace());
+					LOG.error("LdapDeltaUserGroupBuilder.getGroups() failed with exception: " + t); 
 					LOG.info("LdapDeltaUserGroupBuilder.getGroups() group count: "
 							+ counter);
 				}

@@ -125,8 +125,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 	}
 	
-	@Override
-	public void init() throws Throwable {
+	synchronized public void init() throws Throwable {
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
 		

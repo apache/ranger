@@ -481,7 +481,7 @@ public class UserGroupSyncConfig  {
 
 	private String getUserGroupSourceClassName() {
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM);
-		String className = null;
+		String className = UGSYNC_SOURCE_CLASS;
 		
 		String syncSource = null;
 
