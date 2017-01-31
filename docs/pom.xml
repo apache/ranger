@@ -24,7 +24,7 @@
     <url>http://ranger.apache.org/</url>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.ranger</groupId>
-    <version>0.6.3</version>
+    <version>0.6.4-SNAPSHOT</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>
     <licenses>
