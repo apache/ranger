@@ -1980,7 +1980,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 			CSVFileName = "Ranger_Policies_" + timeStamp + ".csv";
 			out = response.getOutputStream();
-			StringBuffer sb = writeCSV(policies, CSVFileName, response);
+			StringBuilder sb = writeCSV(policies, CSVFileName, response);
 			IOUtils.write(sb.toString(), out, "UTF-8");
 		} catch (Exception e) {
 			LOG.error("Error while generating report file " + CSVFileName, e);
@@ -3244,12 +3244,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private StringBuffer writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
+	private StringBuilder writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
 		response.setContentType("text/csv");
 		final String COMMA_DELIMITER = "|";
 		final String LINE_SEPARATOR = "\n";
 		final String FILE_HEADER = "ID|Name|Resources|Groups|Users|Accesses|Service Type|Status";
-		StringBuffer csvBuffer = new StringBuffer();
+		StringBuilder csvBuffer = new StringBuilder();
 		csvBuffer.append(FILE_HEADER);
 		csvBuffer.append(LINE_SEPARATOR);
 		for (RangerPolicy policy : policies) {
@@ -3401,9 +3401,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					csvBuffer.append(COMMA_DELIMITER);
 					csvBuffer.append(LINE_SEPARATOR);
 				}
-			}
-
-			else {
+			} else {
 				Map<String, RangerPolicyResource> resources = policy.getResources();
 				if (resources != null) {
 					for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
@@ -3417,39 +3415,59 @@ public class ServiceDBStore extends AbstractServiceStore {
 				resourceKeyVal = resKeyVal.toString();
 				resourceKeyVal = resourceKeyVal.substring(1);
 
-				for (RangerPolicyItem policyItem : policyItems) {
-					groups = null;
-					users = null;
-					accesses = null;
-					groupNames = "";
-					userNames = "";
-					accessType = "";
-					groups = policyItem.getGroups();
-					users = policyItem.getUsers();
-					accesses = policyItem.getAccesses();
+				if (CollectionUtils.isNotEmpty(policyItems)) {
+					for (RangerPolicyItem policyItem : policyItems) {
+						groups = null;
+						users = null;
+						accesses = null;
+						groupNames = "";
+						userNames = "";
+						accessType = "";
+						groups = policyItem.getGroups();
+						users = policyItem.getUsers();
+						accesses = policyItem.getAccesses();
 
-					if (CollectionUtils.isNotEmpty(accesses)) {
-						for (RangerPolicyItemAccess access : accesses) {
-							accessType = accessType + access.getType().replace("#", "").replace("|","") + "#";
+						if (CollectionUtils.isNotEmpty(accesses)) {
+							for (RangerPolicyItemAccess access : accesses) {
+								accessType = accessType + access.getType().replace("#", "").replace("|", "") + "#";
+							}
+							accessType = accessType.substring(0, accessType.lastIndexOf("#"));
 						}
-						accessType = accessType.substring(0, accessType.lastIndexOf("#"));
-					}
-					if (CollectionUtils.isNotEmpty(groups)) {
-						for (String group : groups){
-							group=group.replace("|", "");
-							group=group.replace("#", "");
-							groupNames=groupNames+group+ "#";
+						if (CollectionUtils.isNotEmpty(groups)) {
+							for (String group : groups) {
+								group = group.replace("|", "");
+								group = group.replace("#", "");
+								groupNames = groupNames + group + "#";
+							}
+							groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
 						}
-						groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
-					}
-					if (CollectionUtils.isNotEmpty(users)) {
-						for (String user : users){
-							user=user.replace("|", "");
-							user=user.replace("#", "");
-							userNames=userNames +user + "#";
+						if (CollectionUtils.isNotEmpty(users)) {
+							for (String user : users) {
+								user = user.replace("|", "");
+								user = user.replace("#", "");
+								userNames = userNames + user + "#";
+							}
+							userNames = userNames.substring(0, userNames.lastIndexOf("#"));
 						}
-						userNames=userNames.substring(0,userNames.lastIndexOf("#"));
+						csvBuffer.append(policyId);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(policyName);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(resourceKeyVal);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(groupNames);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(userNames);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(accessType);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(ServiceType);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(policyStatus);
+						csvBuffer.append(COMMA_DELIMITER);
+						csvBuffer.append(LINE_SEPARATOR);
 					}
+				} else {
 					csvBuffer.append(policyId);
 					csvBuffer.append(COMMA_DELIMITER);
 					csvBuffer.append(policyName);
@@ -3502,6 +3520,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		try {
 			out = response.getOutputStream();
+			response.setStatus(HttpServletResponse.SC_OK);
 			IOUtils.write(json, out, "UTF-8");
 		} catch (Exception e) {
 			LOG.error("Error while exporting json file " + jsonFileName, e);

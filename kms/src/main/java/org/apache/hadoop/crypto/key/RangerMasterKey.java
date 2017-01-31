@@ -205,10 +205,13 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec);
-		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
-		Cipher c = Cipher.getInstance(key.getAlgorithm());
-		c.init(Cipher.ENCRYPT_MODE, key,paramSpec);
-		return c.doFinal(data);
+		if(keyspec != null && keyspec.getSalt() != null){
+			PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
+			Cipher c = Cipher.getInstance(key.getAlgorithm());
+			c.init(Cipher.ENCRYPT_MODE, key,paramSpec);
+			return c.doFinal(data);
+		}
+		return null;
 	}
 	private SecretKey getPasswordKey(PBEKeySpec keyspec) throws Throwable {
 		SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGO);
@@ -216,10 +219,13 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	private byte[] decryptKey(byte[] encrypted, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec);
-		PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
-		Cipher c = Cipher.getInstance(key.getAlgorithm());
-		c.init(Cipher.DECRYPT_MODE, key, paramSpec);
-		return c.doFinal(encrypted);
+		if(keyspec != null && keyspec.getSalt() != null){
+			PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
+			Cipher c = Cipher.getInstance(key.getAlgorithm());
+			c.init(Cipher.DECRYPT_MODE, key, paramSpec);
+			return c.doFinal(encrypted);
+		}
+		return null;
 	}
 	private SecretKey getMasterKeyFromBytes(byte[] keyData) throws Throwable {
 		return new SecretKeySpec(keyData, MK_CIPHER);
