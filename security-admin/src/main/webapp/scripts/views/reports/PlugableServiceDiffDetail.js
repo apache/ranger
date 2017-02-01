@@ -106,7 +106,6 @@ define(function(require){
 			}
 			if(!_.isUndefined(this.collection.models[0]) ){
 				this.policyName = _.isUndefined(this.policyName) ? this.collection.models[0].get('objectName') : this.policyName;
-				if(this.action != 'delete'){
 					var rangerService = new RangerService({ 'id' : this.collection.models[0].get('parentObjectId') })
 					rangerService.fetch({
 						cache : false,
@@ -121,8 +120,6 @@ define(function(require){
 						})
 						this.repositoryType = this.rangerServiceDefModel.get('name');
 					}
-				}
-				
 				//get policy created/updated date/owner
 				var model = this.collection.models[0];
 				this.objectCreatedBy = model.get('updatedBy');

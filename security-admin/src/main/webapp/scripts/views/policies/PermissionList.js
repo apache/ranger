@@ -628,18 +628,16 @@ define(function(require) {
 			}).on('click', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
-//				that.clickOnMaskingType(that);
 			});
 			that.ui.addMaskingTypeSpan.click(function(e) {
 				e.stopPropagation();
 				that.$('a[data-js="maskingType"]').editable('toggle');
-//				that.clickOnMaskingType(that);
 			});
 			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
 				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
 					that.model.get('dataMaskInfo').valueExpr = e.currentTarget.value;
 				}
-			});
+			}).trigger('change');
 		},
 		renderRowLevelFilter :function(){
 			var that = this;

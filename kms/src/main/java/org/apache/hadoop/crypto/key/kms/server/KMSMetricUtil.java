@@ -115,12 +115,12 @@ public class KMSMetricUtil {
 					if (kmsWebApp != null) {
 						kmsWebApp.contextInitialized(null);
 						KeyProviderCryptoExtension keyProvider = kmsWebApp.getKeyProvider();
-						if (keyProvider != null && keyProvider.getKeys() != null) {
+						Map<String, Integer> encryptedKeyByAlgorithmCountMap = new HashMap<String, Integer>();
+						int count = 0;
+						if (keyProvider != null && keyProvider.getKeys() != null && keyProvider.getKeys().size() > 0) {
 							List<String> keyList = new ArrayList<String>();
 							keyList.addAll(keyProvider.getKeys());
-							if (keyList != null) {
-								Map<String, Integer> encryptedKeyByAlgorithmCountMap = new HashMap<String, Integer>();
-								int count = 0;
+							if (keyList != null) {								
 								for (int i = 0; i < keyList.size(); i++) {
 									String algorithmName = keyProvider.getMetadata(keyList.get(i)).getCipher();
 									if (encryptedKeyByAlgorithmCountMap.containsKey(algorithmName)) {
@@ -134,15 +134,14 @@ public class KMSMetricUtil {
 								Gson gson = new GsonBuilder().create();
 								final String jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
 								System.out.println(jsonEncKeyByAlgo);
-							}
-							kmsWebApp.contextDestroyed(null);
+							}							
 						} else {
-							Map<String, String> encryptedKeyByAlgorithmCountMap = new HashMap<String, String>();
-							encryptedKeyByAlgorithmCountMap.put("encryptedKeyByAlgorithm", "");
+							encryptedKeyByAlgorithmCountMap.put("encryptedKeyByAlgorithm", count);
 							Gson gson = new GsonBuilder().create();
 							final String jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
 							System.out.println(jsonEncKeyByAlgo);
 						}
+						kmsWebApp.contextDestroyed(null);
 					}
 				} catch (IOException e) {
 					logger.error("Error calculating KMSMetric for encrypted key by algorithm : " + e.getMessage());

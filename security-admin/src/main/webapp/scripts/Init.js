@@ -146,7 +146,6 @@
         'handlebars'				: '../libs/bower/require-handlebars-plugin/js/Handlebars',
         /* require handlebars plugin - Alex Sexton */
         'i18nprecompile'			: '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
-        'json2'						: '../libs/bower/require-handlebars-plugin/js/json2',
         'hbs'						: '../libs/bower/require-handlebars-plugin/js/hbs',
         'esprima'					: '../libs/bower/esprima/esprima',
 

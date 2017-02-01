@@ -57,7 +57,7 @@ define(function(require){
 			this.initializePlugins();
 			if(!this.model.isNew()){
 				if(!_.isUndefined(this.model.get('groupSource')) && this.model.get('groupSource') == XAEnums.GroupSource.XA_GROUP.value){
-					this.fields.name.editor.$el.attr('disabled',true);
+					this.fields.name.editor.$el.find('input').attr('disabled',true);
 					this.fields.description.editor.$el.attr('disabled',true);
 				}
 			}

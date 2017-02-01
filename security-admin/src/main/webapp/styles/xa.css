@@ -2138,3 +2138,6 @@ td.subgrid-custom-cell{
 .margin-left-75{
     margin-left:75px
 }
+.capitalize {
+    text-transform: capitalize;   
+}

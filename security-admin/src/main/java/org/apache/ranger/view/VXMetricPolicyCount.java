@@ -32,28 +32,27 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class VXMetricPolicyCount implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	protected Map<String,VXMetricServiceCount> vXMetricServiceCount = new HashMap<String,VXMetricServiceCount>();
+	protected Map<String,VXMetricServiceCount> policyCountList = new HashMap<String,VXMetricServiceCount>();
 	protected long totalCount;
 	
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXMetricPolicyCount() {	
-	}
-	
+	}	
+
 	/**
-	 * @return the vXMetricServiceCount
+	 * @return the policyCountList
 	 */
-	public Map<String, VXMetricServiceCount> getvXMetricServiceCount() {
-		return vXMetricServiceCount;
+	public Map<String, VXMetricServiceCount> getPolicyCountList() {
+		return policyCountList;
 	}
 
 	/**
-	 * @param vXMetricServiceCount the vXMetricServiceCount to set
+	 * @param policyCountList the policyCountList to set
 	 */
-	public void setvXMetricServiceCount(
-			Map<String, VXMetricServiceCount> vXMetricServiceCount) {
-		this.vXMetricServiceCount = vXMetricServiceCount;
+	public void setPolicyCountList(Map<String, VXMetricServiceCount> policyCountList) {
+		this.policyCountList = policyCountList;
 	}
 
 	/**
@@ -74,7 +73,7 @@ public class VXMetricPolicyCount implements java.io.Serializable {
 	public String toString() {
 		return "VXMetricPolicyCount={totalCount="
 				+ totalCount +", vXMetricServiceCount=["
-				+ vXMetricServiceCount.toString()
+				+ policyCountList.toString()
 				 + "]}";
 	}
 }

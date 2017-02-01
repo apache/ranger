@@ -413,7 +413,7 @@ define(function(require) {
 										callback(auditList);
 										break;
 									case 'Actions':
-										callback(["create","update","delete","password change"]);
+										callback(["Create","Update","Delete","Password Change","Export Json","Export Csv","Export Excel","Import End","Import Start"]);
 										break;
 									case 'Start Date' :
 											var endDate, models = that.visualSearch.searchQuery.where({category:"End Date"});
@@ -603,10 +603,10 @@ define(function(require) {
 						XAUtils.blockUI('unblock');
 						fullTrxLogListForTrxId = new VXTrxLogList(coll.vXTrxLogs);
 						//diff view to support new plugable service model
-						if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_NONE.value){
+						var hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"];
+						if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value && ($.inArray(action,hasAction) >= 0)){
 							var view  = that.getExportImportTemplate(fullTrxLogListForTrxId);
-						}
-						else if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value){
+						} else if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value){
 							var view = new vPlugableServiceDiffDetail({
 								collection : fullTrxLogListForTrxId,
 								classType : self.model.get('objectClassType'),
@@ -711,24 +711,28 @@ define(function(require) {
 						fromRaw: function (rawValue, model) {
 							rawValue = model.get('objectClassType');
 							var action = model.get('action'), name = _.escape(model.get('objectName')),
-								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '';
-							if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
-								html = 	'Service '+action+'d '+'<b>'+name+'</b>';
-							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
-								html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
-							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
-								html = 	'User '+action+'d '+'<b>'+name+'</b>';
-							else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
-								html = 	'Group '+action+'d '+'<b>'+name+'</b>';
-							else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
-								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
-							else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
-								html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
-							else if(action == "EXPORT JSON" || action == "EXPORT EXCEL" || action == "EXPORT CSV")
-								html = 	'Exported policies';
-							else
-								html = 	action;
-							return html;
+								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '',
+								hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"];
+							if($.inArray(action,hasAction)>=0){
+								if(action == "EXPORT JSON" || action == "EXPORT EXCEL" || action == "EXPORT CSV")
+									return html = 	'Exported policies';
+								else
+									return html = 	action;
+							} else{	
+								 if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
+								 	 html = 	'Service '+action+'d '+'<b>'+name+'</b>';
+								 else if((rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value))
+									 html = 	'Policy '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
+									 html = 	'User '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
+									 html = 	'Group '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
+									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
+									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
+								 return html;
+						    }
 						}
 					})
 				},
@@ -742,10 +746,6 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							var action = model.get('action');
-							var hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"]
-							if($.inArray(action,hasAction) >= 0){
-								rawValue = XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value
-							}
 							return XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue);
 						}
 					})
@@ -783,13 +783,14 @@ define(function(require) {
 						fromRaw: function (rawValue) {
 							var html = '';
 							if(rawValue =='create'){
-								html = 	'<label class="label label-success">'+rawValue+'</label>';
+								html = 	'<label class="label label-success capitalize">'+rawValue+'</label>';
 							} else if(rawValue == 'update'){
-								html = 	'<label class="label label-yellow">'+rawValue+'</label>';
+								html = 	'<label class="label label-yellow capitalize">'+rawValue+'</label>';
 							}else if(rawValue == 'delete'){
-								html = 	'<label class="label label-important">'+rawValue+'</label>';
+								html = 	'<label class="label label-important capitalize">'+rawValue+'</label>';
 							} else {
-								html = 	'<label class="label">'+rawValue+'</label>';
+								rawValue = rawValue.toLowerCase() 
+								html = 	'<label class="label capitalize ">'+rawValue+'</label>';
 							}
 							return html;
 						}
