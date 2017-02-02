@@ -45,6 +45,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -505,8 +506,8 @@ public class MiscUtil {
 		if(ret != null) {
 			try {
 			ret.checkTGTAndReloginFromKeytab();
-			} catch(IOException excp) {
-				// ignore
+			} catch(IOException ioe) {
+				logger.error("Error renewing TGT and relogin. Ignoring Exception, and continuing with the old TGT", ioe);
 			}
 		}
 
@@ -634,6 +635,46 @@ public class MiscUtil {
 
 	}
 
+	public static void setUGIFromJAASConfig(String jaasConfigAppName) throws Exception {
+		String keytabFile 			= null;
+		String principal  			= null;
+		UserGroupInformation ugi 	= null;
+		if (logger.isDebugEnabled()){
+			logger.debug("===> MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: " + jaasConfigAppName);
+		}
+		try {
+			AppConfigurationEntry entries[] = Configuration.getConfiguration().getAppConfigurationEntry(jaasConfigAppName);
+			if(!ArrayUtils.isEmpty(entries)){
+				for (AppConfigurationEntry entry : entries) {
+					if (entry.getOptions().get("keyTab") != null) {
+						keytabFile = (String) entry.getOptions().get("keyTab");
+					}
+					if (entry.getOptions().get("principal") != null) {
+						principal = (String) entry.getOptions().get("principal");
+					}
+					if (!StringUtils.isEmpty(principal) && !StringUtils.isEmpty(keytabFile)) {
+						break;
+					}
+				}
+			}
+			if (!StringUtils.isEmpty(principal) && !StringUtils.isEmpty(keytabFile)) {
+				// This will login and set the UGI
+				UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
+				ugi = UserGroupInformation.getLoginUser();
+			} else {
+				String error_mesage = "Unable to get the principal/keytab from jaasConfigAppName: " + jaasConfigAppName;
+				logger.error(error_mesage);
+				throw new Exception(error_mesage);
+			}
+			logger.info("MiscUtil.setUGIFromJAASConfig() UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
+		} catch ( Exception e) {
+			logger.error("Unable to set UGI for Principal: " + principal + " keytab: " + keytabFile );
+			throw e;
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("<=== MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: " + jaasConfigAppName + " UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
+		}
+	}
 	public static void authWithConfig(String appName, Configuration config) {
 		try {
 			if (config != null) {

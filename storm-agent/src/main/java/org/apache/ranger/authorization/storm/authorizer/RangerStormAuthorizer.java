@@ -22,7 +22,6 @@
 import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
-import javax.security.auth.login.LoginContext;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -39,7 +38,6 @@ import org.apache.storm.Config;
 import org.apache.storm.security.auth.IAuthorizer;
 import org.apache.storm.security.auth.ReqContext;
 
-import javax.security.auth.Subject;
 
 public class RangerStormAuthorizer implements IAuthorizer {
 
@@ -158,17 +156,10 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 				if (me == null) {
 					try {
-						Subject subject = getStormSubject();
-
-						UserGroupInformation ugi = MiscUtil.createUGIFromSubject(subject);
-
-						if (ugi != null) {
-							MiscUtil.setUGILoginUser(ugi, subject);
-						}
-
+						MiscUtil.setUGIFromJAASConfig(STORM_CLIENT_JASS_CONFIG_SECTION);
 						LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
 					} catch (Throwable t) {
-						LOG.error("Error getting principal.", t);
+						LOG.error("Error while setting UGI for Storm Plugin...", t);
 					}
 
 					LOG.info("Creating StormRangerPlugin");
@@ -180,19 +171,4 @@ public class RangerStormAuthorizer implements IAuthorizer {
 		}
 	}
 
-	private Subject getStormSubject() {
-		Subject ret = null;
-
-		try {
-			LoginContext lc = new LoginContext(STORM_CLIENT_JASS_CONFIG_SECTION);
-
-			lc.login();
-
-			ret = lc.getSubject();
-		} catch (Exception excp) {
-			LOG.error("Failed to get Storm server login subject", excp);
-		}
-
-		return ret;
-	}
 }

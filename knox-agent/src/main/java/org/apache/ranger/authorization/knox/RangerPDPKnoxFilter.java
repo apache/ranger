@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -40,7 +39,6 @@ import org.apache.hadoop.gateway.filter.AbstractGatewayFilter;
 import org.apache.hadoop.gateway.security.GroupPrincipal;
 import org.apache.hadoop.gateway.security.ImpersonatedPrincipal;
 import org.apache.hadoop.gateway.security.PrimaryPrincipal;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -66,17 +64,10 @@ public class RangerPDPKnoxFilter implements Filter {
 
 				if(me == null) {
 					try {
-						Subject subject = getKnoxSubject();
-
-						UserGroupInformation ugi = MiscUtil.createUGIFromSubject(subject);
-
-						if (ugi != null) {
-							MiscUtil.setUGILoginUser(ugi, subject);
-						}
-
+						MiscUtil.setUGIFromJAASConfig(KNOX_GATEWAY_JASS_CONFIG_SECTION);
 						LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
 					} catch (Throwable t) {
-						LOG.error("Error getting principal.", t);
+						LOG.error("Error while setting UGI for Knox Plugin...", t);
 					}
 
 					LOG.info("Creating KnoxRangerPlugin");
@@ -191,22 +182,4 @@ public class RangerPDPKnoxFilter implements Filter {
 	private String getServiceName() {
 		return resourceRole;
 	}
-
-	private Subject getKnoxSubject() {
-		Subject ret = null;
-
-		try {
-			LoginContext lc = new LoginContext(KNOX_GATEWAY_JASS_CONFIG_SECTION);
-
-			lc.login();
-
-			ret = lc.getSubject();
-		} catch (Exception excp) {
-			LOG.error("Failed to get Knox server login subject", excp);
-		}
-
-		return ret;
-	}
-
-
 }
