@@ -108,7 +108,7 @@ public class AtlasNotificationMapper {
 		return ret;
 	}
 
-	public static Map<String, ServiceTags> processEntitiesWithTraits(List<AtlasEntityWithTraits> atlasEntities) {
+	public static Map<String, ServiceTags> processAtlasEntities(List<AtlasEntityWithTraits> atlasEntities) {
 		Map<String, ServiceTags> ret = null;
 
 		try {
@@ -245,32 +245,40 @@ public class AtlasNotificationMapper {
 		RangerServiceResource  serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
 
 		if (serviceResource != null) {
-			List<RangerTag>    tags    = getTags(entityWithTraits);
-			List<RangerTagDef> tagDefs = getTagDefs(entityWithTraits);
 
-			String serviceName = serviceResource.getServiceName();
+			List<RangerTag>     tags        = getTags(entityWithTraits);
+			List<RangerTagDef>  tagDefs     = getTagDefs(entityWithTraits);
+			String              serviceName = serviceResource.getServiceName();
 
 			ret = createOrGetServiceTags(serviceTagsMap, serviceName);
 
-			serviceResource.setId((long)ret.getServiceResources().size());
-			ret.getServiceResources().add(serviceResource);
+			if (serviceTagsMap == null || CollectionUtils.isNotEmpty(tags)) {
 
-			List<Long> tagIds = new ArrayList<Long>();
+				serviceResource.setId((long) ret.getServiceResources().size());
+				ret.getServiceResources().add(serviceResource);
 
-			if(CollectionUtils.isNotEmpty(tags)) {
-				for(RangerTag tag : tags) {
-					tag.setId((long)ret.getTags().size());
-					ret.getTags().put(tag.getId(), tag);
+				List<Long> tagIds = new ArrayList<Long>();
 
-					tagIds.add(tag.getId());
+				if (CollectionUtils.isNotEmpty(tags)) {
+					for (RangerTag tag : tags) {
+						tag.setId((long) ret.getTags().size());
+						ret.getTags().put(tag.getId(), tag);
+
+						tagIds.add(tag.getId());
+					}
 				}
-			}
-			ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
+				ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
 
-			if(CollectionUtils.isNotEmpty(tagDefs)) {
-				for(RangerTagDef tagDef : tagDefs) {
-					tagDef.setId((long)ret.getTagDefinitions().size());
-					ret.getTagDefinitions().put(tagDef.getId(), tagDef);
+				if (CollectionUtils.isNotEmpty(tagDefs)) {
+					for (RangerTagDef tagDef : tagDefs) {
+						tagDef.setId((long) ret.getTagDefinitions().size());
+						ret.getTagDefinitions().put(tagDef.getId(), tagDef);
+					}
+				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Entity " + entityWithTraits + " does not have any tags associated with it when full-sync is being done.");
+					LOG.debug("Will not add this entity to serviceTags, so that this entity, if exists,  will be removed from ranger");
 				}
 			}
 		} else {

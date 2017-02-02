@@ -194,16 +194,16 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
 	public void synchUp() {
 
-		List<AtlasEntityWithTraits> atlasEntitiesWithTraits = atlasRESTUtil.getEntitiesWithTraits();
+		List<AtlasEntityWithTraits> atlasEntities = atlasRESTUtil.getAtlasEntities();
 
-		if (CollectionUtils.isNotEmpty(atlasEntitiesWithTraits)) {
+		if (CollectionUtils.isNotEmpty(atlasEntities)) {
 			if (LOG.isDebugEnabled()) {
-				for (AtlasEntityWithTraits element : atlasEntitiesWithTraits) {
+				for (AtlasEntityWithTraits element : atlasEntities) {
 					LOG.debug(element);
 				}
 			}
 
-			Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processEntitiesWithTraits(atlasEntitiesWithTraits);
+			Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(atlasEntities);
 
 			if (MapUtils.isNotEmpty(serviceTagsMap)) {
 				for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {

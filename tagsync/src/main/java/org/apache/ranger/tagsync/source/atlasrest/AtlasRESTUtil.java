@@ -88,9 +88,9 @@ public class AtlasRESTUtil {
 		}
 	}
 
-	public List<AtlasEntityWithTraits> getEntitiesWithTraits() {
+	public List<AtlasEntityWithTraits> getAtlasEntities() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> getEntriesWithTraits()");
+			LOG.debug("==> getAtlasEntities()");
 		}
 
 		List<AtlasEntityWithTraits> ret = new ArrayList<AtlasEntityWithTraits>();
@@ -129,9 +129,9 @@ public class AtlasRESTUtil {
 
 					Map<String, Object> traitsAttribute = getAttribute(definition, TRAITS_ATTRIBUTE, Map.class);
 
-					if (MapUtils.isNotEmpty(traitsAttribute)) {
+					List<IStruct> allTraits = new LinkedList<>();
 
-						List<IStruct> allTraits = new LinkedList<>();
+					if (MapUtils.isNotEmpty(traitsAttribute)) {
 
 						for (Map.Entry<String, Object> entry : traitsAttribute.entrySet()) {
 
@@ -151,24 +151,24 @@ public class AtlasRESTUtil {
 							allTraits.add(trait1);
 							allTraits.addAll(superTypes);
 						}
+					}
 
-						IReferenceableInstance entity = InstanceSerialization.fromJsonReferenceable(gson.toJson(definition), true);
+					IReferenceableInstance entity = InstanceSerialization.fromJsonReferenceable(gson.toJson(definition), true);
 
-						if (entity != null) {
-							AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, allTraits);
-							ret.add(entityWithTraits);
-						} else {
-							if (LOG.isInfoEnabled()) {
-								LOG.info("Could not create Atlas entity from its definition, type=" + type + ", guid=" + guid);
-							}
+					if (entity != null) {
+						AtlasEntityWithTraits atlasEntity = new AtlasEntityWithTraits(entity, allTraits);
+						ret.add(atlasEntity);
+					} else {
+						if (LOG.isInfoEnabled()) {
+							LOG.info("Could not create Atlas entity from its definition, type=" + type + ", guid=" + guid);
 						}
-
 					}
 
 				}
+
 			}
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== getEntriesWithTraits()");
+				LOG.debug("<== getAtlasEntities()");
 			}
 		}
 
