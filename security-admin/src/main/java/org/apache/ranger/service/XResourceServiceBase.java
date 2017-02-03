@@ -39,9 +39,8 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXResource mapViewToEntityBean(VXResource vObj, XXResource mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setName( vObj.getName());
 		mObj.setDescription( vObj.getDescription());
 		mObj.setResourceType( vObj.getResourceType());
@@ -65,9 +64,8 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXResource mapEntityToViewBean(VXResource vObj, XXResource mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setName( mObj.getName());
 		vObj.setDescription( mObj.getDescription());
 		vObj.setResourceType( mObj.getResourceType());
@@ -99,14 +97,12 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 		VXResourceList returnList = new VXResourceList();
 		List<VXResource> xResourceList = new ArrayList<VXResource>();
 
-		@SuppressWarnings("unchecked")
-		List<XXResource> resultList = (List<XXResource>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXResource gjXResource : resultList) {
-			@SuppressWarnings("unchecked")
-			VXResource vXResource = populateViewBean((T)gjXResource);
+		for (T gjXResource : resultList) {
+			VXResource vXResource = populateViewBean(gjXResource);
 			xResourceList.add(vXResource);
 		}
 

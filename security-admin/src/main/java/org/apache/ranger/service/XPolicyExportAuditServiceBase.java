@@ -40,9 +40,8 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXPolicyExportAudit mapViewToEntityBean(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setClientIP( vObj.getClientIP());
 		mObj.setAgentId( vObj.getAgentId());
 		mObj.setRequestedEpoch( vObj.getRequestedEpoch());
@@ -53,9 +52,8 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXPolicyExportAudit mapEntityToViewBean(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setClientIP( mObj.getClientIP());
 		vObj.setAgentId( mObj.getAgentId());
 		vObj.setRequestedEpoch( mObj.getRequestedEpoch());
@@ -75,14 +73,12 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 		VXPolicyExportAuditList returnList = new VXPolicyExportAuditList();
 		List<VXPolicyExportAudit> xPolicyExportAuditList = new ArrayList<VXPolicyExportAudit>();
 
-		@SuppressWarnings("unchecked")
-		List<XXPolicyExportAudit> resultList = (List<XXPolicyExportAudit>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXPolicyExportAudit gjXPolicyExportAudit : resultList) {
-			@SuppressWarnings("unchecked")
-			VXPolicyExportAudit vXPolicyExportAudit = populateViewBean((T)gjXPolicyExportAudit);
+		for (T gjXPolicyExportAudit : resultList) {
+			VXPolicyExportAudit vXPolicyExportAudit = populateViewBean(gjXPolicyExportAudit);
 			xPolicyExportAuditList.add(vXPolicyExportAudit);
 		}
 

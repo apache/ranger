@@ -20,7 +20,6 @@ package org.apache.ranger.service;
 
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.JSONUtil;
-import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXPolicyWithAssignedId;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +34,12 @@ public class RangerPolicyWithAssignedIdService extends RangerPolicyServiceBase<X
 	@Override
 	protected XXPolicyWithAssignedId mapViewToEntityBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj,
 			int OPERATION_CONTEXT) {
-		return (XXPolicyWithAssignedId) super.mapViewToEntityBean(vObj, (XXPolicyBase) xObj, OPERATION_CONTEXT);
+		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj) {
-		return super.mapEntityToViewBean(vObj, (XXPolicyBase) xObj);
+		return super.mapEntityToViewBean(vObj, xObj);
 	}
 
 	@Override

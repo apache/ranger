@@ -39,9 +39,8 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXAccessAudit mapViewToEntityBean(VXAccessAudit vObj, XXAccessAudit mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setAuditType( vObj.getAuditType());
 		mObj.setAccessResult( vObj.getAccessResult());
 		mObj.setAccessType( vObj.getAccessType());
@@ -66,9 +65,8 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXAccessAudit mapEntityToViewBean(VXAccessAudit vObj, XXAccessAudit mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setAuditType( mObj.getAuditType());
 		vObj.setAccessResult( mObj.getAccessResult());
 		vObj.setAccessType( mObj.getAccessType());
@@ -101,14 +99,12 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
 		VXAccessAuditList returnList = new VXAccessAuditList();
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
-		@SuppressWarnings("unchecked")
-		List<XXAccessAudit> resultList = (List<XXAccessAudit>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXAccessAudit gjXAccessAudit : resultList) {
-			@SuppressWarnings("unchecked")
-			VXAccessAudit vXAccessAudit = populateViewBean((T)gjXAccessAudit);
+		for (T gjXAccessAudit : resultList) {
+			VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
 			xAccessAuditList.add(vXAccessAudit);
 		}
 

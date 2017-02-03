@@ -75,12 +75,12 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 	@Override
 	protected XXService mapViewToEntityBean(RangerService vObj, XXService xObj, int OPERATION_CONTEXT) {
-		return (XXService)super.mapViewToEntityBean(vObj, (XXServiceBase)xObj, OPERATION_CONTEXT);
+		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected RangerService mapEntityToViewBean(RangerService vObj, XXService xObj) {
-		return super.mapEntityToViewBean(vObj, (XXServiceBase)xObj);
+		return super.mapEntityToViewBean(vObj, xObj);
 	}
 	
 	@Override

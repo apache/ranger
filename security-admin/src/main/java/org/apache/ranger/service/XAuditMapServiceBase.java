@@ -39,9 +39,8 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setResourceId( vObj.getResourceId());
 		mObj.setGroupId( vObj.getGroupId());
 		mObj.setUserId( vObj.getUserId());
@@ -49,9 +48,8 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setResourceId( mObj.getResourceId());
 		vObj.setGroupId( mObj.getGroupId());
 		vObj.setUserId( mObj.getUserId());
@@ -67,14 +65,12 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
 		VXAuditMapList returnList = new VXAuditMapList();
 		List<VXAuditMap> xAuditMapList = new ArrayList<VXAuditMap>();
 
-		@SuppressWarnings("unchecked")
-		List<XXAuditMap> resultList = (List<XXAuditMap>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXAuditMap gjXAuditMap : resultList) {
-			@SuppressWarnings("unchecked")
-			VXAuditMap vXAuditMap = populateViewBean((T)gjXAuditMap);
+		for (T gjXAuditMap : resultList) {
+			VXAuditMap vXAuditMap = populateViewBean(gjXAuditMap);
 			xAuditMapList.add(vXAuditMap);
 		}
 

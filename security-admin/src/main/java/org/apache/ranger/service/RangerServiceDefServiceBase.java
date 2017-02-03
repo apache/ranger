@@ -78,9 +78,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerServiceDef populateViewBean(XXServiceDefBase xServiceDef) {
-		RangerServiceDef serviceDef = super.populateViewBean((T) xServiceDef);
+	protected V populateViewBean(T xServiceDef) {
+		V serviceDef = super.populateViewBean((T) xServiceDef);
 		Long serviceDefId = xServiceDef.getId();
 
 		List<XXServiceConfigDef> xConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
@@ -198,9 +197,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return serviceDef;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXServiceDefBase mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefBase xObj, int operationContext) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
 		
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
@@ -216,9 +214,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return xObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDefBase xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setName(xObj.getName());
@@ -528,7 +525,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return vObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
 		RangerServiceDefList retList = new RangerServiceDefList();
 		int startIndex = searchFilter.getStartIndex();
@@ -540,10 +536,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		if(searchFilter.getParam("pageSource")!=null){
 			isAuditPage=true;
 		}
-		List<XXServiceDef> xSvcDefList = (List<XXServiceDef>) searchResources(searchFilter, searchFields, sortFields,
+		List<T> xSvcDefList = searchResources(searchFilter, searchFields, sortFields,
 				retList);
-		List<XXServiceDef> permittedServiceDefs = new ArrayList<XXServiceDef>();
-		for (XXServiceDef xSvcDef : xSvcDefList) {
+		List<T> permittedServiceDefs = new ArrayList<T>();
+		for (T xSvcDef : xSvcDefList) {
 			if (bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage) ) {
 				permittedServiceDefs.add(xSvcDef);
 			}
@@ -556,7 +552,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	}
 	
 
-	private void populatePageList(List<XXServiceDef> xxObjList, int startIndex, int pageSize,
+	private void populatePageList(List<T> xxObjList, int startIndex, int pageSize,
 			RangerServiceDefList retList) {
 		List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
 
@@ -632,8 +628,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return ret;
 	}
 
-	public <T> T jsonToObject(String jsonStr, Class<T> clz) {
-		T ret = null;
+	public <DST> DST jsonToObject(String jsonStr, Class<DST> clz) {
+		DST ret = null;
 
 		if(StringUtils.isNotEmpty(jsonStr)) {
 			try {

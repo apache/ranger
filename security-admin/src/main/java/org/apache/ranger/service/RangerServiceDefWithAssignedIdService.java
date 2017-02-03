@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.entity.XXServiceDefWithAssignedId;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.springframework.stereotype.Service;
@@ -28,12 +27,12 @@ public class RangerServiceDefWithAssignedIdService extends RangerServiceDefServi
 	@Override
 	protected XXServiceDefWithAssignedId mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj,
 			int OPERATION_CONTEXT) {
-		return (XXServiceDefWithAssignedId) super.mapViewToEntityBean(vObj, (XXServiceDefBase) xObj, OPERATION_CONTEXT);
+		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj) {
-		return super.mapEntityToViewBean(vObj, (XXServiceDefBase) xObj);
+		return super.mapEntityToViewBean(vObj, xObj);
 	}
 
 	@Override

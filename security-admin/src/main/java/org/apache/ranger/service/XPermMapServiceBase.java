@@ -39,9 +39,8 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXPermMap mapViewToEntityBean(VXPermMap vObj, XXPermMap mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setPermGroup( vObj.getPermGroup());
 		mObj.setResourceId( vObj.getResourceId());
 		mObj.setGroupId( vObj.getGroupId());
@@ -55,9 +54,8 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXPermMap mapEntityToViewBean(VXPermMap vObj, XXPermMap mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setPermGroup( mObj.getPermGroup());
 		vObj.setResourceId( mObj.getResourceId());
 		vObj.setGroupId( mObj.getGroupId());
@@ -79,14 +77,12 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
 		VXPermMapList returnList = new VXPermMapList();
 		List<VXPermMap> xPermMapList = new ArrayList<VXPermMap>();
 
-		@SuppressWarnings("unchecked")
-		List<XXPermMap> resultList = (List<XXPermMap>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXPermMap gjXPermMap : resultList) {
-			@SuppressWarnings("unchecked")
-			VXPermMap vXPermMap = populateViewBean((T)gjXPermMap);
+		for (T gjXPermMap : resultList) {
+			VXPermMap vXPermMap = populateViewBean(gjXPermMap);
 			xPermMapList.add(vXPermMap);
 		}
 

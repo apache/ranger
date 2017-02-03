@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -46,12 +45,12 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
 	@Override
 	protected XXServiceDef mapViewToEntityBean(RangerServiceDef vObj, XXServiceDef xObj, int OPERATION_CONTEXT) {
-		return (XXServiceDef) super.mapViewToEntityBean(vObj, (XXServiceDefBase) xObj, OPERATION_CONTEXT);
+		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
-		return super.mapEntityToViewBean(vObj, (XXServiceDefBase) xObj);
+		return super.mapEntityToViewBean(vObj, xObj);
 	}
 
 	public List<RangerServiceDef> getAllServiceDefs() {

@@ -33,19 +33,17 @@ public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXGroupPermission mapViewToEntityBean(VXGroupPermission vObj,
-			XXGroupPermission mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj,
+			T mObj, int OPERATION_CONTEXT) {
 		mObj.setGroupId(vObj.getGroupId());
 		mObj.setModuleId(vObj.getModuleId());
 		mObj.setIsAllowed(vObj.getIsAllowed());
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXGroupPermission mapEntityToViewBean(VXGroupPermission vObj, XXGroupPermission mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setGroupId(mObj.getGroupId());
 		vObj.setModuleId(mObj.getModuleId());
 		vObj.setIsAllowed(mObj.getIsAllowed());
@@ -60,14 +58,12 @@ public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V
 		VXGroupPermissionList returnList = new VXGroupPermissionList();
 		List<VXGroupPermission> vXGroupPermissions = new ArrayList<VXGroupPermission>();
 
-		@SuppressWarnings("unchecked")
-		List<XXGroupPermission> resultList = (List<XXGroupPermission>) searchResources(
+		List<T> resultList = searchResources(
 				searchCriteria, searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXGroupPermission gjXUser : resultList) {
-			@SuppressWarnings("unchecked")
-			VXGroupPermission vXGroupPermission = populateViewBean((T) gjXUser);
+		for (T gjXUser : resultList) {
+			VXGroupPermission vXGroupPermission = populateViewBean(gjXUser);
 			vXGroupPermissions.add(vXGroupPermission);
 		}
 

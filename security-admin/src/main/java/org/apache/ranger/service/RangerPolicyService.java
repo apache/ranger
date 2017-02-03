@@ -30,7 +30,6 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -93,12 +92,12 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 
 	@Override
 	protected XXPolicy mapViewToEntityBean(RangerPolicy vObj, XXPolicy xObj, int OPERATION_CONTEXT) {
-		return (XXPolicy)super.mapViewToEntityBean(vObj, (XXPolicyBase)xObj, OPERATION_CONTEXT);
+		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicy xObj) {
-		return super.mapEntityToViewBean(vObj, (XXPolicyBase)xObj);
+		return super.mapEntityToViewBean(vObj, xObj);
 	}
 	
 	@Override

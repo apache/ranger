@@ -35,15 +35,13 @@ public abstract class UserServiceBase<T extends XXPortalUser, V extends VXPortal
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXPortalUser mapViewToEntityBean(VXPortalUser vObj, XXPortalUser mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXPortalUser mapEntityToViewBean(VXPortalUser vObj, XXPortalUser mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		return vObj;
 	}
 
@@ -55,14 +53,12 @@ public abstract class UserServiceBase<T extends XXPortalUser, V extends VXPortal
 		VXPortalUserList returnList = new VXPortalUserList();
 		List<VXPortalUser> userList = new ArrayList<VXPortalUser>();
 
-		@SuppressWarnings("unchecked")
-		List<XXPortalUser> resultList = (List<XXPortalUser>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXPortalUser gjUser : resultList) {
-			@SuppressWarnings("unchecked")
-			VXPortalUser vUser = populateViewBean((T)gjUser);
+		for (T gjUser : resultList) {
+			VXPortalUser vUser = populateViewBean(gjUser);
 			userList.add(vUser);
 		}
 

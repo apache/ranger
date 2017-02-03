@@ -51,8 +51,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 	RangerConfigUtil configUtil;
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXTag mapViewToEntityBean(RangerTag vObj, XXTag xObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		XXTagDef xTagDef = daoMgr.getXXTagDef().findByName(vObj.getType());
@@ -69,8 +68,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerTag mapEntityToViewBean(RangerTag vObj, XXTag xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 		XXTagDef xTagDef = daoMgr.getXXTagDef().getById(xObj.getType());
 		if(xTagDef == null) {
 			throw restErrorUtil.createRESTException(
@@ -101,15 +99,14 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 		return ret;
 	}
 
-	@SuppressWarnings("unchecked")
-	public PList<RangerTag> searchRangerTags(SearchFilter searchFilter) {
-		PList<RangerTag> retList = new PList<RangerTag>();
-		List<RangerTag> tagList = new ArrayList<RangerTag>();
+	public PList<V> searchRangerTags(SearchFilter searchFilter) {
+		PList<V> retList = new PList<V>();
+		List<V> tagList = new ArrayList<V>();
 
-		List<XXTag> xTagList = (List<XXTag>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+		List<T> xTagList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-		for (XXTag xTag : xTagList) {
-			RangerTag tag = populateViewBean((T) xTag);
+		for (T xTag : xTagList) {
+			V tag = populateViewBean(xTag);
 			tagList.add(tag);
 		}
 

@@ -33,13 +33,8 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
 
 	public static final String NAME = "XUserPermission";
 
-	public XUserPermissionServiceBase() {
-
-	}
-
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXUserPermission mapViewToEntityBean(VXUserPermission vObj, XXUserPermission mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 
 		// Assuming that vObj.userId coming from UI/Client would be of XXUser, but in DB it should be of XXPortalUser so
 		// have to map XXUser.ID to XXPortalUser.ID and if portalUser does not exist then not allowing to create/update
@@ -65,8 +60,7 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected VXUserPermission mapEntityToViewBean(VXUserPermission vObj, XXUserPermission mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 
 		// As XXUserPermission.userID refers to XXPortalUser.ID, But UI/Client expects XXUser.ID so have to map
 		// XXUserPermission.userID from XXPortalUser.ID to XXUser.ID
@@ -92,14 +86,12 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
 		VXUserPermissionList returnList = new VXUserPermissionList();
 		List<VXUserPermission> vXUserPermissions = new ArrayList<VXUserPermission>();
 
-		@SuppressWarnings("unchecked")
-		List<XXUserPermission> resultList = (List<XXUserPermission>) searchResources(
+		List<T> resultList = searchResources(
 				searchCriteria, searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXUserPermission gjXUser : resultList) {
-			@SuppressWarnings("unchecked")
-			VXUserPermission vXUserPermission = populateViewBean((T) gjXUser);
+		for (T gjXUser : resultList) {
+			VXUserPermission vXUserPermission = populateViewBean(gjXUser);
 			vXUserPermissions.add(vXUserPermission);
 		}
 

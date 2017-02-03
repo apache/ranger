@@ -39,18 +39,16 @@ public abstract class XGroupUserServiceBase<T extends XXGroupUser, V extends VXG
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXGroupUser mapViewToEntityBean(VXGroupUser vObj, XXGroupUser mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setName( vObj.getName());
 		mObj.setParentGroupId( vObj.getParentGroupId());
 		mObj.setUserId( vObj.getUserId());
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXGroupUser mapEntityToViewBean(VXGroupUser vObj, XXGroupUser mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setName( mObj.getName());
 		vObj.setParentGroupId( mObj.getParentGroupId());
 		vObj.setUserId( mObj.getUserId());
@@ -65,14 +63,12 @@ public abstract class XGroupUserServiceBase<T extends XXGroupUser, V extends VXG
 		VXGroupUserList returnList = new VXGroupUserList();
 		List<VXGroupUser> xGroupUserList = new ArrayList<VXGroupUser>();
 
-		@SuppressWarnings("unchecked")
-		List<XXGroupUser> resultList = (List<XXGroupUser>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXGroupUser gjXGroupUser : resultList) {
-			@SuppressWarnings("unchecked")
-			VXGroupUser vXGroupUser = populateViewBean((T)gjXGroupUser);
+		for (T gjXGroupUser : resultList) {
+			VXGroupUser vXGroupUser = populateViewBean(gjXGroupUser);
 			xGroupUserList.add(vXGroupUser);
 		}
 

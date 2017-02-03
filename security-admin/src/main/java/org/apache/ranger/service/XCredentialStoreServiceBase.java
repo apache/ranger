@@ -39,17 +39,15 @@ public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXCredentialStore mapViewToEntityBean(VXCredentialStore vObj, XXCredentialStore mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setName( vObj.getName());
 		mObj.setDescription( vObj.getDescription());
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXCredentialStore mapEntityToViewBean(VXCredentialStore vObj, XXCredentialStore mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setName( mObj.getName());
 		vObj.setDescription( mObj.getDescription());
 		return vObj;
@@ -63,14 +61,12 @@ public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V
 		VXCredentialStoreList returnList = new VXCredentialStoreList();
 		List<VXCredentialStore> xCredentialStoreList = new ArrayList<VXCredentialStore>();
 
-		@SuppressWarnings("unchecked")
-		List<XXCredentialStore> resultList = (List<XXCredentialStore>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXCredentialStore gjXCredentialStore : resultList) {
-			@SuppressWarnings("unchecked")
-			VXCredentialStore vXCredentialStore = populateViewBean((T)gjXCredentialStore);
+		for (T gjXCredentialStore : resultList) {
+			VXCredentialStore vXCredentialStore = populateViewBean(gjXCredentialStore);
 			xCredentialStoreList.add(vXCredentialStore);
 		}
 

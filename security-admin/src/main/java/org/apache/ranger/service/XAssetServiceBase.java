@@ -39,9 +39,8 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset>
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXAsset mapViewToEntityBean(VXAsset vObj, XXAsset mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setName( vObj.getName());
 		mObj.setDescription( vObj.getDescription());
 		mObj.setActiveStatus( vObj.getActiveStatus());
@@ -51,9 +50,8 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset>
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXAsset mapEntityToViewBean(VXAsset vObj, XXAsset mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setName( mObj.getName());
 		vObj.setDescription( mObj.getDescription());
 		vObj.setActiveStatus( mObj.getActiveStatus());
@@ -71,14 +69,12 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset>
 		VXAssetList returnList = new VXAssetList();
 		List<VXAsset> xAssetList = new ArrayList<VXAsset>();
 
-		@SuppressWarnings("unchecked")
-		List<XXAsset> resultList = (List<XXAsset>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXAsset gjXAsset : resultList) {
-			@SuppressWarnings("unchecked")
-			VXAsset vXAsset = populateViewBean((T)gjXAsset);
+		for (T gjXAsset : resultList) {
+			VXAsset vXAsset = populateViewBean(gjXAsset);
 			xAssetList.add(vXAsset);
 		}
 

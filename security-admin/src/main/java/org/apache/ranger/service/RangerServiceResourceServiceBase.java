@@ -44,8 +44,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 	GUIDUtil guidUtil;
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXServiceResource mapViewToEntityBean(RangerServiceResource vObj, XXServiceResource xObj, int operationContext) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
@@ -64,8 +63,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerServiceResource mapEntityToViewBean(RangerServiceResource vObj, XXServiceResource xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setIsEnabled(xObj.getIsEnabled());
@@ -96,15 +94,14 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 		return vObj;
 	}
 
-	@SuppressWarnings("unchecked")
-	public PList<RangerServiceResource> searchServiceResources(SearchFilter searchFilter) {
-		PList<RangerServiceResource> retList = new PList<RangerServiceResource>();
-		List<RangerServiceResource> resourceList = new ArrayList<RangerServiceResource>();
+	public PList<V> searchServiceResources(SearchFilter searchFilter) {
+		PList<V> retList = new PList<V>();
+		List<V> resourceList = new ArrayList<V>();
 
-		List<XXServiceResource> xResourceList = (List<XXServiceResource>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+		List<T> xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-		for (XXServiceResource xResource : xResourceList) {
-			RangerServiceResource taggedRes = populateViewBean((T) xResource);
+		for (T xResource : xResourceList) {
+			V taggedRes = populateViewBean(xResource);
 			resourceList.add(taggedRes);
 		}
 		retList.setList(resourceList);

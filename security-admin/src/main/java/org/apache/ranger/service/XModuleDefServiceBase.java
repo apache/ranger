@@ -36,18 +36,16 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXModuleDef mapViewToEntityBean(VXModuleDef vObj, XXModuleDef mObj,
+	protected T mapViewToEntityBean(V vObj, T mObj,
 			int OPERATION_CONTEXT) {
 		mObj.setModule(vObj.getModule());
 		mObj.setUrl(vObj.getUrl());
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXModuleDef mapEntityToViewBean(VXModuleDef vObj, XXModuleDef mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setModule(mObj.getModule());
 		vObj.setUrl(mObj.getUrl());
 		return vObj;
@@ -61,14 +59,12 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
 		VXModuleDefList returnList = new VXModuleDefList();
 		List<VXModuleDef> vXModuleDefList = new ArrayList<VXModuleDef>();
 
-		@SuppressWarnings("unchecked")
-		List<XXModuleDef> resultList = (List<XXModuleDef>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXModuleDef gjXModuleDef : resultList) {
-			@SuppressWarnings("unchecked")
-			VXModuleDef vXModuleDef = populateViewBean((T)gjXModuleDef);
+		for (T gjXModuleDef : resultList) {
+			VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef);
 			vXModuleDefList.add(vXModuleDef);
 		}
 

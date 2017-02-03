@@ -47,8 +47,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 	RangerConfigUtil configUtil;
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXTagDef mapViewToEntityBean(RangerTagDef vObj, XXTagDef xObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
@@ -60,8 +59,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerTagDef mapEntityToViewBean(RangerTagDef vObj, XXTagDef xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
@@ -118,15 +116,14 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 		return xTagAttrDef;
 	}
 
-	@SuppressWarnings("unchecked")
-	public PList<RangerTagDef> searchRangerTagDefs(SearchFilter searchFilter) {
-		PList<RangerTagDef> retList = new PList<RangerTagDef>();
-		List<RangerTagDef> tagDefList = new ArrayList<RangerTagDef>();
+	public PList<V> searchRangerTagDefs(SearchFilter searchFilter) {
+		PList<V> retList = new PList<V>();
+		List<V> tagDefList = new ArrayList<V>();
 
-		List<XXTagDef> xTagDefList = (List<XXTagDef>) searchRangerObjects(searchFilter, searchFields, sortFields, (PList<V>) retList);
+		List<T> xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-		for (XXTagDef xTagDef : xTagDefList) {
-			RangerTagDef tagDef = populateViewBean((T) xTagDef);
+		for (T xTagDef : xTagDefList) {
+			V tagDef = populateViewBean(xTagDef);
 			tagDefList.add(tagDef);
 		}
 

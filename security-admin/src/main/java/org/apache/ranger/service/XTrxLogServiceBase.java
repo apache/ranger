@@ -39,9 +39,8 @@ public abstract class XTrxLogServiceBase<T extends XXTrxLog, V extends VXTrxLog>
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected XXTrxLog mapViewToEntityBean(VXTrxLog vObj, XXTrxLog mObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
 		mObj.setObjectClassType( vObj.getObjectClassType());
 		mObj.setObjectId( vObj.getObjectId());
 		mObj.setParentObjectId( vObj.getParentObjectId());
@@ -59,9 +58,8 @@ public abstract class XTrxLogServiceBase<T extends XXTrxLog, V extends VXTrxLog>
 		return mObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected VXTrxLog mapEntityToViewBean(VXTrxLog vObj, XXTrxLog mObj) {
+	protected V mapEntityToViewBean(V vObj, T mObj) {
 		vObj.setObjectClassType( mObj.getObjectClassType());
 		vObj.setObjectId( mObj.getObjectId());
 		vObj.setParentObjectId( mObj.getParentObjectId());
@@ -87,14 +85,12 @@ public abstract class XTrxLogServiceBase<T extends XXTrxLog, V extends VXTrxLog>
 		VXTrxLogList returnList = new VXTrxLogList();
 		List<VXTrxLog> xTrxLogList = new ArrayList<VXTrxLog>();
 
-		@SuppressWarnings("unchecked")
-		List<XXTrxLog> resultList = (List<XXTrxLog>)searchResources(searchCriteria,
+		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
-		for (XXTrxLog gjXTrxLog : resultList) {
-			@SuppressWarnings("unchecked")
-			VXTrxLog vXTrxLog = populateViewBean((T)gjXTrxLog);
+		for (T gjXTrxLog : resultList) {
+			VXTrxLog vXTrxLog = populateViewBean(gjXTrxLog);
 			xTrxLogList.add(vXTrxLog);
 		}
 

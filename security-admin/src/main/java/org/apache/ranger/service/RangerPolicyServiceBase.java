@@ -74,8 +74,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXPolicyBase mapViewToEntityBean(RangerPolicy vObj, XXPolicyBase xObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
 		xObj.setGuid(guid);
@@ -98,8 +97,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicyBase xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 		XXService xService = daoMgr.getXXService().getById(xObj.getService());
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());

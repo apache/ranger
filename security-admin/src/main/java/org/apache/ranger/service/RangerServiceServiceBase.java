@@ -64,8 +64,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	protected XXServiceBase mapViewToEntityBean(RangerService vObj, XXServiceBase xObj, int OPERATION_CONTEXT) {
+	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 		
 		xObj.setGuid(guid);
@@ -103,8 +102,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected RangerService mapEntityToViewBean(RangerService vObj, XXServiceBase xObj) {
+	protected V mapEntityToViewBean(V vObj, T xObj) {
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
 		XXService    xTagService = xObj.getTagService() != null ? daoMgr.getXXService().getById(xObj.getTagService()) : null;
 		vObj.setType(xServiceDef.getName());
@@ -129,7 +127,6 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		return vObj;
 	}
 
-	@SuppressWarnings("unchecked")
 	public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
 		RangerServiceList retList = new RangerServiceList();
 
@@ -138,10 +135,10 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		searchFilter.setStartIndex(0);
 		searchFilter.setMaxRows(Integer.MAX_VALUE);
 
-		List<XXService> xSvcList = (List<XXService>) searchResources(searchFilter, searchFields, sortFields, retList);
-		List<XXService> permittedServices = new ArrayList<XXService>();
+		List<T> xSvcList = searchResources(searchFilter, searchFields, sortFields, retList);
+		List<T> permittedServices = new ArrayList<T>();
 
-		for (XXService xSvc : xSvcList) {
+		for (T xSvc : xSvcList) {
 			if(bizUtil.hasAccess(xSvc, null)){
 				permittedServices.add(xSvc);
 			}
@@ -154,13 +151,12 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		return retList;
 	}
 
-	@SuppressWarnings("unchecked")
-	private void populatePageList(List<XXService> xxObjList, int startIndex, int pageSize,
+	private void populatePageList(List<T> xxObjList, int startIndex, int pageSize,
 			RangerServiceList retList) {
 		List<RangerService> onePageList = new ArrayList<RangerService>();
 
 		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
-			onePageList.add(populateViewBean((T)xxObjList.get(i)));
+			onePageList.add(populateViewBean(xxObjList.get(i)));
 		}
 		retList.setServices(onePageList);
 		retList.setStartIndex(startIndex);
