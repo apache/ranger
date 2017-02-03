@@ -54,7 +54,7 @@ import org.springframework.util.CollectionUtils;
 @Scope("singleton")
 public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
-	public static Long createdByUserId = 1L;
+	private final Long createdByUserId;
 
 	@Autowired
 	RangerDaoManager daoManager;
@@ -120,8 +120,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"XXPortalUser xXPortalUser, XXPortalUserRole xXPortalUserRole",
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 
-		
-		createdByUserId = Long.valueOf(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
+		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
 		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden","*****");
 

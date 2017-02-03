@@ -36,8 +36,6 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPermission, VXUserPermission>{
 
-	public static Long createdByUserId = 1L;
-
 	@Autowired
 	RangerDaoManager rangerDaoManager;
 

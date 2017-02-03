@@ -47,7 +47,7 @@ import org.springframework.stereotype.Service;
 public class XGroupUserService extends
 		XGroupUserServiceBase<XXGroupUser, VXGroupUser> {
 
-	public static Long createdByUserId = 1L;
+	private final Long createdByUserId;
 	
 	@Autowired
 	RangerDaoManager rangerDaoManager;
@@ -66,7 +66,7 @@ public class XGroupUserService extends
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("xGroupId", "obj.parentGroupId",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		createdByUserId = Long.valueOf(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
+		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 		
 	}
 

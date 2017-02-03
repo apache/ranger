@@ -269,13 +269,24 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 
     public static Integer getIntProperty(String key, int defaultValue) {
 	if (key == null) {
-	    return null;
+	    return defaultValue;
 	}
 	String rtrnVal = propertiesMap.get(key);
 	if (rtrnVal == null) {
 	    return defaultValue;
 	}
 	return Integer.valueOf(rtrnVal);
+    }
+
+    public static long getLongProperty(String key, long defaultValue) {
+		if (key == null) {
+		    return defaultValue;
+		}
+		String rtrnVal = propertiesMap.get(key);
+		if (rtrnVal == null) {
+		    return defaultValue;
+		}
+		return Long.valueOf(rtrnVal);
     }
 
     public static Integer getIntProperty(String key) {

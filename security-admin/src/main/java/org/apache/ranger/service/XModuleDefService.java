@@ -41,8 +41,6 @@ import org.springframework.util.CollectionUtils;
 public class XModuleDefService extends
 		XModuleDefServiceBase<XXModuleDef, VXModuleDef> {
 
-	public static Long createdByUserId = 1L;
-
 	@Autowired
 	RangerDaoManager rangerDaoManager;
 

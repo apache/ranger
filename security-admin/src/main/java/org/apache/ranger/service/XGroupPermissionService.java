@@ -36,8 +36,6 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroupPermission, VXGroupPermission>{
 
-	public static Long createdByUserId = 1L;
-
 	@Autowired
 	RangerDaoManager rangerDaoManager;
 

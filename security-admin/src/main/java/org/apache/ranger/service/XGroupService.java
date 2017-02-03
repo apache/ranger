@@ -48,7 +48,7 @@ import org.springframework.util.CollectionUtils;
 @Scope("singleton")
 public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 
-	public static Long createdByUserId = 1L;
+	private final Long createdByUserId;
 	
 	@Autowired
 	RangerDaoManager rangerDaoManager;
@@ -74,7 +74,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 		searchFields.add(new SearchField("isVisible", "obj.isVisible",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL ));
 
-		createdByUserId = Long.valueOf(PropertiesUtil.getIntProperty("ranger.xuser.createdByUserId", 1));
+		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
 		 sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 	}

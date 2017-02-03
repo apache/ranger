@@ -56,8 +56,8 @@ public class TestPropertiesUtil {
 	@Test
 	public void testGetIntPropertyNull1(){
 		String key=null;
-		PropertiesUtil.getIntProperty(key);
-		Assert.assertNull(key);
+		Integer value = PropertiesUtil.getIntProperty(key);
+		Assert.assertNull(value);
 	}
 	
 	@Test
@@ -71,8 +71,9 @@ public class TestPropertiesUtil {
 	public void testGetIntPropertyNull(){
 		String key=null;
 		int defaultValue=0;
-		PropertiesUtil.getIntProperty(key, defaultValue);
-		Assert.assertNull(key);
+		Integer value = PropertiesUtil.getIntProperty(key, defaultValue);
+		Assert.assertNotNull(value);
+		Assert.assertEquals(value.intValue(), defaultValue);
 	}
 	
 	@Test
@@ -80,9 +81,18 @@ public class TestPropertiesUtil {
 		String key="1";
 		int defaultValue=1;
 		Integer value= PropertiesUtil.getIntProperty(key, defaultValue);
-		Assert.assertEquals(value, Integer.valueOf(key));
+		Assert.assertEquals(value, Integer.valueOf(defaultValue));
 	}
-	
+
+	@Test
+	public void testGetLongProperty(){
+		String key="longKey";
+		long defaultValue=23L;
+		Long value = PropertiesUtil.getLongProperty(key, defaultValue);
+		Assert.assertNotNull(value);
+		Assert.assertEquals(value.intValue(), defaultValue);
+	}
+
 	@Test
 	public void testGetBooleanPropertyNull() {
 		String key = null;
