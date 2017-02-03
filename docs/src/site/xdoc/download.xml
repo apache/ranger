@@ -34,9 +34,9 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 The current stable release is Apache Ranger 0.6.3:
 </p>
 <p>
-<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
-(<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.asc">PGP</a>)
-(<a href="https://dist.apache.org/repos/dist/release/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.mds">Digests</a>)
+<a href="http://www.apache.org/dyn/closer.lua/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
+(<a href="https://www.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.mds">Digests</a>)
 </p>
 </li>
 <li>
@@ -47,16 +47,6 @@ An older branch release is Apache Ranger 0.5.3:
 <a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
 (<a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.asc">PGP</a>)
 (<a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.mds">Digests</a>)
-</p>
-</li>
-<li>
-<p>
-An older branch release is Apache Ranger 0.4.0:
-</p>
-<p>
-<a href="http://archive.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz">ranger-0.4.0-incubating.tar.gz</a>
-(<a href="http://archive.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.asc">PGP</a>)
-(<a href="http://archive.apache.org/dist/incubator/ranger/0.4.0-incubating/ranger-0.4.0-incubating.tar.gz.mds">Digests</a>)
 </p>
 </li>
 </ul>
