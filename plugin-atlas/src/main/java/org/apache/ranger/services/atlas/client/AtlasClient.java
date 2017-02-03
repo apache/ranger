@@ -112,7 +112,20 @@ public class AtlasClient extends BaseClient {
 							WebResource webResource = client.resource(statusUrl);
 							MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
 							formData.add("j_username", userName);
-							formData.add("j_password",PasswordUtils.decryptPassword(password));
+
+							String decryptedPwd = null;
+							try {
+								decryptedPwd = PasswordUtils.decryptPassword(password);
+							} catch (Exception ex) {
+								LOG.info("Password decryption failed; trying Atlas connection with received password string");
+								decryptedPwd = null;
+							} finally {
+								if (decryptedPwd == null) {
+									decryptedPwd = password;
+								}
+							}
+							formData.add("j_password", decryptedPwd);
+
 							try {
 								statusResponse = webResource.type("application/x-www-form-urlencoded").post(
 										ClientResponse.class, formData);
