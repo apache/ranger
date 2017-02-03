@@ -453,8 +453,9 @@ public class UserGroupSyncConfig  {
 
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
+		String className = getUserGroupSource().getClass().getName();
 		if (val == null) {
-			if (LGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())) {
+			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 			} else {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
@@ -463,9 +464,9 @@ public class UserGroupSyncConfig  {
 		else {
 			long ret = Long.parseLong(val);
 			long min_interval;
-			if (LGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())) {
+			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
-			}else if(UGSYNC_SOURCE_CLASS.equals(getUserGroupSource().getClass().getName())){
+			}else if(UGSYNC_SOURCE_CLASS.equals(className)){
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
 			} else {
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE;
