@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
 @InterfaceStability.Unstable
 public class RangerKrbFilter implements Filter {
 
-  private static Logger LOG = LoggerFactory.getLogger(RangerKrbFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKrbFilter.class);
 
   /**
    * Constant for the property that specifies the configuration prefix.

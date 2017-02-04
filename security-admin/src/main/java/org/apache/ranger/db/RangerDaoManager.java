@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RangerDaoManager extends RangerDaoManagerBase {
-	final static Logger logger = Logger.getLogger(RangerDaoManager.class);
+	private static final Logger logger = Logger.getLogger(RangerDaoManager.class);
 
 	@PersistenceContext(unitName = "defaultPU")
 	private EntityManager em;

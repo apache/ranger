@@ -46,7 +46,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
  */
 public class RangerAuthSuccessHandler extends
 SavedRequestAwareAuthenticationSuccessHandler {
-    static Logger logger = Logger.getLogger(RangerAuthSuccessHandler.class);
+    private static final Logger logger = Logger.getLogger(RangerAuthSuccessHandler.class);
 
     String ajaxLoginSuccessPage = null;
 

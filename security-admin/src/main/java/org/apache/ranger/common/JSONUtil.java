@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.view.ViewBaseBean;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -44,8 +43,6 @@ public class JSONUtil {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-
-	static final Logger logger = Logger.getLogger(JSONUtil.class);
 
 	public File writeJsonToFile(ViewBaseBean viewBean, String fileName)
 			throws JsonGenerationException, JsonMappingException, IOException {

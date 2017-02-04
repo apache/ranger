@@ -71,7 +71,7 @@ import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 @Component
 public class UserMgr {
 
-	static final Logger logger = Logger.getLogger(UserMgr.class);
+	private static final Logger logger = Logger.getLogger(UserMgr.class);
 	private static final Md5PasswordEncoder md5Encoder = new Md5PasswordEncoder();
 	private static final ShaPasswordEncoder sha256Encoder = new ShaPasswordEncoder(256);
 	@Autowired

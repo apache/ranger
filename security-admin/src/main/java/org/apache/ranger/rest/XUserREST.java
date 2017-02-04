@@ -32,7 +32,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -95,7 +94,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("XUserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XUserREST {
-	static Logger logger = Logger.getLogger(XUserREST.class);
 
 	@Autowired
 	SearchUtil searchUtil;

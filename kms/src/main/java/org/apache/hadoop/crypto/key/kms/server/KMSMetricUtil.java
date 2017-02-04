@@ -28,8 +28,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class KMSMetricUtil {
-	private static Logger logger = Logger.getLogger(KMSMetricUtil.class);
-	
+	private static final Logger logger = Logger.getLogger(KMSMetricUtil.class);
+
 	private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
 	private static String metricType;
 	

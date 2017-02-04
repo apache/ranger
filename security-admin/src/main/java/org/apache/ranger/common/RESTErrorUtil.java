@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RESTErrorUtil {
 
-	static final Logger logger = Logger.getLogger(RESTErrorUtil.class);
+	private static final Logger logger = Logger.getLogger(RESTErrorUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;

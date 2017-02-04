@@ -74,7 +74,7 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
 public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
-	Logger LOG = LoggerFactory.getLogger(RangerKRBAuthenticationFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerKRBAuthenticationFilter.class);
 	
 	@Autowired
 	UserMgr userMgr;

@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
@@ -51,9 +50,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 public class RangerSecurityContextFormationFilter extends GenericFilterBean {
-
-	static Logger logger = Logger
-			.getLogger(RangerSecurityContextFormationFilter.class);
 
 	public static final String AKA_SC_SESSION_KEY = "AKA_SECURITY_CONTEXT";
 	public static final String USER_AGENT = "User-Agent";

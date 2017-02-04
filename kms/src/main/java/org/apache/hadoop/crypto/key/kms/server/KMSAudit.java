@@ -101,7 +101,7 @@ public class KMSAudit {
 
   public static final String KMS_LOGGER_NAME = "kms-audit";
 
-  private static Logger AUDIT_LOG = LoggerFactory.getLogger(KMS_LOGGER_NAME);
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger(KMS_LOGGER_NAME);
 
   /**
    * Create a new KMSAudit.

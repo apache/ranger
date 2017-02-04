@@ -35,7 +35,7 @@ public class HdfsConnectionMgr {
 	protected ConcurrentMap<String, HdfsClient> 	hdfsConnectionCache = null;
 	protected ConcurrentMap<String, Boolean> 		repoConnectStatusMap = null;
 
-	private static Logger LOG = Logger.getLogger(HdfsConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(HdfsConnectionMgr.class);
 	
 	public HdfsConnectionMgr(){
 		hdfsConnectionCache  = new ConcurrentHashMap<String, HdfsClient>();

@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  */
 public abstract class BaseLoader {
-    static Logger logger = Logger.getLogger(BaseLoader.class);
+	private static final Logger logger = Logger.getLogger(BaseLoader.class);
 
     long startTime =  DateUtil.getUTCDate().getTime();
     long lastTime = startTime;

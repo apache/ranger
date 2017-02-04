@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 
 public abstract class AbstractMapper implements Mapper {
 	
-	static Logger logger = Logger.getLogger(AbstractMapper.class);
+	protected static final Logger logger = Logger.getLogger(AbstractMapper.class);
 
 	@Override
 	public void init(String baseProperty) {

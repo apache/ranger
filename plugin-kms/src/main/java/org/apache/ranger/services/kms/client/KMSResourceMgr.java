@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 
 public class KMSResourceMgr {
-	public static final 	Logger 	LOG 		= Logger.getLogger(KMSResourceMgr.class);
+	private static final 	Logger 	LOG 		= Logger.getLogger(KMSResourceMgr.class);
 	private static final 	String  KMSKEY	= "keyname";
 	
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {

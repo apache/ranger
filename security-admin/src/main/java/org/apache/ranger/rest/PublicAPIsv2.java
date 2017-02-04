@@ -50,7 +50,7 @@ import java.util.List;
 @RangerAnnotationJSMgrName("PublicMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PublicAPIsv2 {
-	static Logger logger = Logger.getLogger(PublicAPIsv2.class);
+	private static final Logger logger = Logger.getLogger(PublicAPIsv2.class);
 
 	@Autowired
 	ServiceREST serviceREST;

@@ -22,11 +22,7 @@
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-
 public class TimedEventUtil{
-
-	static final Logger logger = Logger.getLogger(TimedEventUtil.class);
 
 	public static void runWithTimeout(final Runnable runnable, long timeout, TimeUnit timeUnit) throws Exception {
 		timedTask(new Callable<Object>() {

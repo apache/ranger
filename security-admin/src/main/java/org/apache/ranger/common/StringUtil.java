@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StringUtil implements Serializable {
-	static final Logger logger = Logger.getLogger(StringUtil.class);
+	private static final Logger logger = Logger.getLogger(StringUtil.class);
 
 	static final public int MIN_PASSWORD_LENGTH = 8;
 

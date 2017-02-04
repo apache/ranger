@@ -29,7 +29,7 @@ import org.apache.ranger.entity.XXUserPermission;
 
 public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 
-	static final Logger logger = Logger.getLogger(XXUserPermissionDao.class);
+	private static final Logger logger = Logger.getLogger(XXUserPermissionDao.class);
 
 	public XXUserPermissionDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);

@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class SolrAccessAuditsService {
-	static Logger logger = Logger.getLogger(SolrAccessAuditsService.class);
+	private static final Logger logger = Logger.getLogger(SolrAccessAuditsService.class);
 
 	@Autowired
 	SolrMgr solrMgr;

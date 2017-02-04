@@ -58,7 +58,7 @@ import org.springframework.util.CollectionUtils;
 
 @Component
 public class DbToSolrMigrationUtil extends BaseLoader {
-	private static Logger logger = Logger.getLogger(DbToSolrMigrationUtil.class);
+	private static final Logger logger = Logger.getLogger(DbToSolrMigrationUtil.class);
 	private final static String CHECK_FILE_NAME = "migration_check_file.txt";
 	private final static Charset ENCODING = StandardCharsets.UTF_8;
 

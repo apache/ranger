@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class XXTrxLogUpdateUtil extends BaseLoader {
-	private static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(XXTrxLogUpdateUtil.class);
 
 	@Autowired

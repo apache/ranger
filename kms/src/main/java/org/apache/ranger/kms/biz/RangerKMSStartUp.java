@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 public class RangerKMSStartUp extends HttpServlet
 {	
 	public static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
-	private static Logger LOG = LoggerFactory.getLogger(RangerKMSStartUp.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerKMSStartUp.class);
 	
 	@PostConstruct
 	public void initRangerMasterKey() {

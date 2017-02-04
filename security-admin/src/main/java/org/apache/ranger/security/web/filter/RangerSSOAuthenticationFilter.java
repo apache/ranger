@@ -67,7 +67,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 public class RangerSSOAuthenticationFilter implements Filter {
-	Logger LOG = LoggerFactory.getLogger(RangerSSOAuthenticationFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerSSOAuthenticationFilter.class);
 
 	public static final String BROWSER_USERAGENT = "ranger.sso.browser.useragent";
 	public static final String JWT_AUTH_PROVIDER_URL = "ranger.sso.providerurl";

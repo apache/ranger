@@ -32,7 +32,7 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HBaseConnectionMgr {
 
-	private static Logger LOG = Logger.getLogger(HBaseConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(HBaseConnectionMgr.class);
 
 	protected ConcurrentMap<String, HBaseClient> hbaseConnectionCache;
 	

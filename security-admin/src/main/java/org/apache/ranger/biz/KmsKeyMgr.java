@@ -76,7 +76,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 @Component
 public class KmsKeyMgr {
 
-	static final Logger logger = Logger.getLogger(KmsKeyMgr.class);
+	private static final Logger logger = Logger.getLogger(KmsKeyMgr.class);
 	
 	private static final String KMS_KEY_LIST_URI  		= "v1/keys/names";				//GET
 	private static final String KMS_ADD_KEY_URI  		= "v1/keys";					//POST

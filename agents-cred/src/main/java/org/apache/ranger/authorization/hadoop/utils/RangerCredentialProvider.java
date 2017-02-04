@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 
 public final class RangerCredentialProvider {
 
-	private static Log LOG = LogFactory.getLog(RangerCredentialProvider.class);
+	private static final Log LOG = LogFactory.getLog(RangerCredentialProvider.class);
 
 	private static final RangerCredentialProvider CRED_PROVIDER = new RangerCredentialProvider();
 

@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CLIUtil {
-	static Logger logger = Logger.getLogger(CLIUtil.class);
+	private static final Logger logger = Logger.getLogger(CLIUtil.class);
 
 	@Autowired
 	StandaloneSecurityHandler securityHandler;

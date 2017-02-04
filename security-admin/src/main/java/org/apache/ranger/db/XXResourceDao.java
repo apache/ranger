@@ -32,7 +32,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXResource;
 
 public class XXResourceDao extends BaseDao<XXResource> {
-	static final Logger logger = Logger.getLogger(XXResourceDao.class);
+	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
 
 	public XXResourceDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);

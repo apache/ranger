@@ -28,7 +28,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 
 
 public class AtlasResourceMgr {
-	public static final Logger LOG = Logger.getLogger(AtlasResourceMgr.class);
+	private static final Logger LOG = Logger.getLogger(AtlasResourceMgr.class);
 	private static final String  ATLASTERM	= "terms";
 
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {

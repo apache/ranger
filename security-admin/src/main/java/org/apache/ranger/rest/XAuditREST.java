@@ -29,7 +29,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.XAuditMgr;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
@@ -55,7 +54,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("XAuditMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XAuditREST {
-	static Logger logger = Logger.getLogger(XAuditREST.class);
 
 	@Autowired
 	SearchUtil searchUtil;

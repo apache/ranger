@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 public abstract class RangerDaoManagerBase {
-	final static Logger logger = Logger.getLogger(RangerDaoManagerBase.class);
+	private static final Logger logger = Logger.getLogger(RangerDaoManagerBase.class);
 
 	@Autowired
 	protected RESTErrorUtil restErrorUtil;

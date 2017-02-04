@@ -41,7 +41,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
 
 public abstract class BaseDao<T> {
-	static final Logger logger = Logger.getLogger(BaseDao.class);
+	private static final Logger logger = Logger.getLogger(BaseDao.class);
 
 	protected RangerDaoManager daoManager;
 

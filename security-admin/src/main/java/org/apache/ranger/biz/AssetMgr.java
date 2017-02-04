@@ -131,7 +131,7 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	RangerPluginInfoService pluginInfoService;
 
-	static Logger logger = Logger.getLogger(AssetMgr.class);
+	private static final Logger logger = Logger.getLogger(AssetMgr.class);
 
 	public File getXResourceFile(Long id, String fileType) {
 		VXResource xResource = xResourceService.readResource(id);

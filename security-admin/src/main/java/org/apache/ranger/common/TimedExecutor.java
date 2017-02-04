@@ -47,7 +47,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 @Scope("singleton")
 public class TimedExecutor {
 
-	static final private Logger LOG = Logger.getLogger(TimedExecutor.class);
+	private static final Logger LOG = Logger.getLogger(TimedExecutor.class);
 
 	@Autowired
 	TimedExecutorConfigurator _configurator;

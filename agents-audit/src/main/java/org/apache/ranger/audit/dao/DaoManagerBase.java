@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 
 
 public abstract class DaoManagerBase {
-	final static Logger logger = Logger.getLogger(DaoManagerBase.class);
+	protected final static Logger logger = Logger.getLogger(DaoManagerBase.class);
 
 	abstract public EntityManager getEntityManager();
 

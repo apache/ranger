@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RangerEnumUtil {
 
-    static final Logger logger = Logger.getLogger(RangerEnumUtil.class);
+    private static final Logger logger = Logger.getLogger(RangerEnumUtil.class);
     public final static String ENUM_CommonEnums_ActiveStatus = "CommonEnums.ActiveStatus";
     public final static String ENUM_CommonEnums_ActivationStatus = "CommonEnums.ActivationStatus";
     public final static String ENUM_CommonEnums_BooleanValue = "CommonEnums.BooleanValue";

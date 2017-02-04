@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
-	private static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(PatchForServiceVersionInfo_J10004.class);
 
 	@Autowired

@@ -72,7 +72,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	@Autowired
 	UserMgr userMgr;
-	private static Logger logger = Logger.getLogger(RangerAuthenticationProvider.class);
+	private static final Logger logger = Logger.getLogger(RangerAuthenticationProvider.class);
 	private String rangerAuthenticationMethod;
 
 	private LdapAuthenticator authenticator;

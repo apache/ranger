@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
-	private static Logger logger = Logger.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
+	private static final Logger logger = Logger.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
 	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME  = "hive";
 	@Autowired
 	RangerDaoManager daoMgr;

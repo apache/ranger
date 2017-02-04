@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class RangerConfigUtil {
-	static Logger logger = Logger.getLogger(RangerConfigUtil.class);
+	private static final Logger logger = Logger.getLogger(RangerConfigUtil.class);
 
 	String webappRootURL;
 	int defaultMaxRows = 250;

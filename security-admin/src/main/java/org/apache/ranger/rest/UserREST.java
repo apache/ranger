@@ -66,7 +66,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("UserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class UserREST {
-	static Logger logger = Logger.getLogger(UserREST.class);
+	private static final Logger logger = Logger.getLogger(UserREST.class);
 
 	@Autowired
 	StringUtil stringUtil;

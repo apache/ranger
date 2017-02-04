@@ -42,7 +42,7 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class RangerMasterKey implements RangerKMSMKI{
 	
-	static final Logger logger = Logger.getLogger(RangerMasterKey.class);
+	private static final Logger logger = Logger.getLogger(RangerMasterKey.class);
 	
 	private static final String MK_CIPHER = "AES";
 	private static final int MK_KeySize = 256;

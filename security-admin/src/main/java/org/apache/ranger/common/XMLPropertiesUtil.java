@@ -34,7 +34,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class XMLPropertiesUtil extends DefaultPropertiesPersister {
-	private static Logger logger = Logger.getLogger(XMLPropertiesUtil.class);
+	private static final Logger logger = Logger.getLogger(XMLPropertiesUtil.class);
 
 	public XMLPropertiesUtil() {
 	}

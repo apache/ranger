@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RangerRestUtil {
-	static final Logger logger = Logger.getLogger(RangerRestUtil.class);
+	private static final Logger logger = Logger.getLogger(RangerRestUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;

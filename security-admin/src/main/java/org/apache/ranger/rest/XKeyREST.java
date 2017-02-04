@@ -56,8 +56,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 @RangerAnnotationJSMgrName("KeyMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XKeyREST {
-	static Logger logger = Logger.getLogger(XKeyREST.class);
-	
+	private static final Logger logger = Logger.getLogger(XKeyREST.class);
+
 	private static String UNAUTHENTICATED_MSG = "Unauthenticated : Please check the premission in the policy for the user";
 	
 	@Autowired

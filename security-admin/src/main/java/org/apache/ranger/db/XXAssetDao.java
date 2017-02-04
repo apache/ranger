@@ -27,7 +27,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAsset;
 
 public class XXAssetDao extends BaseDao<XXAsset> {
-	static final Logger logger = Logger.getLogger(XXAssetDao.class);
+	private static final Logger logger = Logger.getLogger(XXAssetDao.class);
 
     public XXAssetDao( RangerDaoManagerBase  daoManager ) {
 		super(daoManager);

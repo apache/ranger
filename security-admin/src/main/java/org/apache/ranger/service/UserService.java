@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
-	static Logger logger = Logger.getLogger(UserService.class);
+	private static final Logger logger = Logger.getLogger(UserService.class);
 
 	public static final String NAME = "User";
 

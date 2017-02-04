@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SolrMgr {
 
-	static final Logger logger = Logger.getLogger(SolrMgr.class);
+	private static final Logger logger = Logger.getLogger(SolrMgr.class);
 
 	@Autowired
 	RangerBizUtil rangerBizUtil;

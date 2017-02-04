@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SolrUtil {
-	static final Logger logger = Logger.getLogger(SolrUtil.class);
+	private static final Logger logger = Logger.getLogger(SolrUtil.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;

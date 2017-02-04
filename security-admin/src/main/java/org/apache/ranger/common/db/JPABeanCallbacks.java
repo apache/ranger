@@ -30,7 +30,7 @@ import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 
 public class JPABeanCallbacks {
-	static final Logger logger = Logger.getLogger(JPABeanCallbacks.class);
+	private static final Logger logger = Logger.getLogger(JPABeanCallbacks.class);
 
 	@PrePersist
 	void onPrePersist(Object o) {

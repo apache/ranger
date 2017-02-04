@@ -47,7 +47,7 @@ public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
 	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 
-	static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
 

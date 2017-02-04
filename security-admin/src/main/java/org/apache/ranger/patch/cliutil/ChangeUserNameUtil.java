@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ChangeUserNameUtil extends BaseLoader {
-    private static Logger logger = Logger.getLogger(ChangeUserNameUtil.class);
+    private static final Logger logger = Logger.getLogger(ChangeUserNameUtil.class);
 
     @Autowired
     RangerDaoManager daoMgr;

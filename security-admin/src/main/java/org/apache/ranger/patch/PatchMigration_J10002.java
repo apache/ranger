@@ -64,7 +64,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PatchMigration_J10002 extends BaseLoader {
-	private static Logger logger = Logger.getLogger(PatchMigration_J10002.class);
+	private static final Logger logger = Logger.getLogger(PatchMigration_J10002.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

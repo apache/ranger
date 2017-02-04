@@ -28,7 +28,7 @@ import org.apache.ranger.plugin.model.RangerService;
 
 public class KnoxConnectionMgr {
 
-	private static Logger LOG = Logger.getLogger(KnoxConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(KnoxConnectionMgr.class);
 	
 	public KnoxClient getKnoxClientbyService(RangerService service) {
 		KnoxClient 		   knoxClient = null;

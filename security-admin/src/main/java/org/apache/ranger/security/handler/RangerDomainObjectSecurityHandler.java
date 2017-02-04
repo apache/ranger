@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RangerDomainObjectSecurityHandler {
 
-	public static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(RangerDomainObjectSecurityHandler.class);
 
 	@Autowired

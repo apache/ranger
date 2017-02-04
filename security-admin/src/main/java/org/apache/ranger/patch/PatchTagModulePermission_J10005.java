@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PatchTagModulePermission_J10005 extends BaseLoader {
-	private static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(PatchTagModulePermission_J10005.class);
 
 	@Autowired

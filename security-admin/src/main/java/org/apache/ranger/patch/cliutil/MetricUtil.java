@@ -65,7 +65,7 @@ import com.google.gson.GsonBuilder;
 @Component
 public class MetricUtil extends BaseLoader  {
 	
-	private static Logger logger = Logger.getLogger(MetricUtil.class);
+	private static final Logger logger = Logger.getLogger(MetricUtil.class);
 	
 	public static String metricType;
 		

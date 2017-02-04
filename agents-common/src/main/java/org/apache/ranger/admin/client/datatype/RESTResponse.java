@@ -35,7 +35,7 @@ import com.sun.jersey.api.client.ClientResponse;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RESTResponse {
-	private static Logger LOG = Logger.getLogger(RESTResponse.class);
+	private static final Logger LOG = Logger.getLogger(RESTResponse.class);
 
 	/**
 	 * values for statusCode

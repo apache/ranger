@@ -42,7 +42,7 @@ import org.springframework.security.web.authentication.ExceptionMappingAuthentic
  */
 public class RangerAuthFailureHandler extends
 ExceptionMappingAuthenticationFailureHandler {
-    static Logger logger = Logger.getLogger(RangerAuthFailureHandler.class);
+    private static final Logger logger = Logger.getLogger(RangerAuthFailureHandler.class);
 
     String ajaxLoginfailurePage = null;
 

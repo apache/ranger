@@ -93,7 +93,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("AssetMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class AssetREST {
-	static Logger logger = Logger.getLogger(AssetREST.class);
+	private static final Logger logger = Logger.getLogger(AssetREST.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;

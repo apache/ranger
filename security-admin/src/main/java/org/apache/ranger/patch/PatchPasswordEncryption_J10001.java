@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PatchPasswordEncryption_J10001 extends BaseLoader {
-	static Logger logger = Logger.getLogger(PatchPasswordEncryption_J10001.class);
+	private static final Logger logger = Logger.getLogger(PatchPasswordEncryption_J10001.class);
 	int lineCount = 0;
 	
 	@Autowired

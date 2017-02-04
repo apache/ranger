@@ -51,7 +51,7 @@ import java.util.List;
 @RangerAnnotationJSMgrName("PublicMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PublicAPIs {
-	static Logger logger = Logger.getLogger(PublicAPIs.class);
+	private static final Logger logger = Logger.getLogger(PublicAPIs.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;

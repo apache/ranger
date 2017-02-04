@@ -29,7 +29,7 @@ import org.apache.ranger.entity.XXAccessAuditV4;
 import org.apache.ranger.entity.XXAccessAuditV5;
 
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
-	private static Logger logger = Logger.getLogger(XXAccessAuditDao.class);
+	private static final Logger logger = Logger.getLogger(XXAccessAuditDao.class);
     public XXAccessAuditDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager, "loggingPU");
     }

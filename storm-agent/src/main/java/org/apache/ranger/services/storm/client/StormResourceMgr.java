@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 
 public class StormResourceMgr {
-	public static final 	Logger 	LOG 		= Logger.getLogger(StormResourceMgr.class);
+	private static final 	Logger 	LOG 		= Logger.getLogger(StormResourceMgr.class);
 	private static final 	String  TOPOLOGY	= "topology";
 	
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {

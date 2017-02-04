@@ -29,7 +29,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPermMap;
 
 public class XXPermMapDao extends BaseDao<XXPermMap> {
-	static final Logger logger = Logger.getLogger(XXResourceDao.class);
+	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
 
     public XXPermMapDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);

@@ -29,7 +29,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuditMap;
 
 public class XXAuditMapDao extends BaseDao<XXAuditMap> {
-	static final Logger logger = Logger.getLogger(XXAssetDao.class);
+	private static final Logger logger = Logger.getLogger(XXAssetDao.class);
 
     public XXAuditMapDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);

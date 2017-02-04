@@ -41,7 +41,7 @@ import java.io.IOException;
 @Provider
 @InterfaceAudience.Private
 public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
-  private static Logger LOG =
+  private static final Logger LOG =
       LoggerFactory.getLogger(KMSExceptionsProvider.class);
 
   private static final String ENTER = System.getProperty("line.separator");

@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerPluginClassLoader extends URLClassLoader {
-	private static Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
 	
 	private static volatile RangerPluginClassLoader me 	             = null;
 	private static  MyClassLoader				componentClassLoader = null;

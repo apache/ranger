@@ -43,7 +43,7 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
 @SuppressWarnings("deprecation")
 public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 
-    static Logger logger = Logger.getLogger(MyRememberMeFilter.class);
+    private static final Logger logger = Logger.getLogger(MyRememberMeFilter.class);
 
     /*
      * (non-Javadoc)

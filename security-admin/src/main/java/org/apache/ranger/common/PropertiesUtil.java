@@ -44,7 +44,7 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 public class PropertiesUtil extends PropertyPlaceholderConfigurer {
     private static Map<String, String> propertiesMap = new HashMap<String, String>();
-    private static Logger logger = Logger.getLogger(PropertiesUtil.class);
+    private static final Logger logger = Logger.getLogger(PropertiesUtil.class);
     protected List<String> xmlPropertyConfigurer  = new ArrayList<String>();
 
     private PropertiesUtil() {

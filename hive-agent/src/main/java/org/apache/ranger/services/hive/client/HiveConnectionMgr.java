@@ -31,7 +31,7 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 public class HiveConnectionMgr {
 
-	private static Logger LOG = Logger.getLogger(HiveConnectionMgr.class);
+	private static final Logger LOG = Logger.getLogger(HiveConnectionMgr.class);
 	
 	protected ConcurrentMap<String, HiveClient> 	hiveConnectionCache;
 	protected ConcurrentMap<String, Boolean> 		repoConnectStatusMap;

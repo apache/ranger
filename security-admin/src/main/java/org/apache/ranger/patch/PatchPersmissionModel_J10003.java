@@ -40,7 +40,7 @@ import org.springframework.util.CollectionUtils;
 
 @Component
 public class PatchPersmissionModel_J10003 extends BaseLoader {
-	private static Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger(PatchPersmissionModel_J10003.class);
 
 	@Autowired
