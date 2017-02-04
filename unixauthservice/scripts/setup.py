@@ -312,12 +312,12 @@ def initializeInitD(ownerName):
 					if isfile(scriptName) or os.path.islink(scriptName):
 						os.remove(scriptName)
 					os.symlink(initdFn,scriptName)
-			userSyncScriptName = "ranger-usersync-services.sh"
-			localScriptName = os.path.abspath(join(installPropDirName,userSyncScriptName))
-			ubinScriptName = join("/usr/bin",initdProgramName)
-			if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
-				os.remove(ubinScriptName)
-			os.symlink(localScriptName,ubinScriptName)
+		userSyncScriptName = "ranger-usersync-services.sh"
+		localScriptName = os.path.abspath(join(installPropDirName,userSyncScriptName))
+		ubinScriptName = join("/usr/bin",initdProgramName)
+		if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
+			os.remove(ubinScriptName)
+		os.symlink(localScriptName,ubinScriptName)
 
 
 def createJavaKeystoreForSSL(fn,passwd):
