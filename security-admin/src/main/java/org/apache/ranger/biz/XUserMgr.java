@@ -587,6 +587,10 @@ public class XUserMgr extends XUserMgrBase {
 		if (xGroup == null) {
 			return vxGUInfo;
 		}
+
+		VXGroup xgroupInfo = xGroupService.populateViewBean(xGroup);
+		vxGUInfo.setXgroupInfo(xgroupInfo);
+
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchCriteria.addParam("xGroupId", xGroup.getId());
 

@@ -388,40 +388,39 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	public void addOrUpdateGroup(String groupName, List<String> users) throws Throwable {
 		// First get the existing group user mappings from Ranger admin.
 		// Then compute the delta and send the updated group user mappings to ranger admin.
-		GroupUserInfo groupUserInfo = new GroupUserInfo();
+		LOG.debug("addOrUpdateGroup for " + groupName + " with users: " + users);
+		GroupUserInfo groupUserInfo = null;
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 			try {
 				LOG.info("Using principal = " + principal + " and keytab = " + keytab);
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				final GroupUserInfo groupInfo = groupUserInfo;
 				final String gName = groupName;
-				Subject.doAs(sub, new PrivilegedAction<Void>() {
+				groupUserInfo = Subject.doAs(sub, new PrivilegedAction<GroupUserInfo>() {
 					@Override
-					public Void run() {
+					public GroupUserInfo run() {
 						try {
-							getGroupUserInfo(gName, groupInfo);
+							return getGroupUserInfo(gName);
 						} catch (Exception e) {
 							LOG.error("Failed to build Group List : ", e);
 						}
 						return null;
 					}
 				});
-				groupUserInfo = groupInfo;
 			} catch (Exception e) {
 				LOG.error("Failed to Authenticate Using given Principal and Keytab : ", e);
 			}
 		} else {
-			getGroupUserInfo(groupName, groupUserInfo);
+			groupUserInfo = getGroupUserInfo(groupName);
 		}	
 		
-		//GroupUserInfo groupUserInfo = getGroupUserInfo(groupName);
-		LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo() + " are: " + groupUserInfo.getXuserInfo());
 		List<String> oldUsers = new ArrayList<String>();
 		if (groupUserInfo.getXuserInfo() != null) {
 			for (XUserInfo xUserInfo : groupUserInfo.getXuserInfo()) {
 				oldUsers.add(xUserInfo.getName());
 			}
+			LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
 		}
+		
 		List<String> addUsers = new ArrayList<String>();
 		List<String> delUsers = new ArrayList<String>();
 		
@@ -640,8 +639,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		return ret;
 	}
 	
-	public void getGroupUserInfo(String groupName, GroupUserInfo ret) {
-		//GroupUserInfo ret = null;
+	public GroupUserInfo getGroupUserInfo(String groupName) {
+		GroupUserInfo ret = null;
 		try {
 
 			Client c = getClient();
@@ -655,15 +654,17 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			
 		    Gson gson = new GsonBuilder().create();
 	
-		    LOG.debug("RESPONSE: [" + response + "]");
+		    LOG.debug("RESPONSE for " + uri + ": [" + response + "]");
 	
 		    ret = gson.fromJson(response, GroupUserInfo.class);
-		    LOG.debug("return value = " + ret);
+		    
+		    LOG.debug("return value = " + ret.getXgroupInfo().getName());
 
 		} catch (Exception e) {
 
 			LOG.warn( "ERROR: Unable to get group user mappings for: " + groupName, e);
 		}
+		return ret;
 	}
 	
 	private String getURL(String uri) {
