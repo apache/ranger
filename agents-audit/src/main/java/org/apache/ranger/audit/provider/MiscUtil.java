@@ -644,7 +644,7 @@ public class MiscUtil {
 		}
 		try {
 			AppConfigurationEntry entries[] = Configuration.getConfiguration().getAppConfigurationEntry(jaasConfigAppName);
-			if(!ArrayUtils.isEmpty(entries)){
+			if(!ArrayUtils.isEmpty(entries)) {
 				for (AppConfigurationEntry entry : entries) {
 					if (entry.getOptions().get("keyTab") != null) {
 						keytabFile = (String) entry.getOptions().get("keyTab");
@@ -656,17 +656,19 @@ public class MiscUtil {
 						break;
 					}
 				}
-			}
-			if (!StringUtils.isEmpty(principal) && !StringUtils.isEmpty(keytabFile)) {
-				// This will login and set the UGI
-				UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
-				ugi = UserGroupInformation.getLoginUser();
+				if (!StringUtils.isEmpty(principal) && !StringUtils.isEmpty(keytabFile)) {
+					// This will login and set the UGI
+					UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
+					ugi = UserGroupInformation.getLoginUser();
+				} else {
+					String error_mesage = "Unable to get the principal/keytab from jaasConfigAppName: " + jaasConfigAppName;
+					logger.error(error_mesage);
+					throw new Exception(error_mesage);
+				}
+				logger.info("MiscUtil.setUGIFromJAASConfig() UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
 			} else {
-				String error_mesage = "Unable to get the principal/keytab from jaasConfigAppName: " + jaasConfigAppName;
-				logger.error(error_mesage);
-				throw new Exception(error_mesage);
+				logger.warn("JAASConfig file not found! Ranger Plugin will not working in a Secure Cluster...");
 			}
-			logger.info("MiscUtil.setUGIFromJAASConfig() UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
 		} catch ( Exception e) {
 			logger.error("Unable to set UGI for Principal: " + principal + " keytab: " + keytabFile );
 			throw e;
