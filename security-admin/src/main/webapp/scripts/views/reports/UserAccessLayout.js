@@ -472,8 +472,7 @@ define(function(require) {'use strict';
 		onDownload: function(e){
 			var that = this, url = '';
 			if(!this.allowDownload){
-				XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
-				
+				return XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
 			}
 			if(!this.searchedFlag) {
 				url =  this.previousSearchUrl;

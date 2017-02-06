@@ -205,7 +205,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec);
-		if(keyspec != null && keyspec.getSalt() != null){
+		if(keyspec.getSalt() != null) {
 			PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
 			Cipher c = Cipher.getInstance(key.getAlgorithm());
 			c.init(Cipher.ENCRYPT_MODE, key,paramSpec);
@@ -219,7 +219,7 @@ public class RangerMasterKey implements RangerKMSMKI{
 	}
 	private byte[] decryptKey(byte[] encrypted, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec);
-		if(keyspec != null && keyspec.getSalt() != null){
+		if(keyspec.getSalt() != null) {
 			PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
 			Cipher c = Cipher.getInstance(key.getAlgorithm());
 			c.init(Cipher.DECRYPT_MODE, key, paramSpec);

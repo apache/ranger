@@ -45,7 +45,7 @@ define(function(require){
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'collection','serviceNames'));
+			_.extend(this, _.pick(options, 'collection','serviceNames','services'));
 			
 		},
 		onSourceChange : function(e){
@@ -54,14 +54,24 @@ define(function(require){
 		},
 		onDestinationSelect : function(e) {
 		   this.model.set('destination', _.isEmpty(e.currentTarget.value) ? undefined : e.currentTarget.value);
-			
+		   var serviceTypes = _.find( this.services.models , function(m){
+			   return m.get('name') == e.currentTarget.value
+		   });
+		   if(!_.isUndefined(serviceTypes)){
+			   this.model.set('serviceType' , serviceTypes.get('type') );
+		   }else{
+			   this.model.set('serviceType' , " " );
+		   }
 		},
 		onDeleteMapClick : function(){
 			this.collection.remove(this.model)	
 		},
  
 		onRender : function() {
+			var that = this;
 			var options = _.map(this.serviceNames, function(m, key){ return { 'id' : m.name, 'text' : m.name}; });
+			this.ui.sourceInput.val(this.model.get('source'));
+			this.ui.destinationSelect.val(this.model.get('destination'));
 			this.ui.destinationSelect.select2({
 				closeOnSelect: true,
 				placeholder: 'Select service name',
@@ -89,6 +99,7 @@ define(function(require){
 			return {
 				'collection' 	: this.collection,
 				'serviceNames' 	: this.serviceNames,
+				'services': this.services,
 			};
 		},
 		initialize: function(options) {
@@ -237,7 +248,19 @@ define(function(require){
 				});
 				var names = componentServices.map(function(m){ return { 'name' : m.get('name') } });
 				that.serviceNames = names;
-				that.collection.trigger('reset')
+				if(!_.isUndefined(e.removed)){
+					_.each(that.collection.models , function(m){
+						if(m.get('serviceType') == e.removed.id){
+							var mapModels = that.collection.filter(function(m){
+								return m.get('serviceType') == e.removed.id;
+							})
+							if(!_.isUndefined(mapModels)){
+								that.collection.remove(mapModels);
+							}
+						}
+					});
+				}
+				that.collection.trigger('reset');
 			}).trigger('change');
 		},
 		importPolicy : function(e){
