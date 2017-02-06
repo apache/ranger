@@ -29,7 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class RangerUsernamePasswordAuthenticationFilter extends
 	UsernamePasswordAuthenticationFilter {
 
-    static Logger logger = Logger
+    private static final Logger logger = Logger
 	    .getLogger(RangerUsernamePasswordAuthenticationFilter.class);
 
     /*

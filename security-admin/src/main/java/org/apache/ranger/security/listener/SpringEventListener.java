@@ -36,7 +36,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 public class SpringEventListener implements
 	ApplicationListener<AbstractAuthenticationEvent> {
 
-    static Logger logger = Logger.getLogger(SpringEventListener.class);
+    private static final Logger logger = Logger.getLogger(SpringEventListener.class);
 
     @Autowired
     SessionMgr sessionMgr;
