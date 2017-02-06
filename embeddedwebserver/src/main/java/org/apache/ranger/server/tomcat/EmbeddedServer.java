@@ -50,6 +50,7 @@ public class EmbeddedServer {
 	
 	private static final Logger LOG = Logger.getLogger(EmbeddedServer.class
 			.getName());
+	private static final String DEFAULT_NAME_RULE = "DEFAULT";
 	
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-site.xml";
 	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
@@ -223,6 +224,10 @@ public class EmbeddedServer {
 				LOG.warning("Failed to get ranger.admin.kerberos.principal. Reason: " + ignored.toString());
 			}
 			String nameRules = getConfig(ADMIN_NAME_RULES);
+			if(nameRules == null || nameRules.length() == 0){
+				LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
+				nameRules = DEFAULT_NAME_RULE;
+			}
 			if (getConfig(AUTHENTICATION_TYPE) != null
 					&& getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
 					&& SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
