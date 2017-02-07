@@ -215,7 +215,7 @@ public class EmbeddedServer {
 			lce.printStackTrace();
 		}
 		
-		if(servername.equalsIgnoreCase(ADMIN_SERVER_NAME)){
+		if (servername.equalsIgnoreCase(ADMIN_SERVER_NAME)) {
 			String keytab = getConfig(ADMIN_USER_KEYTAB);
 			String principal = null;
 			try {
@@ -224,7 +224,7 @@ public class EmbeddedServer {
 				LOG.warning("Failed to get ranger.admin.kerberos.principal. Reason: " + ignored.toString());
 			}
 			String nameRules = getConfig(ADMIN_NAME_RULES);
-			if(nameRules == null || nameRules.length() == 0){
+			if (nameRules == null || nameRules.length() == 0) {
 				LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
 				nameRules = DEFAULT_NAME_RULE;
 			}
