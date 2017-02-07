@@ -414,7 +414,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}	
 		
 		List<String> oldUsers = new ArrayList<String>();
-		if (groupUserInfo.getXuserInfo() != null) {
+		if (groupUserInfo != null && groupUserInfo.getXuserInfo() != null) {
 			for (XUserInfo xUserInfo : groupUserInfo.getXuserInfo()) {
 				oldUsers.add(xUserInfo.getName());
 			}
