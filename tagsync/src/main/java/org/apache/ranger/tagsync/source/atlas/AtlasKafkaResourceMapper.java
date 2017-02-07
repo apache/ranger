@@ -70,8 +70,6 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
 		String  entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String  serviceName = getRangerServiceName(clusterName);
 
-		RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-		return ret;
+		return new RangerServiceResource(entityGuid, serviceName, elements);
 	}
 }

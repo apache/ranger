@@ -271,7 +271,7 @@ public class TagSynchronizer {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagSynchronizer.initializeTagSources(initilaizedTagSources=" + initializedTagSourceNameList
+			LOG.debug("<== TagSynchronizer.initializeTagSources(initializedTagSources=" + initializedTagSourceNameList
 					+ ", failedTagSources=" + failedTagSources + ")");
 		}
 	}

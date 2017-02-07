@@ -75,7 +75,7 @@ public class AtlasResourceMapperUtil {
 	}
 
 	static public boolean initializeAtlasResourceMappers(Properties properties) {
-		final String MAPPER_NAME_DELIMIER = ",";
+		final String MAPPER_NAME_DELIMITER = ",";
 
 		String customMapperNames = TagSyncConfig.getCustomAtlasResourceMappers(properties);
 
@@ -91,14 +91,14 @@ public class AtlasResourceMapperUtil {
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper");
 
 		if (StringUtils.isNotBlank(customMapperNames)) {
-			for(String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMIER)) {
+			for (String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMITER)) {
 				mapperNames.add(customMapperName.trim());
 			}
 		}
 
 		for (String mapperName : mapperNames) {
 			try {
-				Class clazz = Class.forName(mapperName);
+				Class<?> clazz = Class.forName(mapperName);
 				AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
 
 				resourceMapper.initialize(properties);

@@ -105,7 +105,7 @@ public class AtlasRESTUtil {
 
 				if (!AtlasResourceMapperUtil.isEntityTypeHandled(type)) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Not fetching Atlas entities of type:" + type);
+						LOG.debug("Not fetching Atlas entities of type: " + type);
 					}
 					continue;
 				}
@@ -116,7 +116,7 @@ public class AtlasRESTUtil {
 
 				if (CollectionUtils.isEmpty(guids)) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("No Atlas entities for type:" + type);
+						LOG.debug("No Atlas entities for type: " + type);
 					}
 					continue;
 				}
