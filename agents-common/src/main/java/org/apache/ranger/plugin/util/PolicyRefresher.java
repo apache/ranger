@@ -276,7 +276,7 @@ public class PolicyRefresher extends Thread {
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
-			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of policis (" + lastKnownVersion + ")", snfe);
+			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of policies (" + lastKnownVersion + ")", snfe);
 			throw snfe;
 		} catch (Exception excp) {
 			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
