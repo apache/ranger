@@ -189,7 +189,7 @@ public class MySQLPLRunner {
                     if (hasResults && rs != null) {
                         ResultSetMetaData md = rs.getMetaData();
                         int cols = md.getColumnCount();
-                        for (int i = 0; i < cols; i++) {
+                        for (int i = 1; i <= cols; i++) {
                             String name = md.getColumnLabel(i);
                             print(name + "\t");
                         }
