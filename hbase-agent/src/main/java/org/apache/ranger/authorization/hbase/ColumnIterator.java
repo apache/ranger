@@ -26,7 +26,8 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 
 public class ColumnIterator implements Iterator<String> {
@@ -34,7 +35,7 @@ public class ColumnIterator implements Iterator<String> {
 	
 	private static final Log LOG = LogFactory.getLog(ColumnIterator.class.getName());
 	Iterator<byte[]> _setIterator;
-	Iterator<KeyValue> _listIterator;
+	Iterator<Cell> _listIterator;
 	
 	@SuppressWarnings("unchecked")
 	public ColumnIterator(Collection<?> columnCollection) {
@@ -42,7 +43,7 @@ public class ColumnIterator implements Iterator<String> {
 			if (columnCollection instanceof Set) {
 				_setIterator = ((Set<byte[]>)columnCollection).iterator();
 			} else if (columnCollection instanceof List) {
-				_listIterator = ((List<KeyValue>)columnCollection).iterator();
+				_listIterator = ((List<Cell>)columnCollection).iterator();
 			} else { // unexpected
 				// TODO make message better
 				LOG.error("Unexpected type " + columnCollection.getClass().getName() + " passed as value in column family collection");
@@ -73,8 +74,8 @@ public class ColumnIterator implements Iterator<String> {
 				value = Bytes.toString(valueBytes);
 			}
 		} else if (_listIterator != null) {
-			KeyValue kv = _listIterator.next();
-			byte[] v = kv.getQualifier();
+			Cell cell = _listIterator.next();
+			byte[] v = CellUtil.cloneQualifier(cell);
 			if (v != null) {
 				value = Bytes.toString(v);
 			}

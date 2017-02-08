@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Cell;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -94,12 +94,12 @@ public class ColumnIteratorTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void test_ListOfKeyValue() {
+	public void test_ListOfCell() {
 		/*
 		 * We are not interested in validating the behavior of the real iterator.  Instead just the behavior specific to the column iterator.
 		 */
 		final String[] qualifiers = new String[] {"a", "b", "c"};
-		Iterator<KeyValue> iterator = mock(Iterator.class);
+		Iterator<Cell> iterator = mock(Iterator.class);
 		// Have the iterator return true as many times as the size of keys array
 		when(iterator.hasNext()).thenAnswer(new Answer<Boolean>() {
 			int i = 0;
@@ -108,19 +108,21 @@ public class ColumnIteratorTest {
 				return i++ < qualifiers.length;
 			}
 		});
-		// have the iterator return a KeyValue composed of the key and value arrays
-		when(iterator.next()).thenAnswer(new Answer<KeyValue>() {
+		// have the iterator return a Cell composed of the key and value arrays
+		when(iterator.next()).thenAnswer(new Answer<Cell>() {
 			int i = 0;
 			@Override
-			public KeyValue answer(InvocationOnMock invocation)
+			public Cell answer(InvocationOnMock invocation)
 					throws Throwable {
-				KeyValue kv = mock(KeyValue.class);
-				when(kv.getQualifier()).thenReturn(qualifiers[i++].getBytes());
-				return kv;
+				Cell cell = mock(Cell.class);
+				when(cell.getQualifierOffset()).thenReturn(0);
+				when(cell.getQualifierLength()).thenReturn(1);
+				when(cell.getQualifierArray()).thenReturn(qualifiers[i++].getBytes());
+				return cell;
 			}
 		});
 		// stuff it into the collection
-		List<KeyValue> list = mock(List.class);
+		List<Cell> list = mock(List.class);
 		when(list.iterator()).thenReturn(iterator);
 		// now let's check the behavior
 		ColumnIterator columnIterator = new ColumnIterator(list);
