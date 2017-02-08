@@ -243,9 +243,15 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				} else {
 					Iterator<String> columnIterator = new ColumnIterator(columnCollection);
 					Set<String> columns = new HashSet<String>();
-					while (columnIterator.hasNext()) {
-						String column = columnIterator.next();
-						columns.add(column);
+					try {
+						while (columnIterator.hasNext()) {
+							String column = columnIterator.next();
+							columns.add(column);
+						}
+					} catch (Throwable t) {
+						LOG.error("Exception encountered when converting family-map to set of columns. Ignoring and returning empty set of columns for family[" + family + "]", t);
+						LOG.error("Ignoring exception and returning empty set of columns for family[" + family +"]");
+						columns.clear();
 					}
 					result.put(family, columns);
 				}
@@ -293,8 +299,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 	
 	ColumnFamilyAccessResult evaluateAccess(String operation, Action action, final RegionCoprocessorEnvironment env,
-			final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
-		
+											final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
+
 		String access = _authUtils.getAccess(action);
 		User user = getActiveUser();
 		String userName = _userUtils.getUserAsString(user);
