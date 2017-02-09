@@ -2690,8 +2690,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			serviceVersionInfoDbObj = new XXServiceVersionInfo();
 			serviceVersionInfoDbObj.setServiceId(serviceDbObj.getId());
 			serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceDbObj.getPolicyVersion()));
-			serviceVersionInfoDbObj.setTagVersion(serviceDbObj.getTagVersion());
 			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+			serviceVersionInfoDbObj.setTagVersion(serviceDbObj.getTagVersion());
 			serviceVersionInfoDbObj.setTagUpdateTime(serviceDbObj.getTagUpdateTime());
 
 			serviceVersionInfoDao.create(serviceVersionInfoDbObj);
@@ -2709,11 +2709,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 					if (serviceVersionInfoDbObj != null) {
 
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
-						serviceVersionInfoDbObj.setPolicyUpdateTime(service.getPolicyUpdateTime());
+						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
 
 						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
 							serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
-							serviceVersionInfoDbObj.setTagUpdateTime(service.getTagUpdateTime());
+							serviceVersionInfoDbObj.setTagUpdateTime(new Date());
 						}
 						serviceVersionInfoDao.update(serviceVersionInfoDbObj);
 					} else {
@@ -2721,14 +2721,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 						serviceVersionInfoDbObj = new XXServiceVersionInfo();
 						serviceVersionInfoDbObj.setServiceId(referringService.getId());
 						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
+						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
 						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
 							serviceVersionInfoDbObj.setTagVersion(getNextVersion(referringService.getTagVersion()));
+							serviceVersionInfoDbObj.setTagUpdateTime(new Date());
 						} else {
 							serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());
+							serviceVersionInfoDbObj.setTagUpdateTime(referringService.getTagUpdateTime());
 						}
-						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-						serviceVersionInfoDbObj.setTagUpdateTime(referringService.getTagUpdateTime());
-
 						serviceVersionInfoDao.create(serviceVersionInfoDbObj);
 					}
 				}
