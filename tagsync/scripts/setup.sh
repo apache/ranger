@@ -19,6 +19,10 @@ if [ "${JAVA_HOME}" == "" ]
 then
 	echo "JAVA_HOME environment property not defined, aborting installation."
 	exit 1
+elif [ ! -d "${JAVA_HOME}" ]
+then
+	echo "JAVA_HOME environment property was set incorrectly, aborting installation."
+	exit 1
 else
 	export JAVA_HOME
 	PATH="${JAVA_HOME}/bin:${PATH}"
