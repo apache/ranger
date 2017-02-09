@@ -52,7 +52,7 @@ public class RangerAccessRequestUtil {
 		Set<RangerTagForEval> ret = null;
 		Object          val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
-		if (val != null && val instanceof Set<?>) {
+		if (val instanceof Set<?>) {
 			try {
 				@SuppressWarnings("unchecked")
 				Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
@@ -74,7 +74,7 @@ public class RangerAccessRequestUtil {
 		RangerTagForEval ret = null;
 		Object    val = context.get(KEY_CONTEXT_TAGS);
 
-		if(val != null && val instanceof RangerTagForEval) {
+		if(val instanceof RangerTagForEval) {
 			ret = (RangerTagForEval)val;
 		}
 
@@ -89,7 +89,7 @@ public class RangerAccessRequestUtil {
 		RangerRequestedResources ret = null;
 		Object                   val = context.get(KEY_CONTEXT_REQUESTED_RESOURCES);
 
-		if(val != null && val instanceof RangerRequestedResources) {
+		if(val instanceof RangerRequestedResources) {
 			ret = (RangerRequestedResources)val;
 		}
 
@@ -104,7 +104,7 @@ public class RangerAccessRequestUtil {
 		RangerAccessResource ret = null;
 		Object               val = context.get(KEY_CONTEXT_RESOURCE);
 
-		if(val != null && val instanceof RangerAccessResource) {
+		if(val instanceof RangerAccessResource) {
 			ret = (RangerAccessResource)val;
 		}
 

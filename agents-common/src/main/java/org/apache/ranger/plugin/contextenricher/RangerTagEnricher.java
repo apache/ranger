@@ -227,7 +227,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		RangerAccessResource resource = request.getResource();
 
-		if ((resource == null || resource.getKeys() == null || resource.getKeys().size() == 0) && request.isAccessTypeAny()) {
+		if ((resource == null || resource.getKeys() == null || resource.getKeys().isEmpty()) && request.isAccessTypeAny()) {
 			ret = enrichedServiceTags.getTagsForEmptyResourceAndAnyAccess();
 		} else {
 
@@ -283,7 +283,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		final List<RangerServiceResourceMatcher> serviceResourceMatchers = enrichedServiceTags.getServiceResourceMatchers();
 		final Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = enrichedServiceTags.getServiceResourceTrie();
 
-		if (resource == null || resource.getKeys() == null || resource.getKeys().size() == 0 || serviceResourceTrie == null) {
+		if (resource == null || resource.getKeys() == null || resource.getKeys().isEmpty() || serviceResourceTrie == null) {
 			ret = serviceResourceMatchers;
 		} else {
 			Set<String> resourceKeys = resource.getKeys();
@@ -568,12 +568,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 					serviceTags = gson.fromJson(reader, ServiceTags.class);
 
-					if (serviceTags != null) {
-						if (!StringUtils.equals(tagEnricher.getServiceName(), serviceTags.getServiceName())) {
-							LOG.warn("ignoring unexpected serviceName '" + serviceTags.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
+					if (serviceTags != null && !StringUtils.equals(tagEnricher.getServiceName(), serviceTags.getServiceName())) {
+						LOG.warn("ignoring unexpected serviceName '" + serviceTags.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
 
-							serviceTags.setServiceName(tagEnricher.getServiceName());
-						}
+						serviceTags.setServiceName(tagEnricher.getServiceName());
 					}
 				} catch (Exception excp) {
 					LOG.error("failed to load service-tags from cache file " + cacheFile.getAbsolutePath(), excp);

@@ -248,12 +248,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
       if(nextId == Integer.MAX_VALUE) {
         // reset UUID and counter
-        RangerDefaultAuditHandler.UUID = MiscUtil.generateUniqueId();
+        UUID = MiscUtil.generateUniqueId();
         counter = new AtomicInteger(0);
       }
 
-      String ret = RangerDefaultAuditHandler.UUID + "-" + Integer.toString(nextId);
-
-      return ret;
+      return UUID + "-" + nextId;
 	 }
 }

@@ -81,10 +81,10 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         hasAllPerms = checkIfHasAllPerms();
 
         for (String user : users) {
-            if (!hasCurrentUser && user.equalsIgnoreCase(RangerPolicyEngine.USER_CURRENT)) {
+            if (!hasCurrentUser && RangerPolicyEngine.USER_CURRENT.equalsIgnoreCase(user)) {
                 hasCurrentUser = true;
             }
-            if (!hasResourceOwner && user.equalsIgnoreCase(RangerPolicyEngine.RESOURCE_OWNER)) {
+            if (!hasResourceOwner && RangerPolicyEngine.RESOURCE_OWNER.equalsIgnoreCase(user)) {
                 hasResourceOwner = true;
             }
             if (hasCurrentUser && hasResourceOwner) {
@@ -93,7 +93,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
 
         for (String group : groups) {
-            if (group.equalsIgnoreCase(RangerPolicyEngine.GROUP_PUBLIC)) {
+            if (RangerPolicyEngine.GROUP_PUBLIC.equalsIgnoreCase(group)) {
                 hasPublicGroup = true;
                 break;
             }
@@ -172,7 +172,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
             boolean foundMatchAny         = false;
 
             for (String resourceName : item.policyResource.getValues()) {
-                if (resourceName.isEmpty() || resourceName.equals(RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING)) {
+                if (resourceName.isEmpty() || RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING.equals(resourceName)) {
                     foundMatchAny = true;
                     break;
                 } else if (resourceName.contains(RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING)) {

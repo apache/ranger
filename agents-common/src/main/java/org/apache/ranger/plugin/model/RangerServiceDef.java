@@ -226,9 +226,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.configs.clear();
 
 		if(configs != null) {
-			for(RangerServiceConfigDef config : configs) {
-				this.configs.add(config);
-			}
+			this.configs.addAll(configs);
 		}
 	}
 
@@ -280,9 +278,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.resources.clear();
 
 		if(resources != null) {
-			for(RangerResourceDef resource : resources) {
-				this.resources.add(resource);
-			}
+			this.resources.addAll(resources);
 		}
 	}
 
@@ -308,9 +304,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.accessTypes.clear();
 
 		if(accessTypes != null) {
-			for(RangerAccessTypeDef accessType : accessTypes) {
-				this.accessTypes.add(accessType);
-			}
+			this.accessTypes.addAll(accessTypes);
 		}
 	}
 
@@ -336,9 +330,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.policyConditions.clear();
 
 		if(policyConditions != null) {
-			for(RangerPolicyConditionDef policyCondition : policyConditions) {
-				this.policyConditions.add(policyCondition);
-			}
+			this.policyConditions.addAll(policyConditions);
 		}
 	}
 
@@ -364,9 +356,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.contextEnrichers.clear();
 
 		if(contextEnrichers != null) {
-			for(RangerContextEnricherDef contextEnricher : contextEnrichers) {
-				this.contextEnrichers.add(contextEnricher);
-			}
+			this.contextEnrichers.addAll(contextEnrichers);
 		}
 	}
 
@@ -392,9 +382,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.enums.clear();
 
 		if(enums != null) {
-			for(RangerEnumDef enum1 : enums) {
-				this.enums.add(enum1);
-			}
+			this.enums.addAll(enums);
 		}
 	}
 
@@ -595,9 +583,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.elements.clear();
 
 			if(elements != null) {
-				for(RangerEnumElementDef element : elements) {
-					this.elements.add(element);
-				}
+				this.elements.addAll(elements);
 			}
 		}
 
@@ -1877,9 +1863,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.impliedGrants.clear();
 
 			if(impliedGrants != null) {
-				for(String impliedGrant : impliedGrants) {
-					this.impliedGrants.add(impliedGrant);
-				}
+				this.impliedGrants.addAll(impliedGrants);
 			}
 		}
 
@@ -2522,9 +2506,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.maskTypes.clear();
 
 			if(maskTypes != null) {
-				for(RangerDataMaskTypeDef maskType : maskTypes) {
-					this.maskTypes.add(maskType);
-				}
+				this.maskTypes.addAll(maskTypes);
 			}
 		}
 
@@ -2544,9 +2526,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.accessTypes.clear();
 
 			if(accessTypes != null) {
-				for(RangerAccessTypeDef accessType : accessTypes) {
-					this.accessTypes.add(accessType);
-				}
+				this.accessTypes.addAll(accessTypes);
 			}
 		}
 
@@ -2566,9 +2546,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.resources.clear();
 
 			if(resources != null) {
-				for(RangerResourceDef resource : resources) {
-					this.resources.add(resource);
-				}
+				this.resources.addAll(resources);
 			}
 		}
 
@@ -2933,9 +2911,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.accessTypes.clear();
 
 			if(accessTypes != null) {
-				for(RangerAccessTypeDef accessType : accessTypes) {
-					this.accessTypes.add(accessType);
-				}
+				this.accessTypes.addAll(accessTypes);
 			}
 		}
 
@@ -2955,9 +2931,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.resources.clear();
 
 			if(resources != null) {
-				for(RangerResourceDef resource : resources) {
-					this.resources.add(resource);
-				}
+				this.resources.addAll(resources);
 			}
 		}
 

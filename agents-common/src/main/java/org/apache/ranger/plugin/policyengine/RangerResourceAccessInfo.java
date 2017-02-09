@@ -80,7 +80,7 @@ public class RangerResourceAccessInfo {
 
         sb.append("request={");
         if(request != null) {
-            sb.append(request.toString());
+            sb.append(request);
         }
         sb.append("} ");
 

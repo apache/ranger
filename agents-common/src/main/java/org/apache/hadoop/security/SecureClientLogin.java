@@ -94,10 +94,8 @@ public class SecureClientLogin {
 		if (aSubject != null) {
 			Set<User> list = aSubject.getPrincipals(User.class);
 			if (list != null) {
-				Set<Principal> ret = new HashSet<Principal>();
-				for (User a : list) {
-					ret.add(a);
-				}
+				Set<Principal> ret = new HashSet<>();
+				ret.addAll(list);
 				return ret;
 			} else {
 				return null;
@@ -134,7 +132,7 @@ public class SecureClientLogin {
 	
 	public static String getPrincipal(String principalConfig, String hostName) throws IOException {
 		String[] components = getComponents(principalConfig);
-		if (components == null || components.length != 3 || !components[1].equals(HOSTNAME_PATTERN)) {
+		if (components == null || components.length != 3 || !HOSTNAME_PATTERN.equals(components[1])) {
 			return principalConfig;
 		} else {
 			if (hostName == null) {
@@ -153,7 +151,7 @@ public class SecureClientLogin {
 	private static String replacePattern(String[] components, String hostname)
 			throws IOException {
 		String fqdn = hostname;
-		if (fqdn == null || fqdn.isEmpty() || fqdn.equals("0.0.0.0")) {
+		if (fqdn == null || fqdn.isEmpty() || "0.0.0.0".equals(fqdn)) {
 			fqdn = java.net.InetAddress.getLocalHost().getCanonicalHostName();
 		}
 		return components[0] + "/" + StringUtils.toLowerCase(fqdn) + "@" + components[2];

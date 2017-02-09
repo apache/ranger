@@ -261,9 +261,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.policyItems.clear();
 
 		if(policyItems != null) {
-			for(RangerPolicyItem policyItem : policyItems) {
-				this.policyItems.add(policyItem);
-			}
+			this.policyItems.addAll(policyItems);
 		}
 	}
 
@@ -289,9 +287,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.denyPolicyItems.clear();
 
 		if(denyPolicyItems != null) {
-			for(RangerPolicyItem policyItem : denyPolicyItems) {
-				this.denyPolicyItems.add(policyItem);
-			}
+			this.denyPolicyItems.addAll(denyPolicyItems);
 		}
 	}
 
@@ -317,9 +313,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.allowExceptions.clear();
 
 		if(allowExceptions != null) {
-			for(RangerPolicyItem policyItem : allowExceptions) {
-				this.allowExceptions.add(policyItem);
-			}
+			this.allowExceptions.addAll(allowExceptions);
 		}
 	}
 
@@ -345,9 +339,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.denyExceptions.clear();
 
 		if(denyExceptions != null) {
-			for(RangerPolicyItem policyItem : denyExceptions) {
-				this.denyExceptions.add(policyItem);
-			}
+			this.denyExceptions.addAll(denyExceptions);
 		}
 	}
 
@@ -367,9 +359,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.dataMaskPolicyItems.clear();
 
 		if(dataMaskPolicyItems != null) {
-			for(RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
-				this.dataMaskPolicyItems.add(dataMaskPolicyItem);
-			}
+			this.dataMaskPolicyItems.addAll(dataMaskPolicyItems);
 		}
 	}
 
@@ -389,9 +379,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.rowFilterPolicyItems.clear();
 
 		if(rowFilterPolicyItems != null) {
-			for(RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
-				this.rowFilterPolicyItems.add(rowFilterPolicyItem);
-			}
+			this.rowFilterPolicyItems.addAll(rowFilterPolicyItems);
 		}
 	}
 
@@ -548,9 +536,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.values.clear();
 
 			if(values != null) {
-				for(String value : values) {
-					this.values.add(value);
-				}
+				this.values.addAll(values);
 			}
 		}
 
@@ -709,9 +695,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.accesses.clear();
 
 			if(accesses != null) {
-				for(RangerPolicyItemAccess access : accesses) {
-					this.accesses.add(access);
-				}
+				this.accesses.addAll(accesses);
 			}
 		}
 		/**
@@ -735,9 +719,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.users.clear();
 
 			if(users != null) {
-				for(String user : users) {
-					this.users.add(user);
-				}
+				this.users.addAll(users);
 			}
 		}
 		/**
@@ -761,9 +743,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.groups.clear();
 
 			if(groups != null) {
-				for(String group : groups) {
-					this.groups.add(group);
-				}
+				this.groups.addAll(groups);
 			}
 		}
 		/**
@@ -787,9 +767,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.conditions.clear();
 
 			if(conditions != null) {
-				for(RangerPolicyItemCondition condition : conditions) {
-					this.conditions.add(condition);
-				}
+				this.conditions.addAll(conditions);
 			}
 		}
 
@@ -1254,9 +1232,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.values.clear();
 
 			if(values != null) {
-				for(String value : values) {
-					this.values.add(value);
-				}
+				this.values.addAll(values);
 			}
 		}
 

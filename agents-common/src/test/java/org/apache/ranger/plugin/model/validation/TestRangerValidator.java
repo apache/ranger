@@ -60,12 +60,7 @@ public class TestRangerValidator {
 		
 		boolean isValid(String behavior) {
 			boolean valid;
-			if (behavior.equals("valid")) {
-				valid = true;
-			} else {
-				valid = false;
-			}
-			return valid;
+			return "valid".equals(behavior);
 		}
 	}
 	

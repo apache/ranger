@@ -273,11 +273,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		boolean isValid(DirectedGraph graph) {
-			if (graph.getSources().size() > 0 && graph.getSinks().size() > 0) {
-				return true;
-			} else {
-				return false;
-			}
+			return !graph.getSources().isEmpty() && !graph.getSinks().isEmpty();
 		}
 
 		/**
@@ -383,11 +379,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		boolean hasArc(String from, String to) {
-			if (_nodes.containsKey(from) && _nodes.containsKey(to) && _nodes.get(from).contains(to)) {
-				return true;
-			} else {
-				return false;
-			}
+			return _nodes.containsKey(from) && _nodes.containsKey(to) && _nodes.get(from).contains(to);
 		}
 
 		/**
@@ -396,7 +388,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		boolean hasNeighbors(String from) {
-			return _nodes.containsKey(from) && _nodes.get(from).size() > 0;
+			return _nodes.containsKey(from) && !_nodes.get(from).isEmpty();
 		}
 		/**
 		 * Return the set of nodes with in degree of 0, i.e. those that are not in any other nodes' list of neighbors

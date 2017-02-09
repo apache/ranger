@@ -140,14 +140,14 @@ public class HadoopConfigHolder  {
 	}
 	
 	private void initConnectionProp() {
-		for(String key : connectionProperties.keySet()) {
-			
+		for(Map.Entry<String,String> entry : connectionProperties.entrySet()) {
+			String key = entry.getKey();
 			String resourceName = getResourceName(key);
 			
 			if (resourceName == null) {
 				resourceName = RANGER_SECTION_NAME;
 			}
-			String val = connectionProperties.get(key);
+			String val = entry.getValue();
 			addConfiguration(datasourceName, resourceName, key, val );
 		}
 	}
@@ -226,8 +226,9 @@ public class HadoopConfigHolder  {
 					}
 				}
 	
-				if (prop.size() == 0)
+				if (prop.isEmpty()) {
 					return;
+				}
 				
 				for(Object keyobj : prop.keySet()) {
 					String key = (String)keyobj;
@@ -296,7 +297,7 @@ public class HadoopConfigHolder  {
 			String hadoopSecurityAuthenticationn =  getHadoopSecurityAuthentication();
 
 			if ( hadoopSecurityAuthenticationn != null) {
-				isKerberosAuth = ( hadoopSecurityAuthenticationn.equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD));
+				isKerberosAuth = HADOOP_SECURITY_AUTHENTICATION_METHOD.equalsIgnoreCase(hadoopSecurityAuthenticationn);
 			}
 			else {
 				isKerberosAuth = (((userName != null) && (userName.indexOf("@") > -1)) || (SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)));

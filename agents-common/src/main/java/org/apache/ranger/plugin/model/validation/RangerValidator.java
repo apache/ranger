@@ -108,7 +108,7 @@ public abstract class RangerValidator {
 			StringBuilder builder = new StringBuilder();
 			for (int i = 0; i < failures.size(); i++) {
 				builder.append(String.format("(%d)", i));
-				builder.append(failures.get(i).toString());
+				builder.append(failures.get(i));
 				builder.append(" ");
 			}
 			message = builder.toString();

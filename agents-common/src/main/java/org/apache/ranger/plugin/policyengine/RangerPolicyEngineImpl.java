@@ -604,7 +604,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			if (evaluateResourcePolicies) {
 				boolean findAuditByResource = !ret.getIsAuditedDetermined();
-				boolean foundInCache        = findAuditByResource ? policyRepository.setAuditEnabledFromCache(request, ret) : false;
+				boolean foundInCache        = findAuditByResource && policyRepository.setAuditEnabledFromCache(request, ret);
 
 				if(isAllowedByTags) {
 					ret.setIsAccessDetermined(false); // discard allowed result by tag-policies, to evaluate resource policies for possible deny

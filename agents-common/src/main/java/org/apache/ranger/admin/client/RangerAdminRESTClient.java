@@ -129,7 +129,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			} else {
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+					LOG.debug("No change in policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 				}
 			}
 			ret = null;
@@ -147,7 +147,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			ret = null;
 		}
 
@@ -310,7 +310,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("No change in tags. secureMode=" + isSecureMode + ", user=" + user
-							+ ", response=" + resp.toString() + ", serviceName=" + serviceName
+							+ ", response=" + resp + ", serviceName=" + serviceName
 							+ ", " + "lastKnownVersion=" + lastKnownVersion
 							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
 				}
@@ -330,7 +330,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp.toString() + ", serviceName=" + serviceName);
+			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			ret = null;
 		}
 
@@ -375,8 +375,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			ret = response.getEntity(getGenericType(emptyString));
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.error("Error getting tags. request=" + webResource.toString()
-					+ ", response=" + resp.toString() + ", serviceName=" + serviceName
+			LOG.error("Error getting tags. request=" + webResource
+					+ ", response=" + resp + ", serviceName=" + serviceName
 					+ ", " + "pattern=" + pattern);
 			throw new Exception(resp.getMessage());
 		}

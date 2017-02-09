@@ -72,7 +72,7 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		if (isInitialized && CollectionUtils.isNotEmpty(matchers)) {
 			RangerRequestedResources resources = RangerAccessRequestUtil.getRequestedResourcesFromContext(request.getContext());
 
-			ret = resources == null ? true : resources.isMutuallyExcluded(matchers, request.getContext());
+			ret = resources == null || resources.isMutuallyExcluded(matchers, request.getContext());
 		} else {
 			LOG.error("RangerHiveResourcesNotAccessedTogetherCondition.isMatched() - Enforcer is not initialized correctly, Mutual Exclusion will NOT be enforced");
 		}
@@ -131,8 +131,7 @@ public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstr
 		}
 
 		// Works only for Hive serviceDef for now
-		if (serviceDef != null && serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME)) {
-
+		if (serviceDef != null && EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME.equals(serviceDef.getName())) {
 			//Parse policyResourceSpec
 			char separator = '.';
 			String any = "*";

@@ -113,7 +113,7 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	}
 
 	protected boolean getConditionsDisabledOption() {
-		return options != null ? options.disableCustomConditions : false;
+		return options != null && options.disableCustomConditions;
 	}
 
 	private int computeEvalOrder() {

@@ -195,8 +195,8 @@ public class AbstractPredicateUtil {
 	protected final static Comparator<RangerBaseModelObject> policyNameComparator = new Comparator<RangerBaseModelObject>() {
 		@Override
 		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
-			String val1 = (o1 != null && o1 instanceof RangerPolicy) ? ((RangerPolicy)o1).getName() : null;
-			String val2 = (o2 != null && o2 instanceof RangerPolicy) ? ((RangerPolicy)o2).getName() : null;
+			String val1 = (o1 instanceof RangerPolicy) ? ((RangerPolicy)o1).getName() : null;
+			String val2 = (o2 instanceof RangerPolicy) ? ((RangerPolicy)o2).getName() : null;
 
 			return ObjectUtils.compare(val1, val2);
 		}

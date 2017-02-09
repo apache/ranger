@@ -87,9 +87,7 @@ public class RangerServiceTag extends RangerBaseService {
 					List<String> valuesToExclude = MapUtils.isNotEmpty(context.getResources()) ? context.getResources().get(TAG_RESOURCE_NAME) : null;
 
 					if(CollectionUtils.isNotEmpty(valuesToExclude)) {
-						for (String valueToExclude : valuesToExclude) {
-							tags.remove(valueToExclude);
-						}
+						tags.removeAll(valuesToExclude);
 					}
 
 					String valueToMatch = context.getUserInput();

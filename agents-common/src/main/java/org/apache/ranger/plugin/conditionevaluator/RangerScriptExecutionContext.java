@@ -100,7 +100,7 @@ public final class RangerScriptExecutionContext {
 		RangerTagForEval ret = null;
 		Object    val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT);
 
-		if(val != null && val instanceof RangerTagForEval) {
+		if(val instanceof RangerTagForEval) {
 			ret = (RangerTagForEval)val;
 		} else {
 			if (LOG.isDebugEnabled()) {

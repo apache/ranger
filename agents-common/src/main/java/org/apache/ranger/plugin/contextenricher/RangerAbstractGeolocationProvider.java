@@ -114,12 +114,11 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 		}
 
 		if (StringUtils.isNotBlank(clientIPAddress) && store != null) {
-
 			geolocation = store.getGeoLocation(clientIPAddress);
 
 			if (geolocation != null) {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerAbstractGeolocationProvider.enrich() - Country=" + geolocation.toString());
+					LOG.debug("RangerAbstractGeolocationProvider.enrich() - Country=" + geolocation);
 				}
 				Map<String, Object> context = request.getContext();
 

@@ -274,9 +274,7 @@ public class EmbeddedServiceDefsUtil {
 				for(String element:supportedComponents){
 					if(!StringUtils.isBlank(element)){
 						element=element.toLowerCase();
-						if(!supportedServiceDef.contains(element)){
-							supportedServiceDef.add(element);
-						}
+						supportedServiceDef.add(element);
 					}
 				}
 			}

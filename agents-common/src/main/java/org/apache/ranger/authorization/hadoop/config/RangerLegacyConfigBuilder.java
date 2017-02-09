@@ -134,11 +134,10 @@ public class RangerLegacyConfigBuilder {
 	}
 
 	public static Configuration  buildRangerSecurityConf(String serviceType) {
-
 		Configuration rangerConf = new Configuration();
 
 		rangerConf.set(getPropertyName(RangerConfigConstants.RANGER_SERVICE_NAME,serviceType),"");
-		if (serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME) )  {
+		if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME.equals(serviceType) )  {
 			rangerConf.set(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_SOURCE_IMPL,serviceType),RangerConfigConstants.RANGER_KNOX_PLUGIN_POLICY_SOURCE_IMPL_DEFAULT);
 		} else {
 			rangerConf.set(getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_SOURCE_IMPL,serviceType),"");
@@ -165,14 +164,13 @@ public class RangerLegacyConfigBuilder {
 		changeMap.put(getPropertyName(RangerConfigConstants.XASECURE_POLICYMGR_URL_LASTSTOREDFILE,serviceType),
 					  getPropertyName(RangerConfigConstants.RANGER_PLUGIN_POLICY_CACHE_DIR,serviceType));
 		
-		
-		if (serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME)) {
+				if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME.equals(serviceType)) {
 			changeMap.put(RangerConfigConstants.XASECURE_ADD_HADDOP_AUTHORZATION,
 				      RangerConfigConstants.RANGER_PLUGIN_ADD_HADDOOP_AUTHORIZATION);
 		}
 		
-		if (serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME) ||
-			serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME)) {
+		if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME.equals(serviceType) ||
+			EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME.equals(serviceType)) {
 			changeMap.put(getPropertyName(RangerConfigConstants.XASECURE_UPDATE_XAPOLICIES_ON_GRANT,serviceType),
 					getPropertyName(RangerConfigConstants.XASECURE_UPDATE_XAPOLICIES_ON_GRANT,serviceType));
 		}
@@ -202,46 +200,30 @@ public class RangerLegacyConfigBuilder {
 	}
 
 	public static URL getFileURL(String fileName) {
-		URL lurl = RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName);
-		return lurl;
+		return RangerLegacyConfigBuilder.class.getClassLoader().getResource(fileName);
 	}
 
 	public static String getPropertyName(String rangerProp, String serviceType) {
-		
-		String ret = rangerProp.replace("<ServiceType>", serviceType);
-		
-		return ret;
+		return rangerProp.replace("<ServiceType>", serviceType);
 	}	
 
 	public static String getPolicyMgrURL(String url) {
-		String ret = null;
-		
 		int index = url.indexOf("/",url.lastIndexOf(":"));
 		
-		ret = url.substring(0,index);
-		
-		return ret;
+		return url.substring(0,index);
 	}
 
 	public static String getServiceNameFromURL(String url) {
-		String ret = null;
-		
 		int index = url.lastIndexOf("/");
 		
-		ret = url.substring(index+1);
-		
-		return ret;
+		return url.substring(index+1);
 	}
 
 	
 	public static String getCacheFileURL(String cacheFile) {
-		String ret = null;
-		
 		int index = cacheFile.lastIndexOf("/");
 		
-		ret = cacheFile.substring(0,index);
-		
-		return ret;
+		return cacheFile.substring(0,index);
 	}
 
 	public static String fetchLegacyValue(String legacyVal, String rangerKey) {

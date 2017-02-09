@@ -227,15 +227,14 @@ public class RangerIpMatcherTest {
 		if (ipArray == null) {
 			matcher.setConditionDef(null);
 			matcher.setPolicyItemCondition(null);
-			matcher.init();
 		} else {
 			RangerPolicyItemCondition condition = mock(RangerPolicyItemCondition.class);
 			List<String> addresses = Arrays.asList(ipArray);
 			when(condition.getValues()).thenReturn(addresses);
 			matcher.setConditionDef(null);
 			matcher.setPolicyItemCondition(condition);
-			matcher.init();
 		}
+		matcher.init();
 		
 		return matcher;
 	}

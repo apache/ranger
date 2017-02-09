@@ -257,12 +257,14 @@ public class RangerPolicyValidator extends RangerValidator {
 			int policyType=policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 			switch (policyType) {
 			case RangerPolicy.POLICY_TYPE_DATAMASK:
-				if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems()))
+				if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems())) {
 					policyItemsCount += policy.getDataMaskPolicyItems().size();
+				}
 				break;
 			case RangerPolicy.POLICY_TYPE_ROWFILTER:
-				if (CollectionUtils.isNotEmpty(policy.getRowFilterPolicyItems()))
+				if (CollectionUtils.isNotEmpty(policy.getRowFilterPolicyItems())) {
 					policyItemsCount += policy.getRowFilterPolicyItems().size();
+				}
 				break;
 			default:
 				if (CollectionUtils.isNotEmpty(policy.getPolicyItems())){

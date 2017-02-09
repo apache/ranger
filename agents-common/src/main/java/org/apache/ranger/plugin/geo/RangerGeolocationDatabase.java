@@ -55,10 +55,8 @@ public class RangerGeolocationDatabase {
 	public RangerGeolocationData find(final String ipAddressStr) {
 		RangerGeolocationData ret = null;
 
-		if (StringUtils.isNotBlank(ipAddressStr)) {
-			if (RangerGeolocationData.validateAsIP(ipAddressStr, true)) {
-				ret = data.find(RangerGeolocationData.ipAddressToLong(ipAddressStr));
-			}
+		if (StringUtils.isNotBlank(ipAddressStr) && RangerGeolocationData.validateAsIP(ipAddressStr, true)) {
+			ret = data.find(RangerGeolocationData.ipAddressToLong(ipAddressStr));
 		}
 		return ret;
 	}

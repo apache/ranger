@@ -76,25 +76,19 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 					LOG.error("Error processing input file:" + serviceTagsFileName + " cannot be converted to URL " + serviceTagsFileName, malformedException);
 				}
 			} else {
-
 				URL fileURL = getClass().getResource(serviceTagsFileName);
-				if (fileURL == null) {
-					if (!serviceTagsFileName.startsWith("/")) {
-						fileURL = getClass().getResource("/" + serviceTagsFileName);
-					}
+				if (fileURL == null && !serviceTagsFileName.startsWith("/")) {
+					fileURL = getClass().getResource("/" + serviceTagsFileName);
 				}
 
 				if (fileURL == null) {
 					fileURL = ClassLoader.getSystemClassLoader().getResource(serviceTagsFileName);
-					if (fileURL == null) {
-						if (!serviceTagsFileName.startsWith("/")) {
-							fileURL = ClassLoader.getSystemClassLoader().getResource("/" + serviceTagsFileName);
-						}
+					if (fileURL == null && !serviceTagsFileName.startsWith("/")) {
+						fileURL = ClassLoader.getSystemClassLoader().getResource("/" + serviceTagsFileName);
 					}
 				}
 
 				if (fileURL != null) {
-
 					try {
 						serviceTagsFileStream = fileURL.openStream();
 						serviceTagsFileURL = fileURL;

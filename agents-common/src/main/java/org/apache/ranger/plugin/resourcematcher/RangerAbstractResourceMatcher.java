@@ -86,8 +86,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		optIgnoreCase = getOptionIgnoreCase(options);
 		optWildCard   = getOptionWildCard(options);
 
-		policyValues = new ArrayList<String>();
-		policyIsExcludes = policyResource == null ? false : policyResource.getIsExcludes();
+		policyValues = new ArrayList<>();
+		policyIsExcludes = policyResource != null && policyResource.getIsExcludes();
 
 		if (policyResource != null && policyResource.getValues() != null) {
 			for (String policyValue : policyResource.getValues()) {

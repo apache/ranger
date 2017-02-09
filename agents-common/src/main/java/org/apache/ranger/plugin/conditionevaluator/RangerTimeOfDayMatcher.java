@@ -106,18 +106,18 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 				}
 				String endType = m.group(8).toUpperCase();
 				if(startHour == 12) {
-					if(startType.equals("A")) {
+					if("A".equals(startType)) {
 						startHour = 0;
 					}
-				} else if (startType.equals("P")) {
+				} else if ("P".equals(startType)) {
 					startHour += 12;
 				}
 
 				if(endHour == 12) {
-					if(endType.equals("A")) {
+					if("A".equals(endType)) {
 						endHour = 0;
 					}
-				} else if (endType.equals("P")) {
+				} else if ("P".equals(endType)) {
 					endHour += 12;
 				}
 
@@ -190,10 +190,10 @@ public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("RangerTimeOfDayMatcher {");
-		sb.append("_allowAny=" + _allowAny).append(" ");
+		sb.append("_allowAny=").append(_allowAny).append(" ");
 		sb.append("_durations=[");
 		for(int[] duration : _durations) {
-			sb.append("{start=" + duration[0] + "; end=" + duration[1] + "} ");
+			sb.append("{start=").append(duration[0]).append("; end=").append(duration[1]).append("} ");
 		}
 		sb.append("]");
 		sb.append("}");

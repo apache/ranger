@@ -152,23 +152,11 @@ public class StringUtil {
 	*/
 
 	public static boolean contains(String str, String strToFind) {
-		boolean ret = false;
-
-		if(str != null && strToFind != null) {
-			ret = str.contains(strToFind);
-		}
-
-		return ret;
+		return str != null && strToFind != null && str.contains(strToFind);
 	}
 
 	public static boolean containsIgnoreCase(String str, String strToFind) {
-		boolean ret = false;
-
-		if(str != null && strToFind != null) {
-			ret = str.toLowerCase().contains(strToFind.toLowerCase());
-		}
-
-		return ret;
+		return str != null && strToFind != null && str.toLowerCase().contains(strToFind.toLowerCase());
 	}
 
 	public static boolean contains(String[] strArr, String str) {
@@ -236,7 +224,7 @@ public class StringUtil {
 	public static String toString(List<String> arr) {
 		String ret = "";
 
-		if(arr != null && arr.size() > 0) {
+		if(arr != null && !arr.isEmpty()) {
 			ret = arr.get(0);
 			for(int i = 1; i < arr.size(); i++) {
 				ret += (", " + arr.get(i));

@@ -90,8 +90,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 		String errorText = "";
 
-		if(policyResources != null && policyResources.size() > 0 && serviceDef != null) {
-
+		if(policyResources != null && !policyResources.isEmpty() && serviceDef != null) {
 			Set<String> policyResourceKeySet = policyResources.keySet();
 
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
@@ -272,11 +271,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			Collection<String> resourceKeys = resource == null ? null : resource.getKeys();
 			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
 
-			boolean keysMatch = false;
-
-			if (resourceKeys != null && policyKeys != null) {
-				keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
-			}
+			boolean keysMatch = resourceKeys != null && policyKeys != null && CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
 
 			if(keysMatch) {
 				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
@@ -320,11 +315,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			Collection<String> resourceKeys = resources == null ? null : resources.keySet();
 			Collection<String> policyKeys   = matchers == null ? null : matchers.keySet();
 
-			boolean keysMatch = false;
-
-			if (resourceKeys != null && policyKeys != null) {
-				keysMatch = CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
-			}
+			boolean keysMatch = resourceKeys != null && policyKeys != null && CollectionUtils.isEqualCollection(resourceKeys, policyKeys);
 
 			if(keysMatch) {
 				for(RangerResourceDef resourceDef : serviceDef.getResources()) {

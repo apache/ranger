@@ -65,9 +65,7 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 			_allowAny = true;
 		} else {
 			_contextName = conditionDef.getEvaluatorOptions().get(CONTEXT_NAME);
-			for (String value : condition.getValues()) {
-				_values.add(value);
-			}
+			_values.addAll(condition.getValues());
 		}
 
 		if(LOG.isDebugEnabled()) {

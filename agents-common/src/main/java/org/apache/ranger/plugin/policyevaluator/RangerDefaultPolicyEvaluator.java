@@ -75,7 +75,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 	private String perfTag;
 
-	protected boolean needsDynamicEval() { return resourceMatcher != null ? resourceMatcher.getNeedsDynamicEval() : false; }
+	protected boolean needsDynamicEval() { return resourceMatcher != null && resourceMatcher.getNeedsDynamicEval(); }
 
 	@Override
 	public int getCustomConditionsCount() {
@@ -336,11 +336,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isCompleteMatch(" + resource + ", " + evalContext + ")");
 		}
 
-		boolean ret = false;
-
-		if(resourceMatcher != null) {
-			ret = resourceMatcher.isCompleteMatch(resource, evalContext);
-		}
+		boolean ret = resourceMatcher != null && resourceMatcher.isCompleteMatch(resource, evalContext);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isCompleteMatch(" + resource + "): " + ret);
@@ -355,11 +351,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isCompleteMatch(" + resources + ", " + evalContext + ")");
 		}
 
-		boolean ret = false;
-
-		if(resourceMatcher != null) {
-			ret = resourceMatcher.isCompleteMatch(resources, evalContext);
-		}
+		boolean ret = resourceMatcher != null && resourceMatcher.isCompleteMatch(resources, evalContext);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isCompleteMatch(" + resources + ", " + evalContext + "): " + ret);
@@ -605,11 +597,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + resources + ", " + evalContext + ")");
 		}
 
-		boolean ret = false;
-
-		if(resourceMatcher != null) {
-			ret = resourceMatcher.isMatch(resources, evalContext);
-		}
+		boolean ret = resourceMatcher != null && resourceMatcher.isMatch(resources, evalContext);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isMatch(" + resources + ", " + evalContext + "): " + ret);
@@ -734,9 +722,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						ret.put(accessTypeDef.getName(), impliedAccessGrants);
 					}
 
-					for(String impliedAccessGrant : accessTypeDef.getImpliedGrants()) {
-						impliedAccessGrants.add(impliedAccessGrant);
-					}
+					impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
 				}
 			}
 		}

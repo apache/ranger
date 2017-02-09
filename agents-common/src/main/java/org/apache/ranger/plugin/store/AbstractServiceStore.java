@@ -276,7 +276,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	private void updateTagServiceDefForDeletingAccessTypes(String serviceDefName) throws Exception {
-		if (serviceDefName.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+		if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(serviceDefName)) {
 			return;
 		}
 

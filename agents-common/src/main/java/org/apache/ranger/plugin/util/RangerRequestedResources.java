@@ -52,15 +52,7 @@ public class RangerRequestedResources {
 				requestedResources = new ArrayList<>();
 			}
 
-			boolean exists = false;
-
-			for (RangerAccessResource resource : requestedResources) {
-
-				if (requestedResource.equals(resource)) {
-					exists = true;
-					break;
-				}
-			}
+			boolean exists = requestedResources.contains(requestedResource);
 
 			if (!exists) {
 				requestedResources.add(requestedResource);

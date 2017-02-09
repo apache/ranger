@@ -39,14 +39,13 @@ class ValuePrinter<T> implements ValueProcessor<T> {
 
 		if (value != null) {
 			if (writer == null) {
-				LOG.error("ValuePrinter.process() -" + value.toString());
+				LOG.error("ValuePrinter.process() -" + value);
 			} else {
 				try {
 					writer.write(value.toString());
 					writer.write('\n');
 				} catch (IOException exception) {
-					LOG.error("ValuePrinter.process() - Cannot write '" + value.toString() + "' to " + fileName);
-
+					LOG.error("ValuePrinter.process() - Cannot write '" + value + "' to " + fileName);
 				}
 			}
 		}

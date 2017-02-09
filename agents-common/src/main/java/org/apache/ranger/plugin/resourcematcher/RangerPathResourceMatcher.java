@@ -51,7 +51,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 		Map<String, String> options = resourceDef == null ? null : resourceDef.getMatcherOptions();
 
-		policyIsRecursive = policyResource == null ? false : policyResource.getIsRecursive();
+		policyIsRecursive = policyResource != null && policyResource.getIsRecursive();
 		pathSeparatorChar = ServiceDefUtil.getCharOption(options, OPTION_PATH_SEPARATOR, DEFAULT_PATH_SEPARATOR_CHAR);
 
 		super.init();
@@ -107,7 +107,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 
 		// To ensure that when policyValue is single '*', ResourceMatcher created here returns true for isMatchAny()
-		if (optWildCard && policyValue.equals(WILDCARD_ASTERISK)) {
+		if (optWildCard && WILDCARD_ASTERISK.equals(policyValue)) {
 			return new CaseInsensitiveStringMatcher("");
 		}
 

@@ -288,7 +288,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
-        if(children != null && children.size() > 0) {
+        if(children != null && !children.isEmpty()) {
             if(children.size() == 1) {
                 trieData.singleChildNodeCount++;
             }
