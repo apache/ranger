@@ -138,12 +138,13 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			try {
 				authentication = getJDBCAuthentication(authentication,encoder);
 			} catch (Exception e) {
-				logger.info("JDBC Authentication failure: ", e);
+				logger.debug("JDBC Authentication failure: ", e);
 			}
 			if (authentication !=null && authentication.isAuthenticated()) {
 				return authentication;
 			}
 			if (authentication != null && !authentication.isAuthenticated()) {
+				logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
 				encoder="MD5";
 				String userName = authentication.getName();
 				String userPassword = null;
