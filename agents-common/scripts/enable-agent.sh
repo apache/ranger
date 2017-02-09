@@ -224,9 +224,13 @@ fi
 
 if [ ! -d "${HCOMPONENT_LIB_DIR}" ]
 then
-	echo "ERROR: Unable to find the lib directory of component [${HCOMPONENT_NAME}];  dir [${HCOMPONENT_LIB_DIR}] not found."
-	echo "Exiting installation."
-	exit 1
+    mkdir -p "${HCOMPONENT_LIB_DIR}"
+    if [ ! -d "${HCOMPONENT_LIB_DIR}" ]
+    then
+        echo "ERROR: Unable to find the lib directory of component [${HCOMPONENT_NAME}];  dir [${HCOMPONENT_LIB_DIR}] not found."
+        echo "Exiting installation."
+        exit 1
+    fi
 fi
 
 ambari_hive_install="N"
