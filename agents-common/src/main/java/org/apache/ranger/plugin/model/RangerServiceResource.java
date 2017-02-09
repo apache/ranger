@@ -37,10 +37,9 @@ import java.util.Map;
 public class RangerServiceResource extends RangerBaseModelObject {
 	private static final long serialVersionUID = 1L;
 
-	private String                                         serviceName       = null;
-	private Map<String, RangerPolicy.RangerPolicyResource> resourceElements  = null;
-	private String                                         resourceSignature = null;
-
+	private String                                         serviceName;
+	private Map<String, RangerPolicy.RangerPolicyResource> resourceElements;
+	private String                                         resourceSignature;
 
 	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature) {
 		super();

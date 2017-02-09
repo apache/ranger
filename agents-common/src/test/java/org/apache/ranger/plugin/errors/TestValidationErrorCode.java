@@ -54,7 +54,7 @@ public class TestValidationErrorCode {
         Set<ValidationErrorCode> may = ImmutableSet.copyOf(ValidationErrorCode.values());
 
         // set of enums that must not hvae any subsequent placeholders in it
-        Set<ValidationErrorCode> mustNot = new HashSet<ValidationErrorCode>();
+        Set<ValidationErrorCode> mustNot = new HashSet<>();
 
         for (int i = 0; i < 5; i++) {
             String token = String.format("{%d", i);

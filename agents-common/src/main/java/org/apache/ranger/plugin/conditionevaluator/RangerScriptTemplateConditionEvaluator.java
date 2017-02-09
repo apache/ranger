@@ -26,12 +26,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-
 public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditionEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerScriptTemplateConditionEvaluator.class);
 
-	protected String  script        = null;
-	private   boolean reverseResult = false;
+	protected String  script;
+	private   boolean reverseResult;
 
 	@Override
 	public void init() {

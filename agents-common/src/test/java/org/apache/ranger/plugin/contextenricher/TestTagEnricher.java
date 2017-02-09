@@ -50,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestTagEnricher {
-    static Gson gsonBuilder  = null;
+    static Gson gsonBuilder;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -98,9 +98,8 @@ public class TestTagEnricher {
         tagEnricher.setServiceDef(testCase.serviceDef);
         tagEnricher.setServiceTags(serviceTags);
 
-        List<String> expectedTags = new ArrayList<String>();
-        List<String> resultTags   = new ArrayList<String>();
-
+        List<String> expectedTags = new ArrayList<>();
+        List<String> resultTags   = new ArrayList<>();
 
         for (TestData test : testCase.tests) {
             RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null);

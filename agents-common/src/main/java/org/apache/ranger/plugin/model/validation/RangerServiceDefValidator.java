@@ -58,7 +58,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			LOG.debug(String.format("==> RangerServiceDefValidator.validate(%s, %s)", serviceDef, action));
 		}
 
-		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		List<ValidationFailureDetails> failures = new ArrayList<>();
 		boolean valid = isValid(serviceDef, action, failures);
 		String message = "";
 		try {
@@ -247,9 +247,9 @@ public class RangerServiceDefValidator extends RangerValidator {
 				.build());
 			valid = false;
 		} else {
-			List<RangerAccessTypeDef> defsWithImpliedGrants = new ArrayList<RangerAccessTypeDef>();
-			Set<String> accessNames = new HashSet<String>();
-			Set<Long> ids = new HashSet<Long>();
+			List<RangerAccessTypeDef> defsWithImpliedGrants = new ArrayList<>();
+			Set<String> accessNames = new HashSet<>();
+			Set<Long> ids = new HashSet<>();
 			for (RangerAccessTypeDef def : accessTypeDefs) {
 				String name = def.getName();
 				valid = isUnique(name, accessNames, "access type name", "access types", failures) && valid;
@@ -304,8 +304,8 @@ public class RangerServiceDefValidator extends RangerValidator {
 		if (CollectionUtils.isEmpty(policyConditions)) {
 			LOG.debug("Configs collection was null/empty! ok");
 		} else {
-			Set<Long> ids = new HashSet<Long>();
-			Set<String> names = new HashSet<String>();
+			Set<Long> ids = new HashSet<>();
+			Set<String> names = new HashSet<>();
 			for (RangerPolicyConditionDef conditionDef : policyConditions) {
 				valid = isUnique(conditionDef.getItemId(), ids, "policy condition def itemId", "policy condition defs", failures) && valid;
 				String name = conditionDef.getName();
@@ -522,8 +522,8 @@ public class RangerServiceDefValidator extends RangerValidator {
 		if (CollectionUtils.isEmpty(enumDefs)) {
 			LOG.debug("enum def collection passed in was null/empty. Ok.");
 		} else {
-			Set<String> names = new HashSet<String>();
-			Set<Long> ids = new HashSet<Long>();
+			Set<String> names = new HashSet<>();
+			Set<Long> ids = new HashSet<>();
 			for (RangerEnumDef enumDef : enumDefs) {
 				if (enumDef == null) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_OBJECT;
@@ -586,8 +586,8 @@ public class RangerServiceDefValidator extends RangerValidator {
 			LOG.debug("Enum elements list passed in was null/empty!");
 		} else {
 			// enum element names should be valid and distinct
-			Set<String> elementNames = new HashSet<String>();
-			Set<Long> ids = new HashSet<Long>();
+			Set<String> elementNames = new HashSet<>();
+			Set<Long> ids = new HashSet<>();
 			for (RangerEnumElementDef elementDef : enumElementsDefs) {
 				if (elementDef == null) {
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT;

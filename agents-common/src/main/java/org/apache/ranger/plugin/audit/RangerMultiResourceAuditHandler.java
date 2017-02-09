@@ -29,8 +29,7 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
  * request
  */
 public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
-
-	Collection<AuthzAuditEvent> auditEvents = new ArrayList<AuthzAuditEvent>();
+	Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
 
 	public RangerMultiResourceAuditHandler() {
 	}

@@ -35,7 +35,7 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 	private final long fromIPAddress;
 	private final long toIPAddress;
 	private final String[] locationData;
-	private int hash = 0;
+	private int hash;
 
 	public static RangerGeolocationData create(String fields[], int index, boolean useDotFormat) {
 

@@ -64,14 +64,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	private static final Log PERF_POLICY_INIT_LOG = RangerPerfTracer.getPerfLogger("policy.init");
 	private static final Log PERF_POLICY_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policy.request");
 
-	private RangerPolicyResourceMatcher     resourceMatcher          = null;
-	private List<RangerPolicyItemEvaluator> allowEvaluators          = null;
-	private List<RangerPolicyItemEvaluator> denyEvaluators           = null;
-	private List<RangerPolicyItemEvaluator> allowExceptionEvaluators = null;
-	private List<RangerPolicyItemEvaluator> denyExceptionEvaluators  = null;
-	private int                             customConditionsCount    = 0;
-	private List<RangerDataMaskPolicyItemEvaluator>  dataMaskEvaluators  = null;
-	private List<RangerRowFilterPolicyItemEvaluator> rowFilterEvaluators = null;
+	private RangerPolicyResourceMatcher     resourceMatcher;
+	private List<RangerPolicyItemEvaluator> allowEvaluators;
+	private List<RangerPolicyItemEvaluator> denyEvaluators;
+	private List<RangerPolicyItemEvaluator> allowExceptionEvaluators;
+	private List<RangerPolicyItemEvaluator> denyExceptionEvaluators;
+	private int                             customConditionsCount;
+	private List<RangerDataMaskPolicyItemEvaluator>  dataMaskEvaluators;
+	private List<RangerRowFilterPolicyItemEvaluator> rowFilterEvaluators;
 
 	private String perfTag;
 
@@ -374,7 +374,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
-		Map<String, Object> evalContext = new HashMap<String, Object>();
+		Map<String, Object> evalContext = new HashMap<>();
 		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
 		boolean ret = isAccessAllowed(user, userGroups, accessType) && isMatch(resource, evalContext);
@@ -392,7 +392,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
-		Map<String, Object> evalContext = new HashMap<String, Object>();
+		Map<String, Object> evalContext = new HashMap<>();
 		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
 		boolean ret = isAccessAllowed(user, userGroups, accessType) && isMatch(resources, evalContext);
@@ -423,14 +423,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if (isMatched) {
 
 			if (CollectionUtils.isNotEmpty(allowEvaluators)) {
-				Set<String> users = new HashSet<String>();
-				Set<String> groups = new HashSet<String>();
+				Set<String> users = new HashSet<>();
+				Set<String> groups = new HashSet<>();
 
 				getResourceAccessInfo(request, allowEvaluators, users, groups);
 
 				if (CollectionUtils.isNotEmpty(allowExceptionEvaluators)) {
-					Set<String> exceptionUsers = new HashSet<String>();
-					Set<String> exceptionGroups = new HashSet<String>();
+					Set<String> exceptionUsers = new HashSet<>();
+					Set<String> exceptionGroups = new HashSet<>();
 
 					getResourceAccessInfo(request, allowExceptionEvaluators, exceptionUsers, exceptionGroups);
 
@@ -723,13 +723,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
 				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
 					if(ret == null) {
-						ret = new HashMap<String, Collection<String>>();
+						ret = new HashMap<>();
 					}
 
 					Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
 
 					if(impliedAccessGrants == null) {
-						impliedAccessGrants = new HashSet<String>();
+						impliedAccessGrants = new HashSet<>();
 
 						ret.put(accessTypeDef.getName(), impliedAccessGrants);
 					}
@@ -777,7 +777,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if(CollectionUtils.isNotEmpty(policyItems)) {
-			ret = new ArrayList<RangerPolicyItemEvaluator>();
+			ret = new ArrayList<>();
 
 			int policyItemCounter = 1;
 
@@ -803,7 +803,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		List<RangerDataMaskPolicyItemEvaluator> ret = null;
 
 		if(CollectionUtils.isNotEmpty(policyItems)) {
-			ret = new ArrayList<RangerDataMaskPolicyItemEvaluator>();
+			ret = new ArrayList<>();
 
 			int policyItemCounter = 1;
 
@@ -829,7 +829,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		List<RangerRowFilterPolicyItemEvaluator> ret = null;
 
 		if(CollectionUtils.isNotEmpty(policyItems)) {
-			ret = new ArrayList<RangerRowFilterPolicyItemEvaluator>();
+			ret = new ArrayList<>();
 
 			int policyItemCounter = 1;
 

@@ -87,7 +87,7 @@ public class TestRangerPolicyResourceSignature {
 		Assert.assertFalse("policy.getResources()==null", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
 		// empty resources map is ok!
-		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+		Map<String, RangerPolicyResource> policyResources = new HashMap<>();
 		when(rangerPolicy.getResources()).thenReturn(policyResources);
 		policySerializer = new PolicySerializer(rangerPolicy);
 		Assert.assertTrue("policy.getResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());

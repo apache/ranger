@@ -41,10 +41,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	protected static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
 
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
-	static long sequenceNumber = 0;
+	static long sequenceNumber;
 
 	private static String UUID 	= MiscUtil.generateUniqueId();
-	private static AtomicInteger  counter =  new AtomicInteger(0);;
+	private static AtomicInteger  counter =  new AtomicInteger(0);
 
 	public RangerDefaultAuditHandler() {
 	}
@@ -146,7 +146,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 				}
 
 				if(ret == null) {
-					ret = new ArrayList<AuthzAuditEvent>();
+					ret = new ArrayList<>();
 				}
 
 				ret.add(event);
@@ -222,7 +222,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 		if (CollectionUtils.isNotEmpty(tags)) {
-			ret = new HashSet<String>();
+			ret = new HashSet<>();
 
 			for (RangerTagForEval tag : tags) {
 				ret.add(tag.getType());

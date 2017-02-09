@@ -35,7 +35,7 @@ public class RangerPolicyEngineCache {
 
 	private final Map<String, RangerPolicyEngine> policyEngineCache = Collections.synchronizedMap(new HashMap<String, RangerPolicyEngine>());
 
-	private RangerPolicyEngineOptions options = null;
+	private RangerPolicyEngineOptions options;
 
 	public static RangerPolicyEngineCache getInstance() {
 		return sInstance;

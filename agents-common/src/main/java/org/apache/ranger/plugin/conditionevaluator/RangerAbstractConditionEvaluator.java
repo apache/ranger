@@ -16,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 
-
 public abstract class RangerAbstractConditionEvaluator implements RangerConditionEvaluator {
-	protected RangerServiceDef serviceDef = null;
-	protected RangerPolicyConditionDef  conditionDef = null;
-	protected RangerPolicyItemCondition condition    = null;
+	protected RangerServiceDef serviceDef;
+	protected RangerPolicyConditionDef  conditionDef;
+	protected RangerPolicyItemCondition condition;
 
 	@Override
 	public void setServiceDef(RangerServiceDef serviceDef) {

@@ -123,7 +123,7 @@ public final class RangerScriptExecutionContext {
 			for (RangerTagForEval tag : tagObjectList) {
 				String tagType = tag.getType();
 				if (allTagTypes == null) {
-					allTagTypes = new HashSet<String>();
+					allTagTypes = new HashSet<>();
 				}
 				allTagTypes.add(tagType);
 			}

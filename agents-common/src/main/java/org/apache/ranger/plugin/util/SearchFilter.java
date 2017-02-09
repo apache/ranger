@@ -71,12 +71,12 @@ public class SearchFilter {
 	public static final String PLUGIN_ENTITY_TYPE        = "pluginEntityType";
 	public static final String PLUGIN_IP_ADDRESS         = "pluginIpAddress";
 
-	private Map<String, String> params     = null;
-	private int                 startIndex = 0;
+	private Map<String, String> params;
+	private int                 startIndex;
 	private int                 maxRows    = Integer.MAX_VALUE;
 	private boolean             getCount   = true;
-	private String              sortBy     = null;
-	private String              sortType   = null;
+	private String              sortBy;
+	private String              sortType;
 
 	public SearchFilter() {
 		this(null);
@@ -131,7 +131,7 @@ public class SearchFilter {
 
 				if(name.startsWith(prefix)) {
 					if(ret == null) {
-						ret = new HashMap<String, String>();
+						ret = new HashMap<>();
 					}
 
 					if(stripPrefix) {

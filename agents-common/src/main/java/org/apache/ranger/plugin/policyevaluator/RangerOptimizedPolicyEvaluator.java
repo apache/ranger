@@ -35,14 +35,14 @@ import java.util.*;
 public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     private static final Log LOG = LogFactory.getLog(RangerOptimizedPolicyEvaluator.class);
 
-    private Set<String> groups         = new HashSet<String>();
-    private Set<String> users          = new HashSet<String>();
-    private Set<String> accessPerms    = new HashSet<String>();
-    private boolean     delegateAdmin  = false;
-    private boolean     hasAllPerms    = false;
-    private boolean     hasPublicGroup = false;
-    private boolean     hasCurrentUser = false;
-    private boolean     hasResourceOwner = false;
+    private Set<String> groups         = new HashSet<>();
+    private Set<String> users          = new HashSet<>();
+    private Set<String> accessPerms    = new HashSet<>();
+    private boolean     delegateAdmin;
+    private boolean     hasAllPerms;
+    private boolean     hasPublicGroup;
+    private boolean     hasCurrentUser;
+    private boolean     hasResourceOwner;
 
     // For computation of priority
     private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING   = "*";
@@ -146,7 +146,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         RangerServiceDef                         serviceDef   = getServiceDef();
         List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
         RangerPolicy                             policy       = getPolicy();
-        List<LevelResourceNames>                 tmpList      = new ArrayList<LevelResourceNames>();
+        List<LevelResourceNames>                 tmpList      = new ArrayList<>();
 
         for (Map.Entry<String, RangerPolicy.RangerPolicyResource> kv : policy.getResources().entrySet()) {
             String                            resourceName   = kv.getKey();

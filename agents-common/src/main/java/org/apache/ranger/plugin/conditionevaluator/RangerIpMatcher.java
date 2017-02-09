@@ -34,14 +34,12 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 /**
  * Credits: Large parts of this file have been lifted as is from org.apache.ranger.pdp.knox.URLBasedAuthDB.  Credits for those are due to Dilli Arumugam.
  * @author alal
- *
  */
 public class RangerIpMatcher extends RangerAbstractConditionEvaluator {
-
 	private static final Log LOG = LogFactory.getLog(RangerIpMatcher.class);
-	private List<String> _exactIps = new ArrayList<String>();
-	private List<String> _wildCardIps = new ArrayList<String>();
-	private boolean _allowAny = false;
+	private List<String> _exactIps = new ArrayList<>();
+	private List<String> _wildCardIps = new ArrayList<>();
+	private boolean _allowAny;
 	
 	@Override
 	public void init() {

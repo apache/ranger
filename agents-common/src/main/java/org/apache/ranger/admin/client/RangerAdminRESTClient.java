@@ -47,9 +47,9 @@ import java.util.List;
 public class RangerAdminRESTClient implements RangerAdminClient {
 	private static final Log LOG = LogFactory.getLog(RangerAdminRESTClient.class);
 
-	private String           serviceName = null;
-	private String           pluginId    = null;
-	private RangerRESTClient restClient  = null;
+	private String           serviceName;
+	private String           pluginId;
+	private RangerRESTClient restClient;
 	private RangerRESTUtils restUtils   = new RangerRESTUtils();
 
 	public RangerAdminRESTClient() {

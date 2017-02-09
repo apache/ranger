@@ -34,8 +34,8 @@ public class PerfDataRecorder {
 	private static final Log LOG  = LogFactory.getLog(PerfDataRecorder.class);
 	private static final Log PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
 
-	private static volatile PerfDataRecorder instance = null;
-	private Map<String, PerfStatistic> perfStatistics = new HashMap<String, PerfStatistic>();
+	private static volatile PerfDataRecorder instance;
+	private Map<String, PerfStatistic> perfStatistics = new HashMap<>();
 
 	public static void initialize(List<String> names) {
 		if (instance == null) {
@@ -70,12 +70,11 @@ public class PerfDataRecorder {
 	}
 
 	private void dumpStatistics() {
-		List<String> tags = new ArrayList<String>(perfStatistics.keySet());
+		List<String> tags = new ArrayList<>(perfStatistics.keySet());
 
 		Collections.sort(tags);
 
 		for (String tag : tags) {
-
 			PerfStatistic perfStatistic = perfStatistics.get(tag);
 
 			long averageTimeSpent = 0L;

@@ -67,14 +67,14 @@ public class RangerSslHelper {
 	static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = "SunX509";
 	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "SSL";
 
-	private String mKeyStoreURL     = null;
-	private String mKeyStoreAlias   = null;
-	private String mKeyStoreFile    = null;
-	private String mKeyStoreType    = null;
-	private String mTrustStoreURL   = null;
-	private String mTrustStoreAlias = null;
-	private String mTrustStoreFile  = null;
-	private String mTrustStoreType  = null;
+	private String mKeyStoreURL;
+	private String mKeyStoreAlias;
+	private String mKeyStoreFile;
+	private String mKeyStoreType;
+	private String mTrustStoreURL;
+	private String mTrustStoreAlias;
+	private String mTrustStoreFile;
+	private String mTrustStoreType;
 
 	final static HostnameVerifier _Hv = new HostnameVerifier() {
 		

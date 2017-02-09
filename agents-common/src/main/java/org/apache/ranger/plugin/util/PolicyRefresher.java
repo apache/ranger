@@ -52,9 +52,8 @@ public class PolicyRefresher extends Thread {
 
 	private long 	pollingIntervalMs   = 30 * 1000;
 	private long 	lastKnownVersion    = -1L;
-	private long	lastActivationTimeInMillis  = 0L;
-	private boolean policiesSetInPlugin = false;
-
+	private long	lastActivationTimeInMillis;
+	private boolean policiesSetInPlugin;
 
 	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {

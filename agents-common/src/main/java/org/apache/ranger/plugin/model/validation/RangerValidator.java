@@ -69,7 +69,7 @@ public abstract class RangerValidator {
 			LOG.debug("==> RangerValidator.validate(" + id + ")");
 		}
 
-		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		List<ValidationFailureDetails> failures = new ArrayList<>();
 		if (isValid(id, action, failures)) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerValidator.validate(" + id + "): valid");
@@ -122,7 +122,7 @@ public abstract class RangerValidator {
 
 	Set<String> getServiceConfigParameters(RangerService service) {
 		if (service == null || service.getConfigs() == null) {
-			return new HashSet<String>();
+			return new HashSet<>();
 		} else {
 			return service.getConfigs().keySet();
 		}
@@ -295,7 +295,7 @@ public abstract class RangerValidator {
 			LOG.debug("==> RangerValidator.getAccessTypes(" + serviceDef + ")");
 		}
 
-		Set<String> accessTypes = new HashSet<String>();
+		Set<String> accessTypes = new HashSet<>();
 		if (serviceDef == null) {
 			LOG.warn("serviceDef passed in was null!");
 		} else if (CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
@@ -356,7 +356,7 @@ public abstract class RangerValidator {
 			LOG.debug("==> RangerValidator.getMandatoryResourceNames(" + serviceDef + ")");
 		}
 
-		Set<String> resourceNames = new HashSet<String>();
+		Set<String> resourceNames = new HashSet<>();
 		if (serviceDef == null) {
 			LOG.warn("serviceDef passed in was null!");
 		} else if (CollectionUtils.isEmpty(serviceDef.getResources())) {
@@ -390,7 +390,7 @@ public abstract class RangerValidator {
 			LOG.debug("==> RangerValidator.getAllResourceNames(" + serviceDef + ")");
 		}
 
-		Set<String> resourceNames = new HashSet<String>();
+		Set<String> resourceNames = new HashSet<>();
 		if (serviceDef == null) {
 			LOG.warn("serviceDef passed in was null!");
 		} else if (CollectionUtils.isEmpty(serviceDef.getResources())) {
@@ -423,9 +423,9 @@ public abstract class RangerValidator {
 	 */
 	Set<String> getPolicyResources(RangerPolicy policy) {
 		if (policy == null || policy.getResources() == null || policy.getResources().isEmpty()) {
-			return new HashSet<String>();
+			return new HashSet<>();
 		} else {
-			Set<String> result = new HashSet<String>();
+			Set<String> result = new HashSet<>();
 			for (String name : policy.getResources().keySet()) {
 				result.add(name.toLowerCase());
 			}
@@ -435,9 +435,9 @@ public abstract class RangerValidator {
 
 	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {
 		if (serviceDef == null || CollectionUtils.isEmpty(serviceDef.getResources())) {
-			return new HashMap<String, String>();
+			return new HashMap<>();
 		} else {
-			Map<String, String> result = new HashMap<String, String>();
+			Map<String, String> result = new HashMap<>();
 			for (RangerResourceDef resourceDef : serviceDef.getResources()) {
 				if (resourceDef == null) {
 					LOG.warn("A resource def in resource def collection is null");
@@ -473,7 +473,7 @@ public abstract class RangerValidator {
 		if (def == null) {
 			return null;
 		} else if (CollectionUtils.isEmpty(def.getImpliedGrants())) {
-			return new ArrayList<String>();
+			return new ArrayList<>();
 		} else {
 			List<String> result = new ArrayList<String>(def.getImpliedGrants().size());
 			for (String name : def.getImpliedGrants()) {
@@ -633,7 +633,7 @@ public abstract class RangerValidator {
 	}
 	
 	Map<String, RangerEnumDef> getEnumDefMap(List<RangerEnumDef> enumDefs) {
-		Map<String, RangerEnumDef> result = new HashMap<String, RangerServiceDef.RangerEnumDef>();
+		Map<String, RangerEnumDef> result = new HashMap<>();
 		if (enumDefs != null) {
 			for (RangerEnumDef enumDef : enumDefs) {
 				result.put(enumDef.getName(), enumDef);
@@ -643,7 +643,7 @@ public abstract class RangerValidator {
 	}
 
 	Set<String> getEnumValues(RangerEnumDef enumDef) {
-		Set<String> result = new HashSet<String>();
+		Set<String> result = new HashSet<>();
 		if (enumDef != null) {
 			for (RangerEnumElementDef element : enumDef.getElements()) {
 				result.add(element.getName());

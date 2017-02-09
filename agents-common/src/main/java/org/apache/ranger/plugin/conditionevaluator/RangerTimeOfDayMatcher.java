@@ -35,10 +35,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 public class RangerTimeOfDayMatcher extends RangerAbstractConditionEvaluator {
-
 	private static final Log LOG = LogFactory.getLog(RangerTimeOfDayMatcher.class);
-	boolean _allowAny = false;
-	List<int[]> _durations = new ArrayList<int[]>();
+	boolean _allowAny;
+	List<int[]> _durations = new ArrayList<>();
 	
 	@Override
 	public void init() {

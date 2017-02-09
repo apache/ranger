@@ -335,7 +335,7 @@ class RangerPolicyRepository {
                                     String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
 
                                     if (newImpliedGrants == null) {
-                                        newImpliedGrants = new ArrayList<String>();
+                                        newImpliedGrants = new ArrayList<>();
                                     }
 
                                     newImpliedGrants.add(newImpliedGrant);
@@ -346,7 +346,7 @@ class RangerPolicyRepository {
                         }
                     } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
                         if(unneededAccessTypeDefs == null) {
-                            unneededAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+                            unneededAccessTypeDefs = new ArrayList<>();
                         }
 
                         unneededAccessTypeDefs.add(accessTypeDef);
@@ -383,7 +383,7 @@ class RangerPolicyRepository {
                     CollectionUtils.isEmpty(policy.getRowFilterPolicyItems())) {
 
                     if(policiesToPrune == null) {
-                        policiesToPrune = new ArrayList<RangerPolicy>();
+                        policiesToPrune = new ArrayList<>();
                     }
 
                     policiesToPrune.add(policy);
@@ -418,7 +418,7 @@ class RangerPolicyRepository {
                             access.setType(newAccessType);
                         } else if (accessType.contains(AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
                             if(accessesToPrune == null) {
-                                accessesToPrune = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+                                accessesToPrune = new ArrayList<>();
                             }
 
                             accessesToPrune.add(access);
@@ -431,7 +431,7 @@ class RangerPolicyRepository {
 
                     if (policyItemAccesses.isEmpty() && !policyItem.getDelegateAdmin()) {
                         if(itemsToPrune == null) {
-                            itemsToPrune = new ArrayList< RangerPolicy.RangerPolicyItem>();
+                            itemsToPrune = new ArrayList<>();
                         }
 
                         itemsToPrune.add(policyItem);
@@ -482,10 +482,9 @@ class RangerPolicyRepository {
     }
 
     private void init(RangerPolicyEngineOptions options) {
-
-        List<RangerPolicyEvaluator> policyEvaluators = new ArrayList<RangerPolicyEvaluator>();
-        List<RangerPolicyEvaluator> dataMaskPolicyEvaluators  = new ArrayList<RangerPolicyEvaluator>();
-        List<RangerPolicyEvaluator> rowFilterPolicyEvaluators = new ArrayList<RangerPolicyEvaluator>();
+        List<RangerPolicyEvaluator> policyEvaluators = new ArrayList<>();
+        List<RangerPolicyEvaluator> dataMaskPolicyEvaluators  = new ArrayList<>();
+        List<RangerPolicyEvaluator> rowFilterPolicyEvaluators = new ArrayList<>();
 
         for (RangerPolicy policy : policies) {
             if (skipBuildingPolicyEvaluator(policy, options)) {
@@ -765,8 +764,7 @@ class RangerPolicyRepository {
         List<RangerPolicyEvaluator> ret = evaluators;
 
         if (CollectionUtils.isNotEmpty(evaluators)) {
-
-            ret = new ArrayList<RangerPolicyEvaluator>(evaluators);
+            ret = new ArrayList<>(evaluators);
             Collections.sort(ret);
 
             ret = Collections.unmodifiableList(ret);
@@ -779,7 +777,7 @@ class RangerPolicyRepository {
         final Map<String, RangerResourceTrie> ret;
 
         if (CollectionUtils.isNotEmpty(evaluators) && serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getResources())) {
-            ret = new HashMap<String, RangerResourceTrie>();
+            ret = new HashMap<>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
                 ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators));

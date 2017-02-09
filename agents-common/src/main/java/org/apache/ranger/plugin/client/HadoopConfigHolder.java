@@ -53,12 +53,11 @@ public class HadoopConfigHolder  {
 	public static final String HADOOP_SECURITY_AUTHENTICATION_METHOD = "kerberos";
 	public static final String HADOOP_RPC_PROTECTION = "hadoop.rpc.protection";
 	
-
-	private static boolean initialized = false;
-	private static Map<String,HashMap<String,Properties>> dataSource2ResourceListMap = new HashMap<String,HashMap<String,Properties>>();
+	private static boolean initialized;
+	private static Map<String,HashMap<String,Properties>> dataSource2ResourceListMap = new HashMap<>();
 	private static Properties globalLoginProp = new Properties();
-	private static Map<String,HadoopConfigHolder> dataSource2HadoopConfigHolder = new HashMap<String,HadoopConfigHolder>();
-	private static Properties resourcemapProperties = null;
+	private static Map<String,HadoopConfigHolder> dataSource2HadoopConfigHolder = new HashMap<>();
+	private static Properties resourcemapProperties;
 	
 	
 	private String datasourceName;
@@ -74,7 +73,7 @@ public class HadoopConfigHolder  {
 	
 	private Map<String,String>  connectionProperties;
 
-  private static Set<String> rangerInternalPropertyKeys = new HashSet<String>();
+  private static Set<String> rangerInternalPropertyKeys = new HashSet<>();
 	
 	public static HadoopConfigHolder getInstance(String aDatasourceName) {
 		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName);
@@ -334,7 +333,7 @@ public class HadoopConfigHolder  {
 		HashMap<String,Properties> resourceName2PropertiesMap  = dataSource2ResourceListMap.get(dataSource);
 		
 		if (resourceName2PropertiesMap == null) {
-			resourceName2PropertiesMap = new HashMap<String,Properties>();
+			resourceName2PropertiesMap = new HashMap<>();
 			dataSource2ResourceListMap.put(dataSource, resourceName2PropertiesMap);
 		}
 		

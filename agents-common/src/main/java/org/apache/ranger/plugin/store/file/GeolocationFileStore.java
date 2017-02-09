@@ -52,8 +52,8 @@ public class GeolocationFileStore implements GeolocationStore {
 
 	private RangerGeolocationDatabase geolocationDatabase;
 
-	private boolean isMetalineProcessed = false;
-	private boolean useDotFormat = false;
+	private boolean isMetalineProcessed;
+	private boolean useDotFormat;
 
 	@Override
 	public void init(final Map<String, String> context) {

@@ -57,19 +57,19 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	// For future use
 	private static final long serialVersionUID = 1L;
 
-	private String                            service        	= null;
-	private String                            name           	= null;
-	private Integer                           policyType     	= null;
-	private String                            description    	= null;
-	private String							  resourceSignature = null;
-	private Boolean                           isAuditEnabled 	= null;
-	private Map<String, RangerPolicyResource> resources      	= null;
-	private List<RangerPolicyItem>            policyItems    	= null;
-	private List<RangerPolicyItem>            denyPolicyItems	= null;
-	private List<RangerPolicyItem>            allowExceptions	= null;
-	private List<RangerPolicyItem>            denyExceptions	= null;
-	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems  = null;
-	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems = null;
+	private String                            service;
+	private String                            name;
+	private Integer                           policyType;
+	private String                            description;
+	private String							  resourceSignature;
+	private Boolean                           isAuditEnabled;
+	private Map<String, RangerPolicyResource> resources;
+	private List<RangerPolicyItem>            policyItems;
+	private List<RangerPolicyItem>            denyPolicyItems;
+	private List<RangerPolicyItem>            allowExceptions;
+	private List<RangerPolicyItem>            denyExceptions;
+	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems;
+	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems;
 
 
 	/**
@@ -223,7 +223,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setResources(Map<String, RangerPolicyResource> resources) {
 		if(this.resources == null) {
-			this.resources = new HashMap<String, RangerPolicyResource>();
+			this.resources = new HashMap<>();
 		}
 
 		if(this.resources == resources) {
@@ -251,7 +251,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setPolicyItems(List<RangerPolicyItem> policyItems) {
 		if(this.policyItems == null) {
-			this.policyItems = new ArrayList<RangerPolicyItem>();
+			this.policyItems = new ArrayList<>();
 		}
 
 		if(this.policyItems == policyItems) {
@@ -279,7 +279,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setDenyPolicyItems(List<RangerPolicyItem> denyPolicyItems) {
 		if(this.denyPolicyItems == null) {
-			this.denyPolicyItems = new ArrayList<RangerPolicyItem>();
+			this.denyPolicyItems = new ArrayList<>();
 		}
 
 		if(this.denyPolicyItems == denyPolicyItems) {
@@ -307,7 +307,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setAllowExceptions(List<RangerPolicyItem> allowExceptions) {
 		if(this.allowExceptions == null) {
-			this.allowExceptions = new ArrayList<RangerPolicyItem>();
+			this.allowExceptions = new ArrayList<>();
 		}
 
 		if(this.allowExceptions == allowExceptions) {
@@ -335,7 +335,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 */
 	public void setDenyExceptions(List<RangerPolicyItem> denyExceptions) {
 		if(this.denyExceptions == null) {
-			this.denyExceptions = new ArrayList<RangerPolicyItem>();
+			this.denyExceptions = new ArrayList<>();
 		}
 
 		if(this.denyExceptions == denyExceptions) {
@@ -357,7 +357,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	public void setDataMaskPolicyItems(List<RangerDataMaskPolicyItem> dataMaskPolicyItems) {
 		if(this.dataMaskPolicyItems == null) {
-			this.dataMaskPolicyItems = new ArrayList<RangerDataMaskPolicyItem>();
+			this.dataMaskPolicyItems = new ArrayList<>();
 		}
 
 		if(this.dataMaskPolicyItems == dataMaskPolicyItems) {
@@ -379,7 +379,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	public void setRowFilterPolicyItems(List<RangerRowFilterPolicyItem> rowFilterPolicyItems) {
 		if(this.rowFilterPolicyItems == null) {
-			this.rowFilterPolicyItems = new ArrayList<RangerRowFilterPolicyItem>();
+			this.rowFilterPolicyItems = new ArrayList<>();
 		}
 
 		if(this.rowFilterPolicyItems == rowFilterPolicyItems) {
@@ -500,10 +500,9 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyResource implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private List<String> values      = null;
-		private Boolean      isExcludes = null;
-		private Boolean      isRecursive = null;
-
+		private List<String> values;
+		private Boolean      isExcludes;
+		private Boolean      isRecursive;
 
 		public RangerPolicyResource() {
 			this((List<String>)null, null, null);
@@ -539,7 +538,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setValues(List<String> values) {
 			if(this.values == null) {
-				this.values = new ArrayList<String>();
+				this.values = new ArrayList<>();
 			}
 
 			if(this.values == values) {
@@ -560,7 +559,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setValue(String value) {
 			if(this.values == null) {
-				this.values = new ArrayList<String>();
+				this.values = new ArrayList<>();
 			}
 
 			this.values.clear();
@@ -671,11 +670,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private List<RangerPolicyItemAccess>    accesses      = null;
-		private List<String>                    users         = null;
-		private List<String>                    groups        = null;
-		private List<RangerPolicyItemCondition> conditions    = null;
-		private Boolean                         delegateAdmin = null;
+		private List<RangerPolicyItemAccess>    accesses;
+		private List<String>                    users;
+		private List<String>                    groups;
+		private List<RangerPolicyItemCondition> conditions;
+		private Boolean                         delegateAdmin;
 
 		public RangerPolicyItem() {
 			this(null, null, null, null, null);
@@ -700,7 +699,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setAccesses(List<RangerPolicyItemAccess> accesses) {
 			if(this.accesses == null) {
-				this.accesses = new ArrayList<RangerPolicyItemAccess>();
+				this.accesses = new ArrayList<>();
 			}
 
 			if(this.accesses == accesses) {
@@ -726,7 +725,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setUsers(List<String> users) {
 			if(this.users == null) {
-				this.users = new ArrayList<String>();
+				this.users = new ArrayList<>();
 			}
 
 			if(this.users == users) {
@@ -752,7 +751,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setGroups(List<String> groups) {
 			if(this.groups == null) {
-				this.groups = new ArrayList<String>();
+				this.groups = new ArrayList<>();
 			}
 
 			if(this.groups == groups) {
@@ -778,7 +777,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setConditions(List<RangerPolicyItemCondition> conditions) {
 			if(this.conditions == null) {
-				this.conditions = new ArrayList<RangerPolicyItemCondition>();
+				this.conditions = new ArrayList<>();
 			}
 
 			if(this.conditions == conditions) {
@@ -929,7 +928,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerDataMaskPolicyItem extends RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private RangerPolicyItemDataMaskInfo dataMaskInfo = null;
+		private RangerPolicyItemDataMaskInfo dataMaskInfo;
 
 		public RangerDataMaskPolicyItem() {
 			this(null, null, null, null, null, null);
@@ -1016,7 +1015,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerRowFilterPolicyItem extends RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private RangerPolicyItemRowFilterInfo rowFilterInfo = null;
+		private RangerPolicyItemRowFilterInfo rowFilterInfo;
 
 		public RangerRowFilterPolicyItem() {
 			this(null, null, null, null, null, null);
@@ -1103,8 +1102,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItemAccess implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String  type      = null;
-		private Boolean isAllowed = null;
+		private String  type;
+		private Boolean isAllowed;
 
 		public RangerPolicyItemAccess() {
 			this(null, null);
@@ -1207,8 +1206,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItemCondition implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String type  = null;
-		private List<String> values = null;
+		private String type;
+		private List<String> values;
 
 		public RangerPolicyItemCondition() {
 			this(null, null);
@@ -1245,7 +1244,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setValues(List<String> values) {
 			if (this.values == null) {
-				this.values = new ArrayList<String>();
+				this.values = new ArrayList<>();
 			}
 
 			if(this.values == values) {
@@ -1327,9 +1326,9 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItemDataMaskInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String dataMaskType  = null;
-		private String conditionExpr = null;
-		private String valueExpr     = null;
+		private String dataMaskType;
+		private String conditionExpr;
+		private String valueExpr;
 
 		public RangerPolicyItemDataMaskInfo() { }
 
@@ -1432,7 +1431,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public static class RangerPolicyItemRowFilterInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private String filterExpr = null;
+		private String filterExpr;
 
 		public RangerPolicyItemRowFilterInfo() { }
 

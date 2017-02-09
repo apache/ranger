@@ -44,7 +44,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 public class AbstractPredicateUtil {
-	private static Map<String, Comparator<RangerBaseModelObject>> sorterMap  = new HashMap<String, Comparator<RangerBaseModelObject>>();
+	private static Map<String, Comparator<RangerBaseModelObject>> sorterMap  = new HashMap<>();
 
 	public void applyFilter(List<? extends RangerBaseModelObject> objList, SearchFilter filter) {
 		if(CollectionUtils.isEmpty(objList)) {
@@ -69,7 +69,7 @@ public class AbstractPredicateUtil {
 			return null;
 		}
 
-		List<Predicate> predicates = new ArrayList<Predicate>();
+		List<Predicate> predicates = new ArrayList<>();
 		
 		addPredicates(filter, predicates);
 

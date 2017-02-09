@@ -40,7 +40,7 @@ public class RangerHiveResourcesAccessedTogetherCondition extends RangerAbstract
 	private static final Log LOG = LogFactory.getLog(RangerHiveResourcesAccessedTogetherCondition.class);
 
 	private List<RangerPolicyResourceMatcher> matchers = new ArrayList<>();
-	private boolean isInitialized = false;
+	private boolean isInitialized;
 
 	@Override
 	public void init() {

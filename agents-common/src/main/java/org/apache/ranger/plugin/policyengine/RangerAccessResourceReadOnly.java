@@ -38,14 +38,14 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 		Set<String> sourceKeys = source.getKeys();
 
 		if (CollectionUtils.isEmpty(sourceKeys)) {
-			sourceKeys = new HashSet<String>();
+			sourceKeys = new HashSet<>();
 		}
 		this.keys = Collections.unmodifiableSet(sourceKeys);
 
 		Map<String, String> sourceMap = source.getAsMap();
 
 		if (MapUtils.isEmpty(sourceMap)) {
-			sourceMap = new HashMap<String, String>();
+			sourceMap = new HashMap<>();
 		}
 		this.map = Collections.unmodifiableMap(sourceMap);
 	}

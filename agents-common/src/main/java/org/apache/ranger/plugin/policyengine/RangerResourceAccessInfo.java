@@ -32,10 +32,10 @@ public class RangerResourceAccessInfo {
 
     public RangerResourceAccessInfo(RangerAccessRequest request) {
         this.request       = request;
-        this.allowedUsers  = new HashSet<String>();
-        this.allowedGroups = new HashSet<String>();
-        this.deniedUsers   = new HashSet<String>();
-        this.deniedGroups  = new HashSet<String>();
+        this.allowedUsers  = new HashSet<>();
+        this.allowedGroups = new HashSet<>();
+        this.deniedUsers   = new HashSet<>();
+        this.deniedGroups  = new HashSet<>();
     }
 
     public RangerResourceAccessInfo(RangerResourceAccessInfo other) {

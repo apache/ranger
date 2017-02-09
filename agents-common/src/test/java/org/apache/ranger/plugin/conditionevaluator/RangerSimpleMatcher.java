@@ -36,9 +36,9 @@ public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
 
 	public static final String CONTEXT_NAME = "CONTEXT_NAME";
 
-	private boolean _allowAny = false;
-	private String _contextName = null;
-	private List<String> _values = new ArrayList<String>();
+	private boolean _allowAny;
+	private String _contextName;
+	private List<String> _values = new ArrayList<>();
 	
 	@Override
 	public void init() {

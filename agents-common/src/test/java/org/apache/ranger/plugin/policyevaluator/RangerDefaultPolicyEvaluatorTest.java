@@ -87,14 +87,14 @@ public class RangerDefaultPolicyEvaluatorTest {
 	
 	// takes in a map of condition name to a an two element array where 1st element is evaluator-class-name and second is evaluator-options if any
 	List<RangerPolicyConditionDef> getMockPolicyConditionDefs(Map<String, String[]> pairs) {
-		List<RangerPolicyConditionDef> conditions = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		List<RangerPolicyConditionDef> conditions = new ArrayList<>();
 		// null policy condition def collection should behave sensibly
 		for (Map.Entry<String, String[]> anEntry : pairs.entrySet()) {
 			RangerPolicyConditionDef aCondition = mock(RangerPolicyConditionDef.class);
 			when(aCondition.getName()).thenReturn(anEntry.getKey());
 			when(aCondition.getEvaluator()).thenReturn(anEntry.getValue()[0]);
 
-			Map<String, String> evaluatorOptions = new HashMap<String, String>();
+			Map<String, String> evaluatorOptions = new HashMap<>();
 			evaluatorOptions.put(anEntry.getValue()[1], anEntry.getValue()[1]);
 
 			when(aCondition.getEvaluatorOptions()).thenReturn(evaluatorOptions);

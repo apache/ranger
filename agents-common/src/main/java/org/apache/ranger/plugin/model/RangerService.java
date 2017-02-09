@@ -41,16 +41,15 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerService extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String              type             = null;
-	private String              name             = null;
-	private String              description      = null;
-	private String              tagService       = null;
-	private Map<String, String> configs          = null;
-	private Long                policyVersion    = null;
-	private Date                policyUpdateTime = null;
-	private Long                tagVersion    = null;
-	private Date                tagUpdateTime = null;
-
+	private String              type;
+	private String              name;
+	private String              description;
+	private String              tagService;
+	private Map<String, String> configs;
+	private Long                policyVersion;
+	private Date                policyUpdateTime;
+	private Long                tagVersion;
+	private Date                tagUpdateTime;
 
 
 	/**
@@ -158,7 +157,7 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 */
 	public void setConfigs(Map<String, String> configs) {
 		if(this.configs == null) {
-			this.configs = new HashMap<String, String>();
+			this.configs = new HashMap<>();
 		}
 
 		if(this.configs == configs) {

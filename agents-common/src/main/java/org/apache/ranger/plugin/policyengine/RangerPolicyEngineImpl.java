@@ -62,8 +62,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private final Map<Long, RangerPolicyEvaluator> policyEvaluatorsMap;
 
-	private boolean  useForwardedIPAddress = false;
-	private String[] trustedProxyAddresses = null;
+	private boolean  useForwardedIPAddress;
+	private String[] trustedProxyAddresses;
 
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
@@ -137,7 +137,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		} else if (CollectionUtils.isEmpty(resourceContextEnrichers)) {
 			tmpList = tagContextEnrichers;
 		} else {
-			tmpList = new ArrayList<RangerContextEnricher>(tagContextEnrichers);
+			tmpList = new ArrayList<>(tagContextEnrichers);
 			tmpList.addAll(resourceContextEnrichers);
 		}
 
@@ -295,11 +295,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + requests + ")");
 		}
 
-		Collection<RangerAccessResult> ret = new ArrayList<RangerAccessResult>();
+		Collection<RangerAccessResult> ret = new ArrayList<>();
 
 		if (requests != null) {
 			for (RangerAccessRequest request : requests) {
-
 				RangerAccessResult result = isAccessAllowedNoAudit(request);
 
 				ret.add(result);
@@ -473,7 +472,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
 			if (evaluator.isCompleteMatch(resource, evalContext)) {
 				if(ret == null) {
-					ret = new ArrayList<RangerPolicy>();
+					ret = new ArrayList<>();
 				}
 
 				ret.add(evaluator.getPolicy());
@@ -498,7 +497,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
 			if (evaluator.isCompleteMatch(resources, evalContext)) {
 				if(ret == null) {
-					ret = new ArrayList<RangerPolicy>();
+					ret = new ArrayList<>();
 				}
 
 				ret.add(evaluator.getPolicy());
@@ -518,7 +517,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.getAllowedPolicies(" + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> ret = new ArrayList<>();
 
 		// TODO: run through evaluator in tagPolicyRepository as well
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
@@ -877,7 +876,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	private Map<Long, RangerPolicyEvaluator> createPolicyEvaluatorsMap() {
-		Map<Long, RangerPolicyEvaluator> tmpPolicyEvaluatorMap = new HashMap<Long, RangerPolicyEvaluator>();
+		Map<Long, RangerPolicyEvaluator> tmpPolicyEvaluatorMap = new HashMap<>();
 
 		if (tagPolicyRepository != null) {
 			for (RangerPolicyEvaluator evaluator : tagPolicyRepository.getPolicyEvaluators()) {

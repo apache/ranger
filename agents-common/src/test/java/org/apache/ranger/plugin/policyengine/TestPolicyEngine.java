@@ -57,9 +57,8 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 
-
 public class TestPolicyEngine {
-	static Gson gsonBuilder  = null;
+	static Gson gsonBuilder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

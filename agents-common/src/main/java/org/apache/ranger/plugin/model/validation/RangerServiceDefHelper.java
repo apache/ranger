@@ -41,10 +41,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import com.google.common.collect.Lists;
 
 public class RangerServiceDefHelper {
-
 	private static final Log LOG = LogFactory.getLog(RangerServiceDefHelper.class);
 	
-	static final Map<String, Delegate> _Cache = new ConcurrentHashMap<String, Delegate>();
+	static final Map<String, Delegate> _Cache = new ConcurrentHashMap<>();
 	final Delegate _delegate;
 
 	public RangerServiceDefHelper(RangerServiceDef serviceDef) {
@@ -147,8 +146,7 @@ public class RangerServiceDefHelper {
 	 * Not designed for public access.  Package level only for testability.
 	 */
 	static class Delegate {
-
-		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<Integer, Set<List<RangerResourceDef>>>();
+		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
 		final boolean _valid;
@@ -289,7 +287,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		Set<List<String>> getHierarchies(DirectedGraph graph) {
-			Set<List<String>> hierarchies = new HashSet<List<String>>();
+			Set<List<String>> hierarchies = new HashSet<>();
 			Set<String> sources = graph.getSources();
 			Set<String> sinks = graph.getSinks();
 			for (String source : sources) {
@@ -345,7 +343,7 @@ public class RangerServiceDefHelper {
 	 * Limited DAG implementation to analyze resource graph for a service. Not designed for public access.  Package level only for testability.
 	 */
 	static class DirectedGraph {
-		Map<String, Set<String>> _nodes = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> _nodes = new HashMap<>();
 
 		/**
 		 * Add a node to the graph
@@ -406,7 +404,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		Set<String> getSources() {
-			Set<String> sources = new HashSet<String>(_nodes.keySet());
+			Set<String> sources = new HashSet<>(_nodes.keySet());
 			for (Map.Entry<String, Set<String>> entry : _nodes.entrySet()) {
 				Set<String> nbrs = entry.getValue(); // can never be null
 				sources.removeAll(nbrs); // A source in a DAG can't be a neighbor of any other node
@@ -423,7 +421,7 @@ public class RangerServiceDefHelper {
 		 * @return
 		 */
 		Set<String> getSinks() {
-			Set<String> sinks = new HashSet<String>();
+			Set<String> sinks = new HashSet<>();
 			for (Map.Entry<String, Set<String>> entry : _nodes.entrySet()) {
 				Set<String> nbrs = entry.getValue();
 				if (nbrs.isEmpty()) { // A sink in a DAG doesn't have any neighbor

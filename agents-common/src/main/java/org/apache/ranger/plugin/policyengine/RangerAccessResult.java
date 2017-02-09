@@ -16,25 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.ranger.plugin.model.RangerServiceDef;
-
 
 public class RangerAccessResult {
 	private final String              serviceName;
 	private final RangerServiceDef    serviceDef;
 	private final RangerAccessRequest request;
 
-	private boolean isAccessDetermined = false;
-	private boolean  isAllowed = false;
-	private boolean isAuditedDetermined = false;
-	private boolean  isAudited = false;
+	private boolean isAccessDetermined;
+	private boolean  isAllowed;
+	private boolean isAuditedDetermined;
+	private boolean  isAudited;
 	private long     auditPolicyId  = -1;
 	private long     policyId  = -1;
-	private long     evaluatedPoliciesCount = 0;
-	private String   reason    = null;
+	private long     evaluatedPoliciesCount;
+	private String   reason;
 
 	public RangerAccessResult(final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;

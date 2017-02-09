@@ -48,18 +48,18 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public final static String OPTION_TOKEN_DELIMITER_ESCAPE = "tokenDelimiterEscape";
 	public final static String OPTION_TOKEN_DELIMITER_PREFIX = "tokenDelimiterPrefix";
 
-	protected RangerResourceDef    resourceDef    = null;
-	protected RangerPolicyResource policyResource = null;
+	protected RangerResourceDef    resourceDef;
+	protected RangerPolicyResource policyResource;
 
-	protected boolean      optIgnoreCase = false;
-	protected boolean      optWildCard   = false;
+	protected boolean      optIgnoreCase;
+	protected boolean      optWildCard;
 
-	protected List<String> policyValues = null;
-	protected boolean policyIsExcludes = false;
-	protected boolean isMatchAny = false;
-	protected ResourceMatcherWrapper resourceMatchers = null;
+	protected List<String> policyValues;
+	protected boolean policyIsExcludes;
+	protected boolean isMatchAny;
+	protected ResourceMatcherWrapper resourceMatchers;
 
-	protected boolean optReplaceTokens   = false;
+	protected boolean optReplaceTokens;
 	protected char    startDelimiterChar = '{';
 	protected char    endDelimiterChar   = '}';
 	protected char    escapeChar         = '\\';
@@ -167,7 +167,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return ServiceDefUtil.getOption(options, OPTION_TOKEN_DELIMITER_PREFIX, "");
 	}
 	protected ResourceMatcherWrapper buildResourceMatchers() {
-		List<ResourceMatcher> resourceMatchers = new ArrayList<ResourceMatcher>();
+		List<ResourceMatcher> resourceMatchers = new ArrayList<>();
 		boolean needsDynamicEval = false;
 
 		for (String policyValue : policyValues) {

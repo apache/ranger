@@ -33,12 +33,12 @@ public class KeySearchFilter {
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
 	
-	private Map<String, String> params     = null;
-	private int                 startIndex = 0;
+	private Map<String, String> params;
+	private int                 startIndex;
 	private int                 maxRows    = Integer.MAX_VALUE;
 	private boolean             getCount   = true;
-	private String              sortBy     = null;
-	private String              sortType   = null;
+	private String              sortBy;
+	private String              sortType;
 	
 	public KeySearchFilter() {
 		this(null);
@@ -70,7 +70,7 @@ public class KeySearchFilter {
 		}
 
 		if(params == null) {
-			params = new HashMap<String, String>();
+			params = new HashMap<>();
 		}
 
 		params.put(name, value);

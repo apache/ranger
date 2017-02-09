@@ -43,8 +43,8 @@ import java.util.List;
 public class RangerTagDef extends RangerBaseModelObject {
     private static final long serialVersionUID = 1L;
 
-    private String name = null;
-    private String source = null;
+    private String name;
+    private String source;
 
     private List<RangerTagAttributeDef> attributeDefs;
 
@@ -104,8 +104,8 @@ public class RangerTagDef extends RangerBaseModelObject {
     public static class RangerTagAttributeDef implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String name = null;
-        private String type = null;
+        private String name;
+        private String type;
 
         public RangerTagAttributeDef() {
             this(null, null);

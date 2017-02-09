@@ -40,7 +40,7 @@ import java.util.Map;
 @XmlAccessorType(XmlAccessType.FIELD)
 
 public class RangerRequestedResources {
-	private List<RangerAccessResource> requestedResources = new ArrayList<RangerAccessResource>();
+	private List<RangerAccessResource> requestedResources = new ArrayList<>();
 
 	public RangerRequestedResources() {
 	}

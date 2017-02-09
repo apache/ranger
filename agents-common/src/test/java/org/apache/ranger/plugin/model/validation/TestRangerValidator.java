@@ -73,7 +73,7 @@ public class TestRangerValidator {
 	public void before() {
 		_store = mock(ServiceStore.class);
 		_validator = new RangerValidatorForTest(_store);
-		_failures = new ArrayList<ValidationFailureDetails>();
+		_failures = new ArrayList<>();
 	}
 
 	@Test
@@ -140,7 +140,7 @@ public class TestRangerValidator {
 		Assert.assertNotNull(parameters);
 		Assert.assertTrue(parameters.isEmpty());
 
-		List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+		List<RangerServiceConfigDef> configs = new ArrayList<>();
 		when(serviceDef.getConfigs()).thenReturn(configs);
 		parameters = _validator.getRequiredParameters(null);
 		Assert.assertNotNull(parameters);
@@ -203,7 +203,7 @@ public class TestRangerValidator {
 
 		// what ever store returns should come back
 		hexSignature = "anotherSignature";
-		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> policies = new ArrayList<>();
 		RangerPolicy policy1 = mock(RangerPolicy.class);
 		policies.add(policy1);
 		RangerPolicy policy2 = mock(RangerPolicy.class);
@@ -255,7 +255,7 @@ public class TestRangerValidator {
 		accessTypes = _validator.getAccessTypes(serviceDef);
 		Assert.assertTrue(accessTypes.isEmpty());
 
-		List<RangerAccessTypeDef> accessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerAccessTypeDef> accessTypeDefs = new ArrayList<>();
 		when(serviceDef.getAccessTypes()).thenReturn(accessTypeDefs);
 		accessTypes = _validator.getAccessTypes(serviceDef);
 		Assert.assertTrue(accessTypes.isEmpty());
@@ -287,7 +287,7 @@ public class TestRangerValidator {
 		accessTypes = _validator.getMandatoryResourceNames(serviceDef);
 		Assert.assertTrue(accessTypes.isEmpty());
 
-		List<RangerResourceDef> resourceDefs = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> resourceDefs = new ArrayList<>();
 		when(serviceDef.getResources()).thenReturn(resourceDefs);
 		accessTypes = _validator.getMandatoryResourceNames(serviceDef);
 		Assert.assertTrue(accessTypes.isEmpty());
@@ -332,7 +332,7 @@ public class TestRangerValidator {
 		regExMap = _validator.getValidationRegExes(serviceDef);
 		Assert.assertTrue(regExMap.isEmpty());
 
-		List<RangerResourceDef> resourceDefs = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> resourceDefs = new ArrayList<>();
 		when(serviceDef.getResources()).thenReturn(resourceDefs);
 		regExMap = _validator.getValidationRegExes(serviceDef);
 		Assert.assertTrue(regExMap.isEmpty());
@@ -436,7 +436,7 @@ public class TestRangerValidator {
 		filter = new SearchFilter();
 		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
 
-		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> policies = new ArrayList<>();
 		RangerPolicy policy = mock(RangerPolicy.class);
 		policies.add(policy);
 		
@@ -483,7 +483,7 @@ public class TestRangerValidator {
 		result = _validator.getImpliedGrants(accessTypeDef);
 		Assert.assertTrue(result.isEmpty());
 		
-		List<String> impliedGrants = new ArrayList<String>();
+		List<String> impliedGrants = new ArrayList<>();
 		when(accessTypeDef.getImpliedGrants()).thenReturn(impliedGrants);
 		result = _validator.getImpliedGrants(accessTypeDef);
 		Assert.assertTrue(result.isEmpty());
@@ -509,7 +509,7 @@ public class TestRangerValidator {
 	public void test_isValid_string() {
 		String fieldName = "value-field-Name";
 		String collectionName = "value-collection-Name";
-		Set<String> alreadySeen = new HashSet<String>();
+		Set<String> alreadySeen = new HashSet<>();
 		// null/empty string value is invalid
 		for (String value : new String[] { null, "", "  " }) {
 			Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
@@ -535,7 +535,7 @@ public class TestRangerValidator {
 	public void test_isValid_long() {
 		String fieldName = "field-Name";
 		String collectionName = "field-collection-Name";
-		Set<Long> alreadySeen = new HashSet<Long>();
+		Set<Long> alreadySeen = new HashSet<>();
 		Long value = null;
 		// null value is invalid
 		Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));
@@ -556,7 +556,7 @@ public class TestRangerValidator {
 	public void test_isValid_integer() {
 		String fieldName = "field-Name";
 		String collectionName = "field-collection-Name";
-		Set<Integer> alreadySeen = new HashSet<Integer>();
+		Set<Integer> alreadySeen = new HashSet<>();
 		Integer value = null;
 		// null value is invalid
 		Assert.assertFalse(_validator.isUnique(value, alreadySeen, fieldName, collectionName, _failures));

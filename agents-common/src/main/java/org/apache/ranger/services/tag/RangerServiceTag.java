@@ -39,8 +39,7 @@ public class RangerServiceTag extends RangerBaseService {
 
 	public static final String TAG_RESOURCE_NAME = "tag";
 
-	private TagStore tagStore = null;
-
+	private TagStore tagStore;
 
 	public RangerServiceTag() {
 		super();
@@ -61,7 +60,7 @@ public class RangerServiceTag extends RangerBaseService {
 			LOG.debug("==> RangerServiceTag.validateConfig(" + serviceName + " )");
 		}
 
-		HashMap<String, Object> ret = new HashMap<String, Object>();
+		HashMap<String, Object> ret = new HashMap<>();
 
 		ret.put("connectivityStatus", true);
 
@@ -78,7 +77,7 @@ public class RangerServiceTag extends RangerBaseService {
 			LOG.debug("==> RangerServiceTag.lookupResource(" + context + ")");
 		}
 
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = new ArrayList<>();
 
 		if (context != null && StringUtils.equals(context.getResourceName(), TAG_RESOURCE_NAME)) {
 			try {

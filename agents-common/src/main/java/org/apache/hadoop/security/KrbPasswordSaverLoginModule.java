@@ -27,12 +27,11 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
 public class KrbPasswordSaverLoginModule implements LoginModule {
-	
     public static final String USERNAME_PARAM = "javax.security.auth.login.name";
     public static final String PASSWORD_PARAM = "javax.security.auth.login.password";
 
 	@SuppressWarnings("rawtypes")
-	private Map sharedState = null;
+	private Map sharedState;
 	
 	public KrbPasswordSaverLoginModule() {
 	}

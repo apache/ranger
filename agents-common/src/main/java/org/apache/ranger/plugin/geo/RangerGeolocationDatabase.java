@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 public class RangerGeolocationDatabase {
 	private static final Log LOG = LogFactory.getLog(RangerGeolocationDatabase.class);
 
-	private BinarySearchTree<RangerGeolocationData, Long> data = new BinarySearchTree<RangerGeolocationData, Long>();
+	private BinarySearchTree<RangerGeolocationData, Long> data = new BinarySearchTree<>();
 
 	private GeolocationMetadata metadata = new GeolocationMetadata();
 

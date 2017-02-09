@@ -232,5 +232,5 @@ public class TestRangerServiceValidator {
 	private RangerServiceValidator _validator;
 	private Action _action;
 	private ValidationTestUtils _utils = new ValidationTestUtils();
-	private List<ValidationFailureDetails> _failures = new ArrayList<ValidationFailureDetails>();
+	private List<ValidationFailureDetails> _failures = new ArrayList<>();
 }

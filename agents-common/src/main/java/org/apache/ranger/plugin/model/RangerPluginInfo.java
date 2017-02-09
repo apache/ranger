@@ -59,9 +59,9 @@ public class RangerPluginInfo implements Serializable {
 	public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME     = "lastTagUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_TAG_VERSION       = "latestTagVersion";
 
-	private Long    id         = null;
-	private Date    createTime = null;
-	private Date    updateTime = null;
+	private Long    id;
+	private Date    createTime;
+	private Date    updateTime;
 
 	private String serviceName;
 	private String hostName;

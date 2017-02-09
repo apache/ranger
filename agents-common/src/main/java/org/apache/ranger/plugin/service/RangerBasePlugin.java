@@ -54,15 +54,15 @@ public class RangerBasePlugin {
 
 	public static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
 
-	private String                    serviceType  = null;
-	private String                    appId        = null;
-	private String                    serviceName  = null;
-	private PolicyRefresher           refresher    = null;
-	private RangerPolicyEngine        policyEngine = null;
+	private String                    serviceType;
+	private String                    appId;
+	private String                    serviceName;
+	private PolicyRefresher           refresher;
+	private RangerPolicyEngine        policyEngine;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-	private RangerAccessResultProcessor resultProcessor = null;
-	private boolean                   useForwardedIPAddress = false;
-	private String[]                  trustedProxyAddresses = null;
+	private RangerAccessResultProcessor resultProcessor;
+	private boolean                   useForwardedIPAddress;
+	private String[]                  trustedProxyAddresses;
 	private Timer                     policyEngineRefreshTimer;
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
@@ -438,8 +438,8 @@ public class RangerBasePlugin {
 	}
 
 	static class LogHistory {
-		long lastLogTime = 0;
-		int counter=0;
+		long lastLogTime;
+		int counter;
 	}
 
 	static private final class PolicyEngineRefresher extends TimerTask {

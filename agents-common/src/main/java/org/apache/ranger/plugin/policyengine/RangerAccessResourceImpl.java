@@ -29,15 +29,13 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
-
 public class RangerAccessResourceImpl implements RangerMutableResource {
-	private String              ownerUser        = null;
-	private Map<String, String> elements         = null;
-	private String              stringifiedValue = null;
-	private String              stringifiedCacheKeyValue = null;
-	private String              leafName         = null;
-	private RangerServiceDef    serviceDef       = null;
-
+	private String              ownerUser;
+	private Map<String, String> elements;
+	private String              stringifiedValue;
+	private String              stringifiedCacheKeyValue;
+	private String              leafName;
+	private RangerServiceDef    serviceDef;
 
 	public RangerAccessResourceImpl() {
 		this(null, null);
@@ -101,7 +99,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 			}
 		} else {
 			if(elements == null) {
-				elements = new HashMap<String, String>();
+				elements = new HashMap<>();
 			}
 			elements.put(name, value);
 		}

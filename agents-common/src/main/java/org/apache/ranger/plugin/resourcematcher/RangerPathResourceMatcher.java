@@ -40,7 +40,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	private static final String OPTION_PATH_SEPARATOR       = "pathSeparatorChar";
 	private static final char   DEFAULT_PATH_SEPARATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;
 
-	private boolean policyIsRecursive    = false;
+	private boolean policyIsRecursive;
 	private char    pathSeparatorChar = '/';
 
 	@Override
@@ -64,7 +64,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	@Override
 
 	protected ResourceMatcherWrapper buildResourceMatchers() {
-		List<ResourceMatcher> resourceMatchers = new ArrayList<ResourceMatcher>();
+		List<ResourceMatcher> resourceMatchers = new ArrayList<>();
 		boolean needsDynamicEval = false;
 
 		for (String policyValue : policyValues) {
@@ -218,8 +218,8 @@ final class CaseInsensitiveRecursiveWildcardMatcher extends ResourceMatcher {
 
 abstract class RecursiveMatcher extends ResourceMatcher {
 	final char levelSeparatorChar;
-	String valueWithoutSeparator = null;
-	String valueWithSeparator = null;
+	String valueWithoutSeparator;
+	String valueWithSeparator;
 
 	RecursiveMatcher(String value, char levelSeparatorChar) {
 		super(value);

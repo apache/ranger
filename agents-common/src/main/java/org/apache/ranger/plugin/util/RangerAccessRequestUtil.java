@@ -115,9 +115,9 @@ public class RangerAccessRequestUtil {
 		final Map<String, Object> ret;
 
 		if(MapUtils.isEmpty(context)) {
-			ret = new HashMap<String, Object>();
+			ret = new HashMap<>();
 		} else {
-			ret = new HashMap<String, Object>(context);
+			ret = new HashMap<>(context);
 
 			ret.remove(KEY_CONTEXT_TAGS);
 			ret.remove(KEY_CONTEXT_TAG_OBJECT);

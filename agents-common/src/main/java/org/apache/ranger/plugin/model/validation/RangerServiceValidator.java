@@ -47,7 +47,7 @@ public class RangerServiceValidator extends RangerValidator {
 			LOG.debug(String.format("==> RangerServiceValidator.validate(%s, %s)", service, action));
 		}
 
-		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		List<ValidationFailureDetails> failures = new ArrayList<>();
 		boolean valid = isValid(service, action, failures);
 		String message = "";
 		try {

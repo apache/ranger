@@ -22,10 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
-
 public class RangerRowFilterResult extends RangerAccessResult {
-	private String filterExpr = null;
-
+	private String filterExpr;
 
 	public RangerRowFilterResult(final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this(serviceName, serviceDef, request, null);

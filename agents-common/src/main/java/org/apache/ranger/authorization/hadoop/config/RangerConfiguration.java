@@ -30,10 +30,9 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 
 public class RangerConfiguration extends Configuration {
-	
 	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
 	
-	private static volatile RangerConfiguration config = null;
+	private static volatile RangerConfiguration config;
 	
 	private RangerConfiguration() {
 		super(false);

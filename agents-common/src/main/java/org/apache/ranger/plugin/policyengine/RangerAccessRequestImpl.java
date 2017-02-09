@@ -34,22 +34,22 @@ import org.apache.log4j.Logger;
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private static final Logger LOG = Logger.getLogger(RangerAccessRequestImpl.class);
 
-	private RangerAccessResource resource        = null;
-	private String               accessType      = null;
-	private String               user            = null;
-	private Set<String>          userGroups      = null;
-	private Date                 accessTime      = null;
-	private String               clientIPAddress = null;
-	private List<String>         forwardedAddresses = null;
-	private String               remoteIPAddress = null;
-	private String               clientType      = null;
-	private String               action          = null;
-	private String               requestData     = null;
-	private String               sessionId       = null;
-	private Map<String, Object>  context         = null;
+	private RangerAccessResource resource;
+	private String               accessType;
+	private String               user;
+	private Set<String>          userGroups;
+	private Date                 accessTime;
+	private String               clientIPAddress;
+	private List<String>         forwardedAddresses;
+	private String               remoteIPAddress;
+	private String               clientType;
+	private String               action;
+	private String               requestData;
+	private String               sessionId;
+	private Map<String, Object>  context;
 
-	private boolean isAccessTypeAny            = false;
-	private boolean isAccessTypeDelegatedAdmin = false;
+	private boolean isAccessTypeAny;
+	private boolean isAccessTypeDelegatedAdmin;
 	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
 
 	public RangerAccessRequestImpl() {

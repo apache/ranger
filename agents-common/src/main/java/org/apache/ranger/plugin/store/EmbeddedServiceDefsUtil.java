@@ -81,25 +81,24 @@ public class EmbeddedServiceDefsUtil {
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
 	private boolean          createEmbeddedServiceDefs = true;
-	private RangerServiceDef hdfsServiceDef  = null;
-	private RangerServiceDef hBaseServiceDef = null;
-	private RangerServiceDef hiveServiceDef  = null;
-	private RangerServiceDef kmsServiceDef   = null;
-	private RangerServiceDef knoxServiceDef  = null;
-	private RangerServiceDef stormServiceDef = null;
-	private RangerServiceDef yarnServiceDef  = null;
-	private RangerServiceDef kafkaServiceDef = null;
-	private RangerServiceDef solrServiceDef  = null;
-	private RangerServiceDef nifiServiceDef  = null;
-	private RangerServiceDef atlasServiceDef  = null;
-	private RangerServiceDef wasbServiceDef	 = null;
+	private RangerServiceDef hdfsServiceDef;
+	private RangerServiceDef hBaseServiceDef;
+	private RangerServiceDef hiveServiceDef;
+	private RangerServiceDef kmsServiceDef;
+	private RangerServiceDef knoxServiceDef;
+	private RangerServiceDef stormServiceDef;
+	private RangerServiceDef yarnServiceDef;
+	private RangerServiceDef kafkaServiceDef;
+	private RangerServiceDef solrServiceDef;
+	private RangerServiceDef nifiServiceDef;
+	private RangerServiceDef atlasServiceDef;
+	private RangerServiceDef wasbServiceDef;
 
-	private RangerServiceDef tagServiceDef = null;
+	private RangerServiceDef tagServiceDef;
 
-	private Gson gsonBuilder = null;
+	private Gson gsonBuilder;
 
-
-	/* private constructor to restrict instantiation of this singleton utility class */
+	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
 	}
 
@@ -264,7 +263,7 @@ public class EmbeddedServiceDefsUtil {
 	}
 
 	private Set<String> getSupportedServiceDef(){
-		Set<String> supportedServiceDef =new HashSet<String>();
+		Set<String> supportedServiceDef =new HashSet<>();
 		try{
 			String ranger_supportedcomponents=RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
 			if(StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)){

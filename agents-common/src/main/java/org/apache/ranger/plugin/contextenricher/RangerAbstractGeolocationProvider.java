@@ -36,7 +36,7 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 	public static final String ENRICHER_OPTION_GEOLOCATION_META_PREFIX = "geolocation.meta.prefix";
 
 	public static final String KEY_CONTEXT_GEOLOCATION_PREFIX = "LOCATION_";
-	private GeolocationStore store = null;
+	private GeolocationStore store;
 	private String geoMetaPrefix;
 
 	abstract public String getGeoSourceLoader();

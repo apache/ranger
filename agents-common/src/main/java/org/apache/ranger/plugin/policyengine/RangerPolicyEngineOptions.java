@@ -16,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
-
 public class RangerPolicyEngineOptions {
 	public String  evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO;
 	public boolean cacheAuditResults       = true;
-	public boolean disableContextEnrichers = false;
-	public boolean disableCustomConditions = false;
+	public boolean disableContextEnrichers;
+	public boolean disableCustomConditions;
 	public boolean disableTagPolicyEvaluation = true;
-	public boolean evaluateDelegateAdminOnly = false;
-	public boolean disableTrieLookupPrefilter = false;
+	public boolean evaluateDelegateAdminOnly;
+	public boolean disableTrieLookupPrefilter;
 }

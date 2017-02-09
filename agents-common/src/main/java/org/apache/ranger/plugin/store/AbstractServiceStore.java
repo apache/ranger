@@ -173,9 +173,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			return;
 		}
 
-		List<RangerServiceDef.RangerAccessTypeDef> toAdd    = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
-		List<RangerServiceDef.RangerAccessTypeDef> toUpdate = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
-		List<RangerServiceDef.RangerAccessTypeDef> toDelete = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> toAdd    = new ArrayList<>();
+		List<RangerServiceDef.RangerAccessTypeDef> toUpdate = new ArrayList<>();
+		List<RangerServiceDef.RangerAccessTypeDef> toDelete = new ArrayList<>();
 
 		List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = serviceDef.getAccessTypes();
 		List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes = tagServiceDef.getAccessTypes();
@@ -294,7 +294,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			return;
 		}
 
-		List<RangerServiceDef.RangerAccessTypeDef> accessTypes = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> accessTypes = new ArrayList<>();
 
 		for (RangerServiceDef.RangerAccessTypeDef accessType : tagServiceDef.getAccessTypes()) {
 			if (accessType.getName().startsWith(serviceDefName + COMPONENT_ACCESSTYPE_SEPARATOR)) {

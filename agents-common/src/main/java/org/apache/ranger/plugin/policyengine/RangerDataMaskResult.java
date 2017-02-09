@@ -24,12 +24,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
-
 public class RangerDataMaskResult extends RangerAccessResult {
-	private String maskType      = null;
-	private String maskCondition = null;
-	private String maskedValue   = null;
-
+	private String maskType;
+	private String maskCondition;
+	private String maskedValue;
 
 	public RangerDataMaskResult(final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this(serviceName, serviceDef, request, null);

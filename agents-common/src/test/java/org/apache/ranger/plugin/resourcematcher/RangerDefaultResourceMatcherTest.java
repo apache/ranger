@@ -54,7 +54,7 @@ public class RangerDefaultResourceMatcherTest {
             boolean result = (boolean)row[3];
             String user = (String) row[4];
 
-            Map<String, Object> evalContext = new HashMap<String, Object>();
+            Map<String, Object> evalContext = new HashMap<>();
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, excludes);

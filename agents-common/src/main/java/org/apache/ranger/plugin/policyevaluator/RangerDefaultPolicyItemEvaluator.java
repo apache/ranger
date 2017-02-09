@@ -51,9 +51,9 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	private static final Log PERF_POLICYCONDITION_INIT_LOG = RangerPerfTracer.getPerfLogger("policycondition.init");
 	private static final Log PERF_POLICYCONDITION_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policycondition.request");
 
-	private boolean hasCurrentUser = false;
-	private boolean hasResourceOwner = false;
-	private boolean hasAllPerms = false;
+	private boolean hasCurrentUser;
+	private boolean hasResourceOwner;
+	private boolean hasAllPerms;
 
 	public RangerDefaultPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerPolicyItem policyItem, int policyItemType, int policyItemIndex, RangerPolicyEngineOptions options) {
 		super(serviceDef, policy, policyItem, policyItemType, policyItemIndex, options);
@@ -85,7 +85,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		}
 
 		if (!getConditionsDisabledOption() && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
-			conditionEvaluators = new ArrayList<RangerConditionEvaluator>();
+			conditionEvaluators = new ArrayList<>();
 
 			RangerPerfTracer perf = null;
 

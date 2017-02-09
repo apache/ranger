@@ -47,10 +47,9 @@ public class GrantRevokeData implements java.io.Serializable {
 	private String        tables;
 	private String        columns;
 	private String        columnFamilies;
-	private List<PermMap> permMapList = new ArrayList<PermMap>();
+	private List<PermMap> permMapList = new ArrayList<>();
 	
 	private static String WILDCARD_ASTERISK = "*";
-
 
 	public GrantRevokeData() {
 	}
@@ -171,14 +170,13 @@ public class GrantRevokeData implements java.io.Serializable {
 		return toJson();
 	}
 
-
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class PermMap {
-		private List<String> userList  = new ArrayList<String>();
-		private List<String> groupList = new ArrayList<String>();
-		private List<String> permList  = new ArrayList<String>();
+		private List<String> userList  = new ArrayList<>();
+		private List<String> groupList = new ArrayList<>();
+		private List<String> permList  = new ArrayList<>();
 
 		public PermMap() {
 		}

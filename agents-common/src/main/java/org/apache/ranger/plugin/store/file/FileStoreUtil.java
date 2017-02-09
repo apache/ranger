@@ -45,8 +45,8 @@ import com.google.gson.GsonBuilder;
 public class FileStoreUtil {
 	private static final Log LOG = LogFactory.getLog(FileStoreUtil.class);
 
-	private Gson   gsonBuilder = null;
-	private String dataDir     = null;
+	private Gson   gsonBuilder;
+	private String dataDir;
 
 	private static final String FILE_SUFFIX_JSON        = ".json";
 
@@ -137,7 +137,7 @@ public class FileStoreUtil {
 			LOG.debug("==> FileStoreUtil.loadFromDir()");
 		}
 
-		List<T> ret = new ArrayList<T>();
+		List<T> ret = new ArrayList<>();
 
 		try {
 			FileSystem fileSystem = getFileSystem(dirPath);

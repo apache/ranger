@@ -38,18 +38,15 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private Long    id         = null;
-	private String  guid       = null;
-	private Boolean isEnabled  = null;
-	private String  createdBy  = null;
-	private String  updatedBy  = null;
-	private Date    createTime = null;
-	private Date    updateTime = null;
-	private Long    version    = null;
+	private Long    id;
+	private String  guid;
+	private Boolean isEnabled;
+	private String  createdBy;
+	private String  updatedBy;
+	private Date    createTime;
+	private Date    updateTime;
+	private Long    version;
 
-	/**
-	 *
-	 */
 	public RangerBaseModelObject() {
 		setIsEnabled(null);
 	}

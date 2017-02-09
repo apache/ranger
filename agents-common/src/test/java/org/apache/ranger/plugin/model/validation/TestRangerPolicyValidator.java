@@ -248,7 +248,7 @@ public class TestRangerPolicyValidator {
 		SearchFilter updateFilter = new SearchFilter();
 		updateFilter.setParam(SearchFilter.SERVICE_TYPE, "service-type");
 		updateFilter.setParam(SearchFilter.POLICY_NAME, "policy-name-2"); // this name would be used for update
-		List<RangerPolicy> existingPolicies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> existingPolicies = new ArrayList<>();
 		existingPolicies.add(existingPolicy);
 		when(_store.getPolicies(updateFilter)).thenReturn(existingPolicies);
 		// valid policy can have empty set of policy items if audit is turned on
@@ -378,7 +378,7 @@ public class TestRangerPolicyValidator {
 
 		RangerPolicy existingPolicy = mock(RangerPolicy.class);
 		when(existingPolicy.getId()).thenReturn(7L);
-		List<RangerPolicy> existingPolicies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> existingPolicies = new ArrayList<>();
 		existingPolicies.add(existingPolicy);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.SERVICE_NAME, "service-name");
@@ -449,7 +449,7 @@ public class TestRangerPolicyValidator {
 		}
 		
 		// policy must contain at least one policy item
-		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
+		List<RangerPolicyItem> policyItems = new ArrayList<>();
 		when(_policy.getService()).thenReturn("service-name");
 		RangerService service = mock(RangerService.class);
 		when(_store.getServiceByName("service-name")).thenReturn(service);
@@ -551,7 +551,7 @@ public class TestRangerPolicyValidator {
 		Assert.assertTrue(_validator.isValidPolicyItems(null, _failures, _serviceDef));
 		_failures.isEmpty();
 
-		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
+		List<RangerPolicyItem> policyItems = new ArrayList<>();
 		Assert.assertTrue(_validator.isValidPolicyItems(policyItems, _failures, _serviceDef));
 		_failures.isEmpty();
 		
@@ -563,14 +563,13 @@ public class TestRangerPolicyValidator {
 	
 	@Test
 	public void test_isValidPolicyItem_failures() {
-
 		// empty access collections are invalid
 		RangerPolicyItem policyItem = mock(RangerPolicyItem.class);
 		when(policyItem.getAccesses()).thenReturn(null);
 		_failures.clear(); Assert.assertFalse(_validator.isValidPolicyItem(policyItem, _failures, _serviceDef));
 		_utils.checkFailureForMissingValue(_failures, "policy item accesses");
 
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+		List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 		when(policyItem.getAccesses()).thenReturn(accesses);
 		_failures.clear(); Assert.assertFalse(_validator.isValidPolicyItem(policyItem, _failures, _serviceDef));
 		_utils.checkFailureForMissingValue(_failures, "policy item accesses");
@@ -613,9 +612,8 @@ public class TestRangerPolicyValidator {
 	
 	@Test
 	public void test_isValidItemAccesses_failure() {
-
 		// null policy item access values are an error
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+		List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 		accesses.add(null);
 		_failures.clear(); Assert.assertFalse(_validator.isValidItemAccesses(accesses, _failures, _serviceDef));
 		_utils.checkFailureForMissingValue(_failures, "policy item access");
@@ -733,7 +731,7 @@ public class TestRangerPolicyValidator {
 		when(_policy.getService()).thenReturn("service-name");
 		List<RangerPolicy> policies = null;
 		when(_store.getPoliciesByResourceSignature("service-name", hash, true)).thenReturn(policies);
-		policies = new ArrayList<RangerPolicy>();
+		policies = new ArrayList<>();
 		for (Action action : cu) {
 			Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));
 			Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, action));

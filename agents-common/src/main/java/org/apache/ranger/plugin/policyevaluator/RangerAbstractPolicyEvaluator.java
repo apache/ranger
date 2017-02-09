@@ -36,11 +36,11 @@ import java.util.Map;
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
 
-	private RangerPolicy     policy            = null;
-	private RangerServiceDef serviceDef        = null;
-	private Integer          leafResourceLevel = null;
-	private int              evalOrder         = 0;
-	protected long           usageCount        = 0;
+	private RangerPolicy     policy;
+	private RangerServiceDef serviceDef;
+	private Integer          leafResourceLevel;
+	private int              evalOrder;
+	protected long           usageCount;
 	protected boolean        usageCountMutable = true;
 
 

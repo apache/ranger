@@ -42,8 +42,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class TestPolicyDb {
-	static Gson gsonBuilder  = null;
-
+	static Gson gsonBuilder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -95,7 +94,7 @@ public class TestPolicyDb {
 
 				assertEquals("allowed-policy count mismatch!", test.allowedPolicies.size(), allowedPolicies.size());
 				
-				Set<Long> allowedPolicyIds = new HashSet<Long>();
+				Set<Long> allowedPolicyIds = new HashSet<>();
 				for(RangerPolicy allowedPolicy : allowedPolicies) {
 					allowedPolicyIds.add(allowedPolicy.getId());
 				}

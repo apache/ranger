@@ -47,7 +47,7 @@ public class TestRangerServiceDefValidator {
 	public void setUp() throws Exception {
 		_store = mock(ServiceStore.class);
 		_validator = new RangerServiceDefValidator(_store);
-		_failures = new ArrayList<ValidationFailureDetails>();
+		_failures = new ArrayList<>();
 		_serviceDef = mock(RangerServiceDef.class);
 	}
 
@@ -223,7 +223,7 @@ public class TestRangerServiceDefValidator {
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForMissingValue(_failures, "access types");
 		
-		accessTypeDefs = new ArrayList<RangerAccessTypeDef>();
+		accessTypeDefs = new ArrayList<>();
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForMissingValue(_failures, "access types");
 
@@ -399,7 +399,7 @@ public class TestRangerServiceDefValidator {
 		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
 		_utils.checkFailureForMissingValue(_failures, "resources");
 		
-		List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> resources = new ArrayList<>();
 		when(_serviceDef.getResources()).thenReturn(resources);
 		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
 		_utils.checkFailureForMissingValue(_failures, "resources");
@@ -493,7 +493,7 @@ public class TestRangerServiceDefValidator {
 		// null/empty policy conditions are ok
 		assertTrue(_validator.isValidPolicyConditions(null, _failures));
 		assertTrue(_failures.isEmpty());
-		List<RangerPolicyConditionDef> conditionDefs = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		List<RangerPolicyConditionDef> conditionDefs = new ArrayList<>();
 		assertTrue(_validator.isValidPolicyConditions(conditionDefs, _failures));
 		assertTrue(_failures.isEmpty());
 		

@@ -161,9 +161,8 @@ public class SecureClientLogin {
 }
 
 class SecureClientLoginConfiguration extends javax.security.auth.login.Configuration {
-
-	private Map<String, String> kerberosOptions = new HashMap<String, String>();
-	private boolean usePassword = false;
+	private Map<String, String> kerberosOptions = new HashMap<>();
+	private boolean usePassword;
 
 	public SecureClientLoginConfiguration(boolean useKeyTab, String principal, String credential) {
 		kerberosOptions.put("principal", principal);

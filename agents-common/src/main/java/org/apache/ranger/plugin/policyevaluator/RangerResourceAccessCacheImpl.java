@@ -37,8 +37,8 @@ public class RangerResourceAccessCacheImpl implements RangerResourceAccessCache 
         return new RangerResourceAccessCacheImpl(policy);
     }
 
-    private Map<String, String> matchedResourceCache    = null;
-    private Map<String, String> notMatchedResourceCache = null;
+    private Map<String, String> matchedResourceCache;
+    private Map<String, String> notMatchedResourceCache;
 
     private RangerResourceAccessCacheImpl(RangerPolicy policy) {
         if(LOG.isDebugEnabled()) {

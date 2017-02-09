@@ -225,23 +225,23 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     }
 
     public class TrieData {
-        int nodeCount                     = 0;
-        int leafNodeCount                 = 0;
-        int singleChildNodeCount          = 0;
-        int maxDepth                      = 0;
-        int evaluatorListCount            = 0;
-        int wildcardEvaluatorListCount    = 0;
-        int evaluatorListRefCount         = 0;
-        int wildcardEvaluatorListRefCount = 0;
+        int nodeCount;
+        int leafNodeCount;
+        int singleChildNodeCount;
+        int maxDepth;
+        int evaluatorListCount;
+        int wildcardEvaluatorListCount;
+        int evaluatorListRefCount;
+        int wildcardEvaluatorListRefCount;
     }
 }
 
 class TrieNode<T extends RangerPolicyResourceEvaluator> {
     private final Character          c;
-    private Map<Character, TrieNode> children           = null;
-    private List<T>                  evaluators         = null;
-    private List<T>                  wildcardEvaluators = null;
-    private boolean   isSharingParentWildcardEvaluators = false;
+    private Map<Character, TrieNode> children;
+    private List<T>                  evaluators;
+    private List<T>                  wildcardEvaluators;
+    private boolean   isSharingParentWildcardEvaluators;
 
     TrieNode(Character c) {
         this.c = c;
@@ -323,7 +323,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
 
     TrieNode getOrCreateChild(Character c) {
         if(children == null) {
-            children = new HashMap<Character, TrieNode>();
+            children = new HashMap<>();
         }
 
         TrieNode child = children.get(c);
@@ -338,7 +338,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
 
     void addEvaluator(T evaluator) {
         if(evaluators == null) {
-            evaluators = new ArrayList<T>();
+            evaluators = new ArrayList<>();
         }
 
         if(!evaluators.contains(evaluator)) {
@@ -348,7 +348,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
 
     void addWildcardEvaluator(T evaluator) {
         if(wildcardEvaluators == null) {
-            wildcardEvaluators = new ArrayList<T>();
+            wildcardEvaluators = new ArrayList<>();
         }
 
         if(!wildcardEvaluators.contains(evaluator)) {
@@ -466,7 +466,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
         final List<T> ret;
 
         if(CollectionUtils.isNotEmpty(evaluators)) {
-            ret = new ArrayList<T>(evaluators);
+            ret = new ArrayList<>(evaluators);
 
             Collections.sort(ret);
         } else {

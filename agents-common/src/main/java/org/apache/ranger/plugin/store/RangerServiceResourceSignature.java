@@ -50,7 +50,7 @@ public class RangerServiceResourceSignature {
 			// invalid/empty serviceResource gets a deterministic signature as if it had an
 			// empty resource string
 			Map<String, RangerPolicy.RangerPolicyResource> resource = serviceResource.getResourceElements();
-			Map<String, ResourceSerializer> resources = new TreeMap<String, ResourceSerializer>();
+			Map<String, ResourceSerializer> resources = new TreeMap<>();
 			for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : resource.entrySet()) {
 				String resourceName = entry.getKey();
 				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
@@ -74,7 +74,7 @@ public class RangerServiceResourceSignature {
 				if (_policyResource != null) {
 					builder.append("values=");
 					if (_policyResource.getValues() != null) {
-						List<String> values = new ArrayList<String>(_policyResource.getValues());
+						List<String> values = new ArrayList<>(_policyResource.getValues());
 						Collections.sort(values);
 						builder.append(values);
 					}

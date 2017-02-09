@@ -29,7 +29,7 @@ public class RangerPerfTracer {
 	protected final String data;
 	private final long   startTimeMs;
 
-	private static long reportingThresholdMs = 0L;
+	private static long reportingThresholdMs;
 
 	private final static String tagEndMarker = "(";
 

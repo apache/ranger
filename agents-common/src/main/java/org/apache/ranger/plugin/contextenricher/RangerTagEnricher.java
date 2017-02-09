@@ -62,9 +62,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	public static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
 	public static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
 
-	private RangerTagRefresher                 tagRefresher               = null;
-	private RangerTagRetriever                 tagRetriever               = null;
-	private boolean                            disableTrieLookupPrefilter = false;
+	private RangerTagRefresher                 tagRefresher;
+	private RangerTagRetriever                 tagRetriever;
+	private boolean                            disableTrieLookupPrefilter;
 	private EnrichedServiceTags                enrichedServiceTags;
 	private boolean                            disableCacheIfServiceNotFound = true;
 
@@ -149,18 +149,15 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	}
 
 	public void setServiceTags(final ServiceTags serviceTags) {
-
 		if (serviceTags == null || CollectionUtils.isEmpty(serviceTags.getServiceResources())) {
 			LOG.info("ServiceTags is null or there are no tagged resources for service " + serviceName);
 			enrichedServiceTags = null;
 		} else {
-
-			List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<RangerServiceResourceMatcher>();
+			List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<>();
 
 			List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 
 			if (CollectionUtils.isNotEmpty(serviceResources)) {
-
 				for (RangerServiceResource serviceResource : serviceResources) {
 					RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
@@ -183,14 +180,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
 
 			if (!disableTrieLookupPrefilter) {
-				serviceResourceTrie = new HashMap<String, RangerResourceTrie<RangerServiceResourceMatcher>>();
+				serviceResourceTrie = new HashMap<>();
 
 				for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
 					serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie<RangerServiceResourceMatcher>(resourceDef, resourceMatchers));
 				}
 			}
 
-			Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<RangerTagForEval>();
+			Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<>();
 			for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
 				tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
 			}
@@ -253,7 +250,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					}
 					if (isMatched) {
 						if (ret == null) {
-							ret = new HashSet<RangerTagForEval>();
+							ret = new HashSet<>();
 						}
 						ret.addAll(getTagsForServiceResource(enrichedServiceTags.getServiceTags(), resourceMatcher.getServiceResource(), matchType));
 					}
@@ -348,9 +345,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	static private Set<RangerTagForEval> getTagsForServiceResource(final ServiceTags serviceTags, final RangerServiceResource serviceResource, final RangerPolicyResourceMatcher.MatchType matchType) {
-
-		Set<RangerTagForEval> ret = new HashSet<RangerTagForEval>();
+	private static Set<RangerTagForEval> getTagsForServiceResource(final ServiceTags serviceTags, final RangerServiceResource serviceResource, final RangerPolicyResourceMatcher.MatchType matchType) {
+		Set<RangerTagForEval> ret = new HashSet<>();
 
 		final Long resourceId = serviceResource.getId();
 
@@ -402,11 +398,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private final RangerTagRetriever tagRetriever;
 		private final RangerTagEnricher tagEnricher;
 		private long lastKnownVersion = -1L;
-		private long lastActivationTimeInMillis = 0L;
+		private long lastActivationTimeInMillis;
 
 		private final long pollingIntervalMs;
 		private final String cacheFile;
-		private boolean hasProvidedTagsToReceiver = false;
+		private boolean hasProvidedTagsToReceiver;
 		private Gson gson;
 
 

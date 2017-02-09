@@ -44,7 +44,7 @@ import org.junit.Assert;
 public class ValidationTestUtils {
 	
 	Map<String, String> createMap(String[] keys) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		for (String key : keys) {
 			result.put(key, "valueof-" + key);
 		}
@@ -53,7 +53,7 @@ public class ValidationTestUtils {
 
 	// helper methods for tests
 	List<RangerServiceConfigDef> createServiceConditionDefs(Object[][] input) {
-		List<RangerServiceConfigDef> result = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+		List<RangerServiceConfigDef> result = new ArrayList<>();
 		
 		for (Object data[] : input) {
 			RangerServiceConfigDef aConfigDef = mock(RangerServiceConfigDef.class);
@@ -141,12 +141,11 @@ public class ValidationTestUtils {
 		return defs;
 	}
 
-
 	List<RangerAccessTypeDef> createAccessTypeDefs(Object[][] data) {
 		if (data == null) {
 			return null;
 		}
-		List<RangerAccessTypeDef> result = new ArrayList<RangerAccessTypeDef>();
+		List<RangerAccessTypeDef> result = new ArrayList<>();
 		if (data.length == 0) {
 			return result;
 		}
@@ -175,7 +174,7 @@ public class ValidationTestUtils {
 
 	RangerServiceDef createServiceDefWithAccessTypes(String[] accesses) {
 		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
-		List<RangerAccessTypeDef> accessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerAccessTypeDef> accessTypeDefs = new ArrayList<>();
 		for (String access : accesses) {
 			RangerAccessTypeDef accessTypeDef = mock(RangerAccessTypeDef.class);
 			when(accessTypeDef.getName()).thenReturn(access);
@@ -186,7 +185,7 @@ public class ValidationTestUtils {
 	}
 
 	List<RangerPolicyItemAccess> createItemAccess(Object[][] data) {
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+		List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 		for (Object[] row : data) {
 			RangerPolicyItemAccess access = mock(RangerPolicyItemAccess.class);
 			when(access.getType()).thenReturn((String)row[0]);
@@ -197,7 +196,7 @@ public class ValidationTestUtils {
 	}
 
 	List<RangerPolicyItem> createPolicyItems(Object[] data) {
-		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
+		List<RangerPolicyItem> policyItems = new ArrayList<>();
 		for (Object object : data) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object[]> map = (Map<String, Object[]>) object;
@@ -219,7 +218,7 @@ public class ValidationTestUtils {
 			Boolean[] isAllowedFlags = (Boolean[])map.get("isAllowed");
 			List<RangerPolicyItemAccess> accessesList = null;
 			if (accesses != null && isAllowedFlags != null) {
-				accessesList = new ArrayList<RangerPolicyItemAccess>();
+				accessesList = new ArrayList<>();
 				for (int i = 0; i < accesses.length; i++) {
 					String access = accesses[i];
 					Boolean isAllowed = isAllowedFlags[i];
@@ -241,7 +240,7 @@ public class ValidationTestUtils {
 		if (data == null) {
 			return null;
 		}
-		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> defs = new ArrayList<>();
 		for (Object[] row : data) {
 			RangerResourceDef aDef = null;
 			if (row != null) {
@@ -287,7 +286,7 @@ public class ValidationTestUtils {
 		if (data == null) {
 			return null;
 		}
-		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> defs = new ArrayList<>();
 		for (String[] row : data) {
 			RangerResourceDef aDef = null;
 			if (row != null) {
@@ -307,7 +306,7 @@ public class ValidationTestUtils {
 		if (data == null) {
 			return null;
 		}
-		List<RangerResourceDef> defs = new ArrayList<RangerResourceDef>();
+		List<RangerResourceDef> defs = new ArrayList<>();
 		for (Object[] row : data) {
 			RangerResourceDef aDef = null;
 			if (row != null) {
@@ -339,7 +338,7 @@ public class ValidationTestUtils {
 		if (input == null) {
 			return null;
 		}
-		List<RangerEnumElementDef> output = new ArrayList<RangerEnumElementDef>();
+		List<RangerEnumElementDef> output = new ArrayList<>();
 		for (Object[] row : input) {
 			RangerEnumElementDef aDef = mock(RangerEnumElementDef.class);
 			switch(row.length) {
@@ -357,7 +356,7 @@ public class ValidationTestUtils {
 		if (input == null) {
 			return null;
 		}
-		List<RangerEnumDef> defs = new ArrayList<RangerEnumDef>();
+		List<RangerEnumDef> defs = new ArrayList<>();
 		for (Object[] row : input) {
 			RangerEnumDef enumDef = mock(RangerEnumDef.class);
 			switch (row.length) {
@@ -404,7 +403,7 @@ public class ValidationTestUtils {
 		if (input == null) {
 			return null;
 		}
-		List<RangerServiceConfigDef> result = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+		List<RangerServiceConfigDef> result = new ArrayList<>();
 		for (Object[] row : input) {
 			RangerServiceConfigDef configDef = mock(RangerServiceConfigDef.class);
 			switch(row.length) {
@@ -428,7 +427,7 @@ public class ValidationTestUtils {
 	}
 
 	List<RangerPolicyConditionDef> createPolicyConditionDefs(Object[][] input) {
-		List<RangerPolicyConditionDef> result = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
+		List<RangerPolicyConditionDef> result = new ArrayList<>();
 		if (input != null) {
 			for (Object[] row : input) {
 				RangerPolicyConditionDef conditionDef = mock(RangerPolicyConditionDef.class);

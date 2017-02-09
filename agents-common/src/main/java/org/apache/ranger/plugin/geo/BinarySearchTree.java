@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.geo;
 
 public class BinarySearchTree<T extends Comparable<T> & RangeChecker<V>, V> {
 	private Node<T> root;
-	private int size = 0;
+	private int size;
 
 	public BinarySearchTree() {
 		root = null;

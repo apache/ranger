@@ -139,7 +139,7 @@ public class TestRangerServiceDefHelper {
 		assertTrue(_helper.isResourceGraphValid());
 		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
-		Set<List<String>> expectedHierarchies = new HashSet<List<String>>();
+		Set<List<String>> expectedHierarchies = new HashSet<>();
 		expectedHierarchies.add(Lists.newArrayList("database", "table-space"));
 		expectedHierarchies.add(Lists.newArrayList("database", "table", "column"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
@@ -180,7 +180,7 @@ public class TestRangerServiceDefHelper {
 		assertTrue(_helper.isResourceGraphValid());
 		Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
 
-		Set<List<String>> expectedHierarchies = new HashSet<List<String>>();
+		Set<List<String>> expectedHierarchies = new HashSet<>();
 		expectedHierarchies.add(Lists.newArrayList("database"));
 		expectedHierarchies.add(Lists.newArrayList("server"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));

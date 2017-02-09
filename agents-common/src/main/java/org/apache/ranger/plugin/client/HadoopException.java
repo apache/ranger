@@ -26,34 +26,29 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 public class HadoopException extends RuntimeException {
-
 	private static final long serialVersionUID = 8872734935128535649L;
 	
 	public HashMap<String, Object> responseData;
 
 	public HadoopException() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public HadoopException(String message, Throwable cause) {
 		super(message, cause);
-		// TODO Auto-generated constructor stub
 	}
 
 	public HadoopException(String message) {
 		super(message);
-		// TODO Auto-generated constructor stub
 	}
 
 	public HadoopException(Throwable cause) {
 		super(cause);
-		// TODO Auto-generated constructor stub
 	}
 
 	public void generateResponseDataMap(boolean connectivityStatus,
 			String message, String description, Long objectId, String fieldName) {
-		responseData = new HashMap<String, Object>();
+		responseData = new HashMap<>();
 		responseData.put("connectivityStatus", connectivityStatus);
 		responseData.put("message", message);
 		responseData.put("description", description);
@@ -62,7 +57,7 @@ public class HadoopException extends RuntimeException {
 	}
 
 	public String getMessage(Throwable excp) {
-		List<String> errList = new ArrayList<String>();
+		List<String> errList = new ArrayList<>();
 		while (excp != null) {
 			if (!errList.contains(excp.getMessage() + ". \n")) {
 				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {

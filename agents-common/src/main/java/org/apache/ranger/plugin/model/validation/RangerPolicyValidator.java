@@ -52,7 +52,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("==> RangerPolicyValidator.validate(%s, %s, %s)", policy, action, isAdmin));
 		}
 
-		List<ValidationFailureDetails> failures = new ArrayList<ValidationFailureDetails>();
+		List<ValidationFailureDetails> failures = new ArrayList<>();
 		boolean valid = isValid(policy, action, isAdmin, failures);
 		String message = "";
 		try {
@@ -697,7 +697,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			RangerPolicyResource policyResource = entry.getValue();
 			if(policyResource != null) {
 				if(CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					Set<String> resources = new HashSet<String>(policyResource.getValues());
+					Set<String> resources = new HashSet<>(policyResource.getValues());
 					for (String aValue : resources) {
 						if (StringUtils.isBlank(aValue)) {
 							policyResource.getValues().remove(aValue);

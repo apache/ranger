@@ -60,7 +60,7 @@ public class RangerPathResourceMatcherTest {
             boolean result = (boolean)row[4];
             String user = (String) row[5];
 
-            Map<String, Object> evalContext = new HashMap<String, Object>();
+            Map<String, Object> evalContext = new HashMap<>();
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);

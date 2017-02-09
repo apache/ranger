@@ -43,12 +43,12 @@ import com.google.common.collect.Sets;
 public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyResourceMatcher.class);
 
-	protected RangerServiceDef                  serviceDef      = null;
-	protected RangerPolicy                      policy          = null;
-	protected Map<String, RangerPolicyResource> policyResources = null;
+	protected RangerServiceDef                  serviceDef;
+	protected RangerPolicy                      policy;
+	protected Map<String, RangerPolicyResource> policyResources;
 
-	private Map<String, RangerResourceMatcher> matchers = null;
-	private boolean                            needsDynamicEval = false;
+	private Map<String, RangerResourceMatcher> matchers;
+	private boolean                            needsDynamicEval;
 	private List<RangerResourceDef> firstValidResourceDefHierarchy;
 	/*
 	 * For hive resource policy:
@@ -58,8 +58,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	 * 		2 : database=<any>, table=employee, column=*
 	 * 		3 : database=<any>, table=<any>, column=ssn
 	 */
-	private int lastNonAnyMatcherIndex = 0;
-
+	private int lastNonAnyMatcherIndex;
 
 	@Override
 	public void setServiceDef(RangerServiceDef serviceDef) {
@@ -137,8 +136,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 					firstValidResourceDefHierarchy = null;
 
 				} else {
-
-					matchers = new HashMap<String, RangerResourceMatcher>();
+					matchers = new HashMap<>();
 
 					for (RangerResourceDef resourceDef : firstValidResourceDefHierarchy) {
 

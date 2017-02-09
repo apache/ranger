@@ -129,7 +129,7 @@ public class RangerPolicyResourceSignature {
 			if (_policy.getPolicyType() != null) {
 				type = _policy.getPolicyType();
 			}
-			Map<String, ResourceSerializer> resources = new TreeMap<String, ResourceSerializer>();
+			Map<String, ResourceSerializer> resources = new TreeMap<>();
 			for (Map.Entry<String, RangerPolicyResource> entry : _policy.getResources().entrySet()) {
 				String resourceName = entry.getKey();
 				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());

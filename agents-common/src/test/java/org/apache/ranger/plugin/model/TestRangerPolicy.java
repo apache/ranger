@@ -121,7 +121,7 @@ public class TestRangerPolicy {
     }
 
     private <T> List<T> getList(T value) {
-        List<T> ret = new ArrayList<T>();
+        List<T> ret = new ArrayList<>();
 
         int count = getRandomNumber(10);
         for(int i = 0; i < count; i ++) {

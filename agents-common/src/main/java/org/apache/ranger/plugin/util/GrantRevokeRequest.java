@@ -43,20 +43,19 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class GrantRevokeRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String              grantor                    = null;
-	private Map<String, String> resource                   = null;
-	private Set<String>         users                      = null;
-	private Set<String>         groups                     = null;
-	private Set<String>         accessTypes                = null;
+	private String              grantor;
+	private Map<String, String> resource;
+	private Set<String>         users;
+	private Set<String>         groups;
+	private Set<String>         accessTypes;
 	private Boolean             delegateAdmin              = Boolean.FALSE;
 	private Boolean             enableAudit                = Boolean.TRUE;
 	private Boolean             replaceExistingPermissions = Boolean.FALSE;
 	private Boolean             isRecursive                = Boolean.FALSE;
-	private String              clientIPAddress            = null;
-	private String              clientType                 = null;
-	private String              requestData                = null;
-	private String              sessionId                  = null;
-
+	private String              clientIPAddress;
+	private String              clientType;
+	private String              requestData;
+	private String              sessionId;
 
 	public GrantRevokeRequest() {
 		this(null, null, null, null, null, null, null, null, null, null, null, null, null);

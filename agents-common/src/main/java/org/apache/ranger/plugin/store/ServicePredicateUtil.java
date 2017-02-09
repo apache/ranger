@@ -29,7 +29,7 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import java.util.List;
 
 public class ServicePredicateUtil extends AbstractPredicateUtil {
-	private ServiceStore serviceStore = null;
+	private ServiceStore serviceStore;
 
 	public ServicePredicateUtil(ServiceStore serviceStore) {
 		super();

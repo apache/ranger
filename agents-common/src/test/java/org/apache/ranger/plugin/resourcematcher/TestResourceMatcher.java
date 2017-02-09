@@ -40,7 +40,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class TestResourceMatcher {
-	static Gson gsonBuilder = null;
+	static Gson gsonBuilder;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

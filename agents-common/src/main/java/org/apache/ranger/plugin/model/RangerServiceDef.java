@@ -45,22 +45,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 	public static final String OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES = "enableDenyAndExceptionsInPolicies";
 
-	private String                         name             = null;
-	private String                         implClass        = null;
-	private String                         label            = null;
-	private String                         description      = null;
-	private String                         rbKeyLabel       = null;
-	private String                         rbKeyDescription = null;
-	private Map<String, String>            options          = null;
-	private List<RangerServiceConfigDef>   configs          = null;
-	private List<RangerResourceDef>        resources        = null;
-	private List<RangerAccessTypeDef>      accessTypes      = null;
-	private List<RangerPolicyConditionDef> policyConditions = null;
-	private List<RangerContextEnricherDef> contextEnrichers = null;
-	private List<RangerEnumDef>            enums            = null;
-	private RangerDataMaskDef              dataMaskDef      = null;
-	private RangerRowFilterDef             rowFilterDef     = null;
-
+	private String                         name;
+	private String                         implClass;
+	private String                         label;
+	private String                         description;
+	private String                         rbKeyLabel;
+	private String                         rbKeyDescription;
+	private Map<String, String>            options;
+	private List<RangerServiceConfigDef>   configs;
+	private List<RangerResourceDef>        resources;
+	private List<RangerAccessTypeDef>      accessTypes;
+	private List<RangerPolicyConditionDef> policyConditions;
+	private List<RangerContextEnricherDef> contextEnrichers;
+	private List<RangerEnumDef>            enums;
+	private RangerDataMaskDef              dataMaskDef;
+	private RangerRowFilterDef             rowFilterDef;
 
 	public RangerServiceDef() {
 		this(null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -217,7 +216,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setConfigs(List<RangerServiceConfigDef> configs) {
 		if(this.configs == null) {
-			this.configs = new ArrayList<RangerServiceConfigDef>();
+			this.configs = new ArrayList<>();
 		} else
 
 		if(this.configs == configs) {
@@ -245,7 +244,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setOptions(Map<String, String> options) {
 		if(this.options == null) {
-			this.options = new HashMap<String, String>();
+			this.options = new HashMap<>();
 		} else if(this.options == options) {
 			return;
 		}
@@ -271,7 +270,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setResources(List<RangerResourceDef> resources) {
 		if(this.resources == null) {
-			this.resources = new ArrayList<RangerResourceDef>();
+			this.resources = new ArrayList<>();
 		}
 
 		if(this.resources == resources) {
@@ -299,7 +298,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setAccessTypes(List<RangerAccessTypeDef> accessTypes) {
 		if(this.accessTypes == null) {
-			this.accessTypes = new ArrayList<RangerAccessTypeDef>();
+			this.accessTypes = new ArrayList<>();
 		}
 
 		if(this.accessTypes == accessTypes) {
@@ -327,7 +326,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setPolicyConditions(List<RangerPolicyConditionDef> policyConditions) {
 		if(this.policyConditions == null) {
-			this.policyConditions = new ArrayList<RangerPolicyConditionDef>();
+			this.policyConditions = new ArrayList<>();
 		}
 
 		if(this.policyConditions == policyConditions) {
@@ -355,7 +354,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setContextEnrichers(List<RangerContextEnricherDef> contextEnrichers) {
 		if(this.contextEnrichers == null) {
-			this.contextEnrichers = new ArrayList<RangerContextEnricherDef>();
+			this.contextEnrichers = new ArrayList<>();
 		}
 
 		if(this.contextEnrichers == contextEnrichers) {
@@ -383,7 +382,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	 */
 	public void setEnums(List<RangerEnumDef> enums) {
 		if(this.enums == null) {
-			this.enums = new ArrayList<RangerEnumDef>();
+			this.enums = new ArrayList<>();
 		}
 
 		if(this.enums == enums) {
@@ -530,11 +529,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerEnumDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long                       itemId       = null;
-		private String                     name         = null;
-		private List<RangerEnumElementDef> elements     = null;
-		private Integer                    defaultIndex = null;
-
+		private Long                       itemId;
+		private String                     name;
+		private List<RangerEnumElementDef> elements;
+		private Integer                    defaultIndex;
 
 		public RangerEnumDef() {
 			this(null, null, null, null);
@@ -587,7 +585,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setElements(List<RangerEnumElementDef> elements) {
 			if(this.elements == null) {
-				this.elements = new ArrayList<RangerEnumElementDef>();
+				this.elements = new ArrayList<>();
 			}
 
 			if(this.elements == elements) {
@@ -701,11 +699,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerEnumElementDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		
-		private Long   itemId     = null;
-		private String name       = null;
-		private String label      = null;
-		private String rbKeyLabel = null;
-
+		private Long   itemId;
+		private String name;
+		private String label;
+		private String rbKeyLabel;
 
 		public RangerEnumElementDef() {
 			this(null, null, null, null);
@@ -851,21 +848,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerServiceConfigDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long    itemId            = null;
-		private String  name              = null;
-		private String  type              = null;
-		private String  subType           = null;
-		private Boolean mandatory         = null;
-		private String  defaultValue      = null;
-		private String  validationRegEx   = null;
-		private String  validationMessage = null;
-		private String  uiHint            = null;
-		private String  label             = null;
-		private String  description       = null;
-		private String  rbKeyLabel        = null;
-		private String  rbKeyDescription  = null;
-		private String  rbKeyValidationMessage = null;
-
+		private Long    itemId;
+		private String  name;
+		private String  type;
+		private String  subType;
+		private Boolean mandatory;
+		private String  defaultValue;
+		private String  validationRegEx;
+		private String  validationMessage;
+		private String  uiHint;
+		private String  label;
+		private String  description;
+		private String  rbKeyLabel;
+		private String  rbKeyDescription;
+		private String  rbKeyValidationMessage;
 
 		public RangerServiceConfigDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -1240,25 +1236,25 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerResourceDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long                itemId                 = null;
-		private String              name                   = null;
-		private String              type                   = null;
-		private Integer             level                  = null;
-		private String              parent                 = null;
-		private Boolean             mandatory              = null;
-		private Boolean             lookupSupported        = null;
-		private Boolean             recursiveSupported     = null;
-		private Boolean             excludesSupported      = null;
-		private String              matcher                = null;
-		private Map<String, String> matcherOptions         = null;
-		private String              validationRegEx        = null;
-		private String              validationMessage      = null;
-		private String              uiHint                 = null;
-		private String              label                  = null;
-		private String              description            = null;
-		private String              rbKeyLabel             = null;
-		private String              rbKeyDescription       = null;
-		private String              rbKeyValidationMessage = null;
+		private Long                itemId;
+		private String              name;
+		private String              type;
+		private Integer             level;
+		private String              parent;
+		private Boolean             mandatory;
+		private Boolean             lookupSupported;
+		private Boolean             recursiveSupported;
+		private Boolean             excludesSupported;
+		private String              matcher;
+		private Map<String, String> matcherOptions;
+		private String              validationRegEx;
+		private String              validationMessage;
+		private String              uiHint;
+		private String              label;
+		private String              description;
+		private String              rbKeyLabel;
+		private String              rbKeyDescription;
+		private String              rbKeyValidationMessage;
 
 		public RangerResourceDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -1777,12 +1773,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerAccessTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long               itemId        = null;
-		private String             name          = null;
-		private String             label         = null;
-		private String             rbKeyLabel    = null;
-		private Collection<String> impliedGrants = null;
-
+		private Long               itemId;
+		private String             name;
+		private String             label;
+		private String             rbKeyLabel;
+		private Collection<String> impliedGrants;
 
 		public RangerAccessTypeDef() {
 			this(null, null, null, null, null);
@@ -1797,11 +1792,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		}
 
 		public RangerAccessTypeDef(RangerAccessTypeDef other) {
-			this.setItemId(other.getItemId());
-			this.setName(other.getName());
-			this.setLabel(other.getLabel());
-			this.setRbKeyLabel(other.getRbKeyLabel());
-			this.setImpliedGrants(other.getImpliedGrants());
+			setItemId(other.getItemId());
+			setName(other.getName());
+			setLabel(other.getLabel());
+			setRbKeyLabel(other.getRbKeyLabel());
+			setImpliedGrants(other.getImpliedGrants());
 		}
 
 		/**
@@ -1872,7 +1867,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		 */
 		public void setImpliedGrants(Collection<String> impliedGrants) {
 			if(this.impliedGrants == null) {
-				this.impliedGrants = new ArrayList<String>();
+				this.impliedGrants = new ArrayList<>();
 			}
 
 			if(this.impliedGrants == impliedGrants) {
@@ -1982,19 +1977,18 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerPolicyConditionDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long                itemId                 = null;
-		private String              name                   = null;
-		private String              evaluator              = null;
-		private Map<String, String> evaluatorOptions       = null;
-		private String              validationRegEx        = null;
-		private String              validationMessage      = null;
-		private String              uiHint                 = null;
-		private String              label                  = null;
-		private String              description            = null;
-		private String              rbKeyLabel             = null;
-		private String              rbKeyDescription       = null;
-		private String              rbKeyValidationMessage = null;
-
+		private Long                itemId;
+		private String              name;
+		private String              evaluator;
+		private Map<String, String> evaluatorOptions;
+		private String              validationRegEx;
+		private String              validationMessage;
+		private String              uiHint;
+		private String              label;
+		private String              description;
+		private String              rbKeyLabel;
+		private String              rbKeyDescription;
+		private String              rbKeyValidationMessage;
 
 		public RangerPolicyConditionDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null);
@@ -2338,11 +2332,10 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerContextEnricherDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long                itemId              = null;
-		private String              name            = null;
-		private String              enricher        = null;
-		private Map<String, String> enricherOptions = null;
-
+		private Long                itemId;
+		private String              name;
+		private String              enricher;
+		private Map<String, String> enricherOptions;
 
 		public RangerContextEnricherDef() {
 			this(null, null, null, null);
@@ -2519,7 +2512,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public void setMaskTypes(List<RangerDataMaskTypeDef> maskTypes) {
 			if(this.maskTypes == null) {
-				this.maskTypes = new ArrayList<RangerDataMaskTypeDef>();
+				this.maskTypes = new ArrayList<>();
 			}
 
 			if(this.maskTypes == maskTypes) {
@@ -2541,7 +2534,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public void setAccessTypes(List<RangerAccessTypeDef> accessTypes) {
 			if(this.accessTypes == null) {
-				this.accessTypes = new ArrayList<RangerAccessTypeDef>();
+				this.accessTypes = new ArrayList<>();
 			}
 
 			if(this.accessTypes == accessTypes) {
@@ -2563,7 +2556,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public void setResources(List<RangerResourceDef> resources) {
 			if(this.resources == null) {
-				this.resources = new ArrayList<RangerResourceDef>();
+				this.resources = new ArrayList<>();
 			}
 
 			if(this.resources == resources) {
@@ -2673,15 +2666,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	public static class RangerDataMaskTypeDef implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private Long                itemId           = null;
-		private String              name             = null;
-		private String              label            = null;
-		private String              description      = null;
-		private String              transformer      = null;
-		private Map<String, String> dataMaskOptions  = null;
-		private String              rbKeyLabel       = null;
-		private String              rbKeyDescription = null;
-
+		private Long                itemId;
+		private String              name;
+		private String              label;
+		private String              description;
+		private String              transformer;
+		private Map<String, String> dataMaskOptions;
+		private String              rbKeyLabel;
+		private String              rbKeyDescription;
 
 		public RangerDataMaskTypeDef() {
 			this(null, null, null, null, null, null, null, null);
@@ -2931,7 +2923,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public void setAccessTypes(List<RangerAccessTypeDef> accessTypes) {
 			if(this.accessTypes == null) {
-				this.accessTypes = new ArrayList<RangerAccessTypeDef>();
+				this.accessTypes = new ArrayList<>();
 			}
 
 			if(this.accessTypes == accessTypes) {
@@ -2953,7 +2945,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 		public void setResources(List<RangerResourceDef> resources) {
 			if(this.resources == null) {
-				this.resources = new ArrayList<RangerResourceDef>();
+				this.resources = new ArrayList<>();
 			}
 
 			if(this.resources == resources) {

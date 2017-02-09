@@ -30,9 +30,8 @@ import java.util.Set;
 
 public class TestCacheMap {
 	private static final Log LOG = LogFactory.getLog(TestCacheMap.class);
-	private static CacheMap<String, String> testCacheMap = null;
+	private static CacheMap<String, String> testCacheMap;
 	private static int initialCapacity = 16;
-
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

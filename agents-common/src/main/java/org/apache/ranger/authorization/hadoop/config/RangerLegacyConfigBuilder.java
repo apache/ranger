@@ -32,9 +32,8 @@ public class RangerLegacyConfigBuilder {
 
 	private static final Logger LOG = Logger.getLogger(RangerLegacyConfigBuilder.class);
 
-	static String serviceType 	   = null;
-	static String legacyResource  = null;
-
+	static String serviceType;
+	static String legacyResource;
 
 	public static Configuration getSecurityConfig(String serviceType) {
 
@@ -153,10 +152,9 @@ public class RangerLegacyConfigBuilder {
 		return rangerConf;
 	}
 
-
 	public static HashMap<String, String> getConfigChangeMap(String serviceType) {
 		// ConfigMap for moving legacy Configuration to Ranger Configuration
-		HashMap<String, String> changeMap = new HashMap<String,String>();
+		HashMap<String, String> changeMap = new HashMap<>();
 		
 		changeMap.put(serviceType,
 					  getPropertyName(RangerConfigConstants.RANGER_SERVICE_NAME,serviceType));
