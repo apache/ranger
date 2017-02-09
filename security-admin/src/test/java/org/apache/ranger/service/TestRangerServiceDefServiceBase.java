@@ -39,7 +39,6 @@ import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
 import org.apache.ranger.entity.XXPolicyConditionDef;
@@ -89,7 +88,7 @@ public class TestRangerServiceDefServiceBase {
 	ContextUtil contextUtil;
 
 	@Mock
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 
 	@Mock
 	RangerBizUtil rangerBizUtil;

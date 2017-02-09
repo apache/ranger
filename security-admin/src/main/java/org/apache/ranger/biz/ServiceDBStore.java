@@ -95,7 +95,6 @@ import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
 import org.apache.ranger.entity.XXContextEnricherDef;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXDataHist;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -233,7 +232,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	StringUtil stringUtil;
 	
 	@Autowired
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 	
 	@Autowired
 	RangerPolicyService policyService;
@@ -1426,7 +1425,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
-			xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
+			xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
 			xConfMap.setServiceId(xCreatedService.getId());
 			xConfMap.setConfigkey(configKey);
 			xConfMap.setConfigvalue(configValue);
@@ -2897,7 +2896,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private XXPolicyItem createNewPolicyItemForPolicy(RangerPolicy policy, XXPolicy xPolicy, RangerPolicyItem policyItem, XXServiceDef xServiceDef, int itemOrder, int policyItemType) throws Exception {
 		XXPolicyItem xPolicyItem = new XXPolicyItem();
 
-		xPolicyItem = (XXPolicyItem) rangerAuditFields.populateAuditFields(xPolicyItem, xPolicy);
+		xPolicyItem = rangerAuditFields.populateAuditFields(xPolicyItem, xPolicy);
 
 		xPolicyItem.setDelegateAdmin(policyItem.getDelegateAdmin());
 		xPolicyItem.setItemType(policyItemType);
@@ -2938,7 +2937,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				throw new Exception(user + ": user does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 			}
 			XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
-			xUserPerm = (XXPolicyItemUserPerm) rangerAuditFields.populateAuditFields(xUserPerm, xPolicyItem);
+			xUserPerm = rangerAuditFields.populateAuditFields(xUserPerm, xPolicyItem);
 			xUserPerm.setUserId(xUser.getId());
 			xUserPerm.setPolicyItemId(xPolicyItem.getId());
 			xUserPerm.setOrder(i);
@@ -2954,7 +2953,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				throw new Exception(group + ": group does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 			}
 			XXPolicyItemGroupPerm xGrpPerm = new XXPolicyItemGroupPerm();
-			xGrpPerm = (XXPolicyItemGroupPerm) rangerAuditFields.populateAuditFields(xGrpPerm, xPolicyItem);
+			xGrpPerm = rangerAuditFields.populateAuditFields(xGrpPerm, xPolicyItem);
 			xGrpPerm.setGroupId(xGrp.getId());
 			xGrpPerm.setPolicyItemId(xPolicyItem.getId());
 			xGrpPerm.setOrder(i);
@@ -2974,7 +2973,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			for(int i = 0; i < condition.getValues().size(); i++) {
 				String value = condition.getValues().get(i);
 				XXPolicyItemCondition xPolItemCond = new XXPolicyItemCondition();
-				xPolItemCond = (XXPolicyItemCondition) rangerAuditFields.populateAuditFields(xPolItemCond, xPolicyItem);
+				xPolItemCond = rangerAuditFields.populateAuditFields(xPolItemCond, xPolicyItem);
 				xPolItemCond.setPolicyItemId(xPolicyItem.getId());
 				xPolItemCond.setType(xPolCond.getId());
 				xPolItemCond.setValue(value);
@@ -3058,7 +3057,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 			XXPolicyResource xPolRes = new XXPolicyResource();
-			xPolRes = (XXPolicyResource) rangerAuditFields.populateAuditFields(xPolRes, xPolicy);
+			xPolRes = rangerAuditFields.populateAuditFields(xPolRes, xPolicy);
 
 			xPolRes.setIsExcludes(policyRes.getIsExcludes());
 			xPolRes.setIsRecursive(policyRes.getIsRecursive());
@@ -3071,7 +3070,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				for(int i = 0; i < values.size(); i++) {
 					if(values.get(i)!=null){
 						XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
-						xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
+						xPolResMap = rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
 						xPolResMap.setResourceId(xPolRes.getId());
 						xPolResMap.setValue(values.get(i));
 						xPolResMap.setOrder(i);

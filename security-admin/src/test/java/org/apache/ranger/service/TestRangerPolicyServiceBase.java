@@ -30,7 +30,6 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -69,9 +68,6 @@ public class TestRangerPolicyServiceBase {
 
 	@Mock
 	ContextUtil contextUtil;
-
-	@Mock
-	RangerAuditFields<XXDBBase> rangerAuditFields;
 
 	@Mock
 	RangerBizUtil rangerBizUtil;

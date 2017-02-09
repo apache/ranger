@@ -34,7 +34,6 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerServiceTagsCache;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
@@ -88,7 +87,7 @@ public class TagDBStore extends AbstractTagStore {
 	RESTErrorUtil errorUtil;
 
 	@Autowired
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 
 	@Autowired
 	GUIDUtil guidUtil;
@@ -1044,7 +1043,7 @@ public class TagDBStore extends AbstractTagStore {
 				xAttrDef.setTagDefId(tagDefId);
 				xAttrDef.setName(attrDef.getName());
 				xAttrDef.setType(attrDef.getType());
-				xAttrDef = (XXTagAttributeDef) rangerAuditFields.populateAuditFieldsForCreate(xAttrDef);
+				xAttrDef = rangerAuditFields.populateAuditFieldsForCreate(xAttrDef);
 
 				xAttrDef = daoManager.getXXTagAttributeDef().create(xAttrDef);
 
@@ -1092,7 +1091,7 @@ public class TagDBStore extends AbstractTagStore {
 				xTagAttr.setTagId(tagId);
 				xTagAttr.setName(attr.getKey());
 				xTagAttr.setValue(attr.getValue());
-				xTagAttr = (XXTagAttribute) rangerAuditFields.populateAuditFieldsForCreate(xTagAttr);
+				xTagAttr = rangerAuditFields.populateAuditFieldsForCreate(xTagAttr);
 
 				xTagAttr = daoManager.getXXTagAttribute().create(xTagAttr);
 
@@ -1161,7 +1160,7 @@ public class TagDBStore extends AbstractTagStore {
 			resourceElement.setResDefId(xResDef.getId());
 			resourceElement.setResourceId(resourceId);
 
-			resourceElement = (XXServiceResourceElement) rangerAuditFields.populateAuditFieldsForCreate(resourceElement);
+			resourceElement = rangerAuditFields.populateAuditFieldsForCreate(resourceElement);
 
 			resourceElement = daoManager.getXXServiceResourceElement().create(resourceElement);
 
@@ -1171,7 +1170,7 @@ public class TagDBStore extends AbstractTagStore {
 				resourceElementValue.setResElementId(resourceElement.getId());
 				resourceElementValue.setValue(resVal);
 				resourceElementValue.setSortOrder(sortOrder);
-				resourceElementValue = (XXServiceResourceElementValue) rangerAuditFields.populateAuditFieldsForCreate(resourceElementValue);
+				resourceElementValue = rangerAuditFields.populateAuditFieldsForCreate(resourceElementValue);
 
 				resourceElementValue = daoManager.getXXServiceResourceElementValue().create(resourceElementValue);
 				sortOrder++;

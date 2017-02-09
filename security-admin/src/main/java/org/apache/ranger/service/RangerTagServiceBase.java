@@ -29,7 +29,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerConfigUtil;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagDef;
@@ -45,7 +44,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 	GUIDUtil guidUtil;
 
 	@Autowired
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 	
 	@Autowired
 	RangerConfigUtil configUtil;

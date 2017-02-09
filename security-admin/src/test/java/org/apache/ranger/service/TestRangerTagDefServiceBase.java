@@ -17,7 +17,6 @@
 package org.apache.ranger.service;
 
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.junit.Assert;
@@ -46,9 +45,6 @@ public class TestRangerTagDefServiceBase {
 	
 	@Mock
 	RangerDaoManager daoMgr;
-	
-	@Mock
-	RangerAuditFields<XXDBBase> rangerAuditFields;
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

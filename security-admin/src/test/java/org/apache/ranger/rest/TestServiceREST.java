@@ -45,7 +45,6 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -141,7 +140,7 @@ public class TestServiceREST {
 	XUserMgr userMgr;
 
 	@Mock
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 
 	@Mock
 	ContextUtil contextUtil;

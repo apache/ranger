@@ -109,7 +109,7 @@ public class TestServiceDBStore {
 	XUserMgr xUserMgr;
 
 	@Mock
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 
 	@Mock
 	ContextUtil contextUtil;
@@ -1218,7 +1218,7 @@ public class TestServiceDBStore {
 
 		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 		Mockito.when(rangerAuditFields.populateAuditFields(xConfMap, xService))
-				.thenReturn(xService);
+				.thenReturn(xConfMap);
 
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
@@ -2744,7 +2744,7 @@ public class TestServiceDBStore {
 
 		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 		Mockito.when(rangerAuditFields.populateAuditFields(xConfMap, xService))
-		.thenReturn(xService);
+		.thenReturn(xConfMap);
 
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);

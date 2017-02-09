@@ -56,7 +56,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
 
 	@Autowired
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 
 	@Autowired
 	JSONUtil jsonUtil;
@@ -236,7 +236,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		xObj = (XXServiceConfigDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -282,7 +282,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		xObj = (XXResourceDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -341,7 +341,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		xObj = (XXAccessTypeDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -370,7 +370,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 		
-		xObj = (XXPolicyConditionDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -412,7 +412,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 
-		xObj = (XXContextEnricherDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -438,7 +438,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 
-		xObj = (XXEnumDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -471,7 +471,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("enumDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 
-		xObj = (XXEnumElementDef) rangerAuditFields.populateAuditFields(xObj, enumDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, enumDef);
 		xObj.setEnumdefid(enumDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());
@@ -497,7 +497,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
 		}
 
-		xObj = (XXDataMaskTypeDef) rangerAuditFields.populateAuditFields(xObj, serviceDef);
+		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 		xObj.setDefid(serviceDef.getId());
 		xObj.setItemId(vObj.getItemId());
 		xObj.setName(vObj.getName());

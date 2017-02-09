@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerConfigUtil;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -41,7 +40,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 	GUIDUtil guidUtil;
 
 	@Autowired
-	RangerAuditFields<XXDBBase> rangerAuditFields;
+	RangerAuditFields rangerAuditFields;
 	
 	@Autowired
 	RangerConfigUtil configUtil;
@@ -108,7 +107,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 			xTagAttrDef = new XXTagAttributeDef();
 		}
 
-		xTagAttrDef = (XXTagAttributeDef) rangerAuditFields.populateAuditFields(xTagAttrDef, parentObj);
+		xTagAttrDef = rangerAuditFields.populateAuditFields(xTagAttrDef, parentObj);
 
 		xTagAttrDef.setTagDefId(parentObj.getId());
 		xTagAttrDef.setName(attrDef.getName());
