@@ -124,7 +124,7 @@ public class PasswordValidator implements Runnable {
 				}
 			}
 			catch(IOException ioe){
-				// Ignore exception
+				LOG.debug("Close socket failure. Detail: \n", ioe);
 			}
 			finally {
 				client = null;

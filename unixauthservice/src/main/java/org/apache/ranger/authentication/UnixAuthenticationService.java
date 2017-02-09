@@ -196,7 +196,7 @@ public class UnixAuthenticationService {
 						in.close();
 					}
 					catch(IOException ioe) {
-						// Ignore IOE when closing streams
+						LOG.debug("Close streams failure. Detail: \n", ioe);
 					}
 				}
 			}
