@@ -60,6 +60,7 @@ public class AuditProviderFactory {
 
 	public static final String AUDIT_DEST_BASE = "xasecure.audit.destination";
 	public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC = "xasecure.audit.shutdown.hook.max.wait.seconds";
+	public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
 	public static final int AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
 
 	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
@@ -127,6 +128,9 @@ public class AuditProviderFactory {
 				AUDIT_KAFKA_IS_ENABLED_PROP, false);
 		boolean isAuditToSolrEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_SOLR_IS_ENABLED_PROP, false);
+
+		boolean isAuditFileCacheProviderEnabled = MiscUtil.getBooleanProperty(props,
+				AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP, false);
 
 		List<AuditHandler> providers = new ArrayList<AuditHandler>();
 
@@ -242,14 +246,25 @@ public class AuditProviderFactory {
 				LOG.info("AuditSummaryQueue is disabled");
 			}
 
-			// Create the AsysnQueue
-			AuditAsyncQueue asyncQueue = new AuditAsyncQueue(consumer);
-			propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "async";
-			asyncQueue.init(props, propPrefix);
-			asyncQueue.setParentPath(componentAppType);
-			mProvider = asyncQueue;
-			LOG.info("Starting audit queue " + mProvider.getName());
-			mProvider.start();
+			if (!isAuditFileCacheProviderEnabled) {
+				// Create the AsysnQueue
+				AuditAsyncQueue asyncQueue = new AuditAsyncQueue(consumer);
+				propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "async";
+				asyncQueue.init(props, propPrefix);
+				asyncQueue.setParentPath(componentAppType);
+				mProvider = asyncQueue;
+				LOG.info("Starting audit queue " + mProvider.getName());
+				mProvider.start();
+			} else {
+				// Assign AsyncQueue to AuditFileCacheProvider
+				AuditFileCacheProvider auditFileCacheProvider = new AuditFileCacheProvider(consumer);
+				propPrefix = BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "filecache";
+				auditFileCacheProvider.init(props, propPrefix);
+				auditFileCacheProvider.setParentPath(componentAppType);
+				mProvider = auditFileCacheProvider;
+				LOG.info("Starting Audit File Cache Provider " + mProvider.getName());
+				mProvider.start();
+			}
 		} else {
 			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
 			if (!isEnabled
