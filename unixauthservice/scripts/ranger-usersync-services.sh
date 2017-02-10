@@ -35,6 +35,13 @@ done
 if [ -z "${USERSYNC_PID_DIR_PATH}" ]; then
         USERSYNC_PID_DIR_PATH=/var/run/ranger
 fi
+
+if [ ! -d "${USERSYNC_PID_DIR_PATH}" ]
+then  
+	mkdir -p  $USERSYNC_PID_DIR_PATH
+	chmod 660 $USERSYNC_PID_DIR_PATH
+fi
+
 pidf=${USERSYNC_PID_DIR_PATH}/usersync.pid
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
         UNIX_USERSYNC_USER=ranger
