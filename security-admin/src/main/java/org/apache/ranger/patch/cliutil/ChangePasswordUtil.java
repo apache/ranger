@@ -125,7 +125,8 @@ public class ChangePasswordUtil extends BaseLoader {
 					System.exit(1);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Update Admin Password failure. Detail:  \n", e);
+				System.exit(1);
 			}
 		}
 		else{
