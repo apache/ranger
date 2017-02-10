@@ -902,6 +902,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
 				case DROPVIEW_PROPERTIES:
+				case MSCK:
 					accessType = HiveAccessType.ALTER;
 				break;
 
@@ -1001,7 +1002,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case DROPROLE:
 				case EXPLAIN:
 				case GRANT_ROLE:
-				case MSCK:
 				case REVOKE_ROLE:
 				case RESET:
 				case SET:
