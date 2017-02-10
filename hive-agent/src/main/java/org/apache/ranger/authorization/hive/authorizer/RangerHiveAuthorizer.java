@@ -406,9 +406,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				if(result != null && !result.getIsAllowed()) {
 					String path = resource.getAsString();
-					if (hiveOpType == HiveOperationType.DESCTABLE) {
-						path = path + "/*";
-					}
+					path = buildPathForException(path,hiveOpType);
 					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
 														 user, request.getHiveAccessType().name(), path));
 				}
@@ -1020,6 +1018,28 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		
 		return accessType;
+	}
+
+	private String buildPathForException(String path, HiveOperationType hiveOpType) {
+		String ret  	= path;
+		int endIndex 	= 0;
+		switch(hiveOpType) {
+			case DESCTABLE:
+				ret = path + "/*";
+				break;
+			case QUERY:
+				try {
+					endIndex = StringUtils.ordinalIndexOf(path, "/", 2);
+					ret = path.substring(0,endIndex) + "/*";
+				} catch( Exception e) {
+					//omit and return the path.Log error only in debug.
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("RangerHiveAuthorizer.buildPathForException(): Error while creating exception message ", e);
+					}
+				}
+				break;
+		}
+		return ret;
 	}
 
     private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf) {
