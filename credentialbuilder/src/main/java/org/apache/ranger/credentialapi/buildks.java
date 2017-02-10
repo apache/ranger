@@ -94,7 +94,7 @@ public class buildks {
 	    		returnCode=createKeyStore(args);
 	    	}else{
 	    		try{
-	    			System.out.println("Alias already exist!! will try to delete first.");
+	    			System.out.println("The alias " + alias + " already exists!! Will try to delete first.");
 	    			boolean isSilentMode = true;
 	    			String argsDelete[]=new String[4];
 	    			argsDelete[0]="delete";
