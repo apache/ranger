@@ -386,7 +386,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						if(auditHandler != null) {
 							INode    nodeChecked = inode;
 							FsAction action      = access;
-
 							if(isTraverseOnlyCheck) {
 								if(nodeChecked == null || nodeChecked.isFile()) {
 									if(parent != null) {
@@ -397,14 +396,14 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 								}
 
 								action = FsAction.EXECUTE;
-							} else if(action == null) {
-								if(parentAccess != null) {
+							} else if(action == null || action == FsAction.NONE)  {
+								if(parentAccess != null && parentAccess != FsAction.NONE ) {
 									nodeChecked = parent;
 									action      = parentAccess;
-								} else if(ancestorAccess != null) {
+								} else if(ancestorAccess != null  && ancestorAccess != FsAction.NONE ) {
 									nodeChecked = ancestor;
 									action      = ancestorAccess;
-								} else if(subAccess != null) {
+								} else if(subAccess != null && subAccess != FsAction.NONE ) {
 									action = subAccess;
 								}
 							}
