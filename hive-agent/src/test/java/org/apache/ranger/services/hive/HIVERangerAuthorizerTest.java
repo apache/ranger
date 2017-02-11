@@ -80,12 +80,6 @@ public class HIVERangerAuthorizerTest {
 
         conf.set(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, "" + port);
-
-        // Enable authorization
-        conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED.varname, "true");
-        conf.set(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.varname, "true");
-        conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER.varname,
-                 "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory");
         conf.set(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
 
         hiveServer = new HiveServer2();
@@ -128,6 +122,13 @@ public class HIVERangerAuthorizerTest {
 
         statement.close();
         connection.close();
+        
+        // Enable ranger authorization after the initial db setup and table creating is done.
+        conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED.varname, "true");
+        conf.set(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.varname, "true");
+        conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER.varname,
+                 "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory");
+        
     }
 
     @org.junit.AfterClass
