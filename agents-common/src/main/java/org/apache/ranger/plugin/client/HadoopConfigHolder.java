@@ -294,10 +294,10 @@ public class HadoopConfigHolder  {
 			nameRules = prop.getProperty(RANGER_NAME_RULES);
 			authType = prop.getProperty(RANGER_AUTH_TYPE, "simple");
 			
-			String hadoopSecurityAuthenticationn =  getHadoopSecurityAuthentication();
+			String hadoopSecurityAuthentication =  getHadoopSecurityAuthentication();
 
-			if ( hadoopSecurityAuthenticationn != null) {
-				isKerberosAuth = HADOOP_SECURITY_AUTHENTICATION_METHOD.equalsIgnoreCase(hadoopSecurityAuthenticationn);
+			if ( hadoopSecurityAuthentication != null) {
+				isKerberosAuth = HADOOP_SECURITY_AUTHENTICATION_METHOD.equalsIgnoreCase(hadoopSecurityAuthentication);
 			}
 			else {
 				isKerberosAuth = (((userName != null) && (userName.indexOf("@") > -1)) || (SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)));

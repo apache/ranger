@@ -252,6 +252,6 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
         counter = new AtomicInteger(0);
       }
 
-      return UUID + "-" + nextId;
+      return UUID + "-" + Integer.toString(nextId);
 	 }
 }
