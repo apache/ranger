@@ -160,8 +160,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
             }
             logFolder = new File(logFolderProp);
             if (!logFolder.isDirectory()) {
-                logFolder.mkdirs();
-                if (!logFolder.isDirectory()) {
+                boolean result = logFolder.mkdirs();
+                if (!logFolder.isDirectory() || !result) {
                     logger.fatal("File Spool folder not found and can't be created. folder="
                             + logFolder.getAbsolutePath()
                             + ", queueName="
@@ -185,8 +185,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 archiveFolder = new File(archiveFolderProp);
             }
             if (!archiveFolder.isDirectory()) {
-                archiveFolder.mkdirs();
-                if (!archiveFolder.isDirectory()) {
+                boolean result = archiveFolder.mkdirs();
+                if (!archiveFolder.isDirectory() || !result) {
                     logger.error("File Spool archive folder not found and can't be created. folder="
                             + archiveFolder.getAbsolutePath()
                             + ", queueName="
@@ -213,7 +213,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 boolean ret = indexFile.createNewFile();
                 if (!ret) {
                     logger.fatal("Error creating index file. fileName="
-                            + indexDoneFile.getPath());
+                            + indexFile.getPath());
                     return false;
                 }
             }
@@ -496,8 +496,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
             logger.info("Creating new file. queueName="
                     + FILE_CACHE_PROVIDER_NAME + ", fileName=" + fileName);
             // Open the file
-            logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-                    outLogFile)));
+            logWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                    outLogFile),"UTF-8")));
 
             AuditIndexRecord tmpIndexRecord = new AuditIndexRecord();
 
@@ -517,8 +517,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 logger.info("Opening existing file for append. queueName="
                         + FILE_CACHE_PROVIDER_NAME + ", fileName="
                         + currentWriterIndexRecord.filePath);
-                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-                        currentWriterIndexRecord.filePath, true)));
+                logWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                        currentWriterIndexRecord.filePath, true),"UTF-8")));
             }
         }
         return logWriter;
@@ -569,17 +569,23 @@ public class AuditFileCacheProviderSpool implements Runnable {
      */
     void loadIndexFile() throws IOException {
         logger.info("Loading index file. fileName=" + indexFile.getPath());
-        BufferedReader br = new BufferedReader(new FileReader(indexFile));
-        indexRecords.clear();
-        String line;
-        while ((line = br.readLine()) != null) {
-            if (!line.isEmpty() && !line.startsWith("#")) {
-                AuditIndexRecord record = gson.fromJson(line,
-                        AuditIndexRecord.class);
-                indexRecords.add(record);
+        BufferedReader br = null;
+        try {
+             br = new BufferedReader(new InputStreamReader(new FileInputStream(indexFile), "UTF-8"));
+            indexRecords.clear();
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.isEmpty() && !line.startsWith("#")) {
+                    AuditIndexRecord record = gson.fromJson(line,
+                            AuditIndexRecord.class);
+                    indexRecords.add(record);
+                }
+            }
+        } finally {
+            if (br!= null) {
+                br.close();
             }
         }
-        br.close();
     }
 
     synchronized void printIndex() {
@@ -616,7 +622,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     }
 
     synchronized void saveIndexFile() throws FileNotFoundException, IOException {
-        PrintWriter out = new PrintWriter(indexFile);
+        PrintWriter out = new PrintWriter(indexFile,"UTF-8");
         for (AuditIndexRecord auditIndexRecord : indexRecords) {
             out.println(gson.toJson(auditIndexRecord));
         }
@@ -631,8 +637,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 + ", queueName=" + FILE_CACHE_PROVIDER_NAME + ", consumer="
                 + consumerProvider.getName());
         String line = gson.toJson(indexRecord);
-        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
-                indexDoneFile, true)));
+        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                indexDoneFile, true),"UTF-8")));
         out.println(line);
         out.flush();
         out.close();
@@ -648,7 +654,11 @@ public class AuditFileCacheProviderSpool implements Runnable {
             String fileName = logFile.getName();
             archiveFile = new File(archiveFolder, fileName);
             logger.info("Moving logFile " + logFile + " to " + archiveFile);
-            logFile.renameTo(archiveFile);
+            boolean result = logFile.renameTo(archiveFile);
+            if (!result) {
+                logger.error("Error moving log file to archive folder. Unable to rename"
+                        + logFile + " to archiveFile=" + archiveFile);
+            }
         } catch (Throwable t) {
             logger.error("Error moving log file to archive folder. logFile="
                     + logFile + ", archiveFile=" + archiveFile, t);
@@ -743,11 +753,6 @@ public class AuditFileCacheProviderSpool implements Runnable {
 
     }
 
-    class AuditFileSpoolAttempt {
-        Date attemptTime;
-        String status;
-    }
-
     /*
      * (non-Javadoc)
      *
@@ -804,8 +809,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     isRemoveIndex = true;
                 } else {
                     // Let's open the file to write
-                    BufferedReader br = new BufferedReader(new FileReader(
-                            currentConsumerIndexRecord.filePath));
+                    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(
+                            currentConsumerIndexRecord.filePath),"UTF-8"));
                     try {
                         int startLine = currentConsumerIndexRecord.linePosition;
                         String line;
