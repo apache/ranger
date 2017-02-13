@@ -75,6 +75,19 @@
     </mailingLists>
     <developers>
         <developer>
+            <id>abhay</id>
+            <name>Abhay Kulkarni</name>
+            <email>abhay@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Hortonworks
+            </organization>
+        </developer>
+        <developer>
             <id>alok</id>
             <name>Alok Lal</name>
             <email>alok@apache.org</email>
