@@ -274,6 +274,19 @@
                     Hortonworks
                 </organization>
         </developer>
+	<developer>
+            <id>spolavarapu</id>
+            <name>Sailaja Polavarapu</name>
+            <email>spolavarapu@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Hortonworks
+            </organization>
+        </developer>
         <developer>
             <id>sradia</id>
             <name>Sanjay Radia</name>
@@ -382,10 +395,6 @@
         <contributor>
           	<name>Rich Haase</name>
           	<organization>Pandora</organization>
-        </contributor>
-        <contributor>
-          	<name>Sailaja Polavarapu</name>
-          	<organization>Hortonworks Inc.,</organization>
         </contributor>
         <contributor>
           	<name>Sree Vaddi</name>
