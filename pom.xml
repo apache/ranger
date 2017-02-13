@@ -168,7 +168,6 @@
 		<httpcomponents.httpclient.version>4.5.3</httpcomponents.httpclient.version>
 		<httpcomponents.httpcore.version>4.4.6</httpcomponents.httpcore.version>
 		<httpcomponents.httpmime.version>4.5.3</httpcomponents.httpmime.version>
-        <jackson.version>1.9.13</jackson.version>
         <javassist.version>3.12.1.GA</javassist.version>
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
