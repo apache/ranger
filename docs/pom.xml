@@ -113,6 +113,18 @@
             </organization>
         </developer>
         <developer>
+            <id>ankita</id>
+            <name>Ankita Sinha</name>
+            <email>ankita@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>bganesan</id>
             <name>Balaji Ganesan</name>
             <email>bganesan@apache.org</email>
@@ -331,10 +343,6 @@
         <contributor>
           	<name>Aneela Saleem</name>
           	<organization></organization>
-        </contributor>
-        <contributor>
-          	<name>Ankita Sinha</name>
-          	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
           	<name>Arshad Mohammad</name>
