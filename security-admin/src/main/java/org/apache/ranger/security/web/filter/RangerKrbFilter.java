@@ -107,7 +107,7 @@ public class RangerKrbFilter implements Filter {
 
   private static final String BROWSER_USER_AGENT_PARAM = "ranger.krb.browser-useragents-regex";	
 
-  private Set<Pattern> browserUserAgents;
+  private String[] browserUserAgents;
 
   private Properties config;
   private Signer signer;
@@ -590,27 +590,21 @@ public class RangerKrbFilter implements Filter {
     resp.addHeader("Set-Cookie", sb.toString());
   }
 
-  void parseBrowserUserAgents(String userAgents) {
-		String[] agentsArray = userAgents.split(",");
-		browserUserAgents = new HashSet<Pattern>();
-		for (String patternString : agentsArray) {
-			browserUserAgents.add(Pattern.compile(patternString));
-		}
+	void parseBrowserUserAgents(String userAgents) {
+		browserUserAgents = userAgents.split(",");
 	}
-	
+
 	protected boolean isBrowser(String userAgent) {
-		if (userAgent == null) {
-			return false;
-		}
-		if (browserUserAgents != null){
-			for (Pattern pattern : browserUserAgents) {
-				Matcher matcher = pattern.matcher(userAgent);
-				if (matcher.matches()) {
-					return true;
+		boolean isWeb = false;
+		if (browserUserAgents != null && browserUserAgents.length > 0 && userAgent != null) {
+			for (String ua : browserUserAgents) {
+				if (userAgent.toLowerCase().startsWith(ua.toLowerCase())) {
+					isWeb = true;
+					break;
 				}
 			}
 		}
-		return false;
+		return isWeb;
 	}
 }
 

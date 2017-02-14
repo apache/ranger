@@ -1810,8 +1810,8 @@ public class ServiceREST {
 			List<String> dataFileSourceServices = new ArrayList<String>();
 			if (fileName.endsWith("json")) {
 				try {
-					RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-					List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+					RangerExportPolicyList rangerExportPolicyList = null;
+					List<RangerPolicy> policies = null;
 					Gson gson = new Gson();
 					
 					String policiesString = IOUtils.toString(uploadedInputStream);
@@ -1823,19 +1823,19 @@ public class ServiceREST {
 						LOG.error("Provided json file is empty!!");
 						throw restErrorUtil.createRESTException("Provided json file is empty!!");
 					}
-					if (!CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())){
+					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())){
 						metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
 					} else {
 						LOG.info("metadata info is not provided!!");
 					}
-					if (!CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getPolicies())){
+					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getPolicies())){
 						policies = rangerExportPolicyList.getPolicies();
 					} else {
 						LOG.error("Provided json file does not contain any policy!!");
 						throw restErrorUtil.createRESTException("Provided json file does not contain any policy!!");
 					}
 					if (CollectionUtils.sizeIsEmpty(servicesMappingMap) && isOverride){
-						if(!CollectionUtils.sizeIsEmpty(policies)){
+						if(policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 							for (RangerPolicy policyInJson: policies){
 								if (policyInJson != null) {
 									if (StringUtils.isNotEmpty(policyInJson.getService().trim())) {
@@ -1855,7 +1855,7 @@ public class ServiceREST {
 							}
 						}
 					}else if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
-						if (!CollectionUtils.sizeIsEmpty(policies)){
+						if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 							for (RangerPolicy policyInJson: policies){
 								if (policyInJson != null){
 									if (StringUtils.isNotEmpty(policyInJson.getService().trim())) {
@@ -1881,7 +1881,7 @@ public class ServiceREST {
 									destinationServices, null);
 						}
 					}
-					if (!CollectionUtils.sizeIsEmpty(policies)){
+					if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 						for (RangerPolicy policyInJson: policies){
 							if (policyInJson != null){
 								policiesMap = svcStore.createPolicyMap(servicesMappingMap, sourceServices, destinationServices, policyInJson, policiesMap);
