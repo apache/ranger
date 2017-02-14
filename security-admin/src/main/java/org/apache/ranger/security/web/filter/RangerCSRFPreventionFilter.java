@@ -22,16 +22,12 @@ package org.apache.ranger.security.web.filter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,7 +39,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	private static final Logger LOG = Logger.getLogger(RangerCSRFPreventionFilter.class);
 		
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
-	public static final String BROWSER_USER_AGENTS_DEFAULT = "^Mozilla.*,^Opera.*,^Chrome.*";
+	public static final String BROWSER_USER_AGENTS_DEFAULT = "Mozilla,Opera,Chrome";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
 	public static final String METHODS_TO_IGNORE_DEFAULT = "GET,OPTIONS,HEAD,TRACE";
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
@@ -53,7 +49,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 
 	private String  headerName = HEADER_DEFAULT;
 	private Set<String> methodsToIgnore = null;
-	private Set<Pattern> browserUserAgents;
+	private String[] browserUserAgents;
 	
 	public RangerCSRFPreventionFilter() {
 		try {
@@ -94,26 +90,20 @@ public class RangerCSRFPreventionFilter implements Filter {
 	}
 	
 	void parseBrowserUserAgents(String userAgents) {
-		String[] agentsArray = userAgents.split(",");
-		browserUserAgents = new HashSet<Pattern>();
-		for (String patternString : agentsArray) {
-			browserUserAgents.add(Pattern.compile(patternString));
-		}
+		browserUserAgents = userAgents.split(",");
 	}
 	
 	protected boolean isBrowser(String userAgent) {
-		if (userAgent == null) {
-			return false;
-		}
-		if (browserUserAgents != null){
-			for (Pattern pattern : browserUserAgents) {
-				Matcher matcher = pattern.matcher(userAgent);
-				if (matcher.matches()) {
-					return true;
+		boolean isWeb = false;
+		if (browserUserAgents != null && browserUserAgents.length > 0 && userAgent != null) {
+			for (String ua : browserUserAgents) {
+				if (userAgent.toLowerCase().startsWith(ua.toLowerCase())) {
+					isWeb = true;
+					break;
 				}
 			}
 		}
-		return false;
+		return isWeb;
 	}
 	
 	public interface HttpInteraction {
