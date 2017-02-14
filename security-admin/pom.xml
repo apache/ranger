@@ -38,9 +38,9 @@
             <version>${aopalliance.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.ow2.util.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>${asm.version}</version>
+            <groupId>asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>${asm.all.version}</version>
         </dependency>
         <dependency>
             <groupId>c3p0</groupId>
