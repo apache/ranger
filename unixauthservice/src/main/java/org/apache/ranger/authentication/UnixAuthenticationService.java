@@ -376,7 +376,7 @@ public class UnixAuthenticationService {
 		else {
 			ret = getClass().getResourceAsStream(path);
 			if (ret == null) {
-				ret = getClass().getResourceAsStream("/" + path);
+				ret = getClass().getResourceAsStream(File.separator + path);
 			}
 		}
 		
