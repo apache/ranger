@@ -44,6 +44,10 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
 	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
 		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
+		if(StringUtils.isEmpty(qualifiedName)) {
+			throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "' not found in entity");
+		}
+
 		String topic = getResourceNameFromQualifiedName(qualifiedName);
 
 		if(StringUtils.isEmpty(topic)) {
@@ -57,9 +61,8 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
 		}
 
 		if(StringUtils.isEmpty(clusterName)) {
-			throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "' not found in entity");
+			throwExceptionWithMessage("Cluster name not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "'");
 		}
-
 
 		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 		Boolean isExcludes  = Boolean.FALSE;
