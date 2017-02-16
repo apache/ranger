@@ -316,7 +316,7 @@ def initializeInitD():
 		tagSyncScriptName = "ranger-tagsync-services.sh"
 		localScriptName = os.path.abspath(join(installPropDirName,tagSyncScriptName))
 		ubinScriptName = join("/usr/bin",tagSyncScriptName)
-		if isfile(ubinScriptName):
+		if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
 			os.remove(ubinScriptName)
 		os.symlink(localScriptName,ubinScriptName)
 

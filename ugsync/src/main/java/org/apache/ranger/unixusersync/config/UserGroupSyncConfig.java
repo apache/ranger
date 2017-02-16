@@ -79,9 +79,13 @@ public class UserGroupSyncConfig  {
 
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.keystore.password";
 
+	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
+
 	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
 
 	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.truststore.password";
+
+	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
 
 	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle";
 
@@ -425,6 +429,21 @@ public class UserGroupSyncConfig  {
 
 
 	public String getSSLKeyStorePathPassword() {
+		if (prop == null) {
+			return null;
+		}
+		if(prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE)){
+			String path=prop.getProperty(LGSYNC_LDAP_BIND_KEYSTORE);
+			String alias=SSL_KEYSTORE_PATH_PASSWORD_ALIAS;
+			if(path!=null && alias!=null){
+				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
+						prop.setProperty(SSL_KEYSTORE_PATH_PASSWORD_PARAM,password);
+					}
+				}
+			}
+		}
 		return  prop.getProperty(SSL_KEYSTORE_PATH_PASSWORD_PARAM);
 	}
 
@@ -434,6 +453,21 @@ public class UserGroupSyncConfig  {
 
 
 	public String getSSLTrustStorePathPassword() {
+		if (prop == null) {
+			return null;
+		}
+		if(prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE)){
+			String path=prop.getProperty(LGSYNC_LDAP_BIND_KEYSTORE);
+			String alias=SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS;
+			if(path!=null && alias!=null){
+				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
+						prop.setProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM,password);
+					}
+				}
+			}
+		}
 		return  prop.getProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM);
 	}
 

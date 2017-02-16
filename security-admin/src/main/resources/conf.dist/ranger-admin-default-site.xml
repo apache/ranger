@@ -240,12 +240,20 @@
 		<value>keystore.jks</value>
 	</property>
 	<property>
+		<name>ranger.unixauth.keystore.credential.alias</name>
+		<value>unixAuthKeyStoreAlias</value>
+	</property>
+	<property>
 		<name>ranger.unixauth.keystore.password</name>
 		<value>password</value>
 	</property>
 	<property>
 		<name>ranger.unixauth.truststore</name>
 		<value>cacerts</value>
+	</property>
+	<property>
+		<name>ranger.unixauth.truststore.credential.alias</name>
+		<value>unixAuthTrustStoreAlias</value>
 	</property>
 	<property>
 		<name>ranger.unixauth.truststore.password</name>
@@ -498,5 +506,29 @@
 	<property>
 		<name>ranger.db.ssl.verifyServerCertificate</name>
 		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.keystore.file</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.keystore.alias</name>
+		<value>keyStoreAlias</value>
+	</property>
+	<property>
+		<name>ranger.keystore.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.truststore.file</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.truststore.alias</name>
+		<value>trustStoreAlias</value>
+	</property>
+	<property>
+		<name>ranger.truststore.password</name>
+		<value></value>
 	</property>
 </configuration>

@@ -83,7 +83,6 @@ SYNC_SOURCE_LDAP = 'ldap'
 SYNC_SOURCE_LIST = [ SYNC_SOURCE_UNIX, SYNC_SOURCE_LDAP ]
 SYNC_LDAP_BIND_PASSWORD_KEY  = 'ranger.usersync.ldap.ldapbindpassword'
 credUpdateClassName =  'org.apache.ranger.credentialapi.buildks'
-#credUpdateClassName =  'com.hortonworks.credentialapi.buildks'
 ENV_LOGDIR_FILE = 'ranger-usersync-env-logdir.sh'
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-usersync-env-hadoopconfdir.sh"
@@ -550,7 +549,7 @@ def main():
                 if os.path.islink(usersync_conf_full_path):
                         os.remove(usersync_conf_full_path)
 
-	if isfile(hadoop_conf_full_path):
+	if isfile(hadoop_conf_full_path) and not isfile(usersync_conf_full_path):
         	os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
 
 main()

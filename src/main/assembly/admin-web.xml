@@ -207,6 +207,10 @@
                     <include>org.apache.hadoop:hadoop-common</include>
                     <include>commons-logging:commons-logging</include>
                     <include>com.sun.jersey.contribs:jersey-multipart</include>
+                    <include>com.google.guava:guava</include>
+                    <include>commons-collections:commons-collections</include>
+                    <include>commons-configuration:commons-configuration</include>
+                    <include>commons-lang:commons-lang</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>

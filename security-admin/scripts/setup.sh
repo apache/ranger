@@ -68,6 +68,10 @@ db_password=$(get_prop 'db_password' $PROPFILE)
 db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
 db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
+javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
+javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
+javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
+javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
 audit_store=$(get_prop 'audit_store' $PROPFILE)
 audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
@@ -78,6 +82,9 @@ audit_db_user=''
 audit_db_password=''
 policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
 policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
+policymgr_https_keystore_file=$(get_prop 'policymgr_https_keystore_file' $PROPFILE)
+policymgr_https_keystore_keyalias=$(get_prop 'policymgr_https_keystore_keyalias' $PROPFILE)
+policymgr_https_keystore_password=$(get_prop 'policymgr_https_keystore_password' $PROPFILE)
 policymgr_supportedcomponents=$(get_prop 'policymgr_supportedcomponents' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
@@ -85,6 +92,10 @@ authentication_method=$(get_prop 'authentication_method' $PROPFILE)
 remoteLoginEnabled=$(get_prop 'remoteLoginEnabled' $PROPFILE)
 authServiceHostName=$(get_prop 'authServiceHostName' $PROPFILE)
 authServicePort=$(get_prop 'authServicePort' $PROPFILE)
+ranger_unixauth_keystore=$(get_prop 'ranger_unixauth_keystore' $PROPFILE)
+ranger_unixauth_keystore_password=$(get_prop 'ranger_unixauth_keystore_password' $PROPFILE)
+ranger_unixauth_truststore=$(get_prop 'ranger_unixauth_truststore' $PROPFILE)
+ranger_unixauth_truststore_password=$(get_prop 'ranger_unixauth_truststore_password' $PROPFILE)
 xa_ldap_url=$(get_prop 'xa_ldap_url' $PROPFILE)
 xa_ldap_userDNpattern=$(get_prop 'xa_ldap_userDNpattern' $PROPFILE)
 xa_ldap_groupSearchBase=$(get_prop 'xa_ldap_groupSearchBase' $PROPFILE)
@@ -826,6 +837,183 @@ update_properties() {
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 	fi
+	if [ "${javax_net_ssl_keyStore}" != "" ]  && [ "${javax_net_ssl_keyStorePassword}" != "" ]
+	then
+		javax_net_ssl_keyStoreAlias=keyStoreAlias
+
+		propertyName=ranger.keystore.file
+		newPropertyValue="${javax_net_ssl_keyStore}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.keystore.alias
+		newPropertyValue="${javax_net_ssl_keyStoreAlias}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		if [ "${keystore}" != "" ]
+		then
+			propertyName=ranger.keystore.password
+			newPropertyValue="_"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_keyStoreAlias" -v "$javax_net_ssl_keyStorePassword" -c 1
+		else
+			propertyName=ranger.keystore.password
+			newPropertyValue="${javax_net_ssl_keyStorePassword}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+
+		if test -f $keystore; then
+			chown -R ${unix_user}:${unix_group} ${keystore}
+		else
+			propertyName=ranger.keystore.password
+			newPropertyValue="${javax_net_ssl_keyStorePassword}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+
+	fi
+	if [ "${javax_net_ssl_trustStore}" != "" ]  && [ "${javax_net_ssl_trustStorePassword}" != "" ]
+	then
+		javax_net_ssl_trustStoreAlias=trustStoreAlias
+
+		propertyName=ranger.truststore.file
+		newPropertyValue="${javax_net_ssl_trustStore}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.truststore.alias
+		newPropertyValue="${javax_net_ssl_trustStoreAlias}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		if [ "${keystore}" != "" ]
+		then
+			propertyName=ranger.truststore.password
+			newPropertyValue="_"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_trustStoreAlias" -v "$javax_net_ssl_trustStorePassword" -c 1
+		else
+			propertyName=ranger.truststore.password
+			newPropertyValue="${javax_net_ssl_trustStorePassword}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+		if test -f $keystore; then
+			chown -R ${unix_user}:${unix_group} ${keystore}
+		else
+			propertyName=ranger.truststore.password
+			newPropertyValue="${javax_net_ssl_trustStorePassword}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+
+	fi
+	if [ "${policymgr_http_enabled}" == "false" ]
+	then
+		if [ "${policymgr_https_keystore_keyalias}" == "" ]
+		then
+			policymgr_https_keystore_keyalias=rangeradmin
+		fi
+		if [ "${policymgr_https_keystore_file}" != "" ] && [ "${policymgr_https_keystore_password}" != "" ]
+		then
+			propertyName=ranger.service.https.attrib.ssl.enabled
+			newPropertyValue="true"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+			propertyName=ranger.service.https.attrib.client.auth
+			newPropertyValue="want"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+			propertyName=ranger.service.https.attrib.keystore.file
+			newPropertyValue="${policymgr_https_keystore_file}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+			propertyName=ranger.service.https.attrib.keystore.keyalias
+			newPropertyValue="${policymgr_https_keystore_keyalias}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+			policymgr_https_keystore_credential_alias=keyStoreCredentialAlias
+			propertyName=ranger.service.https.attrib.keystore.credential.alias
+			newPropertyValue="${policymgr_https_keystore_credential_alias}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+			if [ "${keystore}" != "" ]
+			then
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="_"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_keystore_credential_alias" -v "$policymgr_https_keystore_password" -c 1
+			else
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="${policymgr_https_keystore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			fi
+			if test -f $keystore; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="${policymgr_https_keystore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			fi
+		fi
+	fi
+
+	if [ "${ranger_unixauth_keystore}" != "" ] && [ "${ranger_unixauth_keystore_password}" != "" ]
+	then
+		propertyName=ranger.unixauth.keystore
+		newPropertyValue="${ranger_unixauth_keystore}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		ranger_unixauth_keystore_alias=unixAuthKeyStoreAlias
+		propertyName=ranger.unixauth.keystore.credential.alias
+		newPropertyValue="${ranger_unixauth_keystore_alias}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		if [ "${keystore}" != "" ]
+		then
+			propertyName=ranger.unixauth.keystore.password
+			newPropertyValue="_"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_keystore_alias" -v "$ranger_unixauth_keystore_password" -c 1
+		else
+			propertyName=ranger.unixauth.keystore.password
+			newPropertyValue="${ranger_unixauth_keystore_password}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+		if test -f $keystore; then
+			chown -R ${unix_user}:${unix_group} ${keystore}
+		else
+			propertyName=ranger.unixauth.keystore.password
+			newPropertyValue="${ranger_unixauth_keystore_password}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+	fi
+
+	if [ "${ranger_unixauth_truststore}" != "" ] && [ "${ranger_unixauth_truststore_password}" != "" ]
+	then
+		propertyName=ranger.unixauth.truststore
+		newPropertyValue="${ranger_unixauth_truststore}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		ranger_unixauth_truststore_alias=unixAuthTrustStoreAlias
+		propertyName=ranger.unixauth.truststore.credential.alias
+		newPropertyValue="${ranger_unixauth_truststore_alias}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		if [ "${keystore}" != "" ]
+		then
+			propertyName=ranger.unixauth.truststore.password
+			newPropertyValue="_"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_truststore_alias" -v "$ranger_unixauth_truststore_password" -c 1
+		else
+			propertyName=ranger.unixauth.truststore.password
+			newPropertyValue="${ranger_unixauth_truststore_password}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+		if test -f $keystore; then
+			chown -R ${unix_user}:${unix_group} ${keystore}
+		else
+			propertyName=ranger.unixauth.truststore.password
+			newPropertyValue="${ranger_unixauth_truststore_password}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
+	fi
+
 }
 
 do_unixauth_setup() {
@@ -1189,10 +1377,6 @@ setup_install_files(){
 
 	if [ "${db_ssl_verifyServerCertificate}" == "true" ]
 	then
-		javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
-		javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
-		javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
-		javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
 		DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh

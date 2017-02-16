@@ -27,7 +27,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Logger;
-
+import java.util.List;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -38,7 +39,10 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.hadoop.security.SecureClientLogin;
-
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.alias.CredentialProvider;
+import org.apache.hadoop.security.alias.CredentialProviderFactory;
+import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 import javax.security.auth.Subject;
 
 import org.w3c.dom.Document;
@@ -52,12 +56,12 @@ public class EmbeddedServer {
 			.getName());
 	private static final String DEFAULT_NAME_RULE = "DEFAULT";
 	
-	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-site.xml";
+	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-default-site.xml";
 	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
 	
 	private static final String DEFAULT_WEBAPPS_ROOT_FOLDER = "webapps";
 	
-	private static String configFile = DEFAULT_CONFIG_FILENAME;
+	private static String configFile = "ranger-admin-site.xml";
 	
 	private static final String AUTH_TYPE_KERBEROS = "kerberos";
     private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
@@ -78,6 +82,7 @@ public class EmbeddedServer {
 			configFile = args[0];
 		}
 		loadConfig(CORE_SITE_CONFIG_FILENAME);
+		loadConfig(DEFAULT_CONFIG_FILENAME);
 		loadConfig(configFile);		
 	}
 	
@@ -126,9 +131,22 @@ public class EmbeddedServer {
 			ssl.setScheme("https");
 			ssl.setAttribute("SSLEnabled", "true");
 			ssl.setAttribute("sslProtocol", getConfig("ranger.service.https.attrib.ssl.protocol", "TLS"));
-			ssl.setAttribute("clientAuth", getConfig("ranger.service.https.attrib.clientAuth", "false"));
-			ssl.setAttribute("keyAlias", getConfig("ranger.service.https.attrib.keystore.keyalias"));
-			ssl.setAttribute("keystorePass", getConfig("ranger.service.https.attrib.keystore.pass"));
+			String clientAuth=getConfig("ranger.service.https.attrib.clientAuth", "false");
+			if("false".equalsIgnoreCase(clientAuth)){
+				clientAuth=getConfig("ranger.service.https.attrib.client.auth", "want");
+			}
+			ssl.setAttribute("clientAuth",clientAuth);
+			String providerPath=getConfig("ranger.credential.provider.path");
+			String keyAlias= getConfig("ranger.service.https.attrib.keystore.credential.alias","keyStoreCredentialAlias");
+			String keystorePass=null;
+			if(providerPath!=null && keyAlias!=null){
+				keystorePass=getDecryptedString(providerPath.trim(), keyAlias.trim());
+				if(keystorePass==null || keystorePass.trim().isEmpty() || "none".equalsIgnoreCase(keystorePass.trim())){
+					keystorePass=getConfig("ranger.service.https.attrib.keystore.pass");
+				}
+			}
+			ssl.setAttribute("keyAlias", getConfig("ranger.service.https.attrib.keystore.keyalias","rangeradmin"));
+			ssl.setAttribute("keystorePass", keystorePass);
 			ssl.setAttribute("keystoreFile", getKeystoreFile());
 			
 			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
@@ -447,5 +465,50 @@ public class EmbeddedServer {
 				LOG.info(property + ":" + server.getConnector().getProperty(property));
 			}
 		}
+	}
+
+	public String getDecryptedString(String CrendentialProviderPath,String alias) {
+		String credential=null;
+		try{
+			if(CrendentialProviderPath==null || alias==null||CrendentialProviderPath.trim().isEmpty()||alias.trim().isEmpty()){
+				return null;
+			}
+			char[] pass = null;
+			Configuration conf = new Configuration();
+			String crendentialProviderPrefixJceks=JavaKeyStoreProvider.SCHEME_NAME + "://file";
+			String crendentialProviderPrefixLocalJceks="localjceks://file";
+			crendentialProviderPrefixJceks=crendentialProviderPrefixJceks.toLowerCase();
+			CrendentialProviderPath=CrendentialProviderPath.trim();
+			alias=alias.trim();
+			if(CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixJceks) ||  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixLocalJceks)){
+				conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,CrendentialProviderPath);
+			}else{
+				if(CrendentialProviderPath.startsWith("/")){
+					conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,JavaKeyStoreProvider.SCHEME_NAME + "://file" + CrendentialProviderPath);
+				}else{
+					conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,JavaKeyStoreProvider.SCHEME_NAME + "://file/" + CrendentialProviderPath);
+				}
+			}
+			List<CredentialProvider> providers = CredentialProviderFactory.getProviders(conf);
+			List<String> aliasesList=new ArrayList<String>();
+			CredentialProvider.CredentialEntry credEntry=null;
+			for(CredentialProvider provider: providers) {
+				//System.out.println("Credential Provider :" + provider);
+				aliasesList=provider.getAliases();
+				if(aliasesList!=null && aliasesList.contains(alias.toLowerCase())){
+					credEntry=null;
+					credEntry= provider.getCredentialEntry(alias);
+					pass = credEntry.getCredential();
+					if(pass!=null && pass.length>0){
+						credential=String.valueOf(pass);
+						break;
+					}
+				}
+			}
+		}catch(Exception ex){
+			LOG.severe("CredentialReader failed while decrypting provided string. Reason: " + ex.toString());
+			credential=null;
+		}
+		return credential;
 	}
 }
