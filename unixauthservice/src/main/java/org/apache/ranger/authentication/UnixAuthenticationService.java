@@ -113,6 +113,7 @@ public class UnixAuthenticationService {
 		try {
 			LOG.info("Starting User Sync Service!");
 			startUnixUserGroupSyncProcess();
+			Thread.sleep(5000);
 			if (enableUnixAuth) {
 				LOG.info("Enabling Unix Auth Service!");
 			    init();

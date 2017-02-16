@@ -103,6 +103,16 @@ hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
 
 DB_HOST="${db_host}"
 
+ranger_kms_http_enabled=$(get_prop 'ranger_kms_http_enabled' $PROPFILE)
+ranger_kms_https_keystore_file=$(get_prop 'ranger_kms_https_keystore_file' $PROPFILE)
+ranger_kms_https_keystore_keyalias=$(get_prop 'ranger_kms_https_keystore_keyalias' $PROPFILE)
+ranger_kms_https_keystore_password=$(get_prop 'ranger_kms_https_keystore_password' $PROPFILE)
+
+javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
+javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
+javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
+javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
+
 check_ret_status(){
 	if [ $1 -ne 0 ]; then
 		log "[E] $2";
@@ -674,6 +684,70 @@ update_properties() {
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file         
         fi
 
+	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml
+    if test -f $to_file_kms_site; then
+		log "[I] $to_file_kms_site file found"
+	else
+		log "[E] $to_file_kms_site does not exists" ; exit 1;
+    fi
+
+	propertyName=ranger.service.http.enabled
+	newPropertyValue="${ranger_kms_http_enabled}"
+	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+	if [ "${ranger_kms_http_enabled}" == "false" ]
+	then
+		if [ "${ranger_kms_https_keystore_keyalias}" == "" ]
+		then
+			ranger_kms_https_keystore_keyalias=rangerkms
+		fi
+		if [ "${ranger_kms_https_keystore_file}" != "" ] && [ "${ranger_kms_https_keystore_password}" != "" ]
+		then
+			propertyName=ranger.service.https.attrib.ssl.enabled
+			newPropertyValue="true"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			propertyName=ranger.service.https.attrib.client.auth
+			newPropertyValue="want"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			propertyName=ranger.service.https.attrib.keystore.file
+			newPropertyValue="${ranger_kms_https_keystore_file}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			propertyName=ranger.service.https.attrib.keystore.keyalias
+			newPropertyValue="${ranger_kms_https_keystore_keyalias}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			policymgr_https_keystore_credential_alias=keyStoreCredentialAlias
+			propertyName=ranger.service.https.attrib.keystore.credential.alias
+			newPropertyValue="${policymgr_https_keystore_credential_alias}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			propertyName=ranger.credential.provider.path
+			newPropertyValue="${keystore}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+			if [ "${keystore}" != "" ]
+			then
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="_"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_keystore_credential_alias" -v "$ranger_kms_https_keystore_password" -c 1
+			else
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="${ranger_kms_https_keystore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+			fi
+			if test -f $keystore; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+				chmod 640 ${keystore}
+			else
+				propertyName=ranger.service.https.attrib.keystore.pass
+				newPropertyValue="${ranger_kms_https_keystore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+			fi
+		fi
+	fi
 }
 
 #=====================================================================
@@ -817,10 +891,6 @@ setup_install_files(){
 
 	if [ "${db_ssl_verifyServerCertificate}" == "true" ]
 	then
-		javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
-		javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
-		javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
-		javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
 		DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh

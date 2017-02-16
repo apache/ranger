@@ -73,26 +73,82 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	
 	// update system trust store path with custom trust store.
 	if (propertiesMap!=null && propertiesMap.containsKey("ranger.truststore.file")) {
-		System.setProperty("javax.net.ssl.trustStore", propertiesMap.get("ranger.truststore.file"));
-		System.setProperty("javax.net.ssl.trustStorePassword", propertiesMap.get("ranger.truststore.password"));
-		System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
 		if(!StringUtils.isEmpty(propertiesMap.get("ranger.truststore.file"))){
-			Path path = Paths.get(propertiesMap.get("ranger.truststore.file"));
-			if (!Files.exists(path) || !Files.isReadable(path)) {
+			System.setProperty("javax.net.ssl.trustStore", propertiesMap.get("ranger.truststore.file"));
+			System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
+			Path trustStoreFile = Paths.get(propertiesMap.get("ranger.truststore.file"));
+			if (!Files.exists(trustStoreFile) || !Files.isReadable(trustStoreFile)) {
 				logger.debug("Could not find or read truststore file '"+propertiesMap.get("ranger.truststore.file")+"'");
+			}else{
+				if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path")){
+					String path=propertiesMap.get("ranger.credential.provider.path");
+					String trustStoreAlias=getProperty("ranger.truststore.alias","trustStoreAlias");
+					if(path!=null && trustStoreAlias!=null){
+						String trustStorePassword=CredentialReader.getDecryptedString(path.trim(), trustStoreAlias.trim());
+						if(trustStorePassword!=null&& !trustStorePassword.trim().isEmpty() && !trustStorePassword.trim().equalsIgnoreCase("none")){
+							propertiesMap.put("ranger.truststore.password", trustStorePassword);
+							props.put("ranger.truststore.password", trustStorePassword);
+						}else{
+							logger.info("trustStorePassword password not applied; clear text password shall be applicable");
+						}
+					}
+				}
 			}
 		}
+		System.setProperty("javax.net.ssl.trustStorePassword", propertiesMap.get("ranger.truststore.password"));
 	}
 
 	// update system key store path with custom key store.
 	if (propertiesMap!=null && propertiesMap.containsKey("ranger.keystore.file")) {
-		System.setProperty("javax.net.ssl.keyStore", propertiesMap.get("ranger.keystore.file"));
-		System.setProperty("javax.net.ssl.keyStorePassword", propertiesMap.get("ranger.keystore.password"));
-		System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
 		if(!StringUtils.isEmpty(propertiesMap.get("ranger.keystore.file"))){
-			Path path = Paths.get(propertiesMap.get("ranger.keystore.file"));
-			if (!Files.exists(path) || !Files.isReadable(path)) {
+			System.setProperty("javax.net.ssl.keyStore", propertiesMap.get("ranger.keystore.file"));
+			System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
+			Path keyStoreFile = Paths.get(propertiesMap.get("ranger.keystore.file"));
+			if (!Files.exists(keyStoreFile) || !Files.isReadable(keyStoreFile)) {
 				logger.debug("Could not find or read keystore file '"+propertiesMap.get("ranger.keystore.file")+"'");
+			}else{
+				if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path")){
+					String path=propertiesMap.get("ranger.credential.provider.path");
+					String keyStoreAlias=getProperty("ranger.keystore.alias","keyStoreAlias");
+					if(path!=null && keyStoreAlias!=null){
+						String keyStorePassword=CredentialReader.getDecryptedString(path.trim(), keyStoreAlias.trim());
+						if(keyStorePassword!=null&& !keyStorePassword.trim().isEmpty() && !keyStorePassword.trim().equalsIgnoreCase("none")){
+							propertiesMap.put("ranger.keystore.password", keyStorePassword);
+							props.put("ranger.keystore.password", keyStorePassword);
+						}else{
+							logger.info("keyStorePassword password not applied; clear text password shall be applicable");
+						}
+					}
+				}
+			}
+		}
+		System.setProperty("javax.net.ssl.keyStorePassword", propertiesMap.get("ranger.keystore.password"));
+	}
+
+	//update unixauth keystore and truststore credentials
+	if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path")){
+		String path=propertiesMap.get("ranger.credential.provider.path");
+		if(path!=null){
+			String unixAuthKeyStoreAlias=getProperty("ranger.unixauth.keystore.alias","unixAuthKeyStoreAlias");
+			if(unixAuthKeyStoreAlias!=null){
+				String unixAuthKeyStorePass=CredentialReader.getDecryptedString(path.trim(),unixAuthKeyStoreAlias.trim());
+				if(unixAuthKeyStorePass!=null&& !unixAuthKeyStorePass.trim().isEmpty() &&!unixAuthKeyStorePass.trim().equalsIgnoreCase("none")){
+					propertiesMap.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
+					props.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
+				}else{
+					logger.info("unixauth keystore password not applied; clear text password shall be applicable");
+				}
+			}
+			//
+			String unixAuthTrustStoreAlias=getProperty("ranger.unixauth.truststore.alias","unixAuthTrustStoreAlias");
+			if(unixAuthTrustStoreAlias!=null){
+				String unixAuthTrustStorePass=CredentialReader.getDecryptedString(path.trim(),unixAuthTrustStoreAlias.trim());
+				if(unixAuthTrustStorePass!=null&& !unixAuthTrustStorePass.trim().isEmpty() &&!unixAuthTrustStorePass.trim().equalsIgnoreCase("none")){
+					propertiesMap.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
+					props.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
+				}else{
+					logger.info("unixauth truststore password not applied; clear text password shall be applicable");
+				}
 			}
 		}
 	}
@@ -108,7 +164,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				propertiesMap.put("ranger.jpa.jdbc.password", xaDBPassword);
 				props.put("ranger.jpa.jdbc.password", xaDBPassword);
 			}else{
-				logger.info("Credential keystore password not applied for XA DB; clear text password shall be applicable");
+				logger.info("Credential keystore password not applied for Ranger DB; clear text password shall be applicable");
 			}
 		}
 	}
