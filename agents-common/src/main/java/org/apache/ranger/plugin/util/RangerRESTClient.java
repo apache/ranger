@@ -230,32 +230,34 @@ public class RangerRESTClient {
 
 		mIsSSL = StringUtil.containsIgnoreCase(mUrl, "https");
 
-		InputStream in =  null;
+		if (mIsSSL) {
 
-		try {
-			Configuration conf = new Configuration();
+			InputStream in = null;
 
-			in = getFileInputStream(mSslConfigFileName);
+			try {
+				Configuration conf = new Configuration();
 
-			if (in != null) {
-				conf.addResource(in);
+				in = getFileInputStream(mSslConfigFileName);
+
+				if (in != null) {
+					conf.addResource(in);
+				}
+
+				mKeyStoreURL = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
+				mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
+				mKeyStoreType = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
+				mKeyStoreFile = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+
+				mTrustStoreURL = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+				mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
+				mTrustStoreType = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
+				mTrustStoreFile = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+			} catch (IOException ioe) {
+				LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
+			} finally {
+				close(in, mSslConfigFileName);
 			}
 
-			mKeyStoreURL   = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
-			mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-			mKeyStoreType  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
-			mKeyStoreFile  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
-
-			mTrustStoreURL   = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
-			mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-			mTrustStoreType  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
-			mTrustStoreFile  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
-		}
-		catch(IOException ioe) {
-			LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
-		}
-		finally {
-			close(in, mSslConfigFileName);
 		}
 	}
 
