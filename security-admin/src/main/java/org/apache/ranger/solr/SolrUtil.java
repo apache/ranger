@@ -117,6 +117,7 @@ public class SolrUtil {
 						} else if (searchField.getSearchType() == SEARCH_TYPE.LESS_EQUAL_THAN
 								|| searchField.getSearchType() == SEARCH_TYPE.LESS_THAN) {
 							toDate = (Date) paramValue;
+							dateFieldName = fieldName;
 						}
 					}
 				} else if (searchField.getSearchType() == SEARCH_TYPE.GREATER_EQUAL_THAN
