@@ -658,8 +658,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	
 		    ret = gson.fromJson(response, GroupUserInfo.class);
 		    
-		    LOG.debug("return value = " + ret.getXgroupInfo().getName());
-
 		} catch (Exception e) {
 
 			LOG.warn( "ERROR: Unable to get group user mappings for: " + groupName, e);
