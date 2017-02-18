@@ -456,7 +456,7 @@ define(function(require){
 			var selArr = [];
 			var message = '';
 			_.each(collection.selected,function(obj){
-				 selArr.push(_.escape(obj.get('name')));
+                                 selArr.push(obj.get('name'));
             });
 			var  vXStrings = [];
 			var jsonUsers  = {};
@@ -471,7 +471,7 @@ define(function(require){
 			var total_selected = jsonUsers.vXStrings.length;
 
 			if(total_selected == 1) {
-				message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+jsonUsers.vXStrings[0].value+'\'?';
+                                message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+ _.escape( jsonUsers.vXStrings[0].value )+'\'?';
 			}
 			else {
 				message = 'Are you sure you want to delete '+total_selected+' '+(that.showUsers ? 'users':'groups')+'?';

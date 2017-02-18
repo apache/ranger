@@ -89,14 +89,14 @@ define(function(require){
 				firstName : { 
 					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.firstName")+' *',
-					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i, 
+                                        validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid first name'}],
 					errorMsg    :localization.tt('validationMessages.firstNameValidationMsg'),
 				},
 				lastName : { 
 					type		: 'TextFiledWithIcon',
 					title		: localization.tt("lbl.lastName"),
-					validators  : [{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -]|[\u00C0-\u017F])+$/i, 
+                                        validators  : [{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid last name'}],
 					errorMsg    :localization.tt('validationMessages.lastNameValidationMsg'),
 				},

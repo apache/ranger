@@ -229,7 +229,7 @@ define(function(require) {
 	XAUtils.notifyError = function(type, text, options) {
 		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-warning-sign"></span>\
 			</div><h4 style="margin-top: -19px;margin-left: 15px;">Error</h4><div>'
-				+ text + '</div></div></div>';
+                                + _.escape(text) + '</div></div></div>';
 		if (_.isUndefined(options)) {
 			options = {
 				message : {

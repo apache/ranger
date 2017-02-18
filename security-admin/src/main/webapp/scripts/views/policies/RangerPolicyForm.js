@@ -261,65 +261,42 @@ define(function(require){
 				this.$el.find(this.ui.denyConditionItems).remove();
 			} 
 	
-			this.userList = new VXUserList();
-			var params = {sortBy : 'name', isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
-			this.userList.setPageSize(100,{fetch:false});
-			this.userList.fetch({
-				cache :true,
-				data: params,
-				async : false
-			});
-			this.groupList = new VXGroupList();
-			this.groupList.setPageSize(100,{fetch:false});
-			this.groupList.fetch({
-					cache :true,
-					data : params
-				}).done(function(){
-						that.$('[data-customfields="groupPerms"]').html(new PermissionList({
-							collection : that.formInputList,
-							groupList  : that.groupList,
-							userList   : that.userList,
-							model 	   : that.model,
-							accessTypes: accessType,
-							headerTitle: "",
-							rangerServiceDefModel : that.rangerServiceDefModel,
-							rangerPolicyType : that.model.get('policyType')
-						}).render().el);
+                        that.$('[data-customfields="groupPerms"]').html(new PermissionList({
+                                collection : that.formInputList,
+                                model 	   : that.model,
+                                accessTypes: accessType,
+                                headerTitle: "",
+                                rangerServiceDefModel : that.rangerServiceDefModel,
+                                rangerPolicyType : that.model.get('policyType')
+                        }).render().el);
 						
-						if( enableDenyAndExceptionsInPolicies ){
-							that.$('[data-customfields="groupPermsAllowExclude"]').html(new PermissionList({
-								collection : that.formInputAllowExceptionList,
-								groupList  : that.groupList,
-								userList   : that.userList,
-								model 	   : that.model,
-								accessTypes: accessType,
-								headerTitle: "",
-								rangerServiceDefModel : that.rangerServiceDefModel,
-								rangerPolicyType : that.model.get('policyType')
-							}).render().el);
-						
-							that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
-								collection : that.formInputDenyList,
-								groupList  : that.groupList,
-								userList   : that.userList,
-								model 	   : that.model,
-								accessTypes: accessType,
-								headerTitle: "Deny",
-								rangerServiceDefModel : that.rangerServiceDefModel,
-								rangerPolicyType : that.model.get('policyType')
-							}).render().el);
-							that.$('[data-customfields="groupPermsDenyExclude"]').html(new PermissionList({
-								collection : that.formInputDenyExceptionList,
-								groupList  : that.groupList,
-								userList   : that.userList,
-								model 	   : that.model,
-								accessTypes: accessType,
-								headerTitle: "Deny",
-								rangerServiceDefModel : that.rangerServiceDefModel,
-								rangerPolicyType : that.model.get('policyType')
-							}).render().el);
-					}
-			});
+                        if( enableDenyAndExceptionsInPolicies ){
+                                that.$('[data-customfields="groupPermsAllowExclude"]').html(new PermissionList({
+                                        collection : that.formInputAllowExceptionList,
+                                        model 	   : that.model,
+                                        accessTypes: accessType,
+                                        headerTitle: "",
+                                        rangerServiceDefModel : that.rangerServiceDefModel,
+                                        rangerPolicyType : that.model.get('policyType')
+                                }).render().el);
+
+                                that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
+                                        collection : that.formInputDenyList,
+                                        model 	   : that.model,
+                                        accessTypes: accessType,
+                                        headerTitle: "Deny",
+                                        rangerServiceDefModel : that.rangerServiceDefModel,
+                                        rangerPolicyType : that.model.get('policyType')
+                                }).render().el);
+                                that.$('[data-customfields="groupPermsDenyExclude"]').html(new PermissionList({
+                                        collection : that.formInputDenyExceptionList,
+                                        model 	   : that.model,
+                                        accessTypes: accessType,
+                                        headerTitle: "Deny",
+                                        rangerServiceDefModel : that.rangerServiceDefModel,
+                                        rangerPolicyType : that.model.get('policyType')
+                                }).render().el);
+                        }
 
 		},
 		renderParentChildHideShow : function(onChangeOfSameLevelType) {
@@ -436,6 +413,7 @@ define(function(require){
 				this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
 			}
 			this.model.set('service',this.rangerService.get('name'));
+                        this.model.set('name', _.escape(this.model.get('name')));
 		},
 		setPermissionsToColl : function(list, policyItemList) {
 			list.each(function(m){
