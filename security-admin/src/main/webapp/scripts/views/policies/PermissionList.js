@@ -77,7 +77,7 @@ define(function(require) {
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','accessTypes','policyConditions','userList','rangerServiceDefModel','rangerPolicyType'));
+                        _.extend(this, _.pick(options,'accessTypes','policyConditions','rangerServiceDefModel','rangerPolicyType'));
 			this.setupPermissionsAndConditions();
 			
 		},
@@ -86,8 +86,8 @@ define(function(require) {
 			//To setup permissions for edit mode 
 			this.setupFormForEditMode();
 			//create select2 dropdown for groups and users  
-			this.createDropDown(this.ui.selectGroups, this.groupList, true);
-			this.createDropDown(this.ui.selectUsers, this.userList, false);
+                        this.createDropDown(this.ui.selectGroups, true);
+                        this.createDropDown(this.ui.selectUsers, false);
 			//groups or users select2 dropdown change vent 
 			
 			this.dropDownChange(this.ui.selectGroups);
@@ -182,43 +182,24 @@ define(function(require) {
 				}
 			});
 		},
-		createDropDown :function($select, list, typeGroup){
-			var that = this,
+                createDropDown :function($select, typeGroup){
+                        var that = this, tags = [],
 			placeholder = (typeGroup) ? 'Select Group' : 'Select User',
-			searchUrl   = (typeGroup) ? "service/xusers/groups" : "service/xusers/users",
-			getUrl 		= (typeGroup) ? "service/xusers/groups/groupName/" : "service/xusers/users/userName/";
+                        searchUrl   = (typeGroup) ? "service/xusers/groups" : "service/xusers/users";
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
-				var temp = this.model.attributes.userName;
+                                var temp = this.model.attributes[ (typeGroup) ? 'groupName': 'userName'];
 				_.each(temp , function(name){
-					if(_.isEmpty(list.where({ 'name' : name}))){
-						var model = typeGroup ? new VXGroup() : new VXUser();
-						model.urlRoot = getUrl + name;
-						model.fetch({async:false}).done(function(){
-							list.add(model);
-						});
-					}
+                                        tags.push( { 'id' : _.escape( name ), 'text' : _.escape( name ) } );
 				});
 			}
-			var tags = list.map(function(m){
-//				return { id : m.id+"" , text : _.escape(m.get('name'))};
-				return { id : m.id+"" , text : m.get('name')};
-			});
-			
 			$select.select2({
 				closeOnSelect : true,
 				placeholder : placeholder,
-			//	maximumSelectionSize : 1,
 				width :'220px',
 				tokenSeparators: [",", " "],
-				tags : tags, 
+                                tags : true,
 				initSelection : function (element, callback) {
-					var data = [], names = (typeGroup) ? that.model.get('groupName') : that.model.get('userName');
-					_.each(names, function (name) {
-//						name = _.escape(name);
-						var obj = _.findWhere(tags, {text: name });
-						data.push({ id : obj.id, text : name })
-					});
-					callback(data);
+                                        callback(tags);
 				},
 				ajax: { 
 					url: searchUrl,
@@ -232,9 +213,9 @@ define(function(require) {
 						selectedVals = that.getSelectedValues($select, typeGroup);
 						if(data.resultSize != "0"){
 							if(typeGroup){
-								results = data.vXGroups.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
+                                                                results = data.vXGroups.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
 							} else {
-								results = data.vXUsers.map(function(m, i){	return {id : m.id+"", text: _.escape(m.name) };	});
+                                                                results = data.vXUsers.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
 							}
 							if(!_.isEmpty(selectedVals)){
 								results = XAUtil.filterResultByText(results, selectedVals);
@@ -695,8 +676,6 @@ define(function(require) {
 			this.setAccessTypeByPolicyType();
 			return {
 				'collection' 	: this.collection,
-				'groupList' 	: this.groupList,
-				'userList' 	: this.userList,
 				'accessTypes'	: this.accessTypes,
 				'policyConditions' : this.rangerServiceDefModel.get('policyConditions'),
 				'rangerServiceDefModel' : this.rangerServiceDefModel,
@@ -707,8 +686,7 @@ define(function(require) {
 			'click [data-action="addGroup"]' : 'addNew'
 		},
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'groupList','accessTypes','rangerServiceDefModel','userList', 'headerTitle','rangerPolicyType'));
-			this.listenTo(this.groupList, 'sync', this.render, this);
+                        _.extend(this, _.pick(options, 'accessTypes','rangerServiceDefModel', 'headerTitle','rangerPolicyType'));
 			if(this.collection.length == 0)
 				this.collection.add(new Backbone.Model());
 		},

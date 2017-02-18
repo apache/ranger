@@ -353,7 +353,7 @@
 	    return new Handlebars.SafeString(ret);
 	});
 	Handlebars.registerHelper('highlightNewForAttr', function(newValue, oldValue, hightlightValue) {
-		var html='';
+                var html='', newValue = _.escape( newValue ), oldValue = _.escape( oldValue );
 		if(hightlightValue == 'new'){
 			if(_.isNull(oldValue) || oldValue == '--' || oldValue == "" || _.isUndefined(oldValue)){
 				html = '<span class="add-text">'+newValue+'</span>';
@@ -370,7 +370,7 @@
 	    return html;
 	});
 	Handlebars.registerHelper('highlightNewForObj', function(prop, newValue, oldValue, hightlightValue) {
-		var html='';
+                var html='', newValue = _.escape( newValue ), oldValue = _.escape( oldValue );
 		if(hightlightValue == 'new'){
 			if(_.isNull(oldValue[prop]) || oldValue[prop] == ""){
 				html = '<span class="add-text">'+newValue+'</span>';

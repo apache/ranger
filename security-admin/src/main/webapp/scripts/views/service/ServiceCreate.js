@@ -206,7 +206,8 @@ define(function(require){
 	                            			   callback:function(e){
 	                            				   console.log(e)
 	                            				   if($(e.currentTarget).text() == 'Show More..'){
-                        							   var div = '<div class="showMore connection-error-font"><br>'+msResponse.messageList[0].message.split('\n').join('<br>')+'</div>'
+									   var respMsg = _.escape( msResponse.messageList[0].message );
+										   var div = '<div class="showMore connection-error-font"><br>'+respMsg.split('\n').join('<br>')+'</div>'
                         							   $(e.delegateTarget).find('.modal-body').append(div)
                         							   $(e.currentTarget).html('Show Less..')
 	                            				   } else {

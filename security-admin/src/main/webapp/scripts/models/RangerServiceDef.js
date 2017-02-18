@@ -92,7 +92,7 @@ define(function(require){
 				width :'220px',
 				allowClear: true,
 				initSelection : function (element, callback) {
-					callback( { id:element.val(), text:element.val() })
+                                        callback( { id:_.escape(element.val()), text:_.escape(element.val()) })
 				},
 				ajax: { 
 					url: "service/plugins/services",
@@ -103,7 +103,7 @@ define(function(require){
 					results: function (data, page) { 
 						var results = [];
 						if(data.resultSize != "0"){
-							results = data.services.map(function(m, i){	return {id : m.name, text: m.name};	});
+                                                        results = data.services.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
 							return {results : results};
 						}
 						return {results : results};

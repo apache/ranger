@@ -96,6 +96,7 @@ define(function(require){
 			if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 				this.$('[data-tab="edit-password"]').hide();
 				this.$('[data-tab="edit-basic"]').hide();
+                                this.ui.btnSave.prop( "disabled", true );
 			}
 			this.renderForm();
 			this.rForm.$el.dirtyFields();

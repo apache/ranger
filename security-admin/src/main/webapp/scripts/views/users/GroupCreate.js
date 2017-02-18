@@ -94,7 +94,7 @@ define(function(require){
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavGroupForm'),this.rForm.$el);
 			if(!_.isUndefined(this.model.get('groupSource')) && this.model.get('groupSource') == XAEnums.GroupSource.XA_GROUP.value){
-				this.ui.btnSave.hide();
+                                this.ui.btnSave.prop( "disabled", true );
 			}
 		},
 
