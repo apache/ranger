@@ -39,20 +39,16 @@
 		<mkdir dir="${release-dir}" />
 		<tar destfile="${release-dir}/${build-release-tar-file}" compression="gzip" longfile="posix">
 			<tarfileset prefix="${release-name}" dir=".">
-				<exclude name="git" />
-				<exclude name="*/.gitignore" />
-				<exclude name=".settings/**" />
-				<exclude name="*/.settings/**" />
-				<exclude name=".classpath" />
-				<exclude name="*/.classpath" />
-				<exclude name=".project" />
-				<exclude name="*/.project" />
-				<exclude name="winpkg/*" />
-				<exclude name="hdfs-agent/dependency-reduced-pom.xml" />
 				<exclude name="*/bin/**" />
-				<exclude name="*/target/**" />
+				<exclude name="git" />
 				<exclude name="**/.DS_Store" />
-				<exclude name="target/**" />
+				<exclude name="**/.classpath" />
+				<exclude name="**/.gitignore" />
+				<exclude name="**/.project" />
+				<exclude name="**/.settings/**" />
+				<exclude name="**/target/**" />
+				<exclude name="hdfs-agent/dependency-reduced-pom.xml" />
+				<exclude name="winpkg/*" />
 			</tarfileset>
 		</tar>
 
