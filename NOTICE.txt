@@ -2,6 +2,6 @@ Apache Ranger
 Copyright 2014-2017 The Apache Software Foundation
 
 This product includes software developed at The Apache Software Foundation (http://www.apache.org/).
-his product includes json2.js (https://github.com/douglascrockford/JSON-js - Public Domain license) by Douglas Crockford
+This product includes json2.js (https://github.com/douglascrockford/JSON-js - Public Domain license) by Douglas Crockford
 This product includes Font Awesome 3.2.1 (http://fontawesome.io/ - SIL Open Font License (OFL) licensee) by Dave Gandy
 This product includes software developed by Spring Security Project (http://www.springframework.org/security)
