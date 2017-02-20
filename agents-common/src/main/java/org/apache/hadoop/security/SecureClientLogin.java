@@ -116,7 +116,7 @@ public class SecureClientLogin {
 			if (!keytabFile.exists()) {
 				LOG.warn(keytabPath + " doesn't exist.");
 			} else if (!keytabFile.canRead()) {
-				LOG.warn("Unable to read " + keytabPath + " Please check the file access permissions for user");
+				LOG.warn("Unable to read " + keytabPath + ". Please check the file access permissions for user");
 			}else{
 				isValid = true;
 			}
