@@ -60,9 +60,9 @@
 			<arg value="${release-dir}/${build-release-tar-file}" />
 		</exec>
 
-		<exec executable="gpg" output="${release-dir}/${build-release-tar-file}.mds">
+		<exec executable="gpg" output="${release-dir}/${build-release-tar-file}.mds" dir="${release-dir}">
 			<arg value="--print-mds" />
-			<arg value="${release-dir}/${build-release-tar-file}" />
+			<arg value="${build-release-tar-file}" />
 		</exec>
 
 	</target>
