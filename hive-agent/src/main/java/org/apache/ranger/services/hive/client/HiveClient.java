@@ -183,9 +183,9 @@ public class HiveClient extends BaseClient implements Closeable {
 		return tableList;
 	}
 
-	public List<String> getTblList(String tableNameMatching, List<String> dbList, List<String> tblList) throws HadoopException {
+	private List<String> getTblList(String tableNameMatching, List<String> dbList, List<String> tblList) throws HadoopException {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HiveClient getTableList() tableNameMatching : " + tableNameMatching + " ExcludedbList :" + dbList + "ExcludeTableList :" + tblList);
+			LOG.debug("==> HiveClient getTblList() tableNameMatching : " + tableNameMatching + " ExcludedbList :" + dbList + "ExcludeTableList :" + tblList);
 		}
 
 		List<String> ret = new ArrayList<String>();
@@ -260,7 +260,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HiveClient getTableList() " +  ret);
+			LOG.debug("<== HiveClient getTblList() " +  ret);
 		}
 
 		return ret;
@@ -296,7 +296,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		return columnList;
 	}
 	
-	public List<String> getClmList(String columnNameMatching,List<String> dbList, List<String> tblList, List<String> colList) throws HadoopException {
+	private List<String> getClmList(String columnNameMatching,List<String> dbList, List<String> tblList, List<String> colList) throws HadoopException {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HiveClient.getClmList() columnNameMatching: " + columnNameMatching + " dbList :" + dbList +  " tblList: " + tblList + " colList: " + colList);
 		}
