@@ -132,28 +132,21 @@ public class SolrAccessAuditsService {
 					MessageEnums.ERROR_SYSTEM);
 		}
 
-		VXAccessAuditList returnList = new VXAccessAuditList();
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
 		QueryResponse response = solrUtil.searchResources(searchCriteria,
 				searchFields, sortFields, solrClient);
-		if (response == null) {
-			logger.warn("Error running search query. searchCriteria="
-					+ searchCriteria.toString());
-			throw restErrorUtil.createRESTException(
-					"Error running search query", MessageEnums.ERROR_SYSTEM);
-		}
 		SolrDocumentList docs = response.getResults();
-		int i;
-		for (i = 0; i < docs.size(); i++) {
+		for (int i = 0; i < docs.size(); i++) {
 			SolrDocument doc = docs.get(i);
 			
 			VXAccessAudit vXAccessAudit = populateViewBean(doc);
 			xAccessAuditList.add(vXAccessAudit);
 		}
 		
+		VXAccessAuditList returnList = new VXAccessAuditList();
 		returnList.setPageSize(searchCriteria.getMaxRows());
-		returnList.setResultSize(i);
+		returnList.setResultSize(docs.size());
 		returnList.setTotalCount((int) docs.getNumFound());
 		returnList.setStartIndex((int) docs.getStart());
 		returnList.setVXAccessAudits(xAccessAuditList);

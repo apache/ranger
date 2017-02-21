@@ -108,7 +108,7 @@ public class SolrUtil {
 					}
 				} else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
 					if (!(paramValue instanceof Date)) {
-						logger.error("Search file is not of java object instanceof Date");
+						logger.error("Search field is not a Java Date Object, paramValue=" + paramValue);
 					} else {
 						if (searchField.getSearchType() == SEARCH_TYPE.GREATER_EQUAL_THAN
 								|| searchField.getSearchType() == SEARCH_TYPE.GREATER_THAN) {
@@ -152,12 +152,12 @@ public class SolrUtil {
 		// Fields to get
 		// query.setFields("myClassType", "id", "score", "globalId");
 		if (logger.isDebugEnabled()) {
-			logger.debug("SOLR QUERY=" + query.toString());
+			logger.debug("SOLR QUERY=" + query);
 		}
 		QueryResponse response = runQuery(solrClient, query);
 
 		if (response == null || response.getStatus() != 0) {
-			logger.error("Error running query. query=" + query.toString()
+			logger.error("Error running query. query=" + query
 					+ ", response=" + response);
 			throw restErrorUtil.createRESTException("Error running query",
 					MessageEnums.ERROR_SYSTEM);
