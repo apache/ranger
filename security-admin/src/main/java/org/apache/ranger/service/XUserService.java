@@ -254,7 +254,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 					userRoleList.add(gjUserRole.getUserRole());
 				}
 			}
-			if(userRoleList==null || userRoleList.size()==0){
+			if(userRoleList==null || userRoleList.isEmpty()){
 				userRoleList.add(RangerConstants.ROLE_USER);
 			}			
 			vObj.setUserRoleList(userRoleList);
@@ -363,7 +363,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				trxLogList.add(xTrxLog);
 			}
 
-			if (trxLogList.size() == 0) {
+			if (trxLogList.isEmpty()) {
 				XXTrxLog xTrxLog = new XXTrxLog();
 				xTrxLog.setAction(action);
 				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_USER);

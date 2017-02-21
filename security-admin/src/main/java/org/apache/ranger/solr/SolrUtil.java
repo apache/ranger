@@ -195,7 +195,7 @@ public class SolrUtil {
 	}
 
 	public String orList(String fieldName, Collection<?> valueList) {
-		if (valueList == null || valueList.size() == 0) {
+		if (valueList == null || valueList.isEmpty()) {
 			return null;
 		}
 		String expr = "";
@@ -210,7 +210,7 @@ public class SolrUtil {
 					+ ClientUtils.escapeQueryChars(value.toString()
 							.toLowerCase());
 		}
-		if (valueList.size() == 0) {
+		if (valueList.isEmpty()) {
 			return expr;
 		} else {
 			return "(" + expr + ")";
@@ -219,7 +219,7 @@ public class SolrUtil {
 	}
 
 	public String andList(String fieldName, Collection<?> valueList) {
-		if (valueList == null || valueList.size() == 0) {
+		if (valueList == null || valueList.isEmpty()) {
 			return null;
 		}
 		String expr = "";
@@ -234,7 +234,7 @@ public class SolrUtil {
 					+ ClientUtils.escapeQueryChars(value.toString()
 							.toLowerCase());
 		}
-		if (valueList.size() == 0) {
+		if (valueList.isEmpty()) {
 			return expr;
 		} else {
 			return "(" + expr + ")";

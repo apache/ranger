@@ -754,7 +754,7 @@ public class ServiceRESTUtil {
 			allItems.addAll(policy.getDenyExceptions());
 
 			for (RangerPolicy.RangerPolicyItem policyItem : allItems) {
-				if (policyItem.getConditions().size() > 0) {
+				if (!policyItem.getConditions().isEmpty()) {
 					ret = true;
 					break;
 				}

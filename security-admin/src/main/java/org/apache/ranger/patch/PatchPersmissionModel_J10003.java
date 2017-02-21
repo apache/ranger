@@ -173,7 +173,7 @@ public class PatchPersmissionModel_J10003 extends BaseLoader {
 			Path path = Paths.get(aFileName);
 			if (Files.exists(path) && Files.isRegularFile(path)) {
 				List<String> fileContents=Files.readAllLines(path, ENCODING);
-				if(fileContents!=null && fileContents.size()>0){
+				if(fileContents!=null && !fileContents.isEmpty()){
 					for(String line:fileContents){
 						if(!StringUtils.isEmpty(line) && !userNames.contains(line)){
 							try{

@@ -20,6 +20,7 @@
 package org.apache.ranger.security.web.filter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.Filter;
@@ -84,9 +85,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	void parseMethodsToIgnore(String mti) {
         String[] methods = mti.split(",");
         methodsToIgnore = new HashSet<String>();
-        for (int i = 0; i < methods.length; i++) {
-          methodsToIgnore.add(methods[i]);
-        }
+        Collections.addAll(methodsToIgnore, methods);
 	}
 	
 	void parseBrowserUserAgents(String userAgents) {

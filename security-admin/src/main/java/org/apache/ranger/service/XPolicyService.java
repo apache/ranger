@@ -365,7 +365,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 
 		// Create Newly added permissions and Remove deleted permissions from DB
-		if (prevPermMap.size() == 0) {
+		if (prevPermMap.isEmpty()) {
 			updPermMapList.addAll(permMapList);
 		} else {
 			for (Entry<String, VXPermMap> entry : newPermMap.entrySet()) {

@@ -176,7 +176,7 @@ public class KmsKeyMgr {
 			}
 		}
 		//details
-		if (vxKmsKeyList != null && vxKmsKeyList.getVXKeys() != null && vxKmsKeyList.getVXKeys().size() > 0) {
+		if (vxKmsKeyList != null && vxKmsKeyList.getVXKeys() != null && !vxKmsKeyList.getVXKeys().isEmpty()) {
 			List<VXKmsKey> lstKMSKey = vxKmsKeyList.getVXKeys();
 			int startIndex=restErrorUtil.parseInt(
 					request.getParameter("startIndex"), 0,

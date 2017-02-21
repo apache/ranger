@@ -22,6 +22,7 @@ package org.apache.ranger.biz;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1230,12 +1231,8 @@ public class RangerBizUtil {
 			List<String> pathToCheckArray = new ArrayList<String>();
 			List<String> wildcardPathArray = new ArrayList<String>();
 
-			for (String p : pathToCheck.split(fileSeparator)) {
-				pathToCheckArray.add(p);
-			}
-			for (String w : wildcardPath.split(fileSeparator)) {
-				wildcardPathArray.add(w);
-			}
+			Collections.addAll(pathToCheckArray, pathToCheck.split(fileSeparator));
+			Collections.addAll(wildcardPathArray, wildcardPath.split(fileSeparator));
 
 			if (pathToCheckArray.size() == wildcardPathArray.size()) {
 				boolean match = false;

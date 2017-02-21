@@ -231,7 +231,7 @@ public class ServiceUtil {
 		ret.setName(StringUtils.trim(resource.getPolicyName()));
 		ret.setDescription(resource.getDescription());
 		ret.setIsEnabled(resource.getResourceStatus() == RangerCommonEnums.STATUS_ENABLED);
-		ret.setIsAuditEnabled(resource.getAuditList() != null && resource.getAuditList().size() > 0);
+		ret.setIsAuditEnabled(resource.getAuditList() != null && !resource.getAuditList().isEmpty());
 
 		Boolean isPathRecursive  = resource.getIsRecursive() == RangerCommonEnums.BOOL_TRUE;
 		Boolean isTableExcludes  = resource.getTableType() == RangerCommonEnums.POLICY_EXCLUSION;
@@ -424,9 +424,7 @@ public class ServiceUtil {
 				ret.put(resourceType, resource);
 			}
 
-			for(String res : resourceString.split(",")) {
-				resource.getValues().add(res);
-			}
+			Collections.addAll(resource.getValues(), resourceString.split(","));
 		}
 
 		return ret;

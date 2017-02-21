@@ -385,7 +385,7 @@ public class XResourceService extends
 				}
 			}
 
-			if (adminPermResourceList.size() > 0) {
+			if (!adminPermResourceList.isEmpty()) {
 				populatePageList(adminPermResourceList, startIndex, pageSize,
 						returnList);
 			}
@@ -1072,7 +1072,7 @@ public class XResourceService extends
 			e.printStackTrace();
 		}
 		
-		if(trxLogList.size()==0){
+		if(trxLogList.isEmpty()){
 			XXTrxLog xTrxLog = new XXTrxLog();
 			xTrxLog.setAction(action);
 			xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_RESOURCE);

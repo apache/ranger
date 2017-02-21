@@ -45,7 +45,7 @@ public class SearchGroup {
 	}
 
 	public String getWhereClause(String prefix) {
-		if (values == null || values.size() == 0 || searchGroups == null || searchGroups.size() == 0) {
+		if (values == null || values.isEmpty() || searchGroups == null || searchGroups.isEmpty()) {
 			return "";
 		}
 
@@ -107,8 +107,8 @@ public class SearchGroup {
 	 * @param query
 	 */
 	public void resolveValues(Query query, String prefix) {
-		if ((values == null || values.size() == 0)
-				|| (searchGroups == null || searchGroups.size() == 0)) {
+		if ((values == null || values.isEmpty())
+				|| (searchGroups == null || searchGroups.isEmpty())) {
 			return;
 		}
 

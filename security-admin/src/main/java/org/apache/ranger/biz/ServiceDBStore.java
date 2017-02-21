@@ -2473,7 +2473,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerServiceDef tagServiceDef = getServiceDef(createdService.getType());
 		List<RangerResourceDef> tagResourceDef = tagServiceDef.getResources();
-		if (tagResourceDef != null && tagResourceDef.size() > 0) {
+		if (tagResourceDef != null && !tagResourceDef.isEmpty()) {
 			// Assumption : First (and perhaps the only) resourceDef is the name of the tag resource
 			RangerResourceDef theTagResourceDef = tagResourceDef.get(0);
 			tagResourceDefName = theTagResourceDef.getName();

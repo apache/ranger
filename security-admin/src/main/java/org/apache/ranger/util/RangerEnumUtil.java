@@ -70,14 +70,14 @@ public class RangerEnumUtil {
     protected List<VEnum> enumList = new ArrayList<VEnum>();
 
     public List<VEnum> getEnums() {
-	if (enumList.size() == 0) {
+	if (enumList.isEmpty()) {
 	    init();
 	}
 	return enumList;
     }
 
     public VEnum getEnum(String enumName) {
-	if (enumList.size() == 0) {
+	if (enumList.isEmpty()) {
 	    init();
 	}
 	return enumMap.get(enumName);

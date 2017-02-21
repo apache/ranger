@@ -2062,7 +2062,7 @@ public class ServiceREST {
 					orderedPolicies.put(policy.getId(), policy);
 				}
 			}
-			if (orderedPolicies.size() > 0) {
+			if (!orderedPolicies.isEmpty()) {
 				policyLists.clear();
 				policyLists.addAll(orderedPolicies.values());
 			}

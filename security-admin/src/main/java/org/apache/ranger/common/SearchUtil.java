@@ -178,7 +178,7 @@ public class SearchUtil {
 		if (values != null && values.length > 1) {
 			List<Long> multiValues = extractLongList(request, searchCriteria,
 					paramName, userFriendlyParamName, paramName);
-			if (multiValues != null && multiValues.size() > 0) {
+			if (multiValues != null && !multiValues.isEmpty()) {
 				return multiValues.get(0);
 			} else {
 				return null;
@@ -271,7 +271,7 @@ public class SearchUtil {
 					paramName);
 			valueList.add(value);
 		}
-		if (valueList.size() > 0) {
+		if (!valueList.isEmpty()) {
 			searchCriteria.getParamList().put(listName, valueList);
 		}
 		return valueList;
@@ -489,7 +489,7 @@ public class SearchUtil {
 					intValueList = (Collection<Number>) paramValue;
 				}
 
-				if (intValueList != null && intValueList.size() > 0) {
+				if (intValueList != null && !intValueList.isEmpty()) {
 					if (searchField.getCustomCondition() == null) {
 						if (intValueList.size() <= minInListLength) {
 							whereClause.append(" and ");
@@ -679,7 +679,7 @@ public class SearchUtil {
 					intValueList = (Collection<Number>) paramValue;
 				}
 
-				if (intValueList != null && intValueList.size() > 0
+				if (intValueList != null && !intValueList.isEmpty()
 						&& intValueList.size() <= minInListLength) {
 					int count = -1;
 					for (Number value : intValueList) {

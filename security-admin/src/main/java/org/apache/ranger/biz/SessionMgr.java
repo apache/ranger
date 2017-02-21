@@ -369,7 +369,7 @@ public class SessionMgr {
 			searchCriteria = new SearchCriteria();
 		}
 		if (searchCriteria.getParamList() != null
-				&& searchCriteria.getParamList().size() > 0) {	
+				&& !searchCriteria.getParamList().isEmpty()) {
 			
 			int clientTimeOffsetInMinute=RestUtil.getClientTimeOffset();
 			java.util.Date temp = null;

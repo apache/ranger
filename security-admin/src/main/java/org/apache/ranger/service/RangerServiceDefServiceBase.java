@@ -544,7 +544,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 				permittedServiceDefs.add(xSvcDef);
 			}
 		}
-		if (permittedServiceDefs.size() > 0) {
+		if (!permittedServiceDefs.isEmpty()) {
 			populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
 		}
 		return retList;

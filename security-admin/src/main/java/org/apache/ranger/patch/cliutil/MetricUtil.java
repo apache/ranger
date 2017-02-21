@@ -338,7 +338,7 @@ public class MetricUtil extends BaseLoader  {
 								RangerServiceDef rangerServiceDefObj = (RangerServiceDef) repoType;
 								String name = rangerServiceDefObj.getName();
 								List<RangerContextEnricherDef> contextEnrichers = rangerServiceDefObj.getContextEnrichers();
-								if (contextEnrichers != null && contextEnrichers.size() > 0) {
+								if (contextEnrichers != null && !contextEnrichers.isEmpty()) {
 									serviceWithContextEnrichers.setServiceName(name);
 									serviceWithContextEnrichers.setTotalCount(contextEnrichers.size());
 								}
@@ -365,7 +365,7 @@ public class MetricUtil extends BaseLoader  {
 						PList<RangerServiceDef> paginatedSvcDefs = svcStore.getPaginatedServiceDefs(policyFilter1);
 						if (paginatedSvcDefs != null) {
 							List<RangerServiceDef> rangerServiceDef = paginatedSvcDefs.getList();
-							if (rangerServiceDef != null && rangerServiceDef.size() > 0) {
+							if (rangerServiceDef != null && !rangerServiceDef.isEmpty()) {
 								for (int i = 0; i < rangerServiceDef.size(); i++) {
 									if (rangerServiceDef.get(i) != null) {
 										String serviceDef = rangerServiceDef.get(i).getName();
@@ -379,7 +379,7 @@ public class MetricUtil extends BaseLoader  {
 													for (int j = 0; j < policies.size(); j++) {
 														if (policies.get(j) != null) {
 															List<RangerPolicyItem> policyItem = policies.get(j).getDenyPolicyItems();
-															if (policyItem != null && policyItem.size() > 0) {
+															if (policyItem != null && !policyItem.isEmpty()) {
 																if (denyconditionsonMap.get(serviceDef) != null) {
 																	denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItem.size();
 																} else {
@@ -387,7 +387,7 @@ public class MetricUtil extends BaseLoader  {
 																}
 															}
 															List<RangerPolicyItem> policyItemExclude = policies.get(j).getDenyExceptions();
-															if (policyItemExclude != null && policyItemExclude.size() > 0) {
+															if (policyItemExclude != null && !policyItemExclude.isEmpty()) {
 																if (denyconditionsonMap.get(serviceDef) != null) {
 																	denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItemExclude.size();
 																} else {

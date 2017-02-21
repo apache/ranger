@@ -47,7 +47,7 @@ public class MapUtil implements Serializable{
 
     public static String getPolicyExportAuditSyncStatus(int key) {
     	String status="";
-    	if(policyExportAuditSyncStatusMessageMap==null || policyExportAuditSyncStatusMessageMap.size()==0){
+    	if(policyExportAuditSyncStatusMessageMap==null || policyExportAuditSyncStatusMessageMap.isEmpty()){
     		init();
     	}
     	if(policyExportAuditSyncStatusMessageMap!=null && policyExportAuditSyncStatusMessageMap.containsKey(key)){

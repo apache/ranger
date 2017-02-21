@@ -148,10 +148,10 @@ public class PatchMigration_J10002 extends BaseLoader {
 		try {
 			List<XXAsset> repoList = daoMgr.getXXAsset().getAll();
 
-			if (repoList.size() <= 0) {
+			if (repoList.isEmpty()) {
 				return;
 			}
-			if (repoList.size() > 0) {
+			if (!repoList.isEmpty()) {
 				EmbeddedServiceDefsUtil.instance().init(svcDBStore);
 			}
 
@@ -188,7 +188,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 
 		try {
 			List<XXResource> resList = daoMgr.getXXResource().getAll();
-			if (resList.size() <= 0) {
+			if (resList.isEmpty()) {
 				return;
 			}
 
@@ -405,9 +405,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 				ret.put(resourceType, resource);
 			}
 
-			for(String res : resourceString.split(",")) {
-				resource.getValues().add(res);
-			}
+			Collections.addAll(resource.getValues(), resourceString.split(","));
 		}
 
 		return ret;

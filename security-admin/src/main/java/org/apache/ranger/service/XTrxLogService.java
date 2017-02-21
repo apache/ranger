@@ -299,7 +299,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		countCQ.select(criteriaBuilder.count(rootEntityType)).where(predicate);		
 		List<Long> countList = em.createQuery(countCQ).getResultList();		
 		Long count = 0L;
-		if(countList != null && countList.size() > 0) {
+		if(countList != null && !countList.isEmpty()) {
 			count = countList.get(0);
 			if(count == null) {
 				count = 0L;

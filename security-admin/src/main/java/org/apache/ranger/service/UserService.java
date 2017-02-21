@@ -147,7 +147,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 		userProfile.setPublicScreenName(userProfile.getFirstName() + " "
 				+ userProfile.getLastName());
 
-		if (messageList.size() > 0) {
+		if (!messageList.isEmpty()) {
 			VXResponse gjResponse = new VXResponse();
 			gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
 			gjResponse.setMsgDesc("Validation failure");
@@ -233,7 +233,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 
 		// TODO: Need to see whether user can set user as internal
 
-		if (messageList.size() > 0) {
+		if (!messageList.isEmpty()) {
 			VXResponse gjResponse = new VXResponse();
 			gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
 			gjResponse.setMsgDesc("Validation failure");

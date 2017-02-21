@@ -2789,8 +2789,6 @@ public class TestServiceDBStore {
 		resourceDef.setDescription("Key Name");
 
 		List<RangerResourceDef> resourceHierarchy = new ArrayList<RangerResourceDef>();
-		resourceHierarchy.addAll(resourceHierarchy);
-
 		spy.createService(rangerService);
 		vXUser = new VXUser();
 		vXUser.setName(userName);

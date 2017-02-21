@@ -906,7 +906,7 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		if (searchCriteria.getParamList() != null
-				&& searchCriteria.getParamList().size() > 0) {
+				&& !searchCriteria.getParamList().isEmpty()) {
 			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
 			Date temp = null;
 			DateUtil dateUtil = new DateUtil();
@@ -954,7 +954,7 @@ public class AssetMgr extends AssetMgrBase {
             searchCriteria = new SearchCriteria();
         }
         if (searchCriteria.getParamList() != null
-                && searchCriteria.getParamList().size() > 0) {
+                && !searchCriteria.getParamList().isEmpty()) {
             int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
             Date temp = null;
             DateUtil dateUtil = new DateUtil();
@@ -1068,7 +1068,7 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
         if (searchCriteria.getParamList() != null
-                && searchCriteria.getParamList().size() > 0) {
+                && !searchCriteria.getParamList().isEmpty()) {
 
             int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
             Date temp = null;

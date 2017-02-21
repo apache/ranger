@@ -131,7 +131,7 @@ public class RangerRestUtil {
 			}
 
 		}
-		if (messageList.size() > 0) {
+		if (!messageList.isEmpty()) {
 			VXResponse gjResponse = new VXResponse();
 			gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
 			gjResponse.setMsgDesc("Validation failure");

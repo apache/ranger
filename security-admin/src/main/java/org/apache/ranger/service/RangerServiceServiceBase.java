@@ -144,7 +144,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 			}
 		}
 
-		if(permittedServices.size() > 0) {
+		if(!permittedServices.isEmpty()) {
 			populatePageList(permittedServices, startIndex, pageSize, retList);
 		}
 

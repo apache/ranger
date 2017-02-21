@@ -36,7 +36,7 @@ public class RangerHttpSessionListener implements HttpSessionListener {
 
 	@Override
 	public void sessionDestroyed(HttpSessionEvent event) {
-		if (listOfSession.size() > 0) {
+		if (!listOfSession.isEmpty()) {
 			listOfSession.remove(event.getSession());
 		}
 	}
