@@ -64,10 +64,19 @@ public class HiveConnectionMgr {
 							LOG.error("Error connecting hive repository : "+
 									serviceName +" using config : "+ configs, e);
 						}
-						HiveClient oldClient = hiveConnectionCache.putIfAbsent(serviceName, hiveClient);
+
+						HiveClient oldClient = null;
+						if (hiveClient != null) {
+							oldClient = hiveConnectionCache.putIfAbsent(serviceName, hiveClient);
+						} else {
+							oldClient = hiveConnectionCache.get(serviceName);
+						}
+
 						if (oldClient != null) {
 							// in the meantime someone else has put a valid client into the cache, let's use that instead.
-							hiveClient.close();
+							if (hiveClient != null) {
+								hiveClient.close();
+							}
 							hiveClient = oldClient;
 						}
 						repoConnectStatusMap.put(serviceName, true);
