@@ -535,7 +535,7 @@ public class buildks {
 			}
 			if(keystore!=null && !keystore.isEmpty()){
 				File file =new File(keystore);
-				if(file!=null && file.length()==0){
+				if(file!=null && file.exists() && file.length()==0){
 					System.out.println("Provider file '"+keystore+"' is in invalid state or corrupt!! will try to delete first.");
 					file.delete();
 					file=null;
