@@ -37,8 +37,8 @@ import java.util.Map;
 public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	private static final Log LOG = LogFactory.getLog(RangerPathResourceMatcher.class);
 
-	private static final String OPTION_PATH_SEPARATOR       = "pathSeparatorChar";
-	private static final char   DEFAULT_PATH_SEPARATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;
+	public static final String OPTION_PATH_SEPARATOR       = "pathSeparatorChar";
+	public static final char   DEFAULT_PATH_SEPARATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;
 
 	private boolean policyIsRecursive;
 	private char    pathSeparatorChar = '/';

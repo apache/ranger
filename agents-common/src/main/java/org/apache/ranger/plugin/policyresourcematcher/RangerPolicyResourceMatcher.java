@@ -49,6 +49,8 @@ public interface RangerPolicyResourceMatcher {
 
 	boolean isMatch(RangerAccessResource resource, MatchScope scope, Map<String, Object> evalContext);
 
+	boolean isMatch(RangerPolicy policy, MatchScope scope, Map<String, Object> evalContext);
+
 	MatchType getMatchType(RangerAccessResource resource, Map<String, Object> evalContext);
 
 	boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext);

@@ -44,6 +44,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -56,6 +57,9 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
@@ -2109,14 +2113,168 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicy> policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
 
 		if(policies != null && filter != null) {
+			Map<String, String> filterResources = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+			String resourceMatchScope = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
+
+			boolean useLegacyResourceSearch = true;
+
+			if (MapUtils.isNotEmpty(filterResources) && resourceMatchScope != null) {
+				useLegacyResourceSearch = false;
+				for (Map.Entry<String, String> entry : filterResources.entrySet()) {
+					filter.removeParam(SearchFilter.RESOURCE_PREFIX + entry.getKey());
+				}
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using" + (useLegacyResourceSearch ? " old " : " new ") + "way of filtering service-policies");
+			}
+
 			ret = new ArrayList<RangerPolicy>(policies);
 			predicateUtil.applyFilter(ret, filter);
+
+			if (!useLegacyResourceSearch && CollectionUtils.isNotEmpty(ret)) {
+				RangerPolicyResourceMatcher.MatchScope scope;
+
+				if (StringUtils.equalsIgnoreCase(resourceMatchScope, "self")) {
+					scope = RangerPolicyResourceMatcher.MatchScope.SELF;
+				} else if (StringUtils.equalsIgnoreCase(resourceMatchScope, "ancestor")) {
+					scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
+				} else if (StringUtils.equalsIgnoreCase(resourceMatchScope, "self_or_ancestor")) {
+					scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
+				} else {
+					// DESCENDANT match will never happen
+					scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
+				}
+
+				RangerServiceDef serviceDef = servicePolicies.getServiceDef();
+
+				switch (scope) {
+					case SELF : {
+						serviceDef = RangerServiceDefHelper.getServiceDefForPolicyFiltering(serviceDef);
+						break;
+					}
+					case ANCESTOR : {
+						Map<String, String> updatedFilterResources = RangerServiceDefHelper.getFilterResourcesForAncestorPolicyFiltering(serviceDef, filterResources);
+						if (MapUtils.isNotEmpty(updatedFilterResources)) {
+							for (Map.Entry<String, String> entry : updatedFilterResources.entrySet()) {
+								filterResources.put(entry.getKey(), entry.getValue());
+							}
+							scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
+						}
+						break;
+					}
+					default:
+						break;
+				}
+
+				ret = applyResourceFilter(serviceDef, ret, filterResources, filter, scope);
+			}
 		} else {
 			ret = policies;
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(): count=" + ((ret == null) ? 0 : ret.size()));
+		}
+
+		return ret;
+	}
+
+	List<RangerPolicy> applyResourceFilter(RangerServiceDef serviceDef, List<RangerPolicy> policies, Map<String, String> filterResources, SearchFilter filter, RangerPolicyResourceMatcher.MatchScope scope) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.applyResourceFilter(policies-size=" + policies.size() + ", filterResources=" + filterResources + ", " + scope + ")");
+		}
+
+		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+
+		List<RangerPolicyResourceMatcher> matchers = getMatchers(serviceDef, filterResources, filter);
+
+		if (CollectionUtils.isNotEmpty(matchers)) {
+
+			for (RangerPolicy policy : policies) {
+
+				for (RangerPolicyResourceMatcher matcher : matchers) {
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Trying to match for policy:[" + policy + "] using RangerDefaultPolicyResourceMatcher:[" + matcher + "]");
+					}
+
+					if (matcher.isMatch(policy, scope, null)) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("matched policy:[" + policy + "]");
+						}
+						ret.add(policy);
+						break;
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.applyResourceFilter(policies-size=" + ret.size() + ", filterResources=" + filterResources + ", " + scope + ")");
+		}
+
+		return ret;
+	}
+
+	List<RangerPolicyResourceMatcher> getMatchers(RangerServiceDef serviceDef, Map<String, String> filterResources, SearchFilter filter) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getMatchers(filterResources=" + filterResources + ")");
+		}
+
+		List<RangerPolicyResourceMatcher> ret = new ArrayList<RangerPolicyResourceMatcher>();
+
+		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+
+		String policyTypeStr = filter.getParam(SearchFilter.POLICY_TYPE);
+
+		int policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+
+		if (StringUtils.isNotBlank(policyTypeStr)) {
+			policyType = Integer.parseInt(policyTypeStr);
+		}
+
+		Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType, filterResources.keySet());
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Found " + validResourceHierarchies.size() + " valid resource hierarchies for key-set " + filterResources.keySet());
+		}
+
+		List<List<RangerResourceDef>> resourceHierarchies = new ArrayList<List<RangerResourceDef>>(validResourceHierarchies);
+
+		for (List<RangerResourceDef> validResourceHierarchy : resourceHierarchies) {
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("validResourceHierarchy:[" + validResourceHierarchy + "]");
+			}
+
+			Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+
+			for (RangerResourceDef resourceDef : validResourceHierarchy) {
+
+				String resourceValue = filterResources.get(resourceDef.getName());
+
+				if (StringUtils.isBlank(resourceValue)) {
+					resourceValue = RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
+				}
+
+				policyResources.put(resourceDef.getName(), new RangerPolicyResource(resourceValue, false, resourceDef.getRecursiveSupported()));
+			}
+
+			RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+			matcher.setServiceDef(serviceDef);
+			matcher.setPolicyResources(policyResources);
+			matcher.init();
+
+			ret.add(matcher);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Added matcher:[" + matcher + "]");
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getMatchers(filterResources=" + filterResources + ", " + ", count=" + ret.size() + ")");
 		}
 
 		return ret;

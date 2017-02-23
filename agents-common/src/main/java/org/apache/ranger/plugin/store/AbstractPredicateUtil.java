@@ -467,6 +467,9 @@ public class AbstractPredicateUtil {
 								break;
 							}
 						}
+						if (ret) {
+							break;
+						}
 					}
 				} else {
 					ret = true;
@@ -518,6 +521,9 @@ public class AbstractPredicateUtil {
 
 								break;
 							}
+						}
+						if (ret) {
+							break;
 						}
 					}
 				} else {

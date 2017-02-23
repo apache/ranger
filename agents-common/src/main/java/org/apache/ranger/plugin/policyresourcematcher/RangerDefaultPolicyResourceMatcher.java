@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
@@ -353,40 +355,71 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	}
 
 	@Override
+	public boolean isMatch(RangerPolicy policy, MatchScope scope, Map<String, Object> evalContext) {
+
+		boolean ret = false;
+		MatchType matchType = MatchType.NONE;
+
+		Map<String, RangerPolicyResource> resources = policy.getResources();
+
+		if (MapUtils.isNotEmpty(resources)) {
+
+			RangerAccessResourceImpl accessResource = new RangerAccessResourceImpl();
+			accessResource.setServiceDef(serviceDef);
+
+			// Build up accessResource resourceDef by resourceDef.
+			// For each resourceDef,
+			// 		examine policy-values one by one.
+			// 		The first value that is acceptable, that is,
+			// 			value matches in any way, is used for that resourceDef, and
+			//			next resourceDef is processed.
+			// 		If none of the values matches, the policy as a whole definitely will not match,
+			//		therefore, the match is failed
+			// After all resourceDefs are processed, and some match is achieved at every
+			// level, the final matchType (which is for the entire policy) is checked against
+			// requested scope to determine the match-result.
+
+			// Unit tests in TestDefaultPolicyResourceForPolicy.java, test_defaultpolicyresourcematcher_for_policy.json,
+			// and test_defaultpolicyresourcematcher_for_hdfs_policy.json
+
+			for (RangerResourceDef resourceDef : firstValidResourceDefHierarchy) {
+
+				ret = false;
+				matchType = MatchType.NONE;
+
+				String name = resourceDef.getName();
+				RangerPolicyResource policyResource = resources.get(name);
+
+				if (policyResource != null) {
+					for (String value : policyResource.getValues()) {
+
+						accessResource.setValue(name, value);
+
+						matchType = getMatchType(accessResource, evalContext);
+
+						if (matchType != MatchType.NONE) { // One value for this resourceDef matched
+							ret = true;
+							break;
+						}
+					}
+				}
+
+				if (!ret) { // None of the values specified for this resourceDef matched, no point in continuing with next resourceDef
+					break;
+				}
+			}
+			ret = ret && isMatch(scope, matchType);
+		}
+		return ret;
+	}
+
+	@Override
 	public boolean isMatch(RangerAccessResource resource, MatchScope scope, Map<String, Object> evalContext) {
 
 		final boolean ret;
 
 		MatchType matchType = getMatchType(resource, evalContext);
-		switch(scope) {
-			case SELF_OR_ANCESTOR_OR_DESCENDANT: {
-				ret = matchType != MatchType.NONE;
-				break;
-			}
-			case SELF: {
-				ret = matchType == MatchType.SELF;
-				break;
-			}
-			case SELF_OR_DESCENDANT: {
-				ret = matchType == MatchType.SELF || matchType == MatchType.DESCENDANT;
-				break;
-			}
-			case SELF_OR_ANCESTOR: {
-				ret = matchType == MatchType.SELF || matchType == MatchType.ANCESTOR;
-				break;
-			}
-			case DESCENDANT: {
-				ret = matchType == MatchType.DESCENDANT;
-				break;
-			}
-			case ANCESTOR: {
-				ret = matchType == MatchType.ANCESTOR;
-				break;
-			}
-			default:
-				ret = matchType != MatchType.NONE;
-				break;
-		}
+		ret = isMatch(scope, matchType);
 
 		return ret;
 	}
@@ -546,6 +579,40 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			LOG.debug("<== RangerDefaultPolicyResourceMatcher.isValid(" + resource + "): " + ret);
 		}
 
+		return ret;
+	}
+
+	private boolean isMatch(final MatchScope scope, final MatchType matchType) {
+		final boolean ret;
+		switch (scope) {
+			case SELF_OR_ANCESTOR_OR_DESCENDANT: {
+				ret = matchType != MatchType.NONE;
+				break;
+			}
+			case SELF: {
+				ret = matchType == MatchType.SELF;
+				break;
+			}
+			case SELF_OR_DESCENDANT: {
+				ret = matchType == MatchType.SELF || matchType == MatchType.DESCENDANT;
+				break;
+			}
+			case SELF_OR_ANCESTOR: {
+				ret = matchType == MatchType.SELF || matchType == MatchType.ANCESTOR;
+				break;
+			}
+			case DESCENDANT: {
+				ret = matchType == MatchType.DESCENDANT;
+				break;
+			}
+			case ANCESTOR: {
+				ret = matchType == MatchType.ANCESTOR;
+				break;
+			}
+			default:
+				ret = matchType != MatchType.NONE;
+				break;
+		}
 		return ret;
 	}
 
