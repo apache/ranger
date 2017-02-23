@@ -41,6 +41,7 @@ public class SearchFilter {
 	public static final String USER            = "user";          // search
 	public static final String GROUP           = "group";         // search
 	public static final String RESOURCE_PREFIX = "resource:";     // search
+	public static final String RESOURCE_MATCH_SCOPE = "resourceMatchScope"; // search - valid values: "self", "ancestor", "self_or_ancestor"
 	public static final String POL_RESOURCE    = "polResource";   // search
 	public static final String POLICY_NAME_PARTIAL = "policyNamePartial";    // search, sort
 	public static final String CREATE_TIME     = "createTime";    // sort
@@ -49,7 +50,7 @@ public class SearchFilter {
 	public static final String PAGE_SIZE       = "pageSize";
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
-	public static final String POLICY_TYPE = "policyType"; // search
+	public static final String POLICY_TYPE     = "policyType";    // search
     public static final String GUID		   = "guid"; //search
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search

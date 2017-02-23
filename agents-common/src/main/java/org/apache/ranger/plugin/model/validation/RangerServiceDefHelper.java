@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.model.validation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 import com.google.common.collect.Lists;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 
 public class RangerServiceDefHelper {
 
@@ -46,6 +49,75 @@ public class RangerServiceDefHelper {
 	
 	static final Map<String, Delegate> _Cache = new ConcurrentHashMap<String, Delegate>();
 	final Delegate _delegate;
+
+	static public RangerServiceDef getServiceDefForPolicyFiltering(RangerServiceDef serviceDef) {
+
+		List<RangerResourceDef> modifiedResourceDefs = new ArrayList<RangerResourceDef>();
+
+		for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+
+			final RangerResourceDef modifiedResourceDef;
+
+			String matcherClassName = resourceDef.getMatcher();
+
+			if (RangerPathResourceMatcher.class.getName().equals(matcherClassName)) {
+
+				Map<String, String> modifiedMatcherOptions = new HashMap<String, String>(resourceDef.getMatcherOptions());
+
+				modifiedMatcherOptions.put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, "false");
+
+				modifiedResourceDef = new RangerResourceDef(resourceDef);
+				modifiedResourceDef.setMatcherOptions(modifiedMatcherOptions);
+				modifiedResourceDef.setRecursiveSupported(false);
+
+			} else {
+				modifiedResourceDef = resourceDef;
+			}
+
+			modifiedResourceDefs.add(modifiedResourceDef);
+		}
+
+		return new RangerServiceDef(serviceDef.getName(), serviceDef.getImplClass(), serviceDef.getLabel(),
+				serviceDef.getDescription(), serviceDef.getOptions(), serviceDef.getConfigs(), modifiedResourceDefs, serviceDef.getAccessTypes(),
+				serviceDef.getPolicyConditions(), serviceDef.getContextEnrichers(), serviceDef.getEnums());
+	}
+
+	public static Map<String, String> getFilterResourcesForAncestorPolicyFiltering(RangerServiceDef serviceDef, Map<String, String> filterResources) {
+
+		Map<String, String> ret = null;
+
+		for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+
+			String matcherClassName = resourceDef.getMatcher();
+
+			if (RangerPathResourceMatcher.class.getName().equals(matcherClassName)) {
+
+				String resourceDefName = resourceDef.getName();
+
+				final Map<String, String> resourceMatcherOptions = resourceDef.getMatcherOptions();
+
+				String delimiter = resourceMatcherOptions.get(RangerPathResourceMatcher.OPTION_PATH_SEPARATOR);
+				if (StringUtils.isBlank(delimiter)) {
+					delimiter = Character.toString(RangerPathResourceMatcher.DEFAULT_PATH_SEPARATOR_CHAR);
+				}
+
+				String resourceValue = filterResources.get(resourceDefName);
+				if (StringUtils.isNotBlank(resourceValue)) {
+					if (!resourceValue.endsWith(delimiter)) {
+						resourceValue += delimiter;
+					}
+					resourceValue += RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
+
+					if (ret == null) {
+						ret = new HashMap<String, String>();
+					}
+					ret.put(resourceDefName, resourceValue);
+				}
+			}
+		}
+
+		return ret;
+	}
 
 	public RangerServiceDefHelper(RangerServiceDef serviceDef) {
 		this(serviceDef, true);
@@ -101,6 +173,19 @@ public class RangerServiceDefHelper {
 	 */
 	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
 		return _delegate.getResourceHierarchies(policyType);
+	}
+
+	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType, Collection<String> keys) {
+
+		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
+
+		for (List<RangerResourceDef> hierarchy : getResourceHierarchies(policyType)) {
+			if (getAllResourceNames(hierarchy).containsAll(keys)) {
+				ret.add(hierarchy);
+			}
+		}
+
+		return ret;
 	}
 
 	public Set<String> getMandatoryResourceNames(List<RangerResourceDef> hierarchy) {

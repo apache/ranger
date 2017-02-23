@@ -81,7 +81,8 @@ public class RangerSearchUtil extends SearchUtil {
 				ret.setParam(name, values[0]);
 			}
 		}
-		
+		ret.setParam(SearchFilter.RESOURCE_MATCH_SCOPE, request.getParameter(SearchFilter.RESOURCE_MATCH_SCOPE));
+
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 
 		return ret;
