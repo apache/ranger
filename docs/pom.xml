@@ -248,6 +248,18 @@
                 Hortonworks
             </organization>
         </developer>
+	<developer>
+            <id>mehul</id>
+            <name>Mehul Parikh</name>
+            <email>mehul@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
         <developer>
             <id>mneethiraj</id>
             <name>Madhanmohan Neethiraj</name>
@@ -399,10 +411,6 @@
         <contributor>
           	<name>Mani Raman</name>
           	<organization></organization>
-        </contributor>
-        <contributor>
-          	<name>Mehul Parikh</name>
-          	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
           	<name>Mugdha Varadkar</name>
