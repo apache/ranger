@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +83,7 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+			InputStreamReader reader   = new InputStreamReader(inStream, Charset.defaultCharset());
 
 			runTests(reader);
 		}
@@ -95,7 +96,7 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 			runTest(testCase, testCases.serviceDef);
 		}
 	}
-		private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) throws Exception {
+	private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) throws Exception {
 
 		assertTrue("invalid input: " , testCase != null && testCase.tests != null);
 
@@ -137,12 +138,12 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 
 		List<TestCase> testCases;
 
-		class TestCase {
-			public String name;
+		static class TestCase {
+			String name;
 			Map<String, RangerPolicyResource> policyResources;
-			public List<OneTest> tests;
+			List<OneTest> tests;
 
-			class OneTest {
+			static class OneTest {
 				String name;
 				String type;
 				RangerPolicy policy;
