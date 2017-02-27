@@ -186,6 +186,8 @@ elif [ "${HCOMPONENT_NAME}" = "storm" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/extlib-daemon
 elif [ "${HCOMPONENT_NAME}" = "atlas" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/libext
+elif [ "${HCOMPONENT_NAME}" = "hadoop" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/share/hadoop/hdfs/lib
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
