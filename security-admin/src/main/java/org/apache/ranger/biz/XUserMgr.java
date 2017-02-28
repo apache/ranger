@@ -1463,100 +1463,104 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Override
 	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
-                VXUserList vXUserList = new VXUserList();
-                VXUser vXUserExactMatch = null;
-                try{
-                        VXUserList vXUserListSort = new VXUserList();
-                        if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
-                                searchCriteria.setSortBy("name");
-                                vXUserListSort = xUserService.searchXUsers(searchCriteria);
-                                vXUserExactMatch = getXUserByUserName((String)searchCriteria.getParamList().get("name"));
-                        }
-                        if(vXUserExactMatch != null){
-                                List<VXUser> vXUsers = new ArrayList<VXUser>();
-                                if(searchCriteria.getStartIndex() == 0){
-                                        vXUsers.add(0,vXUserExactMatch);
-                                }
-                                for(VXUser vxUser:vXUserListSort.getVXUsers()){
-                                        if(vxUser.getId() != vXUserExactMatch.getId()){
-                                                vXUsers.add(vxUser);
-                                        }
-                                }
-                                vXUserList.setVXUsers(vXUsers);
-                                vXUserList.setStartIndex(searchCriteria.getStartIndex());
-                                vXUserList.setResultSize(vXUserList.getVXUsers().size());
-                                vXUserList.setTotalCount(vXUserListSort.getTotalCount());
-                                vXUserList.setPageSize(searchCriteria.getMaxRows());
-                                vXUserList.setSortBy(searchCriteria.getSortBy());
-                                vXUserList.setSortType(searchCriteria.getSortType());
-                        }
-                } catch (Exception e){
-                        logger.error("Error getting the exact match of user =>"+e);
-                }
-                if(vXUserList.getVXUsers().isEmpty()) {
-                        searchCriteria.setSortBy("id");
-                        vXUserList = xUserService.searchXUsers(searchCriteria);
-                }
-                if(vXUserList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
-	        List<VXUser> vXUsers = new ArrayList<VXUser>();
-	        if(vXUserList!=null && vXUserList.getListSize()>0){
-	            for(VXUser vXUser:vXUserList.getList()){
-                    vXUser=getMaskedVXUser(vXUser);
-                    vXUsers.add(vXUser);
-	            }
-	            vXUserList.setVXUsers(vXUsers);
-	        }
-        }
-        return vXUserList;
+		VXUserList vXUserList = new VXUserList();
+		VXUser vXUserExactMatch = null;
+		try{
+			VXUserList vXUserListSort = new VXUserList();
+			if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
+				searchCriteria.setSortBy("name");
+				vXUserListSort = xUserService.searchXUsers(searchCriteria);
+				vXUserExactMatch = getXUserByUserName((String)searchCriteria.getParamList().get("name"));
+			}
+			if(vXUserExactMatch != null){
+				List<VXUser> vXUsers = new ArrayList<VXUser>();
+				if(searchCriteria.getStartIndex() == 0){
+					vXUsers.add(0,vXUserExactMatch);
+				}
+				for(VXUser vxUser:vXUserListSort.getVXUsers()){
+					if(vXUserExactMatch.getId()!=null && vxUser!=null){
+						if(!vXUserExactMatch.getId().equals(vxUser.getId())){
+							vXUsers.add(vxUser);
+						}
+					}
+				}
+				vXUserList.setVXUsers(vXUsers);
+				vXUserList.setStartIndex(searchCriteria.getStartIndex());
+				vXUserList.setResultSize(vXUserList.getVXUsers().size());
+				vXUserList.setTotalCount(vXUserListSort.getTotalCount());
+				vXUserList.setPageSize(searchCriteria.getMaxRows());
+				vXUserList.setSortBy(searchCriteria.getSortBy());
+				vXUserList.setSortType(searchCriteria.getSortType());
+			}
+		} catch (Exception e){
+			logger.error("Error getting the exact match of user =>"+e);
+		}
+		if(vXUserList.getVXUsers().isEmpty()) {
+			searchCriteria.setSortBy("id");
+			vXUserList = xUserService.searchXUsers(searchCriteria);
+		}
+		if(vXUserList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+			List<VXUser> vXUsers = new ArrayList<VXUser>();
+			if(vXUserList!=null && vXUserList.getListSize()>0){
+				for(VXUser vXUser:vXUserList.getList()){
+					vXUser=getMaskedVXUser(vXUser);
+					vXUsers.add(vXUser);
+				}
+				vXUserList.setVXUsers(vXUsers);
+			}
+		}
+		return vXUserList;
 	}
 
 	@Override
 	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
-                VXGroupList vXGroupList= new VXGroupList();
-                VXGroup vXGroupExactMatch = null;
-                try{
-                        VXGroupList vXGroupListSort= new VXGroupList();
-                        if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
-                                searchCriteria.setSortBy("name");
-                                vXGroupListSort = xGroupService.searchXGroups(searchCriteria);
-                                vXGroupExactMatch = getGroupByGroupName((String)searchCriteria.getParamList().get("name"));
-                        }
-                        if(vXGroupExactMatch != null){
-                                List<VXGroup> vXGroups = new ArrayList<VXGroup>();
-                                if(searchCriteria.getStartIndex() == 0){
-                                        vXGroups.add(0,vXGroupExactMatch);
-                                }
-                                for(VXGroup vXGroup:vXGroupListSort.getList()){
-                                        if(vXGroup.getId() != vXGroupExactMatch.getId()){
-                                                vXGroups.add(vXGroup);
-                                        }
-                                }
-                                vXGroupList.setVXGroups(vXGroups);
-                                vXGroupList.setStartIndex(searchCriteria.getStartIndex());
-                                vXGroupList.setResultSize(vXGroupList.getList().size());
-                                vXGroupList.setTotalCount(vXGroupListSort.getTotalCount());
-                                vXGroupList.setPageSize(searchCriteria.getMaxRows());
-                                vXGroupList.setSortBy(searchCriteria.getSortBy());
-                                vXGroupList.setSortType(searchCriteria.getSortType());
-                        }
-                } catch (Exception e){
-                        logger.error("Error getting the exact match of group =>"+e);
-                }
-                if(vXGroupList.getList().isEmpty()) {
-                        searchCriteria.setSortBy("id");
-                        vXGroupList=xGroupService.searchXGroups(searchCriteria);
-                }
-                if(vXGroupList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
-                        if(vXGroupList!=null && vXGroupList.getListSize()>0){
-                                List<VXGroup> listMasked=new ArrayList<VXGroup>();
-                                for(VXGroup vXGroup:vXGroupList.getList()){
-                                        vXGroup=getMaskedVXGroup(vXGroup);
-                                        listMasked.add(vXGroup);
-                                }
-                                vXGroupList.setVXGroups(listMasked);
-                        }
-                }
-                return vXGroupList;
+		VXGroupList vXGroupList= new VXGroupList();
+		VXGroup vXGroupExactMatch = null;
+		try{
+			VXGroupList vXGroupListSort= new VXGroupList();
+			if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
+				searchCriteria.setSortBy("name");
+				vXGroupListSort = xGroupService.searchXGroups(searchCriteria);
+				vXGroupExactMatch = getGroupByGroupName((String)searchCriteria.getParamList().get("name"));
+			}
+			if(vXGroupExactMatch != null){
+				List<VXGroup> vXGroups = new ArrayList<VXGroup>();
+				if(searchCriteria.getStartIndex() == 0){
+					vXGroups.add(0,vXGroupExactMatch);
+				}
+				for(VXGroup vXGroup:vXGroupListSort.getList()){
+					if(vXGroupExactMatch.getId()!=null && vXGroup!=null){
+						if(!vXGroupExactMatch.getId().equals(vXGroup.getId())){
+							vXGroups.add(vXGroup);
+						}
+					}
+				}
+				vXGroupList.setVXGroups(vXGroups);
+				vXGroupList.setStartIndex(searchCriteria.getStartIndex());
+				vXGroupList.setResultSize(vXGroupList.getList().size());
+				vXGroupList.setTotalCount(vXGroupListSort.getTotalCount());
+				vXGroupList.setPageSize(searchCriteria.getMaxRows());
+				vXGroupList.setSortBy(searchCriteria.getSortBy());
+				vXGroupList.setSortType(searchCriteria.getSortType());
+			}
+		} catch (Exception e){
+			logger.error("Error getting the exact match of group =>"+e);
+		}
+		if(vXGroupList.getList().isEmpty()) {
+			searchCriteria.setSortBy("id");
+			vXGroupList=xGroupService.searchXGroups(searchCriteria);
+		}
+		if(vXGroupList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
+			if(vXGroupList!=null && vXGroupList.getListSize()>0){
+				List<VXGroup> listMasked=new ArrayList<VXGroup>();
+				for(VXGroup vXGroup:vXGroupList.getList()){
+					vXGroup=getMaskedVXGroup(vXGroup);
+					listMasked.add(vXGroup);
+				}
+				vXGroupList.setVXGroups(listMasked);
+			}
+		}
+		return vXGroupList;
 	}
 
 	public Collection<String> getMaskedCollection(Collection<String> listunMasked){
