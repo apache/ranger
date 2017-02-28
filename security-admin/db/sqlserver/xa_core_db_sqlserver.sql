@@ -76,7 +76,7 @@ END
 GO
 IF (OBJECT_ID('x_portal_user_FK_upd_by_id') IS NOT NULL)
 BEGIN
-    ALTER TABLE [dbo].[x_portal_user_role] DROP CONSTRAINT x_portal_user_FK_upd_by_id
+    ALTER TABLE [dbo].[x_portal_user] DROP CONSTRAINT x_portal_user_FK_upd_by_id
 END
 GO
 IF (OBJECT_ID('x_portal_user_FK_added_by_id') IS NOT NULL)
@@ -1563,7 +1563,7 @@ END
 GO
 IF (OBJECT_ID('x_atd_grants_FK_atdid') IS NOT NULL)
 BEGIN
-    ALTER TABLE [dbo].[x_atd_grants] DROP CONSTRAINT x_atd_grants_FK_atdid
+    ALTER TABLE [dbo].[x_access_type_def_grants] DROP CONSTRAINT x_atd_grants_FK_atdid
 END
 GO
 IF (OBJECT_ID('x_policy_condition_def_FK_defid') IS NOT NULL)
