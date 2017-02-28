@@ -31,7 +31,17 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 <ul>
 <li>
 <p>
-The current stable release is Apache Ranger 0.6.3:
+Current Statble release is Apache Ranger 0.7.0:
+</p>
+<p>
+<a href="http://www.apache.org/dyn/closer.lua/ranger/0.7.0/apache-ranger-0.7.0.tar.gz">apache-ranger-0.7.0.tar.gz</a>
+(<a href="https://www.apache.org/dist/ranger/0.7.0/apache-ranger-0.7.0.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ranger/0.7.0/apache-ranger-0.7.0.tar.gz.mds">Digests</a>)
+</p>
+</li>
+<li>
+<p>
+An older branch release is Apache Ranger 0.6.3:
 </p>
 <p>
 <a href="http://www.apache.org/dyn/closer.lua/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>

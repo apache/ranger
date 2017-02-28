@@ -80,7 +80,6 @@
             <email>abhay@apache.org</email>
             <timezone>-8</timezone>
             <roles>
-                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -316,7 +315,6 @@
             <email>spolavarapu@apache.org</email>
             <timezone>-8</timezone>
             <roles>
-                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>

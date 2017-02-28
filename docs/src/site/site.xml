@@ -56,15 +56,16 @@ under the License.
         <item name="Team" href="team-list.html"/>
     </menu>
 	<menu name="Releases">
-		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.4.0+Release+Notes" />
-		<item name="0.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.0+-+Release+Notes" />
-		<item name="0.5.1" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.1+-+Release+Notes" />
-		<item name="0.5.2" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.2+-+Release+Notes" />
-		<item name="0.5.3" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.5.3+-+Release+Notes" />
-		<item name="0.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.6.0+-+Release+Notes" />
-		<item name="0.6.1" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.6.1+-+Release+Notes" />
-		<item name="0.6.2" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.6.2+-+Release+Notes" />
-		<item name="0.6.3" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+0.6.3+-+Release+Notes" />
+		<item name="0.7.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.7.0+Release+-+Apache+Ranger" />
+		<item name="0.6.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.3+Release+-+Apache+Ranger" />
+		<item name="0.6.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.2+Release+-+Apache+Ranger" />
+		<item name="0.6.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.1+Release+-+Apache+Ranger" />
+		<item name="0.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.6+Release+-+Apache+Ranger" />
+		<item name="0.5.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.3+Release+-+Apache+Ranger" />
+		<item name="0.5.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.2+Release+-+Apache+Ranger" />
+		<item name="0.5.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.1+Release+-+Apache+Ranger" />
+		<item name="0.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.5+Release+-+Apache+Ranger" />
+		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.4+Release" />
 	</menu>
 </body>
 
