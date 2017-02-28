@@ -529,6 +529,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					LOG.debug("applyRowFilterAndColumnMasking(hiveObjType=" + hiveObjType + ")");
 				}
 
+				boolean needToTransform = false;
+
 				if (hiveObjType == HivePrivilegeObjectType.TABLE_OR_VIEW) {
 					String database = hiveObj.getDbname();
 					String table    = hiveObj.getObjectName();
@@ -541,26 +543,29 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						}
 
 						hiveObj.setRowFilterExpression(rowFilterExpr);
+						needToTransform = true;
 					}
 
 					if (CollectionUtils.isNotEmpty(hiveObj.getColumns())) {
 						List<String> columnTransformers = new ArrayList<String>();
 
 						for (String column : hiveObj.getColumns()) {
-							String columnTransformer = getCellValueTransformer(queryContext, database, table, column);
+							boolean isColumnTransformed = addCellValueTransformerAndCheckIfTransformed(queryContext, database, table, column, columnTransformers);
 
 							if(LOG.isDebugEnabled()) {
-								LOG.debug("columnTransformer(database=" + database + ", table=" + table + ", column=" + column + "): " + columnTransformer);
+								LOG.debug("addCellValueTransformerAndCheckIfTransformed(database=" + database + ", table=" + table + ", column=" + column + "): " + isColumnTransformed);
 							}
 
-							columnTransformers.add(columnTransformer);
+							needToTransform = needToTransform || isColumnTransformed;
 						}
 
 						hiveObj.setCellValueTransformers(columnTransformers);
 					}
 				}
 
-				ret.add(hiveObj);
+				if (needToTransform) {
+					ret.add(hiveObj);
+				}
 			}
 		}
 
@@ -651,7 +656,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private String getCellValueTransformer(HiveAuthzContext context, String databaseName, String tableOrViewName, String columnName) throws SemanticException {
+	private boolean addCellValueTransformerAndCheckIfTransformed(HiveAuthzContext context, String databaseName, String tableOrViewName, String columnName, List<String> columnTransformers) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -659,10 +664,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> getCellValueTransformer(" + databaseName + ", " + tableOrViewName + ", " + columnName + ")");
+			LOG.debug("==> addCellValueTransformerAndCheckIfTransformed(" + databaseName + ", " + tableOrViewName + ", " + columnName + ")");
 		}
 
-		String ret = columnName;
+		boolean ret = false;
+		String columnTransformer = columnName;
 
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
@@ -676,7 +682,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			RangerDataMaskResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
 
-			if(isDataMaskEnabled(result)) {
+			ret = isDataMaskEnabled(result);
+
+			if(ret) {
 				String                maskType    = result.getMaskType();
 				RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
 				String transformer	= null;
@@ -685,18 +693,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 
 				if(StringUtils.equalsIgnoreCase(maskType, RangerPolicy.MASK_TYPE_NULL)) {
-					ret = "NULL";
+					columnTransformer = "NULL";
 				} else if(StringUtils.equalsIgnoreCase(maskType, RangerPolicy.MASK_TYPE_CUSTOM)) {
 					String maskedValue = result.getMaskedValue();
 
 					if(maskedValue == null) {
-						ret = "NULL";
+						columnTransformer = "NULL";
 					} else {
-						ret = maskedValue.replace("{col}", columnName);
+						columnTransformer = maskedValue.replace("{col}", columnName);
 					}
 
 				} else if(StringUtils.isNotEmpty(transformer)) {
-					ret = transformer.replace("{col}", columnName);
+					columnTransformer = transformer.replace("{col}", columnName);
 				}
 
 				/*
@@ -711,8 +719,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			auditHandler.flushAudit();
 		}
 
+		columnTransformers.add(columnTransformer);
+
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== getCellValueTransformer(" + databaseName + ", " + tableOrViewName + ", " + columnName + "): " + ret);
+			LOG.debug("<== addCellValueTransformerAndCheckIfTransformed(" + databaseName + ", " + tableOrViewName + ", " + columnName + "): " + ret);
 		}
 
 		return ret;
