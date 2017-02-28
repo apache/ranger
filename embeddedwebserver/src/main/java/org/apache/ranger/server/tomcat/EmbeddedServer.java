@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.List;
-import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -490,7 +489,7 @@ public class EmbeddedServer {
 				}
 			}
 			List<CredentialProvider> providers = CredentialProviderFactory.getProviders(conf);
-			List<String> aliasesList=new ArrayList<String>();
+			List<String> aliasesList;
 			CredentialProvider.CredentialEntry credEntry=null;
 			for(CredentialProvider provider: providers) {
 				//System.out.println("Credential Provider :" + provider);
