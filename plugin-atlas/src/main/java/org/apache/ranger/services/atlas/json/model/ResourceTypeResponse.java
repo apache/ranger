@@ -16,15 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.ranger.services.atlas.json.model;
 
-package org.apache.ranger.services.atlas.client;
+import java.util.List;
 
-import java.util.Map;
+public class ResourceTypeResponse {
 
-public class AtlasConnectionMgr {
+	private List<String> results;
+	private String count;
+	private String requestId;
 
-	public static AtlasClient getAtlasClient(String serviceName, Map<String, String> configs) {
-		return new AtlasClient(serviceName, configs);
+	public String getCount() {
+		return count;
+	}
+
+	public void setCount(String count) {
+		this.count = count;
+	}
+
+	public String getRequestId() {
+		return requestId;
+	}
+
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
+	}
+
+	public List<String> getResults() {
+		return results;
+	}
+
+	public void setResults(List<String> results) {
+		this.results = results;
 	}
 
 }
