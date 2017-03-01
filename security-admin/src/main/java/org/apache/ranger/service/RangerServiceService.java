@@ -63,6 +63,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Service Description", false));
 		trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Service Status", false));
 		trxLogAttrs.put("configs", new VTrxLogAttr("configs", "Connection Configurations", false));
+		trxLogAttrs.put("tagService", new VTrxLogAttr("tagService", "Tag Service Name", false));
 	}
 	
 	public RangerServiceService() {
@@ -191,11 +192,11 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 			boolean isEnum = vTrxLogAttr.isEnum();
 			if (isEnum) {
 
-			} else if (fieldName.equalsIgnoreCase("configs")) {
+			} else if ("configs".equalsIgnoreCase(fieldName)) {
 				Map<String, String> configs = (field.get(vObj) != null) ? (Map<String, String>) field
 						.get(vObj) : new HashMap<String, String>();
 
-				value = jsonUtil.readMapToString(configs);
+						value = jsonUtil.readMapToString(configs);
 			} else {
 				value = "" + field.get(vObj);
 			}
@@ -225,7 +226,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 						break;
 					}
 				}
-				if (fieldName.equalsIgnoreCase("configs")) {
+				if ("configs".equalsIgnoreCase(fieldName)) {
 					Map<String, String> vConfig = jsonUtil.jsonToMap(value);
 					RangerService oldService = this.populateViewBean(mObj);
 					Map<String, String> xConfig = oldService.getConfigs();
@@ -237,9 +238,9 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 						String key = entry.getKey();
 						if (!xConfig.containsKey(key)) {
-                                                        if(StringUtils.isNotEmpty(entry.getValue())) {
-							       newConfig.put(key, entry.getValue());
-                                                        }
+							if(StringUtils.isNotEmpty(entry.getValue())) {
+								newConfig.put(key, entry.getValue());
+							}
 						} else if (!entry.getValue().equalsIgnoreCase(
 								xConfig.get(key))) {
 							if (key.equalsIgnoreCase("password")
@@ -261,6 +262,12 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 					oldValue = jsonUtil.readMapToString(oldConfig);
 					value = jsonUtil.readMapToString(newConfig);
 				}
+				if ("tagService".equalsIgnoreCase(fieldName)) {
+					if(!StringUtils.isEmpty(oldValue) && !"null".equalsIgnoreCase(oldValue)){
+						RangerService oldService = this.populateViewBean(mObj);
+						oldValue=oldService.getTagService();
+					}
+				}
 				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
 					return null;
 				}
@@ -275,7 +282,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE);
 		xTrxLog.setObjectId(vObj.getId());
 		xTrxLog.setObjectName(objectName);
-		
+
 		XXServiceDef parentObj = daoMgr.getXXServiceDef().findByName(vObj.getType());
 		xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE_DEF);
 		xTrxLog.setParentObjectId(parentObj.getId());

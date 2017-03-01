@@ -1488,8 +1488,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
-
 		boolean hasTagServiceValueChanged = false;
 		Long    existingTagServiceId      = existing.getTagService();
 		String  newTagServiceName         = service.getTagService(); // null for old clients; empty string to remove existing association
@@ -1528,6 +1526,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
+
+		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
