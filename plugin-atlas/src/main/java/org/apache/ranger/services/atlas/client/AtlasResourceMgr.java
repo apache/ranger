@@ -26,10 +26,8 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 
-
 public class AtlasResourceMgr {
 	private static final Logger LOG = Logger.getLogger(AtlasResourceMgr.class);
-	private static final String  ATLASTERM	= "terms";
 
 	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 
@@ -52,37 +50,42 @@ public class AtlasResourceMgr {
 		return ret;
 	}
 
-    public static List<String> getAtlasTermResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) {
-           String userInput = context.getUserInput();
-	   Map<String, List<String>> resourceMap = context.getResources();
-	   List<String> resultList = null;
-	   List<String> atlasTermList = null;
-           String  atlasTermName = null;
-
-		if ( resourceMap != null && !resourceMap.isEmpty() &&
-			resourceMap.get(ATLASTERM) != null ) {
-			atlasTermName = userInput;
-			atlasTermList = resourceMap.get(ATLASTERM);
+	public static List<String> getAtlasResources(String serviceName, Map<String, String> configs,
+			ResourceLookupContext context) {
+		String userInput = context.getUserInput();
+		Map<String, List<String>> resourceMap = context.getResources();
+		List<String> resultList = null;
+		List<String> atlasResourceList = null;
+		String atlasResourceName = null;
+		String atlasResourceParameter = null;
+		if (null != context) {
+			atlasResourceName = context.getResourceName();
+		}
+		if (resourceMap != null && !resourceMap.isEmpty()) {
+			atlasResourceParameter = userInput;
+			atlasResourceList = resourceMap.get(atlasResourceName);
 		} else {
-			atlasTermName = userInput;
+			atlasResourceParameter = userInput;
 		}
 
-        if (configs == null || configs.isEmpty()) {
-                LOG.error("Connection Config is empty");
-        } else {
-               resultList = getAtlasTermResource(serviceName, configs, atlasTermName,atlasTermList);
-        }
-        return resultList;
-    }
+		if (configs == null || configs.isEmpty()) {
+			LOG.error("Connection Config is empty");
+		} else {
+			resultList = getAtlasResource(serviceName, configs, atlasResourceName, atlasResourceParameter,
+					atlasResourceList);
+		}
+		return resultList;
+	}
 
-    public static List<String> getAtlasTermResource(String serviceName, Map<String, String> configs, String atlasTermName, List<String> atlasTermList) {
-        final AtlasClient atlasClient = AtlasConnectionMgr.getAtlasClient(serviceName, configs);
-        List<String> termList = null;
-	    if (atlasClient != null) {
-	       synchronized(atlasClient) {
-               termList = atlasClient.getTermList(atlasTermName, atlasTermList);
-             }
-          }
-       return termList;
-     }
+	public static List<String> getAtlasResource(String serviceName, Map<String, String> configs,
+			String atlasResourceName, String atlasResourceParameter, List<String> atlasResourceList) {
+		final AtlasClient atlasClient = AtlasConnectionMgr.getAtlasClient(serviceName, configs);
+		List<String> resourceList = null;
+		if (atlasClient != null) {
+			synchronized (atlasClient) {
+				resourceList = atlasClient.getResourceList(atlasResourceName, atlasResourceParameter, atlasResourceList);
+			}
+		}
+		return resourceList;
+	}
 }
