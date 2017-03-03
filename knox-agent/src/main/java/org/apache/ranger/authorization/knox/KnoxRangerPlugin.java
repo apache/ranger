@@ -89,6 +89,7 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			resource.setValue(ResourceName.Topology, _topology);
 			// build request
 			RangerAccessRequestImpl request = new RangerAccessRequestImpl();
+			request.setAction(AccessType.Allow);
 			request.setAccessType(AccessType.Allow);
 			request.setClientIPAddress(_clientIp);
 			request.setUser(_user);
