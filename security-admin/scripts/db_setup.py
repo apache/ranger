@@ -1185,6 +1185,31 @@ class OracleConf(BaseDB):
 						jisql_log(query, db_password)
 						output = check_output(query)
 						if output.strip(version + " |"):
+							#Fix to handle Ranger Upgrade failure for Oracle DB flavor 
+							if is_unix:
+								queryUpgradeCaseCheck = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'N' and inst_by!='%s';\"" %(version,ranger_version)
+							elif os_name == "WINDOWS":
+								queryUpgradeCaseCheck = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'N' and inst_by!='%s';\" -c ;" %(version,ranger_version)
+							jisql_log(queryUpgradeCaseCheck, db_password)
+							outputUpgradeCaseCheck = check_output(queryUpgradeCaseCheck)
+							if outputUpgradeCaseCheck.strip(version + " |"):
+								if is_unix:
+									queryUpdate = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and inst_by!='%s';\"" %(version, ranger_version)
+									jisql_log(queryUpdate, db_password)
+									retUpdate = subprocess.call(shlex.split(queryUpdate))
+								elif os_name == "WINDOWS":
+									queryUpdate = get_cmd + " -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and inst_by!='%s';\" -c ;" %(version, ranger_version)
+									jisql_log(queryUpdate, db_password)
+									retUpdate = subprocess.call(queryUpdate)
+								if retUpdate == 0:
+									log ("[I] java patch "+ className +" status has been updated..","info")
+							if is_unix:
+								query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\"" %(version)
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\" -c ;" %(version)
+							jisql_log(query, db_password)
+							output = check_output(query)
+							#End of Upgrade failure fix
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
 								time.sleep(300)
