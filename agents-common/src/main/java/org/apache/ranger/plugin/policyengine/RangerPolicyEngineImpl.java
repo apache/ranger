@@ -862,7 +862,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				RangerMutableResource mutable = (RangerMutableResource) resource;
 				mutable.setServiceDef(getServiceDef());
 			} else {
-				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerTagResourceMap.");
+				LOG.debug("RangerPolicyEngineImpl.setResourceServiceDef(): Cannot set ServiceDef in RangerMutableResource.");
 			}
 		}
 	}
