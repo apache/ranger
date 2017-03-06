@@ -1126,17 +1126,38 @@ class OracleConf(BaseDB):
 						log("[I] java patch "+ className  +" is already applied" ,"info")
 					else:
 						if os_name == "LINUX":
-							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\"" %(version)
+							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\"" %(version)
 						elif os_name == "WINDOWS":
-							query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'Y';\" -c ;" %(version)
+							query = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'N';\" -c ;" %(version)
 						jisql_log(query, db_password)
 						output = check_output(query)
-						if output.strip(version + " |"):
-							while(output.strip(version + " |")):
-								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
-								jisql_log(query, db_password)
-								output = check_output(query)
+						if output.strip(version + " |"):#
+							if os_name == "LINUX":
+								queryInstallAt = get_cmd + " -c \; -query \"select version from x_db_version_h where version = 'J%s' and active = 'N' and inst_at<=CURRENT_DATE-1;\"" %(version)
+							elif os_name == "WINDOWS":
+								queryInstallAt = get_cmd + " -query \"select version from x_db_version_h where version = 'J%s' and active = 'N' inst_at<=CURRENT_DATE-1;\" -c ;" %(version)
+							jisql_log(queryInstallAt, db_password)
+							outputInstallAt = check_output(queryInstallAt)
+							if outputInstallAt.strip(version + " |"):
+								if os_name == "LINUX":
+									queryUpdate = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and updated_by='%s' and inst_at<=CURRENT_DATE-1;\"" %(version, client_host)
+									jisql_log(queryUpdate, db_password)
+									retUpdate = subprocess.call(shlex.split(queryUpdate))
+								elif os_name == "WINDOWS":
+									queryUpdate = get_cmd + " -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and updated_by='%s' and inst_at<=CURRENT_DATE-1;\" -c ;" %(version, client_host)
+									jisql_log(queryUpdate, db_password)
+									retUpdate = subprocess.call(queryUpdate)
+								if retUpdate == 0:
+									log ("[I] java patch "+ className +" status entry has been updated to continue upgrade process.","info")
+								else:
+									log("[E] java patch "+ className +" status entry update request failed, Please update/delete java patches entries having active status 'N' from x_db_version_h table and try again!", "error")
+									sys.exit(1)
+							else:
+								while(output.strip(version + " |")):
+									log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
+									time.sleep(300)
+									jisql_log(query, db_password)
+									output = check_output(query)
 						else:
 							if os_name == "LINUX":
 								query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'J%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, client_host, client_host)
@@ -1155,11 +1176,11 @@ class OracleConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_cmd = "%s -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
+							get_java_cmd = "%s -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,ranger_log,path,className)
 							if os_name == "LINUX":
-								ret = subprocess.call(shlex.split(get_cmd))
+								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
-								ret = subprocess.call(get_cmd)
+								ret = subprocess.call(get_java_cmd)
 							if ret == 0:
 								if os_name == "LINUX":
 									query = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='J%s' and active='N' and updated_by='%s';\"" %(version, client_host)
