@@ -100,7 +100,7 @@ public class UserGroupSync implements Runnable {
 			LOG.error("UserGroupSync thread got an error", t);
 		}
 		finally {
-			LOG.error("Shutting down the UserGroupSync thread");
+			LOG.info("Shutting down the UserGroupSync thread");
 		}
 	}
 	
