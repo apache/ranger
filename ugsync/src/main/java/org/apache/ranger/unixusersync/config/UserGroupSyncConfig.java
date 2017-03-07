@@ -19,11 +19,6 @@
 
 package org.apache.ranger.unixusersync.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,19 +26,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import org.apache.log4j.Logger;
-
 
 
 public class UserGroupSyncConfig  {
@@ -251,104 +239,9 @@ public class UserGroupSyncConfig  {
 	}
 
 	private void init() {
-		readConfigFile(CORE_SITE_CONFIG_FILE);
-		readConfigFile(CONFIG_FILE);
-		readConfigFile(DEFAULT_CONFIG_FILE);		
-	}
-
-	private void readConfigFile(String fileName) {
-		try {
-			InputStream in = getFileInputStream(fileName);
-			if (in != null) {
-				try {
-					//					prop.load(in);
-					DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
-							.newInstance();
-					xmlDocumentBuilderFactory.setIgnoringComments(true);
-					xmlDocumentBuilderFactory.setNamespaceAware(true);
-					DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
-							.newDocumentBuilder();
-					Document xmlDocument = xmlDocumentBuilder.parse(in);
-					xmlDocument.getDocumentElement().normalize();
-
-					NodeList nList = xmlDocument
-							.getElementsByTagName("property");
-
-					for (int temp = 0; temp < nList.getLength(); temp++) {
-
-						Node nNode = nList.item(temp);
-
-						if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-							Element eElement = (Element) nNode;
-
-							String propertyName = "";
-							String propertyValue = "";
-							if (eElement.getElementsByTagName("name").item(
-									0) != null) {
-								propertyName = eElement
-										.getElementsByTagName("name")
-										.item(0).getTextContent().trim();
-							}
-							if (eElement.getElementsByTagName("value")
-									.item(0) != null) {
-								propertyValue = eElement
-										.getElementsByTagName("value")
-										.item(0).getTextContent().trim();
-							}
-
-							if (prop.get(propertyName) != null) {
-								prop.remove(propertyName);
-							}
-
-							prop.put(propertyName, propertyValue);
-
-						}
-					}
-				}
-				finally {
-					try {
-						in.close();
-					}
-					catch(IOException ioe) {
-						// Ignore IOE when closing stream
-					}
-				}
-			}
-		} catch (Throwable e) {
-			throw new RuntimeException("Unable to load configuration file [" + CONFIG_FILE + "]", e);
-		}
-	}
-
-
-	private InputStream getFileInputStream(String path) throws FileNotFoundException {
-
-		InputStream ret = null;
-
-		File f = new File(path);
-
-		if (f.exists()) {
-			ret = new FileInputStream(f);
-		} else {
-			ret = getClass().getResourceAsStream(path);
-
-			if (ret == null) {
-				if (! path.startsWith("/")) {
-					ret = getClass().getResourceAsStream("/" + path);
-				}
-			}
-
-			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
-				if (ret == null) {
-					if (! path.startsWith("/")) {
-						ret = ClassLoader.getSystemResourceAsStream("/" + path);
-					}
-				}
-			}
-		}
-
-		return ret;
+		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
+		XMLUtils.loadConfig(CONFIG_FILE, prop);
+		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 	}
 
 	public String getUserSyncFileSource(){

@@ -23,18 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.util.XMLUtils;
 import org.springframework.util.DefaultPropertiesPersister;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class XMLPropertiesUtil extends DefaultPropertiesPersister {
-	private static final Logger logger = Logger.getLogger(XMLPropertiesUtil.class);
 
 	public XMLPropertiesUtil() {
 	}
@@ -42,45 +34,7 @@ public class XMLPropertiesUtil extends DefaultPropertiesPersister {
 	@Override
 	public void loadFromXml(Properties properties, InputStream inputStream)
 			throws IOException {
-		try {
-			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
-					.newInstance();
-			xmlDocumentBuilderFactory.setIgnoringComments(true);
-			xmlDocumentBuilderFactory.setNamespaceAware(true);
-			DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
-					.newDocumentBuilder();
-			Document xmlDocument = xmlDocumentBuilder.parse(inputStream);
-			xmlDocument.getDocumentElement().normalize();
-
-			NodeList nList = xmlDocument.getElementsByTagName("property");
-
-			for (int temp = 0; temp < nList.getLength(); temp++) {
-
-				Node nNode = nList.item(temp);
-
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-					Element eElement = (Element) nNode;
-
-					String propertyName = "";
-					String propertyValue = "";
-					if (eElement.getElementsByTagName("name").item(0) != null) {
-						propertyName = eElement.getElementsByTagName("name")
-								.item(0).getTextContent().trim();
-					}
-					if (eElement.getElementsByTagName("value").item(0) != null) {
-						propertyValue = eElement.getElementsByTagName("value")
-								.item(0).getTextContent().trim();
-					}
-
-					properties.put(propertyName, propertyValue);
-
-				}
-				//logger.info("ranger site properties loaded successfully.");
-			}
-		} catch (Exception e) {
-			logger.error("Error loading : ", e);
-		}
+        XMLUtils.loadConfig(inputStream, properties);
 	}
 
 }

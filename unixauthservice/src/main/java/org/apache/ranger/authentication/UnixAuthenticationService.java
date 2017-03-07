@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.authentication;
+package org.apache.ranger.authentication;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,16 +41,11 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSync;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class UnixAuthenticationService {
 
@@ -88,9 +83,6 @@ public class UnixAuthenticationService {
 	static private boolean enableUnixAuth = false;
 	
 	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" };
-	private static final String    PROPERTY_ELEMENT_TAGNAME = "property";
-	private static final String    NAME_ELEMENT_TAGNAME = "name";
-	private static final String    VALUE_ELEMENT_TAGNAME = "value";
 
 	public static void main(String[] args) {
 		if (args.length > 0) {
@@ -147,60 +139,7 @@ public class UnixAuthenticationService {
 		Properties prop = new Properties();
 		
 		for (String fn : UGSYNC_CONFIG_XML_FILES ) {
-		
-			InputStream in = getFileInputStream(fn);
-	
-			if (in != null) {
-				try {
-					DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
-					xmlDocumentBuilderFactory.setIgnoringComments(true);
-					xmlDocumentBuilderFactory.setNamespaceAware(true);
-					DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory.newDocumentBuilder();
-					Document xmlDocument = xmlDocumentBuilder.parse(in);
-					xmlDocument.getDocumentElement().normalize();
-	
-					NodeList nList = xmlDocument.getElementsByTagName(PROPERTY_ELEMENT_TAGNAME);
-	
-					for (int temp = 0; temp < nList.getLength(); temp++) {
-	
-						Node nNode = nList.item(temp);
-	
-						if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-	
-							Element eElement = (Element) nNode;
-	
-							String propertyName = "";
-							String propertyValue = "";
-							if (eElement.getElementsByTagName(NAME_ELEMENT_TAGNAME).item(
-									0) != null) {
-								propertyName = eElement
-										.getElementsByTagName(NAME_ELEMENT_TAGNAME)
-										.item(0).getTextContent().trim();
-							}
-							if (eElement.getElementsByTagName(VALUE_ELEMENT_TAGNAME)
-									.item(0) != null) {
-								propertyValue = eElement
-										.getElementsByTagName(VALUE_ELEMENT_TAGNAME)
-										.item(0).getTextContent().trim();
-							}
-	
-							//LOG.info("Adding Property:[" + propertyName + "] Value:["+ propertyValue + "]");
-							if (prop.get(propertyName) != null ) {
-								prop.remove(propertyName);
-	 						}
-							prop.put(propertyName, propertyValue);
-						}
-					}
-				}
-				finally {
-					try {
-						in.close();
-					}
-					catch(IOException ioe) {
-						LOG.debug("Close streams failure. Detail: \n", ioe);
-					}
-				}
-			}
+            XMLUtils.loadConfig(fn, prop);
 		}
 		
 		String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM);

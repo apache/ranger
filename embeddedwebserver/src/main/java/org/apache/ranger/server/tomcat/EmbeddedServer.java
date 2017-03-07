@@ -21,7 +21,6 @@ package org.apache.ranger.server.tomcat;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Iterator;
@@ -29,8 +28,6 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.List;
 import javax.servlet.ServletException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -42,12 +39,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
+import org.apache.ranger.plugin.util.XMLUtils;
 import javax.security.auth.Subject;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class EmbeddedServer {
 	
@@ -80,9 +73,9 @@ public class EmbeddedServer {
 		if (args.length > 0) {
 			configFile = args[0];
 		}
-		loadConfig(CORE_SITE_CONFIG_FILENAME);
-		loadConfig(DEFAULT_CONFIG_FILENAME);
-		loadConfig(configFile);		
+        XMLUtils.loadConfig(CORE_SITE_CONFIG_FILENAME, serverConfigProperties);
+        XMLUtils.loadConfig(DEFAULT_CONFIG_FILENAME, serverConfigProperties);
+        XMLUtils.loadConfig(configFile, serverConfigProperties);
 	}
 	
 	public static int DEFAULT_SHUTDOWN_PORT = 6185;
@@ -326,37 +319,6 @@ public class EmbeddedServer {
 		return ret;
 	}
 	
-	private String getResourceFileName(String aResourceName) {
-		
-		String ret = aResourceName;
-		
-		ClassLoader cl = getClass().getClassLoader();
-		
-		for (String path : new String[] { aResourceName, "/" + aResourceName }) {
-			
-			try {
-				URL lurl = cl.getResource(path);
-		
-				if (lurl != null) {
-					ret = lurl.getFile();
-				}
-			} catch (Throwable t) {
-				ret = null;
-			}
-			if (ret != null) {
-				break;
-			}
-
-		}
-		
-		if (ret == null) {
-			ret = aResourceName;
-		}
-		
-		return ret;
-		
-	}
-	
 	public void shutdownServer() {
 		int timeWaitForShutdownInSeconds = getIntConfig(
 				"service.waitTimeForForceShutdownInSeconds", 0);
@@ -387,50 +349,6 @@ public class EmbeddedServer {
 		System.exit(0);
 	}
 
-
-	public void loadConfig(String configFileName) {
-		String path = getResourceFileName(configFileName);
-		try {
-			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
-					.newInstance();
-			xmlDocumentBuilderFactory.setIgnoringComments(true);
-			xmlDocumentBuilderFactory.setNamespaceAware(true);
-			DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
-					.newDocumentBuilder();
-			Document xmlDocument = xmlDocumentBuilder.parse(new File(path));
-			xmlDocument.getDocumentElement().normalize();
-
-			NodeList nList = xmlDocument.getElementsByTagName("property");
-
-			for (int temp = 0; temp < nList.getLength(); temp++) {
-
-				Node nNode = nList.item(temp);
-
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-					Element eElement = (Element) nNode;
-
-					String propertyName = "";
-					String propertyValue = "";
-					if (eElement.getElementsByTagName("name").item(0) != null) {
-						propertyName = eElement.getElementsByTagName("name")
-								.item(0).getTextContent().trim();
-					}
-					if (eElement.getElementsByTagName("value").item(0) != null) {
-						propertyValue = eElement.getElementsByTagName("value")
-								.item(0).getTextContent().trim();
-					}
-
-					serverConfigProperties.put(propertyName, propertyValue);
-
-				}
-			}
-
-		} catch (Exception e) {
-			LOG.severe("Load configuration fail. Reason: " + e.toString());
-		}
-
-	}
 	protected long getLongConfig(String key, long defaultValue) {
 		long ret = defaultValue;
 		String retStr = getConfig(key);
