@@ -59,9 +59,9 @@ public class ServiceKafkaClient {
 		this.zookeeperConnect = zookeeperConnect;
 	}
 
-	public HashMap<String, Object> connectionTest() throws Exception {
+	public Map<String, Object> connectionTest() throws Exception {
 		String errMsg = errMessage;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 		try {
 			getTopicList(null);
 			// If it doesn't throw exception, then assume the instance is

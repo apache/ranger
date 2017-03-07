@@ -85,10 +85,10 @@ public class HBaseClient extends BaseClient {
 		return connectionProp;
 	}
 
-	public static HashMap<String, Object> connectionTest (String dataSource,
+	public static Map<String, Object> connectionTest (String dataSource,
 			Map<String, String> configs) throws Exception {
 
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 		final String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";

@@ -46,8 +46,8 @@ public class RangerServiceHive extends RangerBaseService {
 	}
 
 	@Override
-	public HashMap<String,Object> validateConfig() throws Exception {
-		HashMap<String, Object> ret = new HashMap<String, Object>();
+	public Map<String,Object> validateConfig() throws Exception {
+		Map<String, Object> ret = new HashMap<String, Object>();
 		String 	serviceName  	    = getServiceName();
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceHive.validateConfig Service: (" + serviceName + " )");

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.solr.client;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.solr.client.solrj.SolrClient;
@@ -49,7 +48,7 @@ public class ServiceSolrConnectionMgr {
 	 * @param configs
 	 * @return
 	 */
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 		ServiceSolrClient serviceSolrClient = getSolrClient(serviceName,
 				configs);

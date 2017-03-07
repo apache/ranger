@@ -174,7 +174,7 @@ public class ServiceMgr {
 				// Timeout value use during validate config is 10 times that used during lookup
 				long time = getTimeoutValueForValidateConfigInMilliSeconds(svc);
 				ValidateCallable callable = new ValidateCallable(svc);
-				HashMap<String, Object> responseData = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
+				Map<String, Object> responseData = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
 
 				ret = generateResponseForTestConn(responseData, "");
 			} catch (Exception e) {
@@ -373,7 +373,7 @@ public class ServiceMgr {
 	}
 
 	private VXResponse generateResponseForTestConn(
-			HashMap<String, Object> responseData, String msg) {
+			Map<String, Object> responseData, String msg) {
 		VXResponse vXResponse = new VXResponse();
 
 		Long objId = null;
@@ -544,7 +544,7 @@ public class ServiceMgr {
 		}
 	}
 
-	static class ValidateCallable extends TimedCallable<HashMap<String, Object>> {
+	static class ValidateCallable extends TimedCallable<Map<String, Object>> {
 
 		public ValidateCallable(RangerBaseService svc) {
 			super(svc);
@@ -556,7 +556,7 @@ public class ServiceMgr {
 		}
 
 		@Override
-		public HashMap<String, Object> actualCall() throws Exception {
+		public Map<String, Object> actualCall() throws Exception {
 			return svc.validateConfig();
 		}
 	}

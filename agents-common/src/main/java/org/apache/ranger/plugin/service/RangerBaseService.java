@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +81,7 @@ public abstract class RangerBaseService {
 		this.serviceType = serviceType;
 	}
 		
-	public abstract HashMap<String, Object> validateConfig() throws Exception;
+	public abstract Map<String, Object> validateConfig() throws Exception;
 	
 	public abstract List<String> lookupResource(ResourceLookupContext context) throws Exception;
 	

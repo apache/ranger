@@ -305,13 +305,13 @@ public class KMSClient {
 		return lret;
 	}
 
-	public static HashMap<String, Object> testConnection(String serviceName,
+	public static Map<String, Object> testConnection(String serviceName,
 			Map<String, String> configs) {
 
 		List<String> strList = new ArrayList<String>();
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 
 		KMSClient kmsClient = getKmsClient(serviceName, configs);
 		strList = getKmsKey(kmsClient, "", null);

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.kafka.client;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceKafkaConnectionMgr {
@@ -41,7 +40,7 @@ public class ServiceKafkaConnectionMgr {
 	 * @param configs
 	 * @return
 	 */
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 		ServiceKafkaClient serviceKafkaClient = getKafkaClient(serviceName,
 				configs);

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.yarn.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +29,8 @@ public class YarnResourceMgr {
 	private static final 	Logger 	LOG 		= Logger.getLogger(YarnResourceMgr.class);
 	private static final 	String  YARNQUEUE	= "queue";
 	
-	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> YarnResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );

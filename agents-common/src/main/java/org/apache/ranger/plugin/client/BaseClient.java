@@ -21,7 +21,6 @@
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -163,7 +162,7 @@ public abstract class BaseClient {
 	
 	public static void generateResponseDataMap(boolean connectivityStatus,
 			String message, String description, Long objectId,
-			String fieldName, HashMap<String, Object> responseData) {
+			String fieldName, Map<String, Object> responseData) {
 		responseData.put("connectivityStatus", connectivityStatus);
 		responseData.put("message", message);
 		responseData.put("description", description);

@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.services.hive.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -38,8 +37,8 @@ public class HiveResourceMgr {
 	private static final String  COLUMN	 	  = "column";
 
 	
-	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> HiveResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );

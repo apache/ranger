@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.knox.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +33,8 @@ public class KnoxResourceMgr {
 	private static final String TOPOLOGY	  	 = "topology";
 	private static final String SERVICE 	 	 = "service";
 
-	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		if (LOG.isDebugEnabled()) {
 		   LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: "+ serviceName + "Configs" + configs );
 		}

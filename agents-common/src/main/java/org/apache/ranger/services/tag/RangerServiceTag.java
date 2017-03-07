@@ -56,7 +56,7 @@ public class RangerServiceTag extends RangerBaseService {
 	}
 
 	@Override
-	public HashMap<String,Object> validateConfig() throws Exception {
+	public Map<String,Object> validateConfig() throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceTag.validateConfig(" + serviceName + " )");
 		}

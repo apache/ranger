@@ -198,11 +198,11 @@ public class HdfsClient extends BaseClient {
 		}
 	}
 
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 
 	LOG.info("===> HdfsClient.testConnection()" );
-    HashMap<String, Object> responseData = new HashMap<String, Object>();
+    Map<String, Object> responseData = new HashMap<String, Object>();
     boolean connectivityStatus = false;
 
     String validateConfigsMsg = null;

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.hbase.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -38,8 +37,8 @@ public class HBaseResourceMgr {
 	private static final String TABLE 		 		    = "table";
 	private static final String COLUMNFAMILY 		    = "column-family";
 		
-	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: "+ serviceName + "Configs" + configs );
 		}	
