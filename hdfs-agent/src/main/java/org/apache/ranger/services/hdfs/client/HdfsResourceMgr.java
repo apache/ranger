@@ -20,7 +20,6 @@
 package org.apache.ranger.services.hdfs.client;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,8 +35,8 @@ public class HdfsResourceMgr {
 	private static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
 	public static final String PATH	= "path";
 
-	public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HdfsResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );

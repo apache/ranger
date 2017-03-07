@@ -348,12 +348,12 @@ public class StormClient {
 		return ret;
 	}
 
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) {
 
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 
 		StormClient stormClient = getStormClient(serviceName,
 				configs);

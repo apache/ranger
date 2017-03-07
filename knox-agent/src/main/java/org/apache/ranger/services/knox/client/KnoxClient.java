@@ -302,14 +302,14 @@ public class KnoxClient {
 		}
 	}
 	
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 										  		Map<String, String> configs) {
 
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
 		boolean connectivityStatus = false;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 
 		KnoxClient knoxClient = getKnoxClient(serviceName, configs);
 		List<String> strList = getKnoxResources(knoxClient, "", null,null,null);

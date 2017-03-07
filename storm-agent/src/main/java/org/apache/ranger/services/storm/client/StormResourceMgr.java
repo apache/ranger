@@ -20,7 +20,6 @@
 package org.apache.ranger.services.storm.client;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +30,8 @@ public class StormResourceMgr {
 	private static final 	Logger 	LOG 		= Logger.getLogger(StormResourceMgr.class);
 	private static final 	String  TOPOLOGY	= "topology";
 	
-	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> StormResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );

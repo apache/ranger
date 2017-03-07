@@ -620,10 +620,10 @@ public class HiveClient extends BaseClient implements Closeable {
 		}	
 	}
 
-	public static HashMap<String, Object> connectionTest(String serviceName,
+	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> connectionProperties) throws Exception {
 		HiveClient connectionObj = null;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 		boolean connectivityStatus = false;
 		String errMsg = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "

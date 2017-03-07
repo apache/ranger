@@ -21,6 +21,8 @@ package org.apache.ranger.services.solr;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -44,8 +46,8 @@ public class RangerServiceSolr extends RangerBaseService {
 	}
 
 	@Override
-	public HashMap<String, Object> validateConfig() throws Exception {
-		HashMap<String, Object> ret = new HashMap<String, Object>();
+	public Map<String, Object> validateConfig() throws Exception {
+		Map<String, Object> ret = new HashMap<String, Object>();
 		String serviceName = getServiceName();
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceSolr.validateConfig Service: ("

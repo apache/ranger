@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.atlas.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +28,9 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 public class AtlasResourceMgr {
 	private static final Logger LOG = Logger.getLogger(AtlasResourceMgr.class);
 
-	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
+	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 
-		HashMap<String, Object> ret = null;
+		Map<String, Object> ret = null;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> AtlasResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );

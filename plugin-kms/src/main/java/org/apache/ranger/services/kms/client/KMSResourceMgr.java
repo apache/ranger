@@ -19,7 +19,6 @@
 
 package org.apache.ranger.services.kms.client;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +29,8 @@ public class KMSResourceMgr {
 	private static final 	Logger 	LOG 		= Logger.getLogger(KMSResourceMgr.class);
 	private static final 	String  KMSKEY	= "keyname";
 	
-	public static HashMap<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		HashMap<String, Object> ret = null;
+	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
+		Map<String, Object> ret = null;
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> KMSResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );

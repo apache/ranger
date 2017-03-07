@@ -71,9 +71,9 @@ public class ServiceSolrClient {
 
 	}
 
-	public HashMap<String, Object> connectionTest() throws Exception {
+	public Map<String, Object> connectionTest() throws Exception {
 		String errMsg = errMessage;
-		HashMap<String, Object> responseData = new HashMap<String, Object>();
+		Map<String, Object> responseData = new HashMap<String, Object>();
 
 		try {
 			getCollectionList(null);
