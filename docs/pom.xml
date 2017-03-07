@@ -360,6 +360,18 @@
                 Hortonworks
             </organization>
         </developer>
+	<developer>
+            <id>zhangqiang</id>
+            <name>zhang qiang</name>
+            <email>zhangqiang@apache.org</email>
+            <timezone>+8</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                ZTE
+            </organization>
+        </developer>
     </developers>
     <contributors>
         <contributor>
