@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Map;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -53,6 +54,7 @@ public class XMLUtils {
 	public static void loadConfig(InputStream input, Map<Object, Object> properties) {
 		try {
 			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+			xmlDocumentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 			xmlDocumentBuilderFactory.setIgnoringComments(true);
 			xmlDocumentBuilderFactory.setNamespaceAware(true);
 
