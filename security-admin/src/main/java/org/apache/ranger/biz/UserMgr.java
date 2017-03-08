@@ -365,7 +365,7 @@ public class UserMgr {
 
 	/**
 	 * @param userId
-	 * @param vStrings
+	 * @param vStringRolesList
 	 */
 	public void setUserRoles(Long userId, List<VXString> vStringRolesList) {
 		List<String> stringRolesList = new ArrayList<String>();
@@ -486,7 +486,7 @@ public class UserMgr {
 	}
 
 	/**
-	 * @param userId
+	 * @param gjUser
 	 */
 	public VXPortalUser deactivateUser(XXPortalUser gjUser) {
 		checkAdminAccess();
@@ -617,9 +617,7 @@ public class UserMgr {
 				userProfile.setEmailAddress(user.getEmailAddress());
 			}
 
-			if (sess != null) {
-				userProfile.setUserSource(sess.getAuthProvider());
-			}
+			userProfile.setUserSource(sess.getAuthProvider());
 
 			List<XXPortalUserRole> gjUserRoleList = daoManager
 					.getXXPortalUserRole().findByParentId(user.getId());
@@ -627,10 +625,7 @@ public class UserMgr {
 			for (XXPortalUserRole gjUserRole : gjUserRoleList) {
 				userProfile.getUserRoleList().add(gjUserRole.getUserRole());
 			}
-		}
 
-		if (sess.isUserAdmin() || sess.isKeyAdmin()
-				|| sess.getXXPortalUser().getId().equals(user.getId())) {
 			userProfile.setId(user.getId());
 			List<XXUserPermission> xUserPermissions = daoManager
 					.getXXUserPermission().findByUserPermissionIdAndIsAllowed(
