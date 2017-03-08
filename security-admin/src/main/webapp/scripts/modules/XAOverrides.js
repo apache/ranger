@@ -1291,7 +1291,8 @@
 		      var collection = this.collection;
 		      var selectedModels = this.selectedModels = {};
 		      this.listenTo(collection.fullCollection || collection,
-		                    "backgrid:selected", function (model, selected) {
+		                    "backgrid:selected", function (model, selected, clearSelectedModels) {
+		    	if(clearSelectedModels) selectedModels = {}; 
 		        if (selected) selectedModels[model.id || model.cid] = 1;
 		        else {
 		          delete selectedModels[model.id || model.cid];

@@ -388,7 +388,11 @@ define(function(require) {
                 noServiceToExport       :'No service found to export policies.',
                 noServiceToImport       :'No service found to import policies.',
                 noPolicytoExport        :'No policies found to export!',
-                importingFiles          :'Importing policies from file is started...'
+                importingFiles          :'Importing policies from file is started...',
+                noDeleteUserRow           :'Please select user first to delete.',
+                noDeleteGroupRow        :'Please select Group first to delete.',
+                plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
+                plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
  
 			},
 			plcHldr : {
@@ -415,8 +419,8 @@ define(function(require) {
 				passwordError          :'Password should be minimum 8 characters with min one alphabet and one numeric.',
 				userNameValidationMsg  :'1. User name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
 				groupNameValidationMsg :'1. Group name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
-                                firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
-                                lastNameValidationMsg  :'1. Last name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
+                firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
+                lastNameValidationMsg  :'1. Last name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
 			},
 			serverMsg : {
 				

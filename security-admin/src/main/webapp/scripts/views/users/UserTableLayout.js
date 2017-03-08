@@ -99,6 +99,7 @@ define(function(require){
 		/** all events binding here */
 		bindEvents : function(){
 			var that = this;
+			
 			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
 			/*this.listenTo(communicator.vent,'someView:someEvent', this.someEventHandler, this)'*/
 		},
@@ -111,7 +112,19 @@ define(function(require){
 			} else {
 				this.renderUserTab();
 			}
+			this.bindEventToColl(this.collection);
+			this.bindEventToColl(this.groupList);
 			this.addVisualSearch();
+		},
+		bindEventToColl : function(coll){
+			if(_.isUndefined(coll)) return;
+			this.listenTo(coll, "sync reset", function(){
+				this.$el.find('table input[type="checkbox"]').prop('checked',false)
+				coll.each(function(model, key, value){
+					coll.trigger("backgrid:selected", model, false, true);
+					coll.deselect(model);
+				}, this);
+			}, this);
 		},
 		onTabChange : function(e){
 			var that = this;
@@ -132,22 +145,35 @@ define(function(require){
 			var updateReq = {};
 			var collection = this.showUsers ? this.collection : this.groupList;
 
-			_.each(collection.selected, function(m){
-				if( m.get('isVisible') != status ){
-					m.set('isVisible', status);
+			collection.each(function(m){
+				if(m.selected && m.get('isVisible') != status){
+				  	m.set('isVisible', status);
 					m.toServer();
 					updateReq[m.get('id')] = m.get('isVisible');
 				}
 			});
-
+			if(_.isEmpty(updateReq)){
+				if(this.showUsers){
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.plsSelectUserToSetVisibility'));
+				}else{
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.plsSelectGroupToSetVisibility'));
+				}
+				
+				return;
+			}
 			var clearCache = function(coll){
-                _.each(Backbone.fetchCache._cache, function(url, val){
-                   var urlStr = coll.url;
-                   if((val.indexOf(urlStr) != -1)){
-                       Backbone.fetchCache.clearItem(val);
-                   }
-                });
-                coll.fetch({reset: true, cache : false});
+					_.each(Backbone.fetchCache._cache, function(url, val){
+		                   var urlStr = coll.url;
+		                   if((val.indexOf(urlStr) != -1)){
+		                       Backbone.fetchCache.clearItem(val);
+		                   }
+		                });
+					coll.fetch({reset: true, cache:false}).done(function(coll){
+	                	coll.each(function(model){
+	                		coll.trigger("backgrid:selected", model, false, true);
+	    					coll.deselect(model);
+	    				}, this);
+	                })
 			}
 			if(this.showUsers){
 				collection.setUsersVisibility(updateReq, {
@@ -174,11 +200,12 @@ define(function(require){
 						if(!_.isUndefined(resp) && !_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){
 							XAUtil.notifyError('Error', resp.responseJSON.msgDesc);
 						}else{
-							XAUtil.notifyError('Error', "Error occurred while updating user");
+							XAUtil.notifyError('Error', "Error occurred while updating group");
 						}
 						collection.trigger('error','',resp)
 					},
                 });
+
 			}
 		},
 		renderUserTab : function(){
@@ -227,7 +254,7 @@ define(function(require){
 			var that = this;
 			var tableRow = Backgrid.Row.extend({
 				render: function () {
-    				tableRow.__super__.render.apply(this, arguments);
+					tableRow.__super__.render.apply(this, arguments);
     				if(!this.model.get('isVisible')){
     					this.$el.addClass('tr-inactive');
     				}
@@ -359,6 +386,7 @@ define(function(require){
     				}
     				return this;
 				},
+				
 			});
 			this.rTableList.show(new XATableLayout({
 				columns: this.getGroupColumns(),
@@ -455,8 +483,10 @@ define(function(require){
 			var collection = that.showUsers ? that.collection : that.groupList;
 			var selArr = [];
 			var message = '';
-			_.each(collection.selected,function(obj){
-                                 selArr.push(obj.get('name'));
+			collection.each(function(obj){
+				if(obj.selected){
+	                selArr.push(obj.get('name'));
+	            }
             });
 			var  vXStrings = [];
 			var jsonUsers  = {};
@@ -469,9 +499,16 @@ define(function(require){
 			jsonUsers.vXStrings = vXStrings;
 
 			var total_selected = jsonUsers.vXStrings.length;
-
-			if(total_selected == 1) {
-                                message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+ _.escape( jsonUsers.vXStrings[0].value )+'\'?';
+			if(total_selected == 0){
+				if(that.showUsers){
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noDeleteUserRow'));
+				}else{
+					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noDeleteGroupRow'));
+				}
+				return;
+			}
+            if(total_selected == 1) {
+                message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+ _.escape( jsonUsers.vXStrings[0].value )+'\'?';
 			}
 			else {
 				message = 'Are you sure you want to delete '+total_selected+' '+(that.showUsers ? 'users':'groups')+'?';
@@ -486,7 +523,7 @@ define(function(require){
 							model.deleteUsers(jsonUsers,{
 								success: function(response,options){
 									XAUtil.blockUI('unblock');
-									that.onUserGroupDeleteSuccess(jsonUsers,collection);
+									that.collection.getFirstPage({fetch:true});
 									XAUtil.notifySuccess('Success','User deleted successfully!');
 									that.collection.selected = {};
 								},
@@ -501,7 +538,7 @@ define(function(require){
 							model.deleteGroups(jsonUsers,{
 								success: function(response){
 									XAUtil.blockUI('unblock');
-									that.onUserGroupDeleteSuccess(jsonUsers,collection);
+									that.groupList.getFirstPage({fetch:true});
 									XAUtil.notifySuccess('Success','Group deleted successfully!');
 									that.groupList.selected  = {};
 								},

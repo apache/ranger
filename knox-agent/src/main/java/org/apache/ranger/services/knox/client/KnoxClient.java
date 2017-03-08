@@ -220,7 +220,7 @@ public class KnoxClient {
 							JsonNode rootNode = objectMapper.readTree(jsonString);
 							JsonNode topologyNode = rootNode.findValue("topology");
 							if (topologyNode != null) {
-								JsonNode servicesNode = topologyNode.get("services");
+								JsonNode servicesNode = topologyNode.get("service");
 								if (servicesNode != null) {
 									Iterator<JsonNode> services = servicesNode.getElements();
 									while (services.hasNext()) {

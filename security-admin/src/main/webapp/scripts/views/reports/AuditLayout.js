@@ -521,7 +521,14 @@ define(function(require) {
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
-									case 'Audit Type':
+								    case 'Service Name':
+										var serviceList 	= new RangerServiceList();
+										serviceList.setPageSize(100);
+										serviceList.fetch().done(function(){
+											callback(serviceList.map(function(model){return model.get('name');}));
+										});
+										break;
+								    case 'Audit Type':
 										callback([]);
 										break;
 									case 'Start Date' :
@@ -561,6 +568,20 @@ define(function(require) {
 					placeholder    : localization.tt('msg.searchForPluginStatus'),
 					container         : this.ui.visualSearch,
 					query             : '',
+					callbacks :  { 
+				    	  valueMatches :function(facet, searchTerm, callback) {
+								switch (facet) {
+								    case 'Service Name':
+										var serviceList 	= new RangerServiceList();
+										serviceList.setPageSize(100);
+										serviceList.fetch().done(function(){
+											callback(serviceList.map(function(model){return model.get('name');}));
+										});
+										break;
+								}     
+			            	
+							}
+				      }
 			}
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.pluginInfoList, pluginAttr);
 		},
