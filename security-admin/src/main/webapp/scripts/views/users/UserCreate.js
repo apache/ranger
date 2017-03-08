@@ -161,7 +161,7 @@ define(function(require){
 					App.appRouter.navigate("#!/users/usertab",{trigger: true});
 					
 					var userList = new VXUserList();
-					   
+					_.extend(userList.queryParams, XAUtil.getUserDataParams())
 					userList.fetch({
 					   cache:false
 					}).done(function(){

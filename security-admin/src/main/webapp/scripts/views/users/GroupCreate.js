@@ -129,7 +129,7 @@ define(function(require){
 					App.appRouter.navigate("#!/users/grouptab",{trigger: true});
 					
 					var groupList = new VXGroupList();
-					   
+					 _.extend(groupList.queryParams, XAUtil.getUserDataParams());   
 					groupList.fetch({
 						   cache:false
 					   }).done(function(){

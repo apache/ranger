@@ -1472,7 +1472,78 @@ public class XUserMgr extends XUserMgrBase {
 				vXUserListSort = xUserService.searchXUsers(searchCriteria);
 				vXUserExactMatch = getXUserByUserName((String)searchCriteria.getParamList().get("name"));
 			}
+			int vXUserExactMatchwithSearchCriteria = 0;
 			if(vXUserExactMatch != null){
+				vXUserListSort = xUserService.searchXUsers(searchCriteria);
+				HashMap<String, Object> searchCriteriaParamList = searchCriteria.getParamList();
+				vXUserExactMatchwithSearchCriteria = 1;
+				for(String caseKey : searchCriteriaParamList.keySet()){
+					switch (caseKey.toLowerCase()) {
+						case "isvisible":
+							Integer isVisible = vXUserExactMatch.getIsVisible();
+							if(isVisible != null && !isVisible.equals(searchCriteriaParamList.get(caseKey))){
+								vXUserExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "status":
+							Integer status = vXUserExactMatch.getStatus();
+							if(status != null && !status.equals(searchCriteriaParamList.get(caseKey))){
+								vXUserExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "usersource":
+							Integer userSource = vXUserExactMatch.getUserSource();
+							if(userSource != null && !userSource.equals(searchCriteriaParamList.get(caseKey))){
+								vXUserExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "emailaddress":
+							String email = vXUserExactMatch.getEmailAddress();
+							if(email != null && !email.equals(searchCriteriaParamList.get(caseKey))){
+								vXUserExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "userrole":
+							if(vXUserExactMatch.getUserRoleList() != null && !vXUserExactMatch.getUserRoleList().contains(searchCriteriaParamList.get(caseKey))){
+								vXUserExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "userrolelist":
+							@SuppressWarnings("unchecked")
+							Collection<String> userrolelist = (Collection<String>) searchCriteriaParamList.get(caseKey);
+							if(!CollectionUtils.isEmpty(userrolelist)){
+								for(String role:userrolelist){
+									if(vXUserExactMatch.getUserRoleList() != null && vXUserExactMatch.getUserRoleList().contains(role)){
+										vXUserExactMatchwithSearchCriteria = 1;
+										break;
+									}
+									else{
+										vXUserExactMatchwithSearchCriteria = -1;
+									}
+								}
+							}
+							break;
+						default:
+							logger.warn("XUserMgr.searchXUsers: unexpected searchCriteriaParam:" + caseKey);
+							break;
+					}
+					if(vXUserExactMatchwithSearchCriteria == -1){
+						break;
+					}
+				}
+			}
+			if(vXUserExactMatchwithSearchCriteria == 1){
+				VXGroupList groups = getXUserGroups(vXUserExactMatch.getId());
+				if(groups.getListSize() > 0){
+					Collection<String> groupNameList = new ArrayList<String>();
+					Collection<Long> groupIdList = new ArrayList<Long>();
+					for(VXGroup group:groups.getList()){
+						groupIdList.add(group.getId());
+						groupNameList.add(group.getName());
+					}
+					vXUserExactMatch.setGroupIdList(groupIdList);
+					vXUserExactMatch.setGroupNameList(groupNameList);
+				}
 				List<VXUser> vXUsers = new ArrayList<VXUser>();
 				if(searchCriteria.getStartIndex() == 0){
 					vXUsers.add(0,vXUserExactMatch);
@@ -1523,13 +1594,40 @@ public class XUserMgr extends XUserMgrBase {
 				vXGroupListSort = xGroupService.searchXGroups(searchCriteria);
 				vXGroupExactMatch = getGroupByGroupName((String)searchCriteria.getParamList().get("name"));
 			}
+			int vXGroupExactMatchwithSearchCriteria = 0;
 			if(vXGroupExactMatch != null){
+				HashMap<String, Object> searchCriteriaParamList = searchCriteria.getParamList();
+				vXGroupExactMatchwithSearchCriteria = 1;
+				for(String caseKey : searchCriteriaParamList.keySet()){
+					switch (caseKey.toLowerCase()) {
+						case "isvisible":
+							Integer isVisible = vXGroupExactMatch.getIsVisible();
+							if(isVisible != null && !isVisible.equals(searchCriteriaParamList.get(caseKey))){
+								vXGroupExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						case "groupsource":
+							Integer groupsource = vXGroupExactMatch.getGroupSource();
+							if(groupsource != null && !groupsource.equals(searchCriteriaParamList.get(caseKey))){
+								vXGroupExactMatchwithSearchCriteria = -1;
+							}
+							break;
+						default:
+							logger.warn("XUserMgr.searchXGroups: unexpected searchCriteriaParam:" + caseKey);
+							break;
+					}
+					if(vXGroupExactMatchwithSearchCriteria == -1){
+						break;
+					}
+				}
+			}
+			if(vXGroupExactMatchwithSearchCriteria == 1){
 				List<VXGroup> vXGroups = new ArrayList<VXGroup>();
 				if(searchCriteria.getStartIndex() == 0){
 					vXGroups.add(0,vXGroupExactMatch);
 				}
 				for(VXGroup vXGroup:vXGroupListSort.getList()){
-					if(vXGroupExactMatch.getId()!=null && vXGroup!=null){
+					if(vXGroupExactMatch.getId() != null && vXGroup != null){
 						if(!vXGroupExactMatch.getId().equals(vXGroup.getId())){
 							vXGroups.add(vXGroup);
 						}
