@@ -169,14 +169,16 @@ public class AuthSessionService extends
 		viewObj.setRequestUserAgent(resource.getRequestUserAgent());
 
 		if (resource.getUserId() != null) {
-			XXPortalUser gjUser = daoMgr.getXXPortalUser().getById(resource.getUserId());
-			viewObj.setEmailAddress(gjUser.getEmailAddress());
-			viewObj.setFamilyScreenName(gjUser.getEmailAddress());
-			viewObj.setFirstName(gjUser.getFirstName());
-			viewObj.setLastName(gjUser.getLastName());
-			viewObj.setLastName(gjUser.getLastName());
-			viewObj.setPublicScreenName(gjUser.getPublicScreenName());
 			viewObj.setUserId(resource.getUserId());
+
+			XXPortalUser gjUser = daoMgr.getXXPortalUser().getById(resource.getUserId());
+			if (gjUser != null) {
+				viewObj.setEmailAddress(gjUser.getEmailAddress());
+				viewObj.setFamilyScreenName(gjUser.getLastName());
+				viewObj.setFirstName(gjUser.getFirstName());
+				viewObj.setLastName(gjUser.getLastName());
+				viewObj.setPublicScreenName(gjUser.getPublicScreenName());
+			}
 		}
 
 		return viewObj;
