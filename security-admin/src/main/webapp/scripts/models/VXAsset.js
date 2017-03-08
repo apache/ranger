@@ -46,8 +46,7 @@ define(function(require){
 
 		schemaBase : function(){
 			var attrs = _.omit(this.serverSchema, 'id', 'createDate', 'updateDate', "version",
-					"createDate", "updateDate", "displayOption",
-					"permList", "forUserId", "status", "priGrpId",
+					"displayOption", "permList", "forUserId", "status", "priGrpId",
 					"updatedBy","isSystem");
 
 			_.each(attrs, function(o){

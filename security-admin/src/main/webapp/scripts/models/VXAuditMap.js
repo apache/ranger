@@ -34,8 +34,7 @@ define(function(require){
 
 		schema : function(){
 			return _.omit(this.serverSchema, 'id', 'createDate', 'updateDate', "version",
-					"createDate", "updateDate", "displayOption",
-					"permList", "forUserId", "status", "priGrpId",
+					"displayOption", "permList", "forUserId", "status", "priGrpId",
 					"isSystem","updatedBy");
 		},
 		/** This models toString() */
