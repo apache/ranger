@@ -74,6 +74,7 @@
               <include>org.apache.hive:hive-service:jar:${hive.version}</include>
               <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
               <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
+              <include>org.apache.hive:hive-jdbc:jar:standalone:${hive.version}</include>
               <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
             </includes>
           </dependencySet>
@@ -84,22 +85,6 @@
      </includes>
     </moduleSet>
 
-	<moduleSet>
-     <binaries>
-        <includeDependencies>true</includeDependencies>
-        <outputDirectory>/ews/webapp/WEB-INF/lib/</outputDirectory>
-        <unpack>false</unpack>
-        <directoryMode>755</directoryMode>
-        <fileMode>644</fileMode>
-        <dependencySets>
-          <dependencySet>
-            <includes>
-              <include>org.apache.hive:hive-jdbc:jar:standalone:${hive.version}</include>
-            </includes>
-          </dependencySet>
-        </dependencySets>
-     </binaries>
-    </moduleSet>
 
     <moduleSet>
      <binaries>
