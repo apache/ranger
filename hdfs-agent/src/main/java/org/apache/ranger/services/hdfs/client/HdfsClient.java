@@ -80,17 +80,17 @@ public class HdfsClient extends BaseClient {
 				fs = FileSystem.get(conf);
 
 				Path basePath = new Path(baseDir);
-				FileStatus[] fileStats = fs.listStatus(basePath);
+				FileStatus[] fileStatus = fs.listStatus(basePath);
 
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== HdfsClient fileStatus : " + fileStats.length + " PathList :" + pathList);
+					LOG.debug("<== HdfsClient fileStatus : " + fileStatus.length + " PathList :" + pathList);
 				}
 
-				if (fileStats != null) {
-					if (fs.exists(basePath) && ArrayUtils.isEmpty(fileStats))  {
+				if (fileStatus != null) {
+					if (fs.exists(basePath) && ArrayUtils.isEmpty(fileStatus))  {
 						fileList.add(basePath.toString());
 					} else {
-						for(FileStatus stat : fileStats) {
+						for(FileStatus stat : fileStatus) {
 								Path path = stat.getPath();
 								String pathComponent = path.getName();
 								String prefixedPath = dirPrefix + pathComponent;
