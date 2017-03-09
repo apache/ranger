@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,9 +162,9 @@ public class AtlasNotificationMapper {
 			ret = buildServiceTags(entityWithTraits, null);
 			if (ret != null) {
 				// tag-definitions should NOT be deleted as part of service-resource delete
-				ret.setTagDefinitions(MapUtils.EMPTY_MAP);
+				ret.setTagDefinitions(Collections.<Long, RangerTagDef>emptyMap());
 				// Ranger deletes tags associated with deleted service-resource
-				ret.setTags(MapUtils.EMPTY_MAP);
+				ret.setTags(Collections.<Long, RangerTag>emptyMap());
 			}
 		}
 
