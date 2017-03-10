@@ -25,6 +25,7 @@ import getpass
 from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
+import time
 globalDict = {}
 
 os_name = platform.system()
@@ -127,6 +128,18 @@ def jisql_log(query, db_root_password):
 			query = query.replace(" -p '"+db_root_password+"'" , " -p '"+masked_pwd_string+"'")
 			log("[JISQL] "+query, "info")
 
+def subprocessCallWithRetry(query):
+	retryCount=1
+	returnCode = subprocess.call(query)
+	while returnCode!=0:
+		retryCount=retryCount+1
+		time.sleep(1)
+		log("[I] SQL statement execution failed!! retrying attempt "+str(retryCount)+" of total 3" ,"info")
+		returnCode = subprocess.call(query)
+		if(returnCode!=0 and retryCount>=3):
+			break
+	return returnCode
+
 class BaseDB(object):
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
@@ -218,11 +231,11 @@ class MysqlConf(BaseDB):
 							if is_unix:
 								query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
 								jisql_log(query, db_root_password)
-								ret = subprocess.call(shlex.split(query))
+								ret = subprocessCallWithRetry(shlex.split(query))
 							elif os_name == "WINDOWS":
 								query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
 								jisql_log(query, db_root_password)
-								ret = subprocess.call(query)
+								ret = subprocessCallWithRetry(query)
 							if ret == 0:
 								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode):
 									log("[I] MySQL user " + db_user +" created for host " + host ,"info")
@@ -238,18 +251,14 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
 								query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, masked_pwd_string)
 								jisql_log(query_with_masked_pwd, db_root_password)
-								ret = subprocess.call(shlex.split(query))
+								ret = subprocessCallWithRetry(shlex.split(query))
 							elif os_name == "WINDOWS":
 								query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, db_password)
 								query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, masked_pwd_string)
 								jisql_log(query_with_masked_pwd, db_root_password)
-								ret = subprocess.call(query)
-							if ret == 0:
-								if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
-									log("[I] MySQL user " + db_user +" created for host " + host ,"info")
-								else:
-									log("[E] Creating MySQL user " + db_user +" failed..","error")
-									sys.exit(1)
+								ret = subprocessCallWithRetry(query)
+							if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
+								log("[I] MySQL user " + db_user +" created for host " + host ,"info")
 							else:
 								log("[E] Creating MySQL user " + db_user +" failed..","error")
 								sys.exit(1)
@@ -287,12 +296,13 @@ class MysqlConf(BaseDB):
 				log("[I] Database does not exist, Creating database " + db_name,"info")
 				jisql_log(query, db_root_password)
 				if is_unix:
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
-					ret = subprocess.call(query)
+					ret = subprocessCallWithRetry(query)
 				if ret != 0:
-					log("[E] Database creation failed..","error")
-					sys.exit(1)
+					if not self.verify_db(root_user, db_root_password, db_name,dryMode):
+						log("[E] Database creation failed..","error")
+						sys.exit(1)
 				else:
 					if self.verify_db(root_user, db_root_password, db_name,dryMode):
 						log("[I] Creating database " + db_name + " succeeded", "info")
@@ -314,21 +324,21 @@ class MysqlConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\" -c ;" %(db_name,db_user, host)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
+					ret = subprocessCallWithRetry(query)
 				if ret == 0:
 					log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
 					if is_unix:
 						query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
 						jisql_log(query, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
 						jisql_log(query, db_root_password)
-						ret = subprocess.call(query)
+						ret = subprocessCallWithRetry(query)
 					if ret == 0:
 						log("[I] Privileges granted to '" + db_user + "' on '"+db_name+"'", "info")
 					else:
@@ -441,31 +451,27 @@ class OracleConf(BaseDB):
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(root_user, db_user, db_root_password,dryMode):
-							log("[I] User " + db_user + " created", "info")
-							log("[I] Granting permission to " + db_user, "info")
-							if is_unix:
-								query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
-								jisql_log(query, db_root_password)
-								ret = subprocess.call(shlex.split(query))
-							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
-								jisql_log(query, db_root_password)
-								ret = subprocess.call(query)
-							if ret == 0:
-								log("[I] Granting permissions to Oracle user '" + db_user + "' for %s done" %(self.host), "info")
-							else:
-								log("[E] Granting permissions to Oracle user '" + db_user + "' failed..", "error")
-								sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(root_user, db_user, db_root_password,dryMode):
+						log("[I] User " + db_user + " created", "info")
+						log("[I] Granting permission to " + db_user, "info")
+						if is_unix:
+							query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
+							jisql_log(query, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
+							jisql_log(query, db_root_password)
+							ret = subprocessCallWithRetry(query)
+						if ret == 0:
+							log("[I] Granting permissions to Oracle user '" + db_user + "' for %s done" %(self.host), "info")
 						else:
-							log("[E] Creating Oracle user '" + db_user + "' failed..", "error")
+							log("[E] Granting permissions to Oracle user '" + db_user + "' failed..", "error")
 							sys.exit(1)
 					else:
 						log("[E] Creating Oracle user '" + db_user + "' failed..", "error")
@@ -516,20 +522,16 @@ class OracleConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -c \; -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\"" %(db_name, db_name)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\" -c ;" %(db_name, db_name)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
-				if ret == 0:
-					if self.verify_tablespace(root_user, db_root_password, db_name,dryMode):
-						log("[I] Creating tablespace "+db_name+" succeeded", "info")
-						status=True
-						status = self.assign_tablespace(root_user, db_root_password, db_user, db_password, db_name, status,dryMode)
-						return status
-					else:
-						log("[E] Creating tablespace "+db_name+" failed..", "error")
-						sys.exit(1)
+					ret = subprocessCallWithRetry(query)
+				if self.verify_tablespace(root_user, db_root_password, db_name,dryMode):
+					log("[I] Creating tablespace "+db_name+" succeeded", "info")
+					status=True
+					status = self.assign_tablespace(root_user, db_root_password, db_user, db_password, db_name, status,dryMode)
+					return status
 				else:
 					log("[E] Creating tablespace "+db_name+" failed..", "error")
 					sys.exit(1)
@@ -544,11 +546,11 @@ class OracleConf(BaseDB):
 			if is_unix:
 				query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(db_user, db_name)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(db_user, db_name)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret == 0:
 				log("[I] Assigning default tablespace to user '" + db_user + "' done..", "info")
 			else:
@@ -572,11 +574,11 @@ class OracleConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -c \; -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\"" %(audit_db_name, audit_db_name)
 					jisql_log(query, audit_db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create tablespace %s datafile '%s.dat' size 10M autoextend on;\" -c ;" %(audit_db_name, audit_db_name)
 					jisql_log(query, audit_db_root_password)
-					ret = subprocess.call(query)
+					ret = subprocessCallWithRetry(query)
 				if ret != 0:
 					log("[E] Tablespace creation failed..","error")
 					sys.exit(1)
@@ -594,11 +596,11 @@ class OracleConf(BaseDB):
 				if is_unix:
 					query = get_cmd +" -c \; -query 'alter user %s DEFAULT Tablespace %s;'" %(audit_db_user, audit_db_name)
 					jisql_log(query, audit_db_root_password)
-					ret2 = subprocess.call(shlex.split(query))
+					ret2 = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd +" -query \"alter user %s DEFAULT Tablespace %s;\" -c ;" %(audit_db_user, audit_db_name)
 					jisql_log(query, audit_db_root_password)
-					ret2 = subprocess.call(query)
+					ret2 = subprocessCallWithRetry(query)
 
 				if (ret2 == 0):
 					log("[I] Assigning default tablespace to user '" + audit_db_user + "' done..", "info")
@@ -613,11 +615,11 @@ class OracleConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret == 0:
 				log("[I] Granted permission to " + db_user, "info")
 				return True
@@ -643,18 +645,14 @@ class OracleConf(BaseDB):
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, audit_db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, audit_db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(audit_db_root_user, db_user, audit_db_root_password,dryMode):
-							log("[I] User " + db_user + " created", "info")
-						else:
-							log("[E] Creating Oracle user '" + db_user + "' failed..", "error")
-							sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(audit_db_root_user, db_user, audit_db_root_password,dryMode):
+						log("[I] User " + db_user + " created", "info")
 					else:
 						log("[E] Creating Oracle user '" + db_user + "' failed..", "error")
 						sys.exit(1)
@@ -672,29 +670,28 @@ class OracleConf(BaseDB):
 						query = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(audit_db_user, audit_db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query 'create user %s identified by \"%s\";'" %(audit_db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, audit_db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(audit_db_user, audit_db_password)
 						query_with_masked_pwd = get_cmd + " -query \"create user %s identified by \"%s\";\" -c ;" %(audit_db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, audit_db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(audit_db_root_user, audit_db_user, audit_db_root_password,dryMode):
-							if is_unix:
-								query = get_cmd + " -c \; -query \"GRANT CREATE SESSION TO %s;\"" %(audit_db_user)
-								jisql_log(query, audit_db_root_password)
-								ret = subprocess.call(shlex.split(query))
-							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"GRANT CREATE SESSION TO %s;\" -c ;" %(audit_db_user)
-								jisql_log(query, audit_db_root_password)
-								ret = subprocess.call(query)
-							if ret == 0:
-								log("[I] Granting permission to " + audit_db_user + " done", "info")
-							else:
-								log("[E] Granting permission to " + audit_db_user + " failed..", "error")
-								sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(audit_db_root_user, audit_db_user, audit_db_root_password,dryMode):
+						if is_unix:
+							query = get_cmd + " -c \; -query \"GRANT CREATE SESSION TO %s;\"" %(audit_db_user)
+							jisql_log(query, audit_db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"GRANT CREATE SESSION TO %s;\" -c ;" %(audit_db_user)
+							jisql_log(query, audit_db_root_password)
+							ret = subprocessCallWithRetry(query)
+						if ret == 0:
+							log("[I] Granting permission to " + audit_db_user + " done", "info")
 						else:
-							log("[I] Creating audit user " + audit_db_user + " failed..", "info")
+							log("[E] Granting permission to " + audit_db_user + " failed..", "error")
+							sys.exit(1)
+					else:
+						log("[I] Creating audit user " + audit_db_user + " failed..", "info")
 				else:
 					logFile("create user %s identified by \"%s\";" %(audit_db_user, audit_db_password))
 					logFile("GRANT CREATE SESSION TO %s;" % (audit_db_user))
@@ -775,18 +772,14 @@ class PostgresConf(BaseDB):
 						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, db_password)
 						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(root_user, db_root_password, db_user,dryMode):
-							log("[I] Postgres user " + db_user + " created", "info")
-						else:
-							log("[E] Postgres user " +db_user+" creation failed..", "error")
-							sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(root_user, db_root_password, db_user,dryMode):
+						log("[I] Postgres user " + db_user + " created", "info")
 					else:
 						log("[E] Postgres user " +db_user+" creation failed..", "error")
 						sys.exit(1)
@@ -820,21 +813,17 @@ class PostgresConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -query \"create database %s with OWNER %s;\"" %(db_name, db_user)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create database %s with OWNER %s;\" -c ;" %(db_name, db_user)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
-				if ret != 0:
+					ret = subprocessCallWithRetry(query)
+				if self.verify_db(root_user, db_root_password, db_name,dryMode):
+					log("[I] Creating database " + db_name + " succeeded", "info")
+					return True
+				else:
 					log("[E] Database creation failed..","error")
 					sys.exit(1)
-				else:
-					if self.verify_db(root_user, db_root_password, db_name,dryMode):
-						log("[I] Creating database " + db_name + " succeeded", "info")
-						return True
-					else:
-						log("[E] Database creation failed..","error")
-						sys.exit(1)
 			else:
 				logFile("CREATE DATABASE %s WITH OWNER %s;" %(db_name, db_user))
 
@@ -845,11 +834,11 @@ class PostgresConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\"" %(db_name, db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\" -c ;" %(db_name, db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret != 0:
 				log("[E] Granting all privileges on database "+db_name+" to user "+db_user+" failed..", "error")
 				sys.exit(1)
@@ -857,70 +846,90 @@ class PostgresConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\"" %(db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\" -c ;" %(db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret != 0:
 				log("[E] Granting all privileges on schema public to user "+db_user+" failed..", "error")
 				sys.exit(1)
 
 			if is_unix:
-				query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\""
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;\"" %(db_user)
 				jisql_log(query, db_root_password)
-				output = check_output(query)
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\" -c ;"
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;\" -c ;" %(db_user)
 				jisql_log(query, db_root_password)
-				output = check_output(query)
-			for each_line in output.split('\n'):
-				if len(each_line) == 0 : continue
-				if re.search(' |', each_line):
-					tablename , value = each_line.strip().split(" |",1)
-					tablename = tablename.strip()
-					if is_unix:
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\"" %(tablename,db_user)
-						jisql_log(query1, db_root_password)
-						ret = subprocess.call(shlex.split(query1))
-						if ret != 0:
-							log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
-							sys.exit(1)
-					elif os_name == "WINDOWS":
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\" -c ;" %(tablename,db_user)
-						jisql_log(query1, db_root_password)
-						ret = subprocess.call(query1)
-						if ret != 0:
-							log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
-							sys.exit(1)
+				ret = subprocessCallWithRetry(query)
+			if ret != 0:
+				log("[E] Granting all privileges on all tables in schema public to user "+db_user+" failed..", "error")
+				if is_unix:
+					query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\""
+					jisql_log(query, db_root_password)
+					output = check_output(query)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';\" -c ;"
+					jisql_log(query, db_root_password)
+					output = check_output(query)
+				for each_line in output.split('\n'):
+					if len(each_line) == 0 : continue
+					if re.search(' |', each_line):
+						tablename , value = each_line.strip().split(" |",1)
+						tablename = tablename.strip()
+						if is_unix:
+							query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\"" %(tablename,db_user)
+							jisql_log(query1, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(query1))
+							if ret != 0:
+								log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
+								sys.exit(1)
+						elif os_name == "WINDOWS":
+							query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\" -c ;" %(tablename,db_user)
+							jisql_log(query1, db_root_password)
+							ret = subprocessCallWithRetry(query1)
+							if ret != 0:
+								log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
+								sys.exit(1)
 
 
 			if is_unix:
-				query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\""
-				output = check_output(query)
-			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\" -c ;"
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;\"" %(db_user)
 				jisql_log(query, db_root_password)
-				output = check_output(query)
-			for each_line in output.split('\n'):
-				if len(each_line) == 0 : continue
-				if re.search(' |', each_line):
-					sequence_name , value = each_line.strip().split(" |",1)
-					sequence_name = sequence_name.strip()
-					if is_unix:
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\"" %(sequence_name,db_user)
-						jisql_log(query1, db_root_password)
-						ret = subprocess.call(shlex.split(query1))
-						if ret != 0:
-							log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
-							sys.exit(1)
-					elif os_name == "WINDOWS":
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\" -c ;" %(sequence_name,db_user)
-						jisql_log(query1, db_root_password)
-						ret = subprocess.call(query1)
-						if ret != 0:
-							log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
-							sys.exit(1)
+				ret = subprocessCallWithRetry(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;\" -c ;" %(db_user)
+				jisql_log(query, db_root_password)
+				ret = subprocessCallWithRetry(query)
+			if ret!=0:
+				log("[E] Granting all privileges on all sequences in schema public to user "+db_user+" failed..", "error")
+				if is_unix:
+					query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\""
+					output = check_output(query)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"SELECT sequence_name FROM information_schema.sequences where sequence_schema='public';\" -c ;"
+					jisql_log(query, db_root_password)
+					output = check_output(query)
+				for each_line in output.split('\n'):
+					if len(each_line) == 0 : continue
+					if re.search(' |', each_line):
+						sequence_name , value = each_line.strip().split(" |",1)
+						sequence_name = sequence_name.strip()
+						if is_unix:
+							query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\"" %(sequence_name,db_user)
+							jisql_log(query1, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(query1))
+							if ret != 0:
+								log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
+								sys.exit(1)
+						elif os_name == "WINDOWS":
+							query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\" -c ;" %(sequence_name,db_user)
+							jisql_log(query1, db_root_password)
+							ret = subprocessCallWithRetry(query1)
+							if ret != 0:
+								log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
+								sys.exit(1)
 
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"' Done" , "info")
 		else:
@@ -1021,20 +1030,16 @@ class SqlServerConf(BaseDB):
 						query = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\"" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\" -c ;" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -query \"CREATE LOGIN %s WITH PASSWORD = '%s';\" -c ;" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(root_user, db_root_password, db_user,dryMode):
-							 log("[I] SQL Server user " + db_user + " created", "info")
-						else:
-							log("[E] SQL Server user " +db_user+" creation failed..", "error")
-							sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(root_user, db_root_password, db_user,dryMode):
+						 log("[I] SQL Server Login " + db_user + " created", "info")
 					else:
-						log("[E] SQL Server user " +db_user+" creation failed..", "error")
+						log("[E] SQL Server Login " +db_user+" creation failed..", "error")
 						sys.exit(1)
 				else:
 					logFile("CREATE LOGIN %s WITH PASSWORD = '%s';" %(db_user,db_password))
@@ -1065,22 +1070,18 @@ class SqlServerConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -c \; -query \"create database %s;\"" %(db_name)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create database %s;\" -c ;" %(db_name)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
-				if ret != 0:
+					ret = subprocessCallWithRetry(query)
+				if self.verify_db(root_user, db_root_password, db_name,dryMode):
+					self.create_user(root_user, db_name ,db_user, db_password, db_root_password,dryMode)
+					log("[I] Creating database " + db_name + " succeeded", "info")
+					return True
+				else:
 					log("[E] Database creation failed..","error")
 					sys.exit(1)
-				else:
-					if self.verify_db(root_user, db_root_password, db_name,dryMode):
-						self.create_user(root_user, db_name ,db_user, db_password, db_root_password,dryMode)
-						log("[I] Creating database " + db_name + " succeeded", "info")
-						return True
-					else:
-						log("[E] Database creation failed..","error")
-						sys.exit(1)
 			else:
 				logFile("create database %s;" %(db_name))
 
@@ -1100,25 +1101,21 @@ class SqlServerConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -c \; -query \"CREATE USER %s for LOGIN %s;\"" %(db_user, db_user)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"CREATE USER %s for LOGIN %s;\" -c ;" %(db_user, db_user)
 					jisql_log(query, db_root_password)
-					ret = subprocess.call(query)
-				if ret == 0:
-					if is_unix:
-						query = get_cmd + " -c \; -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_user)
-					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\" -c ;" %(db_user)
-					jisql_log(query, db_root_password)
-					output = check_output(query)
-					if output.strip(db_user + " |"):
-						log("[I] User "+db_user+" exist ","info")
-					else:
-						log("[E] Database creation failed..","error")
-						sys.exit(1)
+					ret = subprocessCallWithRetry(query)
+				if is_unix:
+					query = get_cmd + " -c \; -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\"" %(db_user)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"SELECT name FROM sys.database_principals WHERE name = N'%s';\" -c ;" %(db_user)
+				jisql_log(query, db_root_password)
+				output = check_output(query)
+				if output.strip(db_user + " |"):
+					log("[I] User "+db_user+" exist ","info")
 				else:
-					log("[E] Database creation failed..","error")
+					log("[E] User "+db_user+" creation failed..","error")
 					sys.exit(1)
 			else:
 				logFile("CREATE USER %s for LOGIN %s;" %(db_user, db_user))
@@ -1130,11 +1127,11 @@ class SqlServerConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -c \; -query \" EXEC sp_addrolemember N'db_owner', N'%s';\"" %(db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \" EXEC sp_addrolemember N'db_owner', N'%s';\" -c ;" %(db_user)
 				jisql_log(query, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret != 0:
 				sys.exit(1)
 		else:
@@ -1241,18 +1238,14 @@ class SqlAnywhereConf(BaseDB):
 						query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						ret = subprocessCallWithRetry(shlex.split(query))
 					elif os_name == "WINDOWS":
 						query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user,db_password)
 						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user,masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
-						ret = subprocess.call(query)
-					if ret == 0:
-						if self.verify_user(root_user, db_root_password, db_user,dryMode):
-							 log("[I] SQL Anywhere user " + db_user + " created", "info")
-						else:
-							log("[E] SQL Anywhere user " +db_user+" creation failed..", "error")
-							sys.exit(1)
+						ret = subprocessCallWithRetry(query)
+					if self.verify_user(root_user, db_root_password, db_user,dryMode):
+						 log("[I] SQL Anywhere user " + db_user + " created", "info")
 					else:
 						log("[E] SQL Anywhere user " +db_user+" creation failed..", "error")
 						sys.exit(1)
@@ -1297,24 +1290,20 @@ class SqlAnywhereConf(BaseDB):
 					query = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -c \; -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\"" %(db_name,db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\" -c ;" %(db_name,db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -query \"create database '%s' dba user '%s' dba password '%s' database size 100MB;\" -c ;" %(db_name,db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
-					ret = subprocess.call(query)
-				if ret != 0:
+					ret = subprocessCallWithRetry(query)
+				self.start_db(root_user, db_root_password, db_name,dryMode)
+				if self.verify_db(root_user, db_root_password, db_name,dryMode):
+					self.create_user(root_user, db_name ,db_user, db_password, db_root_password,dryMode)
+					log("[I] Creating database " + db_name + " succeeded", "info")
+					return True
+				else:
 					log("[E] Database creation failed..","error")
 					sys.exit(1)
-				else:
-					self.start_db(root_user, db_root_password, db_name,dryMode)
-					if self.verify_db(root_user, db_root_password, db_name,dryMode):
-						self.create_user(root_user, db_name ,db_user, db_password, db_root_password,dryMode)
-						log("[I] Creating database " + db_name + " succeeded", "info")
-						return True
-					else:
-						log("[E] Database creation failed..","error")
-						sys.exit(1)
 			else:
 				logFile("create database %s dba user '%s' dba password '%s' database size 100MB;" %(db_name,db_user, db_password))
 
@@ -1335,26 +1324,22 @@ class SqlAnywhereConf(BaseDB):
 					query = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -c \; -query \"CREATE USER %s IDENTIFIED BY '%s';\"" %(db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
-					ret = subprocess.call(shlex.split(query))
+					ret = subprocessCallWithRetry(shlex.split(query))
 				elif os_name == "WINDOWS":
 					query = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user, db_password)
 					query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s IDENTIFIED BY '%s';\" -c ;" %(db_user, masked_pwd_string)
 					jisql_log(query_with_masked_pwd, db_root_password)
-					ret = subprocess.call(query)
-				if ret == 0:
-					if is_unix:
-						query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
-					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
-					jisql_log(query, db_root_password)
-					output = check_output(query)
-					if output.strip(db_user + " |"):
-						log("[I] User "+db_user+" exist ","info")
-					else:
-						log("[E] Database creation failed..","error")
-						sys.exit(1)
+					ret = subprocessCallWithRetry(query)
+				if is_unix:
+					query = get_cmd + " -c \; -query \"select name from syslogins where name ='%s';\"" %(db_user)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select name from syslogins where name ='%s';\" -c ;" %(db_user)
+				jisql_log(query, db_root_password)
+				output = check_output(query)
+				if output.strip(db_user + " |"):
+					log("[I] User "+db_user+" exist ","info")
 				else:
-					log("[E] Database creation failed..","error")
+					log("[E] User "+db_user+" creation failed..","error")
 					sys.exit(1)
 			else:
 				logFile("CREATE USER %s IDENTIFIED BY '%s';" %(db_user, db_password))
@@ -1367,12 +1352,12 @@ class SqlAnywhereConf(BaseDB):
 				query = get_cmd + " -c \; -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
 				query_with_masked_pwd = get_cmd + " -c \; -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
 				jisql_log(query_with_masked_pwd, db_root_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,db_password)
 				query_with_masked_pwd = get_cmd + " -query \" GRANT CONNECT to %s IDENTIFIED BY '%s';\"" %(db_user,masked_pwd_string)
 				jisql_log(query_with_masked_pwd, db_root_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret != 0:
 				sys.exit(1)
 		else:
