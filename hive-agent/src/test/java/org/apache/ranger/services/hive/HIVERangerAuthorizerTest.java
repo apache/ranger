@@ -81,6 +81,8 @@ public class HIVERangerAuthorizerTest {
         conf.set(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, "" + port);
         conf.set(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
+        conf.set(HiveConf.ConfVars.METASTORE_CONNECTION_USER_NAME.varname,"youUserName");
+        conf.set(HiveConf.ConfVars.METASTOREPWD.varname, "youPassword");
 
         hiveServer = new HiveServer2();
         hiveServer.init(conf);
