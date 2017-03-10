@@ -2102,7 +2102,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(xXPortalUser==null){
 			vXPortalUser=new VXPortalUser();
 			vXPortalUser.setLoginId(userName);
-			vXPortalUser.setEmailAddress(guidUtil.genGUID());
+			vXPortalUser.setEmailAddress(vXUser.getEmailAddress());
 			vXPortalUser.setFirstName(vXUser.getFirstName());
 			vXPortalUser.setLastName(vXUser.getLastName());
 			vXPortalUser.setPassword(vXUser.getPassword());
