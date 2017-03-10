@@ -42,6 +42,8 @@ public class UnixUserGroupBuilderTest {
     @Test
     public void testBuilderPasswd() throws Throwable {
         config.setProperty("ranger.usersync.unix.backend", "passwd");
+	config.setProperty(UserGroupSyncConfig.UGSYNC_UNIX_PASSWORD_FILE, "/etc/passwd");
+        config.setProperty(UserGroupSyncConfig.UGSYNC_UNIX_GROUP_FILE, "/etc/group");
 
         UnixUserGroupBuilder builder = new UnixUserGroupBuilder();
         builder.init();
@@ -103,6 +105,26 @@ public class UnixUserGroupBuilderTest {
 
         Map<String, List<String>> users = builder.getUser2GroupListMap();
         assertNull(users.get("root"));
+    }
+
+    @Test
+    public void testUnixPasswdAndGroupFile() throws Throwable {
+        config.setProperty("ranger.usersync.unix.backend", "passwd");
+        config.setProperty(UserGroupSyncConfig.UGSYNC_UNIX_PASSWORD_FILE, "src/test/resources/passwordFile.txt");
+        config.setProperty(UserGroupSyncConfig.UGSYNC_UNIX_GROUP_FILE, "src/test/resources/groupFile.txt");
+
+        UnixUserGroupBuilder builder = new UnixUserGroupBuilder();
+        builder.init();
+
+        Map<String, String> groups = builder.getGroupId2groupNameMap();
+        String name = groups.get("1028");
+        assertThat(name, anyOf(equalTo("wheel"), equalTo("sam")));
+
+        Map<String, List<String>> users = builder.getUser2GroupListMap();
+        List<String> usergroups = users.get("sam");
+        assertNotNull(usergroups);
+        assertThat(usergroups, anyOf(hasItem("wheel"), hasItem("sam")));
+
     }
 
 }

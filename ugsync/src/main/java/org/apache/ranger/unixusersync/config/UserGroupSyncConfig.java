@@ -58,6 +58,12 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_ENABLED_PROP = "ranger.usersync.enabled" ;
 	
 	public static final String  UGSYNC_PM_URL_PROP = 	"ranger.usersync.policymanager.baseURL" ;
+
+	public static final String UGSYNC_UNIX_PASSWORD_FILE = "ranger.usersync.unix.password.file";
+	public static final String  DEFAULT_UGSYNC_UNIX_PASSWORD_FILE =   "/etc/passwd";
+	
+	public static final String UGSYNC_UNIX_GROUP_FILE = "ranger.usersync.unix.group.file";
+	public static final String  DEFAULT_UGSYNC_UNIX_GROUP_FILE =   "/etc/group";
 	
 	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId" ;
 
@@ -352,6 +358,24 @@ public class UserGroupSyncConfig  {
 		if ( val == null) {
 			val = DEFAULT_USER_GROUP_TEXTFILE_DELIMITER;
 		}
+		return val;
+	}
+
+	public String getUnixPasswordFile() {
+		String val = prop.getProperty(UGSYNC_UNIX_PASSWORD_FILE);
+		if ( val == null ) {
+			val = DEFAULT_UGSYNC_UNIX_PASSWORD_FILE;
+		}
+
+		return val;
+	}
+	
+	public String getUnixGroupFile() {
+		String val = prop.getProperty(UGSYNC_UNIX_GROUP_FILE);
+		if ( val == null ) {
+			val = DEFAULT_UGSYNC_UNIX_GROUP_FILE;
+		}
+
 		return val;
 	}
 
