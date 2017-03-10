@@ -16,10 +16,15 @@
 import sys
 import os
 from xml.etree import ElementTree as ET
+from xml.parsers.expat import ExpatError
 
 def write_properties_to_xml(xml_path, property_name='', property_value=''):
 	if(os.path.isfile(xml_path)):
-		xml = ET.parse(xml_path)
+		try:
+			xml = ET.parse(xml_path)
+		except ExpatError:
+			print "Error while parsing file:"+xml_path
+			return -1
 		root = xml.getroot()
 		for child in root.findall('property'):
 			name = child.find("name").text.strip()

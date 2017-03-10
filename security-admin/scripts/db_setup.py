@@ -34,6 +34,7 @@ os_name = platform.system()
 os_name = os_name.upper()
 ranger_version=''
 jisql_debug=True
+retryPatchAfterSeconds=120
 
 is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
@@ -108,6 +109,17 @@ def password_validation(password):
 			log("[E] password contains one of the unsupported special characters like \" ' \ `","error")
 			sys.exit(1)
 
+def subprocessCallWithRetry(query):
+	retryCount=1
+	returnCode = subprocess.call(query)
+	while returnCode!=0:
+		retryCount=retryCount+1
+		time.sleep(1)
+		log("[I] SQL statement execution Failed!! retrying attempt "+str(retryCount)+" of total 3" ,"info")
+		returnCode = subprocess.call(query)
+		if(returnCode!=0 and retryCount>=3):
+			break
+	return returnCode
 
 class BaseDB(object):
 
@@ -135,7 +147,7 @@ class BaseDB(object):
 				for filename in sorted_files:
 					currentPatch = os.path.join(PATCHES_PATH, filename)
 					self.import_db_patches(db_name, db_user, db_password, currentPatch)
-                                self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
+				self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
 			else:
 				log("[I] No patches to apply!","info")
 
@@ -224,11 +236,11 @@ class MysqlConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -query \"GRANT INSERT ON %s.%s TO '%s'@'%s';\"" %(audit_db_name,TABLE_NAME,audit_db_user,host)
 				jisql_log(query, db_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"GRANT INSERT ON %s.%s TO '%s'@'%s';\" -c ;" %(audit_db_name,TABLE_NAME,audit_db_user,host)
 				jisql_log(query, db_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret == 0:
 				log("[I] Granting privileges to '" + audit_db_user+"' done on '"+ audit_db_name+"'", "info")
 			else:
@@ -283,7 +295,7 @@ class MysqlConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -308,6 +320,16 @@ class MysqlConf(BaseDB):
 						query = get_cmd + " -input %s -c ;" %file_name
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
+					if ret!=0:
+						if is_unix:
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+						jisql_log(query, db_password)
+						output = check_output(query)
+						if output.strip(version + " |"):
+							ret=0
+							log("[I] Patch "+ name  +" has been applied by some other process!" ,"info")
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if is_unix:
@@ -370,7 +392,7 @@ class MysqlConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -508,7 +530,7 @@ class MysqlConf(BaseDB):
 						if output.strip(version + " |"):
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
+								time.sleep(retryPatchAfterSeconds)
 								jisql_log(query, db_password)
 								output = check_output(query)
 						else:
@@ -597,7 +619,7 @@ class MysqlConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -707,7 +729,7 @@ class MysqlConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] "+ version  +" is being imported by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -727,21 +749,22 @@ class MysqlConf(BaseDB):
 					isSchemaCreated=False
 					if isFirstTableExist == True and isLastTableExist == True :
 						isSchemaCreated=True
-					elif isFirstTableExist == True and isLastTableExist == False :
-						while(isLastTableExist==False):
-							log("[I] "+ version  +" is being imported by some other process" ,"info")
-							time.sleep(300)
-							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
-							if(isLastTableExist==True):
-								isSchemaCreated=True
 					elif isFirstTableExist == False and isLastTableExist == False :
 						isImported=self.import_db_file(db_name, db_user, db_password, file_name)
 						if(isImported==False):
 							log("[I] "+ version  +" might being imported by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 						isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
 						if(isLastTableExist==True):
 							isSchemaCreated=True
+					elif isFirstTableExist == False or isLastTableExist == False :
+						while(isFirstTableExist == False or isLastTableExist==False):
+							log("[I] "+ version  +" is being imported by some other process" ,"info")
+							time.sleep(retryPatchAfterSeconds)
+							isFirstTableExist=self.check_table(db_name, db_user, db_password, first_table)
+							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
+							if(isFirstTableExist==True and isLastTableExist==True):
+								isSchemaCreated=True
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -776,35 +799,35 @@ class MysqlConf(BaseDB):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if is_unix:
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
+	def hasPendingPatches(self, db_name, db_user, db_password, version):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if is_unix:
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\"" %(version,ranger_version)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active='Y';\" -c ;" %(version,ranger_version)
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if output.strip(version + " |"):
+			return False
+		else:
+			return True
 
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if is_unix:
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\"" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+	def update_applied_patches_status(self,db_name, db_user, db_password,version):
+		if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if is_unix:
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\"" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
+				sys.exit(1)
+			else:
+				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class OracleConf(BaseDB):
 	# Constructor
@@ -855,21 +878,21 @@ class OracleConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -c \; -query 'GRANT SELECT ON %s.XA_ACCESS_AUDIT_SEQ TO %s;'" % (db_user,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"GRANT SELECT ON %s.XA_ACCESS_AUDIT_SEQ TO %s;\" -c ;" % (db_user,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			sys.exit(1)
 		if is_unix:
 			query = get_cmd + " -c \; -query 'GRANT INSERT ON %s.XA_ACCESS_AUDIT TO %s;'" % (db_user,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"GRANT INSERT ON %s.XA_ACCESS_AUDIT TO %s;\" -c ;" % (db_user,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			sys.exit(1)
 
@@ -903,21 +926,21 @@ class OracleConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -c \; -query 'CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT FOR %s.XA_ACCESS_AUDIT;'" % (audit_db_user,db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT FOR %s.XA_ACCESS_AUDIT;\" -c ;" % (audit_db_user,db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			sys.exit(1)
 		if is_unix:
 			query = get_cmd + " -c \; -query 'CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT_SEQ FOR %s.XA_ACCESS_AUDIT_SEQ;'" % (audit_db_user,db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"CREATE OR REPLACE SYNONYM %s.XA_ACCESS_AUDIT_SEQ FOR %s.XA_ACCESS_AUDIT_SEQ;\" -c ;" % (audit_db_user,db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			sys.exit(1)
 
@@ -945,7 +968,7 @@ class OracleConf(BaseDB):
 				if output.strip(version +" |"):
 					while(output.strip(version + " |")):
 						log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -969,6 +992,16 @@ class OracleConf(BaseDB):
 						query = get_cmd + " -input %s -c /" %file_name
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
+					if ret != 0:
+						if is_unix:
+							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+						jisql_log(query, db_password)
+						output = check_output(query)
+						if output.strip(version +" |"):
+							ret=0
+							log("[I] Patch "+ name  +" has been applied by some other process!" ,"info")
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if is_unix:
@@ -1031,7 +1064,7 @@ class OracleConf(BaseDB):
 					if output.strip(version +" |"):
 						while(output.strip(version + " |")):
 							log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -1212,7 +1245,7 @@ class OracleConf(BaseDB):
 							#End of Upgrade failure fix
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
+								time.sleep(retryPatchAfterSeconds)
 								jisql_log(query, db_password)
 								output = check_output(query)
 						else:
@@ -1301,7 +1334,7 @@ class OracleConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -1411,7 +1444,7 @@ class OracleConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] "+ version  +" is being imported by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -1431,21 +1464,22 @@ class OracleConf(BaseDB):
 					isSchemaCreated=False
 					if isFirstTableExist == True and isLastTableExist == True :
 						isSchemaCreated=True
-					elif isFirstTableExist == True and isLastTableExist == False :
-						while(isLastTableExist==False):
-							log("[I] "+ version  +" is being imported by some other process" ,"info")
-							time.sleep(300)
-							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
-							if(isLastTableExist==True):
-								isSchemaCreated=True
 					elif isFirstTableExist == False and isLastTableExist == False :
 						isImported=self.import_db_file(db_name, db_user, db_password, file_name)
 						if(isImported==False):
 							log("[I] "+ version  +" might being imported by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 						isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
 						if(isLastTableExist==True):
 							isSchemaCreated=True
+					elif isFirstTableExist == False or isLastTableExist == False :
+						while(isFirstTableExist==False or isLastTableExist == False):
+							log("[I] "+ version  +" is being imported by some other process" ,"info")
+							time.sleep(retryPatchAfterSeconds)
+							isFirstTableExist=self.check_table(db_name, db_user, db_password, first_table)
+							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
+							if(isFirstTableExist==True and isLastTableExist==True):
+								isSchemaCreated=True
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -1480,35 +1514,35 @@ class OracleConf(BaseDB):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password)
-                if is_unix:
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
+	def hasPendingPatches(self, db_name, db_user, db_password, version):
+		get_cmd = self.get_jisql_cmd(db_user, db_password)
+		if is_unix:
+			query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if output.strip(version + " |"):
+			return False
+		else:
+			return True
 
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password)
-                        if is_unix:
-                                query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\"" %(version, ranger_version, client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\" -c ;" %(version, ranger_version, client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+	def update_applied_patches_status(self,db_name, db_user, db_password,version):
+		if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
+			get_cmd = self.get_jisql_cmd(db_user, db_password)
+			if is_unix:
+				query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\"" %(version, ranger_version, client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','Y');\" -c ;" %(version, ranger_version, client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
+				sys.exit(1)
+			else:
+				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class PostgresConf(BaseDB):
 	# Constructor
@@ -1574,11 +1608,11 @@ class PostgresConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -query 'GRANT SELECT,USAGE ON XA_ACCESS_AUDIT_SEQ TO %s;'" % (audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"GRANT SELECT,USAGE ON XA_ACCESS_AUDIT_SEQ TO %s;\" -c ;" % (audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			log("[E] Granting select privileges to Postgres user '" + audit_db_user + "' failed", "error")
 			sys.exit(1)
@@ -1587,11 +1621,11 @@ class PostgresConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -query 'GRANT INSERT ON XA_ACCESS_AUDIT TO %s;'" % (audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"GRANT INSERT ON XA_ACCESS_AUDIT TO %s;\" -c ;" % (audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0:
 			log("[E] Granting insert privileges to Postgres user '" + audit_db_user + "' failed", "error")
 			sys.exit(1)
@@ -1608,11 +1642,11 @@ class PostgresConf(BaseDB):
 			if is_unix:
 				query = get_cmd + " -query \"CREATE LANGUAGE plpgsql;\""
 				jisql_log(query, db_password)
-				ret = subprocess.call(shlex.split(query))
+				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
 				query = get_cmd + " -query \"CREATE LANGUAGE plpgsql;\" -c ;"
 				jisql_log(query, db_password)
-				ret = subprocess.call(query)
+				ret = subprocessCallWithRetry(query)
 			if ret == 0:
 				log("[I] LANGUAGE plpgsql created successfully", "info")
 			else:
@@ -1644,7 +1678,7 @@ class PostgresConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -1668,6 +1702,16 @@ class PostgresConf(BaseDB):
 						query = get_cmd + " -input %s -c ;" %file_name
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
+					if ret != 0:
+						if is_unix:
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+						jisql_log(query, db_password)
+						output = check_output(query)
+						if output.strip(version + " |"):
+							ret=0
+							log("[I] Patch "+ name  +" has been applied by some other process!" ,"info")
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if is_unix:
@@ -1731,7 +1775,7 @@ class PostgresConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -1871,7 +1915,7 @@ class PostgresConf(BaseDB):
 						if output.strip(version + " |"):
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
+								time.sleep(retryPatchAfterSeconds)
 								jisql_log(query, db_password)
 								output = check_output(query)
 						else:
@@ -1960,7 +2004,7 @@ class PostgresConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -2070,7 +2114,7 @@ class PostgresConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] "+ version  +" is being imported by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -2090,21 +2134,22 @@ class PostgresConf(BaseDB):
 					isSchemaCreated=False
 					if isFirstTableExist == True and isLastTableExist == True :
 						isSchemaCreated=True
-					elif isFirstTableExist == True and isLastTableExist == False :
-						while(isLastTableExist==False):
-							log("[I] "+ version  +" is being imported by some other process" ,"info")
-							time.sleep(300)
-							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
-							if(isLastTableExist==True):
-								isSchemaCreated=True
 					elif isFirstTableExist == False and isLastTableExist == False :
 						isImported=self.import_db_file(db_name, db_user, db_password, file_name)
 						if(isImported==False):
 							log("[I] "+ version  +" might being imported by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 						isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
 						if(isLastTableExist==True):
 							isSchemaCreated=True
+					elif isFirstTableExist == False or isLastTableExist == False :
+						while(isFirstTableExist == False or isLastTableExist==False):
+							log("[I] "+ version  +" is being imported by some other process" ,"info")
+							time.sleep(retryPatchAfterSeconds)
+							isFirstTableExist=self.check_table(db_name, db_user, db_password, first_table)
+							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
+							if(isFirstTableExist == True and isLastTableExist==True):
+								isSchemaCreated=True
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -2139,35 +2184,35 @@ class PostgresConf(BaseDB):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if is_unix:
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
+	def hasPendingPatches(self, db_name, db_user, db_password, version):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if is_unix:
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if output.strip(version + " |"):
+			return False
+		else:
+			return True
 
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if is_unix:
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\"" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+	def update_applied_patches_status(self,db_name, db_user, db_password,version):
+		if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if is_unix:
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\"" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
+				sys.exit(1)
+			else:
+				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class SqlServerConf(BaseDB):
 	# Constructor
@@ -2247,11 +2292,11 @@ class SqlServerConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -c \; -query \"USE %s GRANT SELECT,INSERT to %s;\"" %(audit_db_name ,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"USE %s GRANT SELECT,INSERT to %s;\" -c ;" %(audit_db_name ,audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0 :
 			sys.exit(1)
 		else:
@@ -2281,7 +2326,7 @@ class SqlServerConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -2305,6 +2350,17 @@ class SqlServerConf(BaseDB):
 						query = get_cmd + " -input %s" %file_name
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
+					if ret != 0:
+						time.sleep(1)
+						if is_unix:
+							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+						jisql_log(query, db_password)
+						output = check_output(query)
+						if output.strip(version + " |"):
+							ret=0
+							log("[I] Patch "+ name  +" has been applied by some other process!" ,"info")
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if is_unix:
@@ -2367,7 +2423,7 @@ class SqlServerConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -2491,7 +2547,7 @@ class SqlServerConf(BaseDB):
 						if output.strip(version + " |"):
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
+								time.sleep(retryPatchAfterSeconds)
 								jisql_log(query, db_password)
 								output = check_output(query)
 						else:
@@ -2580,7 +2636,7 @@ class SqlServerConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -2690,7 +2746,7 @@ class SqlServerConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] "+ version  +" is being imported by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -2710,21 +2766,22 @@ class SqlServerConf(BaseDB):
 					isSchemaCreated=False
 					if isFirstTableExist == True and isLastTableExist == True :
 						isSchemaCreated=True
-					elif isFirstTableExist == True and isLastTableExist == False :
-						while(isLastTableExist==False):
-							log("[I] "+ version  +" is being imported by some other process" ,"info")
-							time.sleep(300)
-							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
-							if(isLastTableExist==True):
-								isSchemaCreated=True
 					elif isFirstTableExist == False and isLastTableExist == False :
 						isImported=self.import_db_file(db_name, db_user, db_password, file_name)
 						if(isImported==False):
 							log("[I] "+ version  +" might being imported by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 						isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
 						if(isLastTableExist==True):
 							isSchemaCreated=True
+					elif isFirstTableExist == False or isLastTableExist == False :
+						while(isFirstTableExist == False or isLastTableExist==False):
+							log("[I] "+ version  +" is being imported by some other process" ,"info")
+							time.sleep(retryPatchAfterSeconds)
+							isFirstTableExist=self.check_table(db_name, db_user, db_password, first_table)
+							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
+							if(isFirstTableExist == True and isLastTableExist==True):
+								isSchemaCreated=True
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
@@ -2759,35 +2816,35 @@ class SqlServerConf(BaseDB):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if is_unix:
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
+	def hasPendingPatches(self, db_name, db_user, db_password, version):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if is_unix:
+			query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if output.strip(version + " |"):
+			return False
+		else:
+			return True
 
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if is_unix:
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+	def update_applied_patches_status(self,db_name, db_user, db_password,version):
+		if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if is_unix:
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
+				sys.exit(1)
+			else:
+				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
@@ -2867,11 +2924,11 @@ class SqlAnywhereConf(BaseDB):
 		if is_unix:
 			query = get_cmd + " -c \; -query \"GRANT INSERT ON XA_ACCESS_AUDIT to %s;\"" %(audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(shlex.split(query))
+			ret = subprocessCallWithRetry(shlex.split(query))
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"GRANT INSERT ON XA_ACCESS_AUDIT to %s;\" -c ;" %(audit_db_user)
 			jisql_log(query, db_password)
-			ret = subprocess.call(query)
+			ret = subprocessCallWithRetry(query)
 		if ret != 0 :
 			sys.exit(1)
 		else:
@@ -2901,7 +2958,7 @@ class SqlAnywhereConf(BaseDB):
 				if output.strip(version + " |"):
 					while output.strip(version + " |"):
 						log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -2925,6 +2982,17 @@ class SqlAnywhereConf(BaseDB):
 						query = get_cmd + " -input %s" %file_name
 						jisql_log(query, db_password)
 						ret = subprocess.call(query)
+					if ret != 0:
+						time.sleep(5)
+						if is_unix:
+							query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+						jisql_log(query, db_password)
+						output = check_output(query)
+						if output.strip(version + " |"):
+							ret=0
+							log("[I] Patch "+ name  +" has been applied by some other process!" ,"info")
 					if ret == 0:
 						log("[I] "+name + " patch applied","info")
 						if is_unix:
@@ -2979,7 +3047,7 @@ class SqlAnywhereConf(BaseDB):
 					if output.strip(version + " |"):
 						while output.strip(version + " |"):
 							log("[I] Patch "+ name  +" is being applied by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -3103,7 +3171,7 @@ class SqlAnywhereConf(BaseDB):
 						if output.strip(version + " |"):
 							while(output.strip(version + " |")):
 								log("[I] Java patch "+ className  +" is being applied by some other process" ,"info")
-								time.sleep(300)
+								time.sleep(retryPatchAfterSeconds)
 								jisql_log(query, db_password)
 								output = check_output(query)
 						else:
@@ -3170,19 +3238,19 @@ class SqlAnywhereConf(BaseDB):
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.reserved_keywords='LIMIT';\" -c ;"
 		jisql_log(query, db_password)
-		ret = subprocess.call(shlex.split(query))
+		ret = subprocessCallWithRetry(shlex.split(query))
 		if is_unix:
 			query = get_cmd + " -c \; -query \"set option public.max_statement_count=0;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.max_statement_count=0;\" -c;"
 		jisql_log(query, db_password)
-		ret = subprocess.call(shlex.split(query))
+		ret = subprocessCallWithRetry(shlex.split(query))
 		if is_unix:
 			query = get_cmd + " -c \; -query \"set option public.max_cursor_count=0;\""
 		elif os_name == "WINDOWS":
 			query = get_cmd + " -query \"set option public.max_cursor_count=0;\" -c;"
 		jisql_log(query, db_password)
-		ret = subprocess.call(shlex.split(query))
+		ret = subprocessCallWithRetry(shlex.split(query))
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
 		my_dict = {}
@@ -3213,7 +3281,7 @@ class SqlAnywhereConf(BaseDB):
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
 							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
 					else:
@@ -3323,7 +3391,7 @@ class SqlAnywhereConf(BaseDB):
 				if output.strip(version + " |"):
 					while(output.strip(version + " |")):
 						log("[I] "+ version  +" is being imported by some other process" ,"info")
-						time.sleep(300)
+						time.sleep(retryPatchAfterSeconds)
 						jisql_log(query, db_password)
 						output = check_output(query)
 				else:
@@ -3343,21 +3411,22 @@ class SqlAnywhereConf(BaseDB):
 					isSchemaCreated=False
 					if isFirstTableExist == True and isLastTableExist == True :
 						isSchemaCreated=True
-					elif isFirstTableExist == True and isLastTableExist == False :
-						while(isLastTableExist==False):
-							log("[I] "+ version  +" is being imported by some other process" ,"info")
-							time.sleep(300)
-							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
-							if(isLastTableExist==True):
-								isSchemaCreated=True
 					elif isFirstTableExist == False and isLastTableExist == False :
 						isImported=self.import_db_file(db_name, db_user, db_password, file_name)
 						if(isImported==False):
 							log("[I] "+ version  +" might being imported by some other process" ,"info")
-							time.sleep(300)
+							time.sleep(retryPatchAfterSeconds)
 						isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
 						if(isLastTableExist==True):
 							isSchemaCreated=True
+					elif isFirstTableExist == False or isLastTableExist == False :
+						while(isFirstTableExist == False or isLastTableExist==False):
+							log("[I] "+ version  +" is being imported by some other process" ,"info")
+							time.sleep(retryPatchAfterSeconds)
+							isFirstTableExist = self.check_table(db_name, db_user, db_password, first_table)
+							isLastTableExist=self.check_table(db_name, db_user, db_password, last_table)
+							if(isFirstTableExist == True and isLastTableExist==True):
+								isSchemaCreated=True
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
@@ -3392,35 +3461,35 @@ class SqlAnywhereConf(BaseDB):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
-        def hasPendingPatches(self, db_name, db_user, db_password, version):
-                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                if is_unix:
-                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
-                elif os_name == "WINDOWS":
-                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
-                jisql_log(query, db_password)
-                output = check_output(query)
-                if output.strip(version + " |"):
-                        return False
-                else:
-                        return True
+	def hasPendingPatches(self, db_name, db_user, db_password, version):
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if is_unix:
+			query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\"" %(version,ranger_version)
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and inst_by = '%s' and active = 'Y';\" -c ;" %(version,ranger_version)
+		jisql_log(query, db_password)
+		output = check_output(query)
+		if output.strip(version + " |"):
+			return False
+		else:
+			return True
 
-        def update_applied_patches_status(self,db_name, db_user, db_password,version):
-                if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
-                        get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-                        if is_unix:
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(shlex.split(query))
-                        elif os_name == "WINDOWS":
-                                query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
-                                jisql_log(query, db_password)
-                                ret = subprocess.call(query)
-                        if ret != 0:
-                                log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
-                                sys.exit(1)
-                        else:
-                                log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+	def update_applied_patches_status(self,db_name, db_user, db_password,version):
+		if self.hasPendingPatches(db_name, db_user, db_password,version) == True:
+			get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+			if is_unix:
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c \;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','Y') ;\" -c ;" %(version,ranger_version,client_host)
+				jisql_log(query, db_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] "+ version +" status entry to x_db_version_h table failed", "error")
+				sys.exit(1)
+			else:
+				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
 def main(argv):
 	populate_global_dict()
@@ -3444,31 +3513,31 @@ def main(argv):
 		else:
 			log("[E] ---------- JAVA Not Found, aborting installation. ----------", "error")
 			sys.exit(1)
-        #get ranger version
-        global ranger_version
-        try:
-                lib_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp","WEB-INF","lib","*")
-                get_ranger_version_cmd="%s -cp %s org.apache.ranger.common.RangerVersionInfo"%(JAVA_BIN,lib_home)
-                ranger_version = check_output(get_ranger_version_cmd).split("\n")[1]
-        except Exception, error:
-                ranger_version=''
+	#get ranger version
+	global ranger_version
+	try:
+		lib_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp","WEB-INF","lib","*")
+		get_ranger_version_cmd="%s -cp %s org.apache.ranger.common.RangerVersionInfo"%(JAVA_BIN,lib_home)
+		ranger_version = check_output(get_ranger_version_cmd).split("\n")[1]
+	except Exception, error:
+		ranger_version=''
 
-        try:
-                if ranger_version=="" or ranger_version=="ranger-admin - None":
-                        script_path = os.path.join(RANGER_ADMIN_HOME,"ews","ranger-admin-services.sh")
-                        ranger_version=check_output(script_path +" version").split("\n")[1]
-        except Exception, error:
-                ranger_version=''
+	try:
+		if ranger_version=="" or ranger_version=="ranger-admin - None":
+			script_path = os.path.join(RANGER_ADMIN_HOME,"ews","ranger-admin-services.sh")
+			ranger_version=check_output(script_path +" version").split("\n")[1]
+	except Exception, error:
+		ranger_version=''
 
-        try:
-                if ranger_version=="" or ranger_version=="ranger-admin - None":
-                        ranger_version=check_output("ranger-admin version").split("\n")[1]
-        except Exception, error:
-                ranger_version=''
+	try:
+		if ranger_version=="" or ranger_version=="ranger-admin - None":
+			ranger_version=check_output("ranger-admin version").split("\n")[1]
+	except Exception, error:
+		ranger_version=''
 
-        if ranger_version=="" or ranger_version is None:
-                log("[E] Unable to find ranger version details, Exiting..", "error")
-                sys.exit(1)
+	if ranger_version=="" or ranger_version is None:
+		log("[E] Unable to find ranger version details, Exiting..", "error")
+		sys.exit(1)
 
 	XA_DB_FLAVOR=globalDict['DB_FLAVOR']
 	AUDIT_DB_FLAVOR=globalDict['DB_FLAVOR']
@@ -3675,12 +3744,12 @@ def main(argv):
 				if audit_db_user != "" and db_user != audit_db_user:
 					xa_sqlObj.create_synonym(db_name, db_user, db_password,audit_db_user)
 
-                applyDBPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "DB_PATCHES")
-                if applyDBPatches == True:
-                        log("[I] --------- Applying Ranger DB patches ---------","info")
-                        xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
-                else:
-                        log("[I] DB_PATCHES have already been applied","info")
+		applyDBPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "DB_PATCHES")
+		if applyDBPatches == True:
+			log("[I] --------- Applying Ranger DB patches ---------","info")
+			xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
+		else:
+			log("[I] DB_PATCHES have already been applied","info")
 
 		if audit_store == "db" and audit_db_password!='':
 			log("[I] --------- Starting Audit Operation ---------","info")
@@ -3691,13 +3760,14 @@ def main(argv):
 	if len(argv)>1:
 		for i in range(len(argv)):
 			if str(argv[i]) == "-javapatch":
-                                applyJavaPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "JAVA_PATCHES")
-                                if applyJavaPatches == True:
-                                        log("[I] ----------------- Applying java patches ------------", "info")
-                                        xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
-                                        xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
-                                else:
-                                        log("[I] JAVA_PATCHES have already been applied","info")
+				applyJavaPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "JAVA_PATCHES")
+				if applyJavaPatches == True:
+					log("[I] ----------------- Applying java patches ------------", "info")
+					xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
+					xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
+				else:
+					log("[I] JAVA_PATCHES have already been applied","info")
+
 			if str(argv[i]) == "-changepassword":
 				if len(argv)==5:
 					userName=argv[2]
