@@ -777,15 +777,18 @@ define(function(require) {
 				reset : true,
 				cache : false,
 				error : function(coll, response, options) {
-					that.notifyError('Error', localization.tt('msg.errorLoadingAuditLogs'));
+					that.blockUI('unblock');
+					var errorMsg;
+					if(!_.isUndefined(response) && !_.isUndefined(response.responseJSON) && !_.isUndefined(response.responseJSON.msgDesc)){
+						errorMsg = response.responseJSON.msgDesc;
+					}
+					else {
+						errorMsg = localization.tt('msg.errorLoadingAuditLogs');
+					}
+					that.notifyError('Error', errorMsg);
 				}
-			// data : params,
 			});
 		};
-		// var searchOpt = ['Event Time','User','Resource Name','Resource
-		// ID','Resource Type','Repository Name','Repository
-		// Type','Result','Client IP','Client Type','Access Type','Access
-		// Enforcer','Audit Type','Session ID'];
 
 		var callbackCommon = {
 			search : function(query, searchCollection) {

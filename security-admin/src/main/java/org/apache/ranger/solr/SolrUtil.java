@@ -157,9 +157,9 @@ public class SolrUtil {
 		QueryResponse response = runQuery(solrClient, query);
 
 		if (response == null || response.getStatus() != 0) {
-			logger.error("Error running query. query=" + query
+			logger.error("Error running solr query. query=" + query
 					+ ", response=" + response);
-			throw restErrorUtil.createRESTException("Error running query",
+			throw restErrorUtil.createRESTException("Error running solr query",
 					MessageEnums.ERROR_SYSTEM);
 		}
 		return response;
