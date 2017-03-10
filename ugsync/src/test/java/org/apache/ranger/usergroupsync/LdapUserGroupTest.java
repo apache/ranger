@@ -304,6 +304,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		ldapBuilder.init();
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
@@ -322,6 +323,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(true);
 		ldapBuilder.init();
@@ -341,6 +343,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(true);
 		ldapBuilder.init();
@@ -359,6 +362,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setGroupSearchFilter("cn=*");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(true);
 		ldapBuilder.init();
@@ -378,6 +382,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(true);
 		ldapBuilder.init();
@@ -415,6 +420,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(false);
 		ldapBuilder.init();
@@ -434,6 +440,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(false);
 		ldapBuilder.init();
@@ -525,6 +532,7 @@ public class LdapUserGroupTest extends AbstractLdapTestUnit{
 		config.setUserGroupMemberAttributeName("member");
 		config.setUserObjectClass("organizationalPerson");
 		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
 		config.setUserSearchEnabled(false);
 		ldapBuilder.init();
