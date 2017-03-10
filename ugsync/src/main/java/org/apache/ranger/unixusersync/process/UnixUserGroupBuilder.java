@@ -42,8 +42,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private final static String OS = System.getProperty("os.name");
 
 	// kept for legacy support
-	public static final String UNIX_USER_PASSWORD_FILE = "/etc/passwd";
-	public static final String UNIX_GROUP_FILE = "/etc/group";
+	//public static final String UNIX_USER_PASSWORD_FILE = "/etc/passwd";
+	//public static final String UNIX_GROUP_FILE = "/etc/group";
 
 	/** Shell commands to get users and groups */
 	static final String LINUX_GET_ALL_USERS_CMD = "getent passwd";
@@ -78,6 +78,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>();
 	private int 						minimumUserId  = 0;
 	private int							minimumGroupId = 0;
+	private String unixPasswordFile;
+	private String unixGroupFile;
 
 	private long passwordFileModifiedAt = 0;
 	private long groupFileModifiedAt = 0;
@@ -91,6 +93,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	public UnixUserGroupBuilder() {
 		minimumUserId = Integer.parseInt(config.getMinUserId());
 		minimumGroupId = Integer.parseInt(config.getMinGroupId());
+		unixPasswordFile = config.getUnixPasswordFile();
+		unixGroupFile = config.getUnixGroupFile();
 
 		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
 
@@ -122,12 +126,12 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		if (useNss)
 			return System.currentTimeMillis() - lastUpdateTime > timeout;
 
-		long TempPasswordFileModifiedAt = new File(UNIX_USER_PASSWORD_FILE).lastModified();
+		long TempPasswordFileModifiedAt = new File(unixPasswordFile).lastModified();
 		if (passwordFileModifiedAt != TempPasswordFileModifiedAt) {
 			return true;
 		}
 
-		long TempGroupFileModifiedAt = new File(UNIX_GROUP_FILE).lastModified();
+		long TempGroupFileModifiedAt = new File(unixGroupFile).lastModified();
 		if (groupFileModifiedAt != TempGroupFileModifiedAt) {
 			return true;
 		}
@@ -197,7 +201,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		try {
 			if (!useNss) {
-				File file = new File(UNIX_USER_PASSWORD_FILE);
+				File file = new File(unixPasswordFile);
 				passwordFileModifiedAt = file.lastModified();
 				FileInputStream fis = new FileInputStream(file);
 				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
@@ -386,7 +390,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		try {
 			if (!useNss) {
-				File file = new File(UNIX_GROUP_FILE);
+				File file = new File(unixGroupFile);
 				groupFileModifiedAt = file.lastModified();
 				FileInputStream fis = new FileInputStream(file);
 				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
