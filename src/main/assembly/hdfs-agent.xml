@@ -112,6 +112,11 @@
 		</excludes>
 		<fileMode>700</fileMode>
 	</fileSet>
+	<fileSet>
+		<outputDirectory>/install/conf.templates/disable</outputDirectory>
+		<directory>hdfs-agent/disable-conf</directory>
+		<fileMode>700</fileMode>
+	</fileSet>
     <!-- version file -->
 	<fileSet>
 		<outputDirectory>/</outputDirectory>
