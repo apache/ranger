@@ -1029,7 +1029,7 @@ public class UserMgr {
 		if (sess != null) {
 
 			// Admin
-			if (sess != null && sess.isUserAdmin() || sess.isKeyAdmin()) {
+			if (sess.isUserAdmin() || sess.isKeyAdmin()) {
 				return;
 			}
 
@@ -1056,7 +1056,7 @@ public class UserMgr {
 		if (sess != null) {
 
 			// Admin
-			if (sess != null && sess.isUserAdmin()) {
+			if (sess.isUserAdmin()) {
 				return;
 			}
 
@@ -1158,7 +1158,6 @@ public class UserMgr {
 		userProfile.setFirstName(user.getFirstName());
 		userProfile.setLastName(user.getLastName());
 		userProfile.setPublicScreenName(user.getPublicScreenName());
-		userProfile.setEmailAddress(user.getEmailAddress());
 
 		List<XXPortalUserRole> gjUserRoleList = daoManager
 				.getXXPortalUserRole().findByParentId(user.getId());
