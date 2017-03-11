@@ -2821,7 +2821,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
-		boolean filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(RangerTagDBRetriever.OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, true);
+		boolean filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(RangerTagDBRetriever.OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, false);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
 
