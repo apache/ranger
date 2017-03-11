@@ -67,7 +67,7 @@ public class RangerTagDBRetriever {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver.getTags(serviceName=" + xService.getName());
 			}
 
-			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, true);
+			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, false);
 			TagRetrieverServiceResourceContext serviceResourceContext = new TagRetrieverServiceResourceContext(xService);
 			TagRetrieverTagDefContext tagDefContext = new TagRetrieverTagDefContext(xService);
 			TagRetrieverTagContext tagContext = new TagRetrieverTagContext(xService);
