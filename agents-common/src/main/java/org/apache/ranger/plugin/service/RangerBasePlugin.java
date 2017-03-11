@@ -43,7 +43,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -101,16 +100,17 @@ public class RangerBasePlugin {
 	public void init() {
 		cleanup();
 
-		RangerConfiguration.getInstance().addResourcesForServiceType(serviceType);
-		RangerConfiguration.getInstance().initAudit(appId);
+		RangerConfiguration configuration = RangerConfiguration.getInstance();
+		configuration.addResourcesForServiceType(serviceType);
+		configuration.initAudit(appId);
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
-		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
-		String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
-		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
+		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
+		serviceName = configuration.get(propertyPrefix + ".service.name");
 
-		useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = RangerConfiguration.getInstance().get(propertyPrefix + ".trusted.proxy.ipaddresses");
+		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
@@ -128,12 +128,7 @@ public class RangerBasePlugin {
 			LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
 		}
 
-		policyEngineOptions.evaluatorType           = RangerConfiguration.getInstance().get(propertyPrefix + ".policyengine.option.evaluator.type", RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO);
-		policyEngineOptions.cacheAuditResults       = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
-		policyEngineOptions.disableContextEnrichers = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
-		policyEngineOptions.disableCustomConditions = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);
-		policyEngineOptions.disableTagPolicyEvaluation = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", false);
-		policyEngineOptions.disableTrieLookupPrefilter = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+		policyEngineOptions.configureForPlugin(configuration, propertyPrefix);
 
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
@@ -141,7 +136,7 @@ public class RangerBasePlugin {
 		refresher.setDaemon(true);
 		refresher.startRefresher();
 
-		long policyReorderIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
+		long policyReorderIntervalMs = configuration.getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
 		if (policyReorderIntervalMs >= 0 && policyReorderIntervalMs < 15 * 1000) {
 			policyReorderIntervalMs = 15 * 1000;
 		}

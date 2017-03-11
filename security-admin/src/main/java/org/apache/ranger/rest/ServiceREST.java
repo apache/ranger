@@ -95,7 +95,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -200,6 +199,8 @@ public class ServiceREST {
 	
 	@Autowired
     JSONUtil jsonUtil;
+
+	private RangerPolicyEngineOptions delegateAdminOptions;
 
 	public ServiceREST() {
 	}
@@ -2805,6 +2806,18 @@ public class ServiceREST {
 		}
 	}
 
+	private synchronized RangerPolicyEngineOptions getDelegatedAdminPolicyEngineOptions() {
+		if (delegateAdminOptions == null) {
+			RangerPolicyEngineOptions opts = new RangerPolicyEngineOptions();
+
+			final String propertyPrefix = "ranger.admin";
+
+			opts.configureDelegateAdmin(RangerConfiguration.getInstance(), propertyPrefix);
+			this.delegateAdminOptions = opts;
+		}
+		return delegateAdminOptions;
+	}
+
 	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, Map<String, RangerPolicyResource> resources) {
 		boolean isAllowed = false;
 
@@ -2830,23 +2843,7 @@ public class ServiceREST {
 	}
 
 	private RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
-		if(RangerPolicyEngineCache.getInstance().getPolicyEngineOptions() == null) {
-			RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
-
-			String propertyPrefix = "ranger.admin";
-
-			options.evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-			options.cacheAuditResults       = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", false);
-			options.disableContextEnrichers = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
-			options.disableCustomConditions = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
-			options.evaluateDelegateAdminOnly = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.evaluate.delegateadmin.only", true);
-
-			RangerPolicyEngineCache.getInstance().setPolicyEngineOptions(options);
-		}
-
-		RangerPolicyEngine ret = RangerPolicyEngineCache.getInstance().getPolicyEngine(serviceName, svcStore);
-
-		return ret;
+		return RangerPolicyEngineCache.getInstance().getPolicyEngine(serviceName, svcStore, getDelegatedAdminPolicyEngineOptions());
 	}
 
 	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
@@ -2854,12 +2851,7 @@ public class ServiceREST {
 
 		String propertyPrefix = "ranger.admin";
 
-		options.evaluatorType             = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-		options.cacheAuditResults         = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", false);
-		options.disableContextEnrichers   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
-		options.disableCustomConditions   = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
-		options.evaluateDelegateAdminOnly = false;
-		options.disableTrieLookupPrefilter = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+		options.configureDefaultRangerAdmin(RangerConfiguration.getInstance(), propertyPrefix);
 
 		ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, -1L);
 

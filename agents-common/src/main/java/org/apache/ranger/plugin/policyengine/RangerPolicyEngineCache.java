@@ -35,13 +35,11 @@ public class RangerPolicyEngineCache {
 
 	private final Map<String, RangerPolicyEngine> policyEngineCache = Collections.synchronizedMap(new HashMap<String, RangerPolicyEngine>());
 
-	private RangerPolicyEngineOptions options;
-
 	public static RangerPolicyEngineCache getInstance() {
 		return sInstance;
 	}
 
-	public RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore) {
+	public synchronized RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RangerPolicyEngineOptions options) {
 		RangerPolicyEngine ret = null;
 
 		if(serviceName != null) {
@@ -55,9 +53,9 @@ public class RangerPolicyEngineCache {
 
 					if(policies != null) {
 						if(ret == null) {
-							ret = addPolicyEngine(policies);
+							ret = addPolicyEngine(policies, options);
 						} else if(policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
-							ret = addPolicyEngine(policies);
+							ret = addPolicyEngine(policies, options);
 						}
 					}
 				} catch(Exception excp) {
@@ -69,15 +67,8 @@ public class RangerPolicyEngineCache {
 		return ret;
 	}
 
-	public RangerPolicyEngineOptions getPolicyEngineOptions() {
-		return options;
-	}
 
-	public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
-		this.options = options;
-	}
-
-	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies) {
+	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies, RangerPolicyEngineOptions options) {
 		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options);
 
 		policyEngineCache.put(policies.getServiceName(), ret);
