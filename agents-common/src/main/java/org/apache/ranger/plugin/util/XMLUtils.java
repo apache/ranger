@@ -103,7 +103,12 @@ public class XMLUtils {
 
 		InputStream ret = null;
 
-		File f = new File(path);
+		// Guard against path traversal attacks
+		String sanitizedPath = new File(path).getName();
+		if ("".equals(sanitizedPath)) {
+			return null;
+		}
+		File f = new File(sanitizedPath);
 
 		if (f.exists()) {
 			ret = new FileInputStream(f);
