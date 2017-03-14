@@ -27,7 +27,7 @@ public class RangerProperties extends HashMap<Object, Object> {
 	
 	private static final long serialVersionUID = -4094378755892810987L;
 
-	private final String XMLCONFIG_FILENAME_DELIMITOR = ",";
+	private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
 
 	private String xmlConfigFileNames = null;
 

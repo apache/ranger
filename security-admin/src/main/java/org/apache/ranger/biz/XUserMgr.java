@@ -1477,40 +1477,41 @@ public class XUserMgr extends XUserMgrBase {
 				vXUserListSort = xUserService.searchXUsers(searchCriteria);
 				HashMap<String, Object> searchCriteriaParamList = searchCriteria.getParamList();
 				vXUserExactMatchwithSearchCriteria = 1;
-				for(String caseKey : searchCriteriaParamList.keySet()){
+				for(Map.Entry<String, Object> entry:searchCriteriaParamList.entrySet()){
+					String caseKey=entry.getKey();
 					switch (caseKey.toLowerCase()) {
 						case "isvisible":
 							Integer isVisible = vXUserExactMatch.getIsVisible();
-							if(isVisible != null && !isVisible.equals(searchCriteriaParamList.get(caseKey))){
+							if(isVisible != null && !isVisible.equals(entry.getValue())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "status":
 							Integer status = vXUserExactMatch.getStatus();
-							if(status != null && !status.equals(searchCriteriaParamList.get(caseKey))){
+							if(status != null && !status.equals(entry.getValue())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "usersource":
 							Integer userSource = vXUserExactMatch.getUserSource();
-							if(userSource != null && !userSource.equals(searchCriteriaParamList.get(caseKey))){
+							if(userSource != null && !userSource.equals(entry.getValue())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "emailaddress":
 							String email = vXUserExactMatch.getEmailAddress();
-							if(email != null && !email.equals(searchCriteriaParamList.get(caseKey))){
+							if(email != null && !email.equals(entry.getValue())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "userrole":
-							if(vXUserExactMatch.getUserRoleList() != null && !vXUserExactMatch.getUserRoleList().contains(searchCriteriaParamList.get(caseKey))){
+							if(vXUserExactMatch.getUserRoleList() != null && !vXUserExactMatch.getUserRoleList().contains(entry.getValue())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "userrolelist":
 							@SuppressWarnings("unchecked")
-							Collection<String> userrolelist = (Collection<String>) searchCriteriaParamList.get(caseKey);
+							Collection<String> userrolelist = (Collection<String>) entry.getValue();
 							if(!CollectionUtils.isEmpty(userrolelist)){
 								for(String role:userrolelist){
 									if(vXUserExactMatch.getUserRoleList() != null && vXUserExactMatch.getUserRoleList().contains(role)){
@@ -1598,17 +1599,18 @@ public class XUserMgr extends XUserMgrBase {
 			if(vXGroupExactMatch != null){
 				HashMap<String, Object> searchCriteriaParamList = searchCriteria.getParamList();
 				vXGroupExactMatchwithSearchCriteria = 1;
-				for(String caseKey : searchCriteriaParamList.keySet()){
+				for (Map.Entry<String, Object> entry: searchCriteriaParamList.entrySet()){
+					String caseKey=entry.getKey();
 					switch (caseKey.toLowerCase()) {
 						case "isvisible":
 							Integer isVisible = vXGroupExactMatch.getIsVisible();
-							if(isVisible != null && !isVisible.equals(searchCriteriaParamList.get(caseKey))){
+							if(isVisible != null && !isVisible.equals(entry.getValue())){
 								vXGroupExactMatchwithSearchCriteria = -1;
 							}
 							break;
 						case "groupsource":
 							Integer groupsource = vXGroupExactMatch.getGroupSource();
-							if(groupsource != null && !groupsource.equals(searchCriteriaParamList.get(caseKey))){
+							if(groupsource != null && !groupsource.equals(entry.getValue())){
 								vXGroupExactMatchwithSearchCriteria = -1;
 							}
 							break;

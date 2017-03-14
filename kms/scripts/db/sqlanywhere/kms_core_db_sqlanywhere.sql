@@ -21,7 +21,9 @@ CREATE TABLE ranger_masterkey(
 	cipher varchar(255) DEFAULT NULL NULL,
 	bitlength int DEFAULT NULL NULL,
 	masterkey varchar(2048),
-	CONSTRAINT ranger_masterkey_PK_id PRIMARY KEY CLUSTERED(id)
+	CONSTRAINT ranger_masterkey_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT ranger_masterkey_cipher UNIQUE(cipher),
+	CONSTRAINT ranger_masterkey_bitlength UNIQUE(bitlength)
 )
 GO
 CREATE TABLE ranger_keystore(

@@ -151,7 +151,8 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		Metamodel entityMetaModel = em.getMetamodel();
 		EntityType<VXXTrxLog> entityType = entityMetaModel.entity(VXXTrxLog.class);
 
-		for (String key : paramList.keySet()) {
+		for (Map.Entry<String, Object> entry : paramList.entrySet()) {
+			String key=entry.getKey();
 			for (SearchField searchField : searchFields) {
 				if (!key.equalsIgnoreCase(searchField.getClientFieldName())) {
 					continue;
@@ -162,7 +163,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 					fieldName = fieldName.contains(".") ? fieldName.substring(fieldName.indexOf(".") + 1) : fieldName;
 				}
 
-				Object paramValue = paramList.get(key);
+				Object paramValue = entry.getValue();
 				boolean isListValue = false;
 				if (paramValue != null && paramValue instanceof Collection) {
 					isListValue = true;

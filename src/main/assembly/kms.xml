@@ -142,6 +142,7 @@
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 		    		<include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
 		    		<include>org.apache.solr:solr-solrj</include>
+				<include>org.apache.ranger:ranger-plugins-common</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
