@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -85,4 +88,32 @@ public class RangerServiceAtlas extends RangerBaseService {
 		}
 		return ret;
 	}
+
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerServiceAtlas.getDefaultRangerPolicies() ");
+        }
+
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
+        for (RangerPolicy defaultPolicy : ret) {
+            for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+                List<String> users = defaultPolicyItem.getUsers();
+
+                String atlasAdminUser = service.getConfigs().get("atlas.admin.user");
+                if (StringUtils.isBlank(atlasAdminUser)) {
+                    atlasAdminUser = "admin";
+                }
+
+                users.add(atlasAdminUser);
+                defaultPolicyItem.setUsers(users);
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceAtlas.getDefaultRangerPolicies() ");
+        }
+        return ret;
+    }
 }

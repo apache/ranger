@@ -45,7 +45,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+//import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -137,22 +137,6 @@ public class TestServiceDBStore {
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
 	}
-	
-	private XXAccessTypeDef rangerKmsAccessTypes(String accessTypeName, int itemId) {
-		XXAccessTypeDef accessTypeDefObj = new XXAccessTypeDef();
-		accessTypeDefObj.setAddedByUserId(Id);
-		accessTypeDefObj.setCreateTime(new Date());
-		accessTypeDefObj.setDefid(Long.valueOf(itemId));
-		accessTypeDefObj.setId(Long.valueOf(itemId));
-		accessTypeDefObj.setItemId(Long.valueOf(itemId));
-		accessTypeDefObj.setLabel(accessTypeName);
-		accessTypeDefObj.setName(accessTypeName);
-		accessTypeDefObj.setOrder(null);
-		accessTypeDefObj.setRbkeylabel(null);
-		accessTypeDefObj.setUpdatedByUserId(Id);
-		accessTypeDefObj.setUpdateTime(new Date());
-		return accessTypeDefObj;
-	}
 
 	private RangerServiceDef rangerServiceDef() {
 		List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
@@ -220,28 +204,6 @@ public class TestServiceDBStore {
 		rangerService.setUpdatedBy("Admin");
 		rangerService.setUpdateTime(new Date());
 
-		return rangerService;
-	}
-	
-	private RangerService rangerKMSService() {
-		Map<String, String> configs = new HashMap<String, String>();
-		configs.put("username", "servicemgr");
-		configs.put("password", "servicemgr");
-		configs.put("provider", "kmsurl");
-		
-		RangerService rangerService = new RangerService();
-		rangerService.setId(Id);
-		rangerService.setConfigs(configs);
-		rangerService.setCreateTime(new Date());
-		rangerService.setDescription("service kms policy");
-		rangerService.setGuid("1427365526516_835_1");
-		rangerService.setIsEnabled(true);
-		rangerService.setName("KMS_1");
-		rangerService.setPolicyUpdateTime(new Date());
-		rangerService.setType("7");
-		rangerService.setUpdatedBy("Admin");
-		rangerService.setUpdateTime(new Date());
-		
 		return rangerService;
 	}
 
@@ -1234,10 +1196,10 @@ public class TestServiceDBStore {
 
 		ServiceDBStore spy = Mockito.spy(serviceDBStore);
 
-		Mockito.doNothing().when(spy).createDefaultPolicies(xService, vXUser);
+		Mockito.doNothing().when(spy).createDefaultPolicies(rangerService);
 
 		spy.createService(rangerService);
-		
+
 		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
 		Mockito.verify(daoManager).getXXServiceConfigMap();
 	}
@@ -2675,130 +2637,5 @@ public class TestServiceDBStore {
 						isPolicyEnabled);
 		Assert.assertNotNull(policyList);
 		Mockito.verify(daoManager).getXXPolicy();
-	}
-	
-	@Test
-	public void test41createKMSService() throws Exception {
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
-		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
-		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
-				.mock(XXAccessTypeDefDao.class);
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
-				.mock(XXServiceConfigMapDao.class);
-		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
-		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
-				.mock(XXServiceConfigDefDao.class);
-		XXService xService = Mockito.mock(XXService.class);
-		XXUser xUser = Mockito.mock(XXUser.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.findByName("KMS_1")).thenReturn(
-				xServiceDef);
-		Mockito.when(xService.getName()).thenReturn(
-				"KMS_1");
-		Mockito.when(xServiceDao.findByName("KMS_1")).thenReturn(
-				xService);
-		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-
-		RangerService rangerService = rangerKMSService();
-		VXUser vXUser = null;
-		String userName = "servicemgr";
-		Mockito.when(xService.getType()).thenReturn(Long.valueOf(rangerService.getType()));
-		Mockito.when(xServiceDefDao.getById(Long.valueOf(rangerService.getType()))).thenReturn(xServiceDef);
-		Mockito.when(xServiceDef.getImplclassname()).thenReturn(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME);
-		List<XXServiceConfigDef> svcConfDefList = new ArrayList<XXServiceConfigDef>();
-		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
-		serviceConfigDefObj.setId(Id);
-		serviceConfigDefObj.setType("7");
-		svcConfDefList.add(serviceConfigDefObj);
-		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
-				xServiceConfigDefDao);
-		Mockito.when(xServiceConfigDefDao.findByServiceDefName(userName))
-		.thenReturn(svcConfDefList);
-
-		Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
-
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
-				xService);
-		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(
-				xServiceConfigMapDao);
-
-		Mockito.when(stringUtil.getValidUserName(userName))
-		.thenReturn(userName);
-		Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
-		Mockito.when(xUserDao.findByUserName(userName)).thenReturn(xUser);
-
-		Mockito.when(xUserService.populateViewBean(xUser)).thenReturn(vXUser);
-		Mockito.when(xUserMgr.createServiceConfigUser(userName)).thenReturn(vXUser);
-		VXUser vXUserHdfs = new VXUser();
-		vXUserHdfs.setName("hdfs");
-		vXUserHdfs.setPassword("hdfs");
-		Mockito.when(xUserMgr.createServiceConfigUser("hdfs")).thenReturn(vXUserHdfs);
-		VXUser vXUserHive = new VXUser();
-		vXUserHive.setName("hive");
-		vXUserHive.setPassword("hive");
-		Mockito.when(xUserMgr.createServiceConfigUser("hive")).thenReturn(vXUserHive);
-
-		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
-		Mockito.when(rangerAuditFields.populateAuditFields(xConfMap, xService))
-		.thenReturn(xConfMap);
-
-		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
-				rangerService);
-
-		Mockito.when(
-				rangerAuditFields.populateAuditFields(
-						Mockito.isA(XXServiceConfigMap.class),
-						Mockito.isA(XXService.class))).thenReturn(xConfMap);
-
-		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
-
-		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
-
-
-		List<XXAccessTypeDef> accessTypeDefList = new ArrayList<XXAccessTypeDef>();
-		accessTypeDefList.add(rangerKmsAccessTypes("getmetadata", 7));
-		accessTypeDefList.add(rangerKmsAccessTypes("generateeek", 8));
-		accessTypeDefList.add(rangerKmsAccessTypes("decrypteek", 9));
-
-		RangerServiceDef ran = new RangerServiceDef();
-		ran.setName("KMS Test");
-		Mockito.when(serviceDefService.read(1L)).thenReturn(ran);
-		Long serviceDefId = ran.getId();
-
-		ServiceDBStore spy = Mockito.spy(serviceDBStore);
-
-		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
-				xAccessTypeDefDao);
-		Mockito.when(xAccessTypeDefDao.findByServiceDefId(serviceDefId))
-		.thenReturn(accessTypeDefList);
-		Mockito.when(spy.getServiceByName("KMS_1")).thenReturn(
-				rangerService);
-		Mockito.doNothing().when(spy).createDefaultPolicies(xService, vXUser);
-
-		RangerPolicy policy = new RangerPolicy();
-		RangerResourceDef resourceDef = new RangerResourceDef();
-		resourceDef.setItemId(Id);
-		resourceDef.setName("keyname");
-		resourceDef.setType("string");
-		resourceDef.setType("string");
-		resourceDef.setLabel("Key Name");
-		resourceDef.setDescription("Key Name");
-
-		List<RangerResourceDef> resourceHierarchy = new ArrayList<RangerResourceDef>();
-		spy.createService(rangerService);
-		vXUser = new VXUser();
-		vXUser.setName(userName);
-		vXUser.setPassword(userName);
-		
-		spy.createDefaultPolicy(policy, xService, vXUser, resourceHierarchy);
-
-		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
-		Mockito.verify(daoManager).getXXServiceConfigMap();
-		//Assert.assertNull(policy);
-		Assert.assertEquals(3, policy.getPolicyItems().size());
 	}
 }

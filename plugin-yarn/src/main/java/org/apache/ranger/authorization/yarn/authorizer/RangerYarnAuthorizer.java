@@ -50,7 +50,9 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
 	public static final String ACCESS_TYPE_ADMIN       = "admin";
 
-	private static boolean yarnAuthEnabled = RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT;
+    public static final String KEY_RESOURCE_QUEUE = "queue";
+
+    private static boolean yarnAuthEnabled = RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT;
 
 	private static final Log LOG = LogFactory.getLog(RangerYarnAuthorizer.class);
 
@@ -260,10 +262,8 @@ class RangerYarnPlugin extends RangerBasePlugin {
 }
 
 class RangerYarnResource extends RangerAccessResourceImpl {
-	private static final String KEY_QUEUE = "queue";
-
 	public RangerYarnResource(PrivilegedEntity entity) {
-		setValue(KEY_QUEUE, entity != null ? entity.getName() : null);
+		setValue(RangerYarnAuthorizer.KEY_RESOURCE_QUEUE, entity != null ? entity.getName() : null);
 	}
 }
 

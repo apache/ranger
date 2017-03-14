@@ -23,9 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hdfs.client.HdfsResourceMgr;
@@ -93,6 +98,48 @@ public class RangerServiceHdfs extends RangerBaseService {
 			LOG.debug("<== RangerServiceHdfs.lookupResource Response: (" + ret + ")");
 		}
 		
+		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceHdfs.getDefaultRangerPolicies() ");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
+		String pathResourceName = RangerHdfsAuthorizer.KEY_RESOURCE_PATH;
+
+		for (RangerPolicy defaultPolicy : ret) {
+			RangerPolicy.RangerPolicyResource pathPolicyResource = defaultPolicy.getResources().get(pathResourceName);
+			if (pathPolicyResource != null) {
+				List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
+				RangerServiceDef.RangerResourceDef pathResourceDef = null;
+				for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+					if (resourceDef.getName().equals(pathResourceName)) {
+						pathResourceDef = resourceDef;
+						break;
+					}
+				}
+				if (pathResourceDef != null) {
+					String pathSeparator = pathResourceDef.getMatcherOptions().get(RangerPathResourceMatcher.OPTION_PATH_SEPARATOR);
+					if (StringUtils.isBlank(pathSeparator)) {
+						pathSeparator = Character.toString(RangerPathResourceMatcher.DEFAULT_PATH_SEPARATOR_CHAR);
+					}
+					String value = pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
+					pathPolicyResource.setValue(value);
+				} else {
+					LOG.warn("No resourceDef found in HDFS service-definition for '" + pathResourceName + "'");
+				}
+			} else {
+				LOG.warn("No '" + pathResourceName + "' found in default policy");
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceHdfs.getDefaultRangerPolicies() : " + ret);
+		}
 		return ret;
 	}
 }

@@ -64,7 +64,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 	public static final String KEY_BASE_FILENAME = "BASE_FILENAME";
 	public static final String DEFAULT_FILENAME_EXTENSION_SEPARATOR = ".";
 
-	public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
+    public static final String KEY_RESOURCE_PATH = "path";
+
+    public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
 
 	private static final Log LOG = LogFactory.getLog(RangerHdfsAuthorizer.class);
 
@@ -500,11 +502,9 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 }
 
 class RangerHdfsResource extends RangerAccessResourceImpl {
-	private static final String KEY_PATH = "path";
-
 
 	public RangerHdfsResource(String path, String owner) {
-		super.setValue(KEY_PATH, path);
+		super.setValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH, path);
 		super.setOwnerUser(owner);
 	}
 }

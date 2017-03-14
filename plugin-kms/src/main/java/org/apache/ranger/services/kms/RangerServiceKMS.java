@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -33,7 +35,11 @@ import org.apache.commons.logging.LogFactory;
 public class RangerServiceKMS extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceKMS.class);
-	
+
+	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
+	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
+	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
+
 	public RangerServiceKMS() {
 		super();
 	}
@@ -85,6 +91,101 @@ public class RangerServiceKMS extends RangerBaseService {
 			LOG.debug("<== RangerServiceKMS.lookupResource Response: (" + ret + ")");
 		}
 		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceKMS.getDefaultRangerPolicies() ");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
+		String adminPrincipal = RangerConfiguration.getInstance().get(ADMIN_USER_PRINCIPAL);
+		String adminKeytab = RangerConfiguration.getInstance().get(ADMIN_USER_KEYTAB);
+		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
+
+		String adminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
+
+		// Add default policies for HDFS & HIVE users.
+		List<RangerServiceDef.RangerAccessTypeDef> hdfsAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+		List<RangerServiceDef.RangerAccessTypeDef> hiveAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+
+		for(RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+			if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
+				hdfsAccessTypeDefs.add(accessTypeDef);
+				hiveAccessTypeDefs.add(accessTypeDef);
+			} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GENERATE_EEK)) {
+				hdfsAccessTypeDefs.add(accessTypeDef);
+			} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_DECRYPT_EEK)) {
+				hiveAccessTypeDefs.add(accessTypeDef);
+			}
+		}
+
+		for (RangerPolicy defaultPolicy : ret) {
+
+			List<RangerPolicy.RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
+			for (RangerPolicy.RangerPolicyItem item : policyItems) {
+				List<String> users = item.getUsers();
+				users.add(adminUser);
+				item.setUsers(users);
+			}
+
+			String hdfsUser = RangerConfiguration.getInstance().get("ranger.kms.service.user.hdfs", "hdfs");
+			if (hdfsUser != null && !hdfsUser.isEmpty()) {
+				LOG.info("Creating default KMS policy item for " + hdfsUser);
+				List<String> users = new ArrayList<String>();
+				users.add(hdfsUser);
+				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(hdfsAccessTypeDefs, users);
+				policyItems.add(policyItem);
+			}
+
+
+			String hiveUser = RangerConfiguration.getInstance().get("ranger.kms.service.user.hive", "hive");
+
+			if (hiveUser != null && !hiveUser.isEmpty()) {
+				LOG.info("Creating default KMS policy item for " + hiveUser);
+				List<String> users = new ArrayList<String>();
+				users.add(hiveUser);
+				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(hiveAccessTypeDefs, users);
+				policyItems.add(policyItem);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceKMS.getDefaultRangerPolicies() : " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs, List<String> users) throws Exception {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceTag.createDefaultPolicyItem()");
+		}
+
+		RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+
+		policyItem.setUsers(users);
+
+		List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+
+		for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+			RangerPolicy.RangerPolicyItemAccess access = new RangerPolicy.RangerPolicyItemAccess();
+			access.setType(accessTypeDef.getName());
+			access.setIsAllowed(true);
+			accesses.add(access);
+		}
+
+		policyItem.setAccesses(accesses);
+		policyItem.setDelegateAdmin(true);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceTag.createDefaultPolicyItem(): " + policyItem );
+		}
+		return policyItem;
 	}
 }
 
