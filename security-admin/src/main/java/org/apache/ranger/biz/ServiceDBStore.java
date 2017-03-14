@@ -49,8 +49,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
@@ -60,11 +58,11 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.RangerServicePoliciesCache;
 import org.apache.ranger.common.RangerVersionInfo;
@@ -188,18 +186,9 @@ import com.google.gson.Gson;
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
 	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
-	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
-	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
-    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
-	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
-	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
-	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
-	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
-	
-	private static final String KERBEROS_TYPE = "kerberos";
-	
+
 	private static final String POLICY_ALLOW_EXCLUDE = "Policy Allow:Exclude";
-	private static final String POLICY_ALLOW_INCLUDE = "Policy Allow:Include";
+	//private static final String POLICY_ALLOW_INCLUDE = "Policy Allow:Include";
 	private static final String POLICY_DENY_EXCLUDE = "Policy Deny:Exclude";
 	private static final String POLICY_DENY_INCLUDE = "Policy Deny:Include";
 	
@@ -208,8 +197,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String USER_NAME = "Exported by";
 	private static final String RANGER_VERSION = "Ranger apache version";
 	private static final String TIMESTAMP = "Export time";
-	
-	static {
+
+	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
+
+    static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
 		} catch (UnknownHostException e) {
@@ -268,6 +259,9 @@ public class ServiceDBStore extends AbstractServiceStore {
     
     @Autowired
     JSONUtil jsonUtil;
+
+	@Autowired
+	ServiceMgr serviceMgr;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -1430,7 +1424,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap.setServiceId(xCreatedService.getId());
 			xConfMap.setConfigkey(configKey);
 			xConfMap.setConfigvalue(configValue);
-			xConfMap = xConfMapDao.create(xConfMap);
+			xConfMapDao.create(xConfMap);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("vXUser:[" + vXUser + "]");
 		}
 		RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
 
@@ -1445,7 +1442,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		bizUtil.createTrxLog(trxLogList);
 
 		if (createDefaultPolicy) {
-			createDefaultPolicies(xCreatedService, vXUser);
+			createDefaultPolicies(createdService);
 		}
 
 		return createdService;
@@ -1595,9 +1592,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap.setServiceId(service.getId());
 			xConfMap.setConfigkey(configKey);
 			xConfMap.setConfigvalue(configValue);
-			xConfMap = xConfMapDao.create(xConfMap);
+			xConfMapDao.create(xConfMap);
 		}
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("vXUser:[" + vXUser + "]");
+		}
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
 		bizUtil.createTrxLog(trxLogList);
@@ -2447,341 +2446,47 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	void createDefaultPolicies(XXService createdService, VXUser vXUser) throws Exception {
-		RangerServiceDef serviceDef = getServiceDef(createdService.getType());
+	void createDefaultPolicies(RangerService createdService) throws Exception {
 
-		if (serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-			createDefaultTagPolicy(createdService);
-		} else {
-			// we need to create one policy for each resource hierarchy
-			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			for (List<RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
-				RangerPolicy policy = new RangerPolicy();
-				createDefaultPolicy(policy, createdService, vXUser, aHierarchy);
-				policy = createPolicy(policy);
+		RangerBaseService svc = serviceMgr.getRangerServiceByService(createdService, this);
+
+		List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
+
+		List<RangerPolicy.RangerPolicyItemAccess> allAccesses = svc.getAndAllowAllAccesses();
+
+		for (RangerPolicy defaultPolicy : svc.getDefaultRangerPolicies()) {
+
+			if (CollectionUtils.isNotEmpty(serviceCheckUsers)
+			&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+
+				RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+
+				policyItem.setUsers(serviceCheckUsers);
+				policyItem.setAccesses(allAccesses);
+				policyItem.setDelegateAdmin(true);
+
+				defaultPolicy.getPolicyItems().add(policyItem);
 			}
+			createPolicy(defaultPolicy);
 		}
 	}
 
-	private void createDefaultTagPolicy(XXService createdService) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.createDefaultTagPolicy() ");
-		}
+	List<String> getServiceCheckUsers(RangerService createdService) {
+		List<String> ret = new ArrayList<String>();
 
-		String tagResourceDefName = null;
-		boolean isConditionDefFound = false;
+		Map<String, String> serviceConfig = createdService.getConfigs();
 
-		RangerServiceDef tagServiceDef = getServiceDef(createdService.getType());
-		List<RangerResourceDef> tagResourceDef = tagServiceDef.getResources();
-		if (tagResourceDef != null && tagResourceDef.size() > 0) {
-			// Assumption : First (and perhaps the only) resourceDef is the name of the tag resource
-			RangerResourceDef theTagResourceDef = tagResourceDef.get(0);
-			tagResourceDefName = theTagResourceDef.getName();
-		} else {
-			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagResourceDef Name.");
-		}
-
-		List<RangerPolicyConditionDef> policyConditionDefs = tagServiceDef.getPolicyConditions();
-
-		if (CollectionUtils.isNotEmpty(policyConditionDefs)) {
-			for (RangerPolicyConditionDef conditionDef : policyConditionDefs) {
-				if (conditionDef.getName().equals(RANGER_TAG_EXPIRY_CONDITION_NAME)) {
-					isConditionDefFound = true;
-					break;
+		if (serviceConfig.containsKey(AMBARI_SERVICE_CHECK_USER)) {
+			String userNames = serviceConfig.get(AMBARI_SERVICE_CHECK_USER);
+			String[] userList = userNames.split(",");
+			for (String userName : userList) {
+				if (!StringUtils.isEmpty(userName)) {
+					ret.add(userName);
 				}
 			}
 		}
-		if (!isConditionDefFound) {
-			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef with name=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
-		}
 
-		if (tagResourceDefName != null && isConditionDefFound) {
-
-			String tagType = "EXPIRES_ON";
-
-			String policyName = tagType;
-
-			RangerPolicy policy = new RangerPolicy();
-
-			policy.setIsEnabled(true);
-			policy.setVersion(1L);
-			policy.setName(StringUtils.trim(policyName));
-			policy.setService(createdService.getName());
-			policy.setDescription("Policy for data with " + tagType + " tag");
-			policy.setIsAuditEnabled(true);
-
-			Map<String, RangerPolicyResource> resourceMap = new HashMap<String, RangerPolicyResource>();
-
-			RangerPolicyResource polRes = new RangerPolicyResource();
-			polRes.setIsExcludes(false);
-			polRes.setIsRecursive(false);
-			polRes.setValue(tagType);
-			resourceMap.put(tagResourceDefName, polRes);
-
-			policy.setResources(resourceMap);
-
-			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-
-			RangerPolicyItem policyItem = new RangerPolicyItem();
-
-			List<String> groups = new ArrayList<String>();
-			groups.add(RangerConstants.GROUP_PUBLIC);
-			policyItem.setGroups(groups);
-
-			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
-			List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-			for (XXAccessTypeDef accessTypeDef : accessTypeDefs) {
-				RangerPolicyItemAccess access = new RangerPolicyItemAccess();
-				access.setType(accessTypeDef.getName());
-				access.setIsAllowed(true);
-				accesses.add(access);
-			}
-			policyItem.setAccesses(accesses);
-
-			List<RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicyItemCondition>();
-			List<String> values = new ArrayList<String>();
-			values.add("yes");
-			RangerPolicyItemCondition policyItemCondition = new RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
-			policyItemConditions.add(policyItemCondition);
-
-			policyItem.setConditions(policyItemConditions);
-			policyItem.setDelegateAdmin(Boolean.FALSE);
-
-			policyItems.add(policyItem);
-
-			policy.setDenyPolicyItems(policyItems);
-
-			policy = createPolicy(policy);
-		} else {
-			LOG.error("ServiceDBStore.createService() - Cannot create default TAG policy, tagResourceDefName=" + tagResourceDefName +
-					", tagPolicyConditionName=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDBStore.createDefaultTagPolicy()");
-		}
-	}
-
-	private String buildPolicyName(List<RangerResourceDef> resourceHierarchy) {
-		String ret = "all";
-		if (CollectionUtils.isNotEmpty(resourceHierarchy)) {
-			int resourceDefCount = 0;
-			for (RangerResourceDef resourceDef : resourceHierarchy) {
-				if (resourceDefCount > 0) {
-					ret += ", ";
-				} else {
-					ret += " - ";
-				}
-				ret += resourceDef.getName();
-				resourceDefCount++;
-			}
-		}
 		return ret;
-	}
-
-	void createDefaultPolicy(RangerPolicy policy, XXService createdService, VXUser vXUser, List<RangerResourceDef> resourceHierarchy) throws Exception {
-
-		String policyName=buildPolicyName(resourceHierarchy);
-
-		policy.setIsEnabled(true);
-		policy.setVersion(1L);
-		policy.setName(StringUtils.trim(policyName));
-		policy.setService(createdService.getName());
-		policy.setDescription("Policy for " + policyName);
-		policy.setIsAuditEnabled(true);
-
-		policy.setResources(createDefaultPolicyResource(resourceHierarchy));
-
-		if (vXUser != null) {
-			List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-			List<XXAccessTypeDef> accessTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(createdService.getType());
-			//Create Default policy item for the service user
-			RangerPolicyItem policyItem = createDefaultPolicyItem(createdService, vXUser, accessTypeDefs);
-			policyItems.add(policyItem);
-			// For KMS add default policies for HDFS & HIVE users.
-			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(createdService.getType());
-			if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				List<XXAccessTypeDef> hdfsAccessTypeDefs = new ArrayList<XXAccessTypeDef>();
-				List<XXAccessTypeDef> hiveAccessTypeDefs = new ArrayList<XXAccessTypeDef>();
-				for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
-					if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
-						hdfsAccessTypeDefs.add(accessTypeDef);
-						hiveAccessTypeDefs.add(accessTypeDef);
-					} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GENERATE_EEK)) {
-						hdfsAccessTypeDefs.add(accessTypeDef);
-					} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_DECRYPT_EEK)) {
-						hiveAccessTypeDefs.add(accessTypeDef);
-					}
-				}
-
-				String hdfsUser = PropertiesUtil.getProperty("ranger.kms.service.user.hdfs", "hdfs");
-				if (hdfsUser != null && !hdfsUser.isEmpty()) {
-					XXUser xxUser = daoMgr.getXXUser().findByUserName(hdfsUser);
-					if (xxUser != null) {
-						vXUser = xUserService.populateViewBean(xxUser);
-					} else {
-						vXUser = xUserMgr.createServiceConfigUser(hdfsUser);
-					}
-					if (vXUser != null) {
-						LOG.info("Creating default KMS policy item for " + hdfsUser);
-						policyItem = createDefaultPolicyItem(createdService, vXUser, hdfsAccessTypeDefs);
-						policyItems.add(policyItem);
-					}
-				}
-
-				String hiveUser = PropertiesUtil.getProperty("ranger.kms.service.user.hive", "hive");
-				if (hiveUser != null && !hiveUser.isEmpty()) {
-					XXUser xxUser = daoMgr.getXXUser().findByUserName(hiveUser);
-					if (xxUser != null) {
-						vXUser = xUserService.populateViewBean(xxUser);
-					} else {
-						vXUser = xUserMgr.createServiceConfigUser(hiveUser);
-					}
-					if (vXUser != null) {
-						LOG.info("Creating default KMS policy item for " + hiveUser);
-						policyItem = createDefaultPolicyItem(createdService, vXUser, hiveAccessTypeDefs);
-						policyItems.add(policyItem);
-					}
-				}
-			}
-			policy.setPolicyItems(policyItems);
-		}
-	}
-
-	private RangerPolicyItem createDefaultPolicyItem(XXService createdService, VXUser vXUser, List<XXAccessTypeDef> accessTypeDefs) throws Exception {
-		String adminPrincipal = PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL);
-		String adminKeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
-		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE,"simple");
-		String lookupPrincipal = PropertiesUtil.getProperty(LOOKUP_PRINCIPAL);
-		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);
-
-		RangerPolicyItem policyItem = new RangerPolicyItem();
-
-		List<String> users = new ArrayList<String>();
-		users.add(vXUser.getName());
-		VXUser vXLookupUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
-
-		XXService xService = daoMgr.getXXService().findByName(createdService.getName());
-		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
-		if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)){
-			VXUser vXAdminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
-			if(vXAdminUser != null){
-				users.add(vXAdminUser.getName());
-			}	
-		}else if(vXLookupUser != null){
-			users.add(vXLookupUser.getName());
-		}else{
-			// do nothing
-		}
-
-		if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.ATLAS_IMPL_CLASS_NAME)){
-			VXUser vXUserAdmin = chkAdminUserExists("admin");
-			if(vXUserAdmin != null){
-				users.add(vXUserAdmin.getName());
-			}
-		}
-
-		RangerService rangerService = getServiceByName(createdService.getName());
-		if (rangerService != null){
-			Map<String, String> map = rangerService.getConfigs();
-			if (map != null && map.containsKey(AMBARI_SERVICE_CHECK_USER)){
-				String userNames = map.get(AMBARI_SERVICE_CHECK_USER);
-				String[] userList = userNames.split(",");
-				if(userList != null){
-					for (String userName : userList) {
-						if(!StringUtils.isEmpty(userName)){
-							XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
-							if (xxUser != null) {
-								vXUser = xUserService.populateViewBean(xxUser);
-							} else {
-								vXUser = xUserMgr.createServiceConfigUser(userName);
-								LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
-							}
-							if(vXUser != null){
-								users.add(vXUser.getName());
-							}
-						}
-					}
-				}
-			}
-		}
-		policyItem.setUsers(users);
-
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-		for(XXAccessTypeDef accessTypeDef : accessTypeDefs) {
-			RangerPolicyItemAccess access = new RangerPolicyItemAccess();
-			access.setType(accessTypeDef.getName());
-			access.setIsAllowed(true);
-			accesses.add(access);
-		}
-		policyItem.setAccesses(accesses);
-
-		policyItem.setDelegateAdmin(true);
-		return policyItem;
-	}
-
-	private VXUser chkAdminUserExists(String adminUser) {
-		VXUser vXUser = null;
-		if(!StringUtils.isEmpty(adminUser)){
-			XXUser xxUser = daoMgr.getXXUser().findByUserName(adminUser);
-			if (xxUser != null) {
-				vXUser = xUserService.populateViewBean(xxUser);
-			}
-		}
-		return vXUser;
-	}
-
-	private VXUser getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {
-		VXUser vXUser = null;
-		if(!StringUtils.isEmpty(authType) && authType.equalsIgnoreCase(KERBEROS_TYPE)){
-			if(SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
-				KerberosName krbName = new KerberosName(lookupPrincipal);
-				String lookupUser=null;
-				try {
-					lookupUser = krbName.getShortName();
-				} catch (IOException e) {
-					throw restErrorUtil.createRESTException("Please provide proper value of lookup user principal : "+ lookupPrincipal, MessageEnums.INVALID_INPUT_DATA);
-				}
-				
-				if(LOG.isDebugEnabled()){
-					LOG.debug("Checking for Lookup User : "+lookupUser);
-				}
-				if(!StringUtils.isEmpty(lookupUser)){
-					XXUser xxUser = daoMgr.getXXUser().findByUserName(lookupUser);
-					if (xxUser != null) {
-						vXUser = xUserService.populateViewBean(xxUser);
-					} else {
-						vXUser = xUserMgr.createServiceConfigUser(lookupUser);
-						LOG.info("Creating Lookup User : "+vXUser.getName());
-					}
-				}
-			}
-		}
-		return vXUser;
-	}
-
-
-	Map<String, RangerPolicyResource> createDefaultPolicyResource(List<RangerResourceDef> resourceHierarchy) throws Exception {
-		Map<String, RangerPolicyResource> resourceMap = new HashMap<>();
-
-		for (RangerResourceDef resourceDef : resourceHierarchy) {
-			RangerPolicyResource polRes = new RangerPolicyResource();
-			polRes.setIsExcludes(false);
-			polRes.setIsRecursive(false);
-
-			String value = "*";
-			if("path".equalsIgnoreCase(resourceDef.getName())) {
-				value = "/*";
-			}
-
-			if(resourceDef.getRecursiveSupported()) {
-				polRes.setIsRecursive(Boolean.TRUE);
-			}
-
-			polRes.setValue(value);
-			resourceMap.put(resourceDef.getName(), polRes);
-		}
-		return resourceMap;
 	}
 
 	private Map<String, String> validateRequiredConfigParams(RangerService service, Map<String, String> configs) {
@@ -2932,10 +2637,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<String> users = policyItem.getUsers();
 		for(int i = 0; i < users.size(); i++) {
 			String user = users.get(i);
-
+			if (StringUtils.isBlank(user)) {
+				continue;
+			}
 			XXUser xUser = daoMgr.getXXUser().findByUserName(user);
 			if(xUser == null) {
-				throw new Exception(user + ": user does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
+				throw new Exception(user + ": user does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "' user='" + user +"'");
 			}
 			XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
 			xUserPerm = (XXPolicyItemUserPerm) rangerAuditFields.populateAuditFields(xUserPerm, xPolicyItem);
@@ -2948,10 +2655,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<String> groups = policyItem.getGroups();
 		for(int i = 0; i < groups.size(); i++) {
 			String group = groups.get(i);
-
+			if (StringUtils.isBlank(group)) {
+				continue;
+			}
 			XXGroup xGrp = daoMgr.getXXGroup().findByGroupName(group);
 			if(xGrp == null) {
-				throw new Exception(group + ": group does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
+				throw new Exception(group + ": group does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "' group='" + group + "'");
 			}
 			XXPolicyItemGroupPerm xGrpPerm = new XXPolicyItemGroupPerm();
 			xGrpPerm = (XXPolicyItemGroupPerm) rangerAuditFields.populateAuditFields(xGrpPerm, xPolicyItem);
@@ -2991,7 +2700,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(CollectionUtils.isNotEmpty(policyItems)) {
 			for (int itemOrder = 0; itemOrder < policyItems.size(); itemOrder++) {
 				RangerPolicyItem policyItem = policyItems.get(itemOrder);
-				XXPolicyItem xPolicyItem = createNewPolicyItemForPolicy(policy, xPolicy, policyItem, xServiceDef, itemOrder, policyItemType);
+				createNewPolicyItemForPolicy(policy, xPolicy, policyItem, xServiceDef, itemOrder, policyItemType);
 			}
 		}
 	}
@@ -3019,7 +2728,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					xxDataMaskInfo.setConditionExpr(dataMaskInfo.getConditionExpr());
 					xxDataMaskInfo.setValueExpr(dataMaskInfo.getValueExpr());
 
-					xxDataMaskInfo = daoMgr.getXXPolicyItemDataMaskInfo().create(xxDataMaskInfo);
+					daoMgr.getXXPolicyItemDataMaskInfo().create(xxDataMaskInfo);
 				}
 			}
 		}
@@ -3755,6 +3464,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private void writeBookForPolicyItems(RangerPolicy policy, RangerPolicyItem policyItem,
 			RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row, String policyConditonType) {
+		if (LOG.isDebugEnabled()) {
+			// To avoid PMD violation
+			LOG.debug("policyConditonType:[" + policyConditonType + "]");
+		}
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
 		String groupNames = "";

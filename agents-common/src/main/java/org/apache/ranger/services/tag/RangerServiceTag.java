@@ -19,12 +19,11 @@
 
 package org.apache.ranger.services.tag;
 
-import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -33,11 +32,20 @@ import org.apache.ranger.plugin.store.TagStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUBLIC;
+
 public class RangerServiceTag extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceTag.class);
 
 	public static final String TAG_RESOURCE_NAME = "tag";
+	public static final String RANGER_TAG_NAME_EXPIRES_ON = "EXPIRES_ON";
+	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
 
 	private TagStore tagStore = null;
 
@@ -116,6 +124,76 @@ public class RangerServiceTag extends RangerBaseService {
 			LOG.debug("<== RangerServiceTag.lookupResource(): tag count=" + ret.size());
 		}
 
+		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceTag.getDefaultRangerPolicies() ");
+		}
+
+		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+
+		boolean isConditionDefFound = false;
+
+		List<RangerServiceDef.RangerPolicyConditionDef> policyConditionDefs = serviceDef.getPolicyConditions();
+
+		if (CollectionUtils.isNotEmpty(policyConditionDefs)) {
+			for (RangerServiceDef.RangerPolicyConditionDef conditionDef : policyConditionDefs) {
+				if (conditionDef.getName().equals(RANGER_TAG_EXPIRY_CONDITION_NAME)) {
+					isConditionDefFound = true;
+					break;
+				}
+			}
+		}
+
+		if (isConditionDefFound) {
+
+			ret = super.getDefaultRangerPolicies();
+
+			String tagResourceName = serviceDef.getResources().get(0).getName();
+
+			for (RangerPolicy defaultPolicy : ret) {
+
+				RangerPolicy.RangerPolicyResource tagPolicyResource = defaultPolicy.getResources().get(tagResourceName);
+
+				if (tagPolicyResource != null) {
+
+					String value = RANGER_TAG_NAME_EXPIRES_ON;
+
+					tagPolicyResource.setValue(value);
+					defaultPolicy.setDescription("Policy for data with " + value + " tag");
+
+					List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
+
+					for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicyItems) {
+
+						List<String> groups = new ArrayList<String>();
+						groups.add(GROUP_PUBLIC);
+						defaultPolicyItem.setGroups(groups);
+
+						List<RangerPolicy.RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicy.RangerPolicyItemCondition>();
+						List<String> values = new ArrayList<String>();
+						values.add("yes");
+						RangerPolicy.RangerPolicyItemCondition policyItemCondition = new RangerPolicy.RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
+						policyItemConditions.add(policyItemCondition);
+
+						defaultPolicyItem.setConditions(policyItemConditions);
+						defaultPolicyItem.setDelegateAdmin(Boolean.FALSE);
+					}
+
+					defaultPolicy.setDenyPolicyItems(defaultPolicyItems);
+					defaultPolicy.setPolicyItems(null);
+				}
+			}
+		} else {
+			LOG.error("RangerServiceTag.getDefaultRangerPolicies() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef with name=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceTag.getDefaultRangerPolicies() : " + ret);
+		}
 		return ret;
 	}
 }
