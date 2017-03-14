@@ -15,10 +15,10 @@
   limitations under the License.
 --}}
 {{#if showImportExportBtn}}
-	<button type="button" title="Export" class=" btn btn-small btn-right" data-id="exportBtn"> <i class="icon-download-alt"></i>
+	<button type="button" title="Export" class=" btn btn-small btn-right" data-id="exportBtn"> <i class="icon-external-link-sign"></i>
 	 Export
 	</button>
-	<button type="button" title="Import" class="btn btn-success btn btn-small btn-right" data-id="importBtn" > <i class="icon-upload-alt"></i>
+	<button type="button" title="Import" class="btn btn-success btn btn-small btn-right" data-id="importBtn" > <i class="icon-rotate-180 icon-external-link-sign"></i>
 	 Import
 	</button>
 {{/if}}
@@ -40,14 +40,14 @@
 									{{#if ../operation}} 
 									
 									  <a href="javascript:void(0)" title="Export" type="button" class="download  pull-right " data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" > 
-                                          <i class=" icon-download-alt"> </i>
+                                          <i class="icon-external-link-sign"> </i>
 	                                   </a>
 	                                   
 	                                   <a href="javascript:void(0)" title="Import"  data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right" style="margin-right: 5px ; margin-top:-2px;">
-									    <i class=" icon-upload-alt"> </i>
+									    <i class="icon-rotate-180 icon-external-link-sign"> </i>
 									   </a>
 									   
-									   <a href="#!/service/{{./this.id}}/create"class="pull-right" title="Add" style="margin-right: 2px;"> <i class="icon-plus"></i></a> <!--  -->
+									   <a href="#!/service/{{./this.id}}/create"class="pull-right" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a> <!--  -->
 									 
 									{{/if}}
 								</span>	
