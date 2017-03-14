@@ -280,7 +280,7 @@ public class HdfsClient extends BaseClient {
     String fsDefaultName = configs.get("fs.default.name");
     fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
     if (fsDefaultName.isEmpty())  {
-      throw new IllegalArgumentException("Value for neither fs.default.name is specified");
+      throw new IllegalArgumentException("Value for fs.default.name not specified");
     }
 
     String dfsNameservices = configs.get("dfs.nameservices");
