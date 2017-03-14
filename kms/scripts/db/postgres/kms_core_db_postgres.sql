@@ -25,7 +25,9 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 cipher VARCHAR(255) DEFAULT NULL NULL ,
 bitlength INT DEFAULT NULL NULL,
 masterkey VARCHAR(2048),
-PRIMARY KEY (id)
+PRIMARY KEY (id),
+CONSTRAINT ranger_masterkey_cipher UNIQUE(cipher),
+CONSTRAINT ranger_masterkey_bitlength UNIQUE(bitlength)
 );
 
 DROP TABLE IF EXISTS ranger_keystore CASCADE;

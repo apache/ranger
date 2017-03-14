@@ -109,17 +109,17 @@ public abstract class BaseDao<T> {
 
 	public T create(T obj) {
 		T ret = null;
-
 		boolean trxBegan = beginTransaction();
-
-		getEntityManager().persist(obj);
-
-		if(trxBegan) {
-			commitTransaction();
+		try{
+			getEntityManager().persist(obj);
+			if(trxBegan) {
+				commitTransaction();
+			}
+			ret = obj;
+		}catch(Exception e){
+			e.printStackTrace();
+			rollbackTransaction();
 		}
-
-		ret = obj;
-
 		return ret;
 	}
 

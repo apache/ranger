@@ -20,8 +20,8 @@ CREATE TABLE `ranger_masterkey` (
 `update_time` datetime DEFAULT NULL ,
 `added_by_id` bigint( 20 ) DEFAULT NULL ,
 `upd_by_id` bigint( 20 ) DEFAULT NULL ,
-`cipher` varchar( 255 ) DEFAULT NULL ,
-`bitlength` int DEFAULT NULL ,
+`cipher` varchar( 255 ) DEFAULT NULL UNIQUE,
+`bitlength` int DEFAULT NULL UNIQUE,
 `masterkey` varchar(2048),
 PRIMARY KEY ( `id` )
 )ROW_FORMAT=DYNAMIC;

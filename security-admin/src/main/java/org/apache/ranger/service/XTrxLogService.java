@@ -100,11 +100,12 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		Predicate intPredicate = null;		
 		Predicate datePredicate =null;
 		Map<String, Object> paramList = searchCriteria.getParamList();	
-		for(String key : paramList.keySet()){
+		for(Map.Entry<String, Object> entry: paramList.entrySet()){
 			for(SearchField searchField : searchFields){				
 				fieldName = searchField.getFieldName();
-				clientFieldName = searchField.getClientFieldName();				
-				paramValue = paramList.get(key);
+				clientFieldName = searchField.getClientFieldName();	
+				String key=entry.getKey();
+				paramValue = entry.getValue();
 				isListValue = false;				
 				if (paramValue != null && paramValue instanceof Collection) {
 					isListValue = true;
@@ -225,11 +226,12 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		Predicate stringPredicate =null;		
 		Predicate intPredicate = null;		
 		Predicate datePredicate =null;		
-		for(String key : paramList.keySet()){
+		for(Map.Entry<String, Object> entry : paramList.entrySet()){
+			String key=entry.getKey();
 			for(SearchField searchField : searchFields){				
 				fieldName = searchField.getFieldName();
 				clientFieldName = searchField.getClientFieldName();				
-				paramValue = paramList.get(key);
+				paramValue = entry.getValue();
 				isListValue = false;				
 				if (paramValue != null && paramValue instanceof Collection) {
 					isListValue = true;

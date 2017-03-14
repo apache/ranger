@@ -41,7 +41,7 @@ public class RangerProperties extends  HashMap<String,String>  {
 
 	private final Logger LOG = Logger.getLogger(RangerProperties.class);
 
-	private final String XMLCONFIG_FILENAME_DELIMITOR = ",";
+	private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
 	private final String XMLCONFIG_PROPERTY_TAGNAME = "property";
 	private final String XMLCONFIG_NAME_TAGNAME = "name";
 	private final String XMLCONFIG_VALUE_TAGNAME = "value";
