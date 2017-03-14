@@ -203,6 +203,8 @@ if [ "${HCOMPONENT_NAME}" = "solr" ]; then
     fi    
 elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/config
+elif [ "${HCOMPONENT_NAME}" = "hadoop" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc/hadoop
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive
