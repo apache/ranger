@@ -713,6 +713,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						break;            // Break out of policy-evaluation loop
 					}
 				}
+				if (result.getIsAllowed()) {
+					result.setIsAccessDetermined(true);
+				}
 			}
 		}
 
