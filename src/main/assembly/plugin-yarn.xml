@@ -155,11 +155,5 @@
         <outputDirectory>/</outputDirectory>
         <fileMode>755</fileMode>
     </file>
-    <file>
-        <source>plugin-yarn/scripts/yarn-plugin-install.properties</source>
-        <outputDirectory>/</outputDirectory>
-        <destName>yarn-plugin-install.properties</destName>
-        <fileMode>755</fileMode>
-    </file>
   </files>
 </assembly>
