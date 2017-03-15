@@ -747,55 +747,55 @@ public class AppConstants extends RangerCommonEnums {
 			return "Unknown"; //XA_PERM_TYPE_UNKNOWN
 		}
 		if( elementValue == 1 ) {
-			return "Reset"; //XA_PERM_TYPE_RESET
+                        return "reset"; //XA_PERM_TYPE_RESET
 		}
 		if( elementValue == 2 ) {
-			return "Read"; //XA_PERM_TYPE_READ
+                        return "read"; //XA_PERM_TYPE_READ
 		}
 		if( elementValue == 3 ) {
-			return "Write"; //XA_PERM_TYPE_WRITE
+                        return "write"; //XA_PERM_TYPE_WRITE
 		}
 		if( elementValue == 4 ) {
-			return "Create"; //XA_PERM_TYPE_CREATE
+                        return "create"; //XA_PERM_TYPE_CREATE
 		}
 		if( elementValue == 5 ) {
-			return "Delete"; //XA_PERM_TYPE_DELETE
+                        return "delete"; //XA_PERM_TYPE_DELETE
 		}
 		if( elementValue == 6 ) {
-			return "Admin"; //XA_PERM_TYPE_ADMIN
+                        return "admin"; //XA_PERM_TYPE_ADMIN
 		}
 		if( elementValue == 7 ) {
-			return "Obfuscate"; //XA_PERM_TYPE_OBFUSCATE
+                        return "obfuscate"; //XA_PERM_TYPE_OBFUSCATE
 		}
 		if( elementValue == 8 ) {
-			return "Mask"; //XA_PERM_TYPE_MASK
+                        return "mask"; //XA_PERM_TYPE_MASK
 		}
 		if( elementValue == 9 ) {
-			return "Execute"; //XA_PERM_TYPE_EXECUTE
+                        return "execute"; //XA_PERM_TYPE_EXECUTE
 		}
 		if( elementValue == 10 ) {
-			return "Select"; //XA_PERM_TYPE_SELECT
+                        return "select"; //XA_PERM_TYPE_SELECT
 		}
 		if( elementValue == 11 ) {
-			return "Update"; //XA_PERM_TYPE_UPDATE
+                        return "update"; //XA_PERM_TYPE_UPDATE
 		}
 		if( elementValue == 12 ) {
-			return "Drop"; //XA_PERM_TYPE_DROP
+                        return "drop"; //XA_PERM_TYPE_DROP
 		}
 		if( elementValue == 13 ) {
-			return "Alter"; //XA_PERM_TYPE_ALTER
+                        return "alter"; //XA_PERM_TYPE_ALTER
 		}
 		if( elementValue == 14 ) {
-			return "Index"; //XA_PERM_TYPE_INDEX
+                        return "index"; //XA_PERM_TYPE_INDEX
 		}
 		if( elementValue == 15 ) {
-			return "Lock"; //XA_PERM_TYPE_LOCK
+                        return "lock"; //XA_PERM_TYPE_LOCK
 		}
 		if( elementValue == 16 ) {
-			return "All"; //XA_PERM_TYPE_ALL
+                        return "all"; //XA_PERM_TYPE_ALL
 		}
 		if( elementValue == 17 ) {
-			return "Allow"; //XA_PERM_TYPE_ALLOW
+                        return "allow"; //XA_PERM_TYPE_ALLOW
 		}
 		if( elementValue == 18 ) {
 			// return "Submit Topology"; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
