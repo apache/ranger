@@ -217,21 +217,20 @@ public abstract class RangerBaseService {
 	}
 
 	private String buildPolicyName(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) {
-		String ret = "all";
+		StringBuilder sb = new StringBuilder("all");
 		if (CollectionUtils.isNotEmpty(resourceHierarchy)) {
 			int resourceDefCount = 0;
 			for (RangerServiceDef.RangerResourceDef resourceDef : resourceHierarchy) {
 				if (resourceDefCount > 0) {
-					ret += ", ";
+					sb.append(", ");
 				} else {
-					ret += " - ";
+					sb.append(" - ");
 				}
-				ret += resourceDef.getName();
+				sb.append(resourceDef.getName());
 				resourceDefCount++;
 			}
-			ret = ret.trim();
 		}
-		return ret;
+		return sb.toString().trim();
 	}
 
 	private List<String> getUserList() {

@@ -2449,24 +2449,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerBaseService svc = serviceMgr.getRangerServiceByService(createdService, this);
 
-		List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
+		if (svc != null) {
 
-		List<RangerPolicy.RangerPolicyItemAccess> allAccesses = svc.getAndAllowAllAccesses();
+			List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
 
-		for (RangerPolicy defaultPolicy : svc.getDefaultRangerPolicies()) {
+			List<RangerPolicy.RangerPolicyItemAccess> allAccesses = svc.getAndAllowAllAccesses();
 
-			if (CollectionUtils.isNotEmpty(serviceCheckUsers)
-			&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+			for (RangerPolicy defaultPolicy : svc.getDefaultRangerPolicies()) {
 
-				RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+				if (CollectionUtils.isNotEmpty(serviceCheckUsers)
+				&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
 
-				policyItem.setUsers(serviceCheckUsers);
-				policyItem.setAccesses(allAccesses);
-				policyItem.setDelegateAdmin(true);
+					RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
-				defaultPolicy.getPolicyItems().add(policyItem);
+					policyItem.setUsers(serviceCheckUsers);
+					policyItem.setAccesses(allAccesses);
+					policyItem.setDelegateAdmin(true);
+
+					defaultPolicy.getPolicyItems().add(policyItem);
+				}
+				createPolicy(defaultPolicy);
 			}
-			createPolicy(defaultPolicy);
 		}
 	}
 
