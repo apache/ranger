@@ -318,7 +318,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			return rangerRequest;
 		}
 		
-		logger.fatal("Can't create RangerRequest oject. userName="
+		logger.fatal("Can't create RangerRequest object. userName="
 				+ userName + ", accessType=" + accessType + ", ip=" + ip
 				+ ", collectionRequest=" + collectionRequest);
 
