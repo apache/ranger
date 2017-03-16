@@ -103,7 +103,7 @@ public class HdfsConnectionMgr {
 					}
 				}
 		} else {
-			LOG.error("Serice not found with name "+serviceName, new Throwable());
+			LOG.error("Service not found with name " + serviceName, new Throwable());
 		}
 
 		return hdfsClient;
