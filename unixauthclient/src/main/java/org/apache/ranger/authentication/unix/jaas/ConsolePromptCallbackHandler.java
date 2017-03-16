@@ -61,7 +61,7 @@ public class ConsolePromptCallbackHandler implements CallbackHandler {
 		          pc.setPassword(line.toCharArray());
 			}
 			else {
-				System.out.println("Unknown callbacl [" + cb.getClass().getName() + "]");
+				System.out.println("Unknown callback [" + cb.getClass().getName() + "]");
 			}
 		}
 	}
