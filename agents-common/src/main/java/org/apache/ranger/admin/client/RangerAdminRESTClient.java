@@ -31,6 +31,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
@@ -79,10 +80,17 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		this.serviceName = serviceName;
 		this.pluginId    = restUtils.getPluginId(serviceName, appId);
 
-		String url               		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
+		String url                      = "";
+		String tmpUrl                   = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
 		String sslConfigFileName 		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+        if (!StringUtil.isEmpty(tmpUrl)) {
+            url = tmpUrl.trim();
+        }
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
 
 		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs);
 	}
