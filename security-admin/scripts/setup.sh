@@ -49,12 +49,6 @@ if [ ! -f "${PROPFILE}" ]; then
 fi
 
 LOGFILE=$(eval echo " $(get_prop 'LOGFILE' $PROPFILE)")
-pidFolderName='/var/run/ranger'
-mkdir -p ${pidFolderName}
-if [ ! $? = "0" ];then
-    log "Make $pidFolderName failure....!!";
-    exit 1;
-fi
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
@@ -1363,14 +1357,22 @@ setup_install_files(){
         fi
         echo "export RANGER_ADMIN_LOG_DIR=${RANGER_ADMIN_LOG_DIR}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logdir.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logdir.sh
-
+		
+		if [ -z "${RANGER_PID_DIR_PATH}" ]
+		then
+			RANGER_PID_DIR_PATH=/var/run/ranger
+		fi
         if [ ! -d ${RANGER_PID_DIR_PATH} ]; then
-                log "[I]Creating Ranger PID folder: ${RANGER_PID_DIR_PATH}"
-                mkdir -p ${RANGER_PID_DIR_PATH}
+			log "[I]Creating Ranger PID folder: ${RANGER_PID_DIR_PATH}"
+			mkdir -p ${RANGER_PID_DIR_PATH}
+			if [ ! $? = "0" ];then
+				log "Make $RANGER_PID_DIR_PATH failure....!!";
+				exit 1;
+			fi
         fi
-        if [ -d ${RANGER_PID_DIR_PATH} ]; then
-                chown -R ${unix_user} ${RANGER_PID_DIR_PATH}
-        fi
+		
+        chown -R ${unix_user} ${RANGER_PID_DIR_PATH}
+		
         echo "export RANGER_PID_DIR_PATH=${RANGER_PID_DIR_PATH}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-piddir.sh
         echo "export RANGER_USER=${unix_user}" >> ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-piddir.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-piddir.sh
