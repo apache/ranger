@@ -378,7 +378,7 @@ define(function(require) {
                 resultMsg               :'Search by access result i.e Allowed/Denied logs.',
                 statusMsg               :'Status of Policy Enable/Disable.',
                 columnfamily            :'Hbase column-family',
-                searchForPluginStatus   : "Search for Plugin Status....",
+                searchForPluginStatus   : "Search for your plugin status...",
                 pleaseSelectUser        : 'Please select user.',
                 pleaseSelectGroup       : 'Please select group.',
                 addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.',
