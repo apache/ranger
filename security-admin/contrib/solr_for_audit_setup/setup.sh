@@ -16,7 +16,38 @@
 
 #This script downloads Solr (optional) and sets up Solr for Ranger Audit Server
 curr_dir=`pwd`
-. ./install.properties
+PROPFILE=$PWD/install.properties
+
+if [ ! -f ${PROPFILE} ]
+then
+	echo "$PROPFILE file not found....!!";
+	exit 1;
+fi
+
+get_prop(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
+	echo $value
+}
+
+SOLR_INSTALL_FOLDER=$(get_prop 'SOLR_INSTALL_FOLDER' $PROPFILE)
+SOLR_RANGER_HOME=$(get_prop 'SOLR_RANGER_HOME' $PROPFILE)
+SOLR_RANGER_PORT=$(get_prop 'SOLR_RANGER_PORT' $PROPFILE)
+SOLR_DEPLOYMENT=$(get_prop 'SOLR_DEPLOYMENT' $PROPFILE)
+SOLR_RANGER_DATA_FOLDER=$(get_prop 'SOLR_RANGER_DATA_FOLDER' $PROPFILE)
+SOLR_ZK=$(get_prop 'SOLR_ZK' $PROPFILE)
+SOLR_USER=$(get_prop 'SOLR_USER' $PROPFILE)
+SOLR_RANGER_COLLECTION=$(get_prop 'SOLR_RANGER_COLLECTION' $PROPFILE)
+SOLR_INSTALL=$(get_prop 'SOLR_INSTALL' $PROPFILE)
+SOLR_DOWNLOAD_URL=$(get_prop 'SOLR_DOWNLOAD_URL' $PROPFILE)
+SOLR_LOG_FOLDER=$(get_prop 'SOLR_LOG_FOLDER' $PROPFILE)
+MAX_AUDIT_RETENTION_DAYS=$(get_prop 'MAX_AUDIT_RETENTION_DAYS' $PROPFILE)
+RANGER_AUDITS_DATA_FOLDER=$(get_prop 'RANGER_AUDITS_DATA_FOLDER' $PROPFILE)
+SOLR_MAX_MEM=$(get_prop 'SOLR_MAX_MEM' $PROPFILE)
+SOLR_HOST_URL=$(get_prop 'SOLR_HOST_URL' $PROPFILE)
+SOLR_SHARDS=$(get_prop 'SOLR_SHARDS' $PROPFILE)
+SOLR_REPLICATION=$(get_prop 'SOLR_REPLICATION' $PROPFILE)
 
 #Current timestamp
 ts=$(date +"%m%d%y%H%M%S")
