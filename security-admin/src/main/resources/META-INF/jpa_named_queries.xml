@@ -791,7 +791,7 @@
 		<query>select obj from XXServiceResourceElement obj where obj.resourceId = :resourceId order by obj.resourceId, obj.id</query>
 	</named-query>
 
-	<named-query name="XXServiceResourceElement.findForTaggedResourcesInServiceId">
+	<named-query name="XXServiceResourceElement.findTaggedResourcesInServiceId">
 		<query>select obj from XXServiceResourceElement obj where obj.resourceId in
 			(select serviceresource.id from XXServiceResource serviceresource where serviceresource.serviceId = :serviceId and serviceresource.id in
 			(select tagResMap.resourceId from XXTagResourceMap tagResMap)
@@ -829,7 +829,7 @@
 		<query>select obj.value from XXServiceResourceElementValue obj where obj.resElementId = :resElementId</query>
 	</named-query>
 
-	<named-query name="XXServiceResourceElementValue.findForTaggedResourcesInServiceId">
+	<named-query name="XXServiceResourceElementValue.findTaggedResourcesInServiceId">
 		<query>select obj from XXServiceResourceElementValue obj, XXServiceResourceElement resElem where obj.resElementId = resElem.id and resElem.resourceId in
 					(select res.id from XXServiceResource res where res.serviceId = :serviceId and res.id in
 						(select tagResMap.resourceId from XXTagResourceMap tagResMap)
