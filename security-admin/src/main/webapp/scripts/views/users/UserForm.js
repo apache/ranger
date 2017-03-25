@@ -152,7 +152,6 @@ define(function(require){
 					this.fields.lastName.editor.$el.find('input').attr('disabled',true);
 					this.fields.emailAddress.editor.$el.attr('disabled',true);
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
-					return
 				}
 				
 				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
