@@ -81,6 +81,7 @@ policymgr_https_keystore_keyalias=$(get_prop 'policymgr_https_keystore_keyalias'
 policymgr_https_keystore_password=$(get_prop 'policymgr_https_keystore_password' $PROPFILE)
 policymgr_supportedcomponents=$(get_prop 'policymgr_supportedcomponents' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 authentication_method=$(get_prop 'authentication_method' $PROPFILE)
 remoteLoginEnabled=$(get_prop 'remoteLoginEnabled' $PROPFILE)
@@ -155,6 +156,13 @@ check_ret_status_for_groupadd(){
 # 9 is the response if the group exists
     if [ $1 -ne 0 ] && [ $1 -ne 9 ]; then
         log "[E] $2";
+        exit 1;
+    fi
+}
+
+check_user_pwd(){
+    if [ -z "$1" ]; then
+        log "[E] The unix user password is empty. Please set user password.";
         exit 1;
     fi
 }
@@ -1254,12 +1262,24 @@ setup_unix_user_group(){
 		check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
 	fi
 
+	#create user if it does not exists
 	id -u ${unix_user} > /dev/null 2>&1
 	if [ $? -ne 0 ]
 	then
+		check_user_pwd ${unix_user_pwd}
 	    log "[I] Creating new user and adding to group";
         useradd ${unix_user} -g ${unix_group} -m
 		check_ret_status $? "useradd ${unix_user} failed"
+
+		passwdtmpfile=passwd.tmp
+		if [  -f "$passwdtmpfile" ]; then
+			rm -rf  ${passwdtmpfile}
+		fi
+		cat> ${passwdtmpfile} << EOF
+${unix_user}:${unix_user_pwd}
+EOF
+		chpasswd <  ${passwdtmpfile}
+		rm -rf  ${passwdtmpfile}
 	else
 	    log "[I] User already exists, adding it to group";
 	    usermod -g ${unix_group} ${unix_user}
