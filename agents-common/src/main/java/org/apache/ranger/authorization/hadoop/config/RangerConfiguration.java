@@ -20,8 +20,6 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -86,24 +84,20 @@ public class RangerConfiguration extends Configuration {
 			LOG.debug("==> addResourceIfReadable(" + aResourceName + ")");
 		}
 
-		String fName = getFileLocation(aResourceName);
-		if (fName != null) {
+		URL fUrl = getFileLocation(aResourceName);
+		if (fUrl != null) {
 			if(LOG.isInfoEnabled()) {
-				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fName);
+				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
 			}
 
-			File f = new File(fName);
-			if (f.exists() && f.canRead()) {
-				URL fUrl = null;
-				try {
-					fUrl = f.toURI().toURL();
-					addResource(fUrl);
-					ret = true;
-				} catch (MalformedURLException e) {
-					LOG.error("Unable to find URL for the resource name [" + aResourceName + "]. Ignoring the resource:" + aResourceName);
+			try {
+				addResource(fUrl);
+				ret = true;
+			} catch (Exception e) {
+				LOG.error("Unable to load the resource name [" + aResourceName + "]. Ignoring the resource:" + fUrl);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Resource loading failed for " + fUrl, e);
 				}
-			} else {
-				LOG.error("addResourceIfReadable(" + aResourceName + "): resource not readable");
 			}
 		} else {
 			LOG.error("addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
@@ -154,21 +148,13 @@ public class RangerConfiguration extends Configuration {
 		return auditFactory != null && auditFactory.isInitDone();
 	}
 	
-	private String getFileLocation(String fileName) {
-		
-		String ret = null;
-		
+	private URL getFileLocation(String fileName) {
 		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
 		
 		if (lurl == null ) {
 			lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
 		}
-		
-		if (lurl != null) {
-			ret = lurl.getFile();
-		}
-		
-		return ret;
+		return lurl;
 	}
 	
 	private void  addSecurityResource(String serviceType) {
