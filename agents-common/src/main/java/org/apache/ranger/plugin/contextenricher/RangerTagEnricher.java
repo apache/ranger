@@ -189,7 +189,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<>();
 			for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
-				tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.ANCESTOR));
+				tagsForEmptyResourceAndAnyAccess.add(new RangerTagForEval(entry.getValue(), RangerPolicyResourceMatcher.MatchType.DESCENDANT));
 			}
 
 			enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
