@@ -284,12 +284,12 @@
     }
     ,
     {
-      "name":"DENY 'show databases;' for hive",
+      "name":"ALLOW 'show databases;' for hive",
       "request":{
         "resource":{"elements":{}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"'show databases;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     }
   ]
 }

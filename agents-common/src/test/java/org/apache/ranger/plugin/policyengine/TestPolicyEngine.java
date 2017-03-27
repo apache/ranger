@@ -264,6 +264,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+    @Test
+    public void testPolicyEngine_hiveForShowDatabases() {
+        String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_tag_hive_for_show_databases.json" };
+
+        runTestsFromResourceFiles(conditionsTestResourceFiles);
+    }
+
 	@Test
 	public void testPolicyEngine_descendant_tags() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_descendant_tags.json"};
