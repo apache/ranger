@@ -590,8 +590,7 @@
 			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
 			  			that.formView.trigger('policyForm:parentChildHideShow',true);
 						if(!_.isUndefined(this.value)
-								&& ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_TABLE.label
-										|| XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
+                                                                && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
 							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
 						}
 
