@@ -63,6 +63,6 @@ ${project.name}
   {{{https://issues.apache.org/jira/browse/ranger/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel}issue tracker}}. When creating a new issue, please provide a comprehensive description of your
   concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem.
   
-  Contributors can check out the source codefrom our
-  {{{http://git.apache.org/ranger.git/}Git repository}}
+  Contributors can check out the source code from our
+  {{{https://git.apache.org/ranger.git/}Git repository}}
 

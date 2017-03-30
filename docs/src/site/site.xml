@@ -47,7 +47,7 @@ under the License.
 	  <item name="Wiki" href="https://cwiki.apache.org/confluence/display/RANGER/Index" />
       <item name="Quick Start Guide" href="quick_start_guide.html"/>
       <!-- According to http://jira.codehaus.org/browse/MNGSITE-152 -->
-      <item name="License" href="http://www.apache.org/licenses/"/>
+      <item name="License" href="https://www.apache.org/licenses/"/>
     </menu>
     <menu name="Project Information">
         <item name="Project Summary" href="project-summary.html"/>
@@ -70,7 +70,7 @@ under the License.
 </body>
 
 <poweredBy>
-    <logo name="Maven" href="http://maven.apache.org/"img="http://maven.apache.org/images/logos/maven-feather.png"/>
+    <logo name="Maven" href="http://maven.apache.org/" img="https://maven.apache.org/images/logos/maven-feather.png"/>
 </poweredBy>
 <custom>
     <fluidoSkin>

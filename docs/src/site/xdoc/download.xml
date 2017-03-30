@@ -23,7 +23,7 @@
 Use the links below to download a distribution of Apache Ranger from one of our mirrors. 
 It is good practice to verify the integrity of the distribution files. Apache Ranger releases are 
 available under the 
-<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
+<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
 LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </p>
 </subsection>
@@ -34,7 +34,7 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 Current Stable release is Apache Ranger 0.7.0:
 </p>
 <p>
-<a href="http://www.apache.org/dyn/closer.lua/ranger/0.7.0/apache-ranger-0.7.0.tar.gz">apache-ranger-0.7.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/0.7.0/apache-ranger-0.7.0.tar.gz">apache-ranger-0.7.0.tar.gz</a>
 (<a href="https://www.apache.org/dist/ranger/0.7.0/apache-ranger-0.7.0.tar.gz.asc">PGP</a>)
 (<a href="https://www.apache.org/dist/ranger/0.7.0/apache-ranger-0.7.0.tar.gz.mds">Digests</a>)
 </p>
@@ -44,7 +44,7 @@ Current Stable release is Apache Ranger 0.7.0:
 An older branch release is Apache Ranger 0.6.3:
 </p>
 <p>
-<a href="http://www.apache.org/dyn/closer.lua/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
 (<a href="https://www.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.asc">PGP</a>)
 (<a href="https://www.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.mds">Digests</a>)
 </p>
@@ -54,9 +54,9 @@ An older branch release is Apache Ranger 0.6.3:
 An older branch release is Apache Ranger 0.5.3:
 </p>
 <p>
-<a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
-(<a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.asc">PGP</a>)
-(<a href="http://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.mds">Digests</a>)
+<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
+(<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.asc">PGP</a>)
+(<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.mds">Digests</a>)
 </p>
 </li>
 </ul>
@@ -86,7 +86,7 @@ The digests are stored in the file called 'apache-ranger-*.tar.gz.mds'. You can 
 </subsection>
 <subsection name="Archive of old releases">
 <p>
-Older releases are available in the <a href="http://archive.apache.org/dist/incubator/ranger/">archive</a>.
+Older releases are available in the <a href="https://archive.apache.org/dist/incubator/ranger/">archive</a>.
 </p>
 </subsection>
 </section>
