@@ -62,7 +62,6 @@ public class RangerAccessResult {
 		this.isAuditedDetermined = other.getIsAuditedDetermined();
 		this.isAudited = other.getIsAudited();
 		this.auditPolicyId = other.getAuditPolicyId();
-		this.evaluatedPoliciesCount += other.getEvaluatedPoliciesCount();
 	}
 
 	/**

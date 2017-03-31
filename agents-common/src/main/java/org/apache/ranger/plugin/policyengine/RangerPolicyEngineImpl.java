@@ -202,6 +202,38 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public RangerDataMaskResult createDataMaskResult(RangerAccessRequest request) {
+		RangerDataMaskResult ret = new RangerDataMaskResult(this.getServiceName(), policyRepository.getServiceDef(), request);
+		switch (policyRepository.getAuditModeEnum()) {
+			case AUDIT_ALL:
+				ret.setIsAudited(true);
+				break;
+			case AUDIT_NONE:
+				ret.setIsAudited(false);
+				break;
+			default:
+				break;
+		}
+		return ret;
+	}
+
+	@Override
+	public RangerRowFilterResult createRowFilterResult(RangerAccessRequest request) {
+		RangerRowFilterResult ret = new RangerRowFilterResult(this.getServiceName(), policyRepository.getServiceDef(), request);
+		switch (policyRepository.getAuditModeEnum()) {
+			case AUDIT_ALL:
+				ret.setIsAudited(true);
+				break;
+			case AUDIT_NONE:
+				ret.setIsAudited(false);
+				break;
+			default:
+				break;
+		}
+		return ret;
+	}
+
+	@Override
 	public void preProcess(RangerAccessRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.preProcess(" + request + ")");
@@ -326,23 +358,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evalDataMaskPolicies(" + request + ")");
 		}
 
-		RangerDataMaskResult ret = new RangerDataMaskResult(getServiceName(), getServiceDef(), request);
-
-		if(request != null) {
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getDataMaskPolicyEvaluators(request.getResource());
-			for (RangerPolicyEvaluator evaluator : evaluators) {
-				evaluator.evaluate(request, ret);
-
-				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-					if(!StringUtils.equalsIgnoreCase(ret.getMaskType(), RangerPolicy.MASK_TYPE_NONE)) {
-						break;
-					} else {
-						ret.setMaskType(null);
-						ret.setIsAccessDetermined(false);
-					}
-				}
-			}
-		}
+		RangerDataMaskResult ret = evalDataMaskPoliciesNoAudit(request);
 
 		// no need to audit if mask is not enabled
 		if(! ret.isMaskEnabled()) {
@@ -368,22 +384,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evalRowFilterPolicies(" + request + ")");
 		}
 
-		RangerRowFilterResult ret = new RangerRowFilterResult(getServiceName(), getServiceDef(), request);
-
-		if(request != null) {
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getRowFilterPolicyEvaluators(request.getResource());
-			for (RangerPolicyEvaluator evaluator : evaluators) {
-				evaluator.evaluate(request, ret);
-
-				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
-					if(StringUtils.isNotEmpty(ret.getFilterExpr())) {
-						break;
-					} else {
-						ret.setIsAccessDetermined(false);
-					}
-				}
-			}
-		}
+		RangerRowFilterResult ret = evalRowFilterPoliciesNoAudit(request);
 
 		// no need to audit if filter is not enabled
 		if(! ret.isRowFilterEnabled()) {
@@ -675,7 +676,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					List<RangerPolicyEvaluator> evaluators = tagPolicyRepository.getPolicyEvaluators(tagEvalRequest.getResource());
 
 					for (RangerPolicyEvaluator evaluator : evaluators) {
-						tagEvalResult.incrementEvaluatedPoliciesCount();
+						result.incrementEvaluatedPoliciesCount();
 
 						evaluator.evaluate(tagEvalRequest, tagEvalResult);
 
@@ -697,8 +698,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					}
 
 					if (tagEvalResult.getIsAudited()) {
-						result.setIsAudited(true);
-						result.setAuditPolicyId(tagEvalResult.getAuditPolicyId());
+						result.setAuditResultFrom(tagEvalResult);
 					}
 
 					if (!result.getIsAccessDetermined() && tagEvalResult.getIsAccessDetermined()) {
@@ -725,6 +725,214 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowedForTagPolicies(" + request + ", " + result + ")");
+		}
+	}
+
+	RangerDataMaskResult evalDataMaskPoliciesNoAudit(RangerAccessRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalDataMaskPoliciesNoAudit(" + request + ")");
+		}
+
+		RangerDataMaskResult ret = createDataMaskResult(request);
+
+		if (ret != null && request != null) {
+			if (hasTagPolicies()) {
+				evalDataMaskPoliciesForTagPolicies(request, ret);
+
+				if (LOG.isDebugEnabled()) {
+					if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+						LOG.debug("RangerPolicyEngineImpl.evalDataMaskPoliciesNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + ret);
+					}
+				}
+			}
+			boolean isEvaluatedByTags        = ret.getIsAccessDetermined() && ret.getIsAllowed();
+			boolean evaluateResourcePolicies = hasResourcePolicies() && (!isEvaluatedByTags || !ret.getIsAuditedDetermined());
+
+			if (evaluateResourcePolicies) {
+				boolean                     findAuditByResource = !ret.getIsAuditedDetermined();
+				boolean                     foundInCache        = findAuditByResource && policyRepository.setAuditEnabledFromCache(request, ret);
+				List<RangerPolicyEvaluator> evaluators          = policyRepository.getDataMaskPolicyEvaluators(request.getResource());
+
+				for (RangerPolicyEvaluator evaluator : evaluators) {
+					ret.incrementEvaluatedPoliciesCount();
+					evaluator.evaluate(request, ret);
+
+					if(ret.getIsAccessDetermined()) {
+						if (StringUtils.equalsIgnoreCase(ret.getMaskType(), RangerPolicy.MASK_TYPE_NONE)) {
+							ret.setMaskType(null);
+						}
+
+						if (ret.getIsAuditedDetermined()) {
+							break;
+						}
+					}
+				}
+
+				if (findAuditByResource && !foundInCache) {
+					policyRepository.storeAuditEnabledInCache(request, ret);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalDataMaskPoliciesNoAudit(" + request + "): " + ret);
+		}
+		return ret;
+	}
+
+	protected void evalDataMaskPoliciesForTagPolicies(final RangerAccessRequest request, RangerDataMaskResult result) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalDataMaskPoliciesForTagPolicies(" + request + ", " + result + ")");
+		}
+
+		List<RangerPolicyEvaluator> tagEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getDataMaskPolicyEvaluators();
+
+		if (CollectionUtils.isNotEmpty(tagEvaluators)) {
+			Set<RangerTagForEval>       tags               = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+			List<PolicyEvaluatorForTag> dataMaskEvaluators = tagPolicyRepository.getDataMaskPolicyEvaluators(tags);
+
+			if (CollectionUtils.isNotEmpty(dataMaskEvaluators)) {
+				for (PolicyEvaluatorForTag dataMaskEvaluator : dataMaskEvaluators) {
+					RangerPolicyEvaluator evaluator      = dataMaskEvaluator.getEvaluator();
+					RangerTagForEval      tag            = dataMaskEvaluator.getTag();
+					RangerAccessRequest   tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerDataMaskResult  tagEvalResult  = createDataMaskResult(tagEvalRequest);
+
+					tagEvalResult.setAuditResultFrom(result);
+					tagEvalResult.setAccessResultFrom(result);
+
+					tagEvalResult.setMaskType(result.getMaskType());
+					tagEvalResult.setMaskCondition(result.getMaskCondition());
+					tagEvalResult.setMaskedValue(result.getMaskedValue());
+
+					result.incrementEvaluatedPoliciesCount();
+
+					evaluator.evaluate(tagEvalRequest, tagEvalResult);
+
+					if (tagEvalResult.getIsAudited()) {
+						result.setAuditResultFrom(tagEvalResult);
+					}
+
+					if (tagEvalResult.getIsAccessDetermined()) {
+						result.setAccessResultFrom(tagEvalResult);
+						result.setMaskType(tagEvalResult.getMaskType());
+						result.setMaskCondition(tagEvalResult.getMaskCondition());
+						result.setMaskedValue(tagEvalResult.getMaskedValue());
+
+						if (StringUtils.equalsIgnoreCase(result.getMaskType(), RangerPolicy.MASK_TYPE_NONE)) {
+							result.setMaskType(null);
+						}
+					}
+
+					if (result.getIsAuditedDetermined() && result.getIsAccessDetermined()) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("RangerPolicyEngineImpl.evalDataMaskPoliciesForTagPolicies: concluding eval of dataMask policies for tags: tag=" + tag.getType() + " with authorization=" + tagEvalResult.getIsAllowed());
+						}
+						break;            // Break out of datamask policy-evaluation loop
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalDataMaskPoliciesForTagPolicies(" + request + ", " + result + ")");
+		}
+	}
+
+	RangerRowFilterResult evalRowFilterPoliciesNoAudit(RangerAccessRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalRowFilterPoliciesNoAudit(" + request + ")");
+		}
+
+		RangerRowFilterResult ret = createRowFilterResult(request);
+
+		if (ret != null && request != null) {
+			if (hasTagPolicies()) {
+				evalRowFilterPoliciesForTagPolicies(request, ret);
+
+				if (LOG.isDebugEnabled()) {
+					if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
+						LOG.debug("RangerPolicyEngineImpl.evalRowFilterPoliciesNoAudit() - access and audit determined by tag policy. No resource policies will be evaluated, request=" + request + ", result=" + ret);
+					}
+				}
+			}
+			boolean isEvaluatedByTags        = ret.getIsAccessDetermined() && ret.getIsAllowed();
+			boolean evaluateResourcePolicies = hasResourcePolicies() && (!isEvaluatedByTags || !ret.getIsAuditedDetermined());
+
+			if (evaluateResourcePolicies) {
+				boolean                     findAuditByResource = !ret.getIsAuditedDetermined();
+				boolean                     foundInCache        = findAuditByResource && policyRepository.setAuditEnabledFromCache(request, ret);
+				List<RangerPolicyEvaluator> evaluators          = policyRepository.getRowFilterPolicyEvaluators(request.getResource());
+
+				for (RangerPolicyEvaluator evaluator : evaluators) {
+					ret.incrementEvaluatedPoliciesCount();
+					evaluator.evaluate(request, ret);
+
+					if(ret.getIsAuditedDetermined() && ret.getIsAccessDetermined()) {
+						break;
+					}
+				}
+
+				if (findAuditByResource && !foundInCache) {
+					policyRepository.storeAuditEnabledInCache(request, ret);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalRowFilterPoliciesNoAudit(" + request + "): " + ret);
+		}
+		return ret;
+	}
+
+	protected void evalRowFilterPoliciesForTagPolicies(final RangerAccessRequest request, RangerRowFilterResult result) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evalRowFilterPoliciesForTagPolicies(" + request + ", " + result + ")");
+		}
+
+		List<RangerPolicyEvaluator> tagEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getRowFilterPolicyEvaluators();
+
+		if (CollectionUtils.isNotEmpty(tagEvaluators)) {
+			Set<RangerTagForEval>       tags                = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+			List<PolicyEvaluatorForTag> rowFilterEvaluators = tagPolicyRepository.getRowFilterPolicyEvaluators(tags);
+
+			if (CollectionUtils.isNotEmpty(rowFilterEvaluators)) {
+				for (PolicyEvaluatorForTag rowFilterEvaluator : rowFilterEvaluators) {
+					RangerPolicyEvaluator evaluator      = rowFilterEvaluator.getEvaluator();
+					RangerTagForEval      tag            = rowFilterEvaluator.getTag();
+					RangerAccessRequest   tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerRowFilterResult tagEvalResult  = createRowFilterResult(tagEvalRequest);
+
+					tagEvalResult.setAuditResultFrom(result);
+					tagEvalResult.setAccessResultFrom(result);
+
+					tagEvalResult.setFilterExpr(result.getFilterExpr());
+
+					result.incrementEvaluatedPoliciesCount();
+
+					evaluator.evaluate(tagEvalRequest, tagEvalResult);
+
+					if (tagEvalResult.getIsAudited()) {
+						result.setAuditResultFrom(tagEvalResult);
+					}
+
+					if (tagEvalResult.getIsAccessDetermined()) {
+						result.setAccessResultFrom(tagEvalResult);
+						result.setFilterExpr(tagEvalResult.getFilterExpr());
+					}
+
+					if (result.getIsAuditedDetermined() && result.getIsAccessDetermined()) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("RangerPolicyEngineImpl.evalRowFilterPoliciesForTagPolicies: concluding eval of rowFilter policies for tags: tag=" + tag.getType() + " with authorization=" + tagEvalResult.getIsAllowed());
+						}
+						break;            // Break out of rowFilter policy-evaluation loop
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evalRowFilterPoliciesForTagPolicies(" + request + ", " + result + ")");
 		}
 	}
 
