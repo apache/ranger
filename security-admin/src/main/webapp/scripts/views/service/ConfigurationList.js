@@ -57,10 +57,12 @@ define(function(require) {
 		onRender : function() {
 		},
 		onInputNameChange : function(e) {
-			this.model.set('name', $(e.currentTarget).val());
+			this.model.set('name', $(e.currentTarget).val().trim());
+			this.ui.name.val($(e.currentTarget).val().trim());
 		},
 		onInputValueChange : function(e) {
-			this.model.set('value', $(e.currentTarget).val());
+			this.model.set('value', $(e.currentTarget).val().trim());
+			this.ui.value.val($(e.currentTarget).val().trim());
 		},
 		evDelete : function(){
 			var that = this;
