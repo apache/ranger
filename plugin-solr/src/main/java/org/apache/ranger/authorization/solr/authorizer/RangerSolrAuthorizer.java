@@ -179,6 +179,9 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			if (ip == null) {
 				ip = context.getHttpHeader("REMOTE_ADDR");
 			}
+			if (ip == null) {
+				ip = context.getRemoteAddr();
+			}
 
 			// Create the list of requests for access check. Each field is
 			// broken
@@ -270,6 +273,9 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			}
 			if (ipAddress == null) {
 				ipAddress = context.getHttpHeader("REMOTE_ADDR");
+			}
+			if (ipAddress == null) {
+				ipAddress = context.getRemoteAddr();
 			}
 
 			String userName = getUserName(context);
