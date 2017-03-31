@@ -49,6 +49,10 @@ public interface RangerPolicyEngine {
 
 	RangerAccessResult createAccessResult(RangerAccessRequest request);
 
+	RangerDataMaskResult createDataMaskResult(RangerAccessRequest request);
+
+	RangerRowFilterResult createRowFilterResult(RangerAccessRequest request);
+
 	void preProcess(RangerAccessRequest request);
 
 	void preProcess(Collection<RangerAccessRequest> requests);

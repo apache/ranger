@@ -25,7 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
@@ -230,6 +232,10 @@ class RangerPolicyRepository {
         return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
     }
 
+    List<PolicyEvaluatorForTag> getDataMaskPolicyEvaluators(Set<RangerTagForEval> tags) {
+        return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_DATAMASK);
+    }
+
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
         return rowFilterPolicyEvaluators;
     }
@@ -239,6 +245,11 @@ class RangerPolicyRepository {
 
         return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
     }
+
+    List<PolicyEvaluatorForTag> getRowFilterPolicyEvaluators(Set<RangerTagForEval> tags) {
+        return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_ROWFILTER);
+    }
+
     AuditModeEnum getAuditModeEnum() { return auditModeEnum; }
 
     private List<RangerPolicyEvaluator> getPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
@@ -297,6 +308,36 @@ class RangerPolicyRepository {
             LOG.debug("<== RangerPolicyRepository.getPolicyEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
         }
 
+        return ret;
+    }
+
+    private List<PolicyEvaluatorForTag> getSortedPolicyEvaluatorsForTags(Set<RangerTagForEval> tags, int policyType) {
+        List<PolicyEvaluatorForTag> ret = null;
+
+        if (CollectionUtils.isNotEmpty(tags) && getServiceDef() != null
+                && (policyType == RangerPolicy.POLICY_TYPE_ACCESS || policyType == RangerPolicy.POLICY_TYPE_DATAMASK || policyType == RangerPolicy.POLICY_TYPE_ROWFILTER)) {
+            ret = new ArrayList<PolicyEvaluatorForTag>();
+
+            for (RangerTagForEval tag : tags) {
+                RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
+                List<RangerPolicyEvaluator> evaluators = null;
+                if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+                    evaluators = getDataMaskPolicyEvaluators(resource);
+                } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                    evaluators = getRowFilterPolicyEvaluators(resource);
+                } else {
+                    evaluators = getPolicyEvaluators(resource);
+                }
+                if (CollectionUtils.isNotEmpty(evaluators)) {
+                    for (RangerPolicyEvaluator evaluator : evaluators) {
+                        ret.add(new PolicyEvaluatorForTag(evaluator, tag));
+                    }
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(ret)) {
+            Collections.sort(ret);
+        }
         return ret;
     }
 
@@ -391,7 +432,7 @@ class RangerPolicyRepository {
             }
 
             if(policiesToPrune != null) {
-	            rangerPolicies.removeAll(policiesToPrune);
+                rangerPolicies.removeAll(policiesToPrune);
             }
         }
 
@@ -426,11 +467,28 @@ class RangerPolicyRepository {
                     }
 
                     if(accessesToPrune != null) {
-	                    policyItemAccesses.removeAll(accessesToPrune);
+                        policyItemAccesses.removeAll(accessesToPrune);
                     }
 
                     if (policyItemAccesses.isEmpty() && !policyItem.getDelegateAdmin()) {
                         if(itemsToPrune == null) {
+                            itemsToPrune = new ArrayList<>();
+                        }
+
+                        itemsToPrune.add(policyItem);
+
+                        continue;
+                    }
+                }
+
+                if (policyItem instanceof RangerPolicy.RangerDataMaskPolicyItem) {
+                    RangerPolicyItemDataMaskInfo dataMaskInfo = ((RangerPolicy.RangerDataMaskPolicyItem) policyItem).getDataMaskInfo();
+                    String                       maskType     = dataMaskInfo.getDataMaskType();
+
+                    if (StringUtils.startsWith(maskType, prefix)) {
+                        dataMaskInfo.setDataMaskType(StringUtils.removeStart(maskType, prefix));
+                    } else if (maskType.contains(AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                        if (itemsToPrune == null) {
                             itemsToPrune = new ArrayList<>();
                         }
 
@@ -440,7 +498,7 @@ class RangerPolicyRepository {
             }
 
             if(itemsToPrune != null) {
-	            policyItems.removeAll(itemsToPrune);
+                policyItems.removeAll(itemsToPrune);
             }
         }
 
