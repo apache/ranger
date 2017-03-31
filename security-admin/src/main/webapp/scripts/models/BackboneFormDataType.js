@@ -44,6 +44,7 @@ define(function(require) {
 						return configs;
 					}
 				}
+				configs = _.sortBy(configs, function(m){ return m.itemId });
 				return configs;
 			};
 			var getValidators = function(formObj, v){
