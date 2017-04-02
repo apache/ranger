@@ -395,8 +395,8 @@ public class SearchUtil {
 			String sortType = searchCriteria.getSortType();
 			String querySortType = "asc";
 			if (sortType != null) {
-				if (sortType.equalsIgnoreCase("asc")
-						|| sortType.equalsIgnoreCase("desc")) {
+				if ("asc".equalsIgnoreCase(sortType)
+						|| "desc".equalsIgnoreCase(sortType)) {
 					querySortType = sortType;
 				} else {
 					logger.error("Invalid sortType. sortType=" + sortType);
@@ -589,17 +589,13 @@ public class SearchUtil {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ").append(
 								searchField.getFieldName());
-						if (searchField.getSearchType().equals(
-								SearchField.SEARCH_TYPE.LESS_THAN)) {
+						if (SearchField.SEARCH_TYPE.LESS_THAN.equals(searchField.getSearchType())) {
 							whereClause.append("< :");
-						} else if (searchField.getSearchType().equals(
-								SearchField.SEARCH_TYPE.LESS_EQUAL_THAN)) {
+						} else if (SearchField.SEARCH_TYPE.LESS_EQUAL_THAN.equals(searchField.getSearchType())) {
 							whereClause.append("<= :");
-						} else if (searchField.getSearchType().equals(
-								SearchField.SEARCH_TYPE.GREATER_THAN)) {
+						} else if (SearchField.SEARCH_TYPE.GREATER_THAN.equals(searchField.getSearchType())) {
 							whereClause.append("> :");
-						} else if (searchField.getSearchType().equals(
-								SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN)) {
+						} else if (SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN.equals(searchField.getSearchType())) {
 							whereClause.append(">= :");
 						}
 						whereClause.append(searchField.getClientFieldName());

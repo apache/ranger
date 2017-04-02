@@ -694,25 +694,25 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("resourceType") ) {
+		if( "resourceType".equals(fieldName) ) {
 			return "CommonEnums.ResourceType";
 		}
-		if( fieldName.equals("isEncrypt") ) {
+		if( "isEncrypt".equals(fieldName) ) {
 			return "CommonEnums.BooleanValue";
 		}
-		if( fieldName.equals("isRecursive") ) {
+		if( "isRecursive".equals(fieldName) ) {
 			return "CommonEnums.BooleanValue";
 		}
-		if( fieldName.equals("resourceStatus") ) {
+		if( "resourceStatus".equals(fieldName) ) {
 			return "CommonEnums.ActiveStatus";
 		}
-		if( fieldName.equals("tableType") ) {
+		if( "tableType".equals(fieldName) ) {
 			return "CommonEnums.PolicyType";
 		}
-		if( fieldName.equals("columnType") ) {
+		if( "columnType".equals(fieldName) ) {
 			return "CommonEnums.PolicyType";
 		}
-		if( fieldName.equals("assetType") ) {
+		if( "assetType".equals(fieldName) ) {
 			return "CommonEnums.AssetType";
 		}
 		//Later TODO

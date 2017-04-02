@@ -39,7 +39,7 @@ public class RestUtil {
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
 					try {
-						if (cookie.getName().equals(timeOffsetCookieName)) {
+						if (timeOffsetCookieName.equals(cookie.getName())) {
 							timeOffset = cookie.getValue();
 							if (timeOffset != null) {
 								cookieVal = Integer.parseInt(timeOffset);

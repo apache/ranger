@@ -385,13 +385,13 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("permFor") ) {
+		if( "permFor".equals(fieldName) ) {
 			return "CommonEnums.XAPermForType";
 		}
-		if( fieldName.equals("permType") ) {
+		if( "permType".equals(fieldName) ) {
 			return "CommonEnums.XAPermType";
 		}
-		if( fieldName.equals("isRecursive") ) {
+		if( "isRecursive".equals(fieldName) ) {
 			return "CommonEnums.BooleanValue";
 		}
 		//Later TODO

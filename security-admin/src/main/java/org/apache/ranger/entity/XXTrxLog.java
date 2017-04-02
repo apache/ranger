@@ -516,7 +516,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("objectClassType") ) {
+		if( "objectClassType".equals(fieldName) ) {
 			return "CommonEnums.ClassTypes";
 		}
 		//Later TODO

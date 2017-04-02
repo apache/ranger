@@ -499,18 +499,15 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			if (tUser != null) {
 				if (tUser.getPublicScreenName() != null
 						&& !tUser.getPublicScreenName().trim().isEmpty()
-						&& !tUser.getPublicScreenName().trim()
-								.equalsIgnoreCase("null")) {
+						&& !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
 					viewBean.setOwner(tUser.getPublicScreenName());
 				} else {
 					if (tUser.getFirstName() != null
 							&& !tUser.getFirstName().trim().isEmpty()
-							&& !tUser.getFirstName().trim()
-									.equalsIgnoreCase("null")) {
+							&& !"null".equalsIgnoreCase(tUser.getFirstName().trim())) {
 						if (tUser.getLastName() != null
 								&& !tUser.getLastName().trim().isEmpty()
-								&& !tUser.getLastName().trim()
-										.equalsIgnoreCase("null")) {
+								&& !"null".equalsIgnoreCase(tUser.getLastName().trim())) {
 							viewBean.setOwner(tUser.getFirstName() + " "
 									+ tUser.getLastName());
 						} else {
@@ -528,18 +525,15 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			if (tUser != null) {
 				if (tUser.getPublicScreenName() != null
 						&& !tUser.getPublicScreenName().trim().isEmpty()
-						&& !tUser.getPublicScreenName().trim()
-								.equalsIgnoreCase("null")) {
+						&& !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
 					viewBean.setUpdatedBy(tUser.getPublicScreenName());
 				} else {
 					if (tUser.getFirstName() != null
 							&& !tUser.getFirstName().trim().isEmpty()
-							&& !tUser.getFirstName().trim()
-									.equalsIgnoreCase("null")) {
+							&& !"null".equalsIgnoreCase(tUser.getFirstName().trim())) {
 						if (tUser.getLastName() != null
 								&& !tUser.getLastName().trim().isEmpty()
-								&& !tUser.getLastName().trim()
-										.equalsIgnoreCase("null")) {
+								&& !"null".equalsIgnoreCase(tUser.getLastName().trim())) {
 							viewBean.setUpdatedBy(tUser.getFirstName() + " "
 									+ tUser.getLastName());
 						} else {
@@ -860,7 +854,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
 			// Add sort type
 			String sortType = searchCriteria.getSortType();
-			if (sortType != null && sortType.equalsIgnoreCase("desc")) {
+			if (sortType != null && "desc".equalsIgnoreCase(sortType)) {
 				criteria.orderBy(criteriaBuilder.desc(from.get(sortByField)));
 			} else {
 				criteria.orderBy(criteriaBuilder.asc(from.get(sortByField)));

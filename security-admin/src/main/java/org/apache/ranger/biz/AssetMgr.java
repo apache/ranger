@@ -149,7 +149,7 @@ public class AssetMgr extends AssetMgrBase {
 		File file = null;
 		try {
 			if (fileType != null) {
-				if (fileType.equalsIgnoreCase("json")) {
+				if ("json".equalsIgnoreCase(fileType)) {
 					file = jsonUtil.writeJsonToFile(xResource,
 							xResource.getName());
 				} else {
@@ -211,7 +211,7 @@ public class AssetMgr extends AssetMgrBase {
 
 		policyExportAudit.setClientIP(ipAddress);
 
-		if (epoch != null && !epoch.trim().isEmpty() && !epoch.equalsIgnoreCase("null")) {
+		if (epoch != null && !epoch.trim().isEmpty() && !"null".equalsIgnoreCase(epoch)) {
 			policyExportAudit.setRequestedEpoch(Long.parseLong(epoch));
 		} else {
 			policyExportAudit.setRequestedEpoch(0L);
@@ -253,7 +253,7 @@ public class AssetMgr extends AssetMgrBase {
 			try {
 				LdapName ln = new LdapName(dn);
 				for (Rdn rdn : ln.getRdns()) {
-					if (rdn.getType().equalsIgnoreCase("CN")) {
+					if ("CN".equalsIgnoreCase(rdn.getType())) {
 						commonName = rdn.getValue() + "";
 						break;
 					}
@@ -976,10 +976,10 @@ public class AssetMgr extends AssetMgrBase {
         }
         if (searchCriteria.getSortType() == null) {
             searchCriteria.setSortType("desc");
-        } else if (!searchCriteria.getSortType().equalsIgnoreCase("asc") && !searchCriteria.getSortType().equalsIgnoreCase("desc")) {
+        } else if (!"asc".equalsIgnoreCase(searchCriteria.getSortType()) && !"desc".equalsIgnoreCase(searchCriteria.getSortType())) {
             searchCriteria.setSortType("desc");
         }
-        if (xaBizUtil.getAuditDBType().equalsIgnoreCase(RangerBizUtil.AUDIT_STORE_SOLR)) {
+        if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
@@ -1007,14 +1007,14 @@ public class AssetMgr extends AssetMgrBase {
 		for (VXTrxLog xTrxLog : xTrxLogList) {
 			VXTrxLog vXTrxLog = new VXTrxLog();
 			vXTrxLog = xTrxLog;
-			if(vXTrxLog.getPreviousValue()==null || vXTrxLog.getPreviousValue().equalsIgnoreCase("null")){
+			if(vXTrxLog.getPreviousValue()==null || "null".equalsIgnoreCase(vXTrxLog.getPreviousValue())){
 				vXTrxLog.setPreviousValue("");
 			}
-			if(vXTrxLog.getAttributeName()!=null && vXTrxLog.getAttributeName().equalsIgnoreCase("Password")){
+			if(vXTrxLog.getAttributeName()!=null && "Password".equalsIgnoreCase(vXTrxLog.getAttributeName())){
 				vXTrxLog.setPreviousValue("*********");
 				vXTrxLog.setNewValue("***********");
 			}
-			if(vXTrxLog.getAttributeName()!=null && vXTrxLog.getAttributeName().equalsIgnoreCase("Connection Configurations")){
+			if(vXTrxLog.getAttributeName()!=null && "Connection Configurations".equalsIgnoreCase(vXTrxLog.getAttributeName())){
 				if(vXTrxLog.getPreviousValue()!=null && vXTrxLog.getPreviousValue().contains("password")){
 					String tempPreviousStr=vXTrxLog.getPreviousValue();					
 					String tempPreviousArr[]=vXTrxLog.getPreviousValue().split(",");					

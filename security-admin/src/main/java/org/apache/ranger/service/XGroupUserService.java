@@ -155,11 +155,11 @@ public class XGroupUserService extends
 					value = xXGroup.getName();
 				}
 				
-				if(action.equalsIgnoreCase("create")){
+				if("create".equalsIgnoreCase(action)){
 					xTrxLog.setNewValue(value);
-				} else if(action.equalsIgnoreCase("delete")){
+				} else if("delete".equalsIgnoreCase(action)){
 					xTrxLog.setPreviousValue(value);
-				} else if(action.equalsIgnoreCase("update")){
+				} else if("update".equalsIgnoreCase(action)){
 					// No Change.
 					xTrxLog.setNewValue(value);
 					xTrxLog.setPreviousValue(value);

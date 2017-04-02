@@ -105,7 +105,7 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Override
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
+		if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
 			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
 		} else {
 			return super.searchXAccessAudits(searchCriteria);
@@ -114,7 +114,7 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Override
 	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-		if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
+		if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
 			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else {
 			return super.getXAccessAuditSearchCount(searchCriteria);

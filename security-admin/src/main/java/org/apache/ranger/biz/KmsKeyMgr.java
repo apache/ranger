@@ -587,7 +587,7 @@ public class KmsKeyMgr {
 	}
 
 	private boolean checkKerberos() throws Exception {
-		if(PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "simple").equalsIgnoreCase(KERBEROS_TYPE)){
+		if(KERBEROS_TYPE.equalsIgnoreCase(PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "simple"))){
 			return true;
 		}else{
 			return false;

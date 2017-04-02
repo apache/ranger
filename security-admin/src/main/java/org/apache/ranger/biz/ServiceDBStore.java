@@ -1508,7 +1508,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (StringUtils.isNotBlank(newTagServiceName)) {
 			RangerService tmp = getServiceByName(newTagServiceName);
 
-			if (tmp == null || !tmp.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			if (tmp == null || !EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(tmp.getType())) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("ServiceDBStore.updateService() - " + newTagServiceName + " does not refer to a valid tag service.(" + service + ")");
 				}
@@ -1879,7 +1879,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updatePolicySignature(policy);
 
 		boolean isTagVersionUpdateNeeded = false;
-		if (service.getType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+		if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(service.getType())) {
 			isTagVersionUpdateNeeded = existing.getIsEnabled() ? !policy.getIsEnabled() : policy.getIsEnabled();
 			isTagVersionUpdateNeeded = isTagVersionUpdateNeeded || !StringUtils.equals(existing.getResourceSignature(), policy.getResourceSignature());
 		}
@@ -3783,7 +3783,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Download, serviceUser);
 							chkServiceUpdate = true;
 		                }
-		                if((!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Grant_Revoke)) && (rangerService.getType().equalsIgnoreCase("hbase") || rangerService.getType().equalsIgnoreCase("hive"))){
+		                if((!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Grant_Revoke)) && ("hbase".equalsIgnoreCase(rangerService.getType()) || "hive".equalsIgnoreCase(rangerService.getType()))){
 							rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Grant_Revoke, serviceUser);
 							chkServiceUpdate = true;
 		                }

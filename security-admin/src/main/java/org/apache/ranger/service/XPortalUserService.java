@@ -81,7 +81,7 @@ public class XPortalUserService extends
 
 	public List<XXTrxLog> getTransactionLog(VXPortalUser vObj,
 			XXPortalUser xObj, String action) {
-		if (vObj == null || action == null || (action.equalsIgnoreCase("update") && xObj == null)) {
+		if (vObj == null || action == null || ("update".equalsIgnoreCase(action) && xObj == null)) {
 			return null;
 		}
 
@@ -117,14 +117,14 @@ public class XPortalUserService extends
 					value = "" + field.get(vObj);
 				}
 
-				if (action.equalsIgnoreCase("create")) {
+				if ("create".equalsIgnoreCase(action)) {
 					if (stringUtil.isEmpty(value)) {
 						continue;
 					}
 					xTrxLog.setNewValue(value);
-				} else if (action.equalsIgnoreCase("delete")) {
+				} else if ("delete".equalsIgnoreCase(action)) {
 					xTrxLog.setPreviousValue(value);
-				} else if (action.equalsIgnoreCase("update")) {
+				} else if ("update".equalsIgnoreCase(action)) {
 					String oldValue = null;
 					Field[] xFields = xObj.getClass().getDeclaredFields();
 
@@ -147,7 +147,7 @@ public class XPortalUserService extends
 							break;
 						}
 					}
-					if (fieldName.equalsIgnoreCase("emailAddress")) {
+					if ("emailAddress".equalsIgnoreCase(fieldName)) {
 						if (!stringUtil.validateEmail(oldValue)) {
 							oldValue = "";
 						}

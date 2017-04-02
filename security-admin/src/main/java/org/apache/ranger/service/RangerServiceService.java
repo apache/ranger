@@ -157,7 +157,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 			}
 			Field[] superClassFields = vObj.getClass().getSuperclass().getDeclaredFields();
 			for(Field field : superClassFields) {
-				if(field.getName().equalsIgnoreCase("isEnabled")) {
+				if("isEnabled".equalsIgnoreCase(field.getName())) {
 					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, action);
 					if(xTrx != null) {
 						trxLogList.add(xTrx);
@@ -243,7 +243,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 							}
 						} else if (!entry.getValue().equalsIgnoreCase(
 								xConfig.get(key))) {
-							if (key.equalsIgnoreCase("password")
+							if ("password".equalsIgnoreCase(key)
 									&& entry.getValue().equalsIgnoreCase(
 											hiddenPasswordString)) {
 								continue;
@@ -295,7 +295,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		Map<String, String> configs = service.getConfigs();
 		
 		String pwd = configs.get(ServiceDBStore.CONFIG_KEY_PASSWORD);
-		if(!stringUtil.isEmpty(pwd) && pwd.equalsIgnoreCase(ServiceDBStore.HIDDEN_PASSWORD_STR)) {
+		if(!stringUtil.isEmpty(pwd) && ServiceDBStore.HIDDEN_PASSWORD_STR.equalsIgnoreCase(pwd)) {
 			XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(),
 					ServiceDBStore.CONFIG_KEY_PASSWORD);
 			if(pwdConfig != null) {

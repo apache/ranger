@@ -70,7 +70,7 @@ public class StringUtil implements Serializable {
 	}
 
 	public boolean isEmptyOrWildcardAsterisk(String str) {
-		return isEmpty(str) || str.equals(WILDCARD_ASTERISK);
+		return isEmpty(str) || WILDCARD_ASTERISK.equals(str);
 	}
 
 	public boolean equals(String str1, String str2) {

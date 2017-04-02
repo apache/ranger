@@ -172,12 +172,12 @@ public class RangerBizUtil {
 	 * @return
 	 */
 	public int getMimeTypeInt(String contentType) {
-		if (contentType.equalsIgnoreCase("JPEG")
-				|| contentType.equalsIgnoreCase("JPG")
+		if ("JPEG".equalsIgnoreCase(contentType)
+				|| "JPG".equalsIgnoreCase(contentType)
 				|| contentType.endsWith("jpg") || contentType.endsWith("jpeg")) {
 			return RangerConstants.MIME_JPEG;
 		}
-		if (contentType.equalsIgnoreCase("PNG") || contentType.endsWith("png")) {
+		if ("PNG".equalsIgnoreCase(contentType) || contentType.endsWith("png")) {
 			return RangerConstants.MIME_PNG;
 		}
 		return RangerConstants.MIME_UNKNOWN;
@@ -880,11 +880,11 @@ public class RangerBizUtil {
 			// if permission is enabled then load Topologies,services list from
 			// resource
 			if (hasPermission) {
-				String[] xTopologies = (xResource.getTopologies() == null || xResource
-						.getTopologies().equalsIgnoreCase("")) ? null
+				String[] xTopologies = (xResource.getTopologies() == null || "".equalsIgnoreCase(xResource
+						.getTopologies())) ? null
 						: stringUtil.split(xResource.getTopologies(), ",");
-				String[] xServices = (xResource.getServices() == null || xResource
-						.getServices().equalsIgnoreCase("")) ? null
+				String[] xServices = (xResource.getServices() == null || "".equalsIgnoreCase(xResource
+						.getServices())) ? null
 						: stringUtil.split(xResource.getServices(), ",");
 
 				boolean matchFound = false;
@@ -967,8 +967,8 @@ public class RangerBizUtil {
 			// if permission is enabled then load Topologies,services list from
 			// resource
 			if (hasPermission) {
-				String[] xTopologies = (xResource.getTopologies() == null || xResource
-						.getTopologies().equalsIgnoreCase("")) ? null
+				String[] xTopologies = (xResource.getTopologies() == null || "".equalsIgnoreCase(xResource
+						.getTopologies())) ? null
 						: stringUtil.split(xResource.getTopologies(), ",");
 				/*
 				 * String[] xServices = (xResource.getServices() == null ||
@@ -1453,9 +1453,9 @@ public class RangerBizUtil {
 				return false;
 			}
 
-			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
-			} else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			} else if ((isSysAdmin || isUser) && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
 			}
 		}
@@ -1475,9 +1475,9 @@ public class RangerBizUtil {
 				return false;
 			}
 
-			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
-			} else if (isUser && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+			} else if (isUser && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
 			}
 			// else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
@@ -1506,7 +1506,7 @@ public class RangerBizUtil {
 	public void hasKMSPermissions(String objType, String implClassName) {
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 
-		if (session.isKeyAdmin() && !implClassName.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+		if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
 			throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
 					MessageEnums.OPER_NO_PERMISSION);
 		}
@@ -1514,7 +1514,7 @@ public class RangerBizUtil {
 		// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
 		// services including KMS
 
-		if (objType.equalsIgnoreCase("Service-Def") && session.isUserAdmin() && implClassName.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+		if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
 			throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
 					MessageEnums.OPER_NO_PERMISSION);
 		}
@@ -1557,7 +1557,7 @@ public class RangerBizUtil {
 			String[] userList = userNames.split(",");
 			if(userList != null){
 				for (String u : userList) {
-					if (u.equals("*") || (user != null && u.equalsIgnoreCase(user))) {
+					if ("*".equals(u) || (user != null && u.equalsIgnoreCase(user))) {
 						return true;
 					}
 				}
@@ -1575,7 +1575,7 @@ public class RangerBizUtil {
 			String[] userList = userNames.split(",");
 			if (userList != null) {
 				for (String u : userList) {
-					if (u.equals("*") || (userName != null && u.equalsIgnoreCase(userName))) {
+					if ("*".equals(u) || (userName != null && u.equalsIgnoreCase(userName))) {
 						return true;
 					}
 				}

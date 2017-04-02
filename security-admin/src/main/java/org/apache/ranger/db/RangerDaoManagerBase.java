@@ -203,167 +203,167 @@ public abstract class RangerDaoManagerBase {
 	}
 
 	public BaseDao<?> getDaoForClassName(String className) {
-		if (className.equals("XXDBBase")) {
+		if ("XXDBBase".equals(className)) {
 			return getXXDBBase();
 		}
-		if (className.equals("XXAuthSession")) {
+		if ("XXAuthSession".equals(className)) {
 			return getXXAuthSession();
 		}
-		if (className.equals("XXPortalUser")) {
+		if ("XXPortalUser".equals(className)) {
 			return getXXPortalUser();
 		}
-		if (className.equals("XXPortalUserRole")) {
+		if ("XXPortalUserRole".equals(className)) {
 			return getXXPortalUserRole();
 		}
-		if (className.equals("XXAsset")) {
+		if ("XXAsset".equals(className)) {
 			return getXXAsset();
 		}
-		if (className.equals("XXResource")) {
+		if ("XXResource".equals(className)) {
 			return getXXResource();
 		}
-		if (className.equals("XXCredentialStore")) {
+		if ("XXCredentialStore".equals(className)) {
 			return getXXCredentialStore();
 		}
-		if (className.equals("XXGroup")) {
+		if ("XXGroup".equals(className)) {
 			return getXXGroup();
 		}
-		if (className.equals("XXUser")) {
+		if ("XXUser".equals(className)) {
 			return getXXUser();
 		}
-		if (className.equals("XXGroupUser")) {
+		if ("XXGroupUser".equals(className)) {
 			return getXXGroupUser();
 		}
-		if (className.equals("XXGroupGroup")) {
+		if ("XXGroupGroup".equals(className)) {
 			return getXXGroupGroup();
 		}
-		if (className.equals("XXPermMap")) {
+		if ("XXPermMap".equals(className)) {
 			return getXXPermMap();
 		}
-		if (className.equals("XXAuditMap")) {
+		if ("XXAuditMap".equals(className)) {
 			return getXXAuditMap();
 		}
-		if (className.equals("XXPolicyExportAudit")) {
+		if ("XXPolicyExportAudit".equals(className)) {
 			return getXXPolicyExportAudit();
 		}
-		if (className.equals("XXTrxLog")) {
+		if ("XXTrxLog".equals(className)) {
 			return getXXTrxLog();
 		}
-		if (className.equals("XXAccessAudit")) {
+		if ("XXAccessAudit".equals(className)) {
 			return getXXAccessAudit();
 		}
-		if (className.equals("XXPolicy")) {
+		if ("XXPolicy".equals(className)) {
 			return getXXPolicy();
 		}
-		if (className.equals("XXService")) {
+		if ("XXService".equals(className)) {
 			return getXXService();
 		}
-		if (className.equals("XXPolicyItem")) {
+		if ("XXPolicyItem".equals(className)) {
 			return getXXPolicyItem();
 		}
-		if (className.equals("XXServiceDef")) {
+		if ("XXServiceDef".equals(className)) {
 			return getXXServiceDef();
 		}
-		if (className.equals("XXServiceConfigDef")) {
+		if ("XXServiceConfigDef".equals(className)) {
 			return getXXServiceConfigDef();
 		}
-		if (className.equals("XXResourceDef")) {
+		if ("XXResourceDef".equals(className)) {
 			return getXXResourceDef();
 		}
-		if (className.equals("XXAccessTypeDef")) {
+		if ("XXAccessTypeDef".equals(className)) {
 			return getXXAccessTypeDef();
 		}
-		if (className.equals("XXAccessTypeDefGrants")) {
+		if ("XXAccessTypeDefGrants".equals(className)) {
 			return getXXAccessTypeDefGrants();
 		}
-		if (className.equals("XXPolicyConditionDef")) {
+		if ("XXPolicyConditionDef".equals(className)) {
 			return getXXPolicyConditionDef();
 		}
-		if (className.equals("XXEnumDef")) {
+		if ("XXEnumDef".equals(className)) {
 			return getXXEnumDef();
 		}
-		if (className.equals("XXEnumElementDef")) {
+		if ("XXEnumElementDef".equals(className)) {
 			return getXXEnumElementDef();
 		}
-		if (className.equals("XXServiceConfigMap")) {
+		if ("XXServiceConfigMap".equals(className)) {
 			return getXXServiceConfigMap();
 		}
-		if (className.equals("XXPolicyResource")) {
+		if ("XXPolicyResource".equals(className)) {
 			return getXXPolicyResource();
 		}
-		if (className.equals("XXPolicyResourceMap")) {
+		if ("XXPolicyResourceMap".equals(className)) {
 			return getXXPolicyResourceMap();
 		}
-		if (className.equals("XXPolicyItemAccess")) {
+		if ("XXPolicyItemAccess".equals(className)) {
 			return getXXPolicyItemAccess();
 		}
-		if (className.equals("XXPolicyItemCondition")) {
+		if ("XXPolicyItemCondition".equals(className)) {
 			return getXXPolicyItemCondition();
 		}
-		if (className.equals("XXPolicyItemUserPerm")) {
+		if ("XXPolicyItemUserPerm".equals(className)) {
 			return getXXPolicyItemUserPerm();
 		}
-		if (className.equals("XXPolicyItemGroupPerm")) {
+		if ("XXPolicyItemGroupPerm".equals(className)) {
 			return getXXPolicyItemGroupPerm();
 		}
-		if (className.equals("XXDataHist")) {
+		if ("XXDataHist".equals(className)) {
 			return getXXDataHist();
 		}
-		if (className.equals("XXPolicyWithAssignedId")) {
+		if ("XXPolicyWithAssignedId".equals(className)) {
 			return getXXPolicyWithAssignedId();
 		}
-		if (className.equals("XXServiceWithAssignedId")) {
+		if ("XXServiceWithAssignedId".equals(className)) {
 			return getXXServiceWithAssignedId();
 		}
-		if (className.equals("XXModuleDef")) {
+		if ("XXModuleDef".equals(className)) {
 			return getXXModuleDef();
 		}
-		if (className.equals("XXUserPermission")) {
+		if ("XXUserPermission".equals(className)) {
 			return getXXUserPermission();
 		}
-		if (className.equals("XXGroupPermission")) {
+		if ("XXGroupPermission".equals(className)) {
 			return getXXGroupPermission();
 		}
-		if (className.equals("XXServiceDefWithAssignedId")) {
+		if ("XXServiceDefWithAssignedId".equals(className)) {
 			return getXXServiceDefWithAssignedId();
 		}
 
-		if (className.equals("XXTagDef")) {
+		if ("XXTagDef".equals(className)) {
 			return getXXTagDef();
 		}
-		if (className.equals("XXTagAttributeDef")) {
+		if ("XXTagAttributeDef".equals(className)) {
 			return getXXTagAttributeDef();
 		}
-		if (className.equals("XXServiceResource")) {
+		if ("XXServiceResource".equals(className)) {
 			return getXXServiceResource();
 		}
-		if (className.equals("XXServiceResourceElement")) {
+		if ("XXServiceResourceElement".equals(className)) {
 			return getXXServiceResourceElement();
 		}
-		if (className.equals("XXServiceResourceElementValue")) {
+		if ("XXServiceResourceElementValue".equals(className)) {
 			return getXXServiceResourceElementValue();
 		}
-		if (className.equals("XXTag")) {
+		if ("XXTag".equals(className)) {
 			return getXXTag();
 		}
-		if (className.equals("XXTagAttribute")) {
+		if ("XXTagAttribute".equals(className)) {
 			return getXXTagAttribute();
 		}
-		if (className.equals("XXTagResourceMap")) {
+		if ("XXTagResourceMap".equals(className)) {
 			return getXXTagResourceMap();
 		}
-		if (className.equals("XXDataMaskTypeDef")) {
+		if ("XXDataMaskTypeDef".equals(className)) {
 			return getXXDataMaskTypeDef();
 		}
-		if (className.equals("XXPolicyItemDataMaskInfo")) {
+		if ("XXPolicyItemDataMaskInfo".equals(className)) {
 			return getXXPolicyItemDataMaskInfo();
 		}
-		if (className.equals("XXPolicyItemRowFilterInfo")) {
+		if ("XXPolicyItemRowFilterInfo".equals(className)) {
 			return getXXPolicyItemRowFilterInfo();
 		}
-		if (className.equals("XXServiceVersionInfo")) {
+		if ("XXServiceVersionInfo".equals(className)) {
 			return getXXServiceVersionInfo();
 		}
-		if (className.equals("XXPluginInfo")) {
+		if ("XXPluginInfo".equals(className)) {
 			return getXXPluginInfo();
 		}
 		logger.error("No DaoManager found for className=" + className, new Throwable());

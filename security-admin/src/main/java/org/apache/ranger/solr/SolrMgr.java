@@ -68,7 +68,7 @@ public class SolrMgr {
 		if (!initDone) {
 			synchronized (lock) {
 				if (!initDone) {
-					if (rangerBizUtil.getAuditDBType().equalsIgnoreCase("solr")) {
+					if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
 						String zkHosts = PropertiesUtil
 								.getProperty(SOLR_ZK_HOSTS);
 						if (zkHosts == null) {
@@ -94,13 +94,13 @@ public class SolrMgr {
 									.getProperty("ranger.solr.url");
 						}
 
-						if (zkHosts != null && !zkHosts.trim().equals("")
-								&& !zkHosts.trim().equalsIgnoreCase("none")) {
+						if (zkHosts != null && !"".equals(zkHosts.trim())
+								&& !"none".equalsIgnoreCase(zkHosts.trim())) {
 							zkHosts = zkHosts.trim();
 							String collectionName = PropertiesUtil
 									.getProperty(SOLR_COLLECTION_NAME);
 							if (collectionName == null
-									|| collectionName.equalsIgnoreCase("none")) {
+									|| "none".equalsIgnoreCase(collectionName)) {
 								collectionName = DEFAULT_COLLECTION_NAME;
 							}
 
@@ -124,7 +124,7 @@ public class SolrMgr {
 
 						} else {
 							if (solrURL == null || solrURL.isEmpty()
-									|| solrURL.equalsIgnoreCase("none")) {
+									|| "none".equalsIgnoreCase(solrURL)) {
 								logger.fatal("Solr ZKHosts and URL for Audit are empty. Please set property "
 										+ SOLR_ZK_HOSTS
 										+ " or "

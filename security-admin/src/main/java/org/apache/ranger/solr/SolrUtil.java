@@ -276,7 +276,7 @@ public class SolrUtil {
 			// Add sort type
 			String sortType = searchCriteria.getSortType();
 			ORDER order = ORDER.asc;
-			if (sortType != null && sortType.equalsIgnoreCase("desc")) {
+			if (sortType != null && "desc".equalsIgnoreCase(sortType)) {
 				order = ORDER.desc;
 
 			}

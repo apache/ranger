@@ -279,10 +279,10 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("activeStatus") ) {
+		if( "activeStatus".equals(fieldName) ) {
 			return "CommonEnums.ActiveStatus";
 		}
-		if( fieldName.equals("assetType") ) {
+		if( "assetType".equals(fieldName) ) {
 			return "CommonEnums.AssetType";
 		}
 		//Later TODO

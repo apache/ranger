@@ -460,16 +460,16 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("authStatus") ) {
+		if( "authStatus".equals(fieldName) ) {
 			return "CommonEnums.AuthStatus";
 		}
-		if( fieldName.equals("authType") ) {
+		if( "authType".equals(fieldName) ) {
 			return "CommonEnums.AuthType";
 		}
-		if( fieldName.equals("authProvider") ) {
+		if( "authProvider".equals(fieldName) ) {
 			return "CommonEnums.AuthType";
 		}
-		if( fieldName.equals("deviceType") ) {
+		if( "deviceType".equals(fieldName) ) {
 			return "CommonEnums.DeviceType";
 		}
 		//Later TODO

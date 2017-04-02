@@ -93,7 +93,7 @@ public class MetricUtil extends BaseLoader  {
 			if (args.length != 2) {
 				System.out.println("type: Incorrect Arguments usage : -type policies | audits | usergroup | services | database | contextenrichers | denyconditions");
 			} else {
-				if (!(args[0].equalsIgnoreCase("-type")) || !(args[1].equalsIgnoreCase("policies") || args[1].equalsIgnoreCase("audits") || args[1].equalsIgnoreCase("usergroup") || args[1].equalsIgnoreCase("services") || args[1].equalsIgnoreCase("database") || args[1].equalsIgnoreCase("contextenrichers") || args[1].equalsIgnoreCase("denyconditions"))) {
+				if (!("-type".equalsIgnoreCase(args[0])) || !("policies".equalsIgnoreCase(args[1]) || "audits".equalsIgnoreCase(args[1]) || "usergroup".equalsIgnoreCase(args[1]) || "services".equalsIgnoreCase(args[1]) || "database".equalsIgnoreCase(args[1]) || "contextenrichers".equalsIgnoreCase(args[1]) || "denyconditions".equalsIgnoreCase(args[1]))) {
 					System.out.println("type: Incorrect Arguments usage : -type policies | audits | usergroup | services | database | contextenrichers | denyconditions");
 				} else {
 					metricType = args[1];
@@ -447,7 +447,7 @@ public class MetricUtil extends BaseLoader  {
 				PList<RangerPolicy> policiestype = svcStore.getPaginatedPolicies(policyFilter1);
 				long count = policiestype.getTotalCount();
 				if (count != 0) {
-					if (!serviceName.equalsIgnoreCase("tag")) {
+					if (!"tag".equalsIgnoreCase(serviceName)) {
 						servicesforPolicyType.put(serviceName, count);
 					} else {
 						tagCount = count;

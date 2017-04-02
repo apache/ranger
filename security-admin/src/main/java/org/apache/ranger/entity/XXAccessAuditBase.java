@@ -647,10 +647,10 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("auditType") ) {
+		if( "auditType".equals(fieldName) ) {
 			return "CommonEnums.AssetType";
 		}
-		if( fieldName.equals("accessResult") ) {
+		if( "accessResult".equals(fieldName) ) {
 			return "CommonEnums.AccessResult";
 		}
 		return null;

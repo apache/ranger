@@ -93,8 +93,8 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 		if (logStdOut) {
 			String path = request.getRequestUri().getPath();
 
-			if ((request.getMediaType() == null || !request.getMediaType()
-					.getType().equals("multipart"))
+			if ((request.getMediaType() == null || !"multipart".equals(request.getMediaType()
+					.getType()))
 					&& !path.endsWith("/service/general/logs")) {
 				try {
 					request = super.filter(request);
@@ -124,7 +124,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 				logger.info("DELETE ME: Response= mediaType is null");
 			}
 			if (response.getMediaType() == null
-					|| !response.getMediaType().getType().equals("image")) {
+					|| !"image".equals(response.getMediaType().getType())) {
 
 				response = super.filter(request, response);
 			}

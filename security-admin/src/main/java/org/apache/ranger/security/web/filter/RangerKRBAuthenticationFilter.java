@@ -195,7 +195,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		}
 		String sessionUserName = request.getParameter(S_USER);
 		String pathInfo = request.getPathInfo();
-		if(!StringUtils.isEmpty(sessionUserName) && sessionUserName.equalsIgnoreCase("keyadmin") && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")){
+		if(!StringUtils.isEmpty(sessionUserName) && "keyadmin".equalsIgnoreCase(sessionUserName) && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")){
 			LOG.info("Session will be created by : "+sessionUserName);
 			userName = sessionUserName;
 		}
@@ -244,7 +244,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 			if(cookie != null){
 				for(Cookie c : cookie){
 					String cname = c.getName();
-					if(cname != null && cname.equalsIgnoreCase("u"))
+					if(cname != null && "u".equalsIgnoreCase(cname))
 					{
 						int ustr = cname.indexOf("u=");
 						if(ustr != -1){
@@ -253,7 +253,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 								userName = cname.substring(ustr+2, andStr);
 							}
 						}
-					}else if(cname != null && cname.equalsIgnoreCase(AUTH_COOKIE_NAME)){
+					}else if(cname != null && AUTH_COOKIE_NAME.equalsIgnoreCase(cname)){
 						int ustr = cname.indexOf("u=");
 						if(ustr != -1){
 							int andStr = cname.indexOf("&", ustr);
@@ -295,7 +295,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	private boolean isSpnegoEnable(String authType){
 		String principal = PropertiesUtil.getProperty(PRINCIPAL);
 		String keytabPath = PropertiesUtil.getProperty(KEYTAB);
-		return ((!StringUtils.isEmpty(authType)) && authType.equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(principal, keytabPath));
+		return ((!StringUtils.isEmpty(authType)) && KERBEROS_TYPE.equalsIgnoreCase(authType) && SecureClientLogin.isKerberosCredentialExists(principal, keytabPath));
 	}
 	
 	private Authentication getGrantedAuthority(Authentication authentication) {

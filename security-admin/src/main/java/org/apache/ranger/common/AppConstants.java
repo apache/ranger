@@ -975,22 +975,22 @@ public class AppConstants extends RangerCommonEnums {
 		if (label == null) {
 			return 0;
 		}
-		if (label.equalsIgnoreCase("Unknown")) {
+		if ("Unknown".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_UNKNOWN; // ASSET_UNKNOWN
 		}
-		if (label.equalsIgnoreCase("HDFS")) {
+		if ("HDFS".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_HDFS; // ASSET_HDFS
 		}
-		if (label.equalsIgnoreCase("HBase")) {
+		if ("HBase".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_HBASE; // ASSET_HBASE
 		}
-		if (label.equalsIgnoreCase("Hive")) {
+		if ("Hive".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_HIVE; // ASSET_HIVE
 		}
-		if (label.equalsIgnoreCase("Knox")) {
+		if ("Knox".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_KNOX; // ASSET_KNOX
 		}
-		if (label.equalsIgnoreCase("Storm")) {
+		if ("Storm".equalsIgnoreCase(label)) {
 			return AppConstants.ASSET_STORM; // ASSET_STORM
 		}
 		return 0;
@@ -1018,37 +1018,37 @@ public class AppConstants extends RangerCommonEnums {
 		if (label == null) {
 			return 0;
 		}
-		if (label.equalsIgnoreCase("Unknown")) {
+		if ("Unknown".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_UNKNOWN; // RESOURCE_UNKNOWN
 		}
-		if (label.equalsIgnoreCase("Path")) {
+		if ("Path".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_PATH; // RESOURCE_PATH
 		}
-		if (label.equalsIgnoreCase("Database")) {
+		if ("Database".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_DB; // RESOURCE_DB
 		}
-		if (label.equalsIgnoreCase("Table")) {
+		if ("Table".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_TABLE; // RESOURCE_TABLE
 		}
-		if (label.equalsIgnoreCase("Column Family")) {
+		if ("Column Family".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_COL_FAM; // RESOURCE_COL_FAM
 		}
-		if (label.equalsIgnoreCase("Column")) {
+		if ("Column".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_COLUMN; // RESOURCE_COLUMN
 		}
-		if (label.equalsIgnoreCase("VIEW")) {
+		if ("VIEW".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_VIEW; // RESOURCE_VIEW
 		}
-		if (label.equalsIgnoreCase("UDF")) {
+		if ("UDF".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_UDF; // RESOURCE_UDF
 		}
-		if (label.equalsIgnoreCase("View Column")) {
+		if ("View Column".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_VIEW_COL; // RESOURCE_VIEW_COL
 		}
-		if (label.equalsIgnoreCase("Topology")) {
+		if ("Topology".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_TOPOLOGY; // RESOURCE_TOPOLOGY
 		}
-		if (label.equalsIgnoreCase("Service")) {
+		if ("Service".equalsIgnoreCase(label)) {
 			return AppConstants.RESOURCE_SERVICE_NAME; // RESOURCE_SERVICE_NAME
 		}
 		return 0;
@@ -1058,100 +1058,100 @@ public class AppConstants extends RangerCommonEnums {
 		if (label == null) {
 			return 0;
 		}
-		if (label.equalsIgnoreCase("Unknown")) {
+		if ("Unknown".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_UNKNOWN; // XA_PERM_TYPE_UNKNOWN
 		}
-		if (label.equalsIgnoreCase("Reset")) {
+		if ("Reset".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_RESET; // XA_PERM_TYPE_RESET
 		}
-		if (label.equalsIgnoreCase("Read")) {
+		if ("Read".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_READ; // XA_PERM_TYPE_READ
 		}
-		if (label.equalsIgnoreCase("Write")) {
+		if ("Write".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_WRITE; // XA_PERM_TYPE_WRITE
 		}
-		if (label.equalsIgnoreCase("Create")) {
+		if ("Create".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_CREATE; // XA_PERM_TYPE_CREATE
 		}
-		if (label.equalsIgnoreCase("Delete")) {
+		if ("Delete".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_DELETE; // XA_PERM_TYPE_DELETE
 		}
-		if (label.equalsIgnoreCase("Admin")) {
+		if ("Admin".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_ADMIN; // XA_PERM_TYPE_ADMIN
 		}
-		if (label.equalsIgnoreCase("Obfuscate")) {
+		if ("Obfuscate".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_OBFUSCATE; // XA_PERM_TYPE_OBFUSCATE
 		}
-		if (label.equalsIgnoreCase("Mask")) {
+		if ("Mask".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_MASK; // XA_PERM_TYPE_MASK
 		}
-		if (label.equalsIgnoreCase("Execute")) {
+		if ("Execute".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_EXECUTE; // XA_PERM_TYPE_EXECUTE
 		}
-		if (label.equalsIgnoreCase("Select")) {
+		if ("Select".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_SELECT; // XA_PERM_TYPE_SELECT
 		}
-		if (label.equalsIgnoreCase("Update")) {
+		if ("Update".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_UPDATE; // XA_PERM_TYPE_UPDATE
 		}
-		if (label.equalsIgnoreCase("Drop")) {
+		if ("Drop".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_DROP; // XA_PERM_TYPE_DROP
 		}
-		if (label.equalsIgnoreCase("Alter")) {
+		if ("Alter".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_ALTER; // XA_PERM_TYPE_ALTER
 		}
-		if (label.equalsIgnoreCase("Index")) {
+		if ("Index".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_INDEX; // XA_PERM_TYPE_INDEX
 		}
-		if (label.equalsIgnoreCase("Lock")) {
+		if ("Lock".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_LOCK; // XA_PERM_TYPE_LOCK
 		}
-		if (label.equalsIgnoreCase("All")) {
+		if ("All".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_ALL; // XA_PERM_TYPE_ALL
 		}
-		if(label.equalsIgnoreCase("Allow")) {
+		if("Allow".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_ALLOW; //XA_PERM_TYPE_ALLOW
 		}
-		if(label.equalsIgnoreCase("submitTopology")) {
+		if("submitTopology".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_SUBMIT_TOPOLOGY; //XA_PERM_TYPE_SUBMIT_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("fileUpload")) {
+		if("fileUpload".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_FILE_UPLOAD; //XA_PERM_TYPE_FILE_UPLOAD
 		}
-		if(label.equalsIgnoreCase("getNimbusConf")) {
+		if("getNimbusConf".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_NIMBUS; //XA_PERM_TYPE_GET_NIMBUS
 		}
-		if(label.equalsIgnoreCase("getClusterInfo")) {
+		if("getClusterInfo".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_CLUSTER_INFO; //XA_PERM_TYPE_GET_CLUSTER_INFO
 		}
-		if(label.equalsIgnoreCase("fileDownload")) {
+		if("fileDownload".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_FILE_DOWNLOAD; //XA_PERM_TYPE_FILE_DOWNLOAD
 		}
-		if(label.equalsIgnoreCase("killTopology")) {
+		if("killTopology".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_KILL_TOPOLOGY; //XA_PERM_TYPE_KILL_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("rebalance")) {
+		if("rebalance".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_REBALANCE; //XA_PERM_TYPE_REBALANCE
 		}
-		if(label.equalsIgnoreCase("activate")) {
+		if("activate".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_ACTIVATE; //XA_PERM_TYPE_ACTIVATE
 		}
-		if(label.equalsIgnoreCase("deactivate")) {
+		if("deactivate".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_DEACTIVATE; //XA_PERM_TYPE_DEACTIVATE
 		}
-		if(label.equalsIgnoreCase("getTopologyConf")) {
+		if("getTopologyConf".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_CONF; //XA_PERM_TYPE_GET_TOPOLOGY_CONF
 		}
-		if(label.equalsIgnoreCase("getTopology")) {
+		if("getTopology".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY; //XA_PERM_TYPE_GET_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("getUserTopology")) {
+		if("getUserTopology".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_USER_TOPOLOGY; //XA_PERM_TYPE_GET_USER_TOPOLOGY
 		}
-		if(label.equalsIgnoreCase("getTopologyInfo")) {
+		if("getTopologyInfo".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_GET_TOPOLOGY_INFO; //XA_PERM_TYPE_GET_TOPOLOGY_INFO
 		}
-		if(label.equalsIgnoreCase("uploadNewCredentials")) {
+		if("uploadNewCredentials".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL; //XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL
 		}
 		return 0;
@@ -1161,10 +1161,10 @@ public class AppConstants extends RangerCommonEnums {
 		if (label == null) {
 			return 0;
 		}
-		if (label.equalsIgnoreCase("Inclusion")) {
+		if ("Inclusion".equalsIgnoreCase(label)) {
 			return AppConstants.POLICY_INCLUSION; // POLICY_INCLUSION
 		}
-		if (label.equalsIgnoreCase("Exclusion")) {
+		if ("Exclusion".equalsIgnoreCase(label)) {
 			return AppConstants.POLICY_EXCLUSION; // POLICY_EXCLUSION
 		}
 		return 0;

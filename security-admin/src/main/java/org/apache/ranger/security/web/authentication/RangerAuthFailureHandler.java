@@ -82,7 +82,7 @@ ExceptionMappingAuthenticationFailureHandler {
 			String msg = exception.getMessage();
 			VXResponse vXResponse = new VXResponse();
 			if(msg!=null && !msg.isEmpty()){
-				if(msg.equalsIgnoreCase("Bad credentials")){
+				if("Bad credentials".equalsIgnoreCase(msg)){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("The username or password you entered is incorrect..");
 				}else if(msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")){
@@ -91,7 +91,7 @@ ExceptionMappingAuthenticationFailureHandler {
 				}else if(msg.contains("Communications link failure")){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("Unable to connect to DB..");
-				}else if(msg.equalsIgnoreCase("User is disabled")){
+				}else if("User is disabled".equalsIgnoreCase(msg)){
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("The username or password you entered is disable..");
 				}
@@ -103,7 +103,7 @@ ExceptionMappingAuthenticationFailureHandler {
 			logger.info("Error while writing JSON in HttpServletResponse");
 		}
 	
-	if (ajaxRequestHeader != null && ajaxRequestHeader.equalsIgnoreCase("XMLHttpRequest")) {
+	if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
 //	    if (logger.isDebugEnabled()) {
 //		logger.debug("Forwarding AJAX login request failure to "
 //			+ ajaxLoginfailurePage);

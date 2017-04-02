@@ -154,7 +154,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			Field[] superClassFields = vObj.getClass().getSuperclass()
 					.getDeclaredFields();
 			for (Field field : superClassFields) {
-				if (field.getName().equalsIgnoreCase("isEnabled")) {
+				if ("isEnabled".equalsIgnoreCase(field.getName())) {
 					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, action);
 					if (xTrx != null) {
 						trxLogList.add(xTrx);
@@ -189,23 +189,23 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			boolean isEnum = vTrxLogAttr.isEnum();
 			if (isEnum) {
 
-			} else if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
+			} else if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 				value = processPolicyResourcesForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
+			} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(DENYPOLICY_ITEM_CLASS_FIELD_NAME)) {
+			} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+			} else if (POLICY_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = processPolicyNameForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(ALLOW_EXCEPTIONS_CLASS_FIELD_NAME)){
+			} else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(DENY_EXCEPTIONS_CLASS_FIELD_NAME)){
+			} else if (DENY_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)){
+			} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = processDataMaskPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)){
+			} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)){
+			} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
 			
 			}
@@ -239,107 +239,107 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					}
 				}
 				RangerPolicy oldPolicy = populateViewBean(mObj);
-				if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
+				if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyResourcesForTrxLog(oldPolicy.getResources());
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getPolicyItems());
 					}
-				} else if (fieldName.equalsIgnoreCase(DENYPOLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getDenyPolicyItems());
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+				} else if (POLICY_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 					if (oldPolicy != null) {
 						oldValue = processPolicyNameForTrxLog(oldPolicy.getName());
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_DESCRIPTION_CLASS_FIELD_NAME)){
+				} else if (POLICY_DESCRIPTION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)){
 					if (oldPolicy != null) {
 						oldValue = processPolicyNameForTrxLog(oldPolicy.getDescription());
 					}
-				}  else if (fieldName.equalsIgnoreCase(ALLOW_EXCEPTIONS_CLASS_FIELD_NAME)) {
+				}  else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getAllowExceptions());
 					}
-				} else if (fieldName.equalsIgnoreCase(DENY_EXCEPTIONS_CLASS_FIELD_NAME)) {
+				} else if (DENY_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getDenyExceptions());
 					}
-				} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processDataMaskPolicyItemsForTrxLog(oldPolicy.getDataMaskPolicyItems());
 					}
-				} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processRowFilterPolicyItemForTrxLog(oldPolicy.getRowFilterPolicyItems());
 					}
-				}else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)) {
+				}else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = String.valueOf(processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled()));
 					}
 				}
 				if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
 					return null;
-				} else if (fieldName.equalsIgnoreCase(POLICY_RESOURCE_CLASS_FIELD_NAME)) {
+				} else if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					// Compare old and new resources
 					if(compareTwoPolicyResources(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//Compare old and new policyItems
 					if(compareTwoPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)) {
+				} else if (POLICY_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new policyName
 					if(compareTwoPolicyName(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(DENYPOLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new denyPolicyItem
 					if(compareTwoPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(ALLOW_EXCEPTIONS_CLASS_FIELD_NAME)) {
+				} else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new allowExceptions
 					if(compareTwoPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(DENY_EXCEPTIONS_CLASS_FIELD_NAME)) {
+				} else if (DENY_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new denyExceptions
 					if(compareTwoPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_DESCRIPTION_CLASS_FIELD_NAME)) {
+				} else if (POLICY_DESCRIPTION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new Description
 					if(org.apache.commons.lang.StringUtils.equals(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new dataMaskPolicyItems
 					if(compareTwoDataMaskingPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)) {
+				} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new rowFilterPolicyItems
 					if(compareTwoRowFilterPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)) {
+				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 					    oldValue=processPolicyNameForTrxLog(String.valueOf(oldPolicy.getIsEnabled()));
 					}
-				} else if (fieldName.equalsIgnoreCase(IS_AUDIT_ENABLED_CLASS_FIELD_NAME)) {
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 					    oldValue=processPolicyNameForTrxLog(String.valueOf(oldPolicy.getIsAuditEnabled()));
 					}
-				} else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)) {
+				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if(compareTwoPolicyName(value, oldValue)) {
 					    return null;
 					}
-				} else if (fieldName.equalsIgnoreCase(IS_AUDIT_ENABLED_CLASS_FIELD_NAME)) {
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if(compareTwoPolicyName(value, oldValue)) {
 						return null;
 					}

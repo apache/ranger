@@ -99,7 +99,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			rangerAuthenticationMethod="NONE";
 		}
 		if (authentication != null && rangerAuthenticationMethod != null) {
-			if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
+			if ("LDAP".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getLdapAuthentication(authentication);
 				if (authentication!=null && authentication.isAuthenticated()) {
 					return authentication;
@@ -110,7 +110,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					}
 				}
 			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")) {
+			if ("ACTIVE_DIRECTORY".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getADBindAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
@@ -121,14 +121,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					}
 				}
 			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
+			if ("UNIX".equalsIgnoreCase(rangerAuthenticationMethod)) {
                 boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
                 authentication= (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
 				}
 			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("PAM")) {
+			if ("PAM".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getPamAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;

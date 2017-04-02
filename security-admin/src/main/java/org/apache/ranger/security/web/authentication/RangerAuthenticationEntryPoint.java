@@ -121,7 +121,7 @@ public class RangerAuthenticationEntryPoint extends
 		}
 
 		if (ajaxRequestHeader != null
-				&& ajaxRequestHeader.equalsIgnoreCase("XMLHttpRequest")) {
+				&& "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("commence() AJAX request. Authentication required. Returning "
 						+ ajaxReturnCode + ". URL=" + request.getRequestURI());

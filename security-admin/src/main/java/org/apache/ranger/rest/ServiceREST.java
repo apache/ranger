@@ -308,7 +308,7 @@ public class ServiceREST {
 
 			String forceDeleteStr = request.getParameter("forceDelete");
 			boolean forceDelete = false;
-			if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
+			if(!StringUtils.isEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
 				forceDelete = true;
 			}
 			
@@ -502,11 +502,11 @@ public class ServiceREST {
 				bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 			}
 			if(session != null && session.isSpnegoEnabled()){
-				if (session.isKeyAdmin() && !xxServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xxServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS ",
 							MessageEnums.OPER_NO_PERMISSION);
 				}
-				if ((!session.isKeyAdmin() && !session.isUserAdmin()) && xxServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if ((!session.isKeyAdmin() && !session.isUserAdmin()) && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xxServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException("User cannot create/update/delete KMS Service",
 							MessageEnums.OPER_NO_PERMISSION);
 				}
@@ -2790,13 +2790,13 @@ public class ServiceREST {
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 
 			if (isAdmin) {
-				if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException(
 							"KMS Policies/Services/Service-Defs are not accessible for user '" + userName + "'.",
 							MessageEnums.OPER_NO_PERMISSION);
 				}
 			} else if (isKeyAdmin) {
-				if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException(
 							"Only KMS Policies/Services/Service-Defs are accessible for user '" + userName + "'.",
 							MessageEnums.OPER_NO_PERMISSION);

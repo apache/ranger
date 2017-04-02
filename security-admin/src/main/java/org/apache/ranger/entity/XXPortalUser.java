@@ -369,10 +369,10 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("status") ) {
+		if( "status".equals(fieldName) ) {
 			return "CommonEnums.ActivationStatus";
 		}
-		if( fieldName.equals("userSource") ) {
+		if( "userSource".equals(fieldName) ) {
 			return "CommonEnums.UserSource";
 		}
 		//Later TODO

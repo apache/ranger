@@ -153,7 +153,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	}
 
 	public List<XXTrxLog> getTransactionLog(VXGroup vObj, XXGroup mObj, String action){
-		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)){
+		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
 			return null;
 		}
 		
@@ -187,14 +187,14 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 					value = ""+field.get(vObj);
 				}
 				
-				if(action.equalsIgnoreCase("create")){
+				if("create".equalsIgnoreCase(action)){
 					if(stringUtil.isEmpty(value)){
 						continue;
 					}
 					xTrxLog.setNewValue(value);
-				} else if(action.equalsIgnoreCase("delete")){
+				} else if("delete".equalsIgnoreCase(action)){
 					xTrxLog.setPreviousValue(value);
-				} else if(action.equalsIgnoreCase("update")){
+				} else if("update".equalsIgnoreCase(action)){
 					String oldValue = null;
 					Field[] mFields = mObj.getClass().getDeclaredFields();
 					for(Field mField : mFields){

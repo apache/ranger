@@ -90,7 +90,7 @@ public class ServiceMgr {
 		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String rangerkeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
 		
-		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
+		if(!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
@@ -98,7 +98,7 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
 			}
 		}
-		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
+		if(!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_KEYTAB, rangerkeytab);
@@ -143,7 +143,7 @@ public class ServiceMgr {
 		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String rangerkeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
 		
-		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
+		if(!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_KEYTAB, lookupKeytab);
@@ -151,7 +151,7 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
 			}
 		}
-		if(!StringUtils.isEmpty(authType) && authType.trim().equalsIgnoreCase(KERBEROS_TYPE) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
+		if(!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_KEYTAB, rangerkeytab);
@@ -343,7 +343,7 @@ public class ServiceMgr {
 
 		URL pluginJarPath = getClass().getClassLoader().getResource(dirPath);
 
-		if(pluginJarPath != null && pluginJarPath.getProtocol().equals("file")) {
+		if(pluginJarPath != null && "file".equals(pluginJarPath.getProtocol())) {
 			try {
 				File[] dirFiles = new File(pluginJarPath.toURI()).listFiles();
 

@@ -292,10 +292,10 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("status") ) {
+		if( "status".equals(fieldName) ) {
 			return "CommonEnums.ActiveStatus";
 		}
-		if( fieldName.equals("groupType") ) {
+		if( "groupType".equals(fieldName) ) {
 			return "CommonEnums.XAGroupType";
 		}
 		//Later TODO

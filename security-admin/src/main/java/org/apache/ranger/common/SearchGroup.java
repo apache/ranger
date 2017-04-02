@@ -55,7 +55,7 @@ public class SearchGroup {
 		for (SearchValue value : values) {
 			count++;
 			if (count > 0) {
-				if (condition.equals(CONDITION.AND)) {
+				if (CONDITION.AND.equals(condition)) {
 					whereClause.append(" AND ");
 				} else {
 					whereClause.append(" OR ");
@@ -89,7 +89,7 @@ public class SearchGroup {
 		for (SearchGroup searchGroup : searchGroups) {
 			count++;
 			if (count > 0) {
-				if (condition.equals(CONDITION.AND)) {
+				if (CONDITION.AND.equals(condition)) {
 					whereClause.append(" AND ");
 				} else {
 					whereClause.append(" OR ");

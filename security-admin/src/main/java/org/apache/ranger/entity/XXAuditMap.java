@@ -220,7 +220,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("auditType") ) {
+		if( "auditType".equals(fieldName) ) {
 			return "CommonEnums.XAAuditType";
 		}
 		//Later TODO

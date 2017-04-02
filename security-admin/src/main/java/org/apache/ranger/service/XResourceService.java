@@ -464,7 +464,7 @@ public class XResourceService extends
 	}
 	
 	public List<XXTrxLog> getTransactionLog(VXResource vObj, XXResource mObj, String action){
-		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)) {
+		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)) {
 			return null;
 		}
 
@@ -522,26 +522,26 @@ public class XResourceService extends
 				boolean isEnum = vTrxLogAttr.isEnum();
 				if(isEnum){
 					String enumName = XXResource.getEnumName(fieldName);
-					if(enumName==null && fieldName.equals("assetType")){
+					if(enumName==null && "assetType".equals(fieldName)){
 						enumName="CommonEnums.AssetType";
 					}
 					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
 					value = xaEnumUtil.getLabel(enumName, enumValue);
 				} else {
 					value = ""+field.get(vObj);
-					if(value == null || value.equalsIgnoreCase("null")){
+					if(value == null || "null".equalsIgnoreCase(value)){
 						continue;
 					}
 				}
 				
-				if(action.equalsIgnoreCase("create")){
+				if("create".equalsIgnoreCase(action)){
 					if(stringUtil.isEmpty(value)){
 						continue;
 					}
 					xTrxLog.setNewValue(value);
-				} else if(action.equalsIgnoreCase("delete")){
+				} else if("delete".equalsIgnoreCase(action)){
 					xTrxLog.setPreviousValue(value);
-				} else if(action.equalsIgnoreCase("update")){
+				} else if("update".equalsIgnoreCase(action)){
 					String oldValue = null;
 					Field[] mFields = mObj.getClass().getDeclaredFields();
 					for(Field mField : mFields){
@@ -550,7 +550,7 @@ public class XResourceService extends
 						if(fieldName.equalsIgnoreCase(mFieldName)){
 							if(isEnum){
 								String enumName = XXResource.getEnumName(mFieldName);
-								if(enumName==null && mFieldName.equals("assetType")){
+								if(enumName==null && "assetType".equals(mFieldName)){
 									enumName="CommonEnums.AssetType";
 								}
 								int enumValue = mField.get(mObj) == null ? 0 : Integer.parseInt(""+mField.get(mObj));
@@ -561,7 +561,7 @@ public class XResourceService extends
 							break;
 						}
 					}
-					if(value.equalsIgnoreCase(oldValue) && !fieldName.equals("policyName")){
+					if(value.equalsIgnoreCase(oldValue) && !"policyName".equals(fieldName)){
 						continue;
 					}
 					xTrxLog.setPreviousValue(oldValue);

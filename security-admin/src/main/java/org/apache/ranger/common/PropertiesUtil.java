@@ -160,7 +160,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 		if(path!=null && alias!=null){
 			String xaDBPassword=CredentialReader.getDecryptedString(path.trim(),alias.trim());
 			if(xaDBPassword!=null&& !xaDBPassword.trim().isEmpty() &&
-					!xaDBPassword.trim().equalsIgnoreCase("none")){
+					!"none".equalsIgnoreCase(xaDBPassword.trim())){
 				propertiesMap.put("ranger.jpa.jdbc.password", xaDBPassword);
 				props.put("ranger.jpa.jdbc.password", xaDBPassword);
 			}else{
@@ -174,7 +174,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 		if(path!=null && alias!=null){
 			String auditDBPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
 			if(auditDBPassword!=null&& !auditDBPassword.trim().isEmpty() &&
-					!auditDBPassword.trim().equalsIgnoreCase("none")){
+					!"none".equalsIgnoreCase(auditDBPassword.trim())){
 				propertiesMap.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
 				props.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
 			}else{
@@ -184,14 +184,14 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	}
 	if(propertiesMap!=null && propertiesMap.containsKey("ranger.authentication.method")){
 		String authenticationMethod=propertiesMap.get("ranger.authentication.method");
-		if(authenticationMethod!=null && (authenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")||authenticationMethod.equalsIgnoreCase("AD"))){
+		if(authenticationMethod!=null && ("ACTIVE_DIRECTORY".equalsIgnoreCase(authenticationMethod)||"AD".equalsIgnoreCase(authenticationMethod))){
 			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.ldap.ad.binddn.credential.alias")){
 				String path=propertiesMap.get("ranger.credential.provider.path");
 				String alias=propertiesMap.get("ranger.ldap.ad.binddn.credential.alias");
 				if(path!=null && alias!=null){
 					String bindDNPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
 					if(bindDNPassword!=null&& !bindDNPassword.trim().isEmpty() &&
-							!bindDNPassword.trim().equalsIgnoreCase("none")){
+							!"none".equalsIgnoreCase(bindDNPassword.trim())){
 						propertiesMap.put("ranger.ldap.ad.bind.password", bindDNPassword);
 						props.put("ranger.ldap.ad.bind.password", bindDNPassword);
 					}else{
@@ -203,14 +203,14 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	}
 	if(propertiesMap!=null && propertiesMap.containsKey("ranger.authentication.method")){
 		String authenticationMethod=propertiesMap.get("ranger.authentication.method");
-		if(authenticationMethod!=null && (authenticationMethod.equalsIgnoreCase("LDAP"))){
+		if(authenticationMethod!=null && ("LDAP".equalsIgnoreCase(authenticationMethod))){
 			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.ldap.binddn.credential.alias")){
 				String path=propertiesMap.get("ranger.credential.provider.path");
 				String alias=propertiesMap.get("ranger.ldap.binddn.credential.alias");
 				if(path!=null && alias!=null){
 					String bindDNPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
 					if(bindDNPassword!=null&& !bindDNPassword.trim().isEmpty() &&
-							!bindDNPassword.trim().equalsIgnoreCase("none")){
+							!"none".equalsIgnoreCase(bindDNPassword.trim())){
 						propertiesMap.put("ranger.ldap.bind.password", bindDNPassword);
 						props.put("ranger.ldap.bind.password", bindDNPassword);
 					}else{
@@ -222,14 +222,14 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	}
 	if(propertiesMap!=null && propertiesMap.containsKey("ranger.audit.source.type")){
 		String auditStore=propertiesMap.get("ranger.audit.source.type");
-		if(auditStore!=null && (auditStore.equalsIgnoreCase("solr"))){
+		if(auditStore!=null && ("solr".equalsIgnoreCase(auditStore))){
 			if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.solr.audit.credential.alias")){
 				String path=propertiesMap.get("ranger.credential.provider.path");
 				String alias=propertiesMap.get("ranger.solr.audit.credential.alias");
 				if(path!=null && alias!=null){
 					String solrAuditPassword=CredentialReader.getDecryptedString(path.trim(), alias.trim());
 					if(solrAuditPassword!=null&& !solrAuditPassword.trim().isEmpty() &&
-							!solrAuditPassword.trim().equalsIgnoreCase("none")){
+							!"none".equalsIgnoreCase(solrAuditPassword.trim())){
 						propertiesMap.put("ranger.solr.audit.user.password", solrAuditPassword);
 						props.put("ranger.solr.audit.user.password", solrAuditPassword);
 					}else{

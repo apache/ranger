@@ -251,7 +251,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {
-		if( fieldName.equals("status") ) {
+		if( "status".equals(fieldName) ) {
 			return "CommonEnums.ActiveStatus";
 		}
 		//Later TODO

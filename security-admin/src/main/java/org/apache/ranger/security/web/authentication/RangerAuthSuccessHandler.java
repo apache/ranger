@@ -123,7 +123,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
 			if (logger.isDebugEnabled()) {
 			    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 			}
-			if (ajaxRequestHeader != null && ajaxRequestHeader.equalsIgnoreCase("XMLHttpRequest")) {
+			if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
 				// if (logger.isDebugEnabled()) {
 				// logger.debug("Forwarding AJAX login request success to "
 				// + ajaxLoginSuccessPage + " for user "

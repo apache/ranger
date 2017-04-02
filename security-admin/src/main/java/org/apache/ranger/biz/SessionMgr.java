@@ -267,7 +267,7 @@ public class SessionMgr {
 		} else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
 			userSession.setKeyAdmin(true);
 			userSession.setUserAdmin(false);
-		} else if (strRoleList.size() == 1 && strRoleList.get(0).equals(RangerConstants.ROLE_USER)) {
+		} else if (strRoleList.size() == 1 && RangerConstants.ROLE_USER.equals(strRoleList.get(0))) {
 			userSession.setKeyAdmin(false);
 			userSession.setUserAdmin(false);
 		}

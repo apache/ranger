@@ -352,24 +352,24 @@ public class ServiceUtil {
 			String                            resType   = e.getKey();
 			String                            resString = getResourceString(res.getValues());
 
-			if(resType.equalsIgnoreCase("path")) {
+			if("path".equalsIgnoreCase(resType)) {
 				ret.setName(resString);
 				ret.setIsRecursive(Boolean.TRUE.equals(res.getIsRecursive()) ? RangerCommonEnums.BOOL_TRUE : RangerCommonEnums.BOOL_FALSE);
-			} else if(resType.equalsIgnoreCase("table")) {
+			} else if("table".equalsIgnoreCase(resType)) {
 				ret.setTables(resString);
 				ret.setTableType(Boolean.TRUE.equals(res.getIsExcludes()) ? RangerCommonEnums.POLICY_EXCLUSION : RangerCommonEnums.POLICY_INCLUSION);
-			} else if(resType.equalsIgnoreCase("column-family")) {
+			} else if("column-family".equalsIgnoreCase(resType)) {
 				ret.setColumnFamilies(resString);
-			} else if(resType.equalsIgnoreCase("column")) {
+			} else if("column".equalsIgnoreCase(resType)) {
 				ret.setColumns(resString);
 				ret.setColumnType(Boolean.TRUE.equals(res.getIsExcludes()) ? RangerCommonEnums.POLICY_EXCLUSION : RangerCommonEnums.POLICY_INCLUSION);
-			} else if(resType.equalsIgnoreCase("database")) {
+			} else if("database".equalsIgnoreCase(resType)) {
 				ret.setDatabases(resString);
-			} else if(resType.equalsIgnoreCase("udf")) {
+			} else if("udf".equalsIgnoreCase(resType)) {
 				ret.setUdfs(resString);
-			} else if(resType.equalsIgnoreCase("topology")) {
+			} else if("topology".equalsIgnoreCase(resType)) {
 				ret.setTopologies(resString);
-			} else if(resType.equalsIgnoreCase("service")) {
+			} else if("service".equalsIgnoreCase(resType)) {
 				ret.setServices(resString);
 			}
 		}
@@ -814,24 +814,24 @@ public class ServiceUtil {
 			String                            resType   = e.getKey();
 			String                            resString = getResourceString(res.getValues());
 
-			if(resType.equalsIgnoreCase("path")) {
+			if("path".equalsIgnoreCase(resType)) {
 				ret.setResourceName(resString);
 				ret.setIsRecursive(Boolean.TRUE.equals(res.getIsRecursive()) ? true : false);
-			} else if(resType.equalsIgnoreCase("table")) {
+			} else if("table".equalsIgnoreCase(resType)) {
 				ret.setTables(resString);
 				ret.setTableType(Boolean.TRUE.equals(res.getIsExcludes()) ? toVxPolicyIncExc(RangerCommonEnums.POLICY_EXCLUSION):toVxPolicyIncExc(RangerCommonEnums.POLICY_INCLUSION));
-			} else if(resType.equalsIgnoreCase("column-family")) {
+			} else if("column-family".equalsIgnoreCase(resType)) {
 				ret.setColumnFamilies(resString);
-			} else if(resType.equalsIgnoreCase("column")) {
+			} else if("column".equalsIgnoreCase(resType)) {
 				ret.setColumns(resString);
 				ret.setColumnType(Boolean.TRUE.equals(res.getIsExcludes()) ? toVxPolicyIncExc(RangerCommonEnums.POLICY_EXCLUSION):toVxPolicyIncExc(RangerCommonEnums.POLICY_INCLUSION));
-			} else if(resType.equalsIgnoreCase("database")) {
+			} else if("database".equalsIgnoreCase(resType)) {
 				ret.setDatabases(resString);
-			} else if(resType.equalsIgnoreCase("udf")) {
+			} else if("udf".equalsIgnoreCase(resType)) {
 				ret.setUdfs(resString);
-			} else if(resType.equalsIgnoreCase("topology")) {
+			} else if("topology".equalsIgnoreCase(resType)) {
 				ret.setTopologies(resString);
-			} else if(resType.equalsIgnoreCase("service")) {
+			} else if("service".equalsIgnoreCase(resType)) {
 				ret.setServices(resString);
 			}
 		}
@@ -1087,7 +1087,7 @@ public class ServiceUtil {
 				if (vXPermObj.getPermList() != null) {
 					for (String perm : vXPermObj.getPermList()) {
 						if ( AppConstants.getEnumFor_XAPermType(perm) != 0 ) {
-							if (perm.equalsIgnoreCase("Admin")) {
+							if ("Admin".equalsIgnoreCase(perm)) {
 								delegatedAdmin=true;
 								if (assetType != RangerCommonEnums.ASSET_HBASE) {
 									continue;
@@ -1280,7 +1280,7 @@ public class ServiceUtil {
 					if(vXPermObj.getPermList() != null) {
 						for (String perm : vXPermObj.getPermList()) {
 							if ( AppConstants.getEnumFor_XAPermType(perm) != 0 ) {
-								if (perm.equalsIgnoreCase("Admin")) {
+								if ("Admin".equalsIgnoreCase(perm)) {
 									delegatedAdmin=true;
 									if (assetType!=null && assetType.intValue() != RangerCommonEnums.ASSET_HBASE) {
 										continue;
@@ -1412,7 +1412,7 @@ public class ServiceUtil {
 					try {
 						LdapName ln = new LdapName(dn);
 						for (Rdn rdn : ln.getRdns()) {
-							if (rdn.getType().equalsIgnoreCase("CN")) {
+							if ("CN".equalsIgnoreCase(rdn.getType())) {
 								commonName = rdn.getValue() + "";
 								break;
 							}

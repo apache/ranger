@@ -117,7 +117,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest)servletRequest;
 		if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()){
 			synchronized(httpRequest.getServletContext()){
-				if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString().equals("locallogin")){
+				if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && "locallogin".equals(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString())){
 					ssoEnabled = false;
 					httpRequest.getSession().setAttribute("locallogin","true");
 					httpRequest.getServletContext().removeAttribute(httpRequest.getRequestedSessionId());

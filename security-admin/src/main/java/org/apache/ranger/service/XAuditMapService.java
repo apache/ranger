@@ -89,7 +89,7 @@ public class XAuditMapService extends
 	}
 
 	public List<XXTrxLog> getTransactionLog(VXAuditMap vObj, VXAuditMap mObj, String action){
-		if(vObj == null || action == null || (action.equalsIgnoreCase("update") && mObj == null)){
+		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
 			return null;
 		}
 		
@@ -121,11 +121,11 @@ public class XAuditMapService extends
 					value = xUser.getName();
 				}
 				
-				if(action.equalsIgnoreCase("create")){
+				if("create".equalsIgnoreCase(action)){
 					xTrxLog.setNewValue(value);
-				} else if(action.equalsIgnoreCase("delete")){
+				} else if("delete".equalsIgnoreCase(action)){
 					xTrxLog.setPreviousValue(value);
-				} else if(action.equalsIgnoreCase("update")){
+				} else if("update".equalsIgnoreCase(action)){
 					// Not Changed.
 					xTrxLog.setNewValue(value);
 					xTrxLog.setPreviousValue(value);
