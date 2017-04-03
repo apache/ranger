@@ -54,6 +54,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -158,11 +159,13 @@ import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerServiceWithAssignedIdService;
+import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -234,7 +237,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	@Autowired
 	XUserMgr xUserMgr;
-	
+
+	@Autowired
+	XGroupService xGroupService;
+
 	@Autowired
 	RangerDataHistService dataHistService;
 
@@ -2456,20 +2462,97 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			List<RangerPolicy.RangerPolicyItemAccess> allAccesses = svc.getAndAllowAllAccesses();
 
-			for (RangerPolicy defaultPolicy : svc.getDefaultRangerPolicies()) {
+			List<RangerPolicy> defaultPolicies = svc.getDefaultRangerPolicies();
 
-				if (CollectionUtils.isNotEmpty(serviceCheckUsers)
-				&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+			if (CollectionUtils.isNotEmpty(defaultPolicies)) {
 
-					RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+				createDefaultPolicyUsersAndGroups(defaultPolicies);
 
-					policyItem.setUsers(serviceCheckUsers);
-					policyItem.setAccesses(allAccesses);
-					policyItem.setDelegateAdmin(true);
+				for (RangerPolicy defaultPolicy : defaultPolicies) {
+					if (CollectionUtils.isNotEmpty(serviceCheckUsers)
+							&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
 
-					defaultPolicy.getPolicyItems().add(policyItem);
+						RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+
+						policyItem.setUsers(serviceCheckUsers);
+						policyItem.setAccesses(allAccesses);
+						policyItem.setDelegateAdmin(true);
+
+						defaultPolicy.getPolicyItems().add(policyItem);
+					}
+					createPolicy(defaultPolicy);
 				}
-				createPolicy(defaultPolicy);
+			}
+		}
+	}
+
+	void createDefaultPolicyUsersAndGroups(List<RangerPolicy> defaultPolicies) {
+		Set<String> defaultPolicyUsers = new HashSet<String>();
+		Set<String> defaultPolicyGroups = new HashSet<String>();
+
+		for (RangerPolicy defaultPolicy : defaultPolicies) {
+
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getAllowExceptions()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDenyPolicyItems()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDenyExceptions()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDataMaskPolicyItems()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+			for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getRowFilterPolicyItems()) {
+				defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
+				defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
+			}
+		}
+		for (String policyUser : defaultPolicyUsers) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking policyUser:[" + policyUser + "] for existence");
+			}
+			if (StringUtils.isNotBlank(policyUser) && !StringUtils.equals(policyUser, RangerPolicyEngine.USER_CURRENT)
+					&& !StringUtils.equals(policyUser, RangerPolicyEngine.RESOURCE_OWNER)) {
+				XXUser xxUser = daoMgr.getXXUser().findByUserName(policyUser);
+				if (xxUser == null) {
+					UserSessionBase usb = ContextUtil.getCurrentUserSession();
+					if (usb != null && !usb.isKeyAdmin() && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
+						throw restErrorUtil.createRESTException("User does not exist with given username: ["
+								+ policyUser + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
+					}
+					xUserMgr.createServiceConfigUser(policyUser);
+				}
+			}
+		}
+		for (String policyGroup : defaultPolicyGroups) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking policyGroup:[" + policyGroup + "] for existence");
+			}
+			if (StringUtils.isNotBlank(policyGroup)) {
+				XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(policyGroup);
+				if (xxGroup == null) {
+					UserSessionBase usb = ContextUtil.getCurrentUserSession();
+					if (usb != null && !usb.isKeyAdmin() && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
+						throw restErrorUtil.createRESTException("Group does not exist with given groupname: ["
+								+ policyGroup + "] please use existing group", MessageEnums.OPER_NO_PERMISSION);
+					}
+					VXGroup vXGroup = new VXGroup();
+					vXGroup.setName(policyGroup);
+					vXGroup.setDescription(policyGroup);
+					vXGroup.setGroupSource(RangerCommonEnums.GROUP_INTERNAL);
+					vXGroup.setIsVisible(RangerCommonEnums.IS_VISIBLE);
+					xGroupService.createResource(vXGroup);
+				}
 			}
 		}
 	}

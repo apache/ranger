@@ -163,6 +163,7 @@ public class RangerServiceTag extends RangerBaseService {
 					String value = RANGER_TAG_NAME_EXPIRES_ON;
 
 					tagPolicyResource.setValue(value);
+					defaultPolicy.setName(value);
 					defaultPolicy.setDescription("Policy for data with " + value + " tag");
 
 					List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
