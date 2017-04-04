@@ -405,16 +405,17 @@ public class HiveClient extends BaseClient implements Closeable {
 				for (String tbl : tblList) {
 					try {
 						List<FieldSchema> hiveSch = hiveClient.getFields(db, tbl);
-						for (FieldSchema sch : hiveSch) {
-							String columnName = sch.getName();
-							if (colList != null && colList.contains(columnName)) {
-								continue;
-							}
-							if (columnNameMatchingRegEx == null) {
-								ret.add(columnName);
-							}
-							else if (FilenameUtils.wildcardMatch(columnName, columnNameMatchingRegEx)) {
-								ret.add(columnName);
+						if (hiveSch != null) {
+							for (FieldSchema sch : hiveSch) {
+								String columnName = sch.getName();
+								if (colList != null && colList.contains(columnName)) {
+									continue;
+								}
+								if (columnNameMatchingRegEx == null) {
+									ret.add(columnName);
+								} else if (FilenameUtils.wildcardMatch(columnName, columnNameMatchingRegEx)) {
+									ret.add(columnName);
+								}
 							}
 						}
 					} catch (TException e) {
