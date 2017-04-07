@@ -38,6 +38,7 @@ SOLR_DEPLOYMENT=$(get_prop 'SOLR_DEPLOYMENT' $PROPFILE)
 SOLR_RANGER_DATA_FOLDER=$(get_prop 'SOLR_RANGER_DATA_FOLDER' $PROPFILE)
 SOLR_ZK=$(get_prop 'SOLR_ZK' $PROPFILE)
 SOLR_USER=$(get_prop 'SOLR_USER' $PROPFILE)
+SOLR_GROUP=$(get_prop 'SOLR_GROUP' $PROPFILE)
 SOLR_RANGER_COLLECTION=$(get_prop 'SOLR_RANGER_COLLECTION' $PROPFILE)
 SOLR_INSTALL=$(get_prop 'SOLR_INSTALL' $PROPFILE)
 SOLR_DOWNLOAD_URL=$(get_prop 'SOLR_DOWNLOAD_URL' $PROPFILE)
@@ -109,6 +110,10 @@ if [ "$SOLR_USER" = "" ]; then
     SOLR_USER=solr
 fi
 
+if [ "$SOLR_GROUP" = "" ]; then
+    SOLR_GROUP=solr
+fi
+
 if [ "$SOLR_RANGER_COLLECTION" = "" ]; then
     SOLR_RANGER_COLLECTION=ranger_audits
 fi
@@ -139,12 +144,12 @@ fi
 
 
 function run_root_usage {
-    echo "sudo chown -R $SOLR_USER:$SOLR_USER $SOLR_INSTALL_FOLDER"
+    echo "sudo chown -R $SOLR_USER:$SOLR_GROUP $SOLR_INSTALL_FOLDER"
     echo "sudo mkdir -p $SOLR_RANGER_HOME"
-    echo "sudo chown -R $SOLR_USER:$SOLR_USER $SOLR_RANGER_HOME"
+    echo "sudo chown -R $SOLR_USER:$SOLR_GROUP $SOLR_RANGER_HOME"
     if [ "$SOLR_LOG_FOLDER" != "logs" ]; then
 	echo "sudo mkdir -p $SOLR_LOG_FOLDER"
-	echo "sudo chown -R $SOLR_USER:$SOLR_USER $SOLR_LOG_FOLDER"
+	echo "sudo chown -R $SOLR_USER:$SOLR_GROUP $SOLR_LOG_FOLDER"
     fi
 }
 
@@ -170,15 +175,19 @@ function set_ownership {
 
 if [ $is_root -ne 1 ]; then
     if [ "$SOLR_USER" != "$curr_user" ]; then
-	echo "`date`|ERROR|You need to run this script as root or as user $SOLR_USER"
-	echo "If you need to run as $SOLR_USER, then first execute the following commands as root or sudo"
-	id $SOLR_USER &> /dev/null
-	if [ $? -ne 0 ]; then
-	    echo "sudo groupadd $SOLR_USER"
-	    echo "sudo useradd -g $SOLR_USER $SOLR_USER"
-	fi
-	run_root_usage
-	exit 1
+        echo "`date`|ERROR|You need to run this script as root or as user $SOLR_USER"
+        echo "If you need to run as $SOLR_USER, then first execute the following commands as root or sudo"
+        egrep "^$SOLR_GROUP" /etc/group >& /dev/null
+        if [ $? -ne 0 ]
+        then
+            echo "sudo groupadd $SOLR_GROUP"
+        fi
+        id $SOLR_USER &> /dev/null
+        if [ $? -ne 0 ]; then
+            echo "sudo useradd -g $SOLR_GROUP $SOLR_USER"
+        fi
+        run_root_usage
+        exit 1
     fi
 
     #Let's make $curr_user has permission to write to $SOLR_RANGER_HOME and also chown
@@ -197,9 +206,9 @@ if [ $is_root -ne 1 ]; then
 	exit 1
     fi
     
-    chown $SOLR_USER:$SOLR_USER $test_file 2> /dev/null
+    chown $SOLR_USER:$SOLR_GROUP $test_file 2> /dev/null
     if [ $? -ne 0 ]; then
-	echo "`date`|ERROR|User $curr_user doesn't have permission chown to $SOLR_USER in $SOLR_RANGER_HOME"
+	echo "`date`|ERROR|User $curr_user doesn't have permission chown to $SOLR_USER:$SOLR_GROUP in $SOLR_RANGER_HOME"
 	run_root_usage
 	exit 1
     fi
@@ -342,27 +351,34 @@ sed  -e "s#{{SOLR_LOG_FOLDER}}#$SOLR_LOG_FOLDER#g" $SOLR_RANGER_HOME/resources/l
 sed -e "s#{{JAVA_HOME}}#$JAVA_HOME#g" -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_ZK}}#$SOLR_ZK#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" -e "s#{{SOLR_PORT}}#$SOLR_RANGER_PORT#g" $SOLR_RANGER_HOME/scripts/solr.sh.j2 > $SOLR_RANGER_HOME/scripts/solr.sh
 sed  -e "s#{{SOLR_USER}}#$SOLR_USER#g" -e "s#{{SOLR_INSTALL_DIR}}#$SOLR_INSTALL_FOLDER#g" -e "s#{{SOLR_RANGER_HOME}}#$SOLR_RANGER_HOME#g" $SOLR_RANGER_HOME/scripts/start_solr.sh.j2 > $SOLR_RANGER_HOME/scripts/start_solr.sh
 
-#Let's make all ownership is given to $SOLR_USER
+#Let's make all ownership is given to $SOLR_USER:$SOLR_GROUP
 if [ $is_root -eq 1 ]; then
-    #Let's see if $SOLR_USER exists.
-    id $SOLR_USER &> /dev/null
-    if [ $? -ne 0 ]; then
-	echo "`date`|INFO|Creating user $SOLR_USER"
-	groupadd $SOLR_USER 2> /dev/null
-	useradd -g $SOLR_USER $SOLR_USER 2>/dev/null
+    #Let's see if $SOLR_GROUP exists,create group if not exists.
+    egrep "^$SOLR_GROUP" /etc/group >& /dev/null
+    if [ $? -ne 0 ]
+    then
+        echo "`date`|INFO|Creating group $SOLR_GROUP"
+        groupadd ${SOLR_GROUP}
     fi
 
-    set_ownership $SOLR_USER $SOLR_USER $SOLR_INSTALL_FOLDER
+    #Let's see if $SOLR_USER exists,create user if not exists
+    id $SOLR_USER &> /dev/null
+    if [ $? -ne 0 ]; then
+		echo "`date`|INFO|Creating user $SOLR_USER"
+		useradd -g $SOLR_GROUP $SOLR_USER 2>/dev/null
+    fi
+
+    set_ownership $SOLR_USER $SOLR_GROUP $SOLR_INSTALL_FOLDER
     mkdir -p $SOLR_RANGER_HOME
-    set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_HOME
+    set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_HOME
     mkdir -p $SOLR_LOG_FOLDER
-    set_ownership $SOLR_USER $SOLR_USER $SOLR_LOG_FOLDER
+    set_ownership $SOLR_USER $SOLR_GROUP $SOLR_LOG_FOLDER
     if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
 	mkdir -p $SOLR_RANGER_DATA_FOLDER
-	set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_DATA_FOLDER
+	set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_DATA_FOLDER
     fi
 else
-    set_ownership $SOLR_USER $SOLR_USER $SOLR_RANGER_HOME
+    set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_HOME
 fi
 chmod a+x $SOLR_RANGER_HOME/scripts/*.sh
 
