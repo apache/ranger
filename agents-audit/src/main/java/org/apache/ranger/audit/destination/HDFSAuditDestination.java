@@ -50,8 +50,6 @@ public class HDFSAuditDestination extends AuditDestination {
 	public static final String PROP_HDFS_ROLLOVER = "file.rollover.sec";
 	public static final String PROP_HDFS_ROLLOVER_PERIOD = "file.rollover.period";
 
-	String baseFolder = null;
-	String fileFormat = null;
 	int fileRolloverSec = 24 * 60 * 60; // In seconds
 
 	private String logFileNameFormat;
@@ -63,6 +61,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	private String logFolder;
 
 	private PrintWriter logWriter = null;
+	FSDataOutputStream ostream = null; // output stream wrapped in logWriter
 
 	private String currentFileName;
 
@@ -187,10 +186,22 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	public void flush() {
-		if ( logWriter != null) {
-			logWriter.flush();
-			logger.info("Flush HDFS audit logs completed.....");
-		 }
+		logger.info("Flush called. name=" + getName());
+		if (logWriter != null) {
+			try {
+				synchronized (this) {
+					if (logWriter != null)
+						// 1) PrinterWriter does not have bufferring of its own so
+						// we need to flush its underlying stream
+						// 2) HDFS flush() does not really flush all the way to disk.
+						ostream.hflush();
+						logger.info("Flush HDFS audit logs completed.....");
+				}
+			} catch (IOException e) {
+				logger.error("Error on flushing log writer: " + e.getMessage() +
+				 "\nException will be ignored. name=" + getName() + ", fileName=" + currentFileName);
+			}
+		}
 	}
 
 	/*
@@ -290,7 +301,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
 			// Create the file to write
 			logger.info("Creating new log file. hdfPath=" + fullPath);
-			FSDataOutputStream ostream = fileSystem.create(hdfPath);
+			ostream = fileSystem.create(hdfPath);
 			logWriter = new PrintWriter(ostream);
 			currentFileName = fullPath;
 		}
