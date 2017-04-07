@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,6 +74,7 @@ public class AuditProviderFactory {
 	private AuditHandler mProvider = null;
 	private String componentAppType = "";
 	private boolean mInitDone = false;
+	private JVMShutdownHook jvmShutdownHook = null;
 
 	private AuditProviderFactory() {
 		LOG.info("AuditProviderFactory: creating..");
@@ -104,6 +106,16 @@ public class AuditProviderFactory {
 
 	public boolean isInitDone() {
 		return mInitDone;
+	}
+
+	/**
+	 * call shutdown hook to provide a way to
+	 * shutdown gracefully in addition to the ShutdownHook mechanism
+	 */
+	public void shutdown() {
+		if (isInitDone() && jvmShutdownHook != null) {
+			jvmShutdownHook.run();
+		}
 	}
 
 	public synchronized void init(Properties props, String appType) {
@@ -463,7 +475,7 @@ public class AuditProviderFactory {
 
 	private void installJvmSutdownHook(Properties props) {
 		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
-		JVMShutdownHook jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
+		jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
 		ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
 	}
 
@@ -503,6 +515,7 @@ public class AuditProviderFactory {
 		final Semaphore doneCleanup = new Semaphore(0);
 		final Thread cleanupThread;
 		final int maxWait;
+		final AtomicBoolean done = new AtomicBoolean(false);
 
 		public JVMShutdownHook(AuditHandler provider, int maxWait) {
 			this.maxWait = maxWait;
@@ -513,6 +526,10 @@ public class AuditProviderFactory {
 		}
 
 		public void run() {
+			if (!done.compareAndSet(false, true)) {
+				LOG.info("==> JVMShutdownHook.run() already done by another thread");
+				return;
+			}
 			LOG.info("==> JVMShutdownHook.run()");
 			LOG.info("JVMShutdownHook: Signalling async audit cleanup to start.");
 			startCleanup.release();
