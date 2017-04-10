@@ -122,7 +122,7 @@ fi
 errorList=
 
 if [ "$SOLR_INSTALL" = "true" -a $is_root -eq 0 ]; then
-    echo "Error: Solr will be installed only if run as root. Please download and install before continuing"
+    echo "Error: Solr will be installed only if run as root."
     exit 1
 fi
 
