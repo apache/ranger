@@ -60,7 +60,7 @@ import kafka.utils.ZkUtils;
  * 
  * Policies available from admin via:
  * 
- * http://localhost:6080/service/plugins/policies/download/KafkaTest
+ * http://localhost:6080/service/plugins/policies/download/cl1_kafka
  * 
  * Clients and services authenticate to Kafka using the SASL SSL protocol as part of this test.
  */

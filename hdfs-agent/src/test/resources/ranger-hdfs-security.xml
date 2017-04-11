@@ -20,7 +20,7 @@
 
 	<property>
 		<name>ranger.plugin.hdfs.service.name</name>
-		<value>HDFSTest</value>
+		<value>cl1_hadoop</value>
 		<description>
 			Name of the Ranger service containing policies for this SampleApp instance
 		</description>

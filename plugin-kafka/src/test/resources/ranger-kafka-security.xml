@@ -27,7 +27,7 @@
 
 	<property>
 		<name>ranger.plugin.kafka.service.name</name>
-		<value>KafkaTest</value>
+		<value>cl1_kafka</value>
 		<description>
 			Name of the Ranger service containing policies for this SampleApp instance
 		</description>
