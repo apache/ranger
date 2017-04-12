@@ -170,7 +170,7 @@
                 <outputDirectory>/ldaptool/lib</outputDirectory>
                 <directory>ugsync/ldapconfigchecktool/ldapconfigcheck/target</directory>
             <includes>
-                <include>ldapconfigcheck.jar</include>
+                <include>ldapconfigcheck-${project.version}.jar</include>
             </includes>
 	</fileSet>
 	<fileSet>
