@@ -35,7 +35,6 @@ if (not 'JAVA_HOME' in os.environ):
 
 debugLevel = 1
 generateXML = 0
-installPropDirName = '.'
 #logFolderName = '/var/log/ranger'
 initdDirName = '/etc/init.d'
 
@@ -57,11 +56,15 @@ PROP2ALIASMAP = { 'ranger.usersync.ldap.ldapbindpassword':'ranger.usersync.ldap.
 				   'ranger.usersync.keystore.password':'usersync.ssl.key.password',
 				   'ranger.usersync.truststore.password':'usersync.ssl.truststore.password'}
 
-installTemplateDirName = join(installPropDirName,'templates')
-confDistDirName = join(installPropDirName, confDistBaseDirName)
+RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
+if RANGER_USERSYNC_HOME is None:
+    RANGER_USERSYNC_HOME = os.getcwd()
+
+installTemplateDirName = join(RANGER_USERSYNC_HOME,'templates')
+confDistDirName = join(RANGER_USERSYNC_HOME, confDistBaseDirName)
 #ugsyncLogFolderName = join(logFolderName, 'usersync')
-nativeAuthFolderName = join(installPropDirName, 'native')
-localConfFolderName = join(installPropDirName, confBaseDirName)
+nativeAuthFolderName = join(RANGER_USERSYNC_HOME, 'native')
+localConfFolderName = join(RANGER_USERSYNC_HOME, confBaseDirName)
 
 nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
 pamAuthProgramName = join(nativeAuthFolderName, 'pamCredValidator.uexe')
@@ -88,13 +91,9 @@ hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-usersync-env-hadoopconfdir.sh"
 ENV_PID_FILE = 'ranger-usersync-env-piddir.sh'
 
-RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
-if RANGER_USERSYNC_HOME is None:
-    RANGER_USERSYNC_HOME = os.getcwd()
-
 def populate_global_dict():
     global globalDict
-    read_config_file = open(os.path.join(RANGER_USERSYNC_HOME,'install.properties'))
+    read_config_file = open(join(RANGER_USERSYNC_HOME,'install.properties'))
     for each_line in read_config_file.read().split('\n') :
         each_line = each_line.strip()
         if len(each_line) == 0:
@@ -105,7 +104,7 @@ def populate_global_dict():
             key , value = each_line.split("=",1)
             key = key.strip()
             if 'PASSWORD' in key:
-                jceks_file_path = os.path.join(RANGER_USERSYNC_HOME, 'jceks','ranger_db.jceks')
+                jceks_file_path = join(RANGER_USERSYNC_HOME, 'jceks','ranger_db.jceks')
                 value = ''
             value = value.strip()
             globalDict[key] = value
@@ -292,7 +291,7 @@ def createGroup(groupname):
 
 def initializeInitD(ownerName):
 	if (os.path.isdir(initdDirName)):
-		fn = join(installPropDirName,initdProgramName)
+		fn = join(RANGER_USERSYNC_HOME,initdProgramName)
 		initdFn = join(initdDirName,initdProgramName)
 		shutil.copy(fn, initdFn)
 		if (ownerName != 'ranger'):
@@ -316,7 +315,7 @@ def initializeInitD(ownerName):
 						os.remove(scriptName)
 					os.symlink(initdFn,scriptName)
 		userSyncScriptName = "ranger-usersync-services.sh"
-		localScriptName = os.path.abspath(join(installPropDirName,userSyncScriptName))
+		localScriptName = os.path.abspath(join(RANGER_USERSYNC_HOME,userSyncScriptName))
 		ubinScriptName = join("/usr/bin",initdProgramName)
 		if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
 			os.remove(ubinScriptName)
@@ -352,7 +351,7 @@ def main():
                 pid_dir_path = "/var/run/ranger"
 
 	if logFolderName.lower() == "$pwd" or logFolderName == "" :
-                logFolderName = os.path.join(os.getcwd(),"logs")
+                logFolderName = join(os.getcwd(),"logs")
 	ugsyncLogFolderName = logFolderName
 
 	dirList = [ rangerBaseDirName, usersyncBaseDirFullName, confFolderName, certFolderName ]
@@ -383,7 +382,7 @@ def main():
 		os.symlink(confFolderName, localConfFolderName)
 
 	defaultProps = getXMLConfigMap(join(confFolderName,defaultSiteXMLFileName))
-	installProps = getPropertiesConfigMap(join(installPropDirName,installPropFileName))
+	installProps = getPropertiesConfigMap(join(RANGER_USERSYNC_HOME,installPropFileName))
 	modifiedInstallProps = convertInstallPropsToXML(installProps)
 
 	mergeProps = {}
@@ -525,19 +524,19 @@ def main():
         write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
         write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
         write_env_files("USERSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
-        os.chown(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
-        os.chmod(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),0755)
-        os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
-        os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
-        os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
-        os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0755)
+        os.chown(join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
+        os.chmod(join(confBaseDirName, ENV_LOGDIR_FILE),0755)
+        os.chown(join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
+        os.chmod(join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
+        os.chown(join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
+        os.chmod(join(confBaseDirName, ENV_PID_FILE),0755)
 
-        f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
+        f = open(join(confBaseDirName, ENV_PID_FILE), "a+")
         f.write("\nexport {0}={1}".format("UNIX_USERSYNC_USER",unix_user))
         f.close()
 
-        hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
-	usersync_conf_full_path = os.path.join(usersyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
+        hadoop_conf_full_path = join(hadoop_conf, hadoopConfFileName)
+	usersync_conf_full_path = join(usersyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
         if not isfile(hadoop_conf_full_path):
                 print "WARN: core-site.xml file not found in provided hadoop conf path..."
                 f = open(usersync_conf_full_path, "w")
