@@ -369,13 +369,21 @@ if [ $is_root -eq 1 ]; then
     fi
 
     set_ownership $SOLR_USER $SOLR_GROUP $SOLR_INSTALL_FOLDER
-    mkdir -p $SOLR_RANGER_HOME
+	if [ ! -d $SOLR_RANGER_HOME ]; then
+		mkdir -p $SOLR_RANGER_HOME
+    fi
     set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_HOME
-    mkdir -p $SOLR_LOG_FOLDER
+
+	if [ ! -d $SOLR_LOG_FOLDER ]; then
+		mkdir -p $SOLR_LOG_FOLDER
+    fi
     set_ownership $SOLR_USER $SOLR_GROUP $SOLR_LOG_FOLDER
+
     if [ "$SOLR_DEPLOYMENT" = "standalone" ]; then
-	mkdir -p $SOLR_RANGER_DATA_FOLDER
-	set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_DATA_FOLDER
+		if [ ! -d $SOLR_RANGER_DATA_FOLDER ]; then
+			mkdir -p $SOLR_RANGER_DATA_FOLDER
+		fi
+		set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_DATA_FOLDER
     fi
 else
     set_ownership $SOLR_USER $SOLR_GROUP $SOLR_RANGER_HOME
