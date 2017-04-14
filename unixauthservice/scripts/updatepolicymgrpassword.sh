@@ -18,8 +18,6 @@
 INSTALL_BASE=$PWD
 
 MOD_NAME="ranger-usersync"
-unix_user=ranger
-unix_group=ranger
 
 INSTALL_DIR=${INSTALL_BASE}
 
@@ -56,6 +54,27 @@ check_ret_status(){
 		exit 1;
 	fi
 }
+
+get_prop(){
+	validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+	if  test -z "$validateProperty" ; then log "[E] '$1' not found in $2 file while getting....!!"; exit 1; fi
+	value=$(echo $validateProperty | cut -d "=" -f2-)
+	if [[ $1 == *password* ]]
+        then
+                echo $value
+        else
+                echo $value | tr -d \'\"
+        fi
+}
+
+PROPFILE=$PWD/install.properties
+if [ ! -f "${PROPFILE}" ]; then
+    echo "$PROPFILE file not found....!!"
+    exit 1;
+fi
+
+unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_group=$(get_prop 'unix_group' $PROPFILE)
 
 SYNC_LDAP_BIND_KEYSTOREPATH=`grep '^[ \t]*CRED_KEYSTORE_FILENAME[ \t]*=' ${cdir}/install.properties | sed -e 's:^[ \t]*CRED_KEYSTORE_FILENAME[ \t]*=[ \t]*::'`
 

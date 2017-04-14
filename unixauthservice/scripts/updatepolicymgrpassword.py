@@ -30,9 +30,14 @@ from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
 globalDict = {}
+installglobalDict={}
 
 os_name = platform.system()
 os_name = os_name.upper()
+
+RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
+if RANGER_USERSYNC_HOME is None:
+    RANGER_USERSYNC_HOME = os.getcwd()
 
 def check_output(query):
 	if os_name == "LINUX":
@@ -69,9 +74,27 @@ def import_properties_from_xml(xml_path, properties_from_xml=None):
 		print('XML file not found at path : ' + str(xml_path))
 	return properties_from_xml
 
+def populate_global_install_dict():
+    global installglobalDict
+    read_config_file = open(os.path.join(RANGER_USERSYNC_HOME,'install.properties'))
+    for each_line in read_config_file.read().split('\n') :
+        each_line = each_line.strip()
+        if len(each_line) == 0:
+            continue
+        elif each_line[0] == "#":
+            continue
+        if re.search('=', each_line):
+            key , value = each_line.split("=",1)
+            key = key.strip()
+            if 'PASSWORD' in key:
+                jceks_file_path = os.path.join(RANGER_USERSYNC_HOME, 'jceks','ranger_db.jceks')
+                value = ''
+            value = value.strip()
+            installglobalDict[key] = value
 
 def main():
 	global globalDict
+	populate_global_install_dict()
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
@@ -102,8 +125,8 @@ def main():
 	SYNC_POLICY_MGR_ALIAS="ranger.usersync.policymgr.password"
 	SYNC_POLICY_MGR_PASSWORD = ''
 	SYNC_POLICY_MGR_USERNAME = ''
-	unix_user = "ranger"
-	unix_group = "ranger"
+	unix_user = installglobalDict['unix_user']
+	unix_group = installglobalDict['unix_group']
 
 	while SYNC_POLICY_MGR_USERNAME == "":
 		print "Enter policymgr user name:"
