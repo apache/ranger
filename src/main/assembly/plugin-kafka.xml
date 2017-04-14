@@ -184,11 +184,5 @@
 			<destName>install.properties</destName>
 			<fileMode>755</fileMode>
 		</file>
-		<file>
-			<source>plugin-kafka/scripts/kafka-plugin-install.properties</source>
-			<outputDirectory>/</outputDirectory>
-			<destName>kafka-plugin-install.properties</destName>
-			<fileMode>755</fileMode>
-		</file>
 	</files>
 </assembly>
