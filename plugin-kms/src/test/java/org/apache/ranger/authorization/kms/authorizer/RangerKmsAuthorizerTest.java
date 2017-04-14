@@ -33,11 +33,13 @@ import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.hadoop.crypto.key.kms.server.KMSWebApp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.easymock.EasyMock;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * Policies available from admin via:
@@ -46,6 +48,7 @@ import org.junit.Test;
  *
  * The user "bob" can do anything. The group "IT" can only call the "get" methods
  */
+@RunWith(MockitoJUnitRunner.class)
 public class RangerKmsAuthorizerTest {
 
     private static KMSWebApp kmsWebapp;
@@ -81,10 +84,9 @@ public class RangerKmsAuthorizerTest {
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
         // Start KMSWebApp
-        ServletContextEvent servletContextEvent = EasyMock.createMock(ServletContextEvent.class);
-        ServletContext servletContext = EasyMock.createMock(ServletContext.class);
-        EasyMock.expect(servletContextEvent.getServletContext()).andReturn(servletContext).anyTimes();
-        EasyMock.replay(servletContextEvent);
+        ServletContextEvent servletContextEvent = Mockito.mock(ServletContextEvent.class);
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
+        Mockito.when(servletContextEvent.getServletContext()).thenReturn(servletContext);
 
         kmsWebapp = new KMSWebApp();
         kmsWebapp.contextInitialized(servletContextEvent);
