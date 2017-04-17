@@ -372,7 +372,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 						// If the rest call to ranger admin fails, 
 		 				// propagate the failure to the caller for retry in next sync cycle.
 						if (addUserGroupInfo(ugInfo) == null) {
-							String msg = "Failed to add add user group info";
+							String msg = "Failed to add user group info";
 		 					LOG.error(msg);
 		 					throw new Exception(msg);
 						}
@@ -399,7 +399,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 						// If the rest call to ranger admin fails, 
 		 				// propagate the failure to the caller for retry in next sync cycle.
 						if (addUserGroupInfo(ugInfo) == null) {
-							String msg = "Failed to add add user group info";
+							String msg = "Failed to add user group info";
 		 					LOG.error(msg);
 		 					throw new Exception(msg);
 						}
