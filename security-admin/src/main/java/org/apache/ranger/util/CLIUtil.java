@@ -22,6 +22,11 @@
  */
 package org.apache.ranger.util;
 
+import java.util.Locale;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.security.standalone.StandaloneSecurityHandler;
@@ -29,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  *
@@ -63,5 +69,11 @@ public class CLIUtil {
 		logger.info("Authenticating user:" + user);
 		securityHandler.login(user, pwd, context);
 	}
-
+	public static String getMessage(String messagekey,HttpServletRequest request){
+		ServletContext servletContext = request.getSession().getServletContext();
+		ApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(servletContext);
+		Object[] args = new Object[] {};
+		String messageValue=ctx.getMessage(messagekey, args, Locale.getDefault());
+		return messageValue;
+	}
 }

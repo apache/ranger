@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.util.CLIUtil;
 import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
@@ -73,7 +74,7 @@ ExceptionMappingAuthenticationFailureHandler {
 	if (logger.isDebugEnabled()) {
 	    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 	}
-	
+
 		response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Cache-Control", "no-cache");
 		response.setHeader("X-Frame-Options", "DENY");
@@ -81,19 +82,20 @@ ExceptionMappingAuthenticationFailureHandler {
 		try {
 			String msg = exception.getMessage();
 			VXResponse vXResponse = new VXResponse();
-			if(msg!=null && !msg.isEmpty()){
-				if("Bad credentials".equalsIgnoreCase(msg)){
+			if (msg != null && !msg.isEmpty()) {
+				if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials",request).equalsIgnoreCase(msg)) {
+				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+				vXResponse.setMsgDesc("The username or password you entered is incorrect...");
+				logger.info("Error Message : " + msg);
+				} else if (msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("The username or password you entered is incorrect..");
-				}else if(msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")){
+					vXResponse.setMsgDesc("Unable to connect to DB...");
+				} else if (msg.contains("Communications link failure")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("Unable to connect to DB..");
-				}else if(msg.contains("Communications link failure")){
+					vXResponse.setMsgDesc("Unable to connect to DB...");
+				} else if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.disabled",request).equalsIgnoreCase(msg)) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("Unable to connect to DB..");
-				}else if("User is disabled".equalsIgnoreCase(msg)){
-					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("The username or password you entered is disable..");
+					vXResponse.setMsgDesc("The username or password you entered is disable...");
 				}
 			}
 			jsonResp = jsonUtil.writeObjectAsString(vXResponse);
@@ -102,7 +104,7 @@ ExceptionMappingAuthenticationFailureHandler {
 		} catch (IOException e) {
 			logger.info("Error while writing JSON in HttpServletResponse");
 		}
-	
+
 	if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
 //	    if (logger.isDebugEnabled()) {
 //		logger.debug("Forwarding AJAX login request failure to "

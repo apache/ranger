@@ -40,7 +40,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 	</context:component-scan>
 	<context:component-scan base-package="org.apache.ranger" />
 	<tx:annotation-driven />
-    	
+
 	<bean id="defaultEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="persistenceUnitName" value="defaultPU" />
 		<property name="dataSource" ref="defaultDataSource" />
@@ -51,16 +51,16 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 				<property name="generateDdl" value="false" />
 			</bean>
 		</property>
- 		<property name="jpaPropertyMap">
-            <props>
-                <prop key="eclipselink.weaving">false</prop>
-            </props>
-        </property>
+		<property name="jpaPropertyMap">
+			<props>
+				<prop key="eclipselink.weaving">false</prop>
+			</props>
+		</property>
 		<property name="loadTimeWeaver">
-    		<bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+		<bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
 		</property>
 	</bean>
-	
+
 	<bean id="loggingEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="persistenceUnitName" value="loggingPU" />
 		<property name="dataSource" ref="loggingDataSource" />
@@ -71,16 +71,15 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 				<property name="generateDdl" value="false" />
 			</bean>
 		</property>
- 		<property name="jpaPropertyMap">
-            <props>
-                <prop key="eclipselink.weaving">false</prop>
-            </props>
-        </property>
+		<property name="jpaPropertyMap">
+		<props>
+			<prop key="eclipselink.weaving">false</prop>
+		</props>
+		 </property>
 		<property name="loadTimeWeaver">
-    		<bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+		<bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
 		</property>
 	</bean>
-	
 
 	<bean id="xmlPropertyConfigurer" class="org.apache.ranger.common.XMLPropertiesUtil" />
 
@@ -93,15 +92,11 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 				<!-- <value>classpath:xa_ldap.properties</value> -->
 				<value>classpath:core-site.xml</value>
 				<value>classpath:ranger-admin-default-site.xml</value>
-				<value>classpath:ranger-admin-site.xml</value>				
+				<value>classpath:ranger-admin-site.xml</value>
 			</list>
 		</property>
 		<property name="propertiesPersister" ref="xmlPropertyConfigurer" />
 	</bean>
-	
-
-
-
 
 	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
 		<property name="scopes">
@@ -115,7 +110,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			</map>
 		</property>
 	</bean>
-	
+
 	<bean id="messageMappingConfigurer" class="org.apache.ranger.common.ErrorMessageUtil">
 		<property name="locations">
 			<list>
@@ -123,15 +118,15 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			</list>
 		</property>
 	</bean>
-	
+
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="defaultEntityManagerFactory" />
 	</bean>
-	
+
 	<bean id="transactionManager2" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="loggingEntityManagerFactory" />
 	</bean>
-	
+
 	<!-- Datasource and Connection Pool Configuration http://www.mchange.com/projects/c3p0/index.jsp#configuration_properties -->
 	<bean id="defaultDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass">
@@ -170,8 +165,8 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="idleConnectionTestPeriod">
 			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
 		</property>
-	</bean>	
-	
+	</bean>
+
 	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass">
 			<value>${ranger.jpa.jdbc.driver}</value>
@@ -210,7 +205,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
 		</property>
 	</bean>
-		
+
 	<bean id="velocityEngine"
 	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
 		<property name="velocityProperties">
@@ -218,6 +213,12 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 				class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</value>
 		</property>
 	</bean>
-			
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>WEB-INF/classes/internationalization/messages</value>
+			</list>
+		</property>
+	</bean>
 	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate"></bean>
 </beans>
