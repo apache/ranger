@@ -155,7 +155,7 @@ public class RangerBasePlugin {
 			try {
 				policyEngineRefreshTimer.schedule(new PolicyEngineRefresher(this), policyReorderIntervalMs, policyReorderIntervalMs);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Scheduled PolicyEngineRefresher to reorder policies nbased on number of evaluations in and every " + policyReorderIntervalMs + " milliseconds");
+					LOG.debug("Scheduled PolicyEngineRefresher to reorder policies based on number of evaluations in and every " + policyReorderIntervalMs + " milliseconds");
 				}
 			} catch (IllegalStateException exception) {
 				LOG.error("Error scheduling policyEngineRefresher:", exception);
