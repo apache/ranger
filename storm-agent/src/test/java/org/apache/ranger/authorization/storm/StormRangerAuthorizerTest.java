@@ -33,6 +33,10 @@ import org.junit.Test;
  * A simple test that wires a WordSpout + WordCounterBolt into a topology and runs it. The "RangerStormAuthorizer" takes care of authorization.
  * The policies state that "bob" can do anything with the "word-count" topology. In addition, "bob" can create/kill the "temp*" topologies, but do
  * nothing else.
+ *
+ * In addition we have some TAG based policies created in Atlas and synced into Ranger:
+ *
+ * a) The tag "StormTopologyTag" is associated with "create/kill" permissions to the "bob" user for the "stormdev" topology.
  */
 public class StormRangerAuthorizerTest {
 
@@ -173,6 +177,38 @@ public class StormRangerAuthorizerTest {
         });
     }
 
+    @Test
+    public void testTAGBasedPolicy() throws Exception {
+        final Config conf = new Config();
+        conf.setDebug(true);
+
+        final TopologyBuilder builder = new TopologyBuilder();
+        builder.setSpout("words", new WordSpout());
+        builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
+
+        final Subject subject = new Subject();
+
+        subject.getPrincipals().add(new SimplePrincipal("bob"));
+        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+            public Void run() throws Exception {
+                // bob can create the "stormdev" topology
+                cluster.submitTopology("stormdev", conf, builder.createTopology());
+
+                cluster.killTopology("stormdev");
+
+                // but not the "stormdev2" topology
+                try {
+                    cluster.submitTopology("stormdev2", conf, builder.createTopology());
+                    Assert.fail("Authorization failure expected");
+                } catch (Throwable ex) {
+                    // expected
+                }
+
+                return null;
+            }
+        });
+
+    }
 
     private static class SimplePrincipal implements Principal {
 

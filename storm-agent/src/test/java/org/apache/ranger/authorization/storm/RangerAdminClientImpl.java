@@ -38,6 +38,7 @@ import com.google.gson.GsonBuilder;
 public class RangerAdminClientImpl implements RangerAdminClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminClientImpl.class);
     private final static String cacheFilename = "storm-policies.json";
+    private final static String tagFilename = "storm-policies-tag.json";
     private Gson gson;
 
     public void init(String serviceName, String appId, String configPropertyPrefix) {
@@ -72,8 +73,15 @@ public class RangerAdminClientImpl implements RangerAdminClient {
     }
 
     public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-        return null;
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
 
+        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + tagFilename);
+        byte[] cacheBytes = Files.readAllBytes(cachePath);
+
+        return gson.fromJson(new String(cacheBytes), ServiceTags.class);
     }
 
     public List<String> getTagTypes(String tagTypePattern) throws Exception {

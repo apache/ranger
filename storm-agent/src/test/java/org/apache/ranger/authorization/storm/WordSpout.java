@@ -20,7 +20,7 @@ package org.apache.ranger.authorization.storm;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.storm.shade.org.apache.commons.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;

@@ -20,7 +20,7 @@
 
 	<property>
 		<name>ranger.plugin.storm.service.name</name>
-		<value>StormTest</value>
+		<value>cl1_storm</value>
 		<description>
 			Name of the Ranger service containing policies for this SampleApp instance
 		</description>
