@@ -283,18 +283,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public void init() throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.init()");
+			LOG.debug("==> ServiceDBStore.init()");
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.init()");
+			LOG.debug("<== ServiceDBStore.init()");
 		}
 	}
 
 	@PostConstruct
 	public void initStore() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.initStore()");
+			LOG.debug("==> ServiceDBStore.initStore()");
 		}
 
 		if(! legacyServiceDefsInitDone) {
@@ -321,7 +321,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							}
 						});
 					} catch (Throwable ex) {
-						LOG.fatal("ServiceDefDBStore.initStore(): Failed to update DB: " + ex);
+						LOG.fatal("ServiceDBStore.initStore(): Failed to update DB: " + ex);
 					}
 
 					legacyServiceDefsInitDone = true;
@@ -330,14 +330,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.initStore()");
+			LOG.debug("<== ServiceDBStore.initStore()");
 		}
 	}
 
 	@Override
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.createServiceDef(" + serviceDef + ")");
+			LOG.debug("==> ServiceDBStore.createServiceDef(" + serviceDef + ")");
 		}
 
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(
@@ -575,7 +575,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		postCreate(createdServiceDef);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.createServiceDef(" + serviceDef + "): " + createdServiceDef);
+			LOG.debug("<== ServiceDBStore.createServiceDef(" + serviceDef + "): " + createdServiceDef);
 		}
 
 		return createdServiceDef;
@@ -584,7 +584,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.updateServiceDef(" + serviceDef + ")");
+			LOG.debug("==> ServiceDBStore.updateServiceDef(" + serviceDef + ")");
 		}
 
 		Long serviceDefId = serviceDef.getId();
@@ -634,7 +634,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.updateServiceDef(" + serviceDef + "): " + serviceDef);
+			LOG.debug("<== ServiceDBStore.updateServiceDef(" + serviceDef + "): " + serviceDef);
 		}
 
 		return updatedSvcDef;
@@ -1135,7 +1135,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public void deleteServiceDef(Long serviceDefId, Boolean forceDelete) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
+			LOG.debug("==> ServiceDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
 		}
 
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
@@ -1238,7 +1238,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		postDelete(serviceDef);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
+			LOG.debug("<== ServiceDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
 		}
 	}
 
@@ -1283,12 +1283,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public RangerServiceDef getServiceDef(Long id) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.getServiceDef(" + id + ")");
+			LOG.debug("==> ServiceDBStore.getServiceDef(" + id + ")");
 		}
 
 		RangerServiceDef ret = serviceDefService.read(id);
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceDefDBStore.getServiceDef(" + id + "): " + ret);
+			LOG.debug("<== ServiceDBStore.getServiceDef(" + id + "): " + ret);
 		}
 
 		return ret;
@@ -1297,7 +1297,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public RangerServiceDef getServiceDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.getServiceDefByName(" + name + ")");
+			LOG.debug("==> ServiceDBStore.getServiceDefByName(" + name + ")");
 		}
 
 		RangerServiceDef ret = null;
@@ -1309,7 +1309,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("== ServiceDefDBStore.getServiceDefByName(" + name + "): " + ret);
+			LOG.debug("== ServiceDBStore.getServiceDefByName(" + name + "): " + ret);
 		}
 
 		return  ret;
@@ -1357,7 +1357,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public RangerService createService(RangerService service) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDefDBStore.createService(" + service + ")");
+			LOG.debug("==> ServiceDBStore.createService(" + service + ")");
 		}
 
 		if (service == null) {
@@ -1370,7 +1370,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
 		if (validConfigs == null) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
+				LOG.debug("==> ConfigParams cannot be null, ServiceDBStore.createService(" + service + ")");
 			}
 			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
 		}
@@ -1485,7 +1485,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
 		if (validConfigs == null) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> ConfigParams cannot be null, ServiceDefDBStore.createService(" + service + ")");
+				LOG.debug("==> ConfigParams cannot be null, ServiceDBStore.createService(" + service + ")");
 			}
 			throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
 		}
