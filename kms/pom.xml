@@ -182,12 +182,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-test</artifactId>
-            <version>${curator.test.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
             <version>${jersey-bundle.version}</version>
@@ -287,11 +281,6 @@
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-recipes</artifactId>
-            <version>2.6.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

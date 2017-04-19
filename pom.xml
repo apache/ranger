@@ -149,7 +149,7 @@
         <commons.math.version>2.2</commons.math.version>
         <commons.net.version>3.3</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
-        <curator.test.version>2.7.0</curator.test.version>
+        <curator.test.version>2.7.1</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
         <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
