@@ -53,7 +53,7 @@ public class HdfsClient extends BaseClient {
     for (Map.Entry<String, String> entry: connectionProperties.entrySet())  {
       String key = entry.getKey();
       String value = entry.getValue();
-      if (!rangerInternalPropertyKeys.contains(key)) {
+      if (!rangerInternalPropertyKeys.contains(key) && value != null) {
         conf.set(key, value);
       }
     }
@@ -253,7 +253,7 @@ public class HdfsClient extends BaseClient {
 	  String lookupPrincipal=null;
 	  try{
 		  lookupPrincipal = SecureClientLogin.getPrincipal(configs.get("lookupprincipal"), java.net.InetAddress.getLocalHost().getCanonicalHostName());
-	  }catch(Exception e){	
+	  }catch(Exception e){
 		  //do nothing
 	  }
 	  String lookupKeytab = configs.get("lookupkeytab");
