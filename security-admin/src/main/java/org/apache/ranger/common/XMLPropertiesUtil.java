@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -45,6 +46,7 @@ public class XMLPropertiesUtil extends DefaultPropertiesPersister {
 		try {
 			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory
 					.newInstance();
+			xmlDocumentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 			xmlDocumentBuilderFactory.setIgnoringComments(true);
 			xmlDocumentBuilderFactory.setNamespaceAware(true);
 			DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory
