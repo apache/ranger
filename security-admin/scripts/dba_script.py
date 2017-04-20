@@ -163,7 +163,7 @@ class BaseDB(object):
 class MysqlConf(BaseDB):
 	# Constructor
 	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
-		self.host = host
+		self.host = host.lower()
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
 		self.db_ssl_enabled=db_ssl_enabled.lower()
