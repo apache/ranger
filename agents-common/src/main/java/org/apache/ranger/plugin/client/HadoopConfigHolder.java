@@ -293,7 +293,7 @@ public class HadoopConfigHolder  {
 		if (prop != null) {
 			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP);
 			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP);
-			if (!StringUtils.isEmpty(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP).trim())) {
+			if (!StringUtils.isEmpty(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP))) {
 				try {
 					enableHiveMetastoreLookup = Boolean.valueOf(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP,"false").trim());
 				} catch (Exception e) {
