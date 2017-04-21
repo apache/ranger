@@ -390,7 +390,7 @@ define(function(require) {
                 noPolicytoExport        :'No policies found to export!',
                 importingFiles          :'Importing policies from file is started...',
                 noDeleteUserRow           :'Please select user first to delete.',
-                noDeleteGroupRow        :'Please select Group first to delete.',
+                noDeleteGroupRow        :'Please select group first to delete.',
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
  
