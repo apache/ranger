@@ -90,7 +90,7 @@ public class HiveConnectionMgr {
 					} catch(Exception e) {
 						hiveConnectionCache.remove(serviceName);
 						/*
-						 * There is a possiblity that some other thread is also using this connection that we are going to close but
+						 * There is a possibility that some other thread is also using this connection that we are going to close but
 						 * presumably the connection is bad which is why we are closing it, so damage should not be much.
 						 */
 						hiveClient.close();
