@@ -81,7 +81,7 @@ public abstract class BaseClient {
 			 String nameRules = configHolder.getNameRules();
 			 if(StringUtils.isEmpty(nameRules)){
 				 if(LOG.isDebugEnabled()){
-					 LOG.debug("Name is empty. Setting Name Rule as 'DEFAULT'");
+					 LOG.debug("Name Rule is empty. Setting Name Rule as 'DEFAULT'");
 				 }
 				 nameRules = DEFAULT_NAME_RULE;
 			 }
