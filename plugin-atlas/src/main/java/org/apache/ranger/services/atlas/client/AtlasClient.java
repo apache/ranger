@@ -545,7 +545,6 @@ public class AtlasClient extends BaseClient {
 		ClientResponse statusResponse = null;
 		ClientResponse resultResponse = null;
 		try {
-			client = Client.create();
 			statusResponse = getStatusResponse(client);
 			if (statusResponse != null) {
 				if (LOG.isDebugEnabled()) {
