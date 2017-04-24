@@ -168,6 +168,8 @@ public class XmlConfigChanger {
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		doc = builder.parse(inpFile);
 		

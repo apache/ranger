@@ -55,6 +55,8 @@ public class XMLUtils {
 		try {
 			DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
 			xmlDocumentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			xmlDocumentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                	xmlDocumentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 			xmlDocumentBuilderFactory.setIgnoringComments(true);
 			xmlDocumentBuilderFactory.setNamespaceAware(true);
 
