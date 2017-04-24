@@ -42,6 +42,13 @@ if is_unix:
 elif os_name == "WINDOWS":
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 
+RANGER_ADMIN_CONF = os.getenv("RANGER_ADMIN_CONF")
+if RANGER_ADMIN_CONF is None:
+	if is_unix:
+		RANGER_ADMIN_CONF = RANGER_ADMIN_HOME
+	elif os_name == "WINDOWS":
+		RANGER_ADMIN_CONF = os.path.join(RANGER_ADMIN_HOME,'bin')
+
 def check_output(query):
 	if is_unix:
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
@@ -65,9 +72,9 @@ def log(msg,type):
 def populate_global_dict():
 	global globalDict
 	if is_unix:
-		read_config_file = open(os.path.join(RANGER_ADMIN_HOME,'install.properties'))
+		read_config_file = open(os.path.join(RANGER_ADMIN_CONF,'install.properties'))
 	elif os_name == "WINDOWS":
-		read_config_file = open(os.path.join(RANGER_ADMIN_HOME,'bin','install_config.properties'))
+		read_config_file = open(os.path.join(RANGER_ADMIN_CONF,'install_config.properties'))
 		library_path = os.path.join(RANGER_ADMIN_HOME,"cred","lib","*")
 	for cireach_line in read_config_file.read().split('\n') :
 		each_line = cireach_line.strip()

@@ -42,7 +42,7 @@ get_prop(){
         fi
 }
 
-PROPFILE=$PWD/install.properties
+PROPFILE=${RANGER_ADMIN_CONF:-$PWD}/install.properties
 if [ ! -f "${PROPFILE}" ]; then
     echo "$PROPFILE file not found....!!"
     exit 1;
