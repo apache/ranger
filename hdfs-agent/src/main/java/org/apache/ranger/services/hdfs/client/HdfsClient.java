@@ -201,7 +201,7 @@ public class HdfsClient extends BaseClient {
 	public static Map<String, Object> connectionTest(String serviceName,
 			Map<String, String> configs) throws Exception {
 
-	LOG.info("===> HdfsClient.testConnection()" );
+	LOG.info("===> HdfsClient.connectionTest()" );
     Map<String, Object> responseData = new HashMap<String, Object>();
     boolean connectivityStatus = false;
 
@@ -220,7 +220,7 @@ public class HdfsClient extends BaseClient {
 			try {
 				 testResult = connectionObj.listFiles("/", null,null);
 			} catch (HadoopException e) {
-				LOG.error("<== HdfsClient.testConnection() error " + e.getMessage(),e );
+				LOG.error("<== HdfsClient.connectionTest() error " + e.getMessage(),e );
 					throw e;
 			}
 
@@ -244,7 +244,7 @@ public class HdfsClient extends BaseClient {
 			generateResponseDataMap(connectivityStatus, testconnMsg, additionalMsg,
 					null, null, responseData);
 		}
-		LOG.info("<== HdfsClient.testConnection(): Status " + testconnMsg );
+		LOG.info("<== HdfsClient.connectionTest(): Status " + testconnMsg );
 		return responseData;
 	}
 
