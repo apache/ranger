@@ -153,6 +153,8 @@ public class UnixAuthenticationService {
 			if (in != null) {
 				try {
 					DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+					xmlDocumentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                        		xmlDocumentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 					xmlDocumentBuilderFactory.setIgnoringComments(true);
 					xmlDocumentBuilderFactory.setNamespaceAware(true);
 					DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory.newDocumentBuilder();
