@@ -219,6 +219,7 @@
         <xmlenc.version>0.52</xmlenc.version>
         <xz.version>1.0</xz.version>
         <zookeeper.version>3.4.6</zookeeper.version>
+        <hive.thrift.version>0.9.3</hive.thrift.version>
     </properties>
     <profiles>
         <profile>
