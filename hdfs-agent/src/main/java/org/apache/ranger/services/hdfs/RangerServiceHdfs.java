@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
@@ -40,6 +41,8 @@ import org.apache.commons.logging.LogFactory;
 public class RangerServiceHdfs extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHdfs.class);
+        private static final String AUDITTOHDFS_KMS_PATH = "/ranger/kms/audit";
+        private static final String AUDITTOHDFS_POLICY_NAME = "kms-audit-path";
 	
 	public RangerServiceHdfs() {
 		super();
@@ -137,11 +140,81 @@ public class RangerServiceHdfs extends RangerBaseService {
 			}
 		}
 
+                try {
+                        // we need to create one policy for keyadmin user for audit to HDFS
+                        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+                        for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
+                                RangerPolicy policy = getPolicyForKMSAudit(aHierarchy);
+                                if (policy != null) {
+                                        ret.add(policy);
+                                }
+                        }
+                } catch (Exception e) {
+                        LOG.error("Error creating policy for keyadmin for audit to HDFS : " + service.getName(), e);
+                }
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceHdfs.getDefaultRangerPolicies() : " + ret);
 		}
 		return ret;
 	}
+
+        private RangerPolicy getPolicyForKMSAudit(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
+
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("==> RangerServiceHdfs.getPolicyForKMSAudit()");
+                }
+
+                RangerPolicy policy = new RangerPolicy();
+
+                policy.setIsEnabled(true);
+                policy.setVersion(1L);
+                policy.setName(AUDITTOHDFS_POLICY_NAME);
+                policy.setService(service.getName());
+                policy.setDescription("Policy for " + AUDITTOHDFS_POLICY_NAME);
+                policy.setIsAuditEnabled(true);
+                policy.setResources(createKMSAuditResource(resourceHierarchy));
+
+                List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
+                //Create policy item for keyadmin
+                RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+                List<String> userKeyAdmin = new ArrayList<String>();
+                userKeyAdmin.add("keyadmin");
+                policyItem.setUsers(userKeyAdmin);
+                policyItem.setAccesses(getAndAllowAllAccesses());
+                policyItem.setDelegateAdmin(false);
+
+                policyItems.add(policyItem);
+                policy.setPolicyItems(policyItems);
+
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== RangerServiceHdfs.getPolicyForKMSAudit()" + policy);
+                }
+
+                return policy;
+        }
+
+        private Map<String, RangerPolicy.RangerPolicyResource> createKMSAuditResource(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("==> RangerServiceHdfs.createKMSAuditResource()");
+                }
+                Map<String, RangerPolicy.RangerPolicyResource> resourceMap = new HashMap<>();
+
+                for (RangerServiceDef.RangerResourceDef resourceDef : resourceHierarchy) {
+                        RangerPolicy.RangerPolicyResource polRes = new RangerPolicy.RangerPolicyResource();
+
+                        polRes.setIsExcludes(false);
+                        polRes.setIsRecursive(resourceDef.getRecursiveSupported());
+                        polRes.setValue(AUDITTOHDFS_KMS_PATH);
+
+                        resourceMap.put(resourceDef.getName(), polRes);
+                }
+
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== RangerServiceHdfs.createKMSAuditResource():" + resourceMap);
+                }
+                return resourceMap;
+        }
 }
 
 
