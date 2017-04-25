@@ -38,12 +38,9 @@ retryPatchAfterSeconds=120
 
 is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
-if is_unix:
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
-	if RANGER_ADMIN_HOME is None:
-		RANGER_ADMIN_HOME = os.getcwd()
-elif os_name == "WINDOWS":
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+if RANGER_ADMIN_HOME is None:
+	RANGER_ADMIN_HOME = os.getcwd()
 
 if socket.getfqdn().find('.')>=0:
 	client_host=socket.getfqdn()

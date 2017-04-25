@@ -35,12 +35,10 @@ is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
 jisql_debug=True
 masked_pwd_string='********'
-if is_unix:
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
-	if RANGER_ADMIN_HOME is None:
-		RANGER_ADMIN_HOME = os.getcwd()
-elif os_name == "WINDOWS":
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+
+RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+if RANGER_ADMIN_HOME is None:
+	RANGER_ADMIN_HOME = os.getcwd()
 
 RANGER_ADMIN_CONF = os.getenv("RANGER_ADMIN_CONF")
 if RANGER_ADMIN_CONF is None:
