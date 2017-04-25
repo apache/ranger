@@ -114,6 +114,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 
 	@SerializedName("additional_info")
 	protected String additionalInfo;
+	
+	@SerializedName("cluster_name")
+	protected String clusterName;
 
 	public AuthzAuditEvent() {
 		super();
@@ -126,7 +129,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 			String resourcePath, String resourceType, String action,
 			short accessResult, String agentId, long policyId,
 			String resultReason, String aclEnforcer, String sessionId,
-			String clientType, String clientIP, String requestData) {
+			String clientType, String clientIP, String requestData, String clusterName) {
 		this.repositoryType = repositoryType;
 		this.repositoryName = repositoryName;
 		this.user = user;
@@ -144,6 +147,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.clientType = clientType;
 		this.clientIP = clientIP;
 		this.requestData = requestData;
+		this.clusterName = clusterName;
 	}
 
 	/**
@@ -451,6 +455,14 @@ public class AuthzAuditEvent extends AuditEventBase {
 
 	public void setTags(Set<String> tags) {
 		this.tags = tags;
+	}
+
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
 	}
 
 	public String getAdditionalInfo() { return this.additionalInfo; }

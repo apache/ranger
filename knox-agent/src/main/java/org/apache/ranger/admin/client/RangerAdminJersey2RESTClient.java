@@ -62,6 +62,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	String _baseUrl = null;
 	String _sslConfigFileName = null;
 	String _serviceName = null;
+	String _clusterName = null;
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
@@ -79,6 +80,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_isSSL = _utils.isSsl(_baseUrl);
 		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
 
 		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s]", _baseUrl, _sslConfigFileName, _serviceName));
 		
@@ -116,6 +118,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+							.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName)
 							.request(MediaType.APPLICATION_JSON_TYPE)
 							.get();
 				}
@@ -130,6 +133,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
+					.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName)
 					.request(MediaType.APPLICATION_JSON_TYPE)
 					.get();
 		}

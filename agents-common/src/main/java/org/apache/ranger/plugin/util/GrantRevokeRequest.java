@@ -56,12 +56,13 @@ public class GrantRevokeRequest implements Serializable {
 	private String              clientType;
 	private String              requestData;
 	private String              sessionId;
+	private String              clusterName;
 
 	public GrantRevokeRequest() {
-		this(null, null, null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 	}
 
-	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress, String clientType, String requestData, String sessionId) {
+	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress, String clientType, String requestData, String sessionId, String clusterName) {
 		setGrantor(grantor);
 		setResource(resource);
 		setUsers(users);
@@ -75,6 +76,7 @@ public class GrantRevokeRequest implements Serializable {
 		setClientType(clientType);
 		setRequestData(requestData);
 		setSessionId(sessionId);
+		setClusterName(clusterName);
 	}
 
 	/**
@@ -259,6 +261,19 @@ public class GrantRevokeRequest implements Serializable {
 		this.sessionId = sessionId;
 	}
 
+	/**
+	 * @return the clusterName
+	 */
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	/**
+	 * @param clusterName the clusterName to set
+	 */
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
 	@Override
 	public String toString( ) {
@@ -314,6 +329,7 @@ public class GrantRevokeRequest implements Serializable {
 		sb.append("clientType={").append(clientType).append("} ");
 		sb.append("requestData={").append(requestData).append("} ");
 		sb.append("sessionId={").append(sessionId).append("} ");
+		sb.append("clusterName={").append(clusterName).append("} ");
 
 		sb.append("}");
 

@@ -42,6 +42,8 @@ public class XPolicyExportAuditService extends XPolicyExportAuditServiceBase<XXP
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("repositoryName", "obj.repositoryName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("cluster", "obj.clusterName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("startDate", "obj.createTime",
 				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
 		searchFields.add(new SearchField("endDate", "obj.createTime",

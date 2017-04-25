@@ -2300,9 +2300,17 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/download/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @Context HttpServletRequest request) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ")");
+	public ServicePolicies getServicePoliciesIfUpdated(
+			@PathParam("serviceName") String serviceName,
+			@QueryParam("lastKnownVersion") Long lastKnownVersion,
+			@DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+			@QueryParam("pluginId") String pluginId,
+			@DefaultValue("") @QueryParam("clusterName") String clusterName,
+			@Context HttpServletRequest request) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated("
+					+ serviceName + ", " + lastKnownVersion + ", "
+					+ lastActivationTime + ")");
 		}
 
 		ServicePolicies ret      = null;
@@ -2348,7 +2356,7 @@ public class ServiceREST {
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg = excp.getMessage();
 			} finally {
-				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, request);
+				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, clusterName, request);
 				RangerPerfTracer.log(perf);
 			}
 		}
@@ -2369,9 +2377,16 @@ public class ServiceREST {
 	@GET
 	@Path("/secure/policies/download/{serviceName}")
 	@Produces({ "application/json", "application/xml" })
-	public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName,@QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId,@Context HttpServletRequest request) throws Exception {
+	public ServicePolicies getSecureServicePoliciesIfUpdated(
+			@PathParam("serviceName") String serviceName,
+			@QueryParam("lastKnownVersion") Long lastKnownVersion,
+			@DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+			@QueryParam("pluginId") String pluginId,
+			@DefaultValue("") @QueryParam("clusterName") String clusterName,
+			@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("+ serviceName + ", " + lastKnownVersion + ")");
+			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("
+					+ serviceName + ", " + lastKnownVersion + ")");
 		}
 		ServicePolicies ret = null;
 		int httpCode = HttpServletResponse.SC_OK;
@@ -2452,7 +2467,7 @@ public class ServiceREST {
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg = excp.getMessage();
 			} finally {
-				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, request);
+				createPolicyDownloadAudit(serviceName, lastKnownVersion, pluginId, httpCode, clusterName, request);
 				RangerPerfTracer.log(perf);
 			}
 		}
@@ -2468,7 +2483,7 @@ public class ServiceREST {
 		return ret;
 	}		
 
-	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, int httpRespCode, HttpServletRequest request) {
+	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, int httpRespCode, String clusterName, HttpServletRequest request) {
 		try {
 			String ipAddress = request.getHeader("X-FORWARDED-FOR");
 
@@ -2483,7 +2498,8 @@ public class ServiceREST {
 			policyExportAudit.setClientIP(ipAddress);
 			policyExportAudit.setRequestedEpoch(lastKnownVersion);
 			policyExportAudit.setHttpRetCode(httpRespCode);
-
+			policyExportAudit.setClusterName(clusterName);
+			
 			assetMgr.createPolicyAudit(policyExportAudit);
 		} catch(Exception excp) {
 			LOG.error("error while creating policy download audit", excp);

@@ -268,10 +268,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		final AuthzAuditEvent _accessDeniedEvent;
 		final String _denialReason;
 		final RangerAuthorizationFilter _filter;
+		final String _clusterName;
 
 		ColumnFamilyAccessResult(boolean everythingIsAccessible, boolean somethingIsAccessible,
 								 List<AuthzAuditEvent> accessAllowedEvents, List<AuthzAuditEvent> familyLevelAccessEvents, AuthzAuditEvent accessDeniedEvent, String denialReason,
-								 RangerAuthorizationFilter filter) {
+								 RangerAuthorizationFilter filter, String clusterName) {
 			_everythingIsAccessible = everythingIsAccessible;
 			_somethingIsAccessible = somethingIsAccessible;
 			// WARNING: we are just holding on to reference of the collection.  Potentially risky optimization
@@ -281,6 +282,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			_denialReason = denialReason;
 			// cached values of access results
 			_filter = filter;
+			_clusterName = clusterName;
 		}
 		
 		@Override
@@ -293,6 +295,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 					.add("accessDeniedEvent", _accessDeniedEvent)
 					.add("denialReason", _denialReason)
 					.add("filter", _filter)
+					.add("clusterName", _clusterName)
 					.toString();
 			
 		}
@@ -317,12 +320,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			throw new AccessDeniedException("Insufficient permissions for operation '" + operation + "',action: " + action);
 		}
 		String table = Bytes.toString(tableBytes);
+		String clusterName = hbasePlugin.getClusterName();
 
 		final String messageTemplate = "evaluateAccess: exiting: user[%s], Operation[%s], access[%s], families[%s], verdict[%s]";
 		ColumnFamilyAccessResult result;
 		if (canSkipAccessCheck(operation, access, table) || canSkipAccessCheck(operation, access, env)) {
 			LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
-			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null);
+			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null, null);
 			if (LOG.isDebugEnabled()) {
 				Map<String, Set<String>> families = getColumnFamilies(familyMap);
 				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
@@ -339,7 +343,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				.auditHandler(auditHandler)
 				.user(user)
 				.access(access)
-				.table(table);
+				.table(table)
+				.clusterName(clusterName);
 		Map<String, Set<String>> families = getColumnFamilies(familyMap);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("evaluateAccess: families to process: " + families.toString());
@@ -358,11 +363,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				reason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, no column families found.", user.getName(), operation, table);
 			}
 			AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent(); // this could be null, of course, depending on audit settings of table.
-
 			// if authorized then pass captured events as access allowed set else as access denied set.
 			result = new ColumnFamilyAccessResult(authorized, authorized,
 						authorized ? Collections.singletonList(event) : null,
-						null, authorized ? null : event, reason, null);
+						null, authorized ? null : event, reason, null, clusterName);
 			if (LOG.isDebugEnabled()) {
 				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
 				LOG.debug(message);
@@ -488,7 +492,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 		// Cache of auth results are encapsulated the in the filter. Not every caller of the function uses it - only preGet and preOpt will.
 		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familesAccessAllowed, familesAccessDenied, familesAccessIndeterminate, columnsAccessAllowed);
-		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter);
+		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter, clusterName);
 		if (LOG.isDebugEnabled()) {
 			String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
 			LOG.debug(message);
@@ -580,6 +584,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			return;
 		}
 		User user = getActiveUser();
+		String clusterName = hbasePlugin.getClusterName();
 		
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
@@ -592,6 +597,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			.table(table)
 			.columnFamily(columnFamily)
 			.column(column)
+			.clusterName(clusterName)
 			.buildRequest()
 			.authorize();
 		
@@ -626,6 +632,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	
 	boolean canSkipAccessCheck(final String operation, String access, final RegionCoprocessorEnvironment regionServerEnv) throws AccessDeniedException {
 
+		String clusterName = hbasePlugin.getClusterName();
 		User user = getActiveUser();
 		// read access to metadata tables is always allowed and isn't audited.
 		if (isAccessForMetaTables(regionServerEnv) && _authUtils.isReadAccess(access)) {
@@ -640,6 +647,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				.remoteAddress(getRemoteAddress())
 				.user(user)
 				.access(createAccess)
+				.clusterName(clusterName)
 				.buildRequest()
 				.authorize();
 			if (session.isAuthorized()) {
@@ -1087,6 +1095,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
 		}
+		String clusterName = hbasePlugin.getClusterName();
 
 		if (CollectionUtils.isNotEmpty(descriptors)) {
 			// Retains only those which passes authorization checks
@@ -1099,7 +1108,8 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				.remoteAddress(getRemoteAddress())
 				.auditHandler(auditHandler)
 				.user(user)
-				.access(access);
+				.access(access)
+				.clusterName(clusterName);
 	
 			Iterator<HTableDescriptor> itr = descriptors.iterator();
 			while (itr.hasNext()) {
@@ -1166,6 +1176,10 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
+
+					String clusterName = plugin.getClusterName();
+					grData.setClusterName(clusterName);
+					
 					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.grantAccess(grData, auditHandler);
@@ -1205,6 +1219,9 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
+					String clusterName = plugin.getClusterName();
+					grData.setClusterName(clusterName);
+					
 					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.revokeAccess(grData, auditHandler);

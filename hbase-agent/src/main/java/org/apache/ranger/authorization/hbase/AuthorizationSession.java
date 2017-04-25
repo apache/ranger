@@ -55,6 +55,8 @@ public class AuthorizationSession {
 	String _column;
 	String _columnFamily;
 	String _remoteAddress;
+	String _clusterName;
+
 	User _user;
 	Set<String> _groups; // this exits to avoid having to get group for a user repeatedly.  It is kept in sync with _user;
 	// Passing a null handler to policy engine would suppress audit logging.
@@ -87,6 +89,11 @@ public class AuthorizationSession {
 	
 	AuthorizationSession access(String anAccess) {
 		_access = anAccess;
+		return this;
+	}
+	
+	AuthorizationSession clusterName(String clusterName) {
+		_clusterName = clusterName;
 		return this;
 	}
 
@@ -191,6 +198,7 @@ public class AuthorizationSession {
 		request.setRequestData(_otherInformation);
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
+		request.setClusterName(_clusterName);
 		
 		_request = request;
 		if (LOG.isDebugEnabled()) {

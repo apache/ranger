@@ -56,6 +56,7 @@ public class RangerBasePlugin {
 	private String                    serviceType;
 	private String                    appId;
 	private String                    serviceName;
+	private String                    clusterName;
 	private PolicyRefresher           refresher;
 	private RangerPolicyEngine        policyEngine;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
@@ -75,6 +76,14 @@ public class RangerBasePlugin {
 
 	public String getServiceType() {
 		return serviceType;
+	}
+
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -108,6 +117,7 @@ public class RangerBasePlugin {
 		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
 		serviceName = configuration.get(propertyPrefix + ".service.name");
+		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 
 		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
@@ -394,6 +404,7 @@ public class RangerBasePlugin {
 			accessRequest.setClientType(request.getClientType());
 			accessRequest.setRequestData(request.getRequestData());
 			accessRequest.setSessionId(request.getSessionId());
+			accessRequest.setClusterName(request.getClusterName());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
 			RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);

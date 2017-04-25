@@ -47,6 +47,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String               requestData;
 	private String               sessionId;
 	private Map<String, Object>  context;
+	private String				 clusterName;
 
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
@@ -71,6 +72,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setRequestData(null);
 		setSessionId(null);
 		setContext(null);
+		setClusterName(null);
 	}
 
 	@Override
@@ -202,6 +204,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
 	}
+	
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
 	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
 
@@ -280,6 +290,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("requestData={").append(requestData).append("} ");
 		sb.append("sessionId={").append(sessionId).append("} ");
 		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
+		sb.append("clusterName={").append(clusterName).append("} ");
 
 		sb.append("context={");
 		if(context != null) {

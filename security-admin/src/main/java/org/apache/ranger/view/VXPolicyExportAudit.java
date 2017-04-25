@@ -74,6 +74,8 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 	protected int httpRetCode;
 
 	protected String syncStatus;
+	
+	protected String clusterName;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -209,6 +211,15 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		this.syncStatus = syncStatus;
 	}
 
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
+
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT;
@@ -229,6 +240,7 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		str += "exportedJson={" + exportedJson + "} ";
 		str += "httpRetCode={" + httpRetCode + "} ";
 		str += "syncStatus={" + syncStatus + "} ";
+		str += "clusterName={" + clusterName + "} ";
 		str += "}";
 		return str;
 	}

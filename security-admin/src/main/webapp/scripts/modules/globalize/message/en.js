@@ -242,7 +242,7 @@ define(function(require) {
                 selectAndAddGroup               : 'Select and Add Group',
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
-
+		clusterName                     : 'Cluster Name'
 			},
 			btn : {
 				add							: 'Add',
@@ -328,7 +328,8 @@ define(function(require) {
                 topic                       :'Kafka topic.',
                 type                        :'Policy for all type.',
                 udf                         :'Hive udf.',
-                pluginStatus                :'Plugin Status'
+                pluginStatus                :'Plugin Status',
+		clusterName                 :'Name of ambari cluster'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
