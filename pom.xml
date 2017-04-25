@@ -219,7 +219,7 @@
         <sun.jersey.core.version>1.4</sun.jersey.core.version>
         <sun.jersey.spring.version>1.4</sun.jersey.spring.version>
         <tez.version>0.5.2</tez.version>
-        <tomcat.embed.version>7.0.68</tomcat.embed.version>
+        <tomcat.embed.version>7.0.77</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <xmlenc.version>0.52</xmlenc.version>
         <xz.version>1.0</xz.version>
