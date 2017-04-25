@@ -111,7 +111,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 				
 				if (userName != null) {
 					String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() );
-					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName);
+					String clusterName = plugin.getClusterName();
+					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName, clusterName);
 					RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
 					accessAllowed = result != null && result.getIsAllowed();
 					isAuditEnabled = result != null && result.getIsAudited();

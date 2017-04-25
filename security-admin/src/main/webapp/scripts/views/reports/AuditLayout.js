@@ -179,6 +179,7 @@ define(function(require) {
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable ruser"></th>\
+					<th class="renderable cip"> </th>\
 				</tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
@@ -290,21 +291,19 @@ define(function(require) {
 			var that = this;
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-			                      {text : 'Today',label :'today'},{text : 'User',label :'requestUser'},
-			                      {text : 'Resource Name',label :'resourcePath'},{text : 'Policy ID',label :'policyId'},
+			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
 			                      {text : 'Service Name',label :'repoName'},
 			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
-			                      {text : 'Audit Type',label :'auditType'},{text : 'Session ID',label :'sessionId'},
-			                      {text : 'Client IP',label :'clientIP'},{text : 'Client Type',label :'clientType'},
-			                      {text : 'Tags',label :'tags'},
-			                      {text : 'Resource Type',label : 'resourceType'}];
-            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags'];//,'Policy ID'
+			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
+			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'}];
+            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name'];//,'Policy ID'
 		this.clearVisualSearch(this.accessAuditList, serverAttrName);
 		this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
 		                    {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
 		                    {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
+		                    {text : 'Cluster Name'  , info :localization.tt('h.clusterName')},
 		                    {text :'End Date'       , info :localization.tt('h.endDate')},
 		                    {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
 		                    {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
@@ -313,10 +312,9 @@ define(function(require) {
 	                        {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
 		                    {text :'Start Date'     , info :localization.tt('h.startDate')},
 		                    {text :'User' 			, info :localization.tt('h.userMsg')},
-		                    {text :'Tags' 			, info :localization.tt('h.tagsMsg')},];
+		                    {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
 
-			//'Resource Type','Audit Type','Session IP','Client Type','Today',
-            var query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+			var query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
 			var pluginAttr = {
 			      placeholder :localization.tt('h.searchForYourAccessAudit'),
 			      container : this.ui.visualSearch,
@@ -377,16 +375,11 @@ define(function(require) {
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
-			var searchOpt = ["Operation", "Audit Type", "User", "Date", "Actions", "Session Id"];
-			searchOpt = _.without(searchOpt,'Date','Operation');
-			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
-			var serverAttrName  = [{text : "Operation", label :"objectClassName"}, 
-			                       {text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes)},
-			                       {text : "User", label :"owner"},{text : "Date", label :"startDate"},
+			var searchOpt = ["Audit Type", "User", "Actions", "Session Id", "Start Date", "End Date"];
+			var serverAttrName  = [{text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes)},
+			                       {text : "User", label :"owner"},
 			                       {text : "Actions", label :"action"},{text :  "Session Id", label :"sessionId"},
-			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-   			                       {text : 'Today',label :'today'}
-			                       ];
+			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'} ];
 			
 			var auditList = [],query = '';
 			_.each(XAEnums.ClassTypes, function(obj){
@@ -446,15 +439,12 @@ define(function(require) {
 		},
 		addSearchForLoginSessionTab : function(){
 			var that = this;
-			var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Login Time"];
-			searchOpt = _.without(searchOpt,'Login Time');
-			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
+			var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Start Date","End Date"];
 			var serverAttrName  = [{text : "Session Id", label :"id"}, {text : "Login Id", label :"loginId"},
 			                       {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus)},
 			                       {text : "Login Type", label :"authType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthType)},
-			                       {text : "IP", label :"requestIP"},{text :"User Agent", label :"requestUserAgent"},{text : "Login Time", label :"authTime"},
-			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                   {text : 'Today',label :'today'}];
+			                       {text : "IP", label :"requestIP"},{text :"User Agent", label :"requestUserAgent"},
+			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'} ];
 									
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourLoginSession'),
@@ -506,14 +496,12 @@ define(function(require) {
 		},
 		addSearchForAgentTab : function(){
 			var that = this;
-			var searchOpt = ["Export Date", "Service Name", "Plugin Id", "Plugin IP", "Http Response Code"];
-			searchOpt = _.without(searchOpt,'Export Date');
-			searchOpt = _.union(searchOpt, ['Start Date','End Date']);//'Today'
+			var searchOpt = ["Service Name", "Plugin Id", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
 			var serverAttrName  = [{text : "Plugin Id", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
 			                       {text : "Service Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                   {text : 'Today',label :'today'}];
+				                   {text : 'Cluster Name',label :'cluster'}];
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAgent'),
 				      container : this.ui.visualSearch,
@@ -1037,6 +1025,20 @@ define(function(require) {
 						sortable:false,
 						editable:false
 					},
+					clusterName : {
+						label : localization.tt("lbl.clusterName"),
+						cell: 'html',
+						click : false,
+						drag : false,
+						sortable:false,
+						editable:false,
+						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+							fromRaw: function (rawValue, model) {
+								rawValue = _.escape(rawValue);
+								return '<span title="'+rawValue+'">'+rawValue+'</span>';
+							}
+						}),
+					},
 			};
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
@@ -1223,10 +1225,25 @@ define(function(require) {
 					},
 					syncStatus : {
 						cell : 'string',
-						label	: 'Status',
+						label	: localization.tt("lbl.status"),
 						editable:false,
 						sortable:false
 					},
+					clusterName : {
+						label : localization.tt("lbl.clusterName"),
+						cell: 'html',
+						click : false,
+						drag : false,
+						sortable:false,
+						editable:false,
+						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+							fromRaw: function (rawValue, model) {
+								rawValue = _.escape(rawValue);
+								return '<span title="'+rawValue+'">'+rawValue+'</span>';
+							}
+						}),
+					},
+					
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},

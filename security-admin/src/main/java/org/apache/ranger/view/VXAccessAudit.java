@@ -133,6 +133,8 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	
 	protected String tags;
 	
+	protected String clusterName;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -498,6 +500,20 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	public void setTags(String tags) {
 		this.tags = tags;
 	}
+	
+	/**
+	 * @return the clusterName
+	 */
+	public String getClusterName() {
+		return clusterName;
+	}
+	/**
+	 * @param clusterName
+	 *            the clusterName to set
+	 */
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
 	@Override
 	public int getMyClassType( ) {
@@ -534,6 +550,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "eventCount={" + eventCount + "}";
 		str += "eventDuration={" + eventDuration + "}";
 		str += "tags={" + tags + "}";
+		str += "clusterName={" + clusterName + "}";
 		str += "}";
 		return str;
 	}

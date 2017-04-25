@@ -57,6 +57,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
+
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerHdfsAuthorizer extends INodeAttributeProvider {
@@ -424,6 +425,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			AuthzStatus ret       = null;
 			String      path      = inode != null ? inode.getFullPathName() : null;
 			String      pathOwner = inodeAttribs != null ? inodeAttribs.getUserName() : null;
+			String 		clusterName = plugin.getClusterName();
 
 			if(pathOwner == null && inode != null) {
 				pathOwner = inode.getUserName();
@@ -446,7 +448,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			for(String accessType : accessTypes) {
-				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessType, user, groups);
+				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessType, user, groups, clusterName);
 
 				RangerAccessResult result = plugin.isAccessAllowed(request, auditHandler);
 
@@ -511,7 +513,7 @@ class RangerHdfsResource extends RangerAccessResourceImpl {
 
 class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 
-	public RangerHdfsAccessRequest(INode inode, String path, String pathOwner, FsAction access, String accessType, String user, Set<String> groups) {
+	public RangerHdfsAccessRequest(INode inode, String path, String pathOwner, FsAction access, String accessType, String user, Set<String> groups, String clusterName) {
 		super.setResource(new RangerHdfsResource(path, pathOwner));
 		super.setAccessType(accessType);
 		super.setUser(user);
@@ -519,6 +521,7 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
+		super.setClusterName(clusterName);
 
 		if (inode != null) {
 			buildRequestContext(inode);

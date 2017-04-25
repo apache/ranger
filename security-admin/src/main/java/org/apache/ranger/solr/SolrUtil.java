@@ -95,8 +95,7 @@ public class SolrUtil {
 			String dateFieldName = null;
 
 			for (SearchField searchField : searchFields) {
-				Object paramValue = searchCriteria.getParamValue(searchField
-						.getClientFieldName());
+				Object paramValue = searchCriteria.getParamValue(searchField.getClientFieldName());
 				if (paramValue == null || paramValue.toString().isEmpty()) {
 					continue;
 				}

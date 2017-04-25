@@ -535,7 +535,7 @@ public class AssetREST {
 		ServicePolicies servicePolicies = null;
 
 		try {
-			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, request);
+			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "",request);
 		} catch(Exception excp) {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}
@@ -582,6 +582,8 @@ public class AssetREST {
 				"Start date for search", null);
 		searchUtil.extractDate(request, searchCriteria, "endDate",
 				"End date for search", null);
+		searchUtil.extractString(request, searchCriteria, "cluster",
+				"Cluster Name", StringUtil.VALIDATION_TEXT);
 		return assetMgr.searchXPolicyExportAudits(searchCriteria);
 	}
 
@@ -656,6 +658,7 @@ public class AssetREST {
 				"MM/dd/yyyy");
 
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
+		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
 		
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
 		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);

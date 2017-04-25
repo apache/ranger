@@ -49,6 +49,7 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 		mObj.setRepositoryName( vObj.getRepositoryName());
 		mObj.setExportedJson( vObj.getExportedJson());
 		mObj.setHttpRetCode( vObj.getHttpRetCode());
+		mObj.setClusterName( vObj.getClusterName());
 		return mObj;
 	}
 
@@ -62,6 +63,7 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
 		vObj.setExportedJson( mObj.getExportedJson());
 		vObj.setHttpRetCode( mObj.getHttpRetCode());
 		vObj.setSyncStatus( MapUtil.getPolicyExportAuditSyncStatus(mObj.getHttpRetCode()));
+		vObj.setClusterName( mObj.getClusterName());
 		return vObj;
 	}
 

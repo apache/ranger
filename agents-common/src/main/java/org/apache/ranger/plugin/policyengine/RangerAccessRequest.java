@@ -52,6 +52,8 @@ public interface RangerAccessRequest {
 	String getRequestData();
 
 	String getSessionId();
+	
+	String getClusterName();
 
 	Map<String, Object> getContext();
 

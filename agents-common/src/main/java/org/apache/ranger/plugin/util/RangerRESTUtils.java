@@ -60,7 +60,8 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_PLUGIN_ID                 = "pluginId";
 
 	private static final int MAX_PLUGIN_ID_LEN = 255;
-
+	
+	public static final String REST_PARAM_CLUSTER_NAME   = "clusterName";
 
 	public String getPolicyRestUrl(String propertyPrefix) {
 		String url = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");

@@ -77,14 +77,15 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         String action = request.getAction().name();
         Set<AtlasResourceTypes> resourceTypes = request.getResourceTypes();
         String clientIPAddress = request.getClientIPAddress();
+        String clusterName = atlasPlugin.getClusterName();
 
         for (AtlasResourceTypes resourceType : resourceTypes) {
             RangerAtlasAccessRequest rangerRequest =
-                new RangerAtlasAccessRequest(resourceType, resource, action, user, userGroups, clientIPAddress);
+                new RangerAtlasAccessRequest(resourceType, resource, action, user, userGroups, clientIPAddress, clusterName);
             if (isDebugEnabled) {
                 LOG.debug("Creating RangerAtlasAccessRequest with values [resource : " + resource + ", user : " + user
                     + ", Groups : " + userGroups + ", action : " + action + ", resourceType : " + resourceType
-                    + ", clientIP : " + clientIPAddress + "]");
+                    + ", clientIP : " + clientIPAddress + ", clusterName : " + clusterName + "]");
             }
             isAccessAllowed = checkAccess(rangerRequest);
             if (!isAccessAllowed) {
@@ -130,7 +131,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 class RangerAtlasAccessRequest extends RangerAccessRequestImpl {
 
     public RangerAtlasAccessRequest(AtlasResourceTypes resType, String resource, String action, String user,
-        Set<String> userGroups, String clientIp) {
+        Set<String> userGroups, String clientIp, String clusterName) {
         super.setResource(new RangerAtlasResource(resType, resource));
         super.setAccessType(action);
         super.setUser(user);
@@ -138,6 +139,7 @@ class RangerAtlasAccessRequest extends RangerAccessRequestImpl {
         super.setAccessTime(new Date(System.currentTimeMillis()));
         super.setClientIPAddress(clientIp);
         super.setAction(action);
+        super.setClusterName(clusterName);
     }
 
 }

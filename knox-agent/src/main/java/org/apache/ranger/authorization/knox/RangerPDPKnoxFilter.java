@@ -121,11 +121,14 @@ public class RangerPDPKnoxFilter implements Filter {
 		}
 
 		String clientIp = request.getRemoteAddr();
+		String clusterName = plugin.getClusterName();
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Checking access primaryUser: " + primaryUser + ", impersonatedUser: "
-					+ impersonatedUser + ", effectiveUser: " + user +
-					", groups: " + groups + ", clientIp: " + clientIp);
+			LOG.debug("Checking access primaryUser: " + primaryUser
+					+ ", impersonatedUser: " + impersonatedUser
+					+ ", effectiveUser: " + user + ", groups: " + groups
+					+ ", clientIp: " + clientIp + ", clusterName: "
+					+ clusterName);
 		}
 		RangerAccessRequest accessRequest = new KnoxRangerPlugin.RequestBuilder()
 			.service(serviceName)
@@ -133,6 +136,7 @@ public class RangerPDPKnoxFilter implements Filter {
 			.user(user)
 			.groups(groups)
 			.clientIp(clientIp)
+			.clusterName(clusterName)
 			.build();
 
 		boolean accessAllowed = false;

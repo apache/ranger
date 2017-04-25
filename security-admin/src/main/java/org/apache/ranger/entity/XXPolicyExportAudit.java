@@ -129,6 +129,17 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	 */
 	@Column(name="HTTP_RET_CODE"  , nullable=false )
 	protected int httpRetCode;
+	
+	/**
+	 * Name of the Cluster
+	 * <ul>
+	 * <li>The maximum length for this attribute is <b>255</b>.
+	 * </ul>
+	 *
+	 */
+	@Column(name="CLUSTER_NAME" , nullable=false  , length=255)
+	protected String clusterName;
+
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -259,6 +270,23 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	public int getHttpRetCode( ) {
 		return this.httpRetCode;
 	}
+	
+	/**
+	 * This method sets the value to the member attribute <b>clusterName</b>.
+	 * You cannot set null to the attribute.
+	 * @param clusterName Value to set member attribute <b>clusterName</b>
+	 */
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>clusterName</b>
+	 * @return String - value of member attribute <b>clusterName</b>.
+	 */
+	public String getClusterName() {
+		return clusterName;
+	}
 
 	/**
 	 * This return the bean content in string format
@@ -275,6 +303,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 		str += "repositoryName={" + repositoryName + "} ";
 		str += "exportedJson={" + exportedJson + "} ";
 		str += "httpRetCode={" + httpRetCode + "} ";
+		str += "clusterName={" + clusterName + "} ";
 		str += "}";
 		return str;
 	}
@@ -307,7 +336,10 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
         	if ((this.exportedJson == null && other.exportedJson != null) || (this.exportedJson != null && !this.exportedJson.equals(other.exportedJson))) {
             		return false;
         	}
-		if( this.httpRetCode != other.httpRetCode ) return false;
+        	if( this.httpRetCode != other.httpRetCode ) return false;
+			if ((this.clusterName == null && other.clusterName != null) || (this.clusterName != null && !this.clusterName.equals(other.clusterName))) {
+	    		return false;
+			}
 		return true;
 	}
 	public static String getEnumName(String fieldName ) {

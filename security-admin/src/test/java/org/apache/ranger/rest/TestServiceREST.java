@@ -970,7 +970,7 @@ public class TestServiceREST {
 
 		ServicePolicies dbServicePolicies = serviceREST
 				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
-						pluginId, request);
+						pluginId, "", request);
 		Assert.assertNull(dbServicePolicies);
 	}
 

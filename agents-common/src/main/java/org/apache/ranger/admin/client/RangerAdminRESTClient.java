@@ -50,6 +50,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	private String           serviceName = null;
 	private String           pluginId    = null;
 	private RangerRESTClient restClient  = null;
+	private String clusterName = null;
 	private RangerRESTUtils restUtils   = new RangerRESTUtils();
 
 	public RangerAdminRESTClient() {
@@ -81,6 +82,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		String url               		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
 		String sslConfigFileName 		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
+		clusterName       				= RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 
@@ -107,7 +109,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName)
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
-							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId)
+							.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				}
 			};
@@ -119,7 +122,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName)
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
-					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId)
+					.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
 

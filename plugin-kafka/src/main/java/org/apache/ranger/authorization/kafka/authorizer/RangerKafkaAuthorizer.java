@@ -160,6 +160,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			validationStr += "Unsupported access type. operation=" + operation;
 		}
 		String action = accessType;
+		String clusterName = rangerPlugin.getClusterName();
 
 		RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
 		rangerRequest.setUser(userName);
@@ -172,6 +173,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);
 		rangerRequest.setRequestData(resource.name());
+		rangerRequest.setClusterName(clusterName);
 
 		if (resource.resourceType().equals(Topic$.MODULE$)) {
 			rangerResource.setValue(KEY_TOPIC, resource.name());

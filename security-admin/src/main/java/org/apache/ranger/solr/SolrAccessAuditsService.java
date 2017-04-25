@@ -115,6 +115,8 @@ public class SolrAccessAuditsService {
 				SEARCH_TYPE.LESS_EQUAL_THAN));
 
 		searchFields.add(new SearchField("tags", "tags", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("cluster", "cluster",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
 		sortFields.add(new SortField("eventTime", "evtTime", true,
 				SORT_ORDER.DESC));
@@ -176,7 +178,12 @@ public class SolrAccessAuditsService {
 			// TODO: Converting ID to hashcode for now
 			accessAudit.setId((long) value.hashCode());
 		}
-
+		
+		value = doc.getFieldValue("cluster");
+		if (value != null) {
+			accessAudit.setClusterName(value.toString());
+		}
+		
 		value = doc.getFieldValue("access");
 		if (value != null) {
 			accessAudit.setAccessType(value.toString());

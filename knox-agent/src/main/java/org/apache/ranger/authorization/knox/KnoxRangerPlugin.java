@@ -55,6 +55,8 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 		String _user;
 		Set<String> _groups;
 		String _clientIp;
+		String _clusterName;
+		
 		RequestBuilder service(String service) {
 			_service = service;
 			return this;
@@ -75,7 +77,10 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			_clientIp = clientIp;
 			return this;
 		}
-		
+		RequestBuilder clusterName(String clusterName) {
+			_clusterName = clusterName;
+			return this;
+		}
 		void verifyBuildable() {
 			if (_topology == null) throw new IllegalStateException("_topology can't be null!");
 			if (_service == null) throw new IllegalStateException("_service can't be null!");
@@ -95,7 +100,7 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			request.setUser(_user);
 			request.setUserGroups(_groups);
 			request.setResource(resource);
-			
+			request.setClusterName(_clusterName);
 			return request;
 		}
 	}

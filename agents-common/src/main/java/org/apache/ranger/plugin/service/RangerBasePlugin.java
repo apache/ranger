@@ -63,6 +63,7 @@ public class RangerBasePlugin {
 	private RangerAccessResultProcessor resultProcessor = null;
 	private boolean                   useForwardedIPAddress = false;
 	private String[]                  trustedProxyAddresses = null;
+	private String                    clusterName = null;
 	private Timer                     policyEngineRefreshTimer;
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
@@ -76,6 +77,14 @@ public class RangerBasePlugin {
 
 	public String getServiceType() {
 		return serviceType;
+	}
+	
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -108,6 +117,7 @@ public class RangerBasePlugin {
 		long   pollingIntervalMs = RangerConfiguration.getInstance().getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
 		serviceName = RangerConfiguration.getInstance().get(propertyPrefix + ".service.name");
+		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 
 		useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = RangerConfiguration.getInstance().get(propertyPrefix + ".trusted.proxy.ipaddresses");
@@ -399,6 +409,7 @@ public class RangerBasePlugin {
 			accessRequest.setClientType(request.getClientType());
 			accessRequest.setRequestData(request.getRequestData());
 			accessRequest.setSessionId(request.getSessionId());
+			accessRequest.setClusterName(request.getClusterName());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
 			RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);

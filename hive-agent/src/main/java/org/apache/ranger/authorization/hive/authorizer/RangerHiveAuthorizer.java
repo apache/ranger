@@ -142,6 +142,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		try {
 			RangerHiveResource resource = getHiveResource(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject);
 			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+			request.setClusterName(hivePlugin.getClusterName());
 
 			LOG.info("grantPrivileges(): " + request);
 			if(LOG.isDebugEnabled()) {
@@ -182,6 +183,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		try {
 			RangerHiveResource resource = getHiveResource(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject);
 			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
+			request.setClusterName(hivePlugin.getClusterName());
 
 			LOG.info("revokePrivileges(): " + request);
 			if(LOG.isDebugEnabled()) {
@@ -223,6 +225,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String                  user           = ugi.getShortUserName();
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
+			String clusterName = hivePlugin.getClusterName();
 
 			if(LOG.isDebugEnabled()) {
 				LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, context, sessionContext));
@@ -262,7 +265,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 
 					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
-						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext);
+						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext, clusterName);
 
 						requests.add(request);
 					}
@@ -271,7 +274,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				// this should happen only for SHOWDATABASES
 				if (hiveOpType == HiveOperationType.SHOWDATABASES) {
 					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
-					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.USE, context, sessionContext, clusterName);
 					requests.add(request);
 				} else {
 					if (LOG.isDebugEnabled()) {
@@ -306,7 +309,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 
 					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
-						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext);
+						RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType, accessType, context, sessionContext, clusterName);
 
 						requests.add(request);
 					}
@@ -482,7 +485,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				if (resource == null) {
 					LOG.error("filterListCmdObjects: RangerHiveResource returned by createHiveResource is null");
 				} else {
-					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext, hivePlugin.getClusterName());
 					RangerAccessResult result = hivePlugin.isAccessAllowed(request);
 					if (result == null) {
 						LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
@@ -637,8 +640,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			String                  user           = ugi.getShortUserName();
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
 			HiveObjectType          objectType     = HiveObjectType.TABLE;
+			String 					clusterName    = hivePlugin.getClusterName();
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName);
-			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext, clusterName);
 
 			RangerRowFilterResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
 
@@ -659,6 +663,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private boolean addCellValueTransformerAndCheckIfTransformed(HiveAuthzContext context, String databaseName, String tableOrViewName, String columnName, List<String> columnTransformers) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
+		String clusterName = hivePlugin.getClusterName();
 		if(ugi == null) {
 			throw new SemanticException("user information not available");
 		}
@@ -678,7 +683,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
 			HiveObjectType          objectType     = HiveObjectType.COLUMN;
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName, columnName);
-			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext, clusterName);
 
 			RangerDataMaskResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
 

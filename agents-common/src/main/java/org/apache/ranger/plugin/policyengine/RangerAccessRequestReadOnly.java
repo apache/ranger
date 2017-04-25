@@ -92,4 +92,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 
 	@Override
 	public ResourceMatchingScope getResourceMatchingScope() { return source.getResourceMatchingScope(); }
+
+	@Override
+	public String getClusterName() { return source.getClusterName(); }
 }
