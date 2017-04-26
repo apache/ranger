@@ -2141,3 +2141,10 @@ td.subgrid-custom-cell{
 .capitalize {
     text-transform: capitalize;   
 }
+.importbtn{
+        margin-right: 5px ;
+        margin-top:-2px;
+}
+.text-decoration:hover{
+        text-decoration: none;
+}

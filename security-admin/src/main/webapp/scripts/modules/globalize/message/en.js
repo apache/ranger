@@ -329,7 +329,7 @@ define(function(require) {
                 type                        :'Policy for all type.',
                 udf                         :'Hive udf.',
                 pluginStatus                :'Plugin Status',
-		clusterName                 :'Name of ambari cluster'
+                        clusterName                 :'Name of ambari cluster'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
@@ -364,7 +364,7 @@ define(function(require) {
 				userUpdatedSucc           :     'User updated successfully',
 				grpUpdatedSucc            : 'Group updated successfully',
 				grpCreatedSucc            : 'Group created successfully',
-				errorLoadingAuditLogs	  : 'Unable to connect to Audit store !!',
+                                errorLoadingAuditLogs	  : 'Error loading audit logs!!',
                 enterCustomMask			  : 'Please enter custom masked value or expression !!',
                 policyNameMsg           :'Enter name of policy.',
                 policyTypeMsg           :'Select Type of policy eg. access, masking, row level filter policies.'    ,
@@ -394,6 +394,7 @@ define(function(require) {
                 noDeleteGroupRow        :'Please select group first to delete.',
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
+                activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
  
 			},
 			plcHldr : {

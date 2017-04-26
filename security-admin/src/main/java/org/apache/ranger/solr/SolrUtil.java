@@ -156,9 +156,9 @@ public class SolrUtil {
 		QueryResponse response = runQuery(solrClient, query);
 
 		if (response == null || response.getStatus() != 0) {
-			logger.error("Error running solr query. query=" + query
+                        logger.error("Unable to connect to Audit store!! Error running query. query=" + query
 					+ ", response=" + response);
-			throw restErrorUtil.createRESTException("Error running solr query",
+                        throw restErrorUtil.createRESTException("Unable to connect to Audit store !!",
 					MessageEnums.ERROR_SYSTEM);
 		}
 		return response;

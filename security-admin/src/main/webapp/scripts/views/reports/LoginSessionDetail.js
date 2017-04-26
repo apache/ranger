@@ -38,13 +38,15 @@ define(function(require){
         },
     	/** ui selector cache */
     	ui: {
-    		loginTime : '[data-id="loginTime"]'
+		loginTime : '[data-id="loginTime"]',
+		showAction		: '[data-id="showAction"]'
     	},
 
 		/** ui events hash */
 		events: function() {
 			var events = {};
 			//events['change ' + this.ui.input]  = 'onInputChange';
+                        events['click ' + this.ui.showAction]  	   = 'showAction';
 			return events;
 		},
 
@@ -68,7 +70,6 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
-			App.sessionId = this.model.get('id');
 			var date = new Date(this.model.get('authTime')).toString();
 			var timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 			this.ui.loginTime.html(Globalize.format(new Date(this.model.get('authTime')),  "MM/dd/yyyy hh:mm:ss tt")+' '+timezone);
@@ -76,6 +77,10 @@ define(function(require){
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
+                /* on show action button*/
+                showAction : function(){
+                        App.sessionId = this.model.get('id');
+                },
 		/** on close */
 		onClose: function(){
 		}
