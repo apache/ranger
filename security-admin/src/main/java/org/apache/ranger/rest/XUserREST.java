@@ -239,6 +239,7 @@ public class XUserREST {
 		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
 		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
+//		searchUtil.extractInt(request, searchCriteria, "groupSource", "group source");
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
@@ -761,15 +762,15 @@ public class XUserREST {
 		searchUtil.extractLong(request, searchCriteria, "id", "Auth Session Id");
 		searchUtil.extractLong(request, searchCriteria, "userId", "User Id");
 		searchUtil.extractInt(request, searchCriteria, "authStatus", "Auth Status");
-		searchUtil.extractInt(request, searchCriteria, "authType", "Auth Type");
+                searchUtil.extractInt(request, searchCriteria, "authType", "Login Type");
 		searchUtil.extractInt(request, searchCriteria, "deviceType", "Device Type");
 		searchUtil.extractString(request, searchCriteria, "firstName", "User First Name", StringUtil.VALIDATION_NAME);
 		searchUtil.extractString(request, searchCriteria, "lastName", "User Last Name", StringUtil.VALIDATION_NAME);
 		searchUtil.extractString(request, searchCriteria, "requestUserAgent", "User Agent", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "requestIP", "Request IP Address", StringUtil.VALIDATION_IP_ADDRESS);
 		searchUtil.extractString(request, searchCriteria, "loginId", "Login ID", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractDate(request, searchCriteria, "startDate", "Start date for search", null);
-		searchUtil.extractDate(request, searchCriteria, "endDate", "End date for search", null);						
+                searchUtil.extractDate(request, searchCriteria, "startDate", "Start Date", null);
+                searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", null);
 		return sessionMgr.searchAuthSessions(searchCriteria);
 	}
 	

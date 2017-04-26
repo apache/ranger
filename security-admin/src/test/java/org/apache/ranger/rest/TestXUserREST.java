@@ -1332,15 +1332,15 @@ public class TestXUserREST {
 		Mockito.verify(searchUtil).extractLong(request, testSearchCriteria, "id", "Auth Session Id");
 		Mockito.verify(searchUtil).extractLong(request, testSearchCriteria, "userId", "User Id");
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "authStatus", "Auth Status");
-		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "authType", "Auth Type");
+                Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "authType", "Login Type");
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "deviceType", "Device Type");
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "firstName", "User First Name", StringUtil.VALIDATION_NAME);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "lastName", "User Last Name", StringUtil.VALIDATION_NAME);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "requestUserAgent", "User Agent", StringUtil.VALIDATION_TEXT);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "requestIP", "Request IP Address", StringUtil.VALIDATION_IP_ADDRESS);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "loginId", "Login ID", StringUtil.VALIDATION_TEXT);
-		Mockito.verify(searchUtil).extractDate(request, testSearchCriteria, "startDate", "Start date for search", null);
-		Mockito.verify(searchUtil).extractDate(request, testSearchCriteria, "endDate", "End date for search", null);
+                Mockito.verify(searchUtil).extractDate(request, testSearchCriteria, "startDate", "Start Date", null);
+                Mockito.verify(searchUtil).extractDate(request, testSearchCriteria, "endDate", "End Date", null);
 		assertNotNull(outputvXGroupList);
 		assertEquals(outputvXGroupList.getStartIndex(),testVXAuthSessionList.getStartIndex());
 		assertEquals(outputvXGroupList.getTotalCount(), testVXAuthSessionList.getTotalCount());

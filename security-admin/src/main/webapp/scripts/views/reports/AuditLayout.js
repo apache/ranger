@@ -111,19 +111,17 @@ define(function(require) {
 			var date = new Date().toString();
 			this.timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 			this.initializeServiceDefColl();
+                        if(_.isUndefined(App.vsHistory)){
+                                var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
+                                App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
+                        }
 		},
 
 		/** all events binding here */
 		bindEvents : function() {
-			/*this.listenTo(this.model, "change:foo", this.modelChanged, this);*/
 			//this.listenTo(this.collection, "change:foo", this.render, this);
 		},
-		initializeCollection : function(){
-			this.collection.fetch({
-				reset : true,
-				cache : false
-			});
-		},
+
 		initializeServiceDefColl : function() {
 			this.serviceDefList	= new RangerServiceDefList();
 			this.serviceDefList.fetch({ 
@@ -135,7 +133,6 @@ define(function(require) {
 		},
 		/** on render callback */
 		onRender : function() {
-			this.initializePlugins();
 			if(this.currentTab != '#bigData'){
 				this.onTabChange();
 				this.ui.tab.find('li[class="active"]').removeClass();
@@ -145,26 +142,7 @@ define(function(require) {
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
-                        this.addSearchForBigDataTab();
-                        XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
 
-		 },
-		displayDatepicker : function ($el, callback) {
-			var input = $el.find('.search_facet.is_editing input.search_facet_input');
-		    
-		    input.datepicker({
-		    	autoclose : true,
-		    	dateFormat: 'yy-mm-dd'
-		    }).on('changeDate', function(ev){
-		    	callback(ev.date);
-		    	input.datepicker("hide");
-		    	var e = jQuery.Event("keydown");
-		    	e.which = 13; // Enter
-		    	$(this).trigger(e);
-		    }).on('hide',function(){
-		    	input.datepicker("destroy");
-		    });
-		    input.datepicker('show');
 		},
 		modifyTableForSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
@@ -188,29 +166,11 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
-                                        <th class="renderable cip" colspan="3">Policy ( Time )</th>\
-                                        <th class="renderable cip" colspan="3">Tag ( Time )</th>\
+                    <th class="renderable cip" colspan="3">Policy ( Time )</th>\
+                    <th class="renderable cip" colspan="3">Tag ( Time )</th>\
 			 	</tr>');
 		},
-		renderDateFields : function(){
-			var that = this;
 
-			this.ui.startDate.datepicker({
-				autoclose : true
-			}).on('changeDate', function(ev) {
-				that.ui.endDate.datepicker('setStartDate', ev.date);
-			}).on('keydown',function(){
-				return false;
-			});
-			
-			this.ui.endDate.datepicker({
-				autoclose : true
-			}).on('changeDate', function(ev) {
-				that.ui.startDate.datepicker('setEndDate', ev.date);
-			}).on('keydown',function(){
-				return false;
-			});
-		},
 		onTabChange : function(e){
 			var that = this, tab;
 			tab = !_.isUndefined(e) ? $(e.currentTarget).attr('href') : this.currentTab;
@@ -218,6 +178,8 @@ define(function(require) {
 			switch (tab) {
 				case "#bigData":
 					this.currentTab = '#bigData';
+                                        //Remove empty search values on tab changes for visual search.
+                                        App.vsHistory.bigData = XAUtils.removeEmptySearchValue(App.vsHistory.bigData);
 					this.ui.visualSearch.show();
 					this.ui.visualSearch.parents('.well').show();
 					this.renderBigDataTable();
@@ -228,49 +190,57 @@ define(function(require) {
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
+                                        App.vsHistory.admin = XAUtils.removeEmptySearchValue(App.vsHistory.admin);
 					this.trxLogList = new VXTrxLogList();
 					this.renderAdminTable();
-					if(_.isUndefined(App.sessionId)){
+                                        if(_.isEmpty(App.vsHistory.admin) && _.isUndefined(App.sessionId)){
 			     	    this.trxLogList.fetch({
 							   cache : false
 						});
 					}
 					this.addSearchForAdminTab();
 					this.listenTo(this.trxLogList, "request", that.updateLastRefresh)
-                                        this.ui.iconSearchInfo.hide();
-                                        $('.popover').remove();
+                    this.ui.iconSearchInfo.hide();
+                    $('.popover').remove();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
+                                        App.vsHistory.loginSession = XAUtils.removeEmptySearchValue(App.vsHistory.loginSession);
 					this.authSessionList = new VXAuthSession();
 					this.renderLoginSessionTable();
 					//Setting SortBy as id and sortType as desc = 1
 					this.authSessionList.setSorting('id',1); 
-					this.authSessionList.fetch({
-						cache:false,
-					});
+                                        if(_.isEmpty(App.vsHistory.loginSession)){
+                                                this.authSessionList.fetch({
+                                                        cache:false,
+                                                });
+                                        }
 					this.addSearchForLoginSessionTab();
 					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
-                                        this.ui.iconSearchInfo.hide();
-                                        $('.popover').remove();
+                    this.ui.iconSearchInfo.hide();
+                    $('.popover').remove();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
+                                        App.vsHistory.plugin = XAUtils.removeEmptySearchValue(App.vsHistory.plugin);
 					this.policyExportAuditList = new VXPolicyExportAuditList();	
 					var params = { priAcctId : 1 };
 					that.renderAgentTable();
 					this.policyExportAuditList.setSorting('createDate',1);
-					this.policyExportAuditList.fetch({
-						cache : false,
-						data :params
-					});
+                                        if(_.isEmpty(App.vsHistory.plugin)){
+                                                this.policyExportAuditList.fetch({
+                                                        cache : false,
+                                                        data :params
+                                                });
+                                        }
 					this.addSearchForAgentTab();
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
-                                        this.ui.iconSearchInfo.hide();
-                                        $('.popover').remove();
+                    this.ui.iconSearchInfo.hide();
+                    $('.popover').remove();
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
+                                         App.vsHistory.pluginStatus = XAUtils.removeEmptySearchValue(App.vsHistory.pluginStatus);
 					 this.ui.visualSearch.show();
 					 this.pluginInfoList = new VXPolicyExportAuditList();
                                          this.renderPluginInfoTable();
@@ -278,17 +248,19 @@ define(function(require) {
 					 //To use existing collection
 					 this.pluginInfoList.url = 'service/plugins/plugins/info';
 					 this.pluginInfoList.modelAttrName = 'pluginInfoList';
-					 this.pluginInfoList.fetch({cache : false});
+                                         if(_.isEmpty(App.vsHistory.pluginStatus)){
+                                                 this.pluginInfoList.fetch({cache : false});
+                                         }
 					 this.addSearchForPluginStatusTab();
 					 this.ui.iconSearchInfo.hide();
-                                         $('.popover').remove();
+                     $('.popover').remove();
 					 break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
 			that.ui.lastUpdateTimeLabel.html(lastUpdateTime);
 		},
 		addSearchForBigDataTab :function(){
-			var that = this;
+                        var that = this , query = '';
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
@@ -299,26 +271,34 @@ define(function(require) {
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'}];
             var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name'];//,'Policy ID'
-		this.clearVisualSearch(this.accessAuditList, serverAttrName);
-		this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
-		                    {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
-		                    {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
-		                    {text : 'Cluster Name'  , info :localization.tt('h.clusterName')},
-		                    {text :'End Date'       , info :localization.tt('h.endDate')},
-		                    {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
-		                    {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
-		                    {text :'Result'			, info :localization.tt('msg.resultMsg')},
-		                    {text :'Service Name' 	, info :localization.tt('h.serviceNameMsg')},
-	                        {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
-		                    {text :'Start Date'     , info :localization.tt('h.startDate')},
-		                    {text :'User' 			, info :localization.tt('h.userMsg')},
-		                    {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
-
-			var query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                        this.clearVisualSearch(this.accessAuditList, serverAttrName);
+                        this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
+                                            {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
+                                            {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
+                                            {text : 'Cluster Name'  , info :localization.tt('h.clusterName')},
+                                            {text :'End Date'       , info :localization.tt('h.endDate')},
+                                            {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
+                                            {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
+                                            {text :'Result'			, info :localization.tt('msg.resultMsg')},
+                                            {text :'Service Name' 	, info :localization.tt('h.serviceNameMsg')},
+                                        {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
+                                            {text :'Start Date'     , info :localization.tt('h.startDate')},
+                                            {text :'User' 			, info :localization.tt('h.userMsg')},
+                                            {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
+                        //initilize info popover
+                        XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
+                        //Set query(search filter values in query)
+                        if(_.isEmpty(App.vsHistory.bigData)){
+                                query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                                App.vsHistory.bigData.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
+                        }else{
+                                _.map(App.vsHistory.bigData, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
+                        }
 			var pluginAttr = {
 			      placeholder :localization.tt('h.searchForYourAccessAudit'),
 			      container : this.ui.visualSearch,
 			      query     : query,
+                              type		: 'bigData',
 			      callbacks :  { 
 					valueMatches : function(facet, searchTerm, callback) {
 						var auditList = [];
@@ -363,15 +343,12 @@ define(function(require) {
 								} 
 								XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 								break;
-							case 'Today'	:
-								var today = Globalize.format(new Date(),"yyyy/mm/dd");
-								callback([today]);
-								break;
-				            }
+                                                        }
 					}
 			      }
 			};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
@@ -392,13 +369,18 @@ define(function(require) {
 					auditList.push({label :obj.label, value :obj.label+''});
 			});
 			if(!_.isUndefined(App.sessionId)){
+                                App.vsHistory.admin = [] ;
 				query = '"Session Id": "'+App.sessionId+'"';
+                                App.vsHistory.admin.push(new Backbone.Model({'category':'Session Id', value:App.sessionId}));
 				delete App.sessionId;
+                        }else{
+                                _.map(App.vsHistory.admin, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
 			}
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAccessLog'),
 				      container : this.ui.visualSearch,
 				      query     : query,
+                                      type 		: 'admin',
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -424,11 +406,6 @@ define(function(require) {
 										} 
 										XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 										break;
-									case 'Today'	:
-										var today = Globalize.format(new Date(),"yyyy/mm/dd");
-										callback([today]);
-										break;
-										
 								}     
 			            	
 							}
@@ -436,9 +413,10 @@ define(function(require) {
 				};
 			
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.trxLogList,pluginAttr);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.admin);
 		},
 		addSearchForLoginSessionTab : function(){
-			var that = this;
+                        var that = this , query = '' ;
 			var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Start Date","End Date"];
 			var serverAttrName  = [{text : "Session Id", label :"id"}, {text : "Login Id", label :"loginId"},
 			                       {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus)},
@@ -446,10 +424,12 @@ define(function(require) {
 			                       {text : "IP", label :"requestIP"},{text :"User Agent", label :"requestUserAgent"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'} ];
 									
+                        _.map(App.vsHistory.loginSession, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourLoginSession'),
 				      container : this.ui.visualSearch,
-				      query     : '',
+                                      query     : query,
+                                      type 		: 'loginSession',
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -483,29 +463,28 @@ define(function(require) {
 										} 
 										XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 										break;
-									case 'Today'	:
-										var today = Globalize.format(new Date(),"yyyy/mm/dd");
-										callback([today]);
-										break;
-								}     
+                                                                        }
 			            	
 							}
 				      }
 				};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.authSessionList,pluginAttr);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.loginSession);
 		},
 		addSearchForAgentTab : function(){
-			var that = this;
-			var searchOpt = ["Service Name", "Plugin Id", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
-			var serverAttrName  = [{text : "Plugin Id", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
+                        var that = this , query = '';
+                        var searchOpt = ["Service Name", "Plugin ID", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
+                        var serverAttrName  = [{text : "Plugin ID", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
 			                       {text : "Service Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                   {text : 'Cluster Name',label :'cluster'}];
+                        _.map(App.vsHistory.plugin, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAgent'),
 				      container : this.ui.visualSearch,
-				      query     : '',
+                                      query     : query,
+                                      type		: 'plugin',
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -535,27 +514,26 @@ define(function(require) {
 										} 
 										XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 										break;
-									case 'Today'	:
-										var today = Globalize.format(new Date(),"yyyy/mm/dd");
-										callback([today]);
-										break;
 								}     
 			            	
 							}
 				      }
 				};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.policyExportAuditList, pluginAttr);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.plugin);
 		},
 		addSearchForPluginStatusTab : function(){
-			var that = this;
+                        var that = this , query = '';
 			var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),
 			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName")];
 			var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.serviceType"), label :"pluginAppType"},
 			                       {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"}];
+                        _.map(App.vsHistory.pluginStatus, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 					placeholder    : localization.tt('msg.searchForPluginStatus'),
 					container         : this.ui.visualSearch,
-					query             : '',
+                                        query             : query,
+                                        type		   : 'pluginStatus',
 					callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -572,6 +550,24 @@ define(function(require) {
 				      }
 			}
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.pluginInfoList, pluginAttr);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.pluginStatus);
+                },
+                //preserve, remove and change search filter values in App.vsHistory
+                setEventsToFacets : function(vs, value){
+                        vs.searchQuery.bind('add', function(model){
+                                value.push(model) ;
+                        });
+                        vs.searchQuery.bind('remove', function(model){
+                                value = _.filter(value, function(m){ return m.get('category') != model.get('category');})
+                                App.vsHistory[vs.options.type] = value;
+                        });
+                        vs.searchQuery.bind('change', function(model){
+                                _.each(App.vsHistory[vs.options.type],function(m){
+                                        if(m.get('category') == model.get('category')){
+                                                m.attributes.value = model.get('value');
+                                        }
+                                })
+                        });
 		},
 		renderAdminTable : function(){
 			var that = this , self = this;
@@ -1199,11 +1195,17 @@ define(function(require) {
 						
 					},
 					agentId : {
-						cell : 'string',
+                                                cell : 'html',
 						label	:localization.tt('lbl.agentId'),
 						editable:false,
-						sortable:false
-					},
+                                                sortable:false,
+                                                formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                        fromRaw: function (rawValue, model) {
+                                                                        rawValue = _.escape(rawValue);
+                                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                                     }
+                                                    }),
+                                    },
 					clientIP : {
 						cell : 'string',
 						label	: localization.tt('lbl.agentIp'),
@@ -1263,16 +1265,28 @@ define(function(require) {
 		getPluginInfoColums : function(){
 			var that = this, cols ={
 				serviceName : {
-					cell 	: 'string',
+                                        cell 	: 'html',
 					label	: localization.tt("lbl.serviceName"),
 					editable:false,
-					sortable:false
+                                        sortable:false,
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                                rawValue = _.escape(rawValue);
+                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                             }
+                                            }),
 				},
 				appType : {
-					cell : 'string',
+                                        cell : 'html',
 					label	: localization.tt("lbl.serviceType"),
 					editable:false,
-					sortable:false
+                                        sortable:false,
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                                rawValue = _.escape(rawValue);
+                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                             }
+                                            }),
 				},
 				hostName : {
 					cell : 'html',
@@ -1307,7 +1321,7 @@ define(function(require) {
                                                         if(!_.isUndefined(model.get('info')['lastPolicyUpdateTime'])){
                                                                 var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
                                                                 if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
-                                                                        return '<i class="icon-exclamation-sign activePolicyAlert"></i>'
+									return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                         + Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
                                                                 }
                                                         }
@@ -1363,7 +1377,7 @@ define(function(require) {
                                                         if(!_.isUndefined(model.get('info')['lastTagUpdateTime'])){
                                                                 var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
                                                                 if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
-                                                                        return '<i class="icon-exclamation-sign activePolicyAlert"></i>'
+									return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                         + Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
                                                                 }
                                                         }
@@ -1489,9 +1503,6 @@ define(function(require) {
 			});
 		},
 
-		/** all post render plugin initialization */
-		initializePlugins : function() {
-		},
 		updateLastRefresh : function(){
 			this.ui.lastUpdateTimeLabel.html(Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
 		},

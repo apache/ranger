@@ -224,7 +224,7 @@ public class SearchUtil {
 			dateFormat = defaultDateFormat;
 		}
 		value = restErrorUtil.parseDate(request.getParameter(paramName),
-				"Invalid value for" + userFriendlyParamName,
+                                "Invalid value for " + userFriendlyParamName,
 				MessageEnums.INVALID_INPUT_DATA, null, paramName, dateFormat);
 		if (value != null) {
 			searchCriteria.getParamList().put(paramName, value);
