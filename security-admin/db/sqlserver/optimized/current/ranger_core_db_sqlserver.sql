@@ -677,92 +677,92 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_db_version_h](
-	[id]	[bigint] identity(1,1) NOT NULL,
-	[version]	[varchar](64) NOT NULL,
-	[inst_at]	[datetime2] NOT NULL,
-	[inst_by]	[varchar](256) NOT NULL,
-	[updated_at]	[datetime2] NOT NULL,
-	[updated_by]	[varchar](256) NOT NULL,
-	[active]	[varchar](1) check(active IN ('Y', 'N')) DEFAULT 'Y',
-PRIMARY KEY CLUSTERED 
+        [id]	[bigint] identity(1,1) NOT NULL,
+        [version]	[varchar](64) NOT NULL,
+        [inst_at]	[datetime2] NOT NULL,
+        [inst_by]	[varchar](256) NOT NULL,
+        [updated_at]	[datetime2] NOT NULL,
+        [updated_by]	[varchar](256) NOT NULL,
+        [active]	[varchar](1) check(active IN ('Y', 'N')) DEFAULT 'Y',
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_portal_user](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[first_name] [varchar](256) DEFAULT NULL NULL,
-	[last_name] [varchar](256) DEFAULT NULL NULL,
-	[pub_scr_name] [varchar](2048) DEFAULT NULL NULL,
-	[login_id] [varchar](767) DEFAULT NULL NULL,
-	[password] [varchar](512) NOT NULL,
-	[email] [varchar](512) DEFAULT NULL NULL,
-	[status] [int] DEFAULT 0 NOT NULL,
-	[user_src] [int] DEFAULT 0 NOT NULL,
-	[notes] [varchar](4000) DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [first_name] [varchar](256) DEFAULT NULL NULL,
+        [last_name] [varchar](256) DEFAULT NULL NULL,
+        [pub_scr_name] [varchar](2048) DEFAULT NULL NULL,
+        [login_id] [varchar](767) DEFAULT NULL NULL,
+        [password] [varchar](512) NOT NULL,
+        [email] [varchar](512) DEFAULT NULL NULL,
+        [status] [int] DEFAULT 0 NOT NULL,
+        [user_src] [int] DEFAULT 0 NOT NULL,
+        [notes] [varchar](4000) DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [x_portal_user$x_portal_user_UK_login_id] UNIQUE NONCLUSTERED 
+ CONSTRAINT [x_portal_user$x_portal_user_UK_login_id] UNIQUE NONCLUSTERED
 (
-	[login_id] ASC
+        [login_id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_portal_user_role](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[user_id] [bigint] NOT NULL,
-	[user_role] [varchar](128) DEFAULT NULL NULL,
-	[status] [int] DEFAULT 0  NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [user_id] [bigint] NOT NULL,
+        [user_role] [varchar](128) DEFAULT NULL NULL,
+        [status] [int] DEFAULT 0  NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[xa_access_audit](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[audit_type] [int] DEFAULT 0 NOT NULL,
-	[access_result] [int] DEFAULT 0 NULL,
-	[access_type] [varchar](255) DEFAULT NULL NULL,
-	[acl_enforcer] [varchar](255) DEFAULT NULL NULL,
-	[agent_id] [varchar](255) DEFAULT NULL NULL,
-	[client_ip] [varchar](255) DEFAULT NULL NULL,
-	[client_type] [varchar](255) DEFAULT NULL NULL,
-	[policy_id] [bigint] DEFAULT 0 NULL,
-	[repo_name] [varchar](255) DEFAULT NULL NULL,
-	[repo_type] [int] DEFAULT 0 NULL,
-	[result_reason] [varchar](255) DEFAULT NULL NULL,
-	[session_id] [varchar](255) DEFAULT NULL NULL,
-	[event_time] [datetime2] DEFAULT NULL NULL,
-	[request_user] [varchar](255) DEFAULT NULL NULL,
-	[action] [varchar](2000) DEFAULT NULL NULL,
-	[request_data] [varchar](4000) DEFAULT NULL NULL,
-	[resource_path] [varchar](4000) DEFAULT NULL NULL,
-	[resource_type] [varchar](255) DEFAULT NULL NULL,
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [audit_type] [int] DEFAULT 0 NOT NULL,
+        [access_result] [int] DEFAULT 0 NULL,
+        [access_type] [varchar](255) DEFAULT NULL NULL,
+        [acl_enforcer] [varchar](255) DEFAULT NULL NULL,
+        [agent_id] [varchar](255) DEFAULT NULL NULL,
+        [client_ip] [varchar](255) DEFAULT NULL NULL,
+        [client_type] [varchar](255) DEFAULT NULL NULL,
+        [policy_id] [bigint] DEFAULT 0 NULL,
+        [repo_name] [varchar](255) DEFAULT NULL NULL,
+        [repo_type] [int] DEFAULT 0 NULL,
+        [result_reason] [varchar](255) DEFAULT NULL NULL,
+        [session_id] [varchar](255) DEFAULT NULL NULL,
+        [event_time] [datetime2] DEFAULT NULL NULL,
+        [request_user] [varchar](255) DEFAULT NULL NULL,
+        [action] [varchar](2000) DEFAULT NULL NULL,
+        [request_data] [varchar](4000) DEFAULT NULL NULL,
+        [resource_path] [varchar](4000) DEFAULT NULL NULL,
+        [resource_type] [varchar](255) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_PADDING OFF
@@ -770,44 +770,44 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_asset](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[asset_name] [varchar](1024) NOT NULL,
-	[descr] [varchar](4000) NOT NULL,
-	[act_status] [int] DEFAULT 0 NOT NULL,
-	[asset_type] [int] DEFAULT 0 NOT NULL,
-	[config] [nvarchar](max) NULL,
-	[sup_native] [tinyint] DEFAULT 0 NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [asset_name] [varchar](1024) NOT NULL,
+        [descr] [varchar](4000) NOT NULL,
+        [act_status] [int] DEFAULT 0 NOT NULL,
+        [asset_type] [int] DEFAULT 0 NOT NULL,
+        [config] [nvarchar](max) NULL,
+        [sup_native] [tinyint] DEFAULT 0 NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_auth_sess](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[login_id] [varchar](767) NOT NULL,
-	[user_id] [bigint] DEFAULT NULL NULL,
-	[ext_sess_id] [varchar](512) DEFAULT NULL NULL,
-	[auth_time] [datetime2] NOT NULL,
-	[auth_status] [int] DEFAULT 0 NOT NULL,
-	[auth_type] [int] DEFAULT 0 NOT NULL,
-	[auth_provider] [int] DEFAULT 0 NOT NULL,
-	[device_type] [int] DEFAULT 0 NOT NULL,
-	[req_ip] [varchar](48) NOT NULL,
-	[req_ua] [varchar](1024) DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [login_id] [varchar](767) NOT NULL,
+        [user_id] [bigint] DEFAULT NULL NULL,
+        [ext_sess_id] [varchar](512) DEFAULT NULL NULL,
+        [auth_time] [datetime2] NOT NULL,
+        [auth_status] [int] DEFAULT 0 NOT NULL,
+        [auth_type] [int] DEFAULT 0 NOT NULL,
+        [auth_provider] [int] DEFAULT 0 NOT NULL,
+        [device_type] [int] DEFAULT 0 NOT NULL,
+        [req_ip] [varchar](48) NOT NULL,
+        [req_ua] [varchar](1024) DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -815,30 +815,30 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_cred_store](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[store_name] [varchar](1024) NOT NULL,
-	[descr] [varchar](4000) NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [store_name] [varchar](1024) NOT NULL,
+        [descr] [varchar](4000) NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 CREATE TABLE [dbo].[x_db_base](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -846,21 +846,21 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_group](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[group_name] [varchar](1024) NOT NULL,
-	[descr] [varchar](4000) NOT NULL,
-	[status] [int] DEFAULT 0  NOT NULL,
-	[group_type] [int] DEFAULT 0 NOT NULL,
-	[cred_store_id] [bigint] DEFAULT NULL NULL,
-	[group_src] [int] DEFAULT 0 NOT NULL,
-	[is_visible] [int] DEFAULT 1 NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [group_name] [varchar](1024) NOT NULL,
+        [descr] [varchar](4000) NOT NULL,
+        [status] [int] DEFAULT 0  NOT NULL,
+        [group_type] [int] DEFAULT 0 NOT NULL,
+        [cred_store_id] [bigint] DEFAULT NULL NULL,
+        [group_src] [int] DEFAULT 0 NOT NULL,
+        [is_visible] [int] DEFAULT 1 NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -868,17 +868,17 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_group_groups](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[group_name] [varchar](1024) NOT NULL,
-	[p_group_id] [bigint] DEFAULT NULL  NULL,
-	[group_id] [bigint] DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [group_name] [varchar](1024) NOT NULL,
+        [p_group_id] [bigint] DEFAULT NULL  NULL,
+        [group_id] [bigint] DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -886,23 +886,23 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_user](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[user_name] [varchar](767) NOT NULL,
-	[descr] [varchar](4000) NOT NULL,
-	[status] [int] DEFAULT 0 NOT NULL,
-	[cred_store_id] [bigint] DEFAULT NULL NULL,
-	[is_visible] [int] DEFAULT 1 NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [user_name] [varchar](767) NOT NULL,
+        [descr] [varchar](4000) NOT NULL,
+        [status] [int] DEFAULT 0 NOT NULL,
+        [cred_store_id] [bigint] DEFAULT NULL NULL,
+        [is_visible] [int] DEFAULT 1 NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [x_user$x_user_UK_user_name] UNIQUE NONCLUSTERED 
+ CONSTRAINT [x_user$x_user_UK_user_name] UNIQUE NONCLUSTERED
 (
-	[user_name] ASC
+        [user_name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -910,17 +910,17 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_group_users](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[group_name] [varchar](1024) NOT NULL,
-	[p_group_id] [bigint] DEFAULT NULL NULL,
-	[user_id] [bigint] DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [group_name] [varchar](1024) NOT NULL,
+        [p_group_id] [bigint] DEFAULT NULL NULL,
+        [user_id] [bigint] DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -928,22 +928,22 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_export_audit](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[client_ip] [varchar](255) NOT NULL,
-	[agent_id] [varchar](255) DEFAULT NULL NULL,
-	[req_epoch] [bigint] NOT NULL,
-	[last_updated] [datetime2] DEFAULT NULL NULL,
-	[repository_name] [varchar](1024) DEFAULT NULL NULL,
-	[exported_json] [nvarchar](max) DEFAULT NULL NULL,
-	[http_ret_code] [int] DEFAULT 0 NOT NULL,
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [client_ip] [varchar](255) NOT NULL,
+        [agent_id] [varchar](255) DEFAULT NULL NULL,
+        [req_epoch] [bigint] NOT NULL,
+        [last_updated] [datetime2] DEFAULT NULL NULL,
+        [repository_name] [varchar](1024) DEFAULT NULL NULL,
+        [exported_json] [nvarchar](max) DEFAULT NULL NULL,
+        [http_ret_code] [int] DEFAULT 0 NOT NULL,
         [cluster_name] [varchar](255) NOT NULL,
-PRIMARY KEY CLUSTERED 
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
@@ -951,68 +951,68 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_resource](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[res_name] [varchar](4000) DEFAULT NULL  NULL,
-	[descr] [varchar](4000) DEFAULT NULL  NULL,
-	[res_type] [int] DEFAULT 0 NOT NULL,
-	[asset_id] [bigint] NOT NULL,
-	[parent_id] [bigint]  DEFAULT NULL NULL,
-	[parent_path] [varchar](4000) DEFAULT NULL  NULL,
-	[is_encrypt] [int] DEFAULT 0 NOT NULL,
-	[is_recursive] [int] DEFAULT 0 NOT NULL,
-	[res_group] [varchar](1024)  DEFAULT NULL NULL,
-	[res_dbs] [nvarchar](max) NULL,
-	[res_tables] [nvarchar](max) NULL,
-	[res_col_fams] [nvarchar](max) NULL,
-	[res_cols] [nvarchar](max) NULL,
-	[res_udfs] [nvarchar](max) NULL,
-	[res_status] [int] DEFAULT 1 NOT NULL,
-	[table_type] [int] DEFAULT 0 NOT NULL,
-	[col_type] [int] DEFAULT 0 NOT NULL,
-	[policy_name] [varchar](500) DEFAULT NULL  NULL,
-	[res_topologies] [nvarchar](max) DEFAULT NULL  NULL,
-	[res_services] [nvarchar](max)  DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [res_name] [varchar](4000) DEFAULT NULL  NULL,
+        [descr] [varchar](4000) DEFAULT NULL  NULL,
+        [res_type] [int] DEFAULT 0 NOT NULL,
+        [asset_id] [bigint] NOT NULL,
+        [parent_id] [bigint]  DEFAULT NULL NULL,
+        [parent_path] [varchar](4000) DEFAULT NULL  NULL,
+        [is_encrypt] [int] DEFAULT 0 NOT NULL,
+        [is_recursive] [int] DEFAULT 0 NOT NULL,
+        [res_group] [varchar](1024)  DEFAULT NULL NULL,
+        [res_dbs] [nvarchar](max) NULL,
+        [res_tables] [nvarchar](max) NULL,
+        [res_col_fams] [nvarchar](max) NULL,
+        [res_cols] [nvarchar](max) NULL,
+        [res_udfs] [nvarchar](max) NULL,
+        [res_status] [int] DEFAULT 1 NOT NULL,
+        [table_type] [int] DEFAULT 0 NOT NULL,
+        [col_type] [int] DEFAULT 0 NOT NULL,
+        [policy_name] [varchar](500) DEFAULT NULL  NULL,
+        [res_topologies] [nvarchar](max) DEFAULT NULL  NULL,
+        [res_services] [nvarchar](max)  DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_resource$x_resource_UK_policy_name] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_resource$x_resource_UK_policy_name] UNIQUE NONCLUSTERED
 (
-	[policy_name] ASC
+        [policy_name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
- 
+
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_trx_log](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[class_type] [int] DEFAULT 0 NOT NULL,
-	[object_id] [bigint] DEFAULT NULL NULL,
-	[parent_object_id] [bigint] DEFAULT NULL NULL,
-	[parent_object_class_type] [int] DEFAULT 0 NOT NULL,
-	[parent_object_name] [varchar](1024)DEFAULT NULL  NULL,
-	[object_name] [varchar](1024) DEFAULT NULL NULL,
-	[attr_name] [varchar](255) DEFAULT NULL NULL,
-	[prev_val] [nvarchar](max) DEFAULT NULL NULL,
-	[new_val] [nvarchar](max)DEFAULT NULL  NULL,
-	[trx_id] [varchar](1024)DEFAULT NULL  NULL,
-	[action] [varchar](255) DEFAULT NULL NULL,
-	[sess_id] [varchar](512) DEFAULT NULL NULL,
-	[req_id] [varchar](30) DEFAULT NULL NULL,
-	[sess_type] [varchar](30) DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [class_type] [int] DEFAULT 0 NOT NULL,
+        [object_id] [bigint] DEFAULT NULL NULL,
+        [parent_object_id] [bigint] DEFAULT NULL NULL,
+        [parent_object_class_type] [int] DEFAULT 0 NOT NULL,
+        [parent_object_name] [varchar](1024)DEFAULT NULL  NULL,
+        [object_name] [varchar](1024) DEFAULT NULL NULL,
+        [attr_name] [varchar](255) DEFAULT NULL NULL,
+        [prev_val] [nvarchar](max) DEFAULT NULL NULL,
+        [new_val] [nvarchar](max)DEFAULT NULL  NULL,
+        [trx_id] [varchar](1024)DEFAULT NULL  NULL,
+        [action] [varchar](255) DEFAULT NULL NULL,
+        [sess_id] [varchar](512) DEFAULT NULL NULL,
+        [req_id] [varchar](30) DEFAULT NULL NULL,
+        [sess_type] [varchar](30) DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
@@ -1020,24 +1020,24 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_perm_map](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[perm_group] [varchar](1024) DEFAULT NULL NULL,
-	[res_id] [bigint] DEFAULT NULL NULL,
-	[group_id] [bigint] DEFAULT NULL NULL,
-	[user_id] [bigint] DEFAULT NULL NULL,
-	[perm_for] [int] DEFAULT 0 NOT NULL,
-	[perm_type] [int] DEFAULT 0 NOT NULL,
-	[is_recursive] [int] DEFAULT 0 NOT NULL,
-	[is_wild_card] [tinyint] DEFAULT 1 NOT NULL,
-	[grant_revoke] [tinyint] DEFAULT 1 NOT NULL,
-	[ip_address] [nvarchar](max) DEFAULT NULL  NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [perm_group] [varchar](1024) DEFAULT NULL NULL,
+        [res_id] [bigint] DEFAULT NULL NULL,
+        [group_id] [bigint] DEFAULT NULL NULL,
+        [user_id] [bigint] DEFAULT NULL NULL,
+        [perm_for] [int] DEFAULT 0 NOT NULL,
+        [perm_type] [int] DEFAULT 0 NOT NULL,
+        [is_recursive] [int] DEFAULT 0 NOT NULL,
+        [is_wild_card] [tinyint] DEFAULT 1 NOT NULL,
+        [grant_revoke] [tinyint] DEFAULT 1 NOT NULL,
+        [ip_address] [nvarchar](max) DEFAULT NULL  NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -1045,743 +1045,743 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_audit_map](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[res_id] [bigint] DEFAULT NULL NULL,
-	[group_id] [bigint] DEFAULT NULL NULL,
-	[user_id] [bigint] DEFAULT NULL NULL,
-	[audit_type] [int] DEFAULT 0 NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [res_id] [bigint] DEFAULT NULL NULL,
+        [group_id] [bigint] DEFAULT NULL NULL,
+        [user_id] [bigint] DEFAULT NULL NULL,
+        [audit_type] [int] DEFAULT 0 NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_def](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[name] [varchar](1024) DEFAULT NULL NULL,
-	[impl_class_name] [varchar](1024) DEFAULT NULL NULL,
-	[label] [varchar](1024) DEFAULT NULL NULL,
-	[description] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,
-	[is_enabled] [tinyint] DEFAULT 1 NULL,
-	[def_options] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [impl_class_name] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+        [is_enabled] [tinyint] DEFAULT 1 NULL,
+        [def_options] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
-CREATE TABLE [dbo].[x_service] ( 
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[type] [bigint] DEFAULT NULL NULL,
-	[name] [varchar](255) DEFAULT NULL NULL,   
-	[policy_version] [bigint] DEFAULT NULL NULL,
-	[policy_update_time] [datetime2] DEFAULT NULL NULL,
-	[description] [varchar](1024) DEFAULT NULL NULL,
-	[is_enabled] [tinyint] DEFAULT 0 NOT NULL,
-	[tag_service] [bigint] DEFAULT NULL NULL,
-	[tag_version] [bigint] DEFAULT 0 NOT NULL,
-	[tag_update_time] [datetime2] DEFAULT NULL NULL,
-PRIMARY KEY CLUSTERED 
+CREATE TABLE [dbo].[x_service] (
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [type] [bigint] DEFAULT NULL NULL,
+        [name] [varchar](255) DEFAULT NULL NULL,
+        [policy_version] [bigint] DEFAULT NULL NULL,
+        [policy_update_time] [datetime2] DEFAULT NULL NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [is_enabled] [tinyint] DEFAULT 0 NOT NULL,
+        [tag_service] [bigint] DEFAULT NULL NULL,
+        [tag_version] [bigint] DEFAULT 0 NOT NULL,
+        [tag_update_time] [datetime2] DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_service$x_service_name] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_service$x_service_name] UNIQUE NONCLUSTERED
 (
-	[name] ASC
+        [name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[service] [bigint] DEFAULT NULL NULL,
-	[name] [varchar](512) DEFAULT NULL NULL, 
-	[policy_type] [int] DEFAULT 0 NULL,
-	[description] [varchar](1024) DEFAULT NULL NULL,
-	[resource_signature] [varchar](128) DEFAULT NULL NULL,
-	[is_enabled] [tinyint] DEFAULT 0 NOT NULL,
-	[is_audit_enabled] [tinyint] DEFAULT 0 NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [service] [bigint] DEFAULT NULL NULL,
+        [name] [varchar](512) DEFAULT NULL NULL,
+        [policy_type] [int] DEFAULT 0 NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [resource_signature] [varchar](128) DEFAULT NULL NULL,
+        [is_enabled] [tinyint] DEFAULT 0 NOT NULL,
+        [is_audit_enabled] [tinyint] DEFAULT 0 NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_config_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL, 
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL,
-	[item_id] [bigint] NOT NULL,
-	[name] [varchar](1024) DEFAULT NULL NULL,  
-	[type] [varchar](1024) DEFAULT NULL NULL,
-	[sub_type] [varchar](1024) DEFAULT NULL NULL,
-	[is_mandatory] [tinyint] DEFAULT 0 NOT NULL,
-	[default_value] [varchar](1024) DEFAULT NULL NULL,
-	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
-	[validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
-	[label] [varchar](1024) DEFAULT NULL NULL,
-	[description] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [type] [varchar](1024) DEFAULT NULL NULL,
+        [sub_type] [varchar](1024) DEFAULT NULL NULL,
+        [is_mandatory] [tinyint] DEFAULT 0 NOT NULL,
+        [default_value] [varchar](1024) DEFAULT NULL NULL,
+        [validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+        [validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [ui_hint] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_resource_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL, 
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL,  
-	[item_id] [bigint] NOT NULL,  
-	[name] [varchar](1024) DEFAULT NULL NULL,
-	[type] [varchar](1024) DEFAULT NULL NULL,  
-	[res_level] [bigint] DEFAULT NULL NULL,  
-	[parent] [bigint] DEFAULT NULL NULL,  
-	[mandatory] [tinyint] DEFAULT 0 NOT NULL,
-	[look_up_supported] [tinyint] DEFAULT 0 NOT NULL,
-	[recursive_supported] [tinyint] DEFAULT 0 NOT NULL,
-	[excludes_supported] [tinyint] DEFAULT 0 NOT NULL,
-	[matcher] [varchar](1024) DEFAULT NULL NULL,
-	[matcher_options] [varchar](1024) DEFAULT NULL NULL,
-	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
-	[validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
-	[label] [varchar](1024) DEFAULT NULL NULL,  
-	[description] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_description] [varchar](1024) DEFAULT NULL NULL, 
-	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	[datamask_options] [varchar](1024) DEFAULT NULL NULL,
-	[rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [type] [varchar](1024) DEFAULT NULL NULL,
+        [res_level] [bigint] DEFAULT NULL NULL,
+        [parent] [bigint] DEFAULT NULL NULL,
+        [mandatory] [tinyint] DEFAULT 0 NOT NULL,
+        [look_up_supported] [tinyint] DEFAULT 0 NOT NULL,
+        [recursive_supported] [tinyint] DEFAULT 0 NOT NULL,
+        [excludes_supported] [tinyint] DEFAULT 0 NOT NULL,
+        [matcher] [varchar](1024) DEFAULT NULL NULL,
+        [matcher_options] [varchar](1024) DEFAULT NULL NULL,
+        [validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+        [validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [ui_hint] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [datamask_options] [varchar](1024) DEFAULT NULL NULL,
+        [rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_access_type_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL, 
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL,    
-	[item_id] [bigint] NOT NULL,    
-	[name] [varchar](1024) DEFAULT NULL NULL,  
-	[label] [varchar](1024) DEFAULT NULL NULL,   
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL, 
-	[sort_order] [tinyint] DEFAULT 0 NULL,
-	[datamask_options] [varchar](1024) DEFAULT NULL NULL,
-	[rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0 NULL,
+        [datamask_options] [varchar](1024) DEFAULT NULL NULL,
+        [rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_access_type_def_grants](
-	[id] [bigint] IDENTITY(1,1) NOT NULL, 
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[atd_id] [bigint] NOT NULL,     
-	[implied_grant] [varchar](1024) DEFAULT NULL NULL,  
-    PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [atd_id] [bigint] NOT NULL,
+        [implied_grant] [varchar](1024) DEFAULT NULL NULL,
+    PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_condition_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL,      
-	[item_id] [bigint] NOT NULL,      
-	[name] [varchar](1024) DEFAULT NULL NULL,  
-	[evaluator] [varchar](1024) DEFAULT NULL NULL,
-	[evaluator_options] [varchar](1024) DEFAULT NULL NULL,
-	[validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
-	[validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[ui_hint] [varchar](1024) DEFAULT NULL NULL,
-	[label] [varchar](1024) DEFAULT NULL NULL,  
-	[description] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [evaluator] [varchar](1024) DEFAULT NULL NULL,
+        [evaluator_options] [varchar](1024) DEFAULT NULL NULL,
+        [validation_reg_ex] [varchar](1024) DEFAULT NULL NULL,
+        [validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [ui_hint] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 CREATE TABLE [dbo].[x_context_enricher_def](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint]NOT NULL,
-	[item_id] [bigint]NOT NULL,
-	[name] [varchar](1024) DEFAULT NULL NULL,
-	[enricher] [varchar](1024) DEFAULT NULL NULL,
-	[enricher_options] [varchar](1024) DEFAULT NULL NULL,
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint]NOT NULL,
+        [item_id] [bigint]NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [enricher] [varchar](1024) DEFAULT NULL NULL,
+        [enricher_options] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_enum_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL, 
-	[item_id] [bigint] NOT NULL, 
-	[name] [varchar](1024) DEFAULT NULL NULL, 
-	[default_index] [bigint] DEFAULT NULL NULL,    
-    PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [default_index] [bigint] DEFAULT NULL NULL,
+    PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_enum_element_def] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[enum_def_id] [bigint] NOT NULL, 
-	[item_id] [bigint] NOT NULL, 
-	[name] [varchar](1024) DEFAULT NULL NULL,  
-	[label] [varchar](1024) DEFAULT NULL NULL,  
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,   
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-    PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [enum_def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) DEFAULT NULL NULL,
+        [label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+    PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_config_map] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,  
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[service] [bigint] NOT NULL, 
-	[config_key] [varchar](1024) DEFAULT NULL NULL,   
-	[config_value] [varchar](4000) DEFAULT NULL NULL,    
-    PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [service] [bigint] NOT NULL,
+        [config_key] [varchar](1024) DEFAULT NULL NULL,
+        [config_value] [varchar](4000) DEFAULT NULL NULL,
+    PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_resource] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_id] [bigint] NOT NULL, 
-	[res_def_id] [bigint] NOT NULL, 
-	[is_excludes] [tinyint] DEFAULT 0 NOT NULL,
-	[is_recursive] [tinyint] DEFAULT 0 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_id] [bigint] NOT NULL,
+        [res_def_id] [bigint] NOT NULL,
+        [is_excludes] [tinyint] DEFAULT 0 NOT NULL,
+        [is_recursive] [tinyint] DEFAULT 0 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_resource_map] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[resource_id] [bigint] NOT NULL, 
-	[value] [varchar](1024) DEFAULT NULL NULL,  
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [resource_id] [bigint] NOT NULL,
+        [value] [varchar](1024) DEFAULT NULL NULL,
         [sort_order] [int] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_item] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_id] [bigint] NOT NULL,
-	[delegate_admin] [tinyint] DEFAULT 0 NOT NULL,
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	[item_type] [int] DEFAULT 0 NOT NULL,
-	[is_enabled] [tinyint] DEFAULT 1 NOT NULL,
-	[comments] [varchar](255) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_id] [bigint] NOT NULL,
+        [delegate_admin] [tinyint] DEFAULT 0 NOT NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [item_type] [int] DEFAULT 0 NOT NULL,
+        [is_enabled] [tinyint] DEFAULT 1 NOT NULL,
+        [comments] [varchar](255) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_item_access] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL, 
-	[type] [bigint] NOT NULL,
-	[is_allowed] [tinyint] DEFAULT 0 NOT NULL,
-	[sort_order] [tinyint] DEFAULT 0 NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [type] [bigint] NOT NULL,
+        [is_allowed] [tinyint] DEFAULT 0 NOT NULL,
+        [sort_order] [tinyint] DEFAULT 0 NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_item_condition] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL, 
-	[type] [bigint] NOT NULL,
-	[value] [varchar](1024) DEFAULT NULL NULL, 
-	[sort_order] [tinyint] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [type] [bigint] NOT NULL,
+        [value] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_item_user_perm] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL,
-	[user_id] [bigint]  DEFAULT NULL NULL,
-	[sort_order] [int] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [user_id] [bigint]  DEFAULT NULL NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_item_group_perm] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](1024) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL,
-	[group_id] [bigint]  DEFAULT NULL NULL,
-	[sort_order] [int] DEFAULT 0  NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](1024) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [group_id] [bigint]  DEFAULT NULL NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_data_hist] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[obj_guid] [varchar](1024) NOT NULL,
-	[obj_class_type] [int] NOT NULL,
-	[obj_id] [bigint] NOT NULL,
-	[obj_name] [varchar](1024) NOT NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[action] [varchar](512) NOT NULL,
-	[from_time] [datetime2] NOT NULL,
-	[to_time] [datetime2] DEFAULT NULL NULL,
-	[content] [nvarchar](max) NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [obj_guid] [varchar](1024) NOT NULL,
+        [obj_class_type] [int] NOT NULL,
+        [obj_id] [bigint] NOT NULL,
+        [obj_name] [varchar](1024) NOT NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [action] [varchar](512) NOT NULL,
+        [from_time] [datetime2] NOT NULL,
+        [to_time] [datetime2] DEFAULT NULL NULL,
+        [content] [nvarchar](max) NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_modules_master] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[module] [varchar](1024)NOT NULL,
-	[url] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [module] [varchar](1024)NOT NULL,
+        [url] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_user_module_perm] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[user_id] [bigint] DEFAULT NULL NULL,
-	[module_id] [bigint] DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[is_allowed] [int] DEFAULT 1 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [user_id] [bigint] DEFAULT NULL NULL,
+        [module_id] [bigint] DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [is_allowed] [int] DEFAULT 1 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_group_module_perm] (
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[group_id] [bigint] DEFAULT NULL NULL,
-	[module_id] [bigint] DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[is_allowed] [int] DEFAULT 1 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [group_id] [bigint] DEFAULT NULL NULL,
+        [module_id] [bigint] DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [is_allowed] [int] DEFAULT 1 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_tag_def](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[name] [varchar](255) NOT NULL,
-	[source] [varchar](128) DEFAULT NULL NULL,
-	[is_enabled] [tinyint] DEFAULT 0 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [name] [varchar](255) NOT NULL,
+        [source] [varchar](128) DEFAULT NULL NULL,
+        [is_enabled] [tinyint] DEFAULT 0 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_tag_def$x_tag_def_UK_guid] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_tag_def$x_tag_def_UK_guid] UNIQUE NONCLUSTERED
 (
-	[guid] ASC
+        [guid] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_tag_def$x_tag_def_UK_name] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_tag_def$x_tag_def_UK_name] UNIQUE NONCLUSTERED
 (
-	[name] ASC
+        [name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_tag](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[type] [bigint] NOT NULL,
-	[owned_by] [smallint] DEFAULT 0 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [type] [bigint] NOT NULL,
+        [owned_by] [smallint] DEFAULT 0 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_tag$x_tag_UK_guid] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_tag$x_tag_UK_guid] UNIQUE NONCLUSTERED
 (
-	[guid] ASC
+        [guid] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_resource](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[version] [bigint] DEFAULT NULL NULL,
-	[service_id] [bigint] NOT NULL,
-	[resource_signature] [varchar](128) DEFAULT NULL NULL,
-	[is_enabled] [tinyint] DEFAULT 1 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [version] [bigint] DEFAULT NULL NULL,
+        [service_id] [bigint] NOT NULL,
+        [resource_signature] [varchar](128) DEFAULT NULL NULL,
+        [is_enabled] [tinyint] DEFAULT 1 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_service_resource$x_service_res_UK_guid] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_service_resource$x_service_res_UK_guid] UNIQUE NONCLUSTERED
 (
-	[guid] ASC
+        [guid] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_resource_element](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[res_id] [bigint] NOT NULL,
-	[res_def_id] [bigint] NOT NULL,
-	[is_excludes] [tinyint] DEFAULT 0 NOT NULL,
-	[is_recursive] [tinyint] DEFAULT 0 NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [res_id] [bigint] NOT NULL,
+        [res_def_id] [bigint] NOT NULL,
+        [is_excludes] [tinyint] DEFAULT 0 NOT NULL,
+        [is_recursive] [tinyint] DEFAULT 0 NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_tag_attr_def](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[tag_def_id] [bigint] NOT NULL,
-	[name] [varchar](255) NOT NULL,
-	[type] [varchar](50) NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [tag_def_id] [bigint] NOT NULL,
+        [name] [varchar](255) NOT NULL,
+        [type] [varchar](50) NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_tag_attr](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[tag_id] [bigint] NOT NULL,
-	[name] [varchar](255) NOT NULL,
-	[value] [varchar](512) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [tag_id] [bigint] NOT NULL,
+        [name] [varchar](255) NOT NULL,
+        [value] [varchar](512) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_tag_resource_map](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[tag_id] [bigint] NOT NULL,
-	[res_id] [bigint] NOT NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [tag_id] [bigint] NOT NULL,
+        [res_id] [bigint] NOT NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_tag_resource_map$x_tag_resource_map_UK_guid] UNIQUE NONCLUSTERED 
+CONSTRAINT [x_tag_resource_map$x_tag_resource_map_UK_guid] UNIQUE NONCLUSTERED
 (
-	[guid] ASC
+        [guid] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_resource_element_val](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[res_element_id] [bigint] NOT NULL,
-	[value] [varchar](1024) NOT NULL,
-	[sort_order] [tinyint] DEFAULT 0 NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [res_element_id] [bigint] NOT NULL,
+        [value] [varchar](1024) NOT NULL,
+        [sort_order] [tinyint] DEFAULT 0 NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_datamask_type_def](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[def_id] [bigint] NOT NULL,
-	[item_id] [bigint] NOT NULL,
-	[name] [varchar](1024) NOT NULL,
-	[label] [varchar](1024) NOT NULL,
-	[description] [varchar](1024) DEFAULT NULL NULL,
-	[transformer] [varchar](1024) DEFAULT NULL NULL,
-	[datamask_options] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-	[rb_key_description] [varchar](1024) DEFAULT NULL NULL,
-	[sort_order] [tinyint] DEFAULT 0 NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [def_id] [bigint] NOT NULL,
+        [item_id] [bigint] NOT NULL,
+        [name] [varchar](1024) NOT NULL,
+        [label] [varchar](1024) NOT NULL,
+        [description] [varchar](1024) DEFAULT NULL NULL,
+        [transformer] [varchar](1024) DEFAULT NULL NULL,
+        [datamask_options] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
+        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
+        [sort_order] [tinyint] DEFAULT 0 NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 CREATE TABLE [dbo].[x_policy_item_datamask](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL,
-	[type] [bigint] NOT NULL,
-	[condition_expr] [varchar](1024) DEFAULT NULL NULL,
-	[value_expr] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [type] [bigint] NOT NULL,
+        [condition_expr] [varchar](1024) DEFAULT NULL NULL,
+        [value_expr] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 CREATE TABLE [dbo].[x_policy_item_rowfilter](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[guid] [varchar](64) DEFAULT NULL NULL,
-	[create_time] [datetime2] DEFAULT NULL NULL,
-	[update_time] [datetime2] DEFAULT NULL NULL,
-	[added_by_id] [bigint] DEFAULT NULL NULL,
-	[upd_by_id] [bigint] DEFAULT NULL NULL,
-	[policy_item_id] [bigint] NOT NULL,
-	[filter_expr] [varchar](1024) DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_item_id] [bigint] NOT NULL,
+        [filter_expr] [varchar](1024) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_service_version_info](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[service_id] [bigint] NOT NULL,
-	[policy_version] [bigint] NOT NULL DEFAULT 0,
-	[policy_update_time] [datetime2] DEFAULT NULL NULL,
-	[tag_version] [bigint] NOT NULL DEFAULT 0,
-	[tag_update_time] [datetime2] DEFAULT NULL NULL,
-	PRIMARY KEY CLUSTERED 
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [service_id] [bigint] NOT NULL,
+        [policy_version] [bigint] NOT NULL DEFAULT 0,
+        [policy_update_time] [datetime2] DEFAULT NULL NULL,
+        [tag_version] [bigint] NOT NULL DEFAULT 0,
+        [tag_update_time] [datetime2] DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
 (
-	[id] ASC
+        [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
@@ -2174,414 +2174,414 @@ CREATE NONCLUSTERED INDEX [x_asset_cr_time] ON [x_asset]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_asset_FK_added_by_id] ON [x_asset]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_asset_FK_upd_by_id] ON [x_asset]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_asset_up_time] ON [x_asset]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_cr_time] ON [x_audit_map]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_FK_added_by_id] ON [x_audit_map]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_FK_group_id] ON [x_audit_map]
 (
    [group_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 
 CREATE NONCLUSTERED INDEX [x_audit_map_FK_res_id] ON [x_audit_map]
 (
    [res_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_FK_upd_by_id] ON [x_audit_map]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_FK_user_id] ON [x_audit_map]
 (
    [user_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_audit_map_up_time] ON [x_audit_map]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_auth_sess_cr_time] ON [x_auth_sess]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_auth_sess_FK_added_by_id] ON [x_auth_sess]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_auth_sess_FK_upd_by_id] ON [x_auth_sess]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_auth_sess_FK_user_id] ON [x_auth_sess]
 (
    [user_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_auth_sess_up_time] ON [x_auth_sess]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_cred_store_cr_time] ON [x_cred_store]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_cred_store_FK_added_by_id] ON [x_cred_store]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_cred_store_FK_upd_by_id] ON [x_cred_store]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_cred_store_up_time] ON [x_cred_store]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_db_base_cr_time] ON [x_db_base]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_db_base_FK_added_by_id] ON [x_db_base]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_db_base_FK_upd_by_id] ON [x_db_base]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_db_base_up_time] ON [x_db_base]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_cr_time] ON [x_group]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_FK_added_by_id] ON [x_group]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_FK_cred_store_id] ON [x_group]
 (
    [cred_store_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_FK_upd_by_id] ON [x_group]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_cr_time] ON [x_group_groups]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_FK_added_by_id] ON [x_group_groups]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_FK_group_id] ON [x_group_groups]
 (
    [group_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_FK_p_group_id] ON [x_group_groups]
 (
    [p_group_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_FK_upd_by_id] ON [x_group_groups]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_groups_up_time] ON [x_group_groups]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_up_time] ON [x_group]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_cr_time] ON [x_group_users]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_FK_added_by_id] ON [x_group_users]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_FK_p_group_id] ON [x_group_users]
 (
    [p_group_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_FK_upd_by_id] ON [x_group_users]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_FK_user_id] ON [x_group_users]
 (
    [user_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_group_users_up_time] ON [x_group_users]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_cr_time] ON [x_perm_map]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_FK_added_by_id] ON [x_perm_map]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_FK_group_id] ON [x_perm_map]
 (
    [group_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_FK_res_id] ON [x_perm_map]
 (
    [res_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_FK_upd_by_id] ON [x_perm_map]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_FK_user_id] ON [x_perm_map]
 (
    [user_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_perm_map_up_time] ON [x_perm_map]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_export_audit_cr_time] ON [x_policy_export_audit]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_export_audit_FK_added_by_id] ON [x_policy_export_audit]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_export_audit_FK_upd_by_id] ON [x_policy_export_audit]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_export_audit_up_time] ON [x_policy_export_audit]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_cr_time] ON [x_portal_user]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_email] ON [x_portal_user]
 (
    [email] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_FK_added_by_id] ON [x_portal_user]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_FK_upd_by_id] ON [x_portal_user]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_name] ON [x_portal_user]
 (
    [first_name] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_role_cr_time] ON [x_portal_user_role]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_role_FK_added_by_id] ON [x_portal_user_role]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_role_FK_upd_by_id] ON [x_portal_user_role]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_role_FK_user_id] ON [x_portal_user_role]
 (
    [user_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_role_up_time] ON [x_portal_user_role]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_portal_user_up_time] ON [x_portal_user]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_cr_time] ON [x_resource]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_FK_added_by_id] ON [x_resource]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_FK_asset_id] ON [x_resource]
 (
    [asset_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_FK_parent_id] ON [x_resource]
 (
    [parent_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_FK_upd_by_id] ON [x_resource]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_up_time] ON [x_resource]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_trx_log_cr_time] ON [x_trx_log]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_trx_log_FK_added_by_id] ON [x_trx_log]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_trx_log_FK_upd_by_id] ON [x_trx_log]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_trx_log_up_time] ON [x_trx_log]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_user_cr_time] ON [x_user]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_user_FK_added_by_id] ON [x_user]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_user_FK_cred_store_id] ON [x_user]
 (
    [cred_store_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 
 CREATE NONCLUSTERED INDEX [x_user_FK_upd_by_id] ON [x_user]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_user_up_time] ON [x_user]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [xa_access_audit_cr_time] ON [xa_access_audit]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [xa_access_audit_event_time] ON [xa_access_audit]
 (
    [event_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [xa_access_audit_added_by_id] ON [xa_access_audit]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [xa_access_audit_upd_by_id] ON [xa_access_audit]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [xa_access_audit_up_time] ON [xa_access_audit]
 (
    [update_time] ASC
@@ -2591,82 +2591,82 @@ CREATE NONCLUSTERED INDEX [x_service_def_added_by_id] ON [x_service_def]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_def_upd_by_id] ON [x_service_def]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_def_cr_time] ON [x_service_def]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_def_up_time] ON [x_service_def]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_added_by_id] ON [x_service]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_upd_by_id] ON [x_service]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_cr_time] ON [x_service]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_up_time] ON [x_service]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_service_type] ON [x_service]
 (
    [type] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_added_by_id] ON [x_policy]
 (
    [added_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_upd_by_id] ON [x_policy]
 (
    [upd_by_id] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_cr_time] ON [x_policy]
 (
    [create_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_up_time] ON [x_policy]
 (
    [update_time] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_service] ON [x_policy]
 (
    [service] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_policy_resource_signature] ON [x_policy]
 (
    [resource_signature] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_resource_def_parent] ON [x_resource_def]
 (
    [parent] ASC
 )
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY] 
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_usr_module_perm_idx_moduleid] ON [x_user_module_perm]
 (
    [module_id] ASC
