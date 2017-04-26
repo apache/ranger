@@ -189,7 +189,7 @@ public class AtlasClient extends BaseClient {
 					decryptedPwd = password;
 				}
 			}
-			formData.add("j_password", PasswordUtils.decryptPassword(password));
+			formData.add("j_password", decryptedPwd);
 			try {
 				statusResponse = webResource.type("application/x-www-form-urlencoded").post(ClientResponse.class,
 						formData);
