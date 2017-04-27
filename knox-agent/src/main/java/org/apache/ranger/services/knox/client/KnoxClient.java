@@ -50,8 +50,8 @@ public class KnoxClient {
 	
 	/*
    Sample curl calls to Knox to discover topologies
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies
-	 curl -ivk -u admin:admin-password https://localhost:8443/gateway/admin/api/v1/topologies/admin
+         curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies
+         curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies/admin
 	*/
 	
 	public KnoxClient(String knoxUrl, String userName, String password) {

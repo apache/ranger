@@ -18,7 +18,6 @@ package org.apache.ranger.utils.install;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class PasswordGenerator {
 
@@ -66,7 +65,7 @@ public class PasswordGenerator {
 		else {
 			
 			int diff = Math.abs(maximumPasswordLength - minimumPasswordLength) + 1;
-			ret = minimumPasswordLength + new Random().nextInt(diff);
+                        ret = minimumPasswordLength + new SecureRandom().nextInt(diff);
 		}
 		return (ret);
 	}
