@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.audit;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +35,7 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
@@ -226,7 +228,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret = new HashSet<>();
 
 			for (RangerTagForEval tag : tags) {
-				ret.add(tag.getType());
+				ret.add(writeObjectAsString(tag));
 			}
 		}
 
@@ -255,4 +257,16 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
       return UUID + "-" + Integer.toString(nextId);
 	 }
+
+	private String writeObjectAsString(Serializable obj) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		String jsonStr = StringUtils.EMPTY;
+		try {
+			jsonStr = mapper.writeValueAsString(obj);
+		} catch (Exception e) {
+			LOG.error("Cannot create JSON string for object:[" + obj + "]", e);
+		}
+		return jsonStr;
+	}
 }
