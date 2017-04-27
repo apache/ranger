@@ -20,6 +20,7 @@
 package org.apache.ranger.biz;
 
 import java.io.File;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
@@ -97,7 +97,7 @@ public class RangerBizUtil {
 	int maxDisplayNameLength = 150;
 	public final String EMPTY_CONTENT_DISPLAY_NAME = "...";
 	boolean enableResourceAccessControl;
-	private Random random;
+        private SecureRandom random;
 	private static final String PATH_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst0123456789-_.";
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
@@ -120,7 +120,7 @@ public class RangerBizUtil {
 				auditDBType).toLowerCase();
 		logger.info("java.library.path is " + System.getProperty("java.library.path"));
 		logger.info("Audit datasource is " + auditDBType);
-		random = new Random();
+                random = new SecureRandom();
 	}
 
 	public <T extends XXDBBase> List<? extends XXDBBase> getParentObjects(

@@ -44,6 +44,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -677,7 +678,8 @@ public class MiscUtil {
 			logger.debug("<=== MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: " + jaasConfigAppName + " UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
 		}
 	}
-	public static void authWithConfig(String appName, Configuration config) {
+        public static void authWithConfig(String appName, Configuration config) throws LoginException {
+                LoginContext loginContext = null;
 		try {
 			if (config != null) {
 				logger.info("Getting AppConfigrationEntry[] for appName="
@@ -698,7 +700,7 @@ public class MiscUtil {
 					}
 				}
 
-				LoginContext loginContext = new LoginContext(appName,
+                                loginContext = new LoginContext(appName,
 						new Subject(), null, config);
 				logger.info("Login in for appName=" + appName);
 				loginContext.login();
@@ -723,6 +725,10 @@ public class MiscUtil {
 		} catch (Throwable t) {
 			logger.fatal("Error logging as appName=" + appName + ", config="
 					+ config.toString() + ", error=" + t.getMessage());
+                } finally {
+                        if (loginContext != null) {
+                                loginContext.logout();
+                        }
 		}
 	}
 
@@ -735,6 +741,7 @@ public class MiscUtil {
 		Subject serverSubject = new Subject();
 		int successLoginCount = 0;
 		String[] spnegoPrincipals = null;
+
 		try {
 			if (principal.equals("*")) {
 				spnegoPrincipals = KerberosUtil.getPrincipalNames(keytab,
@@ -753,6 +760,7 @@ public class MiscUtil {
 			boolean useKeytab = true;
 			if (!useKeytab) {
 				logger.info("Creating UGI with subject");
+                                LoginContext loginContext = null;
 				List<LoginContext> loginContexts = new ArrayList<LoginContext>();
 				for (String spnegoPrincipal : spnegoPrincipals) {
 					try {
@@ -760,7 +768,7 @@ public class MiscUtil {
 								+ ", for principal " + spnegoPrincipal);
 						final KerberosConfiguration kerberosConfiguration = new KerberosConfiguration(
 								keytab, spnegoPrincipal);
-						final LoginContext loginContext = new LoginContext("",
+                                                loginContext = new LoginContext("",
 								serverSubject, null, kerberosConfiguration);
 						loginContext.login();
 						successLoginCount++;
@@ -785,6 +793,10 @@ public class MiscUtil {
 						} catch (Throwable e) {
 							logger.error("Error creating UGI from subject. subject="
 									+ serverSubject);
+                                                } finally {
+                                                        if (loginContext != null) {
+                                                                loginContext.logout();
+                                                        }
 						}
 					} else {
 						logger.error("Total logins were successfull from keytab="
