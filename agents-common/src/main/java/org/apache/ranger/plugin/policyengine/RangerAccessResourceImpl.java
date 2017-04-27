@@ -203,7 +203,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 
 	@Override
 	public Map<String, String> getAsMap() {
-		return Collections.unmodifiableMap(elements);
+		return elements == null ? Collections.EMPTY_MAP : Collections.unmodifiableMap(elements);
 	}
 
 	@Override
