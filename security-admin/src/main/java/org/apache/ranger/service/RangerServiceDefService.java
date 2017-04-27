@@ -19,9 +19,13 @@ package org.apache.ranger.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +54,20 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
 	@Override
 	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
-		return super.mapEntityToViewBean(vObj, xObj);
+		RangerServiceDef ret =  super.mapEntityToViewBean(vObj, xObj);
+
+		Map<String, String> serviceDefOptions = ret.getOptions();
+
+		if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES) == null) {
+			boolean enableDenyAndExceptionsInPoliciesHiddenOption = RangerConfiguration.getInstance().getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
+			if (enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(ret.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "true");
+			} else {
+				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "false");
+			}
+			ret.setOptions(serviceDefOptions);
+		}
+		return ret;
 	}
 
 	public List<RangerServiceDef> getAllServiceDefs() {
