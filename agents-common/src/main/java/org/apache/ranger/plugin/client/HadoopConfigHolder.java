@@ -150,7 +150,7 @@ public class HadoopConfigHolder  {
 			 connectionProperties.put(ENABLE_HIVE_METASTORE_LOOKUP, "false");
 		 }
 		if (!connectionProperties.containsKey(HIVE_SITE_FILE_PATH)) {
-			 connectionProperties.put(HIVE_SITE_FILE_PATH, null);
+			 connectionProperties.put(HIVE_SITE_FILE_PATH, "");
 		 }
 
 		for (Map.Entry<String, String> entry : connectionProperties.entrySet()) {
