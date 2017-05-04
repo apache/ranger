@@ -545,11 +545,10 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			}
 			if (deltaSyncUserTime < highestdeltaSyncUserTime) {
 				// Incrementing highestdeltaSyncUserTime (for AD) in order to avoid search record repetition for next sync cycle.
-				deltaSyncUserTime = highestdeltaSyncUserTime+1; 
-				// Incrementing the highest timestamp value (for Openldap) with 1min in order to avoid search record repetition for next sync cycle.
-				deltaSyncUserTimeStamp = dateFormat.format(new Date(highestdeltaSyncUserTime + 60000l));
+				deltaSyncUserTime = highestdeltaSyncUserTime+1;
+				// Incrementing the highest timestamp value (for Openldap) with 1sec in order to avoid search record repetition for next sync cycle.
+				deltaSyncUserTimeStamp = dateFormat.format(new Date(highestdeltaSyncUserTime + 60l));
 			}
-			
 		} finally {
 			if (userSearchResultEnum != null) {
 				userSearchResultEnum.close();
