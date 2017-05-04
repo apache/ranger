@@ -29,32 +29,33 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 	public static final String KEY_TABLE    = "table";
 	public static final String KEY_UDF      = "udf";
 	public static final String KEY_COLUMN   = "column";
+	public static final String KEY_URL		= "url";
 
 	private HiveObjectType objectType = null;
 
-	public RangerHiveResource(HiveObjectType objectType, String database) {
-		this(objectType, database, null, null);
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl) {
+		this(objectType, databaseorUrl, null, null);
 	}
 
-	public RangerHiveResource(HiveObjectType objectType, String database, String tableOrUdf) {
-		this(objectType, database, tableOrUdf, null);
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl, String tableOrUdf) {
+		this(objectType, databaseorUrl, tableOrUdf, null);
 	}
 	
-	public RangerHiveResource(HiveObjectType objectType, String database, String tableOrUdf, String column) {
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl, String tableOrUdf, String column) {
 		this.objectType = objectType;
 
 		switch(objectType) {
 			case DATABASE:
-				setValue(KEY_DATABASE, database);
+				setValue(KEY_DATABASE, databaseorUrl);
 			break;
 	
 			case FUNCTION:
-				setValue(KEY_DATABASE, database);
+				setValue(KEY_DATABASE, databaseorUrl);
 				setValue(KEY_UDF, tableOrUdf);
 			break;
 
 			case COLUMN:
-				setValue(KEY_DATABASE, database);
+				setValue(KEY_DATABASE, databaseorUrl);
 				setValue(KEY_TABLE, tableOrUdf);
 				setValue(KEY_COLUMN, column);
 			break;
@@ -63,12 +64,15 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 			case VIEW:
 			case INDEX:
 			case PARTITION:
-				setValue(KEY_DATABASE, database);
+				setValue(KEY_DATABASE, databaseorUrl);
 				setValue(KEY_TABLE, tableOrUdf);
 			break;
 
-			case NONE:
 			case URI:
+				setValue(KEY_URL,databaseorUrl);
+			break;
+
+			case NONE:
 			default:
 			break;
 		}
@@ -92,5 +96,9 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 
 	public String getColumn() {
 		return getValue(KEY_COLUMN);
+	}
+
+	public String getUrl() {
+		return getValue(KEY_URL);
 	}
 }

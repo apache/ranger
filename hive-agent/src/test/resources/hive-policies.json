@@ -487,6 +487,53 @@
           "groups": [],
           "conditions": [],
           "delegateAdmin": true
+        },
+        {
+          "service": "cl1_hive",
+          "name": " Test URI s3a://test/data read/write ",
+          "policyType": 0,
+          "isAuditEnabled": true,
+          "resources": {
+            "uri": {
+              "values": [
+                "s3a://test/data"
+              ],
+              "isExcludes": false,
+              "isRecursive": false
+            }
+          },
+          "policyItems": [
+            {
+              "accesses": [
+                {
+                  "type": "create",
+                  "isAllowed": true
+                },
+                {
+                  "type": "read",
+                  "isAllowed": true
+                },
+                {
+                  "type": "write",
+                  "isAllowed": true
+                }
+              ],
+              "users": [
+                "bob"
+              ],
+              "groups": [],
+              "conditions": [],
+              "delegateAdmin": true
+            }
+          ],
+          "denyPolicyItems": [],
+          "allowExceptions": [],
+          "denyExceptions": [],
+          "dataMaskPolicyItems": [],
+          "rowFilterPolicyItems": [],
+          "id": 9,
+          "isEnabled": true,
+          "version": 2
         }
       ],
       "denyPolicyItems": [],
@@ -497,6 +544,46 @@
       "id": 8,
       "isEnabled": true,
       "version": 2
+    },
+    {
+      "service": "cl1_hive",
+      "name": "S3 URL",
+      "policyType": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "url": {
+          "values": [
+            "s3a://test/data"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "read",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 99,
+      "isEnabled": true,
+      "version": 3
     }
   ],
   "serviceDef": {
@@ -640,6 +727,24 @@
         "uiHint": "",
         "label": "Hive Column",
         "description": "Hive Column"
+      },
+      {
+        "itemId": 5,
+        "name": "url",
+        "type": "string",
+        "level": 10,
+        "parent": "",
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": true,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+        "matcherOptions": { "wildCard":true, "ignoreCase":false },
+        "validationRegEx":"",
+        "validationMessage": "",
+        "uiHint":"",
+        "label": "URL",
+        "description": "URL"
       }
     ],
     "accessTypes": [
@@ -698,6 +803,18 @@
           "index",
           "lock"
         ]
+      },
+      {
+        "itemId": 9,
+        "name": "read",
+        "label": "Read",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 10,
+        "name": "write",
+        "label": "Write",
+        "impliedGrants": []
       }
     ],
     "policyConditions": [],
