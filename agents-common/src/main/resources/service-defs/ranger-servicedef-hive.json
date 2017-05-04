@@ -81,6 +81,25 @@
 			"uiHint":"",
 			"label": "Hive Column",
 			"description": "Hive Column"
+		},
+
+		{
+			"itemId": 5,
+			"name": "url",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": false,
+			"recursiveSupported": true,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":false },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "URL",
+			"description": "URL"
 		}
 	],
 
@@ -140,8 +159,22 @@
 				"drop",
 				"alter",
 				"index",
-				"lock"
+				"lock",
+				"read",
+				"write"
 			]
+		},
+
+		{
+			"itemId": 9,
+			"name": "read",
+			"label": "Read"
+		},
+
+		{
+			"itemId": 10,
+			"name": "write",
+			"label": "Write"
 		}
 	],
 

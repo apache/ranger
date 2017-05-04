@@ -539,6 +539,53 @@
       "id": 14,
       "isEnabled": true,
       "version": 1
+    },
+    {
+      "service": "cl1_hive",
+      "name": " Test URI s3a://test/data read/write ",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "uri": {
+          "values": [
+            "s3a://test/data"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "bob"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 9,
+      "isEnabled": true,
+      "version": 2
     }
   ],
   "serviceDef": {
@@ -682,6 +729,24 @@
         "uiHint": "",
         "label": "Hive Column",
         "description": "Hive Column"
+      },
+      {
+        "itemId": 5,
+        "name": "url",
+        "type": "string",
+        "level": 10,
+        "parent": "",
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": true,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+        "matcherOptions": { "wildCard":true, "ignoreCase":false },
+        "validationRegEx":"",
+        "validationMessage": "",
+        "uiHint":"",
+        "label": "URL",
+        "description": "URL"
       }
     ],
     "accessTypes": [
@@ -740,6 +805,18 @@
           "index",
           "lock"
         ]
+      },
+      {
+        "itemId": 9,
+        "name": "read",
+        "label": "Read",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 10,
+        "name": "write",
+        "label": "Write",
+        "impliedGrants": []
       }
     ],
     "policyConditions": [],
