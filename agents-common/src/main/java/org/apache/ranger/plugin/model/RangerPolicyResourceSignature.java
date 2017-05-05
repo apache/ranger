@@ -45,7 +45,7 @@ public class RangerPolicyResourceSignature {
 		_policy = policy;
 		PolicySerializer serializer = new PolicySerializer(_policy);
 		_string = serializer.toString();
-		_hash = DigestUtils.md5Hex(_string);
+                _hash = DigestUtils.sha256Hex(_string);
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class RangerPolicyResourceSignature {
 		} else {
 			_string = string;
 		}
-		_hash = DigestUtils.md5Hex(_string);
+                _hash = DigestUtils.sha256Hex(_string);
 	}
 	
 	String asString() {
