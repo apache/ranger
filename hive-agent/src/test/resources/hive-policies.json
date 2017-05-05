@@ -487,53 +487,6 @@
           "groups": [],
           "conditions": [],
           "delegateAdmin": true
-        },
-        {
-          "service": "cl1_hive",
-          "name": " Test URI s3a://test/data read/write ",
-          "policyType": 0,
-          "isAuditEnabled": true,
-          "resources": {
-            "uri": {
-              "values": [
-                "s3a://test/data"
-              ],
-              "isExcludes": false,
-              "isRecursive": false
-            }
-          },
-          "policyItems": [
-            {
-              "accesses": [
-                {
-                  "type": "create",
-                  "isAllowed": true
-                },
-                {
-                  "type": "read",
-                  "isAllowed": true
-                },
-                {
-                  "type": "write",
-                  "isAllowed": true
-                }
-              ],
-              "users": [
-                "bob"
-              ],
-              "groups": [],
-              "conditions": [],
-              "delegateAdmin": true
-            }
-          ],
-          "denyPolicyItems": [],
-          "allowExceptions": [],
-          "denyExceptions": [],
-          "dataMaskPolicyItems": [],
-          "rowFilterPolicyItems": [],
-          "id": 9,
-          "isEnabled": true,
-          "version": 2
         }
       ],
       "denyPolicyItems": [],
@@ -547,12 +500,11 @@
     },
     {
       "service": "cl1_hive",
-      "name": "S3 URL",
+      "name": " Test URI s3a://test/data read/write ",
       "policyType": 0,
-      "description": "",
       "isAuditEnabled": true,
       "resources": {
-        "url": {
+        "uri": {
           "values": [
             "s3a://test/data"
           ],
@@ -564,7 +516,15 @@
         {
           "accesses": [
             {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
               "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
               "isAllowed": true
             }
           ],
@@ -573,7 +533,7 @@
           ],
           "groups": [],
           "conditions": [],
-          "delegateAdmin": false
+          "delegateAdmin": true
         }
       ],
       "denyPolicyItems": [],
@@ -581,9 +541,9 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "id": 99,
+      "id": 9,
       "isEnabled": true,
-      "version": 3
+      "version": 2
     }
   ],
   "serviceDef": {
