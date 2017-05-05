@@ -531,4 +531,8 @@
 		<name>ranger.truststore.password</name>
 		<value></value>
 	</property>
+        <property>
+                <name>ranger.service.https.attrib.ssl.enabled.protocols</name>
+                <value>SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2</value>
+        </property>
 </configuration>

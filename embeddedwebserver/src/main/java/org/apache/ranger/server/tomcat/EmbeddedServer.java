@@ -141,7 +141,8 @@ public class EmbeddedServer {
 			ssl.setAttribute("keystorePass", keystorePass);
 			ssl.setAttribute("keystoreFile", getKeystoreFile());
 			
-			String enabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+                        String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+                        String enabledProtocols = getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 			
 			server.getService().addConnector(ssl);
