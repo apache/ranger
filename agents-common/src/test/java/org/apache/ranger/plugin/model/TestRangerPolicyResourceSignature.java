@@ -104,7 +104,7 @@ public class TestRangerPolicyResourceSignature {
 		// String rep of a null policy is an empty string! and its hash is sha of empty string!
 		RangerPolicyResourceSignature signature = new RangerPolicyResourceSignature((String)null);
 		Assert.assertEquals("", signature.asString());
-		Assert.assertEquals(DigestUtils.md5Hex(""), signature.getSignature());
+                Assert.assertEquals(DigestUtils.sha256Hex(""), signature.getSignature());
 	}
 
 	/*

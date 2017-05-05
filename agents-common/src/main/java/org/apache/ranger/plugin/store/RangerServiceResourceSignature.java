@@ -31,7 +31,7 @@ public class RangerServiceResourceSignature {
 
 	public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
 		_string = ServiceResourceSerializer.toString(serviceResource);
-		_hash   = DigestUtils.md5Hex(_string);
+                _hash   = DigestUtils.sha256Hex(_string);
 	}
 
 	String asString() {
