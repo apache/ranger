@@ -143,7 +143,7 @@ public class PatchForHiveServiceDefUpdate_J10007 extends BaseLoader {
 					ret = svcStore.updateServiceDef(dbHiveServiceDef);
 					if(ret==null){
 						logger.error("Error while updating "+SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME+"service-def");
-						System.exit(1);
+						throw new RuntimeException("Error while updating "+SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME+"service-def");
 					}
 				}
 			}
