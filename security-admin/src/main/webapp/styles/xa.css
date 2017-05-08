@@ -390,11 +390,16 @@ body {
         color:#4c504b;
         font-size:larger;
 }
-.searchInfoUserAccsss{
+.searchInfoUserAccess{
         margin-left:12px;
         color:#4c504b;
         font-size:large;
         margin-top:10px
+}
+/* Report Search Info inputs */
+.reportSearchInfoInputs{
+        position:absolute;
+        left:440px;
 }
 
 /* overriding backgrid height property */

@@ -17,30 +17,31 @@
 <h3 class="wrap-header bold"> Reports </h3>
 
 <div class="wrap non-collapsible ">
-<h3 class="wrap-header reportSearchHeader">Search Criteria
-		<span class="label label-yellow pull-right" data-js="searchResult" ></span>
+	<h3 class="wrap-header reportSearchHeader">Search Criteria
+		<span class="label label-yellow pull-right" data-js="searchResult"></span>
 	</h3>
 	<div class="wrap well ">
 		<div class="row-fluid">
 			<div class="span12">
 				<div class="form-horizontal">
 					<div class="span12">
+						<div class="pull-right">
+							<i class="icon-info-sign searchInfoUserAccess" title="Search Filter Hints"
+							   data-id="searchInfo"></i>
+						</div>
 						<div class="control-group">
-                                                    <div class="span4">
+							<div class="span4">
 								<label class="control-label">Policy Name</label>
 								<div class="controls">
-									<input type="text" name="policyName" data-js="policyName" autofocus >
+									<input type="text" name="policyName" data-js="policyName" autofocus>
 								</div>
 							</div>
-							<div class="span4">
+							<div class="span4 reportSearchInfoInputs">
 								<label class="control-label control-label-align" for="policyType">Policy Type</label>
 								<div class="controls controls-margin">
 									<input type="text" data-id="policyType">
 								</div>
 							</div>
-                                                        <div class="pull-right">
-                                         <i class="icon-info-sign searchInfoUserAccsss" title="Search Filter Hints"  data-id="searchInfo"></i>
-                                </div>
 						</div>
 						<div class="control-group">
 							<div class="span4">
@@ -48,8 +49,8 @@
 								<div class="controls">
 									<input type=text data-id="component" name="componentType">
 								</div>
-						</div>
-						<div class="span4">
+							</div>
+							<div class="span4 reportSearchInfoInputs">
 								<label class="control-label control-label-align">Resource</label>
 								<div class="controls controls-margin">
 									<input type="text" name="resourceName" data-js="resourceName">
@@ -82,10 +83,11 @@
 
 
 					</div>
-					<div >
+					<div>
 						<div class="control-group">
 							<div class="controls">
-								<button type="button" class="btn btn-primary btn-small" data-js="searchBtn" name="searchPolicy">
+								<button type="button" class="btn btn-primary btn-small" data-js="searchBtn"
+										name="searchPolicy">
 									<i class="icon-search"></i>
 									Search
 								</button>
@@ -100,7 +102,8 @@
 	<div class="row-fluid">
 	<span>
 		<div class="btn-group btn-right">
-			<button type="button" data-name="downloadFormatBtn" class="btn btn-primary dropdown-toggle" title="Export all below policies" data-toggle="dropdown">
+			<button type="button" data-name="downloadFormatBtn" class="btn btn-primary dropdown-toggle"
+					title="Export all below policies" data-toggle="dropdown">
 				<i class="icon-external-link-sign"></i>
 				<span>Export</span>
 				<span class="caret"> </span>
@@ -114,16 +117,17 @@
 			</ul>
 		</div>
 	</span>
-	<a href="javascript:void(0)" data-id="downloadReport"></a>
-	 </div>
+		<a href="javascript:void(0)" data-id="downloadReport"></a>
+	</div>
 	<div class="row-fluid">
 		{{#each policyHeaderList}}
-			<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader" data-compHeader="{{this.serviceDefName}}"> {{capitaliseLetter this.serviceDefName}}
-				<span class="label label-yellow btn-right" data-js="hdfsSearchResult" ></span>
-			</h3>
-			<div class="wrap well position-relative" data-comp="{{this.serviceDefName}}">
-				<div  data-id="{{this.collName}}" class="hdfs-table showMoreLess"></div>
-			</div>
+		<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader" data-compHeader="{{this.serviceDefName}}">
+			{{capitaliseLetter this.serviceDefName}}
+			<span class="label label-yellow btn-right" data-js="hdfsSearchResult"></span>
+		</h3>
+		<div class="wrap well position-relative" data-comp="{{this.serviceDefName}}">
+			<div data-id="{{this.collName}}" class="hdfs-table showMoreLess"></div>
+		</div>
 		{{/each}}
 	</div>
 </div>
