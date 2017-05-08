@@ -175,17 +175,25 @@ define(function(require) {
 	};
    //	Search Info it give popover box
    XAUtils.searchInfoPopover = function(myArray, $infoEle, placement){
-            var msg = "<span> Wildcard searches ( for example using * or ? ) are not currently supported.</span>";
+        var msg = "<span> Wildcard searches ( for example using * or ? ) are not currently supported.</span>";
 		myArray.map(function(m){
                    msg += '<div><span><b>'+m.text+' : </b></span><span>'+m.info+'</span></div>'
                 });
-        $infoEle.popover({
-           content: msg,
-           html: true,
-           trigger: 'hover',
-           placement: placement,
-           container: 'body'
-        });
+        $infoEle.popover({ trigger: "manual" , html: true, animation:false, content: msg, container:'body', placement: placement})
+                           .on("mouseenter", function () {
+                               var _this = this;
+                               $(this).popover("show");
+                               $(".popover").on("mouseleave", function () {
+                                   $(_this).popover('hide');
+                               });
+                           }).on("mouseleave", function () {
+                               var _this = this;
+                               setTimeout(function () {
+                                   if (!$(".popover:hover").length) {
+                                       $(_this).popover("hide");
+                                   }
+                               }, 300);
+               });
    };
 
 
