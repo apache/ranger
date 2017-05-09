@@ -129,21 +129,6 @@ public class TestRangerServiceDefService {
 		return xServiceDef;
 	}
 
-	private XXPolicy policy() {
-		XXPolicy xxPolicy = new XXPolicy();
-		xxPolicy.setId(Id);
-		xxPolicy.setName("HDFS_1-1-20150316062453");
-		xxPolicy.setAddedByUserId(Id);
-		xxPolicy.setCreateTime(new Date());
-		xxPolicy.setDescription("test");
-		xxPolicy.setIsAuditEnabled(false);
-		xxPolicy.setIsEnabled(false);
-		xxPolicy.setService(1L);
-		xxPolicy.setUpdatedByUserId(Id);
-		xxPolicy.setUpdateTime(new Date());
-		return xxPolicy;
-	}
-
 	@Test
 	public void test1ValidateForCreate() {
 		RangerServiceDef rangerServiceDef = rangerServiceDef();
@@ -167,7 +152,6 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
-		XXAccessTypeDef xAccessTypeDef = Mockito.mock(XXAccessTypeDef.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -179,7 +163,6 @@ public class TestRangerServiceDefService {
 				.mock(XXEnumElementDefDao.class);
 
 		XXServiceDef serviceDef = serviceDef();
-		XXPolicy policy = policy();
 
 		String name = "fdfdfds";
 		XXPortalUser tUser = new XXPortalUser();
@@ -312,19 +295,12 @@ public class TestRangerServiceDefService {
 				.thenReturn(serviceConfigDefList);
 
 		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-		Mockito.when(xResourceDefDao.findByPolicyId(policy.getId()))
-				.thenReturn(resDefList);
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
-		Mockito.when(xAccessTypeDefDao.getById(policyItemAccess.getType()))
-				.thenReturn(xAccessTypeDef);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);
@@ -374,7 +350,6 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
-		XXAccessTypeDef xAccessTypeDef = Mockito.mock(XXAccessTypeDef.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -400,8 +375,6 @@ public class TestRangerServiceDefService {
 		serviceDef.setRbkeydescription(null);
 		serviceDef.setIsEnabled(true);
 		xServiceDefList.add(serviceDef);
-
-		XXPolicy policy = policy();
 
 		String name = "fdfdfds";
 		XXPortalUser tUser = new XXPortalUser();
@@ -537,19 +510,12 @@ public class TestRangerServiceDefService {
 				.thenReturn(serviceConfigDefList);
 
 		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-		Mockito.when(xResourceDefDao.findByPolicyId(policy.getId()))
-				.thenReturn(resDefList);
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
-		Mockito.when(xAccessTypeDefDao.getById(policyItemAccess.getType()))
-				.thenReturn(xAccessTypeDef);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);
@@ -593,7 +559,6 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
-		XXAccessTypeDef xAccessTypeDef = Mockito.mock(XXAccessTypeDef.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXContextEnricherDefDao xContextEnricherDefDao = Mockito
@@ -603,7 +568,6 @@ public class TestRangerServiceDefService {
 				.mock(XXEnumElementDefDao.class);
 
 		XXServiceDef serviceDef = serviceDef();
-		XXPolicy policy = policy();
 		String name = "fdfdfds";
 		XXPortalUser tUser = new XXPortalUser();
 		tUser.setAddedByUserId(Id);
@@ -735,19 +699,12 @@ public class TestRangerServiceDefService {
 				.thenReturn(serviceConfigDefList);
 
 		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-		Mockito.when(xResourceDefDao.findByPolicyId(policy.getId()))
-				.thenReturn(resDefList);
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
-		Mockito.when(xAccessTypeDefDao.getById(policyItemAccess.getType()))
-				.thenReturn(xAccessTypeDef);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);

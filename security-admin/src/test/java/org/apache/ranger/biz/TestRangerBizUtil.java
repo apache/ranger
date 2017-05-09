@@ -72,7 +72,7 @@ public class TestRangerBizUtil {
 	public void setup(){
 		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		RangerContextHolder.setSecurityContext(context);		
+		RangerContextHolder.setSecurityContext(context);
 	}
 	
 	@Test
@@ -80,7 +80,7 @@ public class TestRangerBizUtil {
 		VXResource vXResource = null;
 		rangerBizUtil.enableResourceAccessControl = false;
 		VXResponse resp = rangerBizUtil.hasPermission(vXResource, AppConstants.XA_PERM_TYPE_UNKNOWN);
-		Assert.assertNotNull(resp);		
+		Assert.assertNotNull(resp);
 	}
 	
 	@Test
@@ -95,7 +95,12 @@ public class TestRangerBizUtil {
 	@Test
 	public void testHasPermission_emptyResourceName(){
 		VXResource vXResource = new VXResource();
+		vXResource.setAssetId(12345L);
 		XXPortalUser portalUser = new XXPortalUser();
+		portalUser.setId(id);
+		portalUser.setLoginId("12121");
+		RangerContextHolder.getSecurityContext().getUserSession().setXXPortalUser(portalUser);
+
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		XXUser xxUser = new XXUser();
@@ -106,7 +111,7 @@ public class TestRangerBizUtil {
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.getById(Mockito.anyLong())).thenReturn(portalUser);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
-		Mockito.when(xxUserDao.findByUserName(Mockito.anyString())).thenReturn(xxUser);	
+		Mockito.when(xxUserDao.findByUserName(Mockito.anyString())).thenReturn(xxUser);
 		Mockito.when(daoManager.getXXResource()).thenReturn(xxResourceDao);
 		Mockito.when(xxResourceDao.findByAssetIdAndResourceStatus(Mockito.anyLong(),Mockito.anyInt())).thenReturn(lst);
 		Mockito.when(daoManager.getXXAsset()).thenReturn(xxAssetDao);
@@ -118,20 +123,20 @@ public class TestRangerBizUtil {
 		Mockito.verify(xxUserDao).findByUserName(Mockito.anyString());
 		Assert.assertNotNull(resp);
 		Assert.assertEquals(VXResponse.STATUS_ERROR, resp.getStatusCode());
-		Assert.assertEquals("Permission Denied !", resp.getMsgDesc());		
+		Assert.assertEquals("Permission Denied !", resp.getMsgDesc());
 	}
 	
 	@Test
 	public void testHasPermission_isAdmin(){
 		VXResource vXResource = new VXResource();
 		vXResource.setName(resourceName);
-		vXResource.setAssetId(id);		
+		vXResource.setAssetId(id);
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
 		VXResponse resp = rangerBizUtil.hasPermission(vXResource, AppConstants.XA_PERM_TYPE_UNKNOWN);
 		Assert.assertNotNull(resp);
 		Assert.assertEquals(VXResponse.STATUS_SUCCESS, resp.getStatusCode());
-	}	
+	}
 	
 	@Test
 	public void testIsNotAdmin(){
@@ -145,11 +150,11 @@ public class TestRangerBizUtil {
 		currentUserSession.setUserAdmin(true);
 		boolean isAdminChk = rangerBizUtil.isAdmin();
 		Assert.assertTrue(isAdminChk);
-	}	
+	}
 	
 	@Test
 	public void testUserSessionNull_forIsAdmin(){
-		RangerContextHolder.setSecurityContext(null);	
+		RangerContextHolder.setSecurityContext(null);
 		boolean isAdminChk = rangerBizUtil.isAdmin();
 		Assert.assertFalse(isAdminChk);
 	}
@@ -165,8 +170,12 @@ public class TestRangerBizUtil {
 	public void testGetXUserId_NoUser(){
 		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
-		RangerContextHolder.setSecurityContext(context);	
+		RangerContextHolder.setSecurityContext(context);
 		XXPortalUser xxPortalUser = new XXPortalUser();
+		xxPortalUser.setId(id);
+		xxPortalUser.setLoginId("12121");
+		context.getUserSession().setXXPortalUser(xxPortalUser);
+
 		XXUser xxUser = new XXUser();
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
@@ -179,13 +188,14 @@ public class TestRangerBizUtil {
 		Mockito.verify(xxPortalUserDao).getById(Mockito.anyLong());
 		Mockito.verify(daoManager).getXXUser();
 		Mockito.verify(xxUserDao).findByUserName(Mockito.anyString());
-		Assert.assertNull(chk);	
+		Assert.assertNull(chk);
 	}
 	
 	@Test
 	public void testGetXUserId(){
 		XXPortalUser xxPortalUser = new XXPortalUser();
 		xxPortalUser.setId(id);
+		xxPortalUser.setLoginId("12121");
 		XXUser xxUser = new XXUser();
 		xxUser.setId(id);
 		XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
@@ -195,17 +205,17 @@ public class TestRangerBizUtil {
 		userSessionBase.setUserAdmin(true);
 		context.setUserSession(userSessionBase);
 		userSessionBase.setXXPortalUser(xxPortalUser);
-		RangerContextHolder.setSecurityContext(context);	
+		RangerContextHolder.setSecurityContext(context);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xxPortalUserDao);
 		Mockito.when(xxPortalUserDao.getById(Mockito.anyLong())).thenReturn(xxPortalUser);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
-		Mockito.when(xxUserDao.findByUserName(Mockito.anyString())).thenReturn(xxUser);		
+		Mockito.when(xxUserDao.findByUserName(Mockito.anyString())).thenReturn(xxUser);
 		Long chk = rangerBizUtil.getXUserId();
 		Mockito.verify(daoManager).getXXPortalUser();
 		Mockito.verify(xxPortalUserDao).getById(Mockito.anyLong());
 		Mockito.verify(daoManager).getXXUser();
 		Mockito.verify(xxUserDao).findByUserName(Mockito.anyString());
-		Assert.assertEquals(chk, id);		
+		Assert.assertEquals(chk, id);
 	}
 	
 	@Test
@@ -240,7 +250,7 @@ public class TestRangerBizUtil {
 	}
 	
 	@Test
-	public void testGeneratePublicName(){		
+	public void testGeneratePublicName(){
 		String firstName = "Test123456789123456789";
 		String lastName = "Unit";
 		String publicNameChk = rangerBizUtil.generatePublicName(firstName, lastName);
@@ -248,7 +258,7 @@ public class TestRangerBizUtil {
 	}
 	
 	@Test
-	public void testGeneratePublicName_fNameLessThanMax(){		
+	public void testGeneratePublicName_fNameLessThanMax(){
 		String firstName = "Test";
 		String lastName = "";
 		String publicNameChk = rangerBizUtil.generatePublicName(firstName, lastName);
@@ -348,13 +358,13 @@ public class TestRangerBizUtil {
 	@Test
 	public void testGetMimeType_ForJPG(){
 		String mimeTypeChk = rangerBizUtil.getMimeType(RangerConstants.MIME_JPEG);
-		Assert.assertEquals("jpg",mimeTypeChk);		
+		Assert.assertEquals("jpg",mimeTypeChk);
 	}
 	
 	@Test
 	public void testGetMimeType_ForPNG(){
 		String mimeTypeChk = rangerBizUtil.getMimeType(RangerConstants.MIME_PNG);
-		Assert.assertEquals("png",mimeTypeChk);		
+		Assert.assertEquals("png",mimeTypeChk);
 	}
 	
 	@Test
@@ -402,8 +412,8 @@ public class TestRangerBizUtil {
 	@Test
 	public void testGetMimeTypeInt_ForPNG(){
 		int mimeTypeChk = rangerBizUtil.getMimeTypeInt("png");
-		Assert.assertEquals(RangerConstants.MIME_PNG, mimeTypeChk);		
-	}	
+		Assert.assertEquals(RangerConstants.MIME_PNG, mimeTypeChk);
+	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
@@ -425,17 +435,17 @@ public class TestRangerBizUtil {
 	@Test
 	public void testGetMObject_VXDataObject(){
 		VXAsset vXDataObject = new VXAsset();
-		vXDataObject.setId(id);	
+		vXDataObject.setId(id);
 		BaseDao baseDao = Mockito.mock(BaseDao.class);
 		Mockito.when(daoManager.getDaoForClassType(vXDataObject.getMyClassType())).thenReturn(baseDao);
 		Mockito.when(baseDao.getById(vXDataObject.getId())).thenReturn(new XXAsset());
-		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(vXDataObject);		
+		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(vXDataObject);
 		Assert.assertNotNull(xXDBaseChk);
 	}
 	
 	@Test
 	public void testGetMObject_NOVXDataObject(){
-		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(null);		
+		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(null);
 		Assert.assertNull(xXDBaseChk);
 	}
 	
@@ -443,7 +453,7 @@ public class TestRangerBizUtil {
 	public void testGetVObject_NOObjId(){
 		VXDataObject objchk = rangerBizUtil.getVObject(RangerConstants.CLASS_TYPE_USER_PROFILE, null);
 		Assert.assertNull(objchk);
-	}	
+	}
 	
 	@Test
 	public void testMatchHdfsPolicy_NoResourceName(){
@@ -481,7 +491,6 @@ public class TestRangerBizUtil {
 		xXResource.setIsRecursive(AppConstants.BOOL_TRUE);
 		xXResource.setResourceStatus(AppConstants.STATUS_ENABLED);
 		xResourceList.add(xXResource);
-		Mockito.when(stringUtil.isEmpty(resourceName)).thenReturn(true);
 		Mockito.when(stringUtil.split(Mockito.anyString(), Mockito.anyString())).thenReturn(new String[0]);
 		boolean bnlChk = rangerBizUtil.matchHbasePolicy("/*/*/*", xResourceList, vXResponse, id, AppConstants.XA_PERM_TYPE_UNKNOWN);
 		Mockito.verify(stringUtil).split(Mockito.anyString(), Mockito.anyString());
@@ -527,7 +536,7 @@ public class TestRangerBizUtil {
 		xResourceList.add(xXResource);
 		Mockito.when(stringUtil.split(Mockito.anyString(), Mockito.anyString())).thenReturn(new String[0]);
 		boolean bnlChk = rangerBizUtil.matchHivePolicy("/*/*/*", xResourceList, id, 0);
-		Assert.assertFalse(bnlChk);		
+		Assert.assertFalse(bnlChk);
 	}
 	
 	@Test
@@ -542,6 +551,6 @@ public class TestRangerBizUtil {
 		Mockito.when(stringUtil.split(Mockito.anyString(), Mockito.anyString())).thenReturn(new String[0]);
 		boolean bnlChk = rangerBizUtil.matchHivePolicy("/*/*/*", xResourceList, id, 17);
 		Mockito.verify(stringUtil).split(Mockito.anyString(), Mockito.anyString());
-		Assert.assertFalse(bnlChk);		
-	}		
+		Assert.assertFalse(bnlChk);
+	}
 }

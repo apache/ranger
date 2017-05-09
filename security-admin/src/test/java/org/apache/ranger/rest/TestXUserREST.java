@@ -150,14 +150,14 @@ public class TestXUserREST {
 	@Mock AppConstants AppConstants;
 	@Mock RangerConstants RangerConstants;
 	@Mock VXResource vXResource;
-	@Mock VXResponse vXResponse; 
+	@Mock VXResponse vXResponse;
 	@Mock XXResource xXResource;
 	@Mock XXAuditMap XXAuditMap;
 	@Mock XAuditMapService xAuditMapService;
 	@Mock DaoManager daoManager;
 	@Mock XPermMapService xPermMapService;
 	@Mock XXAsset XXAsset;
-	@Mock RangerDaoManager rangerDaoManager; 
+	@Mock RangerDaoManager rangerDaoManager;
 	@Mock XXPermMap XXPermMap;
 	@Mock Response response;
 	@Mock VXPermMapList vXPermMapList;
@@ -193,7 +193,7 @@ public class TestXUserREST {
 	@Mock RangerPolicy rangerPolicy;
 	@Mock RangerPolicyItem rangerPolicyItem;
 	@Mock RangerDataMaskPolicyItem rangerDataMaskPolicyItem;
-	@Mock RangerRowFilterPolicyItem rangerRowFilterPolicyItem;		
+	@Mock RangerRowFilterPolicyItem rangerRowFilterPolicyItem;
 	
 	@Test
 	public void test1getXGroup() {
@@ -244,7 +244,7 @@ public class TestXUserREST {
 		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
 		assertEquals(compareTestVXGroup.getName(),retVxGroup.getName());
 		Mockito.verify(xUserMgr).createXGroup(compareTestVXGroup);
-	}	
+	}
 	@Test
 	public void test5updateXGroup() {
 		VXGroup compareTestVXGroup=createVXGroup();
@@ -268,7 +268,7 @@ public class TestXUserREST {
 		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
 		assertEquals(compareTestVXGroup.getName(),retVxGroup.getName());
 		Mockito.verify(xUserMgr).updateXGroup(compareTestVXGroup);
-	}	
+	}
 	@Test
 	public void test7modifyGroupsVisibility() {
 		HashMap<Long, Integer> groupVisibilityMap=creategroupVisibilityMap();
@@ -303,7 +303,7 @@ public class TestXUserREST {
 		xUserRest.deleteXGroup(id,request);
 		Mockito.verify(xUserMgr).deleteXGroup(id,forceDelete);
 		Mockito.verify(request).getParameter("forceDelete");
-	}	
+	}
 	@Test
 	public void test10deleteXGroupNotEmpty() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -323,7 +323,7 @@ public class TestXUserREST {
 
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "group name", null)).thenReturn("");
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "Group Visibility")).thenReturn(1);
@@ -333,7 +333,7 @@ public class TestXUserREST {
 		VXGroupList outputvXGroupList=xUserRest.searchXGroups(request);
 		
 		Mockito.verify(xUserMgr).searchXGroups(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "name", "group name", null);
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "isVisible", "Group Visibility");
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "groupSource", "group source", null);
@@ -341,27 +341,27 @@ public class TestXUserREST {
 		assertEquals(outputvXGroupList.getTotalCount(),testvXGroupList.getTotalCount());
 		assertEquals(outputvXGroupList.getClass(),testvXGroupList.getClass());
 		
-	}		
+	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test12countXGroups() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 	
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXGroupSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXGroups(request);
 		Mockito.verify(xUserMgr).getXGroupSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
 		assertEquals(testvxLong.getClass(),vXLong.getClass());
 		
-	}	
+	}
 	@Test
 	public void test13getXUser() {
 	
@@ -394,7 +394,7 @@ public class TestXUserREST {
 		assertNotNull(gotVXUser);
 		assertEquals(vxUser.getId(), gotVXUser.getId());
 		assertEquals(vxUser.getName(), gotVXUser.getName());
-	}	
+	}
 	@Test
 	public void test16createXUserGroupFromMap() {
 		VXUserGroupInfo vXUserGroupInfo= new VXUserGroupInfo();
@@ -429,7 +429,7 @@ public class TestXUserREST {
 		assertNotNull(gotVXUser);
 		assertEquals(vxUser.getId(), gotVXUser.getId());
 		assertEquals(vxUser.getName(), gotVXUser.getName());
-	}	
+	}
 	@Test
 	public void test19secureUpdateXUser() {
 		
@@ -443,12 +443,12 @@ public class TestXUserREST {
 		assertNotNull(gotVXUser);
 		assertEquals(vxUser.getId(), gotVXUser.getId());
 		assertEquals(vxUser.getName(), gotVXUser.getName());
-	}	
+	}
 	@Test
 	public void test20modifyUserVisibility() {
 		HashMap<Long, Integer> testVisibilityMap= new HashMap<Long, Integer>();
 		testVisibilityMap.put(1L,0);
-		Mockito.doNothing().when(xUserMgr).modifyUserVisibility(testVisibilityMap);	
+		Mockito.doNothing().when(xUserMgr).modifyUserVisibility(testVisibilityMap);
 		xUserRest.modifyUserVisibility(testVisibilityMap);
 		Mockito.verify(xUserMgr).modifyUserVisibility(testVisibilityMap);
 	}
@@ -477,7 +477,7 @@ public class TestXUserREST {
 		xUserRest.deleteXUser(id,request);
 		Mockito.verify(xUserMgr).deleteXUser(id,forceDelete);
 		Mockito.verify(request).getParameter("forceDelete");
-	}	
+	}
 	@Test
 	public void test23deleteXUserNotEmpty() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -498,7 +498,7 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 	
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyList())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,Mockito.<SortField>anyList())).thenReturn(testSearchCriteria);
 		
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address",null)).thenReturn("");
@@ -517,7 +517,7 @@ public class TestXUserREST {
 		VXUserList gotVXUserList=xUserRest.searchXUsers(request);
 		
 		Mockito.verify(xUserMgr).searchXUsers(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "name", "User name", null);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "emailAddress", "Email Address",null);
@@ -529,21 +529,21 @@ public class TestXUserREST {
 		assertNotNull(gotVXUserList);
 		assertEquals(testVXUserList.getTotalCount(),gotVXUserList.getTotalCount());
 		assertEquals(testVXUserList.getClass(),gotVXUserList.getClass());
-	}		
+	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test25countXUsers() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXUserSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXUsers(request);
 		Mockito.verify(xUserMgr).getXUserSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
@@ -560,7 +560,7 @@ public class TestXUserREST {
 			assertEquals(testVXGroupUser.getClass(),retVxGroupUser.getClass());
 			assertEquals(testVXGroupUser.getId(),retVxGroupUser.getId());
 			Mockito.verify(xUserMgr).getXGroupUser(id);
-	}	
+	}
 	@Test
 	public void test27createXGroupUser() {
 		VXGroupUser testVXGroupUser= createVXGroupUser();
@@ -572,7 +572,7 @@ public class TestXUserREST {
 		assertEquals(testVXGroupUser.getClass(),retVxGroupUser.getClass());
 		assertEquals(testVXGroupUser.getId(),retVxGroupUser.getId());
 		Mockito.verify(xUserMgr).createXGroupUser(testVXGroupUser);
-	}	
+	}
 	@Test
 	public void test28updateXGroupUser() {
 		VXGroupUser testVXGroupUser= createVXGroupUser();
@@ -601,7 +601,7 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		
 		VXGroupUserList testVXGroupUserList=new VXGroupUserList();
 		VXGroupUser vXGroupUser = createVXGroupUser();
@@ -612,7 +612,7 @@ public class TestXUserREST {
 		VXGroupUserList outputvXGroupList=xUserRest.searchXGroupUsers(request);
 		
 		Mockito.verify(xUserMgr).searchXGroupUsers(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(outputvXGroupList);
 		assertEquals(outputvXGroupList.getClass(),testVXGroupUserList.getClass());
@@ -625,14 +625,14 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXGroupUserSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXGroupUsers(request);
 		Mockito.verify(xUserMgr).getXGroupUserSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
@@ -672,7 +672,7 @@ public class TestXUserREST {
 		assertEquals(compareTestVXGroup.getClass(),retVxGroup.getClass());
 		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
 		Mockito.verify(xUserMgr).updateXGroupGroup(compareTestVXGroup);
-	}	
+	}
 	@Test
 	public void test35deleteXGroupGroup() {
 		boolean forceDelete = false;
@@ -693,13 +693,13 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 
 		Mockito.when(xUserMgr.searchXGroupGroups(testSearchCriteria)).thenReturn(testvXGroupGroupList);
 		VXGroupGroupList outputvXGroupGroupList=xUserRest.searchXGroupGroups(request);
 		
 		Mockito.verify(xUserMgr).searchXGroupGroups(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(outputvXGroupGroupList);
 		assertEquals(outputvXGroupGroupList.getClass(),testvXGroupGroupList.getClass());
@@ -711,19 +711,19 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 				
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		
 		vXLong.setValue(1);
 			
 		Mockito.when(xUserMgr.getXGroupGroupSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXGroupGroups(request);
 		Mockito.verify(xUserMgr).getXGroupGroupSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 			
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getClass(),vXLong.getClass());
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
-	}	
+	}
 	@Test
 	public void test38getXPermMapVXResourceNull() throws Exception{
 		VXPermMap permMap = testcreateXPermMap();
@@ -732,20 +732,20 @@ public class TestXUserREST {
 		VXResource testVxResource= new VXResource();
 		Mockito.when(xResourceService.readResource(null)).thenReturn(testVxResource);
 		
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject())).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
 		VXPermMap retVxGroup= xUserRest.getXPermMap(id);
 		
 		Mockito.verify(xUserMgr).getXPermMap(id);
 		Mockito.verify(xResourceService).readResource(null);
-		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject());
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any());
 		assertEquals(permMap.getId(),retVxGroup.getId());
 		assertEquals(permMap.getClass(),retVxGroup.getClass());
 		assertNotNull(retVxGroup);
 		
 	
-	}	
+	}
 	@Test
 	public void test39getXPermMapNotNull() throws Exception{
 		VXPermMap permMap = testcreateXPermMap();
@@ -777,7 +777,7 @@ public class TestXUserREST {
 		permMap.setResourceId(null);
 		Mockito.when(xUserMgr.createXPermMap(permMap)).thenReturn(permMap);
 		Mockito.when(xResourceService.readResource(permMap.getResourceId())).thenReturn(null);
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject())).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
 		VXPermMap retVxGroup=xUserRest.createXPermMap(permMap);
@@ -788,8 +788,8 @@ public class TestXUserREST {
 		
 		Mockito.verify(xUserMgr).createXPermMap(permMap);
 		Mockito.verify(xResourceService).readResource(permMap.getResourceId());
-		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject());
-	}	
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any());
+	}
 	
 	@Test
 	public void test42createXPermMapNull() {
@@ -799,7 +799,7 @@ public class TestXUserREST {
 		Mockito.verify(xUserMgr).createXPermMap(null);
 		assertNull(retVxGroup);
 		
-	}	
+	}
 	
 	@Test
 	public void test43createXPermMapNullVXResource() {
@@ -869,7 +869,7 @@ public class TestXUserREST {
 		Mockito.doNothing().when(xUserMgr).deleteXPermMap(id, forceDelete);
 		xUserRest.deleteXPermMap(id,request);
 		Mockito.verify(xUserMgr).deleteXPermMap(id,forceDelete);
-	}	
+	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test48searchXPermMaps() {
@@ -877,9 +877,9 @@ public class TestXUserREST {
 
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
-		List <VXPermMap> vXPermMaps= new ArrayList<VXPermMap>(); 
+		List <VXPermMap> vXPermMaps= new ArrayList<VXPermMap>();
 		vXPermMaps.add(permMap);
 		VXPermMapList testvXGroupList=new VXPermMapList() ;
 		testvXGroupList.setTotalCount(1);
@@ -888,28 +888,28 @@ public class TestXUserREST {
 		VXPermMapList outputvXGroupList=xUserRest.searchXPermMaps(request);
 		
 		Mockito.verify(xUserMgr).searchXPermMaps(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(outputvXGroupList);
 		assertEquals(outputvXGroupList.getClass(),testvXGroupList.getClass());
 		assertEquals(outputvXGroupList.getTotalCount(),testvXGroupList.getTotalCount());
-	}	
+	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test49countXPermMaps() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		SearchCriteria testSearchCriteria=createsearchCriteria();				
+		SearchCriteria testSearchCriteria=createsearchCriteria();
 	
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 			
-		vXLong.setValue(1);				
+		vXLong.setValue(1);
 		Mockito.when(xUserMgr.getXPermMapSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXPermMaps(request);
 		Mockito.verify(xUserMgr).getXPermMapSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 				
 		assertNotNull(testvxLong);
-	}		
+	}
 	@Test
 	public void test50getXAuditMapVXAuditMapNull() {
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
@@ -917,7 +917,7 @@ public class TestXUserREST {
 		VXResource testVxResource= createVXResource();
 		Mockito.when(xResourceService.readResource(null)).thenReturn(testVxResource);
 
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject())).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
 		VXAuditMap retVXAuditMap=xUserRest.getXAuditMap(testvXAuditMap.getResourceId());
@@ -928,7 +928,7 @@ public class TestXUserREST {
 		
 		Mockito.verify(xUserMgr).getXAuditMap(testvXAuditMap.getResourceId());
 		Mockito.verify(xResourceService).readResource(null);
-		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject()));
+		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any()));
 		
 	}
 	@Test
@@ -970,7 +970,7 @@ public class TestXUserREST {
 		
 		Mockito.when(xUserMgr.createXAuditMap(testvXAuditMap)).thenReturn(testvXAuditMap);
 		VXResource testVxResource= createVXResource();
-		Mockito.when(xResourceService.readResource(testvXAuditMap.getResourceId())).thenReturn(testVxResource);	
+		Mockito.when(xResourceService.readResource(testvXAuditMap.getResourceId())).thenReturn(testVxResource);
 		VXAuditMap retvXAuditMap= xUserRest.createXAuditMap(testvXAuditMap);
 		assertEquals(testvXAuditMap.getId(),retvXAuditMap.getId());
 		assertEquals(testvXAuditMap.getClass(),retvXAuditMap.getClass());
@@ -991,7 +991,7 @@ public class TestXUserREST {
 		
 		Mockito.when(xResourceService.readResource(testvXAuditMap.getResourceId())).thenReturn(null);
 
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject())).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
 		VXAuditMap retvXAuditMap= xUserRest.createXAuditMap(testvXAuditMap);
@@ -1001,7 +1001,7 @@ public class TestXUserREST {
 		
 		Mockito.verify(xUserMgr).createXAuditMap(testvXAuditMap);
 		Mockito.verify(xResourceService).readResource(testvXAuditMap.getResourceId());
-		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject()));
+		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any()));
 		
 	}@Test
 	public void test55createXAuditMapNull() {
@@ -1012,7 +1012,7 @@ public class TestXUserREST {
 		assertNull(retvXAuditMap);
 		Mockito.verify(xUserMgr).createXAuditMap(null);
 		
-	}	
+	}
 	
 	@Test
 	public void test56updateXAuditMap() {
@@ -1039,13 +1039,13 @@ public class TestXUserREST {
 		
 		Mockito.when(xUserMgr.updateXAuditMap(testvXAuditMap)).thenReturn(testvXAuditMap);
 		Mockito.when(xResourceService.readResource(null)).thenReturn(null);
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject())).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		VXAuditMap retvXAuditMap=xUserRest.updateXAuditMap(testvXAuditMap);
 		assertNull(retvXAuditMap);
 		Mockito.verify(xUserMgr).updateXAuditMap(testvXAuditMap);
 		Mockito.verify(xResourceService).readResource(null);
-		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.anyObject()));
+		Mockito.verify(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any()));
 	}
 	@Test
 	public void test58updateXAuditMapVXResourceNull() {
@@ -1070,39 +1070,39 @@ public class TestXUserREST {
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
-		List <VXAuditMap> testvXAuditMaps= new ArrayList<VXAuditMap>(); 
+		List <VXAuditMap> testvXAuditMaps= new ArrayList<VXAuditMap>();
 		testvXAuditMaps.add(testvXAuditMap);
 		VXAuditMapList testVXAuditMapList=new VXAuditMapList() ;
-		testVXAuditMapList.setVXAuditMaps(testvXAuditMaps); 
+		testVXAuditMapList.setVXAuditMaps(testvXAuditMaps);
 		Mockito.when(xUserMgr.searchXAuditMaps(testSearchCriteria)).thenReturn(testVXAuditMapList);
 		VXAuditMapList outputVXAuditMapList=xUserRest.searchXAuditMaps(request);
 		
 		Mockito.verify(xUserMgr).searchXAuditMaps(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(outputVXAuditMapList);
 		assertEquals(outputVXAuditMapList.getClass(),testVXAuditMapList.getClass());
 		assertEquals(outputVXAuditMapList.getResultSize(),testVXAuditMapList.getResultSize());
 		
 	
-	}	
+	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test61countXAuditMaps() {
 		
 
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		SearchCriteria testSearchCriteria=createsearchCriteria();				
+		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 			
-		vXLong.setValue(1);				
+		vXLong.setValue(1);
 		Mockito.when(xUserMgr.getXAuditMapSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXAuditMaps(request);
 		Mockito.verify(xUserMgr).getXAuditMapSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		assertEquals(testvxLong.getClass(),vXLong.getClass());
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
 		assertNotNull(testvxLong);
@@ -1270,7 +1270,7 @@ public class TestXUserREST {
 		assertEquals(groupList.getClass(),retVxGroupList.getClass());
 		assertEquals(groupList.getResultSize(),retVxGroupList.getResultSize());
 		Mockito.verify(xUserMgr).getXUserGroups(id);
-	}	
+	}
 	@Test
 	public void test73getXGroupUsers() {
 		
@@ -1299,7 +1299,7 @@ public class TestXUserREST {
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		
 		Mockito.when(searchUtil.extractLong(request, testSearchCriteria, "id", "Auth Session Id")).thenReturn(1L);
@@ -1328,7 +1328,7 @@ public class TestXUserREST {
 		VXAuthSessionList outputvXGroupList=xUserRest.getAuthSessions(request);
 		
 		Mockito.verify(sessionMgr).searchAuthSessions(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		Mockito.verify(searchUtil).extractLong(request, testSearchCriteria, "id", "Auth Session Id");
 		Mockito.verify(searchUtil).extractLong(request, testSearchCriteria, "userId", "User Id");
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "authStatus", "Auth Status");
@@ -1389,7 +1389,7 @@ public class TestXUserREST {
 			
 		Mockito.verify(xUserMgr).getXModuleDefPermission(testVXModuleDef.getId());
 		 
-	}	
+	}
 	@Test
 	public void test78updateXModuleDefPermission() {
 	
@@ -1432,7 +1432,7 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "module","modulename", null)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "moduleDefList","id", null)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "userName","userName", null)).thenReturn("");
@@ -1445,7 +1445,7 @@ public class TestXUserREST {
 		assertEquals(outputVXModuleDefList.getStartIndex(),testVXModuleDefList.getStartIndex());
 		
 		Mockito.verify(xUserMgr).searchXModuleDef(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "module","modulename", null);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "moduleDefList","id", null);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "userName","userName", null);
@@ -1460,14 +1460,14 @@ public class TestXUserREST {
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
 	
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXModuleDefSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXModuleDef(request);
 		Mockito.verify(xUserMgr).getXModuleDefSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
@@ -1475,7 +1475,7 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test82createXUserPermission() {
-		VXUserPermission testvXUserPermission = createVXUserPermission(); 
+		VXUserPermission testvXUserPermission = createVXUserPermission();
 			
 		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
 		Mockito.when(xUserMgr.createXUserPermission(testvXUserPermission)).thenReturn(testvXUserPermission);
@@ -1498,7 +1498,7 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test84updateXUserPermission() {
-		VXUserPermission testvXUserPermission = createVXUserPermission(); 
+		VXUserPermission testvXUserPermission = createVXUserPermission();
 		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
 		Mockito.when(xUserMgr.updateXUserPermission(testvXUserPermission)).thenReturn(testvXUserPermission);
 		VXUserPermission retVXUserPermission=xUserRest.updateXUserPermission(testvXUserPermission);
@@ -1533,7 +1533,7 @@ public class TestXUserREST {
 		testVXUserPermissionList.setvXModuleDef(testVXUserPermissions);
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "id", "id",StringUtil.VALIDATION_NAME)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "userPermissionList","userId", StringUtil.VALIDATION_NAME)).thenReturn("");
 			
@@ -1545,7 +1545,7 @@ public class TestXUserREST {
 		assertEquals(outputVXUserPermissionList.getTotalCount(),testVXUserPermissionList.getTotalCount());
 		
 		Mockito.verify(xUserMgr).searchXUserPermission(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "id", "id",StringUtil.VALIDATION_NAME);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "userPermissionList","userId", StringUtil.VALIDATION_NAME);
 			
@@ -1558,14 +1558,14 @@ public class TestXUserREST {
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 		
 		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXUserPermissionSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXUserPermission(request);
 		Mockito.verify(xUserMgr).getXUserPermissionSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
@@ -1575,7 +1575,7 @@ public class TestXUserREST {
 	@Test
 	public void test88createXGroupPermission() {
 		
-		VXGroupPermission testVXGroupPermission = createVXGroupPermission(); 
+		VXGroupPermission testVXGroupPermission = createVXGroupPermission();
 		
 		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
 		Mockito.when(xUserMgr.createXGroupPermission(testVXGroupPermission)).thenReturn(testVXGroupPermission);
@@ -1601,7 +1601,7 @@ public class TestXUserREST {
 	@Test
 	public void test90updateXGroupPermission() {
 	
-		VXGroupPermission testVXGroupPermission = createVXGroupPermission(); 
+		VXGroupPermission testVXGroupPermission = createVXGroupPermission();
 		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
 		Mockito.when(xUserMgr.updateXGroupPermission(testVXGroupPermission)).thenReturn(testVXGroupPermission);
 		VXGroupPermission retVXGroupPermission=xUserRest.updateXGroupPermission(testVXGroupPermission);
@@ -1636,7 +1636,7 @@ public class TestXUserREST {
 		testVXGroupPermissionList.setvXGroupPermission(testVXGroupPermissions);
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "id", "id",StringUtil.VALIDATION_NAME)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria,"groupPermissionList", "groupId", StringUtil.VALIDATION_NAME)).thenReturn("");
 		Mockito.when(xUserMgr.searchXGroupPermission(testSearchCriteria)).thenReturn(testVXGroupPermissionList);
@@ -1647,7 +1647,7 @@ public class TestXUserREST {
 		
 		Mockito.verify(xUserMgr).searchXGroupPermission(testSearchCriteria);
 		
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "id", "id",StringUtil.VALIDATION_NAME);
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria,"groupPermissionList", "groupId", StringUtil.VALIDATION_NAME);
 	}
@@ -1658,14 +1658,14 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 	
 		vXLong.setValue(1);
 		
 		Mockito.when(xUserMgr.getXGroupPermissionSearchCount(testSearchCriteria)).thenReturn(vXLong);
 		VXLong testvxLong=xUserRest.countXGroupPermission(request);
 		Mockito.verify(xUserMgr).getXGroupPermissionSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
 		
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
@@ -1985,7 +1985,7 @@ public class TestXUserREST {
 	
 	private HashMap<Long, Integer> creategroupVisibilityMap()
 	{
-		HashMap<Long, Integer> groupVisibilityMap=new HashMap<Long, Integer>(); 
+		HashMap<Long, Integer> groupVisibilityMap=new HashMap<Long, Integer>();
 		groupVisibilityMap.put(id, 1);
 		return groupVisibilityMap;
 	}

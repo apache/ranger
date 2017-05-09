@@ -184,7 +184,7 @@ public class TestUserMgr {
 		list.add(XXPortalUserRole);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.create((XXPortalUser) Mockito.anyObject()))
+		Mockito.when(userDao.create((XXPortalUser) Mockito.any()))
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
@@ -237,7 +237,7 @@ public class TestUserMgr {
 		list.add(XXPortalUserRole);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.create((XXPortalUser) Mockito.anyObject()))
+		Mockito.when(userDao.create((XXPortalUser) Mockito.any()))
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
@@ -706,7 +706,7 @@ public class TestUserMgr {
 		xGroupPermissionList.add(xGroupPermissionObj);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.create((XXPortalUser) Mockito.anyObject()))
+		Mockito.when(userDao.create((XXPortalUser) Mockito.any()))
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(Mockito.anyLong())).thenReturn(list);

@@ -135,8 +135,8 @@ public class TestXAuditREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		searchCriteria.addParam("name", name);
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject())).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any())).thenReturn(searchCriteria);
 		Mockito.when(xAuditMgr.searchXTrxLogs(searchCriteria)).thenReturn(vxExpList);
 
 		VXTrxLogList vxActList = auditREST.searchXTrxLogs(request);
@@ -144,8 +144,8 @@ public class TestXAuditREST {
 		Assert.assertNotNull(vxActList);
 		Assert.assertEquals(vxExpList, vxActList);
 
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any());
 		Mockito.verify(xAuditMgr).searchXTrxLogs(searchCriteria);
 	}
 
@@ -155,8 +155,8 @@ public class TestXAuditREST {
 		VXLong vxLongExp = new VXLong();
 		vxLongExp.setValue(id);
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject())).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any())).thenReturn(searchCriteria);
 		Mockito.when(xAuditMgr.getXTrxLogSearchCount(searchCriteria)).thenReturn(vxLongExp);
 
 		VXLong vxLongAct = auditREST.countXTrxLogs(request);
@@ -165,8 +165,8 @@ public class TestXAuditREST {
 		Assert.assertEquals(vxLongExp, vxLongAct);
 		Assert.assertEquals(vxLongExp.getValue(), vxLongAct.getValue());
 
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any());
 		Mockito.verify(xAuditMgr).getXTrxLogSearchCount(searchCriteria);
 	}
 
@@ -178,8 +178,8 @@ public class TestXAuditREST {
 		VXAccessAuditList vxAAListExp = new VXAccessAuditList();
 		vxAAListExp.setTotalCount(6L);
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject())).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any())).thenReturn(searchCriteria);
 		Mockito.when(xAuditMgr.searchXAccessAudits(searchCriteria)).thenReturn(vxAAListExp);
 
 		VXAccessAuditList vxAAListAct = auditREST.searchXAccessAudits(request);
@@ -188,8 +188,8 @@ public class TestXAuditREST {
 		Assert.assertEquals(vxAAListExp, vxAAListAct);
 		Assert.assertEquals(vxAAListExp.getTotalCount(), vxAAListAct.getTotalCount());
 
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any());
 		Mockito.verify(xAuditMgr).searchXAccessAudits(searchCriteria);
 	}
 
@@ -201,8 +201,8 @@ public class TestXAuditREST {
 		VXLong vxLongExp = new VXLong();
 		vxLongExp.setValue(id);
 
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject())).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any())).thenReturn(searchCriteria);
 		Mockito.when(xAuditMgr.getXAccessAuditSearchCount(searchCriteria)).thenReturn(vxLongExp);
 
 		VXLong vxLongAct = auditREST.countXAccessAudits(request);
@@ -211,8 +211,8 @@ public class TestXAuditREST {
 		Assert.assertEquals(vxLongExp, vxLongAct);
 		Assert.assertEquals(vxLongExp.getValue(), vxLongAct.getValue());
 
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.anyObject(),
-				(List<SortField>) Mockito.anyObject());
+		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.any(),
+				(List<SortField>) Mockito.any());
 		Mockito.verify(xAuditMgr).getXAccessAuditSearchCount(searchCriteria);
 	}
 

@@ -192,7 +192,7 @@ public class TestTagREST {
 	 
 	@Test
 	public void test4createTagDef() {
-		RangerTagDef oldtagDef = new RangerTagDef(); 
+		RangerTagDef oldtagDef = new RangerTagDef();
 		oldtagDef.setId(id);
 		
 		try {
@@ -452,7 +452,7 @@ public class TestTagREST {
 	
 	@Test
 	public void test17createTag() {
-		RangerTag oldTag = null; 
+		RangerTag oldTag = null;
 		RangerTag newTag = new RangerTag();
 		newTag.setId(id);
 		newTag.setGuid(gId);
@@ -524,7 +524,7 @@ public class TestTagREST {
 	@Test
 	public void test19createTag(){
 		RangerTag oldTag = new RangerTag();
-		oldTag.setId(id);	
+		oldTag.setId(id);
 		
 		try {
 			Mockito.when(validator.preCreateTag(oldTag)).thenReturn(oldTag);
@@ -953,13 +953,13 @@ public class TestTagREST {
 		}
 	}
 	
-	@Test 
+	@Test
 	public void test35getServiceResourcesByService() {
 		List<RangerServiceResource> oldSRS = new ArrayList<RangerServiceResource>();
 		RangerServiceResource rangerServiceResource = new RangerServiceResource();
 		rangerServiceResource.setId(id);
 		rangerServiceResource.setServiceName(serviceName);
-		oldSRS.add(rangerServiceResource);		
+		oldSRS.add(rangerServiceResource);
 		
 		try {
 			Mockito.when(tagStore.getServiceResourcesByService(serviceName)).thenReturn(oldSRS);
@@ -978,9 +978,9 @@ public class TestTagREST {
 		}
 	}
 	
-	@Test 
+	@Test
 	public void test59getServiceResourcesByService() {
-		List<RangerServiceResource> oldSRS = new ArrayList<RangerServiceResource>();		
+		List<RangerServiceResource> oldSRS = new ArrayList<RangerServiceResource>();
 		
 		try {
 			Mockito.when(tagStore.getServiceResourcesByService(serviceName)).thenReturn(oldSRS);
@@ -1431,11 +1431,6 @@ public class TestTagREST {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
-		try {
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
-
-		} catch (Exception e) {
-		}
 		ServiceTags serviceTags = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertEquals(serviceTags.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(serviceTags.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1485,7 +1480,6 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1548,7 +1542,6 @@ public class TestTagREST {
 		
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1614,7 +1607,6 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1680,7 +1672,6 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		
@@ -1801,7 +1792,6 @@ public class TestTagREST {
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
 			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
-			Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 		} catch (Exception e) {
 		}
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());

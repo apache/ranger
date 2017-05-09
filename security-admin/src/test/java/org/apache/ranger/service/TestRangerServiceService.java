@@ -410,34 +410,20 @@ public class TestRangerServiceService {
 		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
 				.thenReturn(xServiceDef);
 
-		String value = null;
-		Map<String, String> configs = new HashMap<String, String>();
-		Mockito.when(jsonUtil.readMapToString(configs)).thenReturn(value);
-
 		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
 				rangerService, 1);
 		Assert.assertNotNull(dbXXTrxLogList);
 	}
-	
+
 	@Test
 	public void test7GetTransactionLogUpdate() {
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerService rangerService = rangerService();
-
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
-				.thenReturn(xServiceDef);
-
-		String value = null;
-		Map<String, String> configs = new HashMap<String, String>();
-		Mockito.when(jsonUtil.readMapToString(configs)).thenReturn(value);
 
 		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
 				rangerService, 2);
 		Assert.assertNull(dbXXTrxLogList);
 	}
-	
+
 	@Test
 	public void test8GetTransactionLogDelete() {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
@@ -447,10 +433,6 @@ public class TestRangerServiceService {
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
 				.thenReturn(xServiceDef);
-
-		String value = null;
-		Map<String, String> configs = new HashMap<String, String>();
-		Mockito.when(jsonUtil.readMapToString(configs)).thenReturn(value);
 
 		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
 				rangerService, 3);

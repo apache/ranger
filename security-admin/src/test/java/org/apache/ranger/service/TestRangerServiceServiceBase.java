@@ -16,18 +16,13 @@
  */
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.persistence.EntityManager;
 
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
@@ -206,26 +201,13 @@ public class TestRangerServiceServiceBase {
 
 	@Test
 	public void test3searchRangerServices() {
-		EntityManager entityManager = Mockito.mock(EntityManager.class);
 		SearchFilter searchFilter = new SearchFilter();
 		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-		String searchString = "policyName";
-		String sortString = "asc";
-		List<SearchField> searchFieldList = new ArrayList<SearchField>();
-		boolean isCountQuery = false;
-
 		BaseDao baseDao = Mockito.mock(BaseDao.class);
 		Mockito.when(daoManager.getDaoForClassName(Mockito.anyString()))
 				.thenReturn(baseDao);
-		Mockito.when(daoManager.getEntityManager()).thenReturn(entityManager);
-		Mockito.when(
-				searchUtil
-						.createSearchQuery(entityManager, searchString,
-								sortString, searchFilter, searchFieldList,
-								isCountQuery)).thenReturn(null);
-		Mockito.when(bizUtil.getClassType(getClass())).thenReturn(1);
 		RangerServiceList dbRangerServiceList = rangerServiceService
 				.searchRangerServices(searchFilter);
 		Assert.assertNotNull(dbRangerServiceList);

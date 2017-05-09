@@ -474,7 +474,7 @@ public class TestServiceREST {
 				.thenReturn(xServiceDef);
 
 		Mockito.when(
-				svcStore.createService((RangerService) Mockito.anyObject()))
+				svcStore.createService((RangerService) Mockito.any()))
 				.thenReturn(rangerService);
 
 		RangerService dbRangerService = serviceREST
@@ -527,8 +527,6 @@ public class TestServiceREST {
 		serviceDefList.setList(serviceDefsList);
 		Mockito.when(svcStore.getPaginatedServiceDefs(filter)).thenReturn(
 				serviceDefList);
-		Mockito.when(serviceDefService.searchRangerServiceDefs(filter))
-				.thenReturn(new RangerServiceDefList(serviceDefsList));
 		RangerServiceDefList dbRangerServiceDef = serviceREST
 				.getServiceDefs(request);
 		Assert.assertNotNull(dbRangerServiceDef);
@@ -551,7 +549,7 @@ public class TestServiceREST {
 				.thenReturn(xServiceDef);
 
 		Mockito.when(
-				svcStore.updateService((RangerService) Mockito.anyObject()))
+				svcStore.updateService((RangerService) Mockito.any()))
 				.thenReturn(rangerService);
 
 		RangerService dbRangerService = serviceREST
@@ -668,8 +666,6 @@ public class TestServiceREST {
 		grantRequestObj.setGrantor("read");
 		grantRequestObj.setIsRecursive(true);
 
-		Mockito.when(validatorFactory.getServiceDefValidator(svcStore))
-				.thenReturn(serviceDefValidator);
 		Mockito.when(
 				serviceUtil.isValidateHttpsAuthentication(serviceName, request))
 				.thenReturn(false);
@@ -698,9 +694,6 @@ public class TestServiceREST {
 		revokeRequest.setGrantor("read");
 		revokeRequest.setGroups(groupList);
 		revokeRequest.setUsers(userList);
-
-		Mockito.when(validatorFactory.getServiceDefValidator(svcStore))
-				.thenReturn(serviceDefValidator);
 
 		RESTResponse restResponse = serviceREST.revokeAccess(serviceName,
 				revokeRequest, request);
@@ -740,22 +733,17 @@ public class TestServiceREST {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
-		Mockito.when(
-				svcStore.getServicePoliciesIfUpdated(Mockito.anyString(),
-						Mockito.anyLong())).thenReturn(servicePolicies);
 		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(
 				policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
-		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
-				userGroupsList);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(Mockito.anyString())).thenReturn(
 				xService);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(
 				xServiceDef);
-		Mockito.when(svcStore.createPolicy((RangerPolicy) Mockito.anyObject()))
+		Mockito.when(svcStore.createPolicy((RangerPolicy) Mockito.any()))
 				.thenReturn(rangPolicy);
 
 		RangerPolicy dbRangerPolicy = serviceREST.createPolicy(rangerPolicy,null);
@@ -828,7 +816,6 @@ public class TestServiceREST {
 				policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
-		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(userGroupsList);
 		Mockito.when(svcStore.getPolicy(Id)).thenReturn(rangerPolicy);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(Mockito.anyString())).thenReturn(xService);
@@ -863,8 +850,6 @@ public class TestServiceREST {
 				policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
-		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
-				userGroupsList);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(Mockito.anyString())).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
@@ -896,15 +881,12 @@ public class TestServiceREST {
 	public void test21countPolicies() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 
-		PList<RangerPolicy> ret  = Mockito.mock(PList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 		Mockito.when(
 				searchUtil.getSearchFilter(request, policyService.sortFields))
 				.thenReturn(filter);
-
-		Mockito.when(svcStore.getPaginatedPolicies(filter)).thenReturn(ret);
 
 		Long data = serviceREST.countPolicies(request);
 		Assert.assertNotNull(data);
@@ -917,16 +899,12 @@ public class TestServiceREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 
-		PList<RangerPolicy> ret = Mockito.mock(PList.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 		Mockito.when(
 				searchUtil.getSearchFilter(request, policyService.sortFields))
 				.thenReturn(filter);
-
-		Mockito.when(svcStore.getPaginatedServicePolicies(Id, filter))
-				.thenReturn(ret);
 
 		RangerPolicyList dbRangerPolicy = serviceREST.getServicePolicies(
 				rangerPolicy.getId(), request);
@@ -964,8 +942,6 @@ public class TestServiceREST {
 		String serviceName = "HDFS_1";
 		Long lastKnownVersion = 1L;
 		String pluginId = "1";
-
-		Mockito.doNothing().when(assetMgr).createPluginInfo(serviceName, pluginId, null, 1, 1L, lastKnownVersion, 1, 0);
 
 		ServicePolicies dbServicePolicies = serviceREST
 				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,

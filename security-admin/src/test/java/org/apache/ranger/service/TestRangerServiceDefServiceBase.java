@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.ranger.biz.RangerBizUtil;
@@ -30,7 +29,6 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
@@ -283,8 +281,6 @@ public class TestRangerServiceDefServiceBase {
 		resourceDefObj.setId(Id);
 
 		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-		Mockito.when(xResourceDefDao.getById(resourceDefObj.getId()))
-				.thenReturn(resourceDefObj);
 
 		RangerResourceDef dbRangerResourceDef = rangerServiceDefService
 				.populateXXToRangerResourceDef(resourceDefObj);
@@ -784,26 +780,14 @@ public class TestRangerServiceDefServiceBase {
 	@Test
 	public void test21searchRangerServiceDefs() {
 		setup();
-		EntityManager entityManager = Mockito.mock(EntityManager.class);
 		SearchFilter searchFilter = new SearchFilter();
 		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
-
-		String searchString = "policyName";
-		String sortString = "asc";
-		List<SearchField> searchFieldList = new ArrayList<SearchField>();
-		boolean isCountQuery = false;
 
 		BaseDao baseDao = Mockito.mock(BaseDao.class);
 
 		Mockito.when(daoManager.getDaoForClassName(Mockito.anyString()))
 				.thenReturn(baseDao);
-		Mockito.when(daoManager.getEntityManager()).thenReturn(entityManager);
-		Mockito.when(
-				searchUtil
-						.createSearchQuery(entityManager, searchString,
-								sortString, searchFilter, searchFieldList,
-								isCountQuery)).thenReturn(null);
 
 		RangerServiceDefList dbRangerServiceDefList = rangerServiceDefService
 				.searchRangerServiceDefs(searchFilter);
