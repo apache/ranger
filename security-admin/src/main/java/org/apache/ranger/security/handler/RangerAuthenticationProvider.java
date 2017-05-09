@@ -265,11 +265,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					"ranger.ldap.ad.domain", "");
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
 					"ranger.ldap.default.role", "ROLE_USER");
+			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty(
+                                       "ranger.ldap.ad.user.searchfilter", "(sAMAccountName={0})");
 
 			ActiveDirectoryLdapAuthenticationProvider adAuthenticationProvider = new ActiveDirectoryLdapAuthenticationProvider(
 					rangerADDomain, rangerADURL);
 			adAuthenticationProvider.setConvertSubErrorCodesToExceptions(true);
 			adAuthenticationProvider.setUseAuthenticationRequestCredentials(true);
+			adAuthenticationProvider.setSearchFilter(rangerLdapUserSearchFilter);
 
 			// Grab the user-name and password out of the authentication object.
 			String userName = authentication.getName();
