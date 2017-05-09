@@ -291,7 +291,7 @@ public class HadoopConfigHolder  {
 		if (prop != null) {
 			userName = prop.getProperty(RANGER_LOGIN_USER_NAME_PROP);
 			keyTabFile = prop.getProperty(RANGER_LOGIN_KEYTAB_FILE_PROP);
-			if (!StringUtils.isEmpty(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP))) {
+			if (StringUtils.trimToNull(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP)) != null) {
 				try {
 					enableHiveMetastoreLookup = Boolean.valueOf(prop.getProperty(ENABLE_HIVE_METASTORE_LOOKUP,"false").trim());
 				} catch (Exception e) {
@@ -299,7 +299,7 @@ public class HadoopConfigHolder  {
 					LOG.error("Error while getting " + ENABLE_HIVE_METASTORE_LOOKUP + " : " + e.getMessage());
 				}
 			}
-			if (!StringUtils.isEmpty(prop.getProperty(HIVE_SITE_FILE_PATH))) {
+			if (StringUtils.trimToNull(prop.getProperty(HIVE_SITE_FILE_PATH)) != null) {
 				hiveSiteFilePath = prop.getProperty(HIVE_SITE_FILE_PATH).trim();
 			} else {
 				hiveSiteFilePath = null;

@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public class RangerServiceHdfs extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHdfs.class);
-        private static final String AUDITTOHDFS_KMS_PATH = "/ranger/kms/audit";
+        private static final String AUDITTOHDFS_KMS_PATH = "/ranger/audit/kms";
         private static final String AUDITTOHDFS_POLICY_NAME = "kms-audit-path";
 	
 	public RangerServiceHdfs() {
