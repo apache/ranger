@@ -779,8 +779,6 @@ public class TestServiceREST {
 				policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
-		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
-				userGroupsList);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(Mockito.anyString())).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
@@ -846,8 +844,6 @@ public class TestServiceREST {
 		XXService xService = xService();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(
-				policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -994,8 +990,6 @@ public class TestServiceREST {
 		Mockito.when(svcStore.getPolicyFromEventTime(strdt, 1l)).thenReturn(policy);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(false);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
-		Mockito.when(userMgr.getGroupsForUser(userName)).thenReturn(
-				userGroupsList);
 
 		Mockito.when(restErrorUtil.createRESTException(Matchers.anyInt(), Matchers.anyString(), Matchers.anyBoolean()))
 				.thenThrow(new WebApplicationException());

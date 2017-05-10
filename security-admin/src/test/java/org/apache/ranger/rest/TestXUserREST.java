@@ -274,8 +274,6 @@ public class TestXUserREST {
 		HashMap<Long, Integer> groupVisibilityMap=creategroupVisibilityMap();
 		xUserRest.modifyGroupsVisibility(groupVisibilityMap);
 		
-		Mockito.doNothing().when(xUserMgr).modifyGroupsVisibility(groupVisibilityMap);
-		
 		Mockito.verify(xUserMgr).modifyGroupsVisibility(groupVisibilityMap);
 	}
 	@Test
@@ -498,7 +496,7 @@ public class TestXUserREST {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		SearchCriteria testSearchCriteria=createsearchCriteria();
 	
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,Mockito.<SortField>anyList())).thenReturn(testSearchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any(), (List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address",null)).thenReturn("");
@@ -729,8 +727,6 @@ public class TestXUserREST {
 		VXPermMap permMap = testcreateXPermMap();
 		
 		Mockito.when(xUserMgr.getXPermMap(id)).thenReturn(permMap);
-		VXResource testVxResource= new VXResource();
-		Mockito.when(xResourceService.readResource(null)).thenReturn(testVxResource);
 		
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
@@ -775,7 +771,6 @@ public class TestXUserREST {
 
 		VXPermMap permMap = testcreateXPermMap();
 		permMap.setResourceId(null);
-		Mockito.when(xUserMgr.createXPermMap(permMap)).thenReturn(permMap);
 		Mockito.when(xResourceService.readResource(permMap.getResourceId())).thenReturn(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
@@ -847,7 +842,6 @@ public class TestXUserREST {
 	public void test46updateXPermMap() {
 		VXPermMap permMap = testcreateXPermMap();
 		
-		Mockito.when(xUserMgr.updateXPermMap(permMap)).thenReturn(permMap);
 		Mockito.when(xResourceService.readResource(permMap.getResourceId())).thenReturn(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
@@ -914,8 +908,6 @@ public class TestXUserREST {
 	public void test50getXAuditMapVXAuditMapNull() {
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
 		Mockito.when(xUserMgr.getXAuditMap(testvXAuditMap.getResourceId())).thenReturn(testvXAuditMap);
-		VXResource testVxResource= createVXResource();
-		Mockito.when(xResourceService.readResource(null)).thenReturn(testVxResource);
 
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
@@ -987,7 +979,6 @@ public class TestXUserREST {
 
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
 		testvXAuditMap.setResourceId(null);
-		Mockito.when(xUserMgr.createXAuditMap(testvXAuditMap)).thenReturn(testvXAuditMap);
 		
 		Mockito.when(xResourceService.readResource(testvXAuditMap.getResourceId())).thenReturn(null);
 
@@ -1007,7 +998,6 @@ public class TestXUserREST {
 	public void test55createXAuditMapNull() {
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
 		testvXAuditMap.setResourceId(null);
-		Mockito.when(xUserMgr.createXAuditMap(testvXAuditMap)).thenReturn(null);
 		VXAuditMap retvXAuditMap=xUserRest.createXAuditMap(null);
 		assertNull(retvXAuditMap);
 		Mockito.verify(xUserMgr).createXAuditMap(null);
@@ -1037,8 +1027,6 @@ public class TestXUserREST {
 		VXAuditMap testvXAuditMap =  createVXAuditMapObj();
 		
 		
-		Mockito.when(xUserMgr.updateXAuditMap(testvXAuditMap)).thenReturn(testvXAuditMap);
-		Mockito.when(xResourceService.readResource(null)).thenReturn(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums)Mockito.any())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		VXAuditMap retvXAuditMap=xUserRest.updateXAuditMap(testvXAuditMap);
@@ -1305,15 +1293,12 @@ public class TestXUserREST {
 		Mockito.when(searchUtil.extractLong(request, testSearchCriteria, "id", "Auth Session Id")).thenReturn(1L);
 		Mockito.when(searchUtil.extractLong(request, testSearchCriteria, "userId", "User Id")).thenReturn(1L);
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "authStatus", "Auth Status")).thenReturn(1);
-		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "authType", "Auth Type")).thenReturn(1);
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "deviceType", "Device Type")).thenReturn(1);
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "firstName", "User First Name", StringUtil.VALIDATION_NAME)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "lastName", "User Last Name", StringUtil.VALIDATION_NAME)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "requestUserAgent", "User Agent", StringUtil.VALIDATION_TEXT)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "requestIP", "Request IP Address", StringUtil.VALIDATION_IP_ADDRESS)).thenReturn("");
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "loginId", "Login ID", StringUtil.VALIDATION_TEXT)).thenReturn("");
-		Mockito.when(searchUtil.extractDate(request, testSearchCriteria, "startDate", "Start date for search", null)).thenReturn(new Date());
-		Mockito.when(searchUtil.extractDate(request, testSearchCriteria, "endDate", "End date for search", null)).thenReturn(new Date());
 		
 		
 		VXAuthSessionList testVXAuthSessionList=new VXAuthSessionList();
