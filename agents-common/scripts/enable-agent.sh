@@ -517,64 +517,41 @@ fi
 #
 # Create library link
 #
-
 if [ "${action}" = "enable" ]
 then
-
-	#if [ -d "${PROJ_LIB_DIR}" ]
-	#then
-		dt=`date '+%Y%m%d%H%M%S'`
-        for f in ${PROJ_LIB_DIR}/*
-            do
-               if [ -f "${f}" ] || [ -d "${f}" ]
-               then
-                   bn=`basename $f`
-                   if [ -f ${HCOMPONENT_LIB_DIR}/${bn} ] || [  -d ${HCOMPONENT_LIB_DIR}/${bn} ]
-                   then
-                       log "Saving lib file: ${HCOMPONENT_LIB_DIR}/${bn} to ${HCOMPONENT_LIB_DIR}/.${bn}.${dt} ..."
-                       mv ${HCOMPONENT_LIB_DIR}/${bn} ${HCOMPONENT_LIB_DIR}/.${bn}.${dt}
-                   fi
-                   if [ ! -f ${HCOMPONENT_LIB_DIR}/${bn} ] && [ ! -d  ${HCOMPONENT_LIB_DIR}/${bn} ]
-                   then
-                       ln -s ${f} ${HCOMPONENT_LIB_DIR}/${bn}
-                   fi
-                fi
-        done
-		# ADD SQL CONNECTOR JAR TO PLUGIN DEPENDENCY JAR FOLDER
-		dbJar=$(getInstallProperty 'SQL_CONNECTOR_JAR')
-		if [ -f "${dbJar}" ]
-		then	
-			bn=`basename ${dbJar}`
-			if [ -f ${PROJ_LIB_PLUGIN_DIR}/${bn} ]
+	dt=`date '+%Y%m%d%H%M%S'`
+	for f in ${PROJ_LIB_DIR}/*
+	do
+		if [ -f "${f}" ] || [ -d "${f}" ]
+		then
+			bn=`basename $f`
+			if [ -f ${HCOMPONENT_LIB_DIR}/${bn} ] || [  -d ${HCOMPONENT_LIB_DIR}/${bn} ]
 			then
-			 	rm ${PROJ_LIB_PLUGIN_DIR}/${bn} 
+				log "Saving lib file: ${HCOMPONENT_LIB_DIR}/${bn} to ${HCOMPONENT_LIB_DIR}/.${bn}.${dt} ..."
+				mv ${HCOMPONENT_LIB_DIR}/${bn} ${HCOMPONENT_LIB_DIR}/.${bn}.${dt}
 			fi
-			if [ ! -f ${PROJ_LIB_PLUGIN_DIR}/${bn} ]
+			if [ ! -f ${HCOMPONENT_LIB_DIR}/${bn} ] && [ ! -d  ${HCOMPONENT_LIB_DIR}/${bn} ]
 			then
-			    ln -s ${dbJar} ${PROJ_LIB_PLUGIN_DIR}/${bn}
+				ln -s ${f} ${HCOMPONENT_LIB_DIR}/${bn}
 			fi
 		fi
-
-	#fi
+	done
 
 	#
 	# Encrypt the password and keep it secure in Credential Provider API
 	#
-	
 	CredFile=${CREDENTIAL_PROVIDER_FILE}
-
 	if ! [ `echo ${CredFile} | grep '^/.*'` ]
 	then
-  	echo "ERROR:Please enter the Credential File Store with proper file path"
-  	exit 1
+		echo "ERROR:Please enter the Credential File Store with proper file path"
+		exit 1
 	fi
-	
+
 	pardir=`dirname ${CredFile}`
 	
 	if [ ! -d "${pardir}" ]
 	then
 		mkdir -p "${pardir}" 
-	
 		if [ $? -ne 0 ]
 		then
     		echo "ERROR: Unable to create credential store file path"
@@ -586,42 +563,27 @@ then
 	#
 	# Generate Credential Provider file and Credential for Audit DB access.
 	#
-	
-	
 	auditCredAlias="auditDBCred"
-	
 	auditdbCred=$(getInstallProperty 'XAAUDIT.DB.PASSWORD')
-	
 	if [ "${auditdbCred}" != "" ]; then
 		create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
 	fi
-	
-	
+
 	#
 	# Generate Credential Provider file and Credential for SSL KEYSTORE AND TRUSTSTORE
 	#
-	
-	
 	sslkeystoreAlias="sslKeyStore"
-	
 	sslkeystoreCred=$(getInstallProperty 'SSL_KEYSTORE_PASSWORD')
-	
 	create_jceks "${sslkeystoreAlias}" "${sslkeystoreCred}" "${CredFile}"
-	
-	
 	ssltruststoreAlias="sslTrustStore"
-	
 	ssltruststoreCred=$(getInstallProperty 'SSL_TRUSTSTORE_PASSWORD')
-	
 	create_jceks "${ssltruststoreAlias}" "${ssltruststoreCred}" "${CredFile}"
-	
 	chown ${CFG_OWNER_INF} ${CredFile}
 	#
 	# To allow all users in the server (where Hive CLI and HBase CLI is used),
 	# user needs to have read access for the credential file.
 	#
 	chmod a+r ${CredFile} 
-	
 fi
 
 #
