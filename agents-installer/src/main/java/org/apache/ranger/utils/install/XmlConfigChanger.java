@@ -53,23 +53,22 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class XmlConfigChanger {
-	
+
 	private static final String EMPTY_TOKEN = "%EMPTY%";
 	private static final String EMPTY_TOKEN_VALUE = "";
-	
+
 	public static final String ROOT_NODE_NAME = "configuration";
 	public static final String NAME_NODE_NAME = "name";
 	public static final String PROPERTY_NODE_NAME = "property";
 	public static final String VALUE_NODE_NAME = "value";
-		
+
 	private File inpFile;
 	private File outFile;
 	private File confFile;
 	private File propFile;
 	
 	private Document doc;
-
-
+	Properties installProperties = new Properties();
 
 	public static void main(String[] args) {
 		XmlConfigChanger xmlConfigChanger = new XmlConfigChanger();
@@ -85,10 +84,7 @@ public class XmlConfigChanger {
 			System.exit(1);
 		}
 	}
-	
-	
-	
-	
+
 	@SuppressWarnings("static-access")
 	public void parseConfig(String[] args) {
 		
@@ -157,13 +153,8 @@ public class XmlConfigChanger {
 		}
 		
 	}
-	
 
-
-	
 	public void run() throws ParserConfigurationException, SAXException, IOException, TransformerException {
-		
-		
 		loadInstallProperties();
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -172,39 +163,31 @@ public class XmlConfigChanger {
 		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		doc = builder.parse(inpFile);
-		
+
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(confFile));
-			
+
 			String line = null;
-			
+
 			@SuppressWarnings("unused")
 			int lineNo = 0;
 			Properties variables = new Properties();
 			while ((line = reader.readLine()) != null) {
-				
 				lineNo++;
-				
 				line = line.trim();
-				
 				if (line.isEmpty() )
 					continue;
 				if (line.startsWith("#")) {
 					continue;
 				}
-				
 				if (line.contains("#")) {
 					int len = line.indexOf("#");
 					line = line.substring(0,len);
 				}
-				
 				String[] tokens = line.split("\\s+");
-				
 				String propName = tokens[0];
-
 				String propValue = null;
-
 				try {
 					if (propnameContainsVariables(propName)) {
 						propName = replaceProp(propName, variables);
@@ -214,8 +197,6 @@ public class XmlConfigChanger {
 					// throw new RuntimeException("Unable to replace tokens in the line: \n[" + line + "]\n in file [" + confFile.getAbsolutePath() + "] line number:["  + lineNo + "]" );
 					throw new RuntimeException(e);
 				}
-
-
 
 				String actionType = tokens[2];
 				String options = (tokens.length > 3 ? tokens[3] : null);
@@ -434,7 +415,7 @@ public class XmlConfigChanger {
 				propNameNode.appendChild(txtNode);
 				propNameNode.setNodeValue(propName);
 				ret.appendChild(propNameNode);
-				
+
 				Node propValueNode = doc.createElement(VALUE_NODE_NAME);
 				txtNode = doc.createTextNode(val);
 				propValueNode.appendChild(txtNode);
@@ -446,41 +427,28 @@ public class XmlConfigChanger {
 			throw new RuntimeException("createNewElement(" + propName + ") with value [" + val + "] failed.", t);
 		}
 
-		
 		return ret;
 	}
-	
-	
-	Properties installProperties = new Properties();
-	
-	private void loadInstallProperties() throws IOException {
+
+	private void loadInstallProperties() {
 		if (propFile != null) {
-			FileInputStream in = new FileInputStream(propFile);
-			try {
-			installProperties.load(in);
-			}
-			finally {
-				if (in != null) {
-					try {
-						in.close();
-					}
-					catch(IOException ioe) {
-						// Ignore IOException during close of stream
-					}
-				}
+			try (FileInputStream in = new FileInputStream(propFile)) {
+				installProperties.load(in);
+			} catch (IOException ioe) {
+				System.err.println("******* ERROR: load file failure. The reason: " + ioe.getMessage());
+				ioe.printStackTrace();
 			}
 		}
 		// To support environment variable, we will add all environment variables to the Properties
 		installProperties.putAll(System.getenv());
 	}
-	
-		
+
 	private String replaceProp(String propValue, Properties prop) throws ValidationException  {
 			
 		StringBuilder tokensb = new StringBuilder();
 		StringBuilder retsb = new StringBuilder();
 		boolean isToken = false;
-		
+
 		for(char c : propValue.toCharArray()) {
 			if (c == '%') {
 				if (isToken) {
