@@ -31,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.ranger.plugin.util.PasswordUtils;
 
 public class HadoopConfigHolder  {
 	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class);
@@ -307,13 +306,7 @@ public class HadoopConfigHolder  {
 				hiveSiteFilePath = null;
 			}
 
-			String plainTextPwd = prop.getProperty(RANGER_LOGIN_PASSWORD);
-			try {
-				password = PasswordUtils.encryptPassword(plainTextPwd);
-			} catch (IOException e) {
-				throw new HadoopException("Unable to initialize login info", e);
-			}
-
+                        password = prop.getProperty(RANGER_LOGIN_PASSWORD);
 			lookupPrincipal = prop.getProperty(RANGER_LOOKUP_PRINCIPAL);
 			lookupKeytab = prop.getProperty(RANGER_LOOKUP_KEYTAB);
 			nameRules = prop.getProperty(RANGER_NAME_RULES);
