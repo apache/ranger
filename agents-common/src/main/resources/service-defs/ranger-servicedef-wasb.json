@@ -47,12 +47,12 @@
       "parent": "container",
       "level":30,
       "mandatory":  true,
-      "lookupSupported":  false,
+      "lookupSupported":  true,
       "excludesSupported":  false,
       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
       "matcherOptions": {"wildCard":true, "ignoreCase":false},
-      "validationRegEx":"",
-			"validationMessage": "",
+      "validationRegEx":"^[/*]$|^\/.*?[^\/]$",
+			"validationMessage": "Relative Path must not end with a slash",
 			"uiHint":"",
 			"label": "Relative Path",
 			"description": "Relative Path inside Storage Account Container"
@@ -71,12 +71,6 @@
 			"itemId": 2,
 			"name": "write",
 			"label": "Write"
-		},
-
-		{
-			"itemId": 3,
-			"name": "execute",
-			"label": "Execute"
 		}
 	],
 
@@ -107,5 +101,5 @@
   ],
   "options": { "enableDenyAndExceptionsInPolicies": "true" },
   "contextEnrichers": [],
-	"policyConditions": []
+  "policyConditions": []
 }
