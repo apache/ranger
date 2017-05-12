@@ -84,8 +84,10 @@ define(function(require) {
 			tab 				: '.nav-tabs',
 			refreshTable		: '[data-id="refreshTable"]',
 			quickFilter			: '[data-id="quickFilter"]',
-                        visualSearch		: '.visual_search',
-                        'iconSearchInfo' : '[data-id="searchInfo"]',
+            visualSearch		: '.visual_search',
+            'iconSearchInfo' : '[data-id="searchInfo"]',
+            btnShowMore : '[data-id="showMore"]',
+                        btnShowLess : '[data-id="showLess"]',
 			
 		},
 
@@ -95,6 +97,8 @@ define(function(require) {
 			events['click ' + this.ui.refresh]         = 'onRefresh';
 			events['click ' + this.ui.searchBtn]  	   = 'onSearch';
 			events['click '+this.ui.tab+' a']		   = 'onTabChange';
+                        events['click ' + this.ui.btnShowMore]  = 'onShowMore';
+                        events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			return events;
 		},
 
@@ -111,15 +115,15 @@ define(function(require) {
 			var date = new Date().toString();
 			this.timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 			this.initializeServiceDefColl();
-                        if(_.isUndefined(App.vsHistory)){
-                                var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
-                                App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
-                        }
+            if(_.isUndefined(App.vsHistory)){
+                    var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
+                    App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
+            }
 		},
 
 		/** all events binding here */
 		bindEvents : function() {
-			//this.listenTo(this.collection, "change:foo", this.render, this);
+                        this.listenTo(this.accessAuditList, "sync",this.showTagsAttributes, this);
 		},
 
 		initializeServiceDefColl : function() {
@@ -142,6 +146,7 @@ define(function(require) {
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
+                        this.showTagsAttributes();
 
 		},
 		modifyTableForSubcolumns : function(){
@@ -157,7 +162,7 @@ define(function(require) {
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable ruser"></th>\
-					<th class="renderable cip"> </th>\
+                                        <th class="renderable ruser"></th>\
 				</tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
@@ -178,15 +183,16 @@ define(function(require) {
 			switch (tab) {
 				case "#bigData":
 					this.currentTab = '#bigData';
-                                        //Remove empty search values on tab changes for visual search.
-                                        App.vsHistory.bigData = XAUtils.removeEmptySearchValue(App.vsHistory.bigData);
+                    //Remove empty search values on tab changes for visual search.
+                    App.vsHistory.bigData = XAUtils.removeEmptySearchValue(App.vsHistory.bigData);
 					this.ui.visualSearch.show();
 					this.ui.visualSearch.parents('.well').show();
 					this.renderBigDataTable();
 					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
-					this.listenTo(this.accessAuditList, "request", that.updateLastRefresh)
+                                        this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
+                                        this.showTagsAttributes();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -830,6 +836,9 @@ define(function(require) {
 				},
 				onClick: function (e) {
 					var self = this;
+                                        if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
+                                                return;
+                                        }
 					var policyId = this.model.get('policyId');
 					if(policyId == -1){
 						return;
@@ -1005,36 +1014,47 @@ define(function(require) {
 						sortable:false,
 						editable:false
 					},
-					eventCount : {
-						label : 'Event Count',
+                                        clusterName : {
+                                                label : localization.tt("lbl.clusterName"),
+                                                cell: 'html',
+						click : false,
+						drag : false,
+						sortable:false,
+                                                editable:false,
+                                                formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                        fromRaw: function (rawValue, model) {
+                                                                rawValue = _.escape(rawValue);
+                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                        }
+                                                }),
+					},
+                                        eventCount : {
+                                                label : 'Event Count',
 						cell: "string",
 						click : false,
 						drag : false,
 						sortable:false,
 						editable:false
 					},
-					tags : {
-						label : 'Tags',
-						cell: "string",
-						click : false,
-						drag : false,
-						sortable:false,
-						editable:false
-					},
-					clusterName : {
-						label : localization.tt("lbl.clusterName"),
-						cell: 'html',
+                                        tags : {
+                                                label : 'Tags',
+                                                cell: Backgrid.HtmlCell.extend({
+                                                        className : 'tagsColumn'
+                                                }),
 						click : false,
 						drag : false,
 						sortable:false,
 						editable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								rawValue = _.escape(rawValue);
-								return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                                if(_.isUndefined(rawValue)){
+                                                                        return '<center>--</center>';
+                                                                }
+                                                                return XAUtils.showAuditLogTags(_.sortBy(JSON.parse(rawValue), 'type'), model);
 							}
 						}),
 					},
+
 			};
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
@@ -1212,6 +1232,20 @@ define(function(require) {
 						editable:false,
 						sortable:false
 					},
+                                        clusterName : {
+                                                label : localization.tt("lbl.clusterName"),
+                                                cell: 'html',
+                                                click : false,
+                                                drag : false,
+                                                sortable:false,
+                                                editable:false,
+                                                formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                        fromRaw: function (rawValue, model) {
+                                                                rawValue = _.escape(rawValue);
+                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                        }
+                                                }),
+                                        },
 					httpRetCode : {
 						cell : 'html',
 						label	: localization.tt('lbl.httpResponseCode'),
@@ -1231,20 +1265,7 @@ define(function(require) {
 						editable:false,
 						sortable:false
 					},
-					clusterName : {
-						label : localization.tt("lbl.clusterName"),
-						cell: 'html',
-						click : false,
-						drag : false,
-						sortable:false,
-						editable:false,
-						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-							fromRaw: function (rawValue, model) {
-								rawValue = _.escape(rawValue);
-								return '<span title="'+rawValue+'">'+rawValue+'</span>';
-							}
-						}),
-					},
+
 					
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
@@ -1502,10 +1523,56 @@ define(function(require) {
 					delete collection.queryParams[obj.label];
 			});
 		},
-
 		updateLastRefresh : function(){
 			this.ui.lastUpdateTimeLabel.html(Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
 		},
+                showTagsAttributes : function(reset){
+                        var that = this;
+                        this.accessAuditList.each(function(model){
+                                if(!_.isUndefined(model.get('tags'))){
+                                        var tagData = JSON.parse(model.get('tags'));
+                                        _.each(_.sortBy(tagData, 'type'), function(e, i){
+                                                var $table = $('<div class="popover-heading" data-id="'+model.id+'">Attribute Details</div><table class="table table-bordered table-condensed tag-attr-table"  style="margin-left:-5px;"><tbody></tr><tr><td>Name</td><td>Value</td></tr></tbody></table>'),
+                                                $tbody = $table.find('tbody');
+                                                var $tr = '';
+                                                 _.each(e.attributes, function(val, key){
+                                                         $tr += ('<tr><td>'+_.escape(key)+'</td><td>'+ _.escape(val) +'</td></tr>');
+                                                });
+                                                $tbody.append($($tr));
+                                                that.$el.find('table a[data-name="tags"][data-id="'+model.id+''+i+'"]').popover({
+                                                        content: $table,
+                                                        html: true,
+                                                        trigger: 'click',
+                                                        placement: 'bottom',
+                                                        container: 'body',
+                                                }).on("click", function(e){
+                                                        e.stopPropagation();
+                                                        $('[data-name="tags"]').not(this).popover('hide');
+                                                        $('.popover').find(".popover-content").addClass("tag-attr-popover");
+
+                                                }).on("focusout", function(e){
+                                                        $(e.target).popover('hide');
+                                                });
+
+
+                                        });
+                                }
+                        });
+                },
+                onShowMore : function(e){
+                        var id = $(e.currentTarget).attr('audit-log-id');
+                        this.rTableList.$el.find('[audit-log-id="'+id+'"]').show();
+                        $('[data-id="showLess"][audit-log-id="'+id+'"]').show();
+                        $('[data-id="showMore"][audit-log-id="'+id+'"]').hide();
+                        $('[data-id="showMore"][audit-log-id="'+id+'"]').parents('div[data-id="tagDiv"]').addClass('set-height-groups');
+                },
+                onShowLess : function(e){
+                        var id = $(e.currentTarget).attr('audit-log-id');
+                        this.rTableList.$el.find('[audit-log-id="'+id+'"]').slice(4).hide();
+                        $('[data-id="showLess"][audit-log-id="'+id+'"]').hide();
+                        $('[data-id="showMore"][audit-log-id="'+id+'"]').show();
+                        $('[data-id="showMore"][audit-log-id="'+id+'"]').parents('div[data-id="tagDiv"]').removeClass('set-height-groups')
+                },
 		/** on close */
 		onClose : function() {
 			clearInterval(this.timerId);
