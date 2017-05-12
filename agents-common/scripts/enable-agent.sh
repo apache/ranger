@@ -561,15 +561,6 @@ then
 	fi
 
 	#
-	# Generate Credential Provider file and Credential for Audit DB access.
-	#
-	auditCredAlias="auditDBCred"
-	auditdbCred=$(getInstallProperty 'XAAUDIT.DB.PASSWORD')
-	if [ "${auditdbCred}" != "" ]; then
-		create_jceks "${auditCredAlias}"  "${auditdbCred}"  "${CredFile}"
-	fi
-
-	#
 	# Generate Credential Provider file and Credential for SSL KEYSTORE AND TRUSTSTORE
 	#
 	sslkeystoreAlias="sslKeyStore"

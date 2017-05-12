@@ -218,31 +218,14 @@ then
  fi
 fi
 
-
-#
-# Generate Credential Provider file and Credential for Audit DB access.
-#
-
-
-auditCredAlias="auditDBCred"
-
-auditdbCred=`grep '^XAAUDIT.DB.PASSWORD' ${install_dir}/install.properties | awk -F= '{ print $2 }'`
-
-create_jceks ${auditCredAlias} ${auditdbCred} ${CredFile}
-
-
 #
 # Generate Credential Provider file and Credential for SSL KEYSTORE AND TRUSTSTORE
 #
-
-
 sslkeystoreAlias="sslKeyStore"
 
 sslkeystoreCred=`head -1 /etc/xasecure/ssl/certs/${repoName}.maze`
 
 create_jceks ${sslkeystoreAlias} ${sslkeystoreCred} ${CredFile}
-
-
 
 ssltruststoreAlias="sslTrustStore"
 
