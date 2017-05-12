@@ -2142,9 +2142,38 @@ td.subgrid-custom-cell{
     text-transform: capitalize;   
 }
 .importbtn{
-        margin-right: 5px ;
-        margin-top:-2px;
+    margin-right: 5px ;
+    margin-top:-2px;
 }
 .text-decoration:hover{
-        text-decoration: none;
+    text-decoration: none;
+}
+.taginfo td, .taginfo th{
+  text-align: center;
+  vertical-align: middle;
+}
+.font-weight-100{
+        font-weight: 100
+}
+.float-left-margin-1{
+    float: left;
+    margin: 1px;
+}
+.tag-attr-popover{
+        padding: 5px;
+}
+.popover-heading {
+    font-weight: bold;
+    margin: 1px;
+}
+.tag-attr-table{
+   border-color: transparent;
+   border-top-color: #dddddd;
+}
+
+.tag-attr-popover .table{
+        margin-bottom:0;
+}
+.tag-attr-popover .table td:first-child{
+        border-left-color:transparent;
 }
