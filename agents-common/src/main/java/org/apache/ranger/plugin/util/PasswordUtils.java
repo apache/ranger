@@ -33,19 +33,20 @@ public class PasswordUtils {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PasswordUtils.class);
 	
-	private static final char[] ENCRYPT_KEY = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV".toCharArray();
-	
-	private static final byte[] SALT = "f77aLYLo".getBytes();
-	
-	private static final int ITERATION_COUNT = 17;
-	
-	private static final String CRYPT_ALGO = "PBEWithMD5AndDES";
-	
-	private static final String PBE_KEY_ALGO = "PBEWithMD5AndDES";
-	
-	private static final String LEN_SEPARATOR_STR = ":";		
+        private static String CRYPT_ALGO = null;
+        private static String password = null;
+        private static char[] ENCRYPT_KEY = null;
+        private static byte[] SALT = null;
+        private static int ITERATION_COUNT = 0;
+        private static final String LEN_SEPARATOR_STR = ":";
+
+        public static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndDES";
+        public static final String DEFAULT_ENCRYPT_KEY = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV";
+        public static final String DEFAULT_SALT = "f77aLYLo";
+        public static final int DEFAULT_ITERATION_COUNT = 1000;
 	
 	public static String encryptPassword(String aPassword) throws IOException {
+                setPropertiesvalues(aPassword);
 		Map<String, String> env = System.getenv();
 		String encryptKeyStr = env.get("ENCRYPT_KEY");
 		char[] encryptKey;		
@@ -67,12 +68,12 @@ public class PasswordUtils {
 			strToEncrypt = "";
 		}
 		else {
-			strToEncrypt = aPassword.length() + LEN_SEPARATOR_STR + aPassword;
+                        strToEncrypt = aPassword.length() + LEN_SEPARATOR_STR + password;
 		}		
 		try {
 			Cipher engine = Cipher.getInstance(CRYPT_ALGO);
 			PBEKeySpec keySpec = new PBEKeySpec(encryptKey);
-			SecretKeyFactory skf = SecretKeyFactory.getInstance(PBE_KEY_ALGO);
+                        SecretKeyFactory skf = SecretKeyFactory.getInstance(CRYPT_ALGO);
 			SecretKey key = skf.generateSecret(keySpec);
 			engine.init(Cipher.ENCRYPT_MODE, key, new PBEParameterSpec(salt, ITERATION_COUNT));
 			byte[] encryptedStr = engine.doFinal(strToEncrypt.getBytes());
@@ -85,7 +86,27 @@ public class PasswordUtils {
 		return ret;
 	}
 
+        public static void setPropertiesvalues(String aPassword) {
+                String[] crypt_algo_array = null;
+                if (aPassword.contains(",")) {
+                        crypt_algo_array = aPassword.split(",");
+                }
+                if (crypt_algo_array != null && crypt_algo_array.length > 1) {
+                        CRYPT_ALGO = crypt_algo_array[0];
+                        ENCRYPT_KEY = crypt_algo_array[1].toCharArray();
+                        SALT = crypt_algo_array[2].getBytes();
+                        ITERATION_COUNT = Integer.parseInt(crypt_algo_array[3]);
+                        password = crypt_algo_array[4];
+                } else {
+                        CRYPT_ALGO = DEFAULT_CRYPT_ALGO;
+                        ENCRYPT_KEY = DEFAULT_ENCRYPT_KEY.toCharArray();
+                        SALT = DEFAULT_SALT.getBytes();
+                        ITERATION_COUNT = DEFAULT_ITERATION_COUNT;
+                }
+        }
+
 	public static String decryptPassword(String aPassword) throws IOException {
+                setPropertiesvalues(aPassword);
 		String ret = null;
 		Map<String, String> env = System.getenv();
 		String encryptKeyStr = env.get("ENCRYPT_KEY");
@@ -103,10 +124,10 @@ public class PasswordUtils {
 			salt=saltStr.getBytes();
 		}
 		try {			
-			byte[] decodedPassword = Base64.decode(aPassword);
+                        byte[] decodedPassword = Base64.decode(password);
 			Cipher engine = Cipher.getInstance(CRYPT_ALGO);
 			PBEKeySpec keySpec = new PBEKeySpec(encryptKey);
-			SecretKeyFactory skf = SecretKeyFactory.getInstance(PBE_KEY_ALGO);
+                        SecretKeyFactory skf = SecretKeyFactory.getInstance(CRYPT_ALGO);
 			SecretKey key = skf.generateSecret(keySpec);
 			engine.init(Cipher.DECRYPT_MODE, key,new PBEParameterSpec(salt, ITERATION_COUNT));
 			String decrypted = new String(engine.doFinal(decodedPassword));

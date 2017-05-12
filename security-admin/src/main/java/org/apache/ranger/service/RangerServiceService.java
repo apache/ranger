@@ -298,11 +298,31 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		if(!stringUtil.isEmpty(pwd) && pwd.equalsIgnoreCase(ServiceDBStore.HIDDEN_PASSWORD_STR)) {
 			XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(),
 					ServiceDBStore.CONFIG_KEY_PASSWORD);
-			if(pwdConfig != null) {
+                        if (pwdConfig != null) {
 				String encryptedPwd = pwdConfig.getConfigvalue();
-				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-				if(StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-					configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
+                                String decryptedPwd = "";
+                                String crypt_algo_array[] = encryptedPwd.split(",");
+                                if (encryptedPwd.contains(",")) {
+                                        crypt_algo_array = encryptedPwd.split(",");
+                                }
+                                if (crypt_algo_array != null && crypt_algo_array.length > 1) {
+                                        ServiceDBStore.CRYPT_ALGO = crypt_algo_array[0];
+                                        ServiceDBStore.ENCRYPT_KEY = crypt_algo_array[1];
+                                        ServiceDBStore.SALT = crypt_algo_array[2];
+                                        ServiceDBStore.ITERATION_COUNT = Integer.parseInt(crypt_algo_array[3]);
+
+                                        String paddingString = ServiceDBStore.CRYPT_ALGO + "," +  ServiceDBStore.ENCRYPT_KEY + "," + ServiceDBStore.SALT + "," + ServiceDBStore.ITERATION_COUNT;
+                                        decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+
+                                        if (StringUtils.equalsIgnoreCase(paddingString + "," + PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd), encryptedPwd)) {
+                                                configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
+                                        }
+                                } else {
+                                        encryptedPwd = pwdConfig.getConfigvalue();
+                                        decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+                                        if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
+                                                configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
+                                        }
 				}
 			}
 		}

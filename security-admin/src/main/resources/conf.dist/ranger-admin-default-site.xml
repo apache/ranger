@@ -535,4 +535,21 @@
                 <name>ranger.service.https.attrib.ssl.enabled.protocols</name>
                 <value>SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2</value>
         </property>
+        <!-- Encryption -->
+       <property>
+               <name>ranger.password.encryption.key</name>
+               <value>tzL1AKl5uc4NKYaoQ4P3WLGIBFsffd98PXWPWdu1fRm9004jtQiV</value>
+       </property>
+       <property>
+               <name>ranger.password.salt</name>
+               <value>FYSA9sds</value>
+       </property>
+       <property>
+               <name>ranger.password.iteration.count</name>
+               <value>1000</value>
+       </property>
+       <property>
+               <name>ranger.password.encryption.algorithm</name>
+               <value>PBEWithMD5AndDES</value>
+       </property>
 </configuration>

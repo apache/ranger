@@ -202,6 +202,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String TIMESTAMP = "Export time";
 
 	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
+	
+	public static String CRYPT_ALGO = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
+	public static String ENCRYPT_KEY = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
+	public static String SALT = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
+	public static Integer ITERATION_COUNT = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
 
     static {
 		try {
@@ -1417,9 +1422,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
-				String encryptedPwd = PasswordUtils.encryptPassword(configValue);
+				String cryptConfigString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT + "," + configValue;
+				String encryptedPwd = PasswordUtils.encryptPassword(cryptConfigString);
+				encryptedPwd = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT + "," + encryptedPwd;
 				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-
 				if (StringUtils.equals(decryptedPwd, configValue)) {
 					configValue = encryptedPwd;
 				}
@@ -1579,20 +1585,44 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXUser = xUserMgr.createServiceConfigUser(userName);
 				}
 			}
-
+			
 			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
 				if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
-					configValue = oldPassword;
+					String[] crypt_algo_array = null;
+					if (configValue.contains(",")) {
+						crypt_algo_array = configValue.split(",");
+					}
+					if (crypt_algo_array != null && oldPassword.contains(",")){
+						crypt_algo_array = oldPassword.split(",");
+						String OLD_CRYPT_ALGO = crypt_algo_array[0];
+						ENCRYPT_KEY = crypt_algo_array[1];
+						SALT = crypt_algo_array[2];
+						ITERATION_COUNT = Integer.parseInt(crypt_algo_array[3]);
+						
+						if (!OLD_CRYPT_ALGO.equalsIgnoreCase(CRYPT_ALGO)) {
+							String decryptedPwd = PasswordUtils.decryptPassword(oldPassword);
+							String paddingString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT;
+							String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
+							String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+							if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
+								configValue = paddingString + "," + encryptedPwd;
+							}
+						} else {
+							configValue = oldPassword;
+						}
+					} else {
+						configValue = oldPassword;
+					}
 				} else {
-					String encryptedPwd = PasswordUtils.encryptPassword(configValue);
-					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+					String paddingString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT;
+					String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," +configValue);
+					String decryptedPwd = PasswordUtils.decryptPassword(paddingString + "," +encryptedPwd);
 
 					if (StringUtils.equals(decryptedPwd, configValue)) {
-						configValue = encryptedPwd;
+						configValue = paddingString + "," + encryptedPwd;
 					}
 				}
 			}
-
 			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 			xConfMap = (XXServiceConfigMap) rangerAuditFields.populateAuditFields(xConfMap, xUpdService);
 			xConfMap.setServiceId(service.getId());
