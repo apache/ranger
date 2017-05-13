@@ -100,6 +100,7 @@ public class EmbeddedServiceDefsUtil {
 
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
+		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 	}
 
 	public static EmbeddedServiceDefsUtil instance() {
@@ -111,8 +112,6 @@ public class EmbeddedServiceDefsUtil {
 
 		try {
 			createEmbeddedServiceDefs = RangerConfiguration.getInstance().getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
-
-			gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
 			supportedServiceDefs =getSupportedServiceDef();
 			/*
