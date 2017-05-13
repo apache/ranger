@@ -193,6 +193,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				ret.setIsAudited(false);
 				break;
 			default:
+				if (CollectionUtils.isEmpty(policyRepository.getPolicies()) && tagPolicyRepository == null) {
+					ret.setIsAudited(true);
+				}
 				break;
 		}
 		return ret;

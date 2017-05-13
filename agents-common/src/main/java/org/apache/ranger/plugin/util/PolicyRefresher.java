@@ -52,9 +52,9 @@ public class PolicyRefresher extends Thread {
 
 	private long 	pollingIntervalMs   = 30 * 1000;
 	private long 	lastKnownVersion    = -1L;
-	private long	lastActivationTimeInMillis  = 0L;
-	private boolean policiesSetInPlugin = false;
-
+	private long	lastActivationTimeInMillis;
+	private boolean policiesSetInPlugin;
+	private boolean serviceDefSetInPlugin;
 
 	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
@@ -223,6 +223,11 @@ public class PolicyRefresher extends Thread {
 				policiesSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = svcPolicies.getPolicyVersion();
+			} else {
+				if (!policiesSetInPlugin && !serviceDefSetInPlugin) {
+					plugIn.setPolicies(null);
+					serviceDefSetInPlugin = true;
+				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
 			if (disableCacheIfServiceNotFound) {
@@ -230,6 +235,7 @@ public class PolicyRefresher extends Thread {
 				plugIn.setPolicies(null);
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = -1;
+				serviceDefSetInPlugin = true;
 			}
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);

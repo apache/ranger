@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -44,6 +46,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -184,6 +187,9 @@ public class RangerBasePlugin {
 		try {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 
+			if (policies == null) {
+				policies = getDefaultSvcPolicies();
+			}
 			if (policies == null) {
 				this.policyEngine = null;
 			} else {
@@ -426,7 +432,36 @@ public class RangerBasePlugin {
 			}
 		}
 	}
-	
+
+	public RangerServiceDef getDefaultServiceDef() {
+		RangerServiceDef ret = null;
+
+		if (StringUtils.isNotBlank(serviceType)) {
+			try {
+				ret = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceType);
+			} catch (Exception exp) {
+				LOG.error("Could not get embedded service-def for " + serviceType);
+			}
+		}
+		return ret;
+	}
+
+	private ServicePolicies getDefaultSvcPolicies() {
+		ServicePolicies ret = null;
+
+		RangerServiceDef serviceDef = getServiceDef();
+		if (serviceDef == null) {
+			serviceDef = getDefaultServiceDef();
+		}
+		if (serviceDef != null) {
+			ret = new ServicePolicies();
+			ret.setServiceDef(serviceDef);
+			ret.setServiceName(serviceName);
+			ret.setPolicies(new ArrayList<RangerPolicy>());
+		}
+		return ret;
+	}
+
 	public boolean logErrorMessage(String message) {
 		LogHistory log = logHistoryList.get(message);
 		if (log == null) {
