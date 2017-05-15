@@ -455,7 +455,7 @@ define(function(require){
 		/** all post render plugin initialization */
 		initializePathPlugins: function(options){
 			var that= this,defaultValue = [];
-			if(!this.model.isNew() && _.isUndefined(this.model.get('path'))){
+                        if(!this.model.isNew() && !_.isUndefined(this.model.get('path'))){
 				defaultValue = this.model.get('path').values;
 			}
 			function split( val ) {
