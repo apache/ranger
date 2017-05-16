@@ -58,7 +58,8 @@ import kafka.utils.ZkUtils;
  * CustomAuthorizer that enforces some authorization rules:
  * 
  *  - The "IT" group can do anything
- *  - The "public" group can only "read/describe" on the "test" topic, not "write".
+ *  - The "public" group can "read/describe/write" on the "test" topic.
+ *  - The "public" group can only "read/describe" on the "dev" topic, but not write.
  *
  * In addition we have a TAG based policy, which grants "read/describe" access to the "public" group to the "messages" topic (which is associated
  * with the tag called "MessagesTag". A "kafka_topic" entity was created in Apache Atlas + then associated with the "MessagesTag". This was
@@ -264,7 +265,7 @@ public class KafkaRangerAuthorizerTest {
         producer.close();
     }
     
-    // The "public" group can't write to "test" or "dev"
+    // The "public" group can write to "test" but not "dev"
     @Test
     public void testUnauthorizedWrite() throws Exception {
         // Create the Producer
@@ -284,19 +285,13 @@ public class KafkaRangerAuthorizerTest {
         final Producer<String, String> producer = new KafkaProducer<>(producerProps);
         
         // Send a message
-        try {
-            Future<RecordMetadata> record = 
-                producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
-            producer.flush();
-            record.get();
-            Assert.fail("Authorization failure expected");
-        } catch (Exception ex) {
-            Assert.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
-        }
+        Future<RecordMetadata> record =
+            producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
+        producer.flush();
+        record.get();
         
         try {
-            Future<RecordMetadata> record = 
-                producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
+            record = producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
             producer.flush();
             record.get();
             Assert.fail("Authorization failure expected");

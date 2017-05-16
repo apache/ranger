@@ -89,6 +89,10 @@
         {
           "accesses": [
             {
+              "type": "publish",
+              "isAllowed": true
+            },
+            {
               "type": "consume",
               "isAllowed": true
             },
@@ -111,6 +115,50 @@
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
       "id": 19,
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "cl1_kafka",
+      "name": "DevPolicy",
+      "policyType": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "topic": {
+          "values": [
+            "dev"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "consume",
+              "isAllowed": true
+            },
+            {
+              "type": "describe",
+              "isAllowed": true
+            }
+          ],
+          "users": [],
+          "groups": [
+            "public"
+          ],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 30,
       "isEnabled": true,
       "version": 1
     }
