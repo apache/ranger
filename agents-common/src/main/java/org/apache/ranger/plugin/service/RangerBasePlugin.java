@@ -308,7 +308,7 @@ public class RangerBasePlugin {
 
 	public void grantAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
+			LOG.debug("==> RangerBasePlugin.grantAccess(" + request + ")");
 		}
 
 		PolicyRefresher   refresher = this.refresher;
@@ -328,13 +328,13 @@ public class RangerBasePlugin {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
+			LOG.debug("<== RangerBasePlugin.grantAccess(" + request + ")");
 		}
 	}
 
 	public void revokeAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
+			LOG.debug("==> RangerBasePlugin.revokeAccess(" + request + ")");
 		}
 
 		PolicyRefresher   refresher = this.refresher;
@@ -354,13 +354,13 @@ public class RangerBasePlugin {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.revokeAccess(" + request + ")");
+			LOG.debug("<== RangerBasePlugin.revokeAccess(" + request + ")");
 		}
 	}
 
 	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAdminRESTClient.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
+			LOG.debug("==> RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
 		}
 
 		RangerAdminClient ret = null;
@@ -393,7 +393,7 @@ public class RangerBasePlugin {
 		ret.init(rangerServiceName, applicationId, propertyPrefix);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAdminRESTClient.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
+			LOG.debug("<== RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
 		}
 		return ret;
 	}
