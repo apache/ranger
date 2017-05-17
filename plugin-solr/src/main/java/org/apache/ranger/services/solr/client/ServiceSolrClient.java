@@ -183,11 +183,6 @@ public class ServiceSolrClient {
 		return new ArrayList<String>(fieldSet);
 	}
 
-	/**
-	 * @param serviceName
-	 * @param context
-	 * @return
-	 */
 	public List<String> getResources(ResourceLookupContext context) {
 
 		String userInput = context.getUserInput();
