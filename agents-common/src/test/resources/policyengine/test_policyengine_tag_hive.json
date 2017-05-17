@@ -224,7 +224,7 @@
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
 
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2026/06/15\"}, \"matchType\":1}]"}
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2026-06-15T15:05:15.000Z\"}, \"matchType\":1}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },

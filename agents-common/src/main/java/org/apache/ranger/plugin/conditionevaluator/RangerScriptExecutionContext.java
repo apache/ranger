@@ -23,21 +23,68 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public final class RangerScriptExecutionContext {
 	private static final Log LOG = LogFactory.getLog(RangerScriptExecutionContext.class);
-	public static final String DATETIME_FORMAT_PATTERN = "yyyy/MM/dd";
+	private static final String TAG_ATTR_DATE_FORMAT_PROP                   = "ranger.plugin.tag.attr.additional.date.formats";
+	private static final String DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT    = "yyyy/MM/dd";
+	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
+	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
 	private final RangerAccessRequest accessRequest;
 	private Boolean result = false;
+
+	private static String[] dateFormatStrings = null;
+
+	static {
+		StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
+
+		String additionalDateFormatsValue = RangerConfiguration.getInstance().get(TAG_ATTR_DATE_FORMAT_PROP);
+		if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
+			sb.append(", ").append(additionalDateFormatsValue);
+		}
+
+		dateFormatStrings = sb.toString().split(", ");
+	}
+
+	private static final ThreadLocal<List<DateFormat>> THREADLOCAL_DATE_FORMATS =
+			new ThreadLocal<List<DateFormat>>() {
+				@Override protected List<DateFormat> initialValue() {
+					List<DateFormat> ret = new ArrayList<>();
+
+					for (String dateFormatString : dateFormatStrings) {
+						try {
+							if (StringUtils.isNotBlank(dateFormatString)) {
+								if (StringUtils.equalsIgnoreCase(dateFormatString, DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME)) {
+									dateFormatString = DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT;
+								}
+								DateFormat df = new SimpleDateFormat(dateFormatString);
+								ret.add(df);
+							}
+						} catch (Exception exception) {
+							// Ignore
+						}
+					}
+
+					return ret;
+				}
+			};
 
 	RangerScriptExecutionContext(final RangerAccessRequest accessRequest) {
 		this.accessRequest = accessRequest;
@@ -205,21 +252,35 @@ public final class RangerScriptExecutionContext {
 
 	// Utilities - TODO
 
+	public Date getAsDate(String value, DateFormat df) {
+		Date ret = null;
+
+		try {
+			if (df != null) {
+				ret = df.parse(value);
+			}
+		} catch (Exception ex) {
+		}
+
+		return ret;
+	}
+
 	public Date getAsDate(String value) {
 		Date ret = null;
 
 		if (StringUtils.isNotBlank(value)) {
-			SimpleDateFormat df = new SimpleDateFormat(DATETIME_FORMAT_PATTERN);
-			try {
-				Date expiryDate = df.parse(value);
-				if (expiryDate == null) {
-					LOG.error("Could not parse provided expiry_date into a valid date, expiry_date=" + value + ", Format-String=" + DATETIME_FORMAT_PATTERN);
-				} else {
-					ret = StringUtil.getUTCDateForLocalDate(expiryDate);
+			for (DateFormat dateFormat : THREADLOCAL_DATE_FORMATS.get()) {
+				ret = getAsDate(value, dateFormat);
+				if (ret != null) {
+					break;
 				}
-			} catch (Exception ex) {
-				LOG.error("RangerScriptExecutionContext.getAsDate() - Could not convert " + value + " to Date, exception=" + ex);
 			}
+		}
+
+		if (ret == null) {
+			LOG.error("RangerScriptExecutionContext.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
+		} else {
+			ret = StringUtil.getUTCDateForLocalDate(ret);
 		}
 
 		return ret;
