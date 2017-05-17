@@ -148,6 +148,10 @@ public class TestPolicyEngine {
 				"                <name>ranger.plugin.hive.trusted.proxy.ipaddresses</name>\n" +
 				"                <value>255.255.255.255; 128.101.101.101;128.101.101.99</value>\n" +
 				"        </property>\n" +
+				"        <property>\n" +
+				"                <name>ranger.plugin.tag.attr.additional.date.formats</name>\n" +
+				"                <value>abcd, ATLAS_DATE_FORMAT</value>\n" +
+				"        </property>\n" +
 				"</configuration>\n");
 		writer.close();
 
