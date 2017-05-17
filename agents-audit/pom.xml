@@ -81,11 +81,6 @@
             <artifactId>httpmime</artifactId>
             <version>${httpcomponents.httpmime.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.noggit</groupId>
-            <artifactId>noggit</artifactId>
-            <version>${noggit.version}</version>
-        </dependency>
 
     </dependencies>
 </project>

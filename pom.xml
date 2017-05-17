@@ -170,8 +170,6 @@
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>
-        <jaxb-api.version>2.2.2</jaxb-api.version>
-        <jaxb-impl.version>2.2.3-1</jaxb-impl.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.3</jersey-bundle.version>
         <jersey-client.version>2.6</jersey-client.version>
@@ -181,7 +179,6 @@
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
         <joda-time.version>2.5</joda-time.version>
-        <jsch.version>0.1.42</jsch.version>
         <json4s.version>3.2.11</json4s.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.12</junit.version>
@@ -194,19 +191,16 @@
         <mockito.version>1.8.4</mockito.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.6.2.Final</netty.version>
-        <noggit.version>0.6</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <poi.version>3.12</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>2.5.0</protobuf-java.version>
         <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.xml.version>1.0.4</scala.xml.version>
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.5</slf4j-api.version>
-        <snappy-java.version>1.0.4.1</snappy-java.version>
         <solr.version>5.5.1</solr.version>
         <spring-ldap-core.version>1.3.1.RELEASE</spring-ldap-core.version>
         <springframework.security.version>3.2.10.RELEASE</springframework.security.version>
@@ -215,8 +209,6 @@
         <storm.version>1.0.2</storm.version>
         <tomcat.embed.version>7.0.77</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
-        <xmlenc.version>0.52</xmlenc.version>
-        <xz.version>1.0</xz.version>
         <zookeeper.version>3.4.6</zookeeper.version>
         <hive.thrift.version>0.9.3</hive.thrift.version>
     </properties>
