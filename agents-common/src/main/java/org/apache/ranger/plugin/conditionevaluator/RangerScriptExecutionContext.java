@@ -30,19 +30,23 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
-import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 public final class RangerScriptExecutionContext {
 	private static final Log LOG = LogFactory.getLog(RangerScriptExecutionContext.class);
 	private static final String TAG_ATTR_DATE_FORMAT_PROP                   = "ranger.plugin.tag.attr.additional.date.formats";
+	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR              = "||";
+	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX        = "\\|\\|";
 	private static final String DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT    = "yyyy/MM/dd";
 	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
 	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
@@ -54,19 +58,26 @@ public final class RangerScriptExecutionContext {
 
 	static {
 		StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
+		sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME);
 
 		String additionalDateFormatsValue = RangerConfiguration.getInstance().get(TAG_ATTR_DATE_FORMAT_PROP);
 		if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
-			sb.append(", ").append(additionalDateFormatsValue);
+			sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(additionalDateFormatsValue);
 		}
 
-		dateFormatStrings = sb.toString().split(", ");
+		dateFormatStrings = sb.toString().split(TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX);
+		Arrays.sort(dateFormatStrings, new Comparator<String>() {
+			@Override
+			public int compare(String first, String second) {
+				return Integer.compare(second.length(), first.length());
+			}
+		});
 	}
 
-	private static final ThreadLocal<List<DateFormat>> THREADLOCAL_DATE_FORMATS =
-			new ThreadLocal<List<DateFormat>>() {
-				@Override protected List<DateFormat> initialValue() {
-					List<DateFormat> ret = new ArrayList<>();
+	private static final ThreadLocal<List<SimpleDateFormat>> THREADLOCAL_DATE_FORMATS =
+			new ThreadLocal<List<SimpleDateFormat>>() {
+				@Override protected List<SimpleDateFormat> initialValue() {
+					List<SimpleDateFormat> ret = new ArrayList<>();
 
 					for (String dateFormatString : dateFormatStrings) {
 						try {
@@ -74,7 +85,8 @@ public final class RangerScriptExecutionContext {
 								if (StringUtils.equalsIgnoreCase(dateFormatString, DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME)) {
 									dateFormatString = DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT;
 								}
-								DateFormat df = new SimpleDateFormat(dateFormatString);
+								SimpleDateFormat df = new SimpleDateFormat(dateFormatString);
+								df.setLenient(false);
 								ret.add(df);
 							}
 						} catch (Exception exception) {
@@ -250,16 +262,16 @@ public final class RangerScriptExecutionContext {
 		this.result = result;
 	}
 
-	// Utilities - TODO
-
-	public Date getAsDate(String value, DateFormat df) {
+	private Date getAsDate(String value, SimpleDateFormat df) {
 		Date ret = null;
 
+		TimeZone savedTimeZone = df.getTimeZone();
 		try {
-			if (df != null) {
-				ret = df.parse(value);
-			}
-		} catch (Exception ex) {
+			ret = df.parse(value);
+		} catch (ParseException exception) {
+			// Ignore
+		} finally {
+			df.setTimeZone(savedTimeZone);
 		}
 
 		return ret;
@@ -269,9 +281,12 @@ public final class RangerScriptExecutionContext {
 		Date ret = null;
 
 		if (StringUtils.isNotBlank(value)) {
-			for (DateFormat dateFormat : THREADLOCAL_DATE_FORMATS.get()) {
-				ret = getAsDate(value, dateFormat);
+			for (SimpleDateFormat simpleDateFormat : THREADLOCAL_DATE_FORMATS.get()) {
+				ret = getAsDate(value, simpleDateFormat);
 				if (ret != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("The best match found for Format-String:[" + simpleDateFormat.toPattern() + "], date:[" + ret +"]");
+					}
 					break;
 				}
 			}
