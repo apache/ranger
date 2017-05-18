@@ -242,6 +242,7 @@ define(function(require) {
                 selectAndAddGroup               : 'Select and Add Group',
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
+  		modules		                : 'Modules',
 		clusterName                     : 'Cluster Name'
 			},
 			btn : {

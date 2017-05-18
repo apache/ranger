@@ -126,7 +126,7 @@ define(function(require){
 					href: function(model){
 						return '#!/permissions/'+model.id+'/edit';
 					},
-					label	: localization.tt("lbl.permissions"),
+					label	: localization.tt("lbl.modules"),
 					editable: false,
 					sortable : false
 				},
