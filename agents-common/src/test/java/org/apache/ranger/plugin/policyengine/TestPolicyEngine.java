@@ -150,7 +150,7 @@ public class TestPolicyEngine {
 				"        </property>\n" +
 				"        <property>\n" +
 				"                <name>ranger.plugin.tag.attr.additional.date.formats</name>\n" +
-				"                <value>abcd, ATLAS_DATE_FORMAT</value>\n" +
+				"                <value>abcd||xyz||yyyy/MM/dd'T'HH:mm:ss.SSS'Z'</value>\n" +
 				"        </property>\n" +
 				"</configuration>\n");
 		writer.close();

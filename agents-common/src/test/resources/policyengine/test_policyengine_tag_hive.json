@@ -233,7 +233,7 @@
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1",
 
-        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10\"}}]"}
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2015/08/10T15:05:15.000Z\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":5}
     },
