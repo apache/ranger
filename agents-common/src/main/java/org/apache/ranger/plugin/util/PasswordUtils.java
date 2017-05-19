@@ -25,6 +25,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ public class PasswordUtils {
         public static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndDES";
         public static final String DEFAULT_ENCRYPT_KEY = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV";
         public static final String DEFAULT_SALT = "f77aLYLo";
-        public static final int DEFAULT_ITERATION_COUNT = 1000;
+        public static final int DEFAULT_ITERATION_COUNT = 17;
 	
 	public static String encryptPassword(String aPassword) throws IOException {
                 setPropertiesvalues(aPassword);
@@ -64,11 +65,10 @@ public class PasswordUtils {
 		}
 		String ret = null;
 		String strToEncrypt = null;		
-		if (aPassword == null) {
+                if (password == null) {
 			strToEncrypt = "";
-		}
-		else {
-                        strToEncrypt = aPassword.length() + LEN_SEPARATOR_STR + password;
+                } else {
+                        strToEncrypt = password.length() + LEN_SEPARATOR_STR + password;
 		}		
 		try {
 			Cipher engine = Cipher.getInstance(CRYPT_ALGO);
@@ -88,7 +88,9 @@ public class PasswordUtils {
 
         public static void setPropertiesvalues(String aPassword) {
                 String[] crypt_algo_array = null;
-                if (aPassword.contains(",")) {
+                int count = 0;
+                if (aPassword != null && aPassword.contains(",")) {
+			count = StringUtils.countMatches(aPassword, ",");
                         crypt_algo_array = aPassword.split(",");
                 }
                 if (crypt_algo_array != null && crypt_algo_array.length > 1) {
@@ -97,11 +99,17 @@ public class PasswordUtils {
                         SALT = crypt_algo_array[2].getBytes();
                         ITERATION_COUNT = Integer.parseInt(crypt_algo_array[3]);
                         password = crypt_algo_array[4];
+                        if (count > 4) {
+				for (int i = 5 ; i<=count ; i++){
+					password = password + "," + crypt_algo_array[i];
+				}
+                        }
                 } else {
                         CRYPT_ALGO = DEFAULT_CRYPT_ALGO;
                         ENCRYPT_KEY = DEFAULT_ENCRYPT_KEY.toCharArray();
                         SALT = DEFAULT_SALT.getBytes();
                         ITERATION_COUNT = DEFAULT_ITERATION_COUNT;
+                        password = aPassword;
                 }
         }
 
