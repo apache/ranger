@@ -1743,7 +1743,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public RangerService getServiceByNameForDP(String name) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getServiceByName()");
+			LOG.debug("==> ServiceDBStore.getServiceByNameForDP()");
 		}
 		XXService xService = daoMgr.getXXService().findByName(name);
 		if (ContextUtil.getCurrentUserSession() != null) {
