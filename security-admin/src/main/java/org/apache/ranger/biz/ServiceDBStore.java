@@ -202,10 +202,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 
-        public static String CRYPT_ALGO = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
-        public static String ENCRYPT_KEY = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
-        public static String SALT = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
-        public static Integer ITERATION_COUNT = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
+        public static final String CRYPT_ALGO = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
+        public static final String ENCRYPT_KEY = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
+        public static final String SALT = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
+        public static final Integer ITERATION_COUNT = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
 
     static {
 		try {
@@ -1591,16 +1591,20 @@ public class ServiceDBStore extends AbstractServiceStore {
                                         if (configValue.contains(",")) {
                                                 crypt_algo_array = configValue.split(",");
                                         }
-                                        if (crypt_algo_array != null && oldPassword.contains(",")) {
+                                        if (oldPassword != null && oldPassword.contains(",")) {
+						String encryptKey = null;
+						String salt = null;
+						int iterationCount = 0;
+
                                                 crypt_algo_array = oldPassword.split(",");
                                                 String OLD_CRYPT_ALGO = crypt_algo_array[0];
-                                                ENCRYPT_KEY = crypt_algo_array[1];
-                                                SALT = crypt_algo_array[2];
-                                                ITERATION_COUNT = Integer.parseInt(crypt_algo_array[3]);
+                                                encryptKey = crypt_algo_array[1];
+                                                salt = crypt_algo_array[2];
+                                                iterationCount = Integer.parseInt(crypt_algo_array[3]);
 
                                                 if (!OLD_CRYPT_ALGO.equalsIgnoreCase(CRYPT_ALGO)) {
                                                         String decryptedPwd = PasswordUtils.decryptPassword(oldPassword);
-                                                        String paddingString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT;
+                                                        String paddingString = CRYPT_ALGO + "," +  encryptKey + "," + salt + "," + iterationCount;
                                                         String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
                                                         String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
                                                         if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {

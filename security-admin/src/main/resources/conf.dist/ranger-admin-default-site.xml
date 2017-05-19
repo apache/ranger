@@ -538,11 +538,11 @@
         <!-- Encryption -->
        <property>
                <name>ranger.password.encryption.key</name>
-               <value>tzL1AKl5uc4NKYaoQ4P3WLGIBFsffd98PXWPWdu1fRm9004jtQiV</value>
+               <value>tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV</value>
        </property>
        <property>
                <name>ranger.password.salt</name>
-               <value>FYSA9sds</value>
+               <value>f77aLYLo</value>
        </property>
        <property>
                <name>ranger.password.iteration.count</name>
