@@ -187,7 +187,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
         
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -229,7 +229,7 @@ public class HBaseRangerAuthorizationTest {
         conn.close();
         
         // Try to disable + delete the table as the "IT" group
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -285,7 +285,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -313,7 +313,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "public";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -362,7 +362,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "public";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -407,7 +407,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -433,7 +433,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "public";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -464,7 +464,7 @@ public class HBaseRangerAuthorizationTest {
         conf.set("hbase.zookeeper.property.clientPort", "" + port);
         conf.set("zookeeper.znode.parent", "/hbase-unsecure");
 
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -522,7 +522,7 @@ public class HBaseRangerAuthorizationTest {
         conn.close();
         
         // Now try to read the row as group "IT" - it should fail as "IT" can only read from table "temp"
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -590,7 +590,7 @@ public class HBaseRangerAuthorizationTest {
         put.addColumn(Bytes.toBytes("colfam1"), Bytes.toBytes("col1"), Bytes.toBytes("val2"));
         table.put(put);
 
-        String user = getNotCurrentUser();
+        String user = "IT";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -633,7 +633,7 @@ public class HBaseRangerAuthorizationTest {
         if (CollectionUtils.isNotEmpty(snapshots)) {
             admin.deleteSnapshot("test_snapshot");
         }
-        String user = getNotCurrentUser();
+        String user = "QA";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[]{"QA"});
 
@@ -690,7 +690,7 @@ public class HBaseRangerAuthorizationTest {
 
         admin.enableTable(tableName);
 
-        String user = getNotCurrentUser();
+        String user = "public";
 
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"public"});
 
@@ -737,10 +737,7 @@ public class HBaseRangerAuthorizationTest {
         tableDescriptor.addFamily(new HColumnDescriptor("colfam2"));
 
         // Try to create a "temp3" table as the "IT" group - this should fail
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = "IT";
 
         // Try to create the table as the "IT" group - this should fail
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
@@ -762,7 +759,7 @@ public class HBaseRangerAuthorizationTest {
         });
 
         // Now try to create the table as the "dev" group - this should work
-        ugi = UserGroupInformation.createUserForTesting(user, new String[] {"dev"});
+        ugi = UserGroupInformation.createUserForTesting("dev", new String[] {"dev"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 Connection conn = ConnectionFactory.createConnection(conf);
@@ -816,10 +813,7 @@ public class HBaseRangerAuthorizationTest {
 
         conn.close();
 
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = "dev";
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"dev"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -844,7 +838,7 @@ public class HBaseRangerAuthorizationTest {
         });
 
         // Now try to read colfam1 as the "IT" group - this should fail
-        ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
+        ugi = UserGroupInformation.createUserForTesting("IT", new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 Connection conn = ConnectionFactory.createConnection(conf);
@@ -903,10 +897,7 @@ public class HBaseRangerAuthorizationTest {
 
         conn.close();
 
-        String user = "bob";
-        if ("bob".equals(System.getProperty("user.name"))) {
-            user = "alice";
-        }
+        String user = "dev";
         UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] {"dev"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
@@ -935,7 +926,7 @@ public class HBaseRangerAuthorizationTest {
             }
         });
 
-        ugi = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
+        ugi = UserGroupInformation.createUserForTesting("IT", new String[] {"IT"});
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 Connection conn = ConnectionFactory.createConnection(conf);
@@ -974,7 +965,4 @@ public class HBaseRangerAuthorizationTest {
         return port;
     }
 
-    private static String getNotCurrentUser() {
-        return "not-" + System.getProperty("user.name");
-    }
 }
