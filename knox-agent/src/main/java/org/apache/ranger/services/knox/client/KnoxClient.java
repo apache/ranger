@@ -213,7 +213,7 @@ public class KnoxClient {
 
 						if (response.getStatus() == 200) {
 							String jsonString = response.getEntity(String.class);
-							LOG.debug("Knox service look up response JSON string: " + jsonString);
+							LOG.debug("Knox service lookup response JSON string: " + jsonString);
 
 							ObjectMapper objectMapper = new ObjectMapper();
 
