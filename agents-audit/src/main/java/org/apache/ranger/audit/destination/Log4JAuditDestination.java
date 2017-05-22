@@ -29,7 +29,7 @@ import org.apache.ranger.audit.provider.MiscUtil;
 
 public class Log4JAuditDestination extends AuditDestination {
 	private static final Log logger = LogFactory
-			.getLog(FileAuditDestination.class);
+			.getLog(Log4JAuditDestination.class);
 
 	private static Log auditLogger = null;
 
