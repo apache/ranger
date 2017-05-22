@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 
 class ValuePrinter<T> implements ValueProcessor<T> {
-	private static final Log LOG = LogFactory.getLog(RangerGeolocationDatabase.class);
+	private static final Log LOG = LogFactory.getLog(ValuePrinter.class);
 
 	private Writer writer;
 	private String fileName;
