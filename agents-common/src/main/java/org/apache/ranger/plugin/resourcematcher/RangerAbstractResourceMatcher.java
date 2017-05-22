@@ -335,14 +335,16 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			}
 		}
 
-		if (needWildcardMatch) {
+		if (needWildcardMatch) { // test?, test*a*, test*a*b, *test*a
 			ret = optIgnoreCase ? new CaseInsensitiveWildcardMatcher(policyValue) : new CaseSensitiveWildcardMatcher(policyValue);
-		} else if (wildcardStartIdx == -1) {
+		} else if (wildcardStartIdx == -1) { // test, testa, testab
 			ret = optIgnoreCase ? new CaseInsensitiveStringMatcher(policyValue) : new CaseSensitiveStringMatcher(policyValue);
-		} else if (wildcardStartIdx == 0) {
+		} else if (wildcardStartIdx == 0) { // *test, **test, *testa, *testab
 			String matchStr = policyValue.substring(wildcardEndIdx + 1);
 			ret = optIgnoreCase ? new CaseInsensitiveEndsWithMatcher(matchStr) : new CaseSensitiveEndsWithMatcher(matchStr);
-		} else {
+		} else if (wildcardEndIdx != (len - 1)) { // test*a, test*ab
+			ret = optIgnoreCase ? new CaseInsensitiveWildcardMatcher(policyValue) : new CaseSensitiveWildcardMatcher(policyValue);
+		} else { // test*, test**, testa*, testab*
 			String matchStr = policyValue.substring(0, wildcardStartIdx);
 			ret = optIgnoreCase ? new CaseInsensitiveStartsWithMatcher(matchStr) : new CaseSensitiveStartsWithMatcher(matchStr);
 		}
