@@ -34,6 +34,8 @@ public class AtlasResourceMapperUtil {
 
 	private static Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<String, AtlasResourceMapper>();
 
+	private static final String MAPPER_NAME_DELIMITER = ",";
+
 	public static boolean isEntityTypeHandled(String entityTypeName) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> isEntityTypeHandled(entityTypeName=" + entityTypeName + ")");
@@ -75,52 +77,47 @@ public class AtlasResourceMapperUtil {
 	}
 
 	static public boolean initializeAtlasResourceMappers(Properties properties) {
-		final String MAPPER_NAME_DELIMITER = ",";
-
 		String customMapperNames = TagSyncConfig.getCustomAtlasResourceMappers(properties);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + customMapperNames + ")");
 		}
+
+		// Initialize the default mappers
+		initializeAtlasResourceMapper(new AtlasHiveResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasHdfsResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasHbaseResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasKafkaResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasStormResourceMapper(), properties);
+
+		// Initialize the custom mappers
 		boolean ret = true;
-
-		List<String> mapperNames = new ArrayList<String>();
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasStormResourceMapper");
-
 		if (StringUtils.isNotBlank(customMapperNames)) {
 			for (String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMITER)) {
-				mapperNames.add(customMapperName.trim());
-			}
-		}
+			    try {
+			        Class<?> clazz = Class.forName(customMapperName);
+			        AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
 
-		for (String mapperName : mapperNames) {
-			try {
-				Class<?> clazz = Class.forName(mapperName);
-				AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
-
-				resourceMapper.initialize(properties);
-
-				for (String entityTypeName : resourceMapper.getSupportedEntityTypes()) {
-					add(entityTypeName, resourceMapper);
-				}
-
-			} catch (Exception exception) {
-				LOG.error("Failed to create AtlasResourceMapper:" + mapperName + ": ", exception);
-				ret = false;
+			        initializeAtlasResourceMapper(resourceMapper, properties);
+			    } catch (Exception exception) {
+			        LOG.error("Failed to create AtlasResourceMapper:" + customMapperName + ": ", exception);
+			        ret = false;
+			    }
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + mapperNames + "): " + ret);
+			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + customMapperNames + "): " + ret);
 		}
 		return ret;
 	}
 
-	private static void add(String entityType, AtlasResourceMapper mapper) {
-		atlasResourceMappers.put(entityType, mapper);
+	private static void initializeAtlasResourceMapper(AtlasResourceMapper resourceMapper, Properties properties) {
+	    resourceMapper.initialize(properties);
+
+        for (String entityTypeName : resourceMapper.getSupportedEntityTypes()) {
+            atlasResourceMappers.put(entityTypeName, resourceMapper);
+        }
 	}
+
 }
