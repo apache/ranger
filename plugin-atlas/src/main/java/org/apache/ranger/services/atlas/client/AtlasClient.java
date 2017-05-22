@@ -57,7 +57,7 @@ public class AtlasClient extends BaseClient {
 	/*** TYPE **/
 	private static final String ATLAS_LIST_TYPE_API_ENDPOINT = "/api/atlas/types/";
 	/**** ENTITY **/
-	private static final String ATLAS_ENTITY_lIST_API_ENDPOINT = "/api/atlas/v1/entities";
+	private static final String ATLAS_ENTITY_LIST_API_ENDPOINT = "/api/atlas/v1/entities";
 	/*** TERM **/
 	private static final String ATLAS_LIST_TERM_API_ENDPOINT = "/api/atlas/v1/taxonomies/Catalog/terms/";
 	/*** TAXONOMY **/
@@ -302,7 +302,7 @@ public class AtlasClient extends BaseClient {
 									if (atlasResourceParameter == null || atlasResourceParameter.isEmpty()
 											|| responseResource.startsWith(atlasResourceParameter)) {
 										if (LOG.isDebugEnabled()) {
-											LOG.debug("getTypeResource():Adding existsResource " + responseResource);
+											LOG.debug("getTypeResource():Adding existing Resource " + responseResource);
 										}
 										lret.add(responseResource);
 									}
@@ -347,7 +347,7 @@ public class AtlasClient extends BaseClient {
 					LOG.debug("getEntityResource():response.getStatus() = " + statusResponse.getStatus());
 				}
 				if (statusResponse.getStatus() == 200) {
-					WebResource webResourceEntity = client.resource(atlasUrl + ATLAS_ENTITY_lIST_API_ENDPOINT);
+					WebResource webResourceEntity = client.resource(atlasUrl + ATLAS_ENTITY_LIST_API_ENDPOINT);
 					WebResource.Builder builder = webResourceEntity.getRequestBuilder();
 					for (NewCookie cook : statusResponse.getCookies()) {
 						builder = builder.cookie(cook);
@@ -376,7 +376,7 @@ public class AtlasClient extends BaseClient {
 										if (atlasResourceParameter == null || atlasResourceParameter.isEmpty()
 												|| responseResource.startsWith(atlasResourceParameter)) {
 											if (LOG.isDebugEnabled()) {
-												LOG.debug("getEntityResource():Adding existsResource "
+												LOG.debug("getEntityResource():Adding existing Resource "
 														+ responseResource);
 											}
 											lret.add(responseResource);
@@ -390,7 +390,7 @@ public class AtlasClient extends BaseClient {
 			}
 		} catch (Throwable t) {
 			String msgDesc = "Exception while getting Atlas getEntityResource List." + " URL : " + atlasUrl
-					+ ATLAS_ENTITY_lIST_API_ENDPOINT;
+					+ ATLAS_ENTITY_LIST_API_ENDPOINT;
 			HadoopException hdpException = new HadoopException(msgDesc, t);
 			LOG.error(msgDesc, t);
 			hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
@@ -444,7 +444,7 @@ public class AtlasClient extends BaseClient {
 									if (atlasResourceParameter == null || atlasResourceParameter.isEmpty()
 											|| responseResource.startsWith(atlasResourceParameter)) {
 										if (LOG.isDebugEnabled()) {
-											LOG.debug("getTermResource():Adding existsResource " + responseResource);
+											LOG.debug("getTermResource():Adding existing Resource " + responseResource);
 										}
 										lret.add(responseResource);
 									}
@@ -510,7 +510,7 @@ public class AtlasClient extends BaseClient {
 									if (atlasResourceParameter == null || atlasResourceParameter.isEmpty()
 											|| responseResource.startsWith(atlasResourceParameter)) {
 										if (LOG.isDebugEnabled()) {
-											LOG.debug("getTaxonomyResource():Adding existsResource " + responseResource);
+											LOG.debug("getTaxonomyResource():Adding existing Resource " + responseResource);
 										}
 										lret.add(responseResource);
 									}
@@ -579,7 +579,7 @@ public class AtlasClient extends BaseClient {
 									if (atlasResourceParameter == null || atlasResourceParameter.isEmpty()
 											|| responseResource.startsWith(atlasResourceParameter)) {
 										if (LOG.isDebugEnabled()) {
-											LOG.debug("getOperationResource():Adding existsResource "
+											LOG.debug("getOperationResource():Adding existing Resource "
 													+ responseResource);
 										}
 										lret.add(responseResource);
