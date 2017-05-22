@@ -216,13 +216,6 @@ updatePropertyToFilePy(){
     check_ret_status $? "Update property failed for: " $1
 }
 
-init_logfiles () {
-    for f in $LOGFILES; do
-        touch $f
-    done
-    #log "start date for $0 = `date`"
-}
-
 init_variables(){
 	curDt=`date '+%Y%m%d%H%M%S'`
 	VERSION=`cat ${PWD}/version`
