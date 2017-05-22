@@ -131,7 +131,7 @@ public class RangerServiceDefHelper {
 		// NOTE: we assume serviceDef, its name and update time are can never by null.
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceNames(%s)", serviceDef));
+			LOG.debug(String.format("==> RangerServiceDefHelper(). The RangerServiceDef: %s", serviceDef));
 		}
 
 		String serviceName = serviceDef.getName();
