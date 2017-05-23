@@ -133,17 +133,28 @@ CUSTOM_USER=${CUSTOM_USER// }
 CUSTOM_GROUP=$(getInstallProperty 'CUSTOM_GROUP')
 CUSTOM_GROUP=${CUSTOM_GROUP// }
 
+CUSTOM_GROUP_STATUS=${CUSTOM_GROUP};
+CUSTOM_USER_STATUS=${CUSTOM_USER};
+egrep "^$CUSTOM_GROUP" /etc/group >& /dev/null
+if [ $? -ne 0 ]
+then
+	CUSTOM_GROUP_STATUS=""
+fi
+id -u ${CUSTOM_USER} > /dev/null 2>&1
+if [ $? -ne 0 ]
+then
+	CUSTOM_USER_STATUS=""
+fi
 
-
-if [ ! -z "${CUSTOM_USER}" ] && [ ! -z "${CUSTOM_GROUP}" ]
+if [ ! -z "${CUSTOM_USER_STATUS}" ] && [ ! -z "${CUSTOM_GROUP_STATUS}" ]
 then
   echo "Custom user and group is available, using custom user and group."
   CFG_OWNER_INF="${CUSTOM_USER}:${CUSTOM_GROUP}"
-elif [ ! -z "${CUSTOM_USER}" ] && [ -z "${CUSTOM_GROUP}" ]
+elif [ ! -z "${CUSTOM_USER_STATUS}" ] && [ -z "${CUSTOM_GROUP_STATUS}" ]
 then
   echo "Custom user is available, using custom user and default group."
   CFG_OWNER_INF="${CUSTOM_USER}:${HCOMPONENT_NAME}"
-elif [ -z  "${CUSTOM_USER}" ] && [ ! -z  "${CUSTOM_GROUP}" ]
+elif [ -z  "${CUSTOM_USER_STATUS}" ] && [ ! -z  "${CUSTOM_GROUP_STATUS}" ]
 then
   echo "Custom group is available, using default user and custom group."
   CFG_OWNER_INF="${HCOMPONENT_NAME}:${CUSTOM_GROUP}"
