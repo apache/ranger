@@ -34,7 +34,7 @@ public class ServiceSolrConnectionMgr {
 			boolean isSolrCloud = true;
 			SolrClient solrClient = new HttpSolrClient(url);
 			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(
-					serviceName, solrClient, isSolrCloud);
+					solrClient, isSolrCloud, configs);
 			return serviceSolrClient;
 		}
 		// TODO: Need to add method to create SolrClient using ZooKeeper for

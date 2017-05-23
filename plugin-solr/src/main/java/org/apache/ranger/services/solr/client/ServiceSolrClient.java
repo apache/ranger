@@ -32,12 +32,14 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
@@ -51,10 +53,6 @@ public class ServiceSolrClient {
 		COLLECTION, FIELD
 	}
 
-	SolrClient solrClient = null;
-	boolean isSolrCloud = true;
-
-	String serviceName = null;
 	private static final String errMessage = " You can still save the repository and start creating "
 			+ "policies, but you would not be able to use autocomplete for "
 			+ "resource names. Check server logs for more info.";
@@ -63,12 +61,17 @@ public class ServiceSolrClient {
 	private static final String FIELD_KEY = "field";
 	private static final long LOOKUP_TIMEOUT_SEC = 5;
 
-	public ServiceSolrClient(String serviceName, SolrClient solrClient,
-			boolean isSolrCloud) {
+	private String username;
+	private String password;
+	private SolrClient solrClient = null;
+	private boolean isSolrCloud = true;
+
+	public ServiceSolrClient(SolrClient solrClient,
+			boolean isSolrCloud, Map<String, String> configs) {
 		this.solrClient = solrClient;
 		this.isSolrCloud = isSolrCloud;
-		this.serviceName = serviceName;
-
+		this.username = configs.get("username");
+		this.password = configs.get("password");
 	}
 
 	public Map<String, Object> connectionTest() throws Exception {
@@ -101,6 +104,10 @@ public class ServiceSolrClient {
 		}
 
 		CollectionAdminRequest<?> request = new CollectionAdminRequest.List();
+		String decPassword = getDecryptedPassword();
+        if (username != null && decPassword != null) {
+		    request.setBasicAuthCredentials(username, decPassword);
+		}
 		SolrResponse response = request.process(solrClient);
 
 		List<String> list = new ArrayList<String>();
@@ -121,6 +128,10 @@ public class ServiceSolrClient {
 			throws Exception {
 		CoreAdminRequest request = new CoreAdminRequest();
 		request.setAction(CoreAdminAction.STATUS);
+		String decPassword = getDecryptedPassword();
+        if (username != null && decPassword != null) {
+		    request.setBasicAuthCredentials(username, decPassword);
+		}
 		CoreAdminResponse cores = request.process(solrClient);
 		// List of the cores
 		List<String> coreList = new ArrayList<String>();
@@ -145,7 +156,12 @@ public class ServiceSolrClient {
 		queryStr += "/schema/fields";
 		SolrQuery query = new SolrQuery();
 		query.setRequestHandler(queryStr);
-		QueryResponse response = solrClient.query(query);
+		QueryRequest req = new QueryRequest(query);
+		String decPassword = getDecryptedPassword();
+		if (username != null && decPassword != null) {
+		    req.setBasicAuthCredentials(username, decPassword);
+		}
+		QueryResponse response = req.process(solrClient);
 
 		List<String> fieldList = new ArrayList<String>();
 		if (response != null && response.getStatus() == 0) {
@@ -287,5 +303,21 @@ public class ServiceSolrClient {
 		}
 
 		return resultList;
+	}
+
+	private String getDecryptedPassword() {
+	    String decryptedPwd = null;
+        try {
+            decryptedPwd = PasswordUtils.decryptPassword(password);
+        } catch (Exception ex) {
+            LOG.info("Password decryption failed; trying Solr connection with received password string");
+            decryptedPwd = null;
+        } finally {
+            if (decryptedPwd == null) {
+                decryptedPwd = password;
+            }
+        }
+
+        return decryptedPwd;
 	}
 }
