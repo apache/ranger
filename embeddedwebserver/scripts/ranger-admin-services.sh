@@ -58,6 +58,10 @@ if [ -z "${RANGER_PID_DIR_PATH}" ]
 then
         RANGER_PID_DIR_PATH=/var/run/ranger
 fi
+if [ -z "${RANGER_ADMIN_PID_NAME}" ]
+then
+        RANGER_ADMIN_PID_NAME=rangeradmin.pid
+fi
 
 if [ ! -d "${RANGER_PID_DIR_PATH}" ]
 then  
@@ -65,7 +69,11 @@ then
 	chmod 660 $RANGER_PID_DIR_PATH
 fi
 
-pidf=${RANGER_PID_DIR_PATH}/rangeradmin.pid
+# User can set their own pid path using RANGER_PID_DIR_PATH and
+# RANGER_ADMIN_PID_NAME variable before calling the script. The user can modify
+# the value of the RANGER_PID_DIR_PATH in ranger-admin-env-piddir.sh to change
+# pid path and set the value of RANGER_ADMIN_PID_NAME to change the pid file.
+pidf=${RANGER_PID_DIR_PATH}/${RANGER_ADMIN_PID_NAME}
 
 if [ -z "${RANGER_USER}" ]
 then
