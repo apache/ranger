@@ -284,5 +284,8 @@
 		<name>ranger.service.https.attrib.keystore.credential.alias</name>
 		<value>keyStoreCredentialAlias</value>
 	</property>
-
+	<property>
+		<name>ranger.tomcat.ciphers</name>
+		<value></value>
+	</property>
 </configuration>

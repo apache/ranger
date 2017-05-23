@@ -144,7 +144,10 @@ public class EmbeddedServer {
                         String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
                         String enabledProtocols = getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
-			
+			String ciphers = getConfig("ranger.tomcat.ciphers");
+			if (ciphers != null && ciphers.trim() != null && ciphers.trim().length() > 0) {
+				ssl.setAttribute("ciphers", ciphers);
+			}
 			server.getService().addConnector(ssl);
 
 			//
