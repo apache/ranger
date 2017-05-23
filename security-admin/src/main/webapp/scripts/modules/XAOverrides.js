@@ -490,6 +490,13 @@
 		    this.resourceOpts = {};
 		    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','resourceOpts','resourcesAtSameLevel','sameLevelOpts',
 		    									'initilializePathPlugin', 'validators','name','formView'));
+                  //(edit mode)set values for sameLevel if first option is not selected
+                    if(!_.isNull(this.value) && !_.isUndefined(this.value)
+				&& !_.isUndefined(this.value.resourceType)){
+			var def = _.findWhere(this.form.rangerServiceDefModel.get('resources'), {'name': this.value.resourceType });
+			this.recursiveSupport = def.recursiveSupported;
+			this.excludeSupport = def.excludesSupported;
+                    }
 		    this.template = this.getTemplate();
 		  },
 		  initializeElements : function() {
@@ -550,6 +557,7 @@
 			  			this.value.isExcludes = _.isUndefined(this.value.isExcludes) ? false : this.value.isExcludes;
 			  			isExcludes = this.value.isExcludes
 			  		}
+					this.$excludeSupport.show();
 			  		this.$excludeSupport.toggles({
 			  			on: !isExcludes,
 			  			text : {on : 'include', off : 'exclude' },
@@ -558,6 +566,8 @@
 			  		    that.value.isExcludes = !active;
 			  		    XAUtil.checkDirtyFieldForToggle($(e.currentTarget))
 			  		});
+				} else {
+					this.$excludeSupport.hide();
 			  	}
 			  	if(this.recursiveSupport){
 			  		if(!_.isNull(this.value)){
@@ -593,6 +603,12 @@
                                                                 && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
 							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
 						}
+                                                //set flags for newly selected resource and re-render
+                                                var def = _.findWhere(that.form.rangerServiceDefModel.get('resources'), {'name': this.value});
+                                                that.recursiveSupport = def.recursiveSupported;
+                                                if(that.recursiveSupport) that.value.isRecursive = true;
+                                                that.excludeSupport = def.excludesSupported;
+                                                that.renderToggles();
 
 					});
 			  	}
@@ -659,9 +675,7 @@
 				    						'+optionsHtml+'\
 				    					</select>';
 				    }
-				    if(this.excludeSupport){
-				    	excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include"><div  class="toggle"></div></div>';
-				    }
+                                    excludeSupportToggleDiv = '<div class="toggle-xa include-toggle toggle" data-js="include"></div>';
 				    return _.template(selectTemplate+'<input data-js="resource" type="text">'+
 				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
 			  },
