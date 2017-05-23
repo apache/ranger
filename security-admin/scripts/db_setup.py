@@ -500,8 +500,6 @@ class MysqlConf(BaseDB):
 				for filename in files:
 					f = re.match("^Patch.*?.class$",filename)
 					if f:
-						className = re.match("(Patch.*?)_.*.class",filename)
-						className = className.group(1)
 						version = re.match("Patch.*?_(.*).class",filename)
 						version = version.group(1)
 						key3 = int(version.strip("J"))
