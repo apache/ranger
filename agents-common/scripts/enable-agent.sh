@@ -212,7 +212,7 @@ fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
 if [ "${HCOMPONENT_NAME}" = "solr" ]; then
-    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/solr-webapp/webapp/WEB-INF/classes
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/resources
     if [ ! -d $HCOMPONENT_CONF_DIR ]; then	
 	install_owner=`ls -ld | cut -f 3 -d " "`
 	echo "INFO: Creating $HCOMPONENT_CONF_DIR" 
