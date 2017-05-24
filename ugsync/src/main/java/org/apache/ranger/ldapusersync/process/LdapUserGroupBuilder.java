@@ -599,6 +599,11 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 								LOG.error("No user information provided for group search!");
 								return;
 							}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Searching for groups for user " + userInfo.getUserName() +
+										" using filter " + String.format(extendedGroupSearchFilter, userInfo.getUserFullName(),
+												userInfo.getUserName()));
+							}
 							groupSearchResultEnum = ldapContext
 									.search(groupSearchBase[ou], extendedGroupSearchFilter,
 											new Object[]{userInfo.getUserFullName(), userInfo.getUserName()},
