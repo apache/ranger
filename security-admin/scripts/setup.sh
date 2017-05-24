@@ -1427,7 +1427,6 @@ setup_install_files(){
 	fi
 }
 
-init_logfiles
 log " --------- Running Ranger PolicyManager Web Application Install Script --------- "
 log "[I] uname=`uname`"
 log "[I] hostname=`hostname`"
