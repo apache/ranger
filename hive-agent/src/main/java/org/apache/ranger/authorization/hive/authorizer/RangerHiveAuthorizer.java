@@ -249,8 +249,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					String 	path         		= hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
+
 					if(hiveObjType == HiveObjectType.URI && isPathInFSScheme(path)) {
-						FsAction permission = FsAction.READ;
+						FsAction permission = getURIAccessType(hiveOpType);
 
 						if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
 							throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
@@ -294,8 +295,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					String   path       = hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
+
 					if(hiveObjType == HiveObjectType.URI  && isPathInFSScheme(path)) {
-						FsAction permission = FsAction.WRITE;
+						FsAction permission = getURIAccessType(hiveOpType);
 
 		                if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
 		    				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
@@ -1047,6 +1049,141 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		
 		return accessType;
+	}
+
+	private FsAction getURIAccessType(HiveOperationType hiveOpType) {
+		FsAction ret = FsAction.NONE;
+
+		switch(hiveOpType) {
+			case LOAD:
+			case IMPORT:
+				ret = FsAction.READ_EXECUTE;
+			break;
+
+			case EXPORT:
+				ret = FsAction.WRITE_EXECUTE;
+			break;
+
+			case CREATEDATABASE:
+			case CREATETABLE:
+			case CREATETABLE_AS_SELECT:
+			case ALTERDATABASE:
+			case ALTERDATABASE_OWNER:
+			case ALTERTABLE_ADDCOLS:
+			case ALTERTABLE_REPLACECOLS:
+			case ALTERTABLE_RENAMECOL:
+			case ALTERTABLE_RENAMEPART:
+			case ALTERTABLE_RENAME:
+			case ALTERTABLE_DROPPARTS:
+			case ALTERTABLE_ADDPARTS:
+			case ALTERTABLE_TOUCH:
+			case ALTERTABLE_ARCHIVE:
+			case ALTERTABLE_UNARCHIVE:
+			case ALTERTABLE_PROPERTIES:
+			case ALTERTABLE_SERIALIZER:
+			case ALTERTABLE_PARTCOLTYPE:
+			case ALTERTABLE_DROPCONSTRAINT:
+			case ALTERTABLE_ADDCONSTRAINT:
+			case ALTERTABLE_SERDEPROPERTIES:
+			case ALTERTABLE_CLUSTER_SORT:
+			case ALTERTABLE_BUCKETNUM:
+			case ALTERTABLE_UPDATETABLESTATS:
+			case ALTERTABLE_UPDATEPARTSTATS:
+			case ALTERTABLE_PROTECTMODE:
+			case ALTERTABLE_FILEFORMAT:
+			case ALTERTABLE_LOCATION:
+			case ALTERINDEX_PROPS:
+			case ALTERTABLE_MERGEFILES:
+			case ALTERTABLE_SKEWED:
+			case ALTERTABLE_COMPACT:
+			case ALTERTABLE_EXCHANGEPARTITION:
+			case ALTERPARTITION_SERIALIZER:
+			case ALTERPARTITION_SERDEPROPERTIES:
+			case ALTERPARTITION_BUCKETNUM:
+			case ALTERPARTITION_PROTECTMODE:
+			case ALTERPARTITION_FILEFORMAT:
+			case ALTERPARTITION_LOCATION:
+			case ALTERPARTITION_MERGEFILES:
+			case ALTERTBLPART_SKEWED_LOCATION:
+				ret = FsAction.ALL;
+				break;
+
+			case EXPLAIN:
+			case DROPDATABASE:
+			case SWITCHDATABASE:
+			case LOCKDB:
+			case UNLOCKDB:
+			case DROPTABLE:
+			case DESCTABLE:
+			case DESCFUNCTION:
+			case MSCK:
+			case ANALYZE_TABLE:
+			case CACHE_METADATA:
+			case SHOWDATABASES:
+			case SHOWTABLES:
+			case SHOWCOLUMNS:
+			case SHOW_TABLESTATUS:
+			case SHOW_TBLPROPERTIES:
+			case SHOW_CREATEDATABASE:
+			case SHOW_CREATETABLE:
+			case SHOWFUNCTIONS:
+			case SHOWINDEXES:
+			case SHOWPARTITIONS:
+			case SHOWLOCKS:
+			case SHOWCONF:
+			case CREATEFUNCTION:
+			case DROPFUNCTION:
+			case RELOADFUNCTION:
+			case CREATEMACRO:
+			case DROPMACRO:
+			case CREATEVIEW:
+			case DROPVIEW:
+			case CREATEINDEX:
+			case DROPINDEX:
+			case ALTERINDEX_REBUILD:
+			case ALTERVIEW_PROPERTIES:
+			case DROPVIEW_PROPERTIES:
+			case LOCKTABLE:
+			case UNLOCKTABLE:
+			case CREATEROLE:
+			case DROPROLE:
+			case GRANT_PRIVILEGE:
+			case REVOKE_PRIVILEGE:
+			case SHOW_GRANT:
+			case GRANT_ROLE:
+			case REVOKE_ROLE:
+			case SHOW_ROLES:
+			case SHOW_ROLE_GRANT:
+			case SHOW_ROLE_PRINCIPALS:
+			case TRUNCATETABLE:
+			case QUERY:
+			case DESCDATABASE:
+			case ALTERVIEW_RENAME:
+			case ALTERVIEW_AS:
+			case SHOW_COMPACTIONS:
+			case SHOW_TRANSACTIONS:
+			case ABORT_TRANSACTIONS:
+			case SET:
+			case RESET:
+			case DFS:
+			case ADD:
+			case DELETE:
+			case COMPILE:
+			case START_TRANSACTION:
+			case COMMIT:
+			case ROLLBACK:
+			case SET_AUTOCOMMIT:
+			case GET_CATALOGS:
+			case GET_COLUMNS:
+			case GET_FUNCTIONS:
+			case GET_SCHEMAS:
+			case GET_TABLES:
+			case GET_TABLETYPES:
+			case GET_TYPEINFO:
+				break;
+		}
+
+		return ret;
 	}
 
 	private String buildPathForException(String path, HiveOperationType hiveOpType) {
