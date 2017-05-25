@@ -35,14 +35,23 @@ done
 if [ -z "${USERSYNC_PID_DIR_PATH}" ]; then
         USERSYNC_PID_DIR_PATH=/var/run/ranger
 fi
-
+if [ -z "${USERSYNC_PID_NAME}" ]
+then
+        USERSYNC_PID_NAME=usersync.pid
+fi
 if [ ! -d "${USERSYNC_PID_DIR_PATH}" ]
 then  
 	mkdir -p  $USERSYNC_PID_DIR_PATH
 	chmod 660 $USERSYNC_PID_DIR_PATH
 fi
 
-pidf=${USERSYNC_PID_DIR_PATH}/usersync.pid
+# User can set their own pid path using USERSYNC_PID_DIR_PATH and
+# USERSYNC_PID_NAME variable before calling the script. The user can modify
+# the value of the USERSYNC_PID_DIR_PATH in ranger-usersync-env-piddir.sh to
+# change pid path and set the value of USERSYNC_PID_NAME to change the
+# pid file.
+pidf=${USERSYNC_PID_DIR_PATH}/${USERSYNC_PID_NAME}
+
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
         UNIX_USERSYNC_USER=ranger
 fi
