@@ -527,7 +527,7 @@ public class TestRangerPolicyValidator {
 		return argThat(new ArgumentMatcher<RangerPolicy>() {
 
 			@Override
-			public boolean matches(Object argument) {
+			public boolean matches(RangerPolicy argument) {
 				return true;
 			}
 		});

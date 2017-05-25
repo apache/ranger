@@ -64,7 +64,7 @@ import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -280,17 +280,14 @@ public class TestUserMgr {
 		XXPortalUser user = new XXPortalUser();
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(
-				user);
+		Mockito.when(userDao.findByLoginId(Mockito.nullable(String.class))).thenReturn(user);
 		Mockito.when(
-				stringUtil.equals(Mockito.anyString(), Mockito.anyString()))
+				stringUtil.equals(Mockito.anyString(), Mockito.nullable(String.class)))
 				.thenReturn(true);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.getById(Mockito.anyLong())).thenReturn(user);
 		Mockito.when(
-				stringUtil.validatePassword(Mockito.anyString(),
-						new String[] { Mockito.anyString() })).thenReturn(true);
+				stringUtil.validatePassword(Mockito.anyString(), Mockito.any(String[].class))).thenReturn(true);
 
 		VXResponse dbVXResponse = userMgr.changePassword(pwdChange);
 		Assert.assertNotNull(dbVXResponse);
@@ -298,9 +295,9 @@ public class TestUserMgr {
 				dbVXResponse.getStatusCode());
 
 		Mockito.verify(stringUtil).equals(Mockito.anyString(),
-				Mockito.anyString());
+				Mockito.nullable(String.class));
 		Mockito.verify(stringUtil).validatePassword(Mockito.anyString(),
-				new String[] { Mockito.anyString() });
+				Mockito.any(String[].class));
 	}
 
 	@Test
@@ -321,17 +318,16 @@ public class TestUserMgr {
 		userKeyAdmin.setLoginId(userProfile.getLoginId());
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(userKeyAdmin);
-		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
+		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.nullable(String.class))).thenReturn(true);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.getById(Mockito.anyLong())).thenReturn(userKeyAdmin);
-		Mockito.when(stringUtil.validatePassword(Mockito.anyString(),new String[] { Mockito.anyString() })).thenReturn(true);
+		Mockito.when(stringUtil.validatePassword(Mockito.anyString(), Mockito.any(String[].class))).thenReturn(true);
 
 		VXResponse dbVXResponse = userMgr.changePassword(pwdChange);
 		Assert.assertNotNull(dbVXResponse);
 		Assert.assertEquals(userProfile.getStatus(),dbVXResponse.getStatusCode());
 
-		Mockito.verify(stringUtil).equals(Mockito.anyString(),Mockito.anyString());
-		Mockito.verify(stringUtil).validatePassword(Mockito.anyString(),new String[] { Mockito.anyString() });
+		Mockito.verify(stringUtil).equals(Mockito.anyString(), Mockito.nullable(String.class));
+		Mockito.verify(stringUtil).validatePassword(Mockito.anyString(), Mockito.any(String[].class));
 	}
 
 	@Test
@@ -352,17 +348,16 @@ public class TestUserMgr {
 		user.setLoginId(userProfile.getLoginId());
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
-		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
+		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.nullable(String.class))).thenReturn(true);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.getById(Mockito.anyLong())).thenReturn(user);
-		Mockito.when(stringUtil.validatePassword(Mockito.anyString(),new String[] { Mockito.anyString() })).thenReturn(true);
+		Mockito.when(stringUtil.validatePassword(Mockito.anyString(), Mockito.any(String[].class))).thenReturn(true);
 
 		VXResponse dbVXResponse = userMgr.changePassword(pwdChange);
 		Assert.assertNotNull(dbVXResponse);
 		Assert.assertEquals(userProfile.getStatus(),dbVXResponse.getStatusCode());
 
-		Mockito.verify(stringUtil).equals(Mockito.anyString(),Mockito.anyString());
-		Mockito.verify(stringUtil).validatePassword(Mockito.anyString(),new String[] { Mockito.anyString() });
+		Mockito.verify(stringUtil).equals(Mockito.anyString(), Mockito.nullable(String.class));
+		Mockito.verify(stringUtil).validatePassword(Mockito.anyString(),Mockito.any(String[].class));
 	}
 
 	@Test
@@ -709,21 +704,12 @@ public class TestUserMgr {
 		Mockito.when(userDao.create((XXPortalUser) Mockito.any()))
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
-		Mockito.when(roleDao.findByUserId(Mockito.anyLong())).thenReturn(list);
 
 		Mockito.when(daoManager.getXXUserPermission()).thenReturn(
 				xUserPermissionDao);
-		Mockito.when(
-				xUserPermissionDao
-						.findByUserPermissionIdAndIsAllowed(userProfile.getId()))
-				.thenReturn(xUserPermissionsList);
 
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
-		Mockito.when(
-				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
-				.thenReturn(xGroupPermissionList);
-		Mockito.when(stringUtil.validateEmail(Mockito.anyString())).thenReturn(true);
 		VXPortalUser dbVXPortalUser = userMgr.createUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(user.getId(), dbVXPortalUser.getId());
@@ -759,9 +745,6 @@ public class TestUserMgr {
 		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(
 				user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
-		Mockito.when(roleDao.findByParentId(Mockito.anyLong()))
-				.thenReturn(list);
-		Mockito.when(stringUtil.validateEmail(Mockito.anyString())).thenReturn(true);
 		VXPortalUser dbVXPortalUser = userMgr
 				.createDefaultAccountUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
@@ -1091,26 +1074,16 @@ public class TestUserMgr {
 		xGroupPermissionObj.setUpdateTime(new Date());
 		xGroupPermissionObj.setGroupId(userId);
 		xGroupPermissionList.add(xGroupPermissionObj);
-		VXPortalUser userProfile = userProfile();
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
 		Mockito.when(xPortalUserDao.getById(userId)).thenReturn(xPortalUser);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(
 				xPortalUserRoleDao);
-		Mockito.when(xPortalUserRoleDao.findByParentId(userId)).thenReturn(
-				xPortalUserRoleList);
 		Mockito.when(daoManager.getXXUserPermission()).thenReturn(
 				xUserPermissionDao);
-		Mockito.when(
-				xUserPermissionDao
-						.findByUserPermissionIdAndIsAllowed(userProfile.getId()))
-				.thenReturn(xUserPermissionsList);
 
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
-		Mockito.when(
-				xGroupPermissionDao.findbyVXPortalUserId(userProfile.getId()))
-				.thenReturn(xGroupPermissionList);
 		VXPortalUser dbVXPortalUser = userMgr.getUserProfile(userId);
 		Assert.assertNotNull(dbVXPortalUser);
 
@@ -1124,10 +1097,7 @@ public class TestUserMgr {
 	public void test32getUserProfileByLoginId() {
 		setup();
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
-		XXPortalUser xPortalUser = Mockito.mock(XXPortalUser.class);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
-		Mockito.when(xPortalUserDao.findByLoginId("1L"))
-				.thenReturn(xPortalUser);
 
 		VXPortalUser dbVXPortalUser = userMgr.getUserProfileByLoginId();
 		Assert.assertNull(dbVXPortalUser);
@@ -1223,8 +1193,6 @@ public class TestUserMgr {
 
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(
 				xPortalUserRoleDao);
-		Mockito.when(xPortalUserRoleDao.findByUserId(userId)).thenReturn(
-				xPortalUserRoleList);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.getById(userId)).thenReturn(user);
 		Mockito.when(daoManager.getXXUserPermission()).thenReturn(

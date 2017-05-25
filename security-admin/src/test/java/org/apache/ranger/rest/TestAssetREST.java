@@ -89,7 +89,7 @@ import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -758,7 +758,7 @@ public class TestAssetREST {
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(searchUtil, Mockito.times(12)).extractString((HttpServletRequest) Mockito.any(),
-				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
@@ -801,7 +801,7 @@ public class TestAssetREST {
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(searchUtil, Mockito.times(12)).extractString((HttpServletRequest) Mockito.any(),
-				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),

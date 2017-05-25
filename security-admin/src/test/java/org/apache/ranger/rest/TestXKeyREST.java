@@ -37,7 +37,7 @@ import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -127,7 +127,7 @@ public class TestXKeyREST {
 	public void Test4RolloverKey() throws Exception {
 		VXKmsKey vxKeyExp = new VXKmsKey();
 
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums) Mockito.any()))
+		Mockito.when(restErrorUtil.createRESTException(Mockito.nullable(String.class), (MessageEnums) Mockito.any()))
 				.thenReturn(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 
@@ -147,7 +147,7 @@ public class TestXKeyREST {
 
 	@Test
 	public void Test6DeleteKey() throws Exception {
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums) Mockito.any()))
+		Mockito.when(restErrorUtil.createRESTException(Mockito.nullable(String.class), (MessageEnums) Mockito.any()))
 				.thenReturn(new WebApplicationException());
 
 		thrown.expect(WebApplicationException.class);
@@ -195,7 +195,7 @@ public class TestXKeyREST {
 	public void Test8CreateKey() throws Exception {
 		VXKmsKey vxKeyExp = new VXKmsKey();
 
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums) Mockito.any()))
+		Mockito.when(restErrorUtil.createRESTException(Mockito.nullable(String.class), (MessageEnums) Mockito.any()))
 				.thenReturn(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 
@@ -223,7 +223,7 @@ public class TestXKeyREST {
 
 	@Test
 	public void Test10GetKey() throws Exception {
-		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), (MessageEnums) Mockito.any()))
+		Mockito.when(restErrorUtil.createRESTException(Mockito.nullable(String.class), (MessageEnums) Mockito.any()))
 				.thenReturn(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 

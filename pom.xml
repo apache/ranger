@@ -188,7 +188,7 @@
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>1.8.4</mockito.version>
+        <mockito.version>2.7.22</mockito.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.6.2.Final</netty.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
