@@ -15,6 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-curr_dir=`pwd`
-cd `dirname $0`; script_dir=`pwd`; cd $curr_dir
-export CLASSPATH="$CLASSPATH:${script_dir}:/etc/kafka/conf:/usr/hdp/current/hadoop-hdfs-client/*:/usr/hdp/current/hadoop-hdfs-client/lib/*:/etc/hadoop/conf"
+classpathmunge () {
+        escaped=`echo $1 | sed -e 's:\*:\\\\*:g'`
+        if ! echo ${CLASSPATH} | /bin/egrep -q "(^|:)${escaped}($|:)" ; then
+           if [ "$2" = "before" ] ; then
+              CLASSPATH=$1:${CLASSPATH}
+           else
+              CLASSPATH=${CLASSPATH}:$1
+           fi
+        fi
+}
+classpathmunge /etc/kafka/conf
+classpathmunge '/usr/hdp/current/hadoop-hdfs-client/*'
+classpathmunge '/usr/hdp/current/hadoop-hdfs-client/lib/*'
+classpathmunge '/etc/hadoop/conf'
+export CLASSPATH
+unset classpathmunge
