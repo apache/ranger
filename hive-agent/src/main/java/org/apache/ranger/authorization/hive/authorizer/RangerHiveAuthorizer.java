@@ -909,6 +909,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_CLUSTER_SORT:
 				case ALTERTABLE_COMPACT:
 				case ALTERTABLE_DROPPARTS:
+				case ALTERTABLE_DROPCONSTRAINT:
+				case ALTERTABLE_ADDCONSTRAINT:
 				case ALTERTABLE_FILEFORMAT:
 				case ALTERTABLE_LOCATION:
 				case ALTERTABLE_MERGEFILES:
