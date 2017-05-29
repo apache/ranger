@@ -154,7 +154,14 @@ fi
 
 if [ "${HCOMPONENT_INSTALL_DIR_NAME}" = "" ]
 then
-	HCOMPONENT_INSTALL_DIR_NAME=${HCOMPONENT_NAME}
+    if [ "${HCOMPONENT_NAME}" = "knox" ];
+    then
+        HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'KNOX_HOME')
+    fi
+    if [ "${HCOMPONENT_INSTALL_DIR_NAME}" = "" ]
+    then
+	    HCOMPONENT_INSTALL_DIR_NAME=${HCOMPONENT_NAME}
+    fi
 fi
 
 firstletter=${HCOMPONENT_INSTALL_DIR_NAME:0:1}
