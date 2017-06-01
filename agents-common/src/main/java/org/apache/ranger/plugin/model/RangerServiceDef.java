@@ -2807,6 +2807,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("name={").append(name).append("} ");
 			sb.append("label={").append(label).append("} ");
 			sb.append("description={").append(description).append("} ");
+			sb.append("transformer={").append(transformer).append("} ");
 			sb.append("dataMaskOptions={").append(dataMaskOptions).append("} ");
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
@@ -2827,6 +2828,9 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			result = prime * result + ((name == null) ? 0 : name.hashCode());
 			result = prime * result
 					+ ((rbKeyLabel == null) ? 0 : rbKeyLabel.hashCode());
+			result = prime * result + ((description == null) ? 0 : description.hashCode());
+			result = prime * result + ((transformer == null) ? 0 : transformer.hashCode());
+			result = prime * result + ((rbKeyDescription == null) ? 0 : rbKeyDescription.hashCode());
 			return result;
 		}
 
@@ -2864,6 +2868,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 				if (other.rbKeyLabel != null)
 					return false;
 			} else if (!rbKeyLabel.equals(other.rbKeyLabel))
+				return false;
+			if (description == null) {
+				if (other.description != null)
+					return false;
+			} else if (!description.equals(other.description))
+				return false;
+			if (transformer == null) {
+				if (other.transformer != null)
+					return false;
+			} else if (!transformer.equals(other.transformer))
+				return false;
+			if (rbKeyDescription == null) {
+				if (other.rbKeyDescription != null)
+					return false;
+			} else if (!rbKeyDescription.equals(other.rbKeyDescription))
 				return false;
 			return true;
 		}
