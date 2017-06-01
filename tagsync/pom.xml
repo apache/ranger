@@ -24,7 +24,7 @@
     <parent>
         <artifactId>ranger</artifactId>
         <groupId>org.apache.ranger</groupId>
-        <version>0.7.1-SNAPSHOT</version>
+        <version>0.7.1</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
