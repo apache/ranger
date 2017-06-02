@@ -36,7 +36,14 @@ done
 if [ -z "${TAGSYNC_PID_DIR_PATH}" ]; then
         TAGSYNC_PID_DIR_PATH=/var/run/ranger
 fi
-pidf=${TAGSYNC_PID_DIR_PATH}/tagsync.pid
+
+if [ -z "${TAGSYNC_PID_NAME}" ]
+then
+        TAGSYNC_PID_NAME=tagsync.pid
+fi
+
+pidf=${TAGSYNC_PID_DIR_PATH}/${TAGSYNC_PID_NAME}
+
 if [ -z "${UNIX_TAGSYNC_USER}" ]; then
         UNIX_TAGSYNC_USER=ranger
 fi
