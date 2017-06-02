@@ -135,10 +135,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			rowFilterEvaluators      = Collections.<RangerRowFilterPolicyItemEvaluator>emptyList();
 		}
 
-		Collections.sort(allowEvaluators);
-		Collections.sort(denyEvaluators);
-		Collections.sort(allowExceptionEvaluators);
-		Collections.sort(denyExceptionEvaluators);
+		RangerPolicyItemEvaluator.EvalOrderComparator comparator = new RangerPolicyItemEvaluator.EvalOrderComparator();
+		Collections.sort(allowEvaluators, comparator);
+		Collections.sort(denyEvaluators, comparator);
+		Collections.sort(allowExceptionEvaluators, comparator);
+		Collections.sort(denyExceptionEvaluators, comparator);
 
 		/* dataMask, rowFilter policyItems must be evaulated in the order given in the policy; hence no sort
 		Collections.sort(dataMaskEvaluators);

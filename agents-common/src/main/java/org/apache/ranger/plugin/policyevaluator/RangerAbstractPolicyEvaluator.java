@@ -28,7 +28,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.Map;
@@ -108,38 +107,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	@Override
 	public boolean isAuditEnabled() {
 		return policy != null && policy.getIsAuditEnabled();
-	}
-
-	@Override
-	public int compareTo(RangerPolicyResourceEvaluator obj) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractPolicyEvaluator.compareTo()");
-		}
-
-		int result;
-
-		if(obj instanceof RangerPolicyEvaluator) {
-			RangerPolicyEvaluator other = (RangerPolicyEvaluator)obj;
-
-			if (hasDeny() && !other.hasDeny()) {
-				result = -1;
-			} else if (!hasDeny() && other.hasDeny()) {
-				result = 1;
-			} else {
-				result = Long.compare(other.getUsageCount(), this.usageCount);
-				if (result == 0) {
-					result = Integer.compare(this.evalOrder, other.getEvalOrder());
-				}
-			}
-		} else {
-			result = Long.compare(getId(), obj.getId());
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractPolicyEvaluator.compareTo(), result:" + result);
-		}
-
-		return result;
 	}
 
 	public void setEvalOrder(int evalOrder) {

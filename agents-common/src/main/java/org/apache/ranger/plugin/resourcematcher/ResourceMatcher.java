@@ -23,9 +23,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
 
+import java.util.Comparator;
 import java.util.Map;
 
-abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
+abstract class ResourceMatcher {
     private static final Log LOG = LogFactory.getLog(ResourceMatcher.class);
 
     protected final String value;
@@ -43,9 +44,6 @@ abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
     boolean getNeedsDynamicEval() {
         return tokenReplacer != null;
     }
-
-    @Override
-    public int compareTo(ResourceMatcher other) { return Integer.compare(getPriority(), other.getPriority()); }
 
     @Override
     public String toString() {
@@ -78,5 +76,12 @@ abstract class ResourceMatcher implements Comparable<ResourceMatcher> {
         }
 
         return ret;
+    }
+
+    public static class PriorityComparator implements Comparator<ResourceMatcher> {
+        @Override
+        public int compare(ResourceMatcher me, ResourceMatcher other) {
+            return Integer.compare(me.getPriority(), other.getPriority());
+        }
     }
 }

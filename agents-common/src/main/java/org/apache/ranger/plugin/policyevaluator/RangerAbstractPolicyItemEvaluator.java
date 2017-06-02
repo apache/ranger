@@ -23,8 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -34,7 +32,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 
 public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyItemEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyItemEvaluator.class);
 
 	private static final int RANGER_POLICY_ITEM_EVAL_ORDER_DEFAULT = 1000;
 
@@ -91,21 +88,6 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	@Override
 	public String getComments() {
 		return null;
-	}
-
-	@Override
-	public int compareTo(RangerPolicyItemEvaluator other) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractPolicyItemEvaluator.compareTo()");
-		}
-
-		int result = Integer.compare(getEvalOrder(), other.getEvalOrder());
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractPolicyItemEvaluator.compareTo(), result:" + result);
-		}
-
-		return result;
 	}
 
 	protected String getServiceType() {

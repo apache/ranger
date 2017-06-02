@@ -22,7 +22,9 @@ package org.apache.ranger.plugin.policyengine;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
-public class PolicyEvaluatorForTag implements Comparable<PolicyEvaluatorForTag> {
+import java.util.Comparator;
+
+public class PolicyEvaluatorForTag {
     private final RangerPolicyEvaluator evaluator;
     private final RangerTagForEval      tag;
 
@@ -39,8 +41,10 @@ public class PolicyEvaluatorForTag implements Comparable<PolicyEvaluatorForTag> 
         return tag;
     }
 
-    @Override
-    public int compareTo(PolicyEvaluatorForTag other) {
-        return evaluator.getPolicy().getName().compareTo(other.evaluator.getPolicy().getName());
+    public static class PolicyNameComparator implements Comparator<PolicyEvaluatorForTag> {
+        @Override
+        public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
+            return me.getEvaluator().getPolicy().getName().compareTo(other.getEvaluator().getPolicy().getName());
+        }
     }
 }

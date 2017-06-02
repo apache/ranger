@@ -380,12 +380,13 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
+        RangerPolicyResourceEvaluator.IdComparator comparator = new RangerPolicyResourceEvaluator.IdComparator();
         if(!isSharingParentWildcardEvaluators && CollectionUtils.isNotEmpty(wildcardEvaluators)) {
-            Collections.sort(wildcardEvaluators);
+            Collections.sort(wildcardEvaluators, comparator);
         }
 
         if(evaluators != wildcardEvaluators && CollectionUtils.isNotEmpty(evaluators)) {
-            Collections.sort(evaluators);
+            Collections.sort(evaluators, comparator);
         }
 
         if(children != null) {
@@ -468,7 +469,7 @@ class TrieNode<T extends RangerPolicyResourceEvaluator> {
         if(CollectionUtils.isNotEmpty(evaluators)) {
             ret = new ArrayList<>(evaluators);
 
-            Collections.sort(ret);
+            Collections.sort(ret, new RangerPolicyResourceEvaluator.IdComparator());
         } else {
             ret = evaluators;
         }

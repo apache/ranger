@@ -336,7 +336,7 @@ class RangerPolicyRepository {
             }
         }
         if (CollectionUtils.isNotEmpty(ret)) {
-            Collections.sort(ret);
+            Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
         }
         return ret;
     }
@@ -563,13 +563,14 @@ class RangerPolicyRepository {
                 }
             }
         }
-        Collections.sort(policyEvaluators);
+        RangerPolicyEvaluator.PolicyEvalOrderComparator comparator = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
+        Collections.sort(policyEvaluators, comparator);
         this.policyEvaluators = Collections.unmodifiableList(policyEvaluators);
 
-        Collections.sort(dataMaskPolicyEvaluators);
+        Collections.sort(dataMaskPolicyEvaluators, comparator);
         this.dataMaskPolicyEvaluators = Collections.unmodifiableList(dataMaskPolicyEvaluators);
 
-        Collections.sort(rowFilterPolicyEvaluators);
+        Collections.sort(rowFilterPolicyEvaluators, comparator);
         this.rowFilterPolicyEvaluators = Collections.unmodifiableList(rowFilterPolicyEvaluators);
 
         List<RangerContextEnricher> contextEnrichers = new ArrayList<RangerContextEnricher>();
@@ -823,7 +824,7 @@ class RangerPolicyRepository {
 
         if (CollectionUtils.isNotEmpty(evaluators)) {
             ret = new ArrayList<>(evaluators);
-            Collections.sort(ret);
+            Collections.sort(ret, new RangerPolicyEvaluator.PolicyEvalOrderComparator());
 
             ret = Collections.unmodifiableList(ret);
         }

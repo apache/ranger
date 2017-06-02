@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.plugin.policyevaluator;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
-public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEvaluator> {
+public interface RangerPolicyItemEvaluator {
 	int POLICY_ITEM_TYPE_ALLOW            = 0;
 	int POLICY_ITEM_TYPE_DENY             = 1;
 	int POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS = 2;
@@ -54,4 +55,11 @@ public interface RangerPolicyItemEvaluator extends Comparable<RangerPolicyItemEv
 	boolean matchAccessType(String accessType);
 
 	boolean matchCustomConditions(RangerAccessRequest request);
+
+	class EvalOrderComparator implements Comparator<RangerPolicyItemEvaluator> {
+		@Override
+		public int compare(RangerPolicyItemEvaluator me, RangerPolicyItemEvaluator other) {
+			return Integer.compare(me.getEvalOrder(), other.getEvalOrder());
+		}
+	}
 }
