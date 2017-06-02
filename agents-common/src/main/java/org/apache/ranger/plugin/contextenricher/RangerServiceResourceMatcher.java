@@ -66,10 +66,7 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 		return leafResourceLevel;
 	}
 
-	@Override
-	public int compareTo(RangerPolicyResourceEvaluator other) {
-		return Long.compare(getId(), other.getId());
-	}
+
 
 	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
 		return policyResourceMatcher != null ?  policyResourceMatcher.getMatchType(requestedResource, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;

@@ -23,9 +23,10 @@ package org.apache.ranger.plugin.policyresourcematcher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
+import java.util.Comparator;
 import java.util.Map;
 
-public interface RangerPolicyResourceEvaluator extends Comparable<RangerPolicyResourceEvaluator>  {
+public interface RangerPolicyResourceEvaluator {
     long getId();
 
     RangerPolicyResourceMatcher getPolicyResourceMatcher();
@@ -35,4 +36,11 @@ public interface RangerPolicyResourceEvaluator extends Comparable<RangerPolicyRe
     RangerResourceMatcher getResourceMatcher(String resourceName);
 
     Integer getLeafResourceLevel();
+
+    class IdComparator implements Comparator<RangerPolicyResourceEvaluator> {
+        @Override
+        public int compare(RangerPolicyResourceEvaluator me, RangerPolicyResourceEvaluator other) {
+            return Long.compare(me.getId(), other.getId());
+        }
+    }
 }

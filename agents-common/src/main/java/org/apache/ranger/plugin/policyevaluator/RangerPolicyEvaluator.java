@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,4 +84,22 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 
+	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator> {
+		@Override
+		public int compare(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
+			int result;
+
+			if (me.hasDeny() && !other.hasDeny()) {
+				result = -1;
+			} else if (!me.hasDeny() && other.hasDeny()) {
+				result = 1;
+			} else {
+				result = Long.compare(other.getUsageCount(), me.getUsageCount());
+				if (result == 0) {
+					result = Integer.compare(me.getEvalOrder(), other.getEvalOrder());
+				}
+			}
+			return result;
+		}
+	}
 }

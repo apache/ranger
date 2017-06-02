@@ -185,7 +185,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			}
 		}
 
-		Collections.sort(resourceMatchers);
+		Collections.sort(resourceMatchers, new ResourceMatcher.PriorityComparator());
 
 		return CollectionUtils.isNotEmpty(resourceMatchers) ?
 				new ResourceMatcherWrapper(needsDynamicEval, resourceMatchers) : null;

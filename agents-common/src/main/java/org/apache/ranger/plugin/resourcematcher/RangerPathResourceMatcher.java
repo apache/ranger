@@ -88,7 +88,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			}
 		}
 
-		Collections.sort(resourceMatchers);
+		Collections.sort(resourceMatchers, new ResourceMatcher.PriorityComparator());
 
 		return CollectionUtils.isNotEmpty(resourceMatchers) ?
 				new ResourceMatcherWrapper(needsDynamicEval, resourceMatchers) : null;
