@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -84,7 +85,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 
-	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator> {
+	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
 		@Override
 		public int compare(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
 			int result;
