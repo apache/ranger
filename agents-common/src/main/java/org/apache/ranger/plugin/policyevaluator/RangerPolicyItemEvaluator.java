@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.plugin.policyevaluator;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +57,7 @@ public interface RangerPolicyItemEvaluator {
 
 	boolean matchCustomConditions(RangerAccessRequest request);
 
-	class EvalOrderComparator implements Comparator<RangerPolicyItemEvaluator> {
+	class EvalOrderComparator implements Comparator<RangerPolicyItemEvaluator>, Serializable {
 		@Override
 		public int compare(RangerPolicyItemEvaluator me, RangerPolicyItemEvaluator other) {
 			return Integer.compare(me.getEvalOrder(), other.getEvalOrder());

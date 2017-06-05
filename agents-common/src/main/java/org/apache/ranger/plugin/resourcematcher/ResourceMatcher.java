@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -78,7 +79,7 @@ abstract class ResourceMatcher {
         return ret;
     }
 
-    public static class PriorityComparator implements Comparator<ResourceMatcher> {
+    public static class PriorityComparator implements Comparator<ResourceMatcher>, Serializable {
         @Override
         public int compare(ResourceMatcher me, ResourceMatcher other) {
             return Integer.compare(me.getPriority(), other.getPriority());
