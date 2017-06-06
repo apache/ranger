@@ -40,6 +40,7 @@ import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.services.storm.client.json.model.Topology;
 import org.apache.ranger.services.storm.client.json.model.TopologyListResponse;
 
@@ -50,13 +51,13 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
 public class StormClient {
-	
+
 	private static final Logger LOG = Logger.getLogger(StormClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
-	
+
 	private static final String TOPOLOGY_LIST_API_ENDPOINT = "/api/v1/topology/summary";
-	
+
 	private static final String errMessage =  " You can still save the repository and start creating "
 											  + "policies, but you would not be able to use autocomplete for "
 											  + "resource names. Check ranger_admin.log for more info.";
@@ -69,14 +70,14 @@ public class StormClient {
 	String nameRules;
 
 	public StormClient(String aStormUIUrl, String aUserName, String aPassword, String lookupPrincipal, String lookupKeytab, String nameRules) {
-		
+
 		this.stormUIUrl = aStormUIUrl;
 		this.userName = aUserName;
 		this.password = aPassword;
 		this.lookupPrincipal = lookupPrincipal;
 		this.lookupKeytab = lookupKeytab;
 		this.nameRules = nameRules;
-		
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Storm Client is build with url [" + aStormUIUrl + "] user: [" + aUserName + "], password: [" + "" + "]");
 		}
@@ -88,7 +89,6 @@ public class StormClient {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting Storm topology list for topologyNameMatching : " + topologyNameMatching);
 		}
-		final String errMsg = errMessage;
 
 		PrivilegedAction<ArrayList<String>> topologyListGetter = new PrivilegedAction<ArrayList<String>>() {
 			@Override
@@ -166,7 +166,7 @@ public class StormClient {
 								+ EXPECTED_MIME_TYPE + "] URL : " + stormUIUrl + " - got null response.";
 						LOG.error(msgDesc);
 						HadoopException hdpException = new HadoopException(msgDesc);
-						hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
+						hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMessage, null, null);
 						throw hdpException;
 					}
 				} catch (HadoopException he) {
@@ -176,7 +176,7 @@ public class StormClient {
 					HadoopException hdpException = new HadoopException(msgDesc, t);
 					LOG.error(msgDesc, t);
 
-					hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+					hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMessage, null, null);
 					throw hdpException;
 				} finally {
 					if (response != null) {
@@ -223,66 +223,9 @@ public class StormClient {
 
 		return ret;
 	}
-	
+
 	public static <T> T executeUnderKerberos(String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules,
 			PrivilegedAction<T> action) throws IOException {
-		
-		final String errMsg = errMessage;
-		class MySecureClientLoginConfiguration extends
-				javax.security.auth.login.Configuration {
-
-			private String userName;
-			private String password;
-
-			MySecureClientLoginConfiguration(String aUserName,
-					String password) {
-				this.userName = aUserName;
-				this.password = password;
-			}
-
-			@Override
-			public AppConfigurationEntry[] getAppConfigurationEntry(
-					String appName) {
-
-				Map<String, String> kerberosOptions = new HashMap<String, String>();
-				kerberosOptions.put("principal", this.userName);
-				kerberosOptions.put("debug", "true");
-				kerberosOptions.put("useKeyTab", "false");
-				kerberosOptions.put(KrbPasswordSaverLoginModule.USERNAME_PARAM, this.userName);
-				kerberosOptions.put(KrbPasswordSaverLoginModule.PASSWORD_PARAM, this.password);
-				kerberosOptions.put("doNotPrompt", "false");
-				kerberosOptions.put("useFirstPass", "true");
-				kerberosOptions.put("tryFirstPass", "false");
-				kerberosOptions.put("storeKey", "true");
-				kerberosOptions.put("refreshKrb5Config", "true");
-
-				AppConfigurationEntry KEYTAB_KERBEROS_LOGIN = null;
-				AppConfigurationEntry KERBEROS_PWD_SAVER = null;
-				try {
-					KEYTAB_KERBEROS_LOGIN = new AppConfigurationEntry(
-							KerberosUtil.getKrb5LoginModuleName(),
-							AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
-							kerberosOptions);
-					KERBEROS_PWD_SAVER = new AppConfigurationEntry(KrbPasswordSaverLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, kerberosOptions);
-
-				} catch (IllegalArgumentException e) {
-					String msgDesc = "executeUnderKerberos: Exception while getting Storm TopologyList.";
-					HadoopException hdpException = new HadoopException(msgDesc,
-							e);
-					LOG.error(msgDesc, e);
-
-					hdpException.generateResponseDataMap(false,
-							BaseClient.getMessage(e), msgDesc + errMsg, null,
-							null);
-					throw hdpException;
-				}
-
-				LOG.debug("getAppConfigurationEntry():" + kerberosOptions.get("principal"));
-				
-                return new AppConfigurationEntry[] { KERBEROS_PWD_SAVER, KEYTAB_KERBEROS_LOGIN };
-			}
-
-		};
 
 		T ret = null;
 
@@ -306,7 +249,7 @@ public class StormClient {
 				LOG.debug("executeUnderKerberos():Creating Context..");
 				loginContext = new LoginContext("hadoop-keytab-kerberos", subject,
 						null, loginConf);
-				
+
 				LOG.debug("executeUnderKerberos():Logging in..");
 				loginContext.login();
 				LOG.info("Init Login: using username/password");
@@ -322,7 +265,7 @@ public class StormClient {
 			LOG.error(msgDesc, le);
 
 			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(le), msgDesc + errMsg, null, null);
+					BaseClient.getMessage(le), msgDesc + errMessage, null, null);
 			throw hdpException;
 		} catch (SecurityException se) {
 			String msgDesc = "executeUnderKerberos: Exception while getting Storm TopologyList.";
@@ -330,7 +273,7 @@ public class StormClient {
 			LOG.error(msgDesc, se);
 
 			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(se), msgDesc + errMsg, null, null);
+					BaseClient.getMessage(se), msgDesc + errMessage, null, null);
 			throw hdpException;
 
 		} finally {
@@ -441,6 +384,68 @@ public class StormClient {
 		}
 		return resultList;
 	}
-	
+
+	private static class MySecureClientLoginConfiguration extends javax.security.auth.login.Configuration {
+
+	    private String userName;
+	    private String password;
+
+	    MySecureClientLoginConfiguration(String aUserName, String password) {
+	        this.userName = aUserName;
+	        String decryptedPwd = null;
+	        try {
+	            decryptedPwd = PasswordUtils.decryptPassword(password);
+	        } catch(Exception ex) {
+	            LOG.info("Password decryption failed; trying Storm connection with received password string");
+	            decryptedPwd = null;
+	        } finally {
+	            if (decryptedPwd == null) {
+	                decryptedPwd = password;
+	            }
+	        }
+	        this.password = decryptedPwd;
+	    }
+
+	    @Override
+	    public AppConfigurationEntry[] getAppConfigurationEntry(String appName) {
+
+	        Map<String, String> kerberosOptions = new HashMap<String, String>();
+	        kerberosOptions.put("principal", this.userName);
+	        kerberosOptions.put("debug", "true");
+	        kerberosOptions.put("useKeyTab", "false");
+	        kerberosOptions.put(KrbPasswordSaverLoginModule.USERNAME_PARAM, this.userName);
+	        kerberosOptions.put(KrbPasswordSaverLoginModule.PASSWORD_PARAM, this.password);
+	        kerberosOptions.put("doNotPrompt", "false");
+	        kerberosOptions.put("useFirstPass", "true");
+	        kerberosOptions.put("tryFirstPass", "false");
+	        kerberosOptions.put("storeKey", "true");
+	        kerberosOptions.put("refreshKrb5Config", "true");
+
+	        AppConfigurationEntry KEYTAB_KERBEROS_LOGIN = null;
+	        AppConfigurationEntry KERBEROS_PWD_SAVER = null;
+	        try {
+	            KEYTAB_KERBEROS_LOGIN = new AppConfigurationEntry(KerberosUtil.getKrb5LoginModuleName(),
+	                                                              AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+	                                                              kerberosOptions);
+	            KERBEROS_PWD_SAVER = new AppConfigurationEntry(KrbPasswordSaverLoginModule.class.getName(),
+	                                                           LoginModuleControlFlag.REQUIRED, kerberosOptions);
+
+	        } catch (IllegalArgumentException e) {
+	            String msgDesc = "executeUnderKerberos: Exception while getting Storm TopologyList.";
+	            HadoopException hdpException = new HadoopException(msgDesc, e);
+	            LOG.error(msgDesc, e);
+
+	            hdpException.generateResponseDataMap(false,
+	                                                 BaseClient.getMessage(e), msgDesc + errMessage, null,
+	                                                 null);
+	            throw hdpException;
+	        }
+
+	        LOG.debug("getAppConfigurationEntry():" + kerberosOptions.get("principal"));
+
+	        return new AppConfigurationEntry[] { KERBEROS_PWD_SAVER, KEYTAB_KERBEROS_LOGIN };
+	    }
+
+	};
 }
 
