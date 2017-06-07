@@ -63,6 +63,7 @@ define(function(require){
 					newRowFilterPolicyItems: this.newRowFilterPolicyItems,
 					oldMaskPolicyItems: this.oldMaskPolicyItems,
 					oldRowFilterPolicyItems: this.oldRowFilterPolicyItems,
+					userName   : this.userName,
 
         		};
         },
@@ -106,21 +107,7 @@ define(function(require){
 			}
 			if(!_.isUndefined(this.collection.models[0]) ){
 				this.policyName = _.isUndefined(this.policyName) ? this.collection.models[0].get('objectName') : this.policyName;
-					var rangerService = new RangerService({ 'id' : this.collection.models[0].get('parentObjectId') })
-					rangerService.fetch({
-						cache : false,
-						async : false
-					})
-					if(!_.isUndefined(rangerService.get('type'))){
-						this.rangerServiceDefModel = new RangerServiceDef();
-						this.rangerServiceDefModel.url = XAUtils.getRangerServiceDef(rangerService.get('type'));
-						this.rangerServiceDefModel.fetch({
-							cache : false,
-							async : false
-						})
-						this.repositoryType = this.rangerServiceDefModel.get('name');
-					}
-				//get policy created/updated date/owner
+//              get policy created/updated date/owner
 				var model = this.collection.models[0];
 				this.objectCreatedBy = model.get('updatedBy');
 			}
@@ -171,9 +158,6 @@ define(function(require){
 			_.each(addedUsers, function(userSpan) { $(userSpan).addClass('add-text')});
 		},
 		array_diff :function(array1, array2){
-//			var array1 = [<span>user1<span>,<span>user2<span>,<span>user3<span>,<span>user4<span>];
-//			var array2 = [<span>user1<span>,<span>user3<span>];
-//			array_diff = [<span>user2<span>,<span>user4<span>]
 			var difference = [];
 			var tmpArr2 = _.map(array2,function(a){ return (a.innerHTML);})
 			$.grep(array1, function(el) {
@@ -270,42 +254,41 @@ define(function(require){
 			if(!_.isUndefined(policyResources.get('newValue')) && !_.isEmpty(policyResources.get('newValue'))){
 				var resources = {} ;
 				var resourceNewValues = JSON.parse(policyResources.get('newValue'));
-				if(!_.isUndefined(this.rangerServiceDefModel)){
-					_.each(this.rangerServiceDefModel.get('resources'), function(obj) {
-						_.each(resourceNewValues,function(val,key){ 
-							if(obj.name == key){
-								resources[obj.name] = val.values.toString();
-								if(!_.isUndefined(obj.excludesSupported) && obj.excludesSupported){
-									resources[obj.name+' exclude'] = val.isExcludes.toString();
-								}
-								if(!_.isUndefined(obj.recursiveSupported) && obj.recursiveSupported){
-									resources[obj.name+' recursive'] = val.isRecursive.toString();
-								}
-							}
-						});
-					});
-				}
+				//for resource  new value
+				_.each(resourceNewValues,function(val,key){ 
+					resources[key] = val.values.toString();
+					resources[key +' exclude'] = val.isExcludes.toString();
+					resources[key +' recursive'] = val.isRecursive.toString();
+				});
 			}
 			if(!_.isUndefined(policyResources.get('previousValue')) && !_.isEmpty(policyResources.get('previousValue'))){
 				var oldResources = {} ;
 				var resourceNewValues = JSON.parse(policyResources.get('previousValue'));
-				if(!_.isUndefined(this.rangerServiceDefModel)){
-					_.each(this.rangerServiceDefModel.get('resources'), function(obj) {
-						_.each(resourceNewValues,function(val,key){ 
-							if(obj.name == key){
-								oldResources[obj.name] = val.values.toString();
-								if(!_.isUndefined(obj.excludesSupported) && obj.excludesSupported){
-									oldResources[obj.name+' exclude'] = val.isExcludes.toString();
-								}
-								if(!_.isUndefined(obj.recursiveSupported) && obj.recursiveSupported){
-									oldResources[obj.name+' recursive'] = val.isRecursive.toString();
-								}
-							}
-						});
-					});
-				}
+				////for resource  old value
+				_.each(resourceNewValues,function(val,key){ 
+					oldResources[key] = val.values.toString();
+					oldResources[key +' exclude'] = val.isExcludes.toString();
+					oldResources[key +' recursive'] = val.isRecursive.toString();
+				});
 			}
 			if(this.action == "update"){
+				//**Show diffview data for resource change at same level.
+				var done = false;
+				_.each(resources,function(val, key){
+					if(_.isUndefined(oldResources[key] && !done)){
+						_.each(resources,function(val,key){
+							if(!oldResources.hasOwnProperty(key)){
+								oldResources[key] = "";
+							}
+						});
+						_.each(oldResources,function(val,key){
+							if(!resources.hasOwnProperty(key)){
+								resources[key] = "";
+							}
+						});
+						done = true;
+					}
+				});
 				_.each(resources,function(val, key){ 
 					if(val != oldResources[key])
 						this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"}); 
@@ -342,25 +325,20 @@ define(function(require){
 				});
 			}
 			if(itemType === 'Masked Policy Items') {
-				for(var i = 0; i < newPolicyItems.length ; i++){
-					var maskingType = newPolicyItems[i].dataMaskInfo.dataMaskType;
-					var dataMaskDefs = that.rangerServiceDefModel.get('dataMaskDef');
-					_.each(dataMaskDefs.maskTypes,function(maskType){
-						if(maskType.name === maskingType) {
-							newPolicyItems[i].dataMaskInfo.dataMaskType = maskType.label;
+		//   its for new created record  
+					for(var i = 0; i < newPolicyItems.length ; i++){
+						if(newPolicyItems[i].DataMasklabel){
+						var maskingType = newPolicyItems[i].dataMaskInfo.dataMaskType;
+						newPolicyItems[i].dataMaskInfo.dataMaskType = newPolicyItems[i].DataMasklabel;
 						}
-					});
-				};
-
-				for(var i = 0; i < oldPolicyItems.length ; i++){
-					var maskingType = oldPolicyItems[i].dataMaskInfo.dataMaskType;
-					var dataMaskDefs = that.rangerServiceDefModel.get('dataMaskDef');
-					_.each(dataMaskDefs.maskTypes,function(maskType){
-						if(maskType.name === maskingType) {
-							oldPolicyItems[i].dataMaskInfo.dataMaskType = maskType.label;
+					}
+					
+					for(var i = 0; i < oldPolicyItems.length ; i++){
+						if(oldPolicyItems[i].DataMasklabel){
+							var maskingType = oldPolicyItems[i].dataMaskInfo.dataMaskType;
+							oldPolicyItems[i].dataMaskInfo.dataMaskType = oldPolicyItems[i].DataMasklabel;
 						}
-					});
-				};
+					}
 			}
 
 //			this.oldPermList =[], this.newPermList =[]

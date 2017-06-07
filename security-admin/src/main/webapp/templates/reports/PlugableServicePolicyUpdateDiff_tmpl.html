@@ -19,9 +19,11 @@
 		<div class="span6">
 			<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 			<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
-			<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+			{{#if repositoryType}}
+				<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+			{{/if}}
 			<label class="no-margin label-size13-weightbold"> Updated Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-			<label class="no-margin label-size13-weightbold" > Updated By  &nbsp;&nbsp;:  {{objectCreatedBy}}</label>
+			<label class="no-margin label-size13-weightbold" > Updated By  &nbsp;&nbsp;:  {{userName}}</label>
 		</div>	
 		<div class="span6 text-right">
 			<div class="add-text legend"></div> Added

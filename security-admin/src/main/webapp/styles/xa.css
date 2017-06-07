@@ -2182,7 +2182,15 @@ td.subgrid-custom-cell{
 .tag-attr-popover .table td:first-child{
         border-left-color:transparent;
 }
-.divider-popup{
+.backgrid-paginator ul > li > a,
+.backgrid-paginator ul > li > span{
+    width: auto !important;
+	min-width: 30px;
+	max-width: 44px;
+	text-overflow:ellipsis;
+	white-space: nowrap;
+    overflow: hidden;
+}.divider-popup{
 	padding: 4px;
 	background-color: #eeeeee;
     text-align: center;

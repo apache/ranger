@@ -183,7 +183,7 @@ public class AssetMgr extends AssetMgrBase {
 	public String getLatestRepoPolicy(VXAsset xAsset, List<VXResource> xResourceList, Long updatedTime,
 									  X509Certificate[] certchain, boolean httpEnabled, String epoch,
 									  String ipAddress, boolean isSecure, String count, String agentId) {
-		if(xAsset==null){
+		if(xAsset == null) {
 			logger.error("Requested repository not found");
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
@@ -193,7 +193,7 @@ public class AssetMgr extends AssetMgrBase {
 			throw restErrorUtil.createRESTException("No Data Found.",
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		if(xAsset.getActiveStatus()==RangerCommonEnums.ACT_STATUS_DISABLED){
+		if(xAsset.getActiveStatus() == RangerCommonEnums.ACT_STATUS_DISABLED) {
 			logger.error("Requested repository is disabled");
 			throw restErrorUtil.createRESTException("Unauthorized access.",
 					MessageEnums.OPER_NO_EXPORT);
@@ -520,7 +520,7 @@ public class AssetMgr extends AssetMgrBase {
 						if (groupId != null) {
 							Set<String> groups = (Set<String>) sortedPermMap.get("groups");
 
-							if(groups != null){
+							if(groups != null) {
 								groups.add(xPermMap.getGroupName());
 								sortedPermMap.put("groups", groups);
 							}
@@ -552,12 +552,12 @@ public class AssetMgr extends AssetMgrBase {
 					
 					sortedPermMap.put("access", permSet);
 					
-					if(assetType == AppConstants.ASSET_KNOX){
+					if(assetType == AppConstants.ASSET_KNOX) {
 						String[] ipAddrList = new String[0];
-						if(xPermMap.getIpAddress() != null){
+						if(xPermMap.getIpAddress() != null) {
 							ipAddrList = xPermMap.getIpAddress().split(",");
 							sortedPermMap.put("ipAddress", ipAddrList);
-						}else
+						} else
 							sortedPermMap.put("ipAddress",ipAddrList);
 					}
 					
@@ -709,7 +709,7 @@ public class AssetMgr extends AssetMgrBase {
 
 	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final int httpCode) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", isPolicyDownloadRequest=" + isPolicyDownloadRequest + ", httpCode=" + httpCode + ")");
+			logger.debug("==> createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
 		}
 
 		final boolean isTagVersionResetNeeded;
@@ -757,7 +757,7 @@ public class AssetMgr extends AssetMgrBase {
 			doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== createOrUpdatePluginInfo(pluginInfo=" + pluginInfo + ", isPolicyDownloadRequest=" + isPolicyDownloadRequest + ", httpCode=" + httpCode + ")");
+			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
 		}
 
 	}
@@ -925,11 +925,11 @@ public class AssetMgr extends AssetMgrBase {
 				searchCriteria.getParamList().put("endDate", temp);
 			}
 			if (searchCriteria.getParamList().containsKey("owner")) {
-				XXPortalUser xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(
+				XXPortalUser xXPortalUser = rangerDaoManager.getXXPortalUser().findByLoginId(
 						(searchCriteria.getParamList().get("owner").toString()));
-				if(xXPortalUser!=null){
+				if(xXPortalUser != null) {
 					searchCriteria.getParamList().put("owner", xXPortalUser.getId());
-				}else{
+				} else {
 					searchCriteria.getParamList().put("owner", 0);
 				}
 				
@@ -939,7 +939,7 @@ public class AssetMgr extends AssetMgrBase {
 
 		VXTrxLogList vXTrxLogList = xTrxLogService
 				.searchXTrxLogs(searchCriteria);
-		Long count=xTrxLogService
+		Long count = xTrxLogService
 				.searchXTrxLogsCount(searchCriteria);
 		vXTrxLogList.setTotalCount(count);
 		
@@ -1007,48 +1007,59 @@ public class AssetMgr extends AssetMgrBase {
 		for (VXTrxLog xTrxLog : xTrxLogList) {
 			VXTrxLog vXTrxLog = new VXTrxLog();
 			vXTrxLog = xTrxLog;
-			if(vXTrxLog.getPreviousValue()==null || "null".equalsIgnoreCase(vXTrxLog.getPreviousValue())){
+			if(vXTrxLog.getPreviousValue() == null || "null".equalsIgnoreCase(vXTrxLog.getPreviousValue())) {
 				vXTrxLog.setPreviousValue("");
 			}
-			if(vXTrxLog.getAttributeName()!=null && "Password".equalsIgnoreCase(vXTrxLog.getAttributeName())){
+			if(vXTrxLog.getNewValue() == null || "null".equalsIgnoreCase(vXTrxLog.getNewValue())) {
+				vXTrxLog.setNewValue("");
+			}
+			if(vXTrxLog.getAttributeName() != null && "Password".equalsIgnoreCase(vXTrxLog.getAttributeName())) {
 				vXTrxLog.setPreviousValue("*********");
 				vXTrxLog.setNewValue("***********");
 			}
-			if(vXTrxLog.getAttributeName()!=null && "Connection Configurations".equalsIgnoreCase(vXTrxLog.getAttributeName())){
-				if(vXTrxLog.getPreviousValue()!=null && vXTrxLog.getPreviousValue().contains("password")){
-					String tempPreviousStr=vXTrxLog.getPreviousValue();					
-					String tempPreviousArr[]=vXTrxLog.getPreviousValue().split(",");					
-					for(int i=0;i<tempPreviousArr.length;i++){
-						if(tempPreviousArr[i].contains("{\"password")){
-							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "{\"password\":\"*****\"}"));
+			if(vXTrxLog.getAttributeName() != null && "Connection Configurations".equalsIgnoreCase(vXTrxLog.getAttributeName())) {
+				if(vXTrxLog.getPreviousValue() != null && vXTrxLog.getPreviousValue().contains("password")) {
+					String tempPreviousStr = vXTrxLog.getPreviousValue();
+					String tempPreviousArr[] = vXTrxLog.getPreviousValue().split(",");
+					for(int i = 0; i < tempPreviousArr.length; i++) {
+						if(tempPreviousArr[i].contains("{\"password") && tempPreviousArr[i].contains("}")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i],"{\"password\":\"*****\"}"));
 							break;
-						}else if(tempPreviousArr[i].contains("\"password") && tempPreviousArr[i].contains("}")){
+						} else if(tempPreviousArr[i].contains("{\"password")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "{\"password\":\"*****\""));
+							break;
+						} else if(tempPreviousArr[i].contains("\"password") && tempPreviousArr[i].contains("}")) {
 							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\"}"));
 							break;
-						}else if(tempPreviousArr[i].contains("\"password")){
+						} else if(tempPreviousArr[i].contains("\"password")) {
 							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\""));
 							break;
 						}
 					}			
 				}
-				if(vXTrxLog.getNewValue()!=null && vXTrxLog.getNewValue().contains("password")){
-					String tempNewStr=vXTrxLog.getNewValue();
-					String tempNewArr[]=vXTrxLog.getNewValue().split(",");
-					for(int i=0;i<tempNewArr.length;i++){
-						if(tempNewArr[i].contains("{\"password")){
+				if(vXTrxLog.getNewValue() != null && vXTrxLog.getNewValue().contains("password")) {
+					String tempNewStr = vXTrxLog.getNewValue();
+					String tempNewArr[] = vXTrxLog.getNewValue().split(",");
+					for(int i = 0; i < tempNewArr.length; i++) {
+						if(tempNewArr[i].contains("{\"password") && tempNewArr[i].contains("}")) {
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\"}"));
+							break;
+						} else if(tempNewArr[i].contains("{\"password")) {
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\""));
 							break;
-						}else if(tempNewArr[i].contains("\"password") && tempNewArr[i].contains("}")){
+						} else if(tempNewArr[i].contains("\"password") && tempNewArr[i].contains("}")) {
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\"}"));
 							break;
-						}else if(tempNewArr[i].contains("\"password")){
+						} else if(tempNewArr[i].contains("\"password")) {
 							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\""));
 							break;
 						}
 					}	
 				}
 			}			
-			vXTrxLogs.add(vXTrxLog);
+			if(vXTrxLog.getPreviousValue() != null && !vXTrxLog.getPreviousValue().isEmpty() || vXTrxLog.getNewValue() != null && !vXTrxLog.getNewValue().isEmpty()) {
+				vXTrxLogs.add(vXTrxLog);
+			}
 		}
 		return vXTrxLogs;
 	}

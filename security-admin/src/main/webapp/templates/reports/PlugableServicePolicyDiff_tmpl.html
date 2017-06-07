@@ -17,9 +17,11 @@
 <div class="diff-content">
 	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+	{{#if repositoryType}}
 	<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+	{{/if}}
 	<label class="no-margin label-size13-weightbold"> Created Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{objectCreatedBy}}</label>
+	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
 
 {{#if collection.length}}
 	<h5>Policy Details :</h5>
@@ -170,12 +172,12 @@
 	</div>
 {{/if}}
 <!-- Deny Exception PolicyItems -->
-{{#if oldDenyExceptionPolicyItems}}
+{{#if newDenyExceptionPolicyItems}}
 	<h5>Deny Exception PolicyItems:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
-				{{#each oldDenyExceptionPolicyItems}}
+				{{#each newDenyExceptionPolicyItems}}
 				<ol class="unstyled data">
 						<li class="change-row">Groups: 
 							{{#if_eq this.groups compare=0}}

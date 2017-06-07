@@ -326,20 +326,27 @@ define(function(require){
 				}
 			},this);
 			//remove validation of fields if it's hidden
-			_.each(this.fields, function(obj, key){
-				if(obj.$el.hasClass('hideResource')){
-					if($.inArray('required',obj.editor.validators) >= 0){
-						this.defaultValidator[key] = obj.editor.validators;
-						obj.editor.validators=[];
-						var label = obj.$el.find('label').html();
-						obj.$el.find('label').html(label.replace('*', ''));
+			//remove validation if fields is not empty
+			_.each(this.fields, function(field, key){
+				if((key.substring(0,key.length-2) === "sameLevel") && field.$el.find('[data-js="resource"]').val()!="" && field.$el.hasClass('error')){
+					field.$el.removeClass('error');
+					field.$el.find('.help-inline').empty();
+				}
+				if(field.$el.hasClass('hideResource')){
+					if($.inArray('required',field.editor.validators) >= 0){
+						this.defaultValidator[key] = field.editor.validators;
+						field.editor.validators=[];
+						var label = field.$el.find('label').html();
+						field.$el.find('label').html(label.replace('*', ''));
+						field.$el.removeClass('error');
+						field.$el.find('.help-inline').empty();
 					}
 				}else{
 					if(!_.isUndefined(this.defaultValidator[key])){
-						obj.editor.validators = this.defaultValidator[key];
-						if($.inArray('required',obj.editor.validators) >= 0){
-							var label = obj.$el.find('label').html();
-							obj.$el.find('label').html(label+"*");
+						field.editor.validators = this.defaultValidator[key];
+						if($.inArray('required',field.editor.validators) >= 0){
+							var label = field.$el.find('label').html();
+							field.$el.find('label').html(label+"*");
 						}
 					}
 				}
