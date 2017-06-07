@@ -18,7 +18,7 @@
 	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
 	<label class="no-margin label-size13-weightbold"> Deleted Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{objectCreatedBy}}</label>
+	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
 
 {{#if collection.length}}
 	<h5>Policy Details :</h5>
@@ -83,6 +83,83 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 					</ol><br/>
 		{{/each}}
+		</div>
+	</div>
+{{/if}}
+<!-- Masking Policy Items -->
+{{#if oldMaskPolicyItems}}
+	<h5>Masking Policy Items :</h5>
+	<div class="diff diff-perms" >
+		<div class="diff-right diff-list" data-id="diff">
+			<h3>old Value</h3>
+				{{#each oldMaskPolicyItems}}
+					<ol class="unstyled data">
+						<li class="change-row">Groups:
+							{{#if_eq this.groups compare=0}}
+								&lt;empty&gt;
+							{{else}}
+								{{this.groups}}
+							{{/if_eq}}
+						</li>
+					<li class="change-row">Users:
+						{{#if_eq this.users compare=0}}
+								&lt;empty&gt;
+						{{else}}
+							{{this.users}}
+						{{/if_eq}}
+					</li>
+					<li class="change-row">Accesses:
+						{{#each this.accesses}}
+							{{this.type}} <span>,</span>
+						{{/each}}
+					</li>
+					{{#if this.dataMaskInfo}}
+					<li class="change-row">
+					Data Mask Types:
+					  {{this.dataMaskInfo.dataMaskType}}
+					</li>
+					{{/if}}
+				</ol><br/>
+			{{/each}}
+		</div>
+	</div>
+{{/if}}
+
+<!--  Row Filter Policy Items-->
+{{#if oldRowFilterPolicyItems}}
+	<h5>Row Level Filter Policy Items :</h5>
+	<div class="diff diff-perms" >
+		<div class="diff-right diff-list" data-id="diff">
+			<h3>Old Value</h3>
+			{{#each oldRowFilterPolicyItems}}
+				<ol class="unstyled data">
+						<li class="change-row">Groups:
+							{{#if_eq this.groups compare=0}}
+								&lt;empty&gt;
+							{{else}}
+								{{this.groups}}
+							{{/if_eq}}
+						</li>
+					<li class="change-row">Users:
+						{{#if_eq this.users compare=0}}
+								&lt;empty&gt;
+						{{else}}
+							{{this.users}}
+						{{/if_eq}}
+					</li>
+					<li class="change-row">Accesses:
+						{{#each this.accesses}}
+							{{this.type}} <span>,</span>
+						{{/each}}
+					</li>
+					{{#if this.rowFilterInfo}}
+					<li class="change-row">
+					Row Level Filter:
+					  {{this.rowFilterInfo.filterExpr}}
+					</li>
+					{{/if}}
+				</ol><br/>
+			{{/each}}
 		</div>
 	</div>
 {{/if}}	

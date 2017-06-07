@@ -17,6 +17,8 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.entity.XXDataMaskTypeDef;
+import org.apache.commons.collections.CollectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -125,7 +127,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		return this.populateViewBean(xPolicy);
 	}
 	
-	public List<XXTrxLog> getTransactionLog(RangerPolicy vPolicy, int action){
+	public List<XXTrxLog> getTransactionLog(RangerPolicy vPolicy, int action) {
 		return getTransactionLog(vPolicy, null, action);
 	}
 
@@ -195,17 +197,37 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				value = processPolicyItemsForTrxLog(field.get(vObj));
 			} else if (fieldName.equalsIgnoreCase(DENYPOLICY_ITEM_CLASS_FIELD_NAME)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+			} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)) {
 				value = processPolicyNameForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(ALLOW_EXCEPTIONS_CLASS_FIELD_NAME)){
+			} else if (fieldName.equalsIgnoreCase(ALLOW_EXCEPTIONS_CLASS_FIELD_NAME)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(DENY_EXCEPTIONS_CLASS_FIELD_NAME)){
+			} else if (fieldName.equalsIgnoreCase(DENY_EXCEPTIONS_CLASS_FIELD_NAME)) {
 				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)){
+			} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)) {
 				value = processDataMaskPolicyItemsForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)){
+				if(vObj.getDataMaskPolicyItems() != null && CollectionUtils.isNotEmpty(vObj.getDataMaskPolicyItems())) {
+					for(RangerDataMaskPolicyItem policyItem : vObj.getDataMaskPolicyItems()) {
+						if(policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
+							List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
+							if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
+								for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
+									if(xxDataMaskTypeDef.getName().equalsIgnoreCase(policyItem.getDataMaskInfo().getDataMaskType())) {
+										String label = xxDataMaskTypeDef.getLabel();
+										StringBuilder sbValue = new StringBuilder(value);
+										label = ",\"DataMasklabel\":\""+label+"\"";
+										int sbValueIndex = sbValue.lastIndexOf("}]");
+										sbValue.insert(sbValueIndex, label);
+										value = sbValue.toString();
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)) {
 				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
-			} else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)){
+			} else if (fieldName.equalsIgnoreCase(IS_ENABLED_CLASS_FIELD_NAME)) {
 				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
 			
 			}
@@ -251,11 +273,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getDenyPolicyItems());
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)){
+				} else if (fieldName.equalsIgnoreCase(POLICY_NAME_CLASS_FIELD_NAME)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyNameForTrxLog(oldPolicy.getName());
 					}
-				} else if (fieldName.equalsIgnoreCase(POLICY_DESCRIPTION_CLASS_FIELD_NAME)){
+				} else if (fieldName.equalsIgnoreCase(POLICY_DESCRIPTION_CLASS_FIELD_NAME)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyNameForTrxLog(oldPolicy.getDescription());
 					}
@@ -270,6 +292,26 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				} else if (fieldName.equalsIgnoreCase(DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME)) {
 					if (oldPolicy != null) {
 						oldValue = processDataMaskPolicyItemsForTrxLog(oldPolicy.getDataMaskPolicyItems());
+						if(oldPolicy.getDataMaskPolicyItems() != null && CollectionUtils.isNotEmpty(oldPolicy.getDataMaskPolicyItems())) {
+							for(RangerDataMaskPolicyItem oldPolicyItem : oldPolicy.getDataMaskPolicyItems()) {
+								if(oldPolicyItem.getDataMaskInfo() != null && oldPolicyItem.getDataMaskInfo().getDataMaskType() != null) {
+									List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
+									if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
+										for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
+											if(xxDataMaskTypeDef.getName().equalsIgnoreCase(oldPolicyItem.getDataMaskInfo().getDataMaskType())) {
+												String oldLabel = xxDataMaskTypeDef.getLabel();
+												StringBuilder sbOldValue = new StringBuilder(oldValue);
+												oldLabel = ",\"DataMasklabel\":\""+oldLabel+"\"";
+												int sbValueIndex = sbOldValue.lastIndexOf("}]");
+												sbOldValue.insert(sbValueIndex, oldLabel);
+												oldValue = sbOldValue.toString();
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
 					}
 				} else if (fieldName.equalsIgnoreCase(ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME)) {
 					if (oldPolicy != null) {
@@ -504,7 +546,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		List<RangerDataMaskPolicyItem> rangerPolicyItems = (List<RangerDataMaskPolicyItem>) value;
-		if(rangerPolicyItems==null || rangerPolicyItems.size()==0){
+		if(rangerPolicyItems == null || rangerPolicyItems.size() == 0) {
 			return "";
 		}
 		String ret = jsonUtil.readListToString(rangerPolicyItems);
@@ -520,7 +562,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		List<RangerRowFilterPolicyItem> rangerPolicyItems = (List<RangerRowFilterPolicyItem>) value;
-		if(rangerPolicyItems==null || rangerPolicyItems.size()==0){
+		if(rangerPolicyItems == null || rangerPolicyItems.size() == 0) {
 			return "";
 		}
 		String ret = jsonUtil.readListToString(rangerPolicyItems);
@@ -529,7 +571,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		}
 		return ret;
 	}
-	private String processIsEnabledClassFieldNameForTrxLog(Object value){
+	private String processIsEnabledClassFieldNameForTrxLog(Object value) {
 		if(value == null)
 			return null;
 		String isEnabled= String.valueOf(value);
