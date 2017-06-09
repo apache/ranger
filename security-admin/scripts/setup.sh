@@ -71,9 +71,6 @@ audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
 audit_solr_password=$(get_prop 'audit_solr_password' $PROPFILE)
 audit_solr_zookeepers=$(get_prop 'audit_solr_zookeepers' $PROPFILE)
-audit_db_name=''
-audit_db_user=''
-audit_db_password=''
 policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
 policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
 policymgr_https_keystore_file=$(get_prop 'policymgr_https_keystore_file' $PROPFILE)
@@ -238,11 +235,7 @@ init_variables(){
 			exit 1
 		fi
 	fi
-	if [ "${audit_store}" == "db" ] ;then
-		audit_db_name=$(get_prop 'audit_db_name' $PROPFILE)
-		audit_db_user=$(get_prop 'audit_db_user' $PROPFILE)
-		audit_db_password=$(get_prop 'audit_db_password' $PROPFILE)
-	fi
+
 	db_ssl_enabled=`echo $db_ssl_enabled | tr '[:upper:]' '[:lower:]'`
 	if [ "${db_ssl_enabled}" != "true" ]
 	then
@@ -488,13 +481,6 @@ update_properties() {
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		if [ "${audit_store}" == "db" ]
-		then
-			propertyName=ranger.jpa.audit.jdbc.url
-			newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
@@ -525,12 +511,6 @@ update_properties() {
 		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		if [ "${audit_store}" == "db" ]
-		then
-			propertyName=ranger.jpa.audit.jdbc.url
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
@@ -550,20 +530,11 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
 		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
-		audit_db_name=`echo ${audit_db_name} | tr '[:upper:]' '[:lower:]'`
 		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
-		audit_db_user=`echo ${audit_db_user} | tr '[:upper:]' '[:lower:]'`
 
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-
-		if [ "${audit_store}" == "db" ]
-		then
-			propertyName=ranger.jpa.audit.jdbc.url
-			newPropertyValue="jdbc:postgresql://${DB_HOST}/${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
@@ -588,13 +559,6 @@ update_properties() {
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-		if [ "${audit_store}" == "db" ]
-		then
-			propertyName=ranger.jpa.audit.jdbc.url
-			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${audit_db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
@@ -617,13 +581,6 @@ update_properties() {
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-
-		if [ "${audit_store}" == "db" ]
-		then
-			propertyName=ranger.jpa.audit.jdbc.url
-			newPropertyValue="jdbc:sqlanywhere:database=${audit_db_name};host=${DB_HOST}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
@@ -672,12 +629,6 @@ update_properties() {
 	newPropertyValue="${db_user}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	if [ "${audit_store}" == "db" ]
-	then
-		propertyName=ranger.jpa.audit.jdbc.user
-		newPropertyValue="${audit_db_user}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-	fi
 	##########
 
 	keystore="${cred_keystore_filename}"
@@ -723,38 +674,6 @@ update_properties() {
 	fi
 
 	###########
-	if [ "${audit_store}" == "db" ]
-	then
-	    audit_db_password_alias=ranger.auditdb.password
-
-	    echo "Starting configuration for Audit DB credentials:"
-
-	    if [ "${keystore}" != "" ]
-	    then
-		$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$audit_db_password_alias" -v "$audit_db_password" -c 1
-
-			propertyName=ranger.jpa.audit.jdbc.credential.alias
-		newPropertyValue="${audit_db_password_alias}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-			propertyName=ranger.jpa.audit.jdbc.password
-		newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-	    else
-			propertyName=ranger.jpa.audit.jdbc.password
-		newPropertyValue="${audit_db_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-	    fi
-
-	    if test -f $keystore; then
-		chown -R ${unix_user}:${unix_group} ${keystore}
-		#echo "$keystore found."
-	    else
-		#echo "$keystore not found. so use clear text password"
-			propertyName=ranger.jpa.audit.jdbc.password
-		newPropertyValue="${audit_db_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-	    fi
-	fi
 	if [ "${audit_store}" == "solr" ]
 	then
 		if [ "${audit_solr_zookeepers}" != "" ]
