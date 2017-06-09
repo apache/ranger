@@ -18,36 +18,46 @@
 package org.apache.ranger.credentialapi;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestCredentialReader {
-  private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
-  @Before
-  public void setup() throws Exception {
-	buildks buildksOBJ=new buildks();	
-    String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-    int rc2=buildksOBJ.createCredential(argsCreateCommand);
-    assertEquals( 0, rc2);
-    assertTrue(rc2==0);
-  }
+    private String keystoreFile;
 
-  @Test
-  public void testPassword() throws Exception {  	
-    String password=CredentialReader.getDecryptedString(keystoreFile, "TestCredential2");
-    assertEquals( "PassworD123", password);
-    assertTrue(password,"PassworD123".equals(password));
-    //delete after use
+    @Before
+    public void setup() throws Exception {
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
+        keystoreFile = basedir + File.separator + "target" + File.separator + "testkeystore.jceks";
 
-    String[] argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
+        buildks buildksOBJ = new buildks();
+        String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
+        int rc2 = buildksOBJ.createCredential(argsCreateCommand);
+        assertEquals(0, rc2);
+    }
 
-	buildks buildksOBJ=new buildks();
-	buildksOBJ.deleteCredential(argsdeleteCommand, true);
+    @After
+    public void cleanup() throws Exception {
+        FileUtils.deleteQuietly(new File(keystoreFile));
+    }
 
-  }
+    @Test
+    public void testPassword() throws Exception {
+        String password = CredentialReader.getDecryptedString(keystoreFile, "TestCredential2");
+        assertEquals("PassworD123", password);
+
+        String[] argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};
+
+        buildks buildksOBJ = new buildks();
+        buildksOBJ.deleteCredential(argsdeleteCommand, true);
+
+    }
 
 }

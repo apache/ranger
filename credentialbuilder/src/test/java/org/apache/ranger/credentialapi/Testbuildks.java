@@ -21,56 +21,68 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Testbuildks {
-  private final String keystoreFile = new File(System.getProperty("user.home")+"/testkeystore.jceks").toURI().getPath();
-  @Test
-  public void testBuildKSsuccess() throws Exception {
-	buildks buildksOBJ=new buildks();
-    String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-    int rc1=buildksOBJ.createCredential(argsCreateCommand);
-    assertEquals( 0, rc1);
-    assertTrue(rc1==0);
 
-    String[] argsListCommand = {"list", "-provider","jceks://file@/" + keystoreFile};
-    int rc2=buildksOBJ.listCredential(argsListCommand);
-    assertEquals(0, rc2);
-    assertTrue(rc2==0);
+    private String keystoreFile;
 
-    String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
-    String pw=buildksOBJ.getCredential(argsGetCommand);
-    assertEquals("PassworD123", pw);
-    assertTrue(pw.equals("PassworD123"));
-    boolean getCredentialPassed = pw.equals("PassworD123");
-
-    String[] argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
-	boolean  isSilentMode      = true;
-
-    int rc3=buildksOBJ.deleteCredential(argsDeleteCommand, isSilentMode);
-    assertEquals(0, rc3);
-    assertTrue(rc3==0);
-
-    if(rc1==rc2 && rc2==rc3 && rc3==0 && getCredentialPassed){
-    	System.out.println("Test Case has been completed successfully..");    	
+    @Before
+    public void setup() throws Exception {
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
+        keystoreFile = basedir + File.separator + "target" + File.separator + "testkeystore.jceks";
     }
-  }
 
-  @Test
-  public void testInvalidProvider() throws Exception {
-	buildks buildksOBJ=new buildks();
-	String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
-    int rc1=buildksOBJ.createCredential(argsCreateCommand);
-    assertEquals(-1, rc1);
-    assertTrue(rc1==-1);
-  }
+    @After
+    public void cleanup() throws Exception {
+        FileUtils.deleteQuietly(new File(keystoreFile));
+    }
 
-  @Test
-  public void testInvalidCommand() throws Exception {
-	buildks buildksOBJ=new buildks();
-	String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
-    int rc1=buildksOBJ.createCredential(argsCreateCommand);
-    assertEquals(-1, rc1);
-    assertTrue(rc1==-1);
-  }
+    @Test
+    public void testBuildKSsuccess() throws Exception {
+        buildks buildksOBJ = new buildks();
+        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
+        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        assertEquals(0, rc1);
+
+        String[] argsListCommand = {"list", "-provider","jceks://file@/" + keystoreFile};
+        int rc2=buildksOBJ.listCredential(argsListCommand);
+        assertEquals(0, rc2);
+
+        String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
+        String pw = buildksOBJ.getCredential(argsGetCommand);
+        assertEquals("PassworD123", pw);
+        assertTrue(pw.equals("PassworD123"));
+        boolean getCredentialPassed = pw.equals("PassworD123");
+        assertTrue(getCredentialPassed);
+
+        String[] argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
+        boolean isSilentMode = true;
+
+        int rc3 = buildksOBJ.deleteCredential(argsDeleteCommand, isSilentMode);
+        assertEquals(0, rc3);
+    }
+
+    @Test
+    public void testInvalidProvider() throws Exception {
+        buildks buildksOBJ = new buildks();
+        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
+        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        assertEquals(-1, rc1);
+    }
+
+    @Test
+    public void testInvalidCommand() throws Exception {
+        buildks buildksOBJ = new buildks();
+        String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
+        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        assertEquals(-1, rc1);
+    }
 }
