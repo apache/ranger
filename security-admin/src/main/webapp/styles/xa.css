@@ -2182,3 +2182,14 @@ td.subgrid-custom-cell{
 .tag-attr-popover .table td:first-child{
         border-left-color:transparent;
 }
+.divider-popup{
+	padding: 4px;
+	background-color: #eeeeee;
+    text-align: center;
+    font-size: 12px;
+}
+.empty-text{
+    text-align: center;
+    font-weight: bold;
+    font-style: italic;
+}

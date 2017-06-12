@@ -385,6 +385,7 @@ define(function(require) {
                 pleaseSelectGroup       : 'Please select group.',
                 addSelectedUserGroup	: 'Please add selected user/group to permissions else user/group will not be added.',
                 maskingPolicyInfoMsg   	: 'Please ensure that users/groups listed in this policy have access to the column via an <b>Access Policy</b>. This policy does not implicitly grant access to the column.',
+                maskingPolicyInfoMsgForTagBased   	: 'Please ensure that users/groups listed in this policy have access to the tag via an <b>Access Policy</b>. This policy does not implicitly grant access to the tag.',
                 rowFilterPolicyInfoMsg 	: 'Please ensure that users/groups listed in this policy have access to the table via an <b>Access Policy</b>. This policy does not implicitly grant access to the table.',
                 udfPolicyViolation      : '<b> Warning !!</b>  : UDF create is a privileged operation. Please make sure you grant them to only trusted users.',
                 noServiceToExport       :'No service found to export policies.',
@@ -396,6 +397,7 @@ define(function(require) {
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
                 activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
+                pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.'
  
 			},
 			plcHldr : {

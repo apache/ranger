@@ -216,7 +216,11 @@ define(function(require){
 				this.selectedResourceTypes = {};
 				var resourceDefList = this.rangerServiceDefModel.get('resources');
 				if(XAUtil.isMaskingPolicy(this.model.get('policyType')) && XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef'))){
-					resourceDefList = this.rangerServiceDefModel.get('dataMaskDef').resources;
+					if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+						resourceDefList = this.rangerServiceDefModel.get('dataMaskDef').resources;
+					}else{
+						resourceDefList = this.rangerServiceDefModel.get('resources');
+					}
 				}
 				_.each(this.model.get('resources'),function(obj,key){
 					var resourceDef = _.findWhere(resourceDefList,{'name':key}),
@@ -270,7 +274,7 @@ define(function(require){
                                 rangerPolicyType : that.model.get('policyType')
                         }).render().el);
 						
-                        if( enableDenyAndExceptionsInPolicies ){
+                        if( enableDenyAndExceptionsInPolicies && !XAUtil.isMaskingPolicy(that.model.get('policyType')) ){
                                 that.$('[data-customfields="groupPermsAllowExclude"]').html(new PermissionList({
                                         collection : that.formInputAllowExceptionList,
                                         model 	   : that.model,
@@ -366,7 +370,11 @@ define(function(require){
 			//Check for masking policies
 			var resourceDef = this.rangerServiceDefModel.get('resources');
 			if(XAUtil.isMaskingPolicy(this.model.get('policyType')) && XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef'))){
-				resourceDef = this.rangerServiceDefModel.get('dataMaskDef').resources;
+				if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+					resourceDef = this.rangerServiceDefModel.get('dataMaskDef').resources;
+				}else{
+					resourceDef = this.rangerServiceDefModel.get('resources');
+				}
 			}
 			if(XAUtil.isRowFilterPolicy(this.model.get('policyType')) && XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef'))){
 				resourceDef = this.rangerServiceDefModel.get('rowFilterDef').resources;
@@ -638,7 +646,7 @@ define(function(require){
 			var resources = {},resourceName = options.type;
 			var isParent = true, name = options.type, val = null,isCurrentSameLevelField = true;
 			while(isParent){
-				var currentResource = _.findWhere(this.rangerServiceDefModel.get('resources'), {'name': name });
+				var currentResource = _.findWhere(this.getResources(), {'name': name });
 				//same level type
 				if(_.isUndefined(this.fields[currentResource.name])){
 					var sameLevelName = 'sameLevel'+currentResource.level;
@@ -691,8 +699,9 @@ define(function(require){
 					condSet = m.has('conditions') ? true : false;
 				}
 				if(m.has('dataMaskInfo') && !_.isUndefined(m.get('dataMaskInfo').dataMaskType)){
-					if(m.get('dataMaskInfo').dataMaskType === "CUSTOM"){
-						customMaskSet = _.isUndefined(m.get('dataMaskInfo').valueExpr) || _.isEmpty(m.get('dataMaskInfo')).valueExpr ? false : true;
+					if( m.get('dataMaskInfo').dataMaskType.indexOf("CUSTOM") >= 0 ){
+						var valueExpr = m.get('dataMaskInfo').valueExpr;
+						customMaskSet = _.isUndefined(valueExpr) || _.isEmpty(valueExpr.trim()) ? false : true;
 					}
 				}
 			});
@@ -716,6 +725,20 @@ define(function(require){
 		getPolicyBaseFieldNames : function(){
 			 var fields = ['isAuditEnabled','description'];
 			 return fields;
+		},
+		getResources : function(){
+			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
+				if(XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef'))){
+					if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+						return this.rangerServiceDefModel.get('dataMaskDef').resources;
+					}
+				}
+			}else if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
+				if(XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef'))){
+					return this.rangerServiceDefModel.get('rowFilterDef').resources;
+				}
+			}
+			return this.rangerServiceDefModel.get('resources');
 		}
 	});
 

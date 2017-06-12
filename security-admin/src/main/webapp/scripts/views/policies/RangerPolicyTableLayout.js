@@ -50,8 +50,11 @@ define(function(require){
 
 		templateHelpers : function(){
 			return {
-				rangerService:this.rangerService,
-				rangerPolicyType : this.collection.queryParams['policyType']
+				rangerService : this.rangerService,
+				rangerServiceDef : this.rangerServiceDefModel,
+				rangerPolicyType : this.collection.queryParams['policyType'],
+				isRenderAccessTab : XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef')) ? true 
+						  : XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef')) ? true : false
 			};
 		},
         
@@ -60,7 +63,6 @@ define(function(require){
     			return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
     		}
     		return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
-//    		return [];
    		},        
 
 		/** Layout sub regions */
@@ -113,7 +115,7 @@ define(function(require){
 			this.rangerServiceDefModel.fetch({
 				cache : false,
 				async : false
-                        });
+            });
 		},
 		
 		initializePolicies : function(policyType){
@@ -131,7 +133,7 @@ define(function(require){
 			this.addVisualSearch();
 			this.renderTable();
 			this.initializePolicies();
-                        XAUtil.searchInfoPopover(this.searchInfoArray , this.ui.iconSearchInfo , 'bottom');
+            XAUtil.searchInfoPopover(this.searchInfoArray , this.ui.iconSearchInfo , 'bottom');
 
 		},
 		/** all post render plugin initialization */
@@ -149,8 +151,8 @@ define(function(require){
 			this.showRequiredTabs()
 		},
 		showRequiredTabs : function(){
-			if(XAUtil.isEmptyObjectResourceVal(this.rangerServiceDefModel.get('dataMaskDef'))){
-				this.$el.find('li[data-tab="masking"]').hide();
+			if(XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef'))){
+				this.$el.find('li[data-tab="masking"]').show();
 			}
 			if(XAUtil.isEmptyObjectResourceVal(this.rangerServiceDefModel.get('rowFilterDef'))){
 				this.$el.find('li[data-tab="rowLevelFilter"]').hide();
@@ -322,7 +324,11 @@ define(function(require){
                         var that = this, resources = this.rangerServiceDefModel.get('resources');
                         var policyType = this.collection.queryParams['policyType'];
                         if(XAUtil.isMaskingPolicy(policyType) ){
-                                resources = this.rangerServiceDefModel.get('dataMaskDef')['resources'];
+                        	if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+                        		resources = this.rangerServiceDefModel.get('dataMaskDef')['resources'];
+                        	}else{
+                        		resources = this.rangerServiceDefModel.get('resources');
+                        	}    
                         }else if(XAUtil.isRowFilterPolicy(policyType) ){
                                 resources = this.rangerServiceDefModel.get('rowFilterDef')['resources'];
                         }

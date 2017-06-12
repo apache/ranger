@@ -47,44 +47,15 @@ language governing permissions and limitations under the License. --}}
 						</div>
 					</div>
 				</div>
-				<div class="form-indent-right" data-js="allowExcludePerm">
-					<p class="wrap-header reportSearchHeader ">Exclude from Allow
-						Conditions :</p>
-					&nbsp;
-					<div class="wrap position-relative">
-
-						<div class="" data-customfields="groupPermsAllowExclude">
-							<div class="control-group" style="margin-left: -100px;">
-								<label class="control-label">Exclude :</label>
-								<div class="controls">
-									<img src="images/loading.gif"
-										style="margin-left: 4%; margin-top: 1%;" />
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div data-js="denyConditionItems">
-				<p class="wrap-header bold formHeader">Deny Conditions :</p>
-				&nbsp;
-				<div class="wrap position-relative">
-					<div class="" data-customfields="groupPermsDeny">
-						<div class="control-group">
-							<label class="control-label">{{tt 'lbl.permissions'}}</label>
-							<div class="controls">
-								<img src="images/loading.gif"
-									style="margin-left: 4%; margin-top: 1%;" />
-							</div>
-						</div>
-					</div>
-					<div class="form-indent-right">
-						<p class="wrap-header reportSearchHeader">Exclude from Deny
+				{{#compare "Allow" "eq" conditionType}}
+					<div class="form-indent-right" data-js="allowExcludePerm">
+						<p class="wrap-header reportSearchHeader ">Exclude from Allow
 							Conditions :</p>
 						&nbsp;
 						<div class="wrap position-relative">
-							<div class="" data-customfields="groupPermsDenyExclude">
-								<div class="control-group">
+	
+							<div class="" data-customfields="groupPermsAllowExclude">
+								<div class="control-group" style="margin-left: -100px;">
 									<label class="control-label">Exclude :</label>
 									<div class="controls">
 										<img src="images/loading.gif"
@@ -94,8 +65,41 @@ language governing permissions and limitations under the License. --}}
 							</div>
 						</div>
 					</div>
-				</div>
+				{{/compare}}
 			</div>
+			{{#compare "Allow" "eq" conditionType}}
+				<div data-js="denyConditionItems">
+					<p class="wrap-header bold formHeader">Deny Conditions :</p>
+					&nbsp;
+					<div class="wrap position-relative">
+						<div class="" data-customfields="groupPermsDeny">
+							<div class="control-group">
+								<label class="control-label">{{tt 'lbl.permissions'}}</label>
+								<div class="controls">
+									<img src="images/loading.gif"
+										style="margin-left: 4%; margin-top: 1%;" />
+								</div>
+							</div>
+						</div>
+						<div class="form-indent-right">
+							<p class="wrap-header reportSearchHeader">Exclude from Deny
+								Conditions :</p>
+							&nbsp;
+							<div class="wrap position-relative">
+								<div class="" data-customfields="groupPermsDenyExclude">
+									<div class="control-group">
+										<label class="control-label">Exclude :</label>
+										<div class="controls">
+											<img src="images/loading.gif"
+												style="margin-left: 4%; margin-top: 1%;" />
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			{{/compare}}
 	</fieldset>
 </form>
 

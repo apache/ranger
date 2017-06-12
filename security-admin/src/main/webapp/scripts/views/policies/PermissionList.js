@@ -77,9 +77,9 @@ define(function(require) {
 		},
 
 		initialize : function(options) {
-                        _.extend(this, _.pick(options,'accessTypes','policyConditions','rangerServiceDefModel','rangerPolicyType'));
+            _.extend(this, _.pick(options,'accessTypes','policyConditions','rangerServiceDefModel','rangerPolicyType'));
 			this.setupPermissionsAndConditions();
-			
+			this.accessPermSetForTagMasking = false;
 		},
  
 		onRender : function() {
@@ -93,18 +93,18 @@ define(function(require) {
 			this.dropDownChange(this.ui.selectGroups);
 			this.dropDownChange(this.ui.selectUsers);
 			//render permissions and policy conditions
-			if(this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label){
-				this.renderPermsForTagBasedPolicies()
+			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
+				this.renderPermsForTagBasedPolicies();
+//				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)) this.renderMaskingTypesForTagBasedPolicies();
 			} else {
 				this.renderPerms();
+				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
+					this.renderMaskingType();
+				}
 			}
 			this.renderPolicyCondtion();
-			if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
-				this.renderMaskingType();
-			}
-			if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
-				this.renderRowLevelFilter();
-			}
+				
+			if(XAUtil.isRowFilterPolicy(this.rangerPolicyType))	this.renderRowLevelFilter();
 			
 		},
 		setupFormForEditMode : function() {
@@ -241,8 +241,10 @@ define(function(require) {
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
 			//set default access type 'select' for add new masking & row filter policies
-			if(!XAUtil.isAccessPolicy(this.rangerPolicyType) && !_.contains(this.permsIds,'select')) {
-				this.permsIds.push('select');
+			if(this.perms.length == 2){
+				if(!_.isUndefined(this.perms[0].value) && _.isEmpty(this.permsIds)){
+					this.permsIds.push(this.perms[0].value);	
+				}
 			}
 			//create x-editable for permissions
 			this.ui.addPerms.editable({
@@ -308,24 +310,37 @@ define(function(require) {
 			this.ui.addPerms.attr('title','Components Permissions')
 			this.ui.delegatedAdmin.parent('td').hide();
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
-
+			//select defatult access type if single component exists
+			if(this.perms.length == 1 && this.permsIds.length >= 0){
+				this.permsIds.push(this.perms[0].value)
+			}
+			var select2optn = { width :'600px' };
+			if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
+				select2optn = {width :'600px' , maximumSelectionSize : 1 };
+			}
 			//create x-editable for permissions
 			this.ui.addPerms.editable({
 			    emptytext : 'Add Permissions',
 				source: this.perms,
 				value : this.permsIds,
+				select2option : select2optn,
 				placement : 'top',
 				showbuttons : 'bottom',
 				display: function(values,srcData) {
+					if(_.contains(values,"on"))	values = _.without(values,"on");
 					if(_.isNull(values) || _.isEmpty(values)){
 						$(this).empty();
 						that.model.unset('accesses');
 						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
+						//disable Masking option for tag based
+						if(XAUtil.isMaskingPolicy(that.rangerPolicyType)){
+							that.accessPermSetForTagMasking = false;
+							that.model.unset('dataMaskInfo');
+							that.renderMaskingTypesForTagBasedPolicies();
+							that.$el.find('input[data-id="maskTypeCustom"]').val("");
+						}
 						return;
-					}
-					if(_.contains(values,"on")){
-						values = _.without(values,"on")
 					}
 					//To remove selectall options
 					values = _.uniq(values);
@@ -359,6 +374,14 @@ define(function(require) {
 					$(this).html(_.uniq(valArr).join(" "));
 					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
 					that.ui.addPermissionsSpan.attr('title','edit');
+					
+					//enabling add masking option for Tag-based
+					if(XAUtil.isMaskingPolicy(that.rangerPolicyType)){
+						that.accessPermSetForTagMasking = true;
+						var selectedComponent = _.map(items, function(m){ return m.type.substr(0,m.type.indexOf(":")); });
+						selectedComponent = _.uniq(selectedComponent);
+						that.renderMaskingTypesForTagBasedPolicies(selectedComponent)
+					}
 				},
 			}).on('hide',function(e){
 					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
@@ -383,6 +406,91 @@ define(function(require) {
 				pop.find('.arrow').removeClass('arrow')
 			});
 			
+		},
+		renderMaskingTypesForTagBasedPolicies :function(accessTypeSelectedComp){
+			var that = this, perms = [];
+			this.ui.addPerms.attr('data-type','radiolist')
+			this.ui.addPerms.attr('title','Components Permissions')
+			this.ui.delegatedAdmin.parent('td').hide();
+			
+			var maskingTypes = this.rangerServiceDefModel.get('dataMaskDef').maskTypes;
+			//get selected components masking types
+			_.each(maskingTypes,function(m){
+				var compName = m.name.substr(0,m.name.indexOf(":"));
+				if($.inArray(compName, accessTypeSelectedComp) >= 0){
+					perms.push({text:m.label, value:m.name});
+				}
+			}, this);
+			var maskTypeVal =  [];
+			if(!_.isUndefined(this.model.get('dataMaskInfo')) && !_.isUndefined(this.model.get('dataMaskInfo').dataMaskType)){
+				maskTypeVal = this.model.get('dataMaskInfo').dataMaskType;
+				if(!_.isUndefined(accessTypeSelectedComp) && !_.isUndefined(maskTypeVal)){
+					maskTypeVal = $.inArray(maskTypeVal.substr(0,maskTypeVal.indexOf(":")), accessTypeSelectedComp) >= 0 ? maskTypeVal : [];
+				}
+			}
+			//Reset Add Masking Options
+			this.ui.maskingType.editable("setValue",null);
+			this.ui.maskingType.editable("destroy");
+			that.ui.addMaskingTypeSpan.unbind( "click" );
+			this.$el.find('input[data-id="maskTypeCustom"]').unbind( "change" );
+			that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+			that.ui.addMaskingTypeSpan.attr('title','add');
+			this.$el.find('input[data-id="maskTypeCustom"]').css("display","none");
+			//create x-editable for permissions
+			this.ui.maskingType.editable({
+			    emptytext : 'Add Mask Type',
+				source: perms,
+				value : maskTypeVal,
+				placement : 'top',
+				showbuttons : 'bottom',
+				disabled : !this.accessPermSetForTagMasking,
+				display: function(value,srcData) {
+					if(_.isNull(value) || _.isUndefined(value) || _.isEmpty(value)){
+						$(this).empty();
+//						that.model.unset('accesses');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.attr('title','add');
+						return;
+					}
+					
+					var obj = _.findWhere(srcData, {'value' : value } );
+					// Save form data to model
+					that.model.set('dataMaskInfo', {'dataMaskType': value });
+					//Custom dataMaskType
+					if(value.indexOf("CUSTOM") >= 0){
+						$(this).siblings('[data-id="maskTypeCustom"]').css("display","");
+					}else{
+						$(this).siblings('[data-id="maskTypeCustom"]').css("display","none");
+						$(this).siblings('[data-id="maskTypeCustom"]').val(" ");
+					}
+					
+					$(this).html("<span class='label label-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
+							+ obj.text +"</span>");
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addMaskingTypeSpan.attr('title','edit');
+				},
+			}).on('hide',function(e){
+					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+			}).on('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+			});
+			that.ui.addMaskingTypeSpan.click(function(e) {
+				e.stopPropagation();
+				if(!that.accessPermSetForTagMasking){
+					XAUtil.alertPopup({ msg :localization.tt('msg.pleaseSelectAccessTypeForTagMasking') });
+					return;
+				}
+				that.$('a[data-js="maskingType"]').editable('toggle');
+			});
+			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
+				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
+					that.model.get('dataMaskInfo').valueExpr = e.currentTarget.value;
+				}
+			}).trigger('change');
+			if(!this.accessPermSetForTagMasking){
+				that.ui.maskingType.html('Add Mask Type');
+			}
 		},
 		clickOnPermissions : function(that) {
 			var selectAll = true;
@@ -699,21 +807,20 @@ define(function(require) {
 		},
 		getPermHeaders : function(){
 			var permList = [];
-			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
-				if(XAUtil.isAccessPolicy(this.rangerPolicyType)){
+			if(XAUtil.isAccessPolicy(this.rangerPolicyType) ){
+				if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 					permList.unshift(localization.tt('lbl.delegatedAdmin'));
-				}
-				if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
-					permList.unshift(localization.tt('lbl.rowLevelFilter'));
-					permList.unshift(localization.tt('lbl.accessTypes'));
-				}else if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
-					permList.unshift(localization.tt('lbl.selectMaskingOption'));
-					permList.unshift(localization.tt('lbl.accessTypes'));
-				}else{
 					permList.unshift(localization.tt('lbl.permissions'));
+				}else{
+					permList.unshift(localization.tt('lbl.componentPermissions'));
 				}
-			} else {
-				permList.unshift(localization.tt('lbl.componentPermissions'));
+			}
+			if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
+				permList.unshift(localization.tt('lbl.rowLevelFilter'));
+				permList.unshift(localization.tt('lbl.accessTypes'));
+			}else if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
+				permList.unshift(localization.tt('lbl.selectMaskingOption'));
+				permList.unshift(localization.tt('lbl.accessTypes'));
 			}
 			
 			if(!_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))){
@@ -736,6 +843,7 @@ define(function(require) {
 					this.accessTypes =  _.map(rowFilterDef.accessTypes, function(m){return _.findWhere(this.accessTypes, {'name' : m.name });}, this);
 				}
 			}
+			
 		},
 		makePolicyItemSortable : function(){
 			var that = this, draggedModel;

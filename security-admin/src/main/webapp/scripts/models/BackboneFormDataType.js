@@ -33,7 +33,10 @@ define(function(require) {
 			var getResourceConfigs = function(configs){
 				if(XAUtils.isMaskingPolicy(form.model.get('policyType'))){
 					if(XAUtils.isRenderMasking(form.rangerServiceDefModel.get('dataMaskDef'))){
-						configs = form.rangerServiceDefModel.get('dataMaskDef').resources;
+						var resources = form.rangerServiceDefModel.get('dataMaskDef').resources;
+						if(!_.isEmpty(resources)){
+							configs = form.rangerServiceDefModel.get('dataMaskDef').resources;
+						}
 						configs = _.map(configs, function(obj){ obj.type =  'string'; return obj; });
 						return configs;
 					}
