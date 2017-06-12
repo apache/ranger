@@ -540,7 +540,21 @@
 		var XAEnums		= require('utils/XAEnums');
 		return XAUtil.isRenderRowFilter(XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value);
 	});
-	
+	Handlebars.registerHelper('showMaskingTab', function(context, options) {
+		var dataMaskDef = context.rangerServiceDef.get('dataMaskDef');
+		
+		return ( !_.isUndefined(dataMaskDef) 
+				&& ( !_.isUndefined(dataMaskDef.accessTypes) ) && dataMaskDef.accessTypes.length > 0 
+				&& ( !_.isUndefined(dataMaskDef.maskTypes) )   && dataMaskDef.maskTypes.length > 0 )
+				? options.fn(this) : options.inverse(this);
+	});
+	Handlebars.registerHelper('showRowLevelTab', function(context, options) {
+		var rowFilterDef = context.rangerServiceDef.get('rowFilterDef');
+		return ( !_.isUndefined(rowFilterDef) 
+				&& ( !_.isUndefined(rowFilterDef.accessTypes) ) && rowFilterDef.accessTypes.length > 0 
+				&& ( !_.isUndefined(rowFilterDef.resources) ) && rowFilterDef.resources.length > 0 )
+				? options.fn(this) : options.inverse(this); 
+	});
 
 	return HHelpers;
 });

@@ -1255,8 +1255,8 @@ define(function(require) {
 		return type == XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ? true : false;
 	};
 	XAUtils.isRenderMasking = function(dataMaskDef){
-		return (!_.isUndefined(dataMaskDef) && !_.isUndefined(dataMaskDef.resources) 
-			&& dataMaskDef.resources.length > 0) ? true : false; 
+		return (!_.isUndefined(dataMaskDef) && !_.isUndefined(dataMaskDef.maskTypes) 
+			&& dataMaskDef.maskTypes.length > 0) ? true : false; 
 	};
 	XAUtils.isAccessPolicy = function(type){
 		return type == XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value ? true : false;
@@ -1329,5 +1329,8 @@ define(function(require) {
                         return '--';
                 }
         };
+        XAUtils.isTagBasedDef = function(def){
+        	return def.get('name') == XAEnums.ServiceType.SERVICE_TAG.label ? true : false;
+        }
 	return XAUtils;
 });

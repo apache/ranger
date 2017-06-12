@@ -45,7 +45,11 @@ define(function(require){
     	templateHelpers : function(){
 		var infoMsg = '', displayClass = 'hide';
 		if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
-			infoMsg = localization.tt('msg.maskingPolicyInfoMsg'), displayClass = 'show';
+			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
+				infoMsg = localization.tt('msg.maskingPolicyInfoMsgForTagBased'), displayClass = 'show';	
+			}else{
+				infoMsg = localization.tt('msg.maskingPolicyInfoMsg'), displayClass = 'show';
+			}
 		}else if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
 			infoMsg = localization.tt('msg.rowFilterPolicyInfoMsg'), displayClass = 'show';
 		}

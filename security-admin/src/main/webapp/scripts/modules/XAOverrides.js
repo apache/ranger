@@ -697,7 +697,7 @@
 	       **/
 	      
 	      var TagChecklist = function (options) {
-	          this.init('tagchecklist', options, TagChecklist.defaults);
+	    	  this.init('tagchecklist', options, TagChecklist.defaults);
 	      };
 
 	      $.fn.editableutils.inherit(TagChecklist, $.fn.editabletypes.list);
@@ -730,7 +730,7 @@
 	              $('<div>').append($selectComp).appendTo(this.$tpl);
 	              $table.append($tbody).appendTo(this.$tpl);
 	              
-	              this.$tpl.find('[data-id="selectComp"]').select2({width :'600px'}).on('change',function(e){
+	              this.$tpl.find('[data-id="selectComp"]').select2(this.options.select2option).on('change',function(e){
 	            	  
 	            	  if(!_.isUndefined(e.added)){
 	            		  that.addTr(e.added.text)
@@ -965,7 +965,8 @@
 	          @type string
 	          @default ','
 	          **/         
-	          separator: ','
+	          separator: ',',
+	          select2option : {}
 	      });
 
 	      $.fn.editabletypes.tagchecklist = TagChecklist;
