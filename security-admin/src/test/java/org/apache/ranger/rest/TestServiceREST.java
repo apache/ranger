@@ -330,7 +330,7 @@ public class TestServiceREST {
 
 		Mockito.when(
 				svcStore.createServiceDef((RangerServiceDef) Mockito
-						.anyObject())).thenReturn(rangerServiceDef);
+						.any())).thenReturn(rangerServiceDef);
 
 		RangerServiceDef dbRangerServiceDef = serviceREST
 				.createServiceDef(rangerServiceDef);
@@ -370,7 +370,7 @@ public class TestServiceREST {
 
 		Mockito.when(
 				svcStore.updateServiceDef((RangerServiceDef) Mockito
-						.anyObject())).thenReturn(rangerServiceDef);
+						.any())).thenReturn(rangerServiceDef);
 
 		RangerServiceDef dbRangerServiceDef = serviceREST
 				.updateServiceDef(rangerServiceDef);
