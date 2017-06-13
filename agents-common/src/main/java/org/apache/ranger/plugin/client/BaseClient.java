@@ -43,9 +43,9 @@ public abstract class BaseClient {
   	private String defaultConfigFile;
 	private Subject loginSubject;
 	private HadoopConfigHolder configHolder;
-	
+
 	protected Map<String,String> connectionProperties;
-	
+
   public BaseClient(String svcName, Map<String,String> connectionProperties) {
     this(svcName, connectionProperties, null);
   }
@@ -57,8 +57,8 @@ public abstract class BaseClient {
 		init();
 		login();
 	}
-	
-	
+
+
 	private void init() {
 		if (connectionProperties == null) {
 			configHolder = HadoopConfigHolder.getInstance(serviceName);
@@ -67,8 +67,8 @@ public abstract class BaseClient {
 			configHolder = HadoopConfigHolder.getInstance(serviceName,connectionProperties, defaultConfigFile);
 		}
 	}
-	
-	
+
+
 	protected void login() {
 		ClassLoader prevCl = Thread.currentThread().getContextClassLoader();
 		String errMsg = " You can still save the repository and start creating "
@@ -86,7 +86,7 @@ public abstract class BaseClient {
 				 nameRules = DEFAULT_NAME_RULE;
 			 }
 			 String userName = configHolder.getUserName();
-			 if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){				
+			 if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){
 				 if (userName == null) {
 					 String msgDesc = "Unable to find login username for hadoop environment, ["
 						+ serviceName + "]";
@@ -109,7 +109,17 @@ public abstract class BaseClient {
 				 }
 				 else {
 					 String encryptedPwd = configHolder.getPassword();
-					 String password = PasswordUtils.decryptPassword(encryptedPwd);
+					 String password = null;
+					 try {
+					     password = PasswordUtils.decryptPassword(encryptedPwd);
+					 } catch(Exception ex) {
+					     LOG.info("Password decryption failed; trying connection with received password string");
+					     password = null;
+					 } finally {
+					     if (password == null) {
+					         password = encryptedPwd;
+					     }
+					 }
 					 if ( configHolder.isKerberosAuthentication() ) {
 						 LOG.info("Init Login: using username/password");
 						 loginSubject = SecureClientLogin.loginUserWithPassword(userName, password);
@@ -125,7 +135,7 @@ public abstract class BaseClient {
 					 loginSubject = SecureClientLogin.loginUserFromKeytab(lookupPrincipal, lookupKeytab, nameRules);
 				 }else{
 					 LOG.info("Init Login: security not enabled, using username");
-					 loginSubject = SecureClientLogin.login(userName);					
+					 loginSubject = SecureClientLogin.login(userName);
 				 }
 			 }
 		} catch (IOException ioe) {
@@ -147,7 +157,7 @@ public abstract class BaseClient {
 			Thread.currentThread().setContextClassLoader(prevCl);
 		}
 	}
-	
+
 	public String getSerivceName() {
 		return serviceName;
 	}
@@ -159,7 +169,7 @@ public abstract class BaseClient {
 	protected HadoopConfigHolder getConfigHolder() {
 		return configHolder;
 	}
-	
+
 	public static void generateResponseDataMap(boolean connectivityStatus,
 			String message, String description, Long objectId,
 			String fieldName, Map<String, Object> responseData) {
