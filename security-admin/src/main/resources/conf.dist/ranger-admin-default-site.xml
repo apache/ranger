@@ -552,4 +552,8 @@
                <name>ranger.password.encryption.algorithm</name>
                <value>PBEWithMD5AndDES</value>
        </property>
+	   <property>
+			<name>ranger.default.browser-useragents</name>
+			<value>Mozilla,Opera,Chrome</value>
+	   </property>
 </configuration>
