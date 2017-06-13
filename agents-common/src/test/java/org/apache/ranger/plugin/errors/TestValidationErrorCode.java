@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.errors;
 
 import com.google.common.collect.ImmutableSet;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.junit.Assert;
 import org.junit.Test;
 

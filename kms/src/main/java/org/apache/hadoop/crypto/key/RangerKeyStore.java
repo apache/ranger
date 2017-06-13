@@ -321,7 +321,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 					  xxRangerKeyStore = new XXRangerKeyStore();
 					  keyStoreExists = false;
 				  }
-				  xxRangerKeyStore = mapToEntityBean(rangerKeyStore, xxRangerKeyStore, 0);		
+				  xxRangerKeyStore = mapToEntityBean(rangerKeyStore, xxRangerKeyStore);
 				  if (keyStoreExists) {
 					  xxRangerKeyStore = rangerKMSDao.update(xxRangerKeyStore);
 				  } else {
@@ -334,7 +334,7 @@ public class RangerKeyStore extends KeyStoreSpi {
   		}
 	}
 
-	private XXRangerKeyStore mapToEntityBean(XXRangerKeyStore rangerKMSKeyStore, XXRangerKeyStore xxRangerKeyStore,int i) {
+	private XXRangerKeyStore mapToEntityBean(XXRangerKeyStore rangerKMSKeyStore, XXRangerKeyStore xxRangerKeyStore) {
 		xxRangerKeyStore.setAlias(rangerKMSKeyStore.getAlias());
 		xxRangerKeyStore.setCreatedDate(rangerKMSKeyStore.getCreatedDate());
 		xxRangerKeyStore.setEncoded(rangerKMSKeyStore.getEncoded());
