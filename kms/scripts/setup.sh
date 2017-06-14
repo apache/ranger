@@ -753,11 +753,14 @@ update_properties() {
 #=====================================================================
 
 setup_unix_user_group(){
-
 	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group}";
-
-    groupadd ${unix_group}
-    check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
+	#create group if it does not exist
+	egrep "^$unix_group" /etc/group >& /dev/null
+	if [ $? -ne 0 ]
+	then
+		groupadd ${unix_group}
+		check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
+	fi
 
 	id -u ${unix_user} > /dev/null 2>&1
 
