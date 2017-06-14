@@ -309,9 +309,13 @@ define(function(require) {
 		   var view 			= require('views/policies/RangerPolicyCreate');
 		   var RangerService	= require('models/RangerService');
 		   var RangerPolicy		= require('models/RangerPolicy');
+		   var RangerPolicyList  = require('collections/RangerPolicyList');
+		   var XAUtil			 = require('utils/XAUtils');
 		   
 		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicy = new RangerPolicy({ id : policyId});
+		   rangerPolicy.collection =new RangerPolicyList();
+		   rangerPolicy.collection.url = XAUtil.getServicePoliciesURL(serviceId);
 		   rangerService.fetch({
 			   cache : false,
 			   async : false,
