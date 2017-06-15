@@ -41,6 +41,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -284,19 +285,26 @@ public class RangerRESTClient {
 					kmList = keyManagerFactory.getKeyManagers();
 				} else {
 					LOG.error("Unable to obtain keystore from file [" + mKeyStoreFile + "]");
+					throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile);
 				}
 			} catch (KeyStoreException e) {
-				LOG.error("Unable to obtain from KeyStore", e);
+				LOG.error("Unable to obtain from KeyStore :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to init keystore:" + e.getMessage(), e);
 			} catch (NoSuchAlgorithmException e) {
-				LOG.error("SSL algorithm is available in the environment", e);
+				LOG.error("SSL algorithm is NOT available in the environment", e);
+				throw new IllegalStateException("SSL algorithm is NOT available in the environment :" + e.getMessage(), e);
 			} catch (CertificateException e) {
 				LOG.error("Unable to obtain the requested certification ", e);
+				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
+				LOG.error("Unable to find the necessary SSL Keystore Files", e);
+				throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
+				LOG.error("Unable to read the necessary SSL Keystore Files", e);
+				throw new IllegalStateException("Unable to read keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (UnrecoverableKeyException e) {
 				LOG.error("Unable to recover the key from keystore", e);
+				throw new IllegalStateException("Unable to recover the key from keystore :" + mKeyStoreFile+", error :" + e.getMessage(), e);
 			} finally {
 				close(in, mKeyStoreFile);
 			}
@@ -327,18 +335,24 @@ public class RangerRESTClient {
 
 					tmList = trustManagerFactory.getTrustManagers();
 				} else {
-					LOG.error("Unable to obtain keystore from file [" + mTrustStoreFile + "]");
+					LOG.error("Unable to obtain truststore from file [" + mTrustStoreFile + "]");
+					throw new IllegalStateException("Unable to find truststore file :" + mTrustStoreFile);
 				}
 			} catch (KeyStoreException e) {
 				LOG.error("Unable to obtain from KeyStore", e);
+				throw new IllegalStateException("Unable to init keystore:" + e.getMessage(), e);
 			} catch (NoSuchAlgorithmException e) {
-				LOG.error("SSL algorithm is available in the environment", e);
+				LOG.error("SSL algorithm is NOT available in the environment :" + e.getMessage(), e);
+				throw new IllegalStateException("SSL algorithm is NOT available in the environment :" + e.getMessage(), e);
 			} catch (CertificateException e) {
-				LOG.error("Unable to obtain the requested certification ", e);
+				LOG.error("Unable to obtain the requested certification :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
+				LOG.error("Unable to find the necessary SSL TrustStore File:" + mTrustStoreFile, e);
+				throw new IllegalStateException("Unable to find trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
+				LOG.error("Unable to read the necessary SSL TrustStore Files :" + mTrustStoreFile, e);
+				throw new IllegalStateException("Unable to read the trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
 			} finally {
 				close(in, mTrustStoreFile);
 			}
@@ -346,24 +360,22 @@ public class RangerRESTClient {
 		
 		return tmList;
 	}
-	
+
 	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
+	        Validate.notNull(tmList, "TrustManager is not specified");
 		try {
-			if(tmList != null) {
-				SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
-	
-				sslContext.init(kmList, tmList, new SecureRandom());
-				
-				return sslContext;
-			}
+			SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
+
+			sslContext.init(kmList, tmList, new SecureRandom());
+
+			return sslContext;
 		} catch (NoSuchAlgorithmException e) {
-			LOG.error("SSL algorithm is available in the environment", e);
+			LOG.error("SSL algorithm is not available in the environment", e);
+			throw new IllegalStateException("SSL algorithm is not available in the environment: " + e.getMessage(), e);
 		} catch (KeyManagementException e) {
 			LOG.error("Unable to initials the SSLContext", e);
-		}catch (Exception e) {
-			LOG.error("Unable to initialize the SSLContext", e);
+			throw new IllegalStateException("Unable to initials the SSLContex: " + e.getMessage(), e);
 		}
-		return null;
 	}
 
 	private String getCredential(String url, String alias) {
