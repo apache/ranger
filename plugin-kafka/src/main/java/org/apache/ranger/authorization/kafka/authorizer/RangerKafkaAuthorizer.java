@@ -133,8 +133,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		String userName = null;
 		if (session.principal() != null) {
 			userName = session.principal().getName();
-			userName = StringUtils.substringBefore(userName, "/");
-			userName = StringUtils.substringBefore(userName, "@");
 		}
 		java.util.Set<String> userGroups = MiscUtil
 				.getGroupsForRequestUser(userName);
