@@ -22,8 +22,6 @@
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
-CONF_FILE=$PWD/ews/webapp/WEB-INF/classes/conf
-ETC_CONF_FILE=/etc/ranger/kms/conf
 pidFolderName='/var/run/ranger_kms'
 if [ ! -d "${pidFolderName}" ]; then
     mkdir -p "${pidFolderName}"
@@ -234,36 +232,11 @@ init_variables(){
 	fi
 	log "[I] DB_FLAVOR=${DB_FLAVOR}"
 	########## HSM Config ##########
-	       
-        propertyName=ranger.ks.hsm.enabled
-        HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
-        password_validation "$KMS_MASTER_KEY_PASSWD" "KMS Master key"   
 
-	#getPropertyFromFile 'db_root_user' $PROPFILE db_root_user
-	#getPropertyFromFile 'db_root_password' $PROPFILE db_user
-	#getPropertyFromFile 'db_user' $PROPFILE db_user
-	#getPropertyFromFile 'db_password' $PROPFILE db_password
-	
-	#if [ -L ${CONF_FILE} ]
-   #     then
-   #             log "Deleting conf symlink"
-   #             rm -f ${CONF_FILE}
-   #     fi
+	propertyName=ranger.ks.hsm.enabled
+	HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
+	password_validation "$KMS_MASTER_KEY_PASSWD" "KMS Master key"
 
-   #     if [ -f ${ETC_CONF_FILE} ]
-   #     then
-   #             log "Deleting /etc/ranger/kms/conf file"
-   #             rm -f ${ETC_CONF_FILE}
-   #     fi
-
-   #     if [ ! -d  ${ETC_CONF_FILE} ]
-   #     then
-   #             log "Creating /etc/ranger/kms/conf dir"
-   #             mkdir -p ${ETC_CONF_FILE}
-   #     fi
-
-   #     log "Create link of conf -> /etc/ranger/kms/conf"
-   #     ln -sf ${ETC_CONF_FILE} ${CONF_FILE}	
 	db_ssl_enabled=`echo $db_ssl_enabled | tr '[:upper:]' '[:lower:]'`
 	if [ "${db_ssl_enabled}" != "true" ]
 	then
