@@ -52,8 +52,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -78,6 +80,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public static final String JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT = "originalUrl";
 	public static final String LOCAL_LOGIN_URL = "locallogin";
 	public static final String DEFAULT_BROWSER_USERAGENT = "ranger.default.browser-useragents";
+        public static final String PROXY_RANGER_URL_PATH = "/ranger";
 
 	private SSOAuthenticationProperties jwtProperties;
 
@@ -116,6 +119,9 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)throws IOException, ServletException {
 		
 		HttpServletRequest httpRequest = (HttpServletRequest)servletRequest;
+
+                String xForwardedURL = constructForwardableURL(httpRequest);
+
 		if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()){
 			synchronized(httpRequest.getServletContext()){
 				if(httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()) != null && httpRequest.getServletContext().getAttribute(httpRequest.getRequestedSessionId()).toString().equals("locallogin")){
@@ -178,7 +184,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 						// if the token is not valid then redirect to knox sso
 						else {
 							if (isWebUserAgent(userAgent)) {
-								String ssourl = constructLoginURL(httpRequest);
+                                                                String ssourl = constructLoginURL(httpRequest, xForwardedURL);
 								if (LOG.isDebugEnabled()) {
 									LOG.debug("SSO URL = " + ssourl);
 								}
@@ -194,7 +200,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				// if the jwt token is not available then redirect it to knox sso
 				else {
 					if (isWebUserAgent(userAgent)) {
-						String ssourl = constructLoginURL(httpRequest);
+                                                String ssourl = constructLoginURL(httpRequest, xForwardedURL);
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("SSO URL = " + ssourl);
 						}
@@ -221,6 +227,39 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			filterChain.doFilter(servletRequest, servletResponse);	
 		}
 	}
+
+        private String constructForwardableURL(HttpServletRequest httpRequest){
+                String xForwardedProto = null;
+                String xForwardedHost = null;
+                String xForwardedContext = null;
+                Enumeration<String> names = httpRequest.getHeaderNames();
+                while (names.hasMoreElements()) {
+                        String name = (String) names.nextElement();
+                        Enumeration<String> values = httpRequest.getHeaders(name);
+                        String value = null;
+                        if (values != null) {
+                                while (values.hasMoreElements()) {
+                                        value = (String) values.nextElement();
+                                }
+                        }
+                        if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
+                                if (name.equalsIgnoreCase("x-forwarded-proto")) {
+                                        xForwardedProto = value;
+                                } else if (name.equalsIgnoreCase("x-forwarded-host")) {
+                                        xForwardedHost = value;
+                                } else if (name.equalsIgnoreCase("x-forwarded-context")) {
+                                        xForwardedContext = value;
+                                }
+                        }
+                }
+                String xForwardedURL = null;
+                if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
+                        xForwardedURL = xForwardedProto + "://" + xForwardedHost
+                                        + xForwardedContext + PROXY_RANGER_URL_PATH
+                                        + httpRequest.getRequestURI();
+                }
+                return xForwardedURL;
+        }
 
 	private Authentication getGrantedAuthority(Authentication authentication) {
 		UsernamePasswordAuthenticationToken result=null;
@@ -326,12 +365,17 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	 *            for getting the original request URL
 	 * @return url to use as login url for redirect
 	 */
-	protected String constructLoginURL(HttpServletRequest request) {
+        protected String constructLoginURL(HttpServletRequest request, String xForwardedURL) {
 		String delimiter = "?";
 		if (authenticationProviderUrl.contains("?")) {
 			delimiter = "&";
 		}
-		String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=" + request.getRequestURL().append(getOriginalQueryString(request));
+                String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=";
+                if (StringUtils.trimToNull(xForwardedURL) != null) {
+                        loginURL += xForwardedURL + getOriginalQueryString(request);
+                } else {
+                        loginURL += request.getRequestURL().append(getOriginalQueryString(request));
+                }
 		return loginURL;
 	}
 
