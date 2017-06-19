@@ -340,7 +340,12 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
-        </dependencies>
+			<dependency>
+				<groupId>com.webcohesion.enunciate</groupId>
+				<artifactId>enunciate-core-annotations</artifactId>
+				<version>2.8.0</version>
+			</dependency>
+		</dependencies>
     </dependencyManagement>
     <build>
         <pluginManagement>
@@ -462,7 +467,27 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.5.2</version>
                 </plugin>
-            </plugins>
+				<plugin>
+					<groupId>com.webcohesion.enunciate</groupId>
+					<artifactId>enunciate-maven-plugin</artifactId>
+					<version>2.8.0</version>
+					<configuration>
+						<configFile>enunciate.xml</configFile>
+						<enunciateArtifactId/>
+						<docsDir>docs/src/site/</docsDir>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>docs</goal>
+							</goals>
+							<phase>package</phase>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
         </pluginManagement>
         <plugins>
             <plugin>
@@ -563,6 +588,8 @@
                         <exclude>**/.pydevproject</exclude>
                         <exclude>**/derby.log</exclude>
                         <exclude>**/*.jaas</exclude>
+                        <exclude>**/target/apidocs/**</exclude>
+                        <exclude>**/target/kms/apidocs/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

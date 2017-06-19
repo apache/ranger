@@ -475,7 +475,11 @@
             <artifactId>guice</artifactId>
             <version>3.0</version>
         </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>com.webcohesion.enunciate</groupId>
+			<artifactId>enunciate-core-annotations</artifactId>
+		</dependency>
+	</dependencies>
     <build>
         <pluginManagement>
             <plugins>
@@ -557,6 +561,17 @@
                     </execution>
                 </executions>
             </plugin>
+			<plugin>
+				<groupId>com.webcohesion.enunciate</groupId>
+				<artifactId>enunciate-maven-plugin</artifactId>
+				<configuration>
+					<configFile>enunciate.xml</configFile>
+					<enunciateArtifactId/>
+					<docsDir>docs/target/</docsDir>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
         </plugins>
         <resources>
             <resource>
