@@ -162,6 +162,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 		try {
 			if (logger.isDebugEnabled()) {
+				logger.debug("==> RangerSolrAuthorizer.authorize()");
 				logAuthorizationConext(context);
 			}
 
@@ -228,7 +229,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			response = new AuthorizationResponse(200);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("context=" + context + ": returning: " + isDenied);
+			logger.debug( "<== RangerSolrAuthorizer.authorize() result: " + isDenied + "Response : " + response.getMessage());
 		}
 		return response;
 	}
@@ -238,9 +239,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	 */
 	private void logAuthorizationConext(AuthorizationContext context) {
 		try {
-			// Note: This method should be called with isDebugEnabled() or
-			// isInfoEnabled() scope
-
+			// Note: This method should be called with isDebugEnabled()
 			String collections = "";
 			int i = -1;
 			for (CollectionRequest collectionRequest : context
@@ -280,15 +279,30 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 			String userName = getUserName(context);
 			Set<String> groups = getGroupsForUser(userName);
+			String resource    = context.getResource();
+			String solrParams  = "";
+			try {
+				solrParams = context.getParams().toQueryString();
+			} catch (Throwable t) {
+				//Exception ignored
+			}
+			RequestType requestType  = context.getRequestType();
+			String 		accessType   = mapToRangerAccessType(context);
+			Principal	principal	 = context.getUserPrincipal();
 
-			logger.info("AuthorizationContext: context.getResource()="
-					+ context.getResource() + ", solarParams="
-					+ context.getParams() + ", requestType="
-					+ context.getRequestType() + ", ranger.requestType="
-					+ mapToRangerAccessType(context) + ", userPrincipal="
-					+ context.getUserPrincipal() + ", userName=" + userName
-					+ ", groups=" + groups + ", ipAddress=" + ipAddress
-					+ ", collections=" + collections + ", headers=" + headers);
+			String contextString = new String("AuthorizationContext: ");
+			contextString  = contextString + "context.getResource()= " + ((resource != null ) ? resource : "");
+			contextString  = contextString + ", solarParams= " + (( solrParams != null ) ? solrParams : "");
+			contextString  = contextString + ", requestType= " + (( requestType != null ) ? requestType : "");
+			contextString  = contextString + ", ranger.requestType= " + ((accessType != null ) ? accessType : "");
+			contextString  = contextString + ", userPrincipal= " + ((principal != null ) ? principal : "");
+			contextString  = contextString + ", userName= "  + userName;
+			contextString  = contextString + ", groups= " + groups;
+			contextString  = contextString + ", ipAddress= " + ipAddress;
+			contextString  = contextString + ", collections= " + collections;
+			contextString  = contextString + ", headers= " + headers;
+
+			logger.debug(contextString);
 		} catch (Throwable t) {
 			logger.error("Error getting request context!!!", t);
 		}
