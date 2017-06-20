@@ -66,6 +66,7 @@ db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 KMS_MASTER_KEY_PASSWD=$(get_prop 'KMS_MASTER_KEY_PASSWD' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
+unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 POLICY_MGR_URL=$(get_prop 'POLICY_MGR_URL' $PROPFILE)
 REPOSITORY_NAME=$(get_prop 'REPOSITORY_NAME' $PROPFILE)
@@ -186,13 +187,18 @@ updatePropertyToFilePy(){
     check_ret_status $? "Update property failed for: {'$1'}"
 }
 
-
-init_logfiles () {
+check_user_pwd(){
+    if [ -z "$1" ]; then
+        log "[E] The unix user password is empty. Please set user password.";
+        exit 1;
+    fi
+}
+init_logfiles(){
     for f in $LOGFILES; do
         touch $f
     done
 }
-password_validation() {
+password_validation(){
         if [ -z "$1" ]
         then
                 log "[I] Blank password is not allowed for" $2". Please enter valid password."
@@ -735,13 +741,24 @@ setup_unix_user_group(){
 		check_ret_status_for_groupadd $? "Creating group ${unix_group} failed"
 	fi
 
+	#create user if it does not exists
 	id -u ${unix_user} > /dev/null 2>&1
-
 	if [ $? -ne 0 ]
 	then
+		check_user_pwd ${unix_user_pwd}
 	    log "[I] Creating new user and adding to group";
         useradd ${unix_user} -g ${unix_group} -m
 		check_ret_status $? "useradd ${unix_user} failed"
+
+		passwdtmpfile=passwd.tmp
+		if [  -f "$passwdtmpfile" ]; then
+			rm -rf  ${passwdtmpfile}
+		fi
+		cat> ${passwdtmpfile} << EOF
+${unix_user}:${unix_user_pwd}
+EOF
+		chpasswd <  ${passwdtmpfile}
+		rm -rf  ${passwdtmpfile}
 	else
 	    log "[I] User already exists, adding it to group";
 	    usermod -g ${unix_group} ${unix_user}
