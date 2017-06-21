@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.services.tag.RangerServiceTag;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -303,6 +304,10 @@ public abstract class AbstractServiceStore implements ServiceStore {
 			updateNeeded = true;
 		}
 
+		boolean resourceUpdated = updateResourceInTagServiceDef(tagServiceDef);
+
+		updateNeeded = updateNeeded || resourceUpdated;
+
 		if (updateNeeded) {
 			try {
 				updateServiceDef(tagServiceDef);
@@ -345,6 +350,8 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		updateTagServiceDefForDeletingDataMaskDef(tagServiceDef, serviceDefName);
 		updateTagServiceDefForDeletingRowFilterDef(tagServiceDef, serviceDefName);
+
+		updateResourceInTagServiceDef(tagServiceDef);
 
 		try {
 			updateServiceDef(tagServiceDef);
@@ -547,5 +554,54 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== AbstractServiceStore.updateTagServiceDefForDeletingRowFilterDef(" + serviceDefName + ")");
 		}
+	}
+
+	private boolean updateResourceInTagServiceDef(RangerServiceDef tagServiceDef) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AbstractServiceStore.updateResourceInTagServiceDef(" + tagServiceDef + ")");
+		}
+		boolean ret = false;
+
+		RangerServiceDef.RangerResourceDef tagResource = new RangerServiceDef.RangerResourceDef();
+		tagResource.setName(RangerServiceTag.TAG_RESOURCE_NAME);
+		List<RangerServiceDef.RangerResourceDef> resources = new ArrayList<>();
+		resources.add(tagResource);
+
+		RangerServiceDef.RangerDataMaskDef dataMaskDef = tagServiceDef.getDataMaskDef();
+
+		if (dataMaskDef != null) {
+			if (CollectionUtils.isNotEmpty(dataMaskDef.getAccessTypes())) {
+				if (CollectionUtils.isEmpty(dataMaskDef.getResources())) {
+					dataMaskDef.setResources(resources);
+					ret = true;
+				}
+			} else {
+				if (CollectionUtils.isNotEmpty(dataMaskDef.getResources())) {
+					dataMaskDef.setResources(null);
+					ret = true;
+				}
+			}
+		}
+
+		RangerServiceDef.RangerRowFilterDef rowFilterDef = tagServiceDef.getRowFilterDef();
+
+		if (rowFilterDef != null) {
+			if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
+				if (CollectionUtils.isEmpty(rowFilterDef.getResources())) {
+					rowFilterDef.setResources(resources);
+					ret = true;
+				}
+			} else {
+				if (CollectionUtils.isNotEmpty(rowFilterDef.getResources())) {
+					rowFilterDef.setResources(null);
+					ret = true;
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AbstractServiceStore.updateResourceInTagServiceDef(" + tagServiceDef + ") : " + ret);
+		}
+		return ret;
 	}
 }
