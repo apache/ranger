@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -40,6 +41,10 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	private static final Log LOG = LogFactory.getLog(AbstractServiceStore.class);
 
 	public static final String COMPONENT_ACCESSTYPE_SEPARATOR = ":";
+
+	private static final String AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP = "ranger.servicedef.autopropagate.rowfilterdef.to.tag";
+
+	private static final boolean AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT = false;
 
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 
@@ -349,6 +354,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		tagServiceDef.getAccessTypes().removeAll(accessTypes);
 
 		updateTagServiceDefForDeletingDataMaskDef(tagServiceDef, serviceDefName);
+
 		updateTagServiceDefForDeletingRowFilterDef(tagServiceDef, serviceDefName);
 
 		updateResourceInTagServiceDef(tagServiceDef);
@@ -509,19 +515,22 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		boolean ret = false;
 
-		RangerServiceDef.RangerRowFilterDef svcRowFilterDef = serviceDef.getRowFilterDef();
-		RangerServiceDef.RangerRowFilterDef tagRowFilterDef = tagServiceDef.getRowFilterDef();
+		boolean autopropagateRowfilterdefToTag = RangerConfiguration.getInstance().getBoolean(AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
 
-		List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = svcRowFilterDef.getAccessTypes();
-		List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes = tagRowFilterDef.getAccessTypes();
+		if (autopropagateRowfilterdefToTag) {
+			RangerServiceDef.RangerRowFilterDef svcRowFilterDef = serviceDef.getRowFilterDef();
+			RangerServiceDef.RangerRowFilterDef tagRowFilterDef = tagServiceDef.getRowFilterDef();
 
-		boolean tagRowFilterAccessTypesUpdated = updateTagAccessTypeDefs(svcDefAccessTypes, tagDefAccessTypes, itemIdOffset, prefix);
+			List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = svcRowFilterDef.getAccessTypes();
+			List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes = tagRowFilterDef.getAccessTypes();
 
-		if (tagRowFilterAccessTypesUpdated) {
-			tagRowFilterDef.setAccessTypes(tagDefAccessTypes);
-			ret = true;
+			boolean tagRowFilterAccessTypesUpdated = updateTagAccessTypeDefs(svcDefAccessTypes, tagDefAccessTypes, itemIdOffset, prefix);
+
+			if (tagRowFilterAccessTypesUpdated) {
+				tagRowFilterDef.setAccessTypes(tagDefAccessTypes);
+				ret = true;
+			}
 		}
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== AbstractServiceStore.updateTagServiceDefForUpdatingRowFilterDef(" + serviceDef.getName() + ") : " + ret);
 		}
@@ -586,15 +595,18 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		RangerServiceDef.RangerRowFilterDef rowFilterDef = tagServiceDef.getRowFilterDef();
 
 		if (rowFilterDef != null) {
-			if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
-				if (CollectionUtils.isEmpty(rowFilterDef.getResources())) {
-					rowFilterDef.setResources(resources);
-					ret = true;
-				}
-			} else {
-				if (CollectionUtils.isNotEmpty(rowFilterDef.getResources())) {
-					rowFilterDef.setResources(null);
-					ret = true;
+			boolean autopropagateRowfilterdefToTag = RangerConfiguration.getInstance().getBoolean(AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
+			if (autopropagateRowfilterdefToTag) {
+				if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
+					if (CollectionUtils.isEmpty(rowFilterDef.getResources())) {
+						rowFilterDef.setResources(resources);
+						ret = true;
+					}
+				} else {
+					if (CollectionUtils.isNotEmpty(rowFilterDef.getResources())) {
+						rowFilterDef.setResources(null);
+						ret = true;
+					}
 				}
 			}
 		}
