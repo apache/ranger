@@ -69,6 +69,14 @@
       "uiHint": "{ \"singleValue\":true }",
       "label":"Accessed after expiry_date (yes/no)?",
       "description": "Accessed after expiry_date? (yes/no)"
+    },
+    {
+      "itemId":2,
+      "name":"Script",
+      "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true"},
+      "label":"Enter your Javascript here",
+      "description": "Script to execute"
     }
   ]
 }

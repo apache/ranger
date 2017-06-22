@@ -149,10 +149,10 @@
       "policyConditions": [
         {
           "itemId":1,
-          "name":"ScriptConditionEvaluator",
+          "name":"Script",
           "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-          "evaluatorOptions" : {"engineName":"JavaScript"},
-          "label":"Script",
+          "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline" : "true"},
+          "label":"Enter your Javascript here: ",
           "description": "Script to execute"
         },
         {
@@ -172,8 +172,8 @@
           {
             "accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
             "conditions":[{
-              "type":"ScriptConditionEvaluator",
-              "values":["if ( ctx.isAccessedBefore('activation_date') ) ctx.result = true;"]
+              "type":"Script",
+              "values":["if ( tagAttr.get('score') < 2 ) ctx.result = true;"]
             }]
           }
         ]
@@ -203,7 +203,7 @@
         "denyExceptions":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
             "conditions":[{
-              "type":"ScriptConditionEvaluator",
+              "type":"Script",
               "values":["if ( ctx.isAccessedBefore('activation_date') ) ctx.result = true;"]
             }]
           }

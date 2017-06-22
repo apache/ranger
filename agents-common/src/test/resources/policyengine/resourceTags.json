@@ -49,7 +49,7 @@
       },
       "3": {
         "type": "RESTRICTED",
-        "attributes": { "activation_date": "2015/08/10" },
+        "attributes": { "activation_date": "2015/08/10", "score": "2" },
         "id": 3,
         "guid": "tag-restricted-3-guid"
       },

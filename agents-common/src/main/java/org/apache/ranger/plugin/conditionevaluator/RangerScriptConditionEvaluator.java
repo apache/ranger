@@ -24,12 +24,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -90,11 +92,15 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 
 				RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
 
-				RangerScriptExecutionContext context = new RangerScriptExecutionContext(readOnlyRequest);
+				RangerScriptExecutionContext context    = new RangerScriptExecutionContext(readOnlyRequest);
+				RangerTagForEval             currentTag = context.getCurrentTag();
+				Map<String, String>          tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.<String, String>emptyMap();
 
 				Bindings bindings = scriptEngine.createBindings();
 
 				bindings.put("ctx", context);
+				bindings.put("tag", currentTag);
+				bindings.put("tagAttr", tagAttribs);
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
