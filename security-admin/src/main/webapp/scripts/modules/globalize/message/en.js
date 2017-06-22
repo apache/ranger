@@ -443,6 +443,9 @@ define(function(require) {
 				userAlreadyExistsError : 'User already exists',
 				repositoryNameAlreadyExistsError  : 'Repository name already exists'
 				
+			},
+			hintMsg : {
+				yarnRestUrl            :"1.For one url, eg.<br>'http or https://&lt;ipaddr&gt;:8088'<br>2.For multiple urls (use , or ; delimiter), eg.<br>'http://&lt;ipaddr1&gt;:8088,http://&lt;ipaddr2&gt;:8088'"
 			}
 			
 
