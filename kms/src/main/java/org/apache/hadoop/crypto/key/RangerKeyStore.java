@@ -42,11 +42,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.SealedObject;
 import javax.xml.bind.DatatypeConverter;
@@ -64,6 +65,8 @@ import org.apache.ranger.kms.dao.RangerKMSDao;
 public class RangerKeyStore extends KeyStoreSpi {
 	
 	static final Logger logger = Logger.getLogger(RangerKeyStore.class);
+        private static final String KEY_NAME_VALIDATION = "[a-z,A-Z,0-9](?!.*--)(?!.*__)(?!.*-_)(?!.*_-)[\\w\\-\\_]*";
+        private static final Pattern pattern = Pattern.compile(KEY_NAME_VALIDATION);
 		
 	private DaoManager daoManager;
 	
@@ -89,7 +92,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     RangerKeyStore() {
     }
 
-    RangerKeyStore(DaoManager daoManager) {
+    public RangerKeyStore(DaoManager daoManager) {
     	this.daoManager = daoManager;
 	}
 
@@ -526,6 +529,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 			                      entry.cipher_field = k.getAlgorithm();
 							  }
 		                      String keyName = alias.split("@")[0];
+                                      validateKeyName(keyName);
 		                      entry.attributes = "{\"key.acl.name\":\"" +  keyName + "\"}";
 		                      Class<?> c = null;
 		                  	  Object o = null;
@@ -581,7 +585,17 @@ public class RangerKeyStore extends KeyStoreSpi {
 				}
 			}
 	}
-	
+
+        private void validateKeyName(String name) {
+                Matcher matcher = pattern.matcher(name);
+                if (!matcher.matches()) {
+                        throw new IllegalArgumentException(
+                                        "Key Name : "
+                                                        + name
+                                                        + ", should start with alpha/numeric letters and can have special characters - (hypen) or _ (underscore)");
+                }
+        }
+
 	public void clearDeltaEntires(){
 		deltaEntries.clear();
 	}
