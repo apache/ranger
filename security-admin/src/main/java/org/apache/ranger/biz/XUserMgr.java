@@ -180,6 +180,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXUser createXUser(VXUser vXUser) {
 		checkAdminAccess();
+                validatePassword(vXUser);
 		String userName = vXUser.getName();
 		if (userName == null || "null".equalsIgnoreCase(userName)
 				|| userName.trim().isEmpty()) {
@@ -382,8 +383,10 @@ public class XUserMgr extends XUserMgrBase {
 				&& password.equals(hiddenPasswordString)) {
 			vXPortalUser.setPassword(oldUserProfile.getPassword());
 		}
-		vXPortalUser.setPassword(password);
-
+                else if(password != null){
+                        validatePassword(vXUser);
+                        vXPortalUser.setPassword(password);
+                }
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
 		XXPortalUser xXPortalUser = new XXPortalUser();
 		xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
@@ -514,6 +517,9 @@ public class XUserMgr extends XUserMgrBase {
 	public VXUserGroupInfo createXUserGroupFromMap(
 			VXUserGroupInfo vXUserGroupInfo) {
 		checkAdminAccess();
+                if(vXUserGroupInfo.getXuserInfo() != null) {
+                        validatePassword(vXUserGroupInfo.getXuserInfo());
+                }
 		VXUserGroupInfo vxUGInfo = new VXUserGroupInfo();
 
 		VXUser vXUser = vXUserGroupInfo.getXuserInfo();
@@ -614,6 +620,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXUser createXUserWithOutLogin(VXUser vXUser) {
 		checkAdminAccess();
+                validatePassword(vXUser);
 		return xUserService.createXUserWithOutLogin(vXUser);
 	}
 
@@ -2145,5 +2152,19 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 		return createdXUser;
-}
+        }
+        private void validatePassword(VXUser vXUser) {
+                if (vXUser.getPassword() != null && !vXUser.getPassword().isEmpty()) {
+                        boolean checkPassword = false;
+                        String pattern = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}";
+                        checkPassword = vXUser.getPassword().trim().matches(pattern);
+                        if (!checkPassword) {
+                                logger.warn("validatePassword(). Password should be minimum 8 characters with min one alphabet and one numeric.");
+                                throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters with min one alphabet and one numeric", null);
+                        }
+                } else {
+                        logger.warn("validatePassword(). Password cannot be blank/null.");
+                        throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
+                }
+        }
 }
