@@ -188,6 +188,7 @@ public class TestXUserMgr {
 		vxUser.setName("grouptest");
 		vxUser.setUserRoleList(userRoleList);
 		vxUser.setGroupNameList(groupNameList);
+                vxUser.setPassword("usertest123");
 		return vxUser;
 	}
 
@@ -835,7 +836,7 @@ public class TestXUserMgr {
 		VXUser vXUser = new VXUser();
 		vXUser.setName("user1");
 		vXUser.setDescription("testuser1 -added for unit testing");
-
+                vXUser.setPassword("usertest123");
 		List<VXGroupUser> vXGroupUserList = new ArrayList<VXGroupUser>();
 		List<VXGroup> vXGroupList = new ArrayList<VXGroup>();
 
