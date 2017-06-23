@@ -1,7 +1,7 @@
 
 Server {
         com.sun.security.auth.module.Krb5LoginModule required refreshKrb5Config=true useKeyTab=true
-        keyTab="<basedir>/target/zookeeper.keytab" storeKey=true principal="zookeeper/127.0.0.1";
+        keyTab="<basedir>/target/zookeeper.keytab" storeKey=true principal="zookeeper/localhost";
 };
 
 KafkaServer {
