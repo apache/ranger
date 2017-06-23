@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerAdminTagEnricher;
 import org.apache.ranger.common.RangerServiceTagsCache;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
@@ -63,6 +64,7 @@ import org.apache.ranger.service.RangerServiceResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 
 @Component
@@ -95,6 +97,11 @@ public class TagDBStore extends AbstractTagStore {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
+
+	@PostConstruct
+	public void initStore() {
+		RangerAdminTagEnricher.setTagStore(this);
+	}
 
 	@Override
 	public RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception {

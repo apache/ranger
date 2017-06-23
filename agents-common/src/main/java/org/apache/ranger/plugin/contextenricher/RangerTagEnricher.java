@@ -199,6 +199,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 	}
 
+	protected Long getServiceTagsVersion() {
+		return enrichedServiceTags != null ? enrichedServiceTags.getServiceTags().getTagVersion() : null;
+	}
+
 	@Override
 	public boolean preCleanup() {
 		boolean ret = true;

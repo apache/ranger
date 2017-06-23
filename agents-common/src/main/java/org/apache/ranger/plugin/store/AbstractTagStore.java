@@ -33,6 +33,11 @@ public abstract class AbstractTagStore implements TagStore {
 		this.svcStore = svcStore;
 	}
 
+	@Override
+	final public ServiceStore getServiceStore() {
+		return svcStore;
+	}
+
 }
 
 

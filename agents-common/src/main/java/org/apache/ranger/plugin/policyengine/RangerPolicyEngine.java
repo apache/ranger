@@ -75,6 +75,8 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
+	List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource);
+
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 
 	void reorderPolicyEvaluators();
