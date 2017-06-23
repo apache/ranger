@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,18 +27,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
-public class RangerPolicyEngineCache {
+class RangerPolicyEngineCache {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineCache.class);
 
-	private static final RangerPolicyEngineCache sInstance = new RangerPolicyEngineCache();
+	private final Map<String, RangerPolicyEngine> policyEngineCache = new HashMap<String, RangerPolicyEngine>();
 
-	private final Map<String, RangerPolicyEngine> policyEngineCache = Collections.synchronizedMap(new HashMap<String, RangerPolicyEngine>());
-
-	public static RangerPolicyEngineCache getInstance() {
-		return sInstance;
-	}
-
-	public synchronized RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RangerPolicyEngineOptions options) {
+	synchronized final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RangerPolicyEngineOptions options) {
 		RangerPolicyEngine ret = null;
 
 		if(serviceName != null) {
