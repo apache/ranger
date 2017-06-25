@@ -23,6 +23,7 @@ define(function(require) {
 	var Backbone 	= require('backbone');
 	var XAUtils 	= require('utils/XAUtils');
 	var XAEnums		= require('utils/XAEnums');
+	var localization	= require('utils/XALangSupport');
 
 	var FormDataType = Backbone.Model.extend({
 		type : [ 'string', 'boolean', 'int' ],
@@ -78,7 +79,12 @@ define(function(require) {
 					switch (v.type) {
 						case 'string':
 							if(!isPolicyForm) {
-								formObj.type = 'Text';
+								if(v.name == 'yarn.url'){
+									formObj.type = 'TextFiledWithIcon';
+									formObj.errorMsg = localization.tt("hintMsg.yarnRestUrl");
+								}else{
+									formObj.type = 'Text';
+								}
 								break;
 							}
 							if($.inArray(v.level, samelevelFieldCreated) >= 0){

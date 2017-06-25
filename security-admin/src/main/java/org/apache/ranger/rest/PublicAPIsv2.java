@@ -339,6 +339,15 @@ public class PublicAPIsv2 {
 		return serviceREST.getServicePoliciesByName(serviceName, request).getPolicies();
 	}
 
+	@GET
+	@Path("/api/policies/{serviceDefName}/for-resource/")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
+													 @DefaultValue("") @QueryParam("serviceName") String serviceName,
+													 @Context HttpServletRequest request) {
+		return serviceREST.getPoliciesForResource(serviceDefName, serviceName, request);
+	}
+
 	@POST
 	@Path("/api/policy/")
 	@Produces({ "application/json", "application/xml" })

@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -86,13 +88,14 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCacheForEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -201,8 +204,18 @@ public class ServiceREST {
     JSONUtil jsonUtil;
 
 	private RangerPolicyEngineOptions delegateAdminOptions;
+	private RangerPolicyEngineOptions policySearchAdminOptions;
+	private RangerPolicyEngineOptions defaultAdminOptions;
 
 	public ServiceREST() {
+	}
+
+	@PostConstruct
+	public void initStore() {
+		tagStore.setServiceStore(svcStore);
+		delegateAdminOptions = getDelegatedAdminPolicyEngineOptions();
+		policySearchAdminOptions = getPolicySearchRangerAdminPolicyEngineOptions();
+		defaultAdminOptions = getDefaultRangerAdminPolicyEngineOptions();
 	}
 
 	@POST
@@ -473,7 +486,130 @@ public class ServiceREST {
 		}
 		return ret;
 	}
-	
+
+	@GET
+	@Path("/policies/{serviceDefName}/for-resource")
+	@Produces({ "application/json", "application/xml" })
+	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
+												  @DefaultValue("") @QueryParam("serviceName") String serviceName,
+												  @Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPoliciesForResource(service-type=" + serviceDefName + ", service-name=" + serviceName + ")");
+		}
+
+		List<RangerPolicy> ret = new ArrayList<>();
+
+		List<RangerService> services = new ArrayList<>();
+		Map<String, String> resource = new HashMap<>();
+
+		String validationMessage = validateResourcePoliciesRequest(serviceDefName, serviceName, request, services, resource);
+
+		if (StringUtils.isNotEmpty(validationMessage)) {
+			LOG.error("Invalid request: [" + validationMessage + "]");
+			throw restErrorUtil.createRESTException(validationMessage,
+					MessageEnums.INVALID_INPUT_DATA);
+		} else {
+			RangerService service = services.get(0);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getServicePolicies with service-name=" + service.getName());
+			}
+
+			RangerPolicyEngine engine = null;
+
+			try {
+				engine = getPolicySearchPolicyEngine(service.getName());
+			} catch (Exception e) {
+				LOG.error("Cannot initialize Policy-Engine", e);
+				throw restErrorUtil.createRESTException("Cannot initialize Policy Engine",
+						MessageEnums.ERROR_SYSTEM);
+			}
+
+			if (engine != null) {
+				ret = engine.getMatchingPolicies(new RangerAccessResourceImpl(resource));
+			}
+
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPoliciesForResource(service-type=" + serviceDefName + ", service-name=" + serviceName + ") : " + ret.toString());
+		}
+		return ret;
+	}
+
+	private String validateResourcePoliciesRequest(String serviceDefName, String serviceName, HttpServletRequest request, List<RangerService> services, Map<String, String> resource) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.validatePoliciesForResourceRequest(service-type=" + serviceDefName + ", service-name=" + serviceName + ")");
+		}
+		final String ret;
+
+		if (MapUtils.isNotEmpty(request.getParameterMap())) {
+			for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+				String name = e.getKey();
+				String[] values = e.getValue();
+
+				if (!StringUtils.isEmpty(name) && !ArrayUtils.isEmpty(values)
+						&& name.startsWith(SearchFilter.RESOURCE_PREFIX)) {
+					resource.put(name.substring(SearchFilter.RESOURCE_PREFIX.length()), values[0]);
+				}
+			}
+		}
+		if (MapUtils.isEmpty(resource)) {
+			ret = "No resource specified";
+		} else {
+			RangerServiceDef serviceDef = null;
+			try {
+				serviceDef = svcStore.getServiceDefByName(serviceDefName);
+			} catch (Exception e) {
+				LOG.error("Invalid service-type:[" + serviceDefName + "]", e);
+			}
+			if (serviceDef == null) {
+				ret = "Invalid service-type:[" + serviceDefName + "]";
+			} else {
+				Set<String> resourceDefNames = resource.keySet();
+				RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+				Set<List<RangerServiceDef.RangerResourceDef>> resourceHierarchies = serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, resourceDefNames);
+				if (CollectionUtils.isEmpty(resourceHierarchies)) {
+					ret = "Invalid resource specified: resource-names:" + resourceDefNames +" are not part of any valid resource hierarchy for service-type:[" + serviceDefName + "]";
+				} else {
+					if (StringUtils.isNotBlank(serviceName)) {
+						RangerService service = null;
+						try {
+							service = svcStore.getServiceByName(serviceName);
+						} catch (Exception e) {
+							LOG.error("Invalid service-name:[" + serviceName + "]");
+						}
+						if (service == null || !StringUtils.equals(service.getType(), serviceDefName)) {
+							ret = "Invalid service-name:[" + serviceName + "] or service-name is not of service-type:[" + serviceDefName + "]";
+						} else {
+							services.add(service);
+							ret = StringUtils.EMPTY;
+						}
+					} else {
+						SearchFilter filter = new SearchFilter();
+						filter.setParam(SearchFilter.SERVICE_TYPE, serviceDefName);
+						List<RangerService> serviceList = null;
+						try {
+							serviceList = svcStore.getServices(filter);
+						} catch (Exception e) {
+							LOG.error("Cannot find service of service-type:[" + serviceDefName + "]");
+						}
+						if (CollectionUtils.isEmpty(serviceList) || serviceList.size() != 1) {
+							ret = "Either 0 or more than 1 services found for service-type :[" + serviceDefName + "]";
+						} else {
+							services.add(serviceList.get(0));
+							ret = StringUtils.EMPTY;
+						}
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.validatePoliciesForResourceRequest(service-type=" + serviceDefName + ", service-name=" + serviceName + ") : " + ret);
+		}
+		return ret;
+	}
+
 	@POST
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
@@ -2822,16 +2958,32 @@ public class ServiceREST {
 		}
 	}
 
-	private synchronized RangerPolicyEngineOptions getDelegatedAdminPolicyEngineOptions() {
-		if (delegateAdminOptions == null) {
-			RangerPolicyEngineOptions opts = new RangerPolicyEngineOptions();
+	private RangerPolicyEngineOptions getDelegatedAdminPolicyEngineOptions() {
+		RangerPolicyEngineOptions opts = new RangerPolicyEngineOptions();
 
-			final String propertyPrefix = "ranger.admin";
+		final String propertyPrefix = "ranger.admin";
 
-			opts.configureDelegateAdmin(RangerConfiguration.getInstance(), propertyPrefix);
-			this.delegateAdminOptions = opts;
-		}
-		return delegateAdminOptions;
+		opts.configureDelegateAdmin(RangerConfiguration.getInstance(), propertyPrefix);
+
+		return opts;
+	}
+
+	private RangerPolicyEngineOptions getPolicySearchRangerAdminPolicyEngineOptions() {
+		RangerPolicyEngineOptions opts = new RangerPolicyEngineOptions();
+
+		final String propertyPrefix = "ranger.admin";
+
+		opts.configureRangerAdminForPolicySearch(RangerConfiguration.getInstance(), propertyPrefix);
+		return opts;
+	}
+
+	private RangerPolicyEngineOptions getDefaultRangerAdminPolicyEngineOptions() {
+		RangerPolicyEngineOptions opts = new RangerPolicyEngineOptions();
+
+		final String propertyPrefix = "ranger.admin";
+
+		opts.configureDefaultRangerAdmin(RangerConfiguration.getInstance(), propertyPrefix);
+		return opts;
 	}
 
 	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, Map<String, RangerPolicyResource> resources) {
@@ -2859,19 +3011,18 @@ public class ServiceREST {
 	}
 
 	private RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
-		return RangerPolicyEngineCache.getInstance().getPolicyEngine(serviceName, svcStore, getDelegatedAdminPolicyEngineOptions());
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, delegateAdminOptions);
+	}
+
+	private RangerPolicyEngine getPolicySearchPolicyEngine(String serviceName) throws Exception {
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, policySearchAdminOptions);
 	}
 
 	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
-		RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
-
-		String propertyPrefix = "ranger.admin";
-
-		options.configureDefaultRangerAdmin(RangerConfiguration.getInstance(), propertyPrefix);
 
 		ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, -1L);
 
-		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options);
+		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, defaultAdminOptions);
 
 		return ret;
 	}

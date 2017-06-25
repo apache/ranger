@@ -22,37 +22,100 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 public class RangerPolicyEngineOptions {
-	public String  evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO;
-	public boolean cacheAuditResults       = true;
-	public boolean disableContextEnrichers;
-	public boolean disableCustomConditions;
-	public boolean disableTagPolicyEvaluation = true;
-	public boolean evaluateDelegateAdminOnly;
-	public boolean disableTrieLookupPrefilter;
+	public String evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO;
+
+	public boolean disableContextEnrichers = false;
+	public boolean disableCustomConditions = false;
+	public boolean disableTagPolicyEvaluation = false;
+	public boolean disableTrieLookupPrefilter = false;
+	public boolean cacheAuditResults = true;
+	public boolean evaluateDelegateAdminOnly = false;
+	public boolean enableTagEnricherWithLocalRefresher = false;
 
 	public void configureForPlugin(Configuration conf, String propertyPrefix) {
-		evaluatorType           = conf.get(propertyPrefix + ".policyengine.option.evaluator.type", RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO);
-		cacheAuditResults       = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
 		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
 		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);
 		disableTagPolicyEvaluation = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", false);
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+
+		cacheAuditResults = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
+
+		evaluateDelegateAdminOnly = false;
+		enableTagEnricherWithLocalRefresher = false;
 	}
 
 	public void configureDefaultRangerAdmin(Configuration conf, String propertyPrefix) {
-		evaluatorType             = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-		cacheAuditResults         = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", false);
-		disableContextEnrichers   = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
-		disableCustomConditions   = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
-		evaluateDelegateAdminOnly = false;
+		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
+		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
+		disableTagPolicyEvaluation = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", true);
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+
+		cacheAuditResults = false;
+		evaluateDelegateAdminOnly = false;
+		enableTagEnricherWithLocalRefresher = false;
 	}
 
 	public void configureDelegateAdmin(Configuration conf, String propertyPrefix) {
-		evaluatorType           = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-		cacheAuditResults       = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", false);
 		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
 		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
-		evaluateDelegateAdminOnly = conf.getBoolean(propertyPrefix + ".policyengine.option.evaluate.delegateadmin.only", true);
+		disableTagPolicyEvaluation = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", true);
+		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+
+		cacheAuditResults = false;
+		evaluateDelegateAdminOnly = true;
+		enableTagEnricherWithLocalRefresher = false;
+
+	}
+
+	public void configureRangerAdminForPolicySearch(Configuration conf, String propertyPrefix) {
+		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", true);
+		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", true);
+		disableTagPolicyEvaluation = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", false);
+		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
+
+		cacheAuditResults = false;
+		evaluateDelegateAdminOnly = false;
+		enableTagEnricherWithLocalRefresher = true;
+	}
+
+	/*
+	* There is no need to implement these, as the options are predefined in a component ServiceREST and hence
+	* guaranteed to be unique objects. That implies that the default equals and hashCode should suffice.
+	*/
+
+	@Override
+	public boolean equals(Object other) {
+		boolean ret = false;
+		if (other instanceof RangerPolicyEngineOptions) {
+			RangerPolicyEngineOptions that = (RangerPolicyEngineOptions) other;
+			ret = this.disableContextEnrichers == that.disableContextEnrichers
+					&& this.disableCustomConditions == that.disableCustomConditions
+					&& this.disableTagPolicyEvaluation == that.disableTagPolicyEvaluation
+					&& this.disableTrieLookupPrefilter == that.disableTrieLookupPrefilter
+					&& this.cacheAuditResults == that.cacheAuditResults
+					&& this.evaluateDelegateAdminOnly == that.evaluateDelegateAdminOnly
+					&& this.enableTagEnricherWithLocalRefresher == that.enableTagEnricherWithLocalRefresher;
+		}
+		return ret;
+	}
+
+	@Override
+	public int hashCode() {
+		int ret = 0;
+		ret += disableContextEnrichers ? 1 : 0;
+		ret *= 2;
+		ret += disableCustomConditions ? 1 : 0;
+		ret *= 2;
+		ret += disableTagPolicyEvaluation ? 1 : 0;
+		ret *= 2;
+		ret += disableTrieLookupPrefilter ? 1 : 0;
+		ret *= 2;
+		ret += cacheAuditResults ? 1 : 0;
+		ret *= 2;
+		ret += evaluateDelegateAdminOnly ? 1 : 0;
+		ret *= 2;
+		ret += enableTagEnricherWithLocalRefresher ? 1 : 0;
+		ret *= 2;
+		return ret;
 	}
 }

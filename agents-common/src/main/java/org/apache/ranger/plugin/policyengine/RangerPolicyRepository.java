@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
@@ -216,23 +217,23 @@ class RangerPolicyRepository {
         return policyEvaluators;
     }
 
-    List<RangerPolicyEvaluator> getPolicyEvaluators(RangerAccessResource resource) {
+    List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource) {
        String resourceStr = resource == null ? null : resource.getAsString();
 
-       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getPolicyEvaluators(policyResourceTrie, resource);
+       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getLikelyMatchPolicyEvaluators(policyResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
         return dataMaskPolicyEvaluators;
     }
 
-    List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators(RangerAccessResource resource) {
+    List<RangerPolicyEvaluator> getLikelyMatchDataMaskPolicyEvaluators(RangerAccessResource resource) {
         String resourceStr = resource == null ? null : resource.getAsString();
 
-        return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getPolicyEvaluators(dataMaskResourceTrie, resource);
+        return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getLikelyMatchPolicyEvaluators(dataMaskResourceTrie, resource);
     }
 
-    List<PolicyEvaluatorForTag> getDataMaskPolicyEvaluators(Set<RangerTagForEval> tags) {
+    List<PolicyEvaluatorForTag> getLikelyMatchDataMaskPolicyEvaluators(Set<RangerTagForEval> tags) {
         return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_DATAMASK);
     }
 
@@ -240,19 +241,19 @@ class RangerPolicyRepository {
         return rowFilterPolicyEvaluators;
     }
 
-    List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators(RangerAccessResource resource) {
+    List<RangerPolicyEvaluator> getLikelyMatchRowFilterPolicyEvaluators(RangerAccessResource resource) {
         String resourceStr = resource == null ? null : resource.getAsString();
 
-        return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getPolicyEvaluators(rowFilterResourceTrie, resource);
+        return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getLikelyMatchPolicyEvaluators(rowFilterResourceTrie, resource);
     }
 
-    List<PolicyEvaluatorForTag> getRowFilterPolicyEvaluators(Set<RangerTagForEval> tags) {
+    List<PolicyEvaluatorForTag> getLikelyMatchRowFilterPolicyEvaluators(Set<RangerTagForEval> tags) {
         return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_ROWFILTER);
     }
 
     AuditModeEnum getAuditModeEnum() { return auditModeEnum; }
 
-    private List<RangerPolicyEvaluator> getPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
+    private List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
         List<RangerPolicyEvaluator> ret          = null;
         Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
 
@@ -305,7 +306,7 @@ class RangerPolicyRepository {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.getPolicyEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
+            LOG.debug("<== RangerPolicyRepository.getLikelyMatchPolicyEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
         }
 
         return ret;
@@ -322,11 +323,11 @@ class RangerPolicyRepository {
                 RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
                 List<RangerPolicyEvaluator> evaluators = null;
                 if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
-                    evaluators = getDataMaskPolicyEvaluators(resource);
+                    evaluators = getLikelyMatchDataMaskPolicyEvaluators(resource);
                 } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
-                    evaluators = getRowFilterPolicyEvaluators(resource);
+                    evaluators = getLikelyMatchRowFilterPolicyEvaluators(resource);
                 } else {
-                    evaluators = getPolicyEvaluators(resource);
+                    evaluators = getLikelyMatchPolicyEvaluators(resource);
                 }
                 if (CollectionUtils.isNotEmpty(evaluators)) {
                     for (RangerPolicyEvaluator evaluator : evaluators) {
@@ -575,16 +576,24 @@ class RangerPolicyRepository {
 
         List<RangerContextEnricher> contextEnrichers = new ArrayList<RangerContextEnricher>();
         if (CollectionUtils.isNotEmpty(this.policyEvaluators)) {
-            if (!options.disableContextEnrichers && !CollectionUtils.isEmpty(serviceDef.getContextEnrichers())) {
+            if (CollectionUtils.isNotEmpty(serviceDef.getContextEnrichers())) {
                 for (RangerServiceDef.RangerContextEnricherDef enricherDef : serviceDef.getContextEnrichers()) {
                     if (enricherDef == null) {
                         continue;
                     }
+                    if (!options.disableContextEnrichers || options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
+                        // This will be true only if the engine is initialized within ranger-admin
+                        RangerServiceDef.RangerContextEnricherDef contextEnricherDef = enricherDef;
 
-                    RangerContextEnricher contextEnricher = buildContextEnricher(enricherDef);
+                        if (options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
+                            contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminTagEnricher", null);
+                        }
 
-                    if (contextEnricher != null) {
-                        contextEnrichers.add(contextEnricher);
+                        RangerContextEnricher contextEnricher = buildContextEnricher(contextEnricherDef);
+
+                        if (contextEnricher != null) {
+                            contextEnrichers.add(contextEnricher);
+                        }
                     }
                 }
             }

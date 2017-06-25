@@ -34,6 +34,7 @@ public interface TagStore {
 
     void setServiceStore(ServiceStore svcStore);
 
+    ServiceStore getServiceStore();
 
     RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception;
 
