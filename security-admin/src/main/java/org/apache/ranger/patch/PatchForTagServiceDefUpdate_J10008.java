@@ -43,7 +43,7 @@ import java.util.Map;
 public class PatchForTagServiceDefUpdate_J10008 extends BaseLoader {
 	private static final Logger logger = Logger.getLogger(PatchForTagServiceDefUpdate_J10008.class);
 	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME  = "tag";
-	public static final String SCRIPT_POLICY_CONDITION_NAME = "Script";
+	public static final String SCRIPT_POLICY_CONDITION_NAME = "expression";
 
 	@Autowired
 	RangerDaoManager daoMgr;

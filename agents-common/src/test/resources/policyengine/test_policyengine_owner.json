@@ -16,11 +16,11 @@
     "policyConditions": [
       {
         "itemId":1,
-        "name":"Script",
-        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-        "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline" : "true"},
-        "label":"Enter your Javascript here: ",
-        "description": "Script to execute"
+        "name":"expression",
+      "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true"},
+      "label":"Enter boolean expression",
+      "description": "Boolean expression"
       }
     ]
   },
