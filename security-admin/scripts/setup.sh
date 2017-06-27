@@ -1218,13 +1218,13 @@ setup_install_files(){
 		if [ "${hadoop_conf}" == "" ]
 		then
 			log "[WARN] Property hadoop_conf not found. Creating blank core-site.xml."
-			echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+			echo "<configuration></configuration>" > ${ranger_hadoop_conf_file}
 		else
 			if [ -f ${hadoop_conf_file} ]; then
-                                ln -sf ${hadoop_conf_file} ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+                                ln -sf ${hadoop_conf_file} ${ranger_hadoop_conf_file}
                         else
                                 log "[WARN] core-site.xml file not found in provided hadoop_conf path. Creating blank core-site.xml"
-				echo "<configuration></configuration>" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/core-site.xml
+				echo "<configuration></configuration>" > ${ranger_hadoop_conf_file}
                         fi
 		fi
 	fi
