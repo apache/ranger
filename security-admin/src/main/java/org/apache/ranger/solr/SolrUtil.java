@@ -38,6 +38,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,18 +69,23 @@ public class SolrUtil {
 		}
 	}
 
-        public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
-		if (solrQuery != null) {
-                        QueryResponse response = null;
-			try {
-				response = solrClient.query(solrQuery, METHOD.POST);
-				return response;
-			} catch (Throwable e) {
-                                logger.error("Error from Solr server. ", e);
-                                throw e;
-			}
-		}
-		return null;
+	public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
+	    if (solrQuery != null) {
+	        try {
+	            QueryRequest req = new QueryRequest(solrQuery, METHOD.POST);
+	            String username = PropertiesUtil.getProperty("ranger.solr.audit.user");
+	            String password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
+	            if (username != null && password != null) {
+	                req.setBasicAuthCredentials(username, password);
+	            }
+
+	            return req.process(solrClient);
+	        } catch (Throwable e) {
+	            logger.error("Error from Solr server. ", e);
+	            throw e;
+	        }
+	    }
+	    return null;
 	}
 
 	public QueryResponse searchResources(SearchCriteria searchCriteria,
