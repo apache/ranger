@@ -78,7 +78,6 @@ KMS_DIR=$(eval echo "$(get_prop 'KMS_DIR' $PROPFILE)")
 app_home=$(eval echo "$(get_prop 'app_home' $PROPFILE)")
 TMPFILE=$(eval echo "$(get_prop 'TMPFILE' $PROPFILE)")
 LOGFILE=$(eval echo "$(get_prop 'LOGFILE' $PROPFILE)")
-LOGFILES=$(eval echo "$(get_prop 'LOGFILES' $PROPFILE)")
 JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
 JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
 JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
@@ -193,11 +192,7 @@ check_user_pwd(){
         exit 1;
     fi
 }
-init_logfiles(){
-    for f in $LOGFILES; do
-        touch $f
-    done
-}
+
 password_validation(){
         if [ -z "$1" ]
         then
@@ -932,10 +927,8 @@ setup_install_files(){
 		chmod 755 /var/log/ranger/kms
         chown -R $unix_user:$unix_group /var/log/ranger/kms
 	fi
-
 }
 
-init_logfiles
 log " --------- Running Ranger KMS Application Install Script --------- "
 log "[I] uname=`uname`"
 log "[I] hostname=`hostname`"
