@@ -82,6 +82,9 @@ define(function(require) {
 								if(v.name == 'yarn.url'){
 									formObj.type = 'TextFiledWithIcon';
 									formObj.errorMsg = localization.tt("hintMsg.yarnRestUrl");
+								}else if(v.name == 'jdbc.url'){
+									formObj.type = 'TextFiledWithIcon';
+									formObj.errorMsg = localization.tt("hintMsg.hiveJDBCUrl");
 								}else{
 									formObj.type = 'Text';
 								}
