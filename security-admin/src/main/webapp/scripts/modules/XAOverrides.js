@@ -490,13 +490,13 @@
 		    this.resourceOpts = {};
 		    _.extend(this, _.pick(this.schema,'excludeSupport','recursiveSupport','resourceOpts','resourcesAtSameLevel','sameLevelOpts',
 		    									'initilializePathPlugin', 'validators','name','formView'));
-                  //(edit mode)set values for sameLevel if first option is not selected
-                    if(!_.isNull(this.value) && !_.isUndefined(this.value)
+		    //(edit mode)set values for sameLevel if first option is not selected
+            if(!_.isNull(this.value) && !_.isUndefined(this.value)
 				&& !_.isUndefined(this.value.resourceType)){
-			var def = _.findWhere(this.form.rangerServiceDefModel.get('resources'), {'name': this.value.resourceType });
-			this.recursiveSupport = def.recursiveSupported;
-			this.excludeSupport = def.excludesSupported;
-                    }
+				var def = _.findWhere(this.form.rangerServiceDefModel.get('resources'), {'name': this.value.resourceType });
+				this.recursiveSupport = def.recursiveSupported;
+				this.excludeSupport = def.excludesSupported;
+            }
 		    this.template = this.getTemplate();
 		  },
 		  initializeElements : function() {
@@ -574,7 +574,21 @@
 			  			this.value.isRecursive = _.isUndefined(this.value.isRecursive) ? true : this.value.isRecursive;
 			  			isRecursive = this.value.isRecursive;
 			  		}
-			  	}
+		  			this.$recursiveSupport.show();
+		  			this.$recursiveSupport.removeClass('recursive-toggle-1 recursive-toggle-2');
+		  			this.$recursiveSupport.addClass(this.excludeSupport ? 'recursive-toggle-2' : 'recursive-toggle-1')
+		  			this.$recursiveSupport.toggles({
+		  				on: isRecursive,
+		  				text : {on : 'recursive', off : 'non-recursive' },
+		  				width: 120,
+		  			}).on('toggle', function (e, active) {
+		  				that.value.isRecursive = active;
+                        XAUtil.checkDirtyFieldForToggle($(e.currentTarget))
+                    });
+		  		} else {
+		  			this.$recursiveSupport.hide();
+		  		}
+			  		
 		  },
 		  renderSameLevelResource : function() {
                           var that = this, dirtyFieldValue = null;
@@ -600,15 +614,15 @@
 			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
 			  			that.formView.trigger('policyForm:parentChildHideShow',true);
 						if(!_.isUndefined(this.value)
-                                                                && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
+                            && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
 							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
 						}
-                                                //set flags for newly selected resource and re-render
-                                                var def = _.findWhere(that.form.rangerServiceDefModel.get('resources'), {'name': this.value});
-                                                that.recursiveSupport = def.recursiveSupported;
-                                                if(that.recursiveSupport) that.value.isRecursive = true;
-                                                that.excludeSupport = def.excludesSupported;
-                                                that.renderToggles();
+                        //set flags for newly selected resource and re-render
+                        var def = _.findWhere(that.form.rangerServiceDefModel.get('resources'), {'name': this.value});
+                        that.recursiveSupport = def.recursiveSupported;
+                        if(that.recursiveSupport) that.value.isRecursive = true;
+                        that.excludeSupport = def.excludesSupported;
+                        that.renderToggles();
 
 					});
 			  	}
@@ -667,16 +681,29 @@
 			  }
 		  	},
 		  	getTemplate : function() {
+				  var that = this , resourcesType ;
 				  var optionsHtml="", selectTemplate = '',excludeSupportToggleDiv='', recursiveSupportToggleDiv='';
-				  this.preserveResourceValues = {};
-				    if(this.resourcesAtSameLevel){
-				    	_.each(this.sameLevelOpts, function(option){ return optionsHtml += "<option value='"+option+"'>"+option+"</option>"; },this);
+				  this.preserveResourceValues = {},klass = '';
+				  if(this.resourcesAtSameLevel){
+					  _.each(this.sameLevelOpts, function(option){ return optionsHtml += "<option value='"+option+"'>"+option+"</option>"; },this);
 				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle sameLevelDropdown" >\
 				    						'+optionsHtml+'\
 				    					</select>';
-				    }
-                                    excludeSupportToggleDiv = '<div class="toggle-xa include-toggle toggle" data-js="include"></div>';
-				    return _.template(selectTemplate+'<input data-js="resource" type="text">'+
+				  }
+				  excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include" style ="height: 20px; width: 80px;"><div  class="toggle"></div></div>';
+				  _.each(this.form.rangerServiceDefModel.get('resources') , function(m){
+				  		if(that.name === m.name){
+				  			resourcesType = m.type ;
+				  		}
+				  })
+				  if(resourcesType == "path"){
+					  klass = (!this.excludeSupport) ? "recursive-toggle-hdfs-1" : "recursive-toggle-hdfs-2";
+				  }else{
+					  klass = (!this.excludeSupport) ? "recursive-toggle-1" : "recursive-toggle-2";
+				  }
+				  recursiveSupportToggleDiv = '<div class="toggle-xa recursive-toggle '+klass+'"" data-js="recursive" style="height: 20px; width: 120px;"><div  class="toggle"></div></div>';
+				  
+				  return _.template(selectTemplate+'<input data-js="resource" type="text">'+
 				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
 			  },
 			});
