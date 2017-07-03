@@ -1796,10 +1796,7 @@ margin-bottom: 5px;
 .include-toggle{
 	margin-left: 264px;
 	margin-top: -29px;
-}
-.recursive-toggle{
-	margin-left: 363px;
-	margin-top: -20px;
+	width:80px;
 }
 .recursive-toggle-path {
 margin-left: 347px;
@@ -2200,4 +2197,22 @@ td.subgrid-custom-cell{
     text-align: center;
     font-weight: bold;
     font-style: italic;
+}
+.recursive-toggle-1 {
+	margin-left: 264px;
+	margin-top: -29px;
+	width:110px;
+}
+.recursive-toggle-2 {
+	margin-left: 363px;
+	margin-top: -20px;
+	width:110px;
+}
+.recursive-toggle-hdfs-1{
+	margin-left: 348px;
+	margin-top: -27px;
+}
+.recursive-toggle-hdfs-2{
+	margin-left: 388px;
+	margin-top: -27px;
 }
