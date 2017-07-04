@@ -431,6 +431,7 @@ then
 					log "Creating default file from [${DEFAULT_XML_CONFIG}] for [${fullpathorgfn}] .."
 					cp ${DEFAULT_XML_CONFIG} ${fullpathorgfn}
 				 	chown ${CFG_OWNER_INF} ${fullpathorgfn}	
+					chmod a+r ${fullpathorgfn}
 				else
         			echo "ERROR: Unable to find ${fullpathorgfn}"
         			exit 1
