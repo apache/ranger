@@ -88,15 +88,4 @@
             <version>${slf4j-api.version}</version>
         </dependency>
     </dependencies>
-    <build>
-        <resources>
-            <resource>
-                <targetPath>${project.build.outputDirectory}/</targetPath>
-                <directory>conf.dist</directory>
-                <includes>
-                    <include>log4j.properties</include>
-                </includes>
-            </resource>
-        </resources>
-    </build>
 </project>
