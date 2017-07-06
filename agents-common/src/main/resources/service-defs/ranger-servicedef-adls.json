@@ -22,7 +22,24 @@
 			"uiHint":"",
 			"label": "Storage Account",
 			"description": "Storage Account for the Path"
-    }
+    },
+    {
+     "itemId":2,
+      "name": "relativepath",
+      "type": "path",
+      "parent": "storageaccount",
+      "level":20,
+      "mandatory":  true,
+      "lookupSupported":  true,
+      "excludesSupported":  false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+      "matcherOptions": {"wildCard":true, "ignoreCase":false},
+      "validationRegEx":"^[/*]$|^\/.*?[^\/]$",
+      "validationMessage": "Relative Path must not end with a slash",
+      "uiHint":"",
+      "label": "Relative Path",
+      "description": "Relative Path inside Storage Account Container"
+    }    
   ],
   "accessTypes":
 	[
