@@ -1254,7 +1254,7 @@ define(function(require) {
 		}
 		return window.location.origin
 		+ window.location.pathname.substring(window.location.pathname
-				.indexOf('/', 2) + 1, 0);
+				.lastIndexOf('/') + 1, 0);
 	};
 	
 	XAUtils.isMaskingPolicy = function(type){
