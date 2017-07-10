@@ -54,6 +54,9 @@ import kafka.server.KafkaServerStartable;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics,
  * sends a message to them and consumes it.
@@ -69,6 +72,8 @@ import kafka.utils.ZkUtils;
  * Authentication is done via Kerberos/GSS.
  */
 public class KafkaRangerAuthorizerGSSTest {
+
+    private static final Log LOG = LogFactory.getLog(KafkaRangerAuthorizerGSSTest.class);
 
     private static KafkaServerStartable kafkaServer;
     private static TestingServer zkServer;
@@ -151,7 +156,7 @@ public class KafkaRangerAuthorizerGSSTest {
 
     private static void configureKerby(String baseDir) throws Exception {
 
-        //System.setProperty("sun.security.krb5.debug", "true");
+        System.setProperty("sun.security.krb5.debug", "true");
         System.setProperty("java.security.krb5.conf", baseDir + "/target/krb5.conf");
 
         kerbyServer = new SimpleKdcServer();
@@ -185,15 +190,19 @@ public class KafkaRangerAuthorizerGSSTest {
 
     @org.junit.AfterClass
     public static void cleanup() throws Exception {
+        LOG.info("Shutting down Kafka");
         if (kafkaServer != null) {
             kafkaServer.shutdown();
         }
+        LOG.info("Shutting down ZK");
         if (zkServer != null) {
             zkServer.stop();
         }
+        LOG.info("Shutting down Kerby");
         if (kerbyServer != null) {
             kerbyServer.stop();
         }
+        LOG.info("Cleanup finished");
     }
 
     // The "public" group can write to and read from "test"
