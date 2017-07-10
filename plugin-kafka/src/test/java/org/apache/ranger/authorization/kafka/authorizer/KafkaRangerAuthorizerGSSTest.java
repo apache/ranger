@@ -90,7 +90,7 @@ public class KafkaRangerAuthorizerGSSTest {
 
         configureKerby(basedir);
 
-        String address = "127.0.0.1"; //InetAddress.getLocalHost().getHostAddress();
+        String address = InetAddress.getLocalHost().getHostAddress();
 
         // JAAS Config file - We need to point to the correct keytab files
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
@@ -168,7 +168,8 @@ public class KafkaRangerAuthorizerGSSTest {
         kerbyServer.init();
 
         // Create principals
-        String zookeeper = "zookeeper/127.0.0.1@kafka.apache.org";
+        String address = InetAddress.getLocalHost().getHostAddress();
+        String zookeeper = "zookeeper/" + address + "@kafka.apache.org";
         String kafka = "kafka/localhost@kafka.apache.org";
         String client = "client@kafka.apache.org";
 
