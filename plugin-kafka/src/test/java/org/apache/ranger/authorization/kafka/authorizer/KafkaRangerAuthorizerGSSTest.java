@@ -18,7 +18,6 @@
 package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
@@ -85,13 +84,11 @@ public class KafkaRangerAuthorizerGSSTest {
 
         configureKerby(basedir);
 
-        String address = InetAddress.getLocalHost().getHostAddress();
-
         // JAAS Config file - We need to point to the correct keytab files
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
         String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         content = content.replaceAll("<basedir>", basedir);
-        content = content.replaceAll("zookeeper/localhost", "zookeeper/" + address);
+        //content = content.replaceAll("zookeeper/localhost", "zookeeper/" + address);
 
         Path path2 = FileSystems.getDefault().getPath(basedir, "/target/test-classes/kafka_kerberos.jaas");
         Files.write(path2, content.getBytes(StandardCharsets.UTF_8));
@@ -104,7 +101,7 @@ public class KafkaRangerAuthorizerGSSTest {
         zookeeperProperties.put("requireClientAuthScheme", "sasl");
         zookeeperProperties.put("jaasLoginRenew", "3600000");
 
-        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1,-1, -1, zookeeperProperties);
+        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1,-1, -1, zookeeperProperties, "localhost");
 
         zkServer = new TestingServer(instanceSpec, true);
 
@@ -163,8 +160,7 @@ public class KafkaRangerAuthorizerGSSTest {
         kerbyServer.init();
 
         // Create principals
-        String address = InetAddress.getLocalHost().getHostAddress();
-        String zookeeper = "zookeeper/" + address + "@kafka.apache.org";
+        String zookeeper = "zookeeper/localhost@kafka.apache.org";
         String kafka = "kafka/localhost@kafka.apache.org";
         String client = "client@kafka.apache.org";
 
