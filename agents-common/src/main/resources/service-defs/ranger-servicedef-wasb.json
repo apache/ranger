@@ -48,6 +48,7 @@
       "level":30,
       "mandatory":  true,
       "lookupSupported":  true,
+      "recursiveSupported": true,
       "excludesSupported":  false,
       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
       "matcherOptions": {"wildCard":true, "ignoreCase":false},
