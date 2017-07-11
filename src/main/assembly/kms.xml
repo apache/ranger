@@ -356,7 +356,7 @@
     <!-- version file -->
     <fileSet>
         <outputDirectory>/</outputDirectory>
-        <directory>${project.build.outputDirectory}</directory>
+        <directory>${project.build.directory}</directory>
         <includes>
             <include>version</include>
         </includes>
