@@ -25,6 +25,7 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.InMemoryJAASConfiguration;
+import org.apache.ranger.audit.utils.SolrAppUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpClientUtil;
@@ -221,13 +222,7 @@ public class SolrAuditDestination extends AuditDestination {
 				docs.add(document);
 			}
 			try {
-				final UpdateResponse response = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<UpdateResponse>() {
-					@Override
-					public UpdateResponse run()  throws Exception {
-						UpdateResponse response = solrClient.add(docs);
-						return response;
-					};
-				});
+				final UpdateResponse response = SolrAppUtil.addDocsToSolr(solrClient, docs);
 
 				if (response.getStatus() != 0) {
 					addFailedCount(events.size());

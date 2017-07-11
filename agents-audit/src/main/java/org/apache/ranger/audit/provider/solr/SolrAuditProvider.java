@@ -21,6 +21,7 @@ package org.apache.ranger.audit.provider.solr;
 
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
@@ -30,6 +31,7 @@ import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.utils.SolrAppUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -167,13 +169,8 @@ public class SolrAuditProvider extends AuditDestination {
 			}
 			// Convert AuditEventBase to Solr document
 			final SolrInputDocument document = toSolrDoc(authzEvent);
-			final UpdateResponse response = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<UpdateResponse>() {
-				@Override
-				public UpdateResponse run()  throws Exception {
-					UpdateResponse response = solrClient.add(document);
-					return response;
-				};
-			});
+			final Collection<SolrInputDocument> docs = Collections.singletonList(document);
+			final UpdateResponse response = SolrAppUtil.addDocsToSolr(solrClient, docs);
 
 			if (response.getStatus() != 0) {
 				lastFailTime = System.currentTimeMillis();
