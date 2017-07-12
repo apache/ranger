@@ -162,6 +162,10 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.usersync.unix.minGroupId</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.usersync.keystore.file</name>
 		<value></value>
 	</property>
