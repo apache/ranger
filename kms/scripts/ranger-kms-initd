@@ -27,7 +27,30 @@
 #LINUX_USER=kms
 BIN_PATH=/usr/bin
 MOD_NAME=ranger-kms
-pidf=/var/run/ranger_kms/rangerkms.pid
+
+realScriptPath=`readlink -f $0`
+realScriptDir=`dirname $realScriptPath`
+RANGER_KMS_DIR=`(cd $realScriptDir; pwd)`
+for custom_env_script in `find ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/ -name "ranger-kms-env*"`; do
+        if [ -f $custom_env_script ]; then
+                . $custom_env_script
+        fi
+done
+if [ -z "${RANGER_KMS_PID_NAME}" ]
+then
+        RANGER_KMS_PID_NAME=rangerkms.pid
+fi
+if [ -z "${RANGER_KMS_PID_DIR_PATH}" ]
+then
+	RANGER_KMS_PID_DIR_PATH=/var/run/ranger_kms
+fi
+# User can set their own pid path using RANGER_KMS_PID_DIR_PATH and
+# RANGER_KMS_PID_NAME variable before calling the script. The user can modify
+# the value of the RANGER_KMS_PID_DIR_PATH in ranger-kms-env-piddir.sh to
+# change pid path and set the value of RANGER_KMS_PID_NAME to change the
+# pid file.
+pidf=${RANGER_KMS_PID_DIR_PATH}/${RANGER_KMS_PID_NAME}
+
 if [ -f $pidf ]; then
 	pid=`cat $pidf`
 else
