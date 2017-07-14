@@ -36,8 +36,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.HiveObjectPrivilege;
+import org.apache.hadoop.hive.metastore.api.HiveObjectRef;
+import org.apache.hadoop.hive.metastore.api.PrincipalType;
+import org.apache.hadoop.hive.metastore.api.PrivilegeGrantInfo;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
+import org.apache.hadoop.hive.ql.security.authorization.AuthorizationUtils;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
@@ -46,6 +53,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClie
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilege;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeInfo;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivObjectActionType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
@@ -1443,6 +1451,98 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public List<HivePrivilegeInfo> showPrivileges(HivePrincipal principal,
+			HivePrivilegeObject privObj) throws HiveAuthzPluginException {
+		try {
+			LOG.debug("RangerHiveAuthorizer.showPrivileges()");
+			IMetaStoreClient mClient = getMetastoreClientFactory()
+					.getHiveMetastoreClient();
+			List<HivePrivilegeInfo> resPrivInfos = new ArrayList<HivePrivilegeInfo>();
+			String principalName = principal == null ? null : principal
+					.getName();
+			PrincipalType principalType = principal == null ? null
+					: AuthorizationUtils.getThriftPrincipalType(principal
+							.getType());
+
+			List<HiveObjectPrivilege> msObjPrivs = mClient.list_privileges(
+					principalName, principalType,
+					this.getThriftHiveObjectRef(privObj));
+
+			for (HiveObjectPrivilege msObjPriv : msObjPrivs) {
+				HivePrincipal resPrincipal = new HivePrincipal(
+						msObjPriv.getPrincipalName(),
+						AuthorizationUtils.getHivePrincipalType(msObjPriv
+								.getPrincipalType()));
+
+				PrivilegeGrantInfo msGrantInfo = msObjPriv.getGrantInfo();
+				HivePrivilege resPrivilege = new HivePrivilege(
+						msGrantInfo.getPrivilege(), null);
+
+				HiveObjectRef msObjRef = msObjPriv.getHiveObject();
+				org.apache.hadoop.hive.metastore.api.HiveObjectType objectType = msObjRef
+						.getObjectType();
+				if (!isSupportedObjectType(msObjRef.getObjectType())) {
+					continue;
+				}
+				HivePrivilegeObject resPrivObj = new HivePrivilegeObject(
+						getPluginPrivilegeObjType(objectType),
+						msObjRef.getDbName(), msObjRef.getObjectName(),
+						msObjRef.getPartValues(), msObjRef.getColumnName());
+
+				HivePrincipal grantorPrincipal = new HivePrincipal(
+						msGrantInfo.getGrantor(),
+						AuthorizationUtils.getHivePrincipalType(msGrantInfo
+								.getGrantorType()));
+
+				HivePrivilegeInfo resPrivInfo = new HivePrivilegeInfo(
+						resPrincipal, resPrivilege, resPrivObj,
+						grantorPrincipal, msGrantInfo.isGrantOption(),
+						msGrantInfo.getCreateTime());
+				resPrivInfos.add(resPrivInfo);
+			}
+			return resPrivInfos;
+
+		} catch (Exception e) {
+			LOG.error("RangerHiveAuthorizer.showPrivileges: showPrivileges returned by showPrivileges is null");
+			throw new HiveAuthzPluginException("hive showPrivileges" + ": "
+					+ e.getMessage(), e);
+		}
+	}
+
+	private boolean isSupportedObjectType(
+			org.apache.hadoop.hive.metastore.api.HiveObjectType objectType) {
+		switch (objectType) {
+		case DATABASE:
+		case TABLE:
+			return true;
+		default:
+			return false;
+		}
+
+	}
+
+	private HivePrivilegeObjectType getPluginPrivilegeObjType(
+			org.apache.hadoop.hive.metastore.api.HiveObjectType objectType) {
+		switch (objectType) {
+		case DATABASE:
+			return HivePrivilegeObjectType.DATABASE;
+		case TABLE:
+			return HivePrivilegeObjectType.TABLE_OR_VIEW;
+		default:
+			throw new AssertionError("Unexpected object type " + objectType);
+		}
+	}
+
+	static HiveObjectRef getThriftHiveObjectRef(HivePrivilegeObject privObj)
+			throws HiveAuthzPluginException {
+		try {
+			return AuthorizationUtils.getThriftHiveObjectRef(privObj);
+		} catch (HiveException e) {
+			throw new HiveAuthzPluginException(e);
+		}
 	}
 
 	private RangerRequestedResources buildRequestContextWithAllAccessedResources(List<RangerHiveAccessRequest> requests) {
