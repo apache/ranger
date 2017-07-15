@@ -517,9 +517,6 @@ public class XUserMgr extends XUserMgrBase {
 	public VXUserGroupInfo createXUserGroupFromMap(
 			VXUserGroupInfo vXUserGroupInfo) {
 		checkAdminAccess();
-                if(vXUserGroupInfo.getXuserInfo() != null) {
-                        validatePassword(vXUserGroupInfo.getXuserInfo());
-                }
 		VXUserGroupInfo vxUGInfo = new VXUserGroupInfo();
 
 		VXUser vXUser = vXUserGroupInfo.getXuserInfo();
