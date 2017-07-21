@@ -229,14 +229,14 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	}
 
         private String constructForwardableURL(HttpServletRequest httpRequest){
-                String xForwardedProto = null;
-                String xForwardedHost = null;
-                String xForwardedContext = null;
+                String xForwardedProto = "";
+                String xForwardedHost = "";
+                String xForwardedContext = "";
                 Enumeration<String> names = httpRequest.getHeaderNames();
                 while (names.hasMoreElements()) {
                         String name = (String) names.nextElement();
                         Enumeration<String> values = httpRequest.getHeaders(name);
-                        String value = null;
+                        String value = "";
                         if (values != null) {
                                 while (values.hasMoreElements()) {
                                         value = (String) values.nextElement();
@@ -253,7 +253,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
                                 }
                         }
                 }
-                String xForwardedURL = null;
+                String xForwardedURL = "";
                 if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
                         xForwardedURL = xForwardedProto + "://" + xForwardedHost
                                         + xForwardedContext + PROXY_RANGER_URL_PATH
