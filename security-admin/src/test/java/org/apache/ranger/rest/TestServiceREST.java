@@ -1099,7 +1099,8 @@ public class TestServiceREST {
 		RangerPolicy existingPolicy = rangerPolicy();
 		RangerPolicy appliedPolicy = rangerPolicy();
 
-		existingPolicy.setPolicyItems(null);
+                List<RangerPolicyItem> policyItem = new ArrayList<RangerPolicyItem>();
+                existingPolicy.setPolicyItems(policyItem );
 		appliedPolicy.setPolicyItems(null);
 
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
@@ -1148,7 +1149,8 @@ public class TestServiceREST {
 		RangerPolicy existingPolicy = rangerPolicy();
 		RangerPolicy appliedPolicy = rangerPolicy();
 
-		existingPolicy.setPolicyItems(null);
+                List<RangerPolicyItem> policyItem = new ArrayList<RangerPolicyItem>();
+                existingPolicy.setPolicyItems(policyItem);
 		appliedPolicy.setPolicyItems(null);
 
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
@@ -1242,8 +1244,8 @@ public class TestServiceREST {
 	@Test
 	public void test42grant() {
 		RangerPolicy existingPolicy = rangerPolicy();
-
-		existingPolicy.setPolicyItems(null);
+                List<RangerPolicyItem> policyItem = new ArrayList<RangerPolicyItem>();
+                existingPolicy.setPolicyItems(policyItem );
 
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
 		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");
@@ -1337,7 +1339,8 @@ public class TestServiceREST {
 	public void test43revoke() {
 		RangerPolicy existingPolicy = rangerPolicy();
 
-		existingPolicy.setPolicyItems(null);
+                List<RangerPolicyItem> policyItem = new ArrayList<RangerPolicyItem>();
+                existingPolicy.setPolicyItems(policyItem );
 
 		Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
 		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource("/tmp");

@@ -35,9 +35,7 @@ import org.apache.ranger.kms.dao.DaoManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
@@ -52,9 +50,6 @@ public class TestRangerKeyStore {
         char[] storePass = "none".toCharArray();
         char[] keyPass = "none".toCharArray();
         char[] masterKey = "MasterPassword".toCharArray();
-
-        @Rule
-        public ExpectedException thrown = ExpectedException.none();
 
         @Before
         public void checkFileIfExists() {
@@ -73,7 +68,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "enckey:1";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         @Test(expected=IOException.class)
@@ -83,7 +80,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "1%enckey";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         @Test(expected=IOException.class)
@@ -93,7 +92,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "1 enckey";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         @Test(expected=IOException.class)
@@ -103,7 +104,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "_1-enckey";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         @Test
@@ -113,7 +116,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "enckey_1-test";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         @Test
@@ -123,7 +128,9 @@ public class TestRangerKeyStore {
                 DaoManager daoManager = Mockito.mock(DaoManager.class);
                 RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
                 String keyValue = "1-enckey_test";
-                rangerKeyStore.engineLoadKeyStoreFile(generateKeyStoreFile(keyValue),storePass, keyPass, masterKey, fileFormat);
+                InputStream inputStream = generateKeyStoreFile(keyValue);
+                rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
+                inputStream.close();
         }
 
         private InputStream generateKeyStoreFile(String keyValue) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
@@ -144,13 +151,18 @@ public class TestRangerKeyStore {
                         return new FileInputStream(new File(keyStoreFileName));
                 } catch (Throwable t) {
                         throw new IOException(t);
+                } finally {
+			stream.close();
                 }
         }
 
         private void deleteKeyStoreFile() {
                 File f = new File(keyStoreFileName);
                 if (f.exists()) {
-                        f.delete();
+                        boolean bol = f.delete();
+                        if(!bol){
+				System.out.println("Keystore File was not deleted successfully.");
+                        }
                 }
         }
 }
