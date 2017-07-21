@@ -1882,6 +1882,7 @@ public class ServiceREST {
 			XXTrxLog xxTrxLog = new XXTrxLog();
 			xxTrxLog.setAction("IMPORT START");
 			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
+                        xxTrxLog.setPreviousValue("IMPORT START");
 			trxLogList.add(xxTrxLog);
 			bizUtil.createTrxLog(trxLogList);
 			
