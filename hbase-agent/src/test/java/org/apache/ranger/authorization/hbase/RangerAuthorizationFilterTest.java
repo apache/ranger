@@ -19,7 +19,7 @@
 package org.apache.ranger.authorization.hbase;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,7 +33,6 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.filter.Filter.ReturnCode;
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
 public class RangerAuthorizationFilterTest {
 
 	@Test
@@ -61,41 +60,54 @@ public class RangerAuthorizationFilterTest {
 		Cell aCell = mock(Cell.class);
 		// families with know denied acess
 		for (String family : deniedFamilies) {
-			when(aCell.getFamily()).thenReturn(family.getBytes());
+			setFamilyArray(aCell, family.getBytes());
+			setQualifierArray(aCell, new byte[0]);
 			assertEquals(ReturnCode.NEXT_COL, filter.filterKeyValue(aCell));
 		}
 		// family that isn't in allowed and if cell does not have column then it should be denied
-		when(aCell.getFamily()).thenReturn("family7".getBytes());
-		when(aCell.getQualifier()).thenReturn(null);
+		setFamilyArray(aCell, "family7".getBytes());
+		setQualifierArray(aCell, new byte[0]);
 		assertEquals(ReturnCode.NEXT_COL, filter.filterKeyValue(aCell));
 		// families with known partial access
 		for (String column : family7KnowGoodColumns ) {
-			when(aCell.getQualifier()).thenReturn(column.getBytes());
+			setQualifierArray(aCell, column.getBytes());
 			assertEquals(ReturnCode.INCLUDE, filter.filterKeyValue(aCell));
 		}
-		when(aCell.getFamily()).thenReturn("family8".getBytes());
+		setFamilyArray(aCell, "family8".getBytes());
 		for (String column : family8KnowGoodColumns ) {
-			when(aCell.getQualifier()).thenReturn(column.getBytes());
+			setQualifierArray(aCell, column.getBytes());
 			assertEquals(ReturnCode.INCLUDE, filter.filterKeyValue(aCell));
 		}
 		// try some columns that are not in the cache
 		for (String column : new String[] { "family8-column3", "family8-column4"}) {
-			when(aCell.getQualifier()).thenReturn(column.getBytes());
+			setQualifierArray(aCell, column.getBytes());
 			assertEquals(ReturnCode.NEXT_COL, filter.filterKeyValue(aCell));
 		}
 		// families with known allowed access - for these we need to doctor up the session
 		when(session.isAuthorized()).thenReturn(true);
 		for (String family : allowedFamilies) {
-			when(aCell.getFamily()).thenReturn(family.getBytes());
-			when(aCell.getQualifier()).thenReturn("some-column".getBytes());
+			setFamilyArray(aCell, family.getBytes());
+			setQualifierArray(aCell, "some-column".getBytes());
 			assertEquals(ReturnCode.INCLUDE, filter.filterKeyValue(aCell));
 		}
 		when(session.isAuthorized()).thenReturn(false);
 		for (String family : indeterminateFamilies) {
-			when(aCell.getFamily()).thenReturn(family.getBytes());
-			when(aCell.getQualifier()).thenReturn("some-column".getBytes());
+			setFamilyArray(aCell, family.getBytes());
+			setQualifierArray(aCell, "some-column".getBytes());
 			assertEquals(ReturnCode.NEXT_COL, filter.filterKeyValue(aCell));
 		}
+	}
+
+	private void setFamilyArray(Cell aCell, byte[] familyArray) {
+		when(aCell.getFamilyArray()).thenReturn(familyArray);
+		when(aCell.getFamilyLength()).thenReturn((byte) familyArray.length);
+		when(aCell.getFamilyOffset()).thenReturn(0);
+	}
+
+	private void setQualifierArray(Cell aCell, byte[] qualifierArray) {
+		when(aCell.getQualifierArray()).thenReturn(qualifierArray);
+		when(aCell.getQualifierLength()).thenReturn(qualifierArray.length);
+		when(aCell.getQualifierOffset()).thenReturn(0);
 	}
 
 	AuthorizationSession createSessionMock() {

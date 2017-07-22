@@ -21,11 +21,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
@@ -122,8 +118,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static final String WILDCARD = "*";
 	private static final String NAMESPACE_SEPARATOR = ":";
 	
-    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
-
     private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 	
@@ -1168,15 +1162,6 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		List<byte[]> cfs = null;
 
 		requirePermission("preCleanupBulkLoad", Permission.Action.WRITE, ctx.getEnvironment(), cfs);
-	}
-	
-	public static Date getUTCDate() {
-		Calendar local=Calendar.getInstance();
-	    int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
-	    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
-	    utc.setTimeInMillis(local.getTimeInMillis());
-	    utc.add(Calendar.MILLISECOND, -offset);
-	    return utc.getTime();
 	}
 	
 	@Override

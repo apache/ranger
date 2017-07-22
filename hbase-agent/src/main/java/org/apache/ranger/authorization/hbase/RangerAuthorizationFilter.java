@@ -28,6 +28,7 @@ import com.google.common.base.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -55,7 +56,6 @@ public class RangerAuthorizationFilter extends FilterBase {
 		_session.auditHandler(_auditHandler);
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public ReturnCode filterKeyValue(Cell kv) throws IOException {
 
@@ -64,7 +64,7 @@ public class RangerAuthorizationFilter extends FilterBase {
 		}
 
 		String family = null;
-		byte[] familyBytes = kv.getFamily();
+		byte[] familyBytes = CellUtil.cloneFamily(kv);
 		if (familyBytes != null && familyBytes.length > 0) {
 			family = Bytes.toString(familyBytes);
 			if (LOG.isDebugEnabled()) {
@@ -72,8 +72,9 @@ public class RangerAuthorizationFilter extends FilterBase {
 			}
 		}
 		String column = null;
-		if (kv.getQualifier() != null && kv.getQualifier().length > 0) {
-			column = Bytes.toString(kv.getQualifier());
+		byte[] qualifier = CellUtil.cloneQualifier(kv);
+                if (qualifier != null && qualifier.length > 0) {
+			column = Bytes.toString(qualifier);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("filterKeyValue: evaluating column[" + column + "].");
 			}
