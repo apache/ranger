@@ -320,15 +320,25 @@ define(function(require) {
 						
 						switch (facet) {
 							case 'Service Name':
-								var serviceList 	= new RangerServiceList();
+								var serviceList 	= new RangerServiceList() , serviceNameVal = [];
 								serviceList.setPageSize(100);
 								serviceList.fetch().done(function(){
-									callback(serviceList.map(function(model){return model.get('name');}));
+								serviceList.each(function(m){
+									if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
+										serviceNameVal.push(m.get('name'));
+									};
+								});
+								callback(serviceNameVal);
 								});
 								break;
 							case 'Service Type':
-								var serviceList =  that.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('name').toUpperCase()}; })
-								callback(serviceList);
+								var serviveDefs = [];
+								that.serviceDefList.each(function(m){
+									if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase()){
+										serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
+									}
+								});
+								callback(serviveDefs);
 								break;
 							case 'Result':
 				                callback(XAUtils.hackForVSLabelValuePairs(XAEnums.AccessResult));
