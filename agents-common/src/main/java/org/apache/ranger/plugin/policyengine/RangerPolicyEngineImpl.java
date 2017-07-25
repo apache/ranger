@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -569,7 +570,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					for (List<RangerPolicyEvaluator> evaluators : likelyEvaluators) {
 						for (RangerPolicyEvaluator evaluator : evaluators) {
-							if (evaluator.isMatch(tagResource, null)) {
+							RangerPolicyResourceMatcher matcher = evaluator.getPolicyResourceMatcher();
+							if (matcher != null && matcher.isMatch(tagResource, RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT, null)) {
 								ret.add(evaluator.getPolicy());
 							}
 						}
@@ -587,7 +589,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			for (List<RangerPolicyEvaluator> evaluators : likelyEvaluators) {
 				for (RangerPolicyEvaluator evaluator : evaluators) {
-					if (evaluator.isMatch(resource, null)) {
+					RangerPolicyResourceMatcher matcher = evaluator.getPolicyResourceMatcher();
+					if (matcher != null && matcher.isMatch(resource, RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT, null)) {
 						ret.add(evaluator.getPolicy());
 					}
 				}
