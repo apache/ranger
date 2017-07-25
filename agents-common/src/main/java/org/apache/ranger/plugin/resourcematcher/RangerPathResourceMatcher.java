@@ -227,6 +227,9 @@ abstract class RecursiveMatcher extends ResourceMatcher {
 	}
 
 	String getStringToCompare(String policyValue) {
+		if (policyValue == null) {
+			return null;
+		}
 		return (policyValue.lastIndexOf(levelSeparatorChar) == policyValue.length()-1) ?
 			policyValue.substring(0, policyValue.length()-1) : policyValue;
 	}
@@ -242,9 +245,10 @@ final class CaseSensitiveRecursiveMatcher extends RecursiveMatcher {
 
 		final String noSeparator;
 		if (getNeedsDynamicEval()) {
-			noSeparator = getStringToCompare(getExpandedValue(evalContext));
+			String expandedPolicyValue = getExpandedValue(evalContext);
+			noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
 		} else {
-			if (valueWithoutSeparator == null) {
+			if (valueWithoutSeparator == null && value != null) {
 				valueWithoutSeparator = getStringToCompare(value);
 				valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
 			}
@@ -253,7 +257,7 @@ final class CaseSensitiveRecursiveMatcher extends RecursiveMatcher {
 
 		boolean ret = StringUtils.equals(resourceValue, noSeparator);
 
-		if (!ret) {
+		if (!ret && noSeparator != null) {
 			final String withSeparator = getNeedsDynamicEval() ? noSeparator + Character.toString(levelSeparatorChar) : valueWithSeparator;
 			ret = StringUtils.startsWith(resourceValue, withSeparator);
 		}
@@ -273,9 +277,10 @@ final class CaseInsensitiveRecursiveMatcher extends RecursiveMatcher {
 
 		final String noSeparator;
 		if (getNeedsDynamicEval()) {
-			noSeparator = getStringToCompare(getExpandedValue(evalContext));
+			String expandedPolicyValue = getExpandedValue(evalContext);
+			noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
 		} else {
-			if (valueWithoutSeparator == null) {
+			if (valueWithoutSeparator == null && value != null) {
 				valueWithoutSeparator = getStringToCompare(value);
 				valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
 			}
@@ -284,7 +289,7 @@ final class CaseInsensitiveRecursiveMatcher extends RecursiveMatcher {
 
 		boolean ret = StringUtils.equalsIgnoreCase(resourceValue, noSeparator);
 
-		if (!ret) {
+		if (!ret && noSeparator != null) {
 			final String withSeparator = getNeedsDynamicEval() ? noSeparator + Character.toString(levelSeparatorChar) : valueWithSeparator;
 			ret = StringUtils.startsWithIgnoreCase(resourceValue, withSeparator);
 		}

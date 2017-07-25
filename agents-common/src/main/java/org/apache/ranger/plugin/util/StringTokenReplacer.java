@@ -72,6 +72,10 @@ public class StringTokenReplacer {
                         Object replaced = RangerAccessRequestUtil.getTokenFromContext(tokens, rawToken.substring(tokenPrefix.length()));
                         if (replaced != null) {
                             ret.append(replaced.toString());
+                        } else {
+                            ret = null;
+                            token = null;
+                            break;
                         }
                     } else {
                         ret.append(startChar).append(token).append(endChar);
@@ -87,6 +91,6 @@ public class StringTokenReplacer {
             ret.append(startChar).append(token);
         }
 
-        return ret.toString();
+        return ret != null ? ret.toString() : null;
     }  
 }
