@@ -143,6 +143,8 @@ public class RangerBasePlugin {
 
 		policyEngineOptions.configureForPlugin(configuration, propertyPrefix);
 
+		LOG.info(policyEngineOptions);
+
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);

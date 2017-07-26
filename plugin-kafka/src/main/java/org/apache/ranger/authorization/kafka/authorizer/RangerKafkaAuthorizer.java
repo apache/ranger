@@ -42,12 +42,14 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import scala.collection.immutable.HashSet;
 import scala.collection.immutable.Set;
 
 public class RangerKafkaAuthorizer implements Authorizer {
 	private static final Log logger = LogFactory
 			.getLog(RangerKafkaAuthorizer.class);
+	private static final Log PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
 
 	public static final String KEY_TOPIC = "topic";
 	public static final String KEY_CLUSTER = "cluster";
@@ -130,6 +132,11 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			return true;
 		}
 
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_KAFKAAUTH_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_KAFKAAUTH_REQUEST_LOG, "RangerKafkaAuthorizer.authorize(resource=" + resource + ")");
+		}
 		String userName = null;
 		if (session.principal() != null) {
 			userName = session.principal().getName();
@@ -204,6 +211,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 						+ rangerRequest, t);
 			}
 		}
+		RangerPerfTracer.log(perf);
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("rangerRequest=" + rangerRequest + ", return="
 					+ returnValue);

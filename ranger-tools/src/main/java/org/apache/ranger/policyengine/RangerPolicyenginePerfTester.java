@@ -59,6 +59,7 @@ public class RangerPolicyenginePerfTester {
             RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
             policyEngineOptions.disableTagPolicyEvaluation = false;
             policyEngineOptions.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
+            policyEngineOptions.cacheAuditResults = false;
             policyEngineOptions.disableTrieLookupPrefilter = perfTestOptions.getIsTrieLookupPrefixDisabled();
 
             PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, perfTestOptions.getIsDynamicReorderingDisabled());

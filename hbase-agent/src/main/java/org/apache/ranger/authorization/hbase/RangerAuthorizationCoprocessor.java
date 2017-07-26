@@ -111,9 +111,11 @@ import com.google.common.collect.MapMaker;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocessorBase implements AccessControlService.Interface, CoprocessorService {
 	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class.getName());
+	private static final Log PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
 		
@@ -334,7 +336,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			}
 			return result;
 		}
-		
+
 		// let's create a session that would be reused.  Set things on it that won't change.
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
@@ -505,7 +507,11 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> authorizeAccess");
 		}
+		RangerPerfTracer perf = null;
+
 		try {
+			perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.authorizeAccess(request=Operation[" + operation + "]");
+
 			ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, env, familyMap);
 			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 			if (accessResult._everythingIsAccessible) {
@@ -525,6 +531,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 				throw new AccessDeniedException(accessResult._denialReason);
 			}
 		} finally {
+			RangerPerfTracer.log(perf);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== authorizeAccess");
 			}
@@ -542,17 +549,26 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	void requirePermission(final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap)
 			throws AccessDeniedException {
 
-		ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, regionServerEnv, familyMap);
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
-		if (accessResult._everythingIsAccessible) {
-			auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
-			auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
-			LOG.debug("requirePermission: exiting: all access was allowed");
-			return;
-		} else {
-			auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
-			LOG.debug("requirePermission: exiting: throwing exception as everything wasn't accessible");
-			throw new AccessDeniedException(accessResult._denialReason);
+		RangerPerfTracer perf = null;
+
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_HBASEAUTH_REQUEST_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.requirePermission(request=Operation[" + operation + "]");
+			}
+			ColumnFamilyAccessResult accessResult = evaluateAccess(operation, action, regionServerEnv, familyMap);
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+			if (accessResult._everythingIsAccessible) {
+				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
+				auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
+				LOG.debug("requirePermission: exiting: all access was allowed");
+				return;
+			} else {
+				auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
+				LOG.debug("requirePermission: exiting: throwing exception as everything wasn't accessible");
+				throw new AccessDeniedException(accessResult._denialReason);
+			}
+		} finally {
+			RangerPerfTracer.log(perf);
 		}
 	}
 	

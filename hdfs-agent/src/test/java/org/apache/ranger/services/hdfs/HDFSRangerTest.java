@@ -23,6 +23,7 @@ import java.security.PrivilegedExceptionAction;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -357,6 +358,11 @@ public class HDFSRangerTest {
         HDFSReadFailTest("/tmp/tmpdir5/t/data-file.txt");
     }
 
+    @org.junit.Test
+    public void HDFSContentSummaryTest() throws Exception {
+        HDFSGetContentSummary("/tmp/get-content-summary");
+    }
+
     void HDFSReadTest(String fileName) throws Exception {
         FileSystem fileSystem = hdfsCluster.getFileSystem();
 
@@ -526,5 +532,54 @@ public class HDFSRangerTest {
                 return null;
             }
         });
+    }
+
+    void HDFSGetContentSummary(final String dirName) throws Exception {
+
+        String subdirName = dirName + "/tmpdir";
+
+        createFile(subdirName, 1);
+        createFile(subdirName, 2);
+
+        UserGroupInformation ugi = UserGroupInformation.createUserForTesting("bob", new String[] {});
+        ugi.doAs(new PrivilegedExceptionAction<Void>() {
+
+            public Void run() throws Exception {
+                Configuration conf = new Configuration();
+                conf.set("fs.defaultFS", defaultFs);
+
+                FileSystem fs = FileSystem.get(conf);
+
+                try {
+                    // GetContentSummary on the directory dirName
+                    ContentSummary contentSummary = fs.getContentSummary(new Path(dirName));
+
+                    long directoryCount = contentSummary.getDirectoryCount();
+                    Assert.assertTrue("Found unexpected number of directories; expected-count=3, actual-count=" + directoryCount, directoryCount == 3);
+                } catch (Exception e) {
+                    Assert.fail("Failed to getContentSummary, exception=" + e);
+                }
+                fs.close();
+                return null;
+            }
+        });
+    }
+
+    void createFile(String baseDir, Integer index) throws Exception {
+        FileSystem fileSystem = hdfsCluster.getFileSystem();
+
+        // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
+        String dirName = baseDir + (index != null ? String.valueOf(index) : "");
+        String fileName = dirName + "/dummy-data";
+        final Path file = new Path(fileName);
+        FSDataOutputStream out = fileSystem.create(file);
+        for (int i = 0; i < 1024; ++i) {
+            out.write(("data" + i + "\n").getBytes("UTF-8"));
+            out.flush();
+        }
+        out.close();
+
+        // Change permissions to read-only
+        fileSystem.setPermission(file, new FsPermission(FsAction.READ, FsAction.NONE, FsAction.NONE));
     }
 }

@@ -44,6 +44,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.common.collect.Sets;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	public static final String ACCESS_TYPE_ADMIN_QUEUE = "admin-queue";
@@ -55,6 +56,8 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
     private static boolean yarnAuthEnabled = RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT;
 
 	private static final Log LOG = LogFactory.getLog(RangerYarnAuthorizer.class);
+
+	private static final Log PERF_YARNAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("yarnauth.request");
 
 	private static volatile RangerYarnPlugin yarnPlugin = null;
 
@@ -101,7 +104,15 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 		RangerAccessResult     result       = null;
 		String				   clusterName  = yarnPlugin.getClusterName();
 
+		RangerPerfTracer perf = null;
+		RangerPerfTracer yarnAclPerf = null;
+
 		if(plugin != null) {
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_YARNAUTH_REQUEST_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_YARNAUTH_REQUEST_LOG, "RangerYarnAuthorizer.checkPermission(entity=" + entity + ")");
+			}
+
 			RangerYarnAccessRequest request = new RangerYarnAccessRequest(entity, getRangerAccessType(accessType), accessType.name(), ugi, clusterName);
 
 			auditHandler = new RangerYarnAuditHandler();
@@ -110,6 +121,11 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 		}
 
 		if(RangerYarnAuthorizer.yarnAuthEnabled && (result == null || !result.getIsAccessDetermined())) {
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_YARNAUTH_REQUEST_LOG)) {
+				yarnAclPerf = RangerPerfTracer.getPerfTracer(PERF_YARNAUTH_REQUEST_LOG, "RangerYarnNativeAuthorizer.isAllowedByYarnAcl(entity=" + entity + ")");
+			}
+
 			ret = isAllowedByYarnAcl(accessType, entity, ugi, auditHandler);
 		} else {
 			ret = result == null ? false : result.getIsAllowed();
@@ -118,6 +134,10 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 		if(auditHandler != null) {
 			auditHandler.flushAudit();
 		}
+
+		RangerPerfTracer.log(yarnAclPerf);
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerYarnAuthorizer.checkPermission(" + accessType + ", " + toString(entity) + ", " + ugi + "): " + ret);

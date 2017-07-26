@@ -21,7 +21,9 @@ package org.apache.ranger.authorization.hadoop.constants;
 public class RangerHadoopConstants {
 	
 	public static final String RANGER_ADD_HDFS_PERMISSION_PROP = "xasecure.add-hadoop-authorization";
+	public static final String RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP = "ranger.optimize-subaccess-authorization" ;
 	public static final boolean RANGER_ADD_HDFS_PERMISSION_DEFAULT = false;
+	public static final boolean RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT = false ;
 	public static final String READ_ACCCESS_TYPE = "read";
 	public static final String WRITE_ACCCESS_TYPE = "write";
 	public static final String EXECUTE_ACCCESS_TYPE = "execute";

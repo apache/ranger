@@ -23,12 +23,14 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.storm.StormRangerPlugin;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 
+	private static final Log PERF_STORMAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("stormauth.request");
+
 	private static final String STORM_CLIENT_JASS_CONFIG_SECTION = "StormClient";
 
 	private static volatile StormRangerPlugin plugin = null;
@@ -51,9 +55,9 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	/**
      * permit() method is invoked for each incoming Thrift request.
-     * @param context request context includes info about
-     * @param operation operation name
-     * @param topology_storm configuration of targeted topology
+     * @param aRequestContext request context includes info about
+     * @param aOperationName operation name
+     * @param aTopologyConfigMap configuration of targeted topology
      * @return true if the request is authorized, false if reject
      */
 	
@@ -64,8 +68,15 @@ public class RangerStormAuthorizer implements IAuthorizer {
 		boolean isAuditEnabled = false;
 
 		String topologyName = null;
-		
+
+		RangerPerfTracer perf = null;
+
 		try {
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_STORMAUTH_REQUEST_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_STORMAUTH_REQUEST_LOG, "RangerStormAuthorizer.permit()");
+			}
+
 			topologyName = (aTopologyConfigMap == null ? "" : (String)aTopologyConfigMap.get(Config.TOPOLOGY_NAME));
 	
 			if (LOG.isDebugEnabled()) {
@@ -130,6 +141,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 			LOG.error("RangerStormAuthorizer found this exception", t);
 		}
 		finally {
+			RangerPerfTracer.log(perf);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("[req "+ aRequestContext.requestID()+ "] Access "
 		                + " from: [" + aRequestContext.remoteAddress() + "]"
@@ -144,7 +156,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 	
 	/**
      * Invoked once immediately after construction
-     * @param conf Storm configuration
+     * @param aStormConfigMap Storm configuration
      */
 
 	@Override
