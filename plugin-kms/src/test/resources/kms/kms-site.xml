@@ -189,4 +189,9 @@
   	<name>hadoop.kms.proxyuser.ranger.users</name>
   	<value>*</value>
   </property>
+
+  <property>
+    <name>hadoop.kms.key.authorization.enable</name>
+    <value>true</value>
+  </property>
 </configuration>
