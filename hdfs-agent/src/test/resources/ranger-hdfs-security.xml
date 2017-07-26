@@ -42,4 +42,12 @@
 		</description>
 	</property>
 
+	<property>
+		<name>ranger.optimize-subaccess-authorization</name>
+		<value>true</value>
+		<description>
+			Enable skipping subdirectories if proper policy exists for getContentSummary and delete commands
+		</description>
+	</property>
+
 </configuration>

@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.solr.security.AuthorizationContext.RequestType;
 import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
@@ -48,6 +49,7 @@ import org.apache.solr.security.AuthorizationContext.CollectionRequest;
 public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	private static final Log logger = LogFactory
 			.getLog(RangerSolrAuthorizer.class);
+	private static final Log PERF_SOLRAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("solrauth.request");
 
 	public static final String PROP_USE_PROXY_IP = "xasecure.solr.use_proxy_ip";
 	public static final String PROP_PROXY_IP_HEADER = "xasecure.solr.proxy_ip_header";
@@ -167,6 +169,12 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 			RangerMultiResourceAuditHandler auditHandler = new RangerMultiResourceAuditHandler();
 
+			RangerPerfTracer perf = null;
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_SOLRAUTH_REQUEST_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_SOLRAUTH_REQUEST_LOG, "RangerSolrAuthorizer.authorize()");
+			}
+
 			String userName = getUserName(context);
 			Set<String> userGroups = getGroupsForUser(userName);
 			String ip = null;
@@ -213,6 +221,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				}
 			} finally {
 				auditHandler.flushAudit();
+				RangerPerfTracer.log(perf);
 			}
 		} catch (Throwable t) {
 			isDenied = true;

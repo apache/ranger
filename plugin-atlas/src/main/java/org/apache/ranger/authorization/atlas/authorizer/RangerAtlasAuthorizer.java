@@ -26,15 +26,18 @@ import org.apache.atlas.authorize.AtlasAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasResourceTypes;
+import org.apache.commons.logging.Log;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
+    private static final Log PERF_ATLASAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("atlasauth.request");
     private static boolean isDebugEnabled = LOG.isDebugEnabled();
     private static volatile RangerBasePlugin atlasPlugin = null;
 
@@ -70,6 +73,11 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         if (isDebugEnabled) {
             LOG.debug("==> isAccessAllowed( " + request + " )");
         }
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_ATLASAUTH_REQUEST_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_ATLASAUTH_REQUEST_LOG, "RangerAtlasAuthorizer.isAccessAllowed(request=" + request + ")");
+        }
 
         String resource = request.getResource();
         String user = request.getUser();
@@ -92,6 +100,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                 break;
             }
         }
+
+        RangerPerfTracer.log(perf);
 
         if (isDebugEnabled) {
             LOG.debug("<== isAccessAllowed Returning value :: " + isAccessAllowed);

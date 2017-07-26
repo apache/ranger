@@ -66,10 +66,13 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 import com.google.common.collect.Sets;
 
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class);
+
+	private static final Log PERF_HIVEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveauth.request");
 
 	private static final char COLUMN_SEP = ',';
 
@@ -221,6 +224,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
+		RangerPerfTracer perf = null;
+
 		try {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String                  user           = ugi.getShortUserName();
@@ -235,6 +240,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				handleDfsCommand(hiveOpType, inputHObjs, user, auditHandler);
 
 				return;
+			}
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_REQUEST_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_REQUEST_LOG, "RangerHiveAuthorizer.checkPrivileges(hiveOpType=" + hiveOpType + ")");
 			}
 
 			List<RangerHiveAccessRequest> requests = new ArrayList<RangerHiveAccessRequest>();
@@ -420,6 +429,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 		} finally {
 			auditHandler.flushAudit();
+			RangerPerfTracer.log(perf);
 		}
 	}
 
@@ -439,7 +449,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> filterListCmdObjects(%s, %s)", objs, context));
 		}
-		
+
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_REQUEST_LOG, "RangerHiveAuthorizer.filterListCmdObjects()");
+		}
+
 		List<HivePrivilegeObject> ret = null;
 
 		// bail out early if nothing is there to validate!
@@ -509,6 +525,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 		}
 
+		RangerPerfTracer.log(perf);
+
 		if (LOG.isDebugEnabled()) {
 			int count = ret == null ? 0 : ret.size();
 			LOG.debug(String.format("<== filterListCmdObjects: count[%d], ret[%s]", count, ret));
@@ -522,6 +540,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> applyRowFilterAndColumnMasking(" + queryContext + ", objCount=" + hiveObjs.size() + ")");
+		}
+
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_REQUEST_LOG, "RangerHiveAuthorizer.applyRowFilterAndColumnMasking()");
 		}
 
 		if(CollectionUtils.isNotEmpty(hiveObjs)) {
@@ -575,6 +599,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== applyRowFilterAndColumnMasking(" + queryContext + ", objCount=" + hiveObjs.size() + "): retCount=" + ret.size());

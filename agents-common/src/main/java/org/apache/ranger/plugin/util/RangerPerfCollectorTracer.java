@@ -22,13 +22,16 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.logging.Log;
 
 public class RangerPerfCollectorTracer extends RangerPerfTracer {
+	private final long   startTimeNanos;
 
 	public RangerPerfCollectorTracer(Log logger, String tag, String data) {
 		super(logger, tag, data);
+		startTimeNanos = System.nanoTime();
 	}
 
 	@Override
 	public void log() {
-		PerfDataRecorder.recordStatistic(tag, getElapsedTime());
+		// Collect elapsed time in microseconds
+		PerfDataRecorder.recordStatistic(tag, ((System.nanoTime() - startTimeNanos) + 500) / 1000);
 	}
 }

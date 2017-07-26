@@ -42,6 +42,9 @@ public class RangerPolicyEngineOptions {
 
 		cacheAuditResults = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
 
+		if (!disableTrieLookupPrefilter) {
+			cacheAuditResults = false;
+		}
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
 	}
@@ -119,5 +122,17 @@ public class RangerPolicyEngineOptions {
 		ret += enableTagEnricherWithLocalRefresher ? 1 : 0;
 		ret *= 2;
 		return ret;
+	}
+
+	@Override
+	public String toString() {
+		return "PolicyEngineOptions: {" +
+				" evaluatorType: " + evaluatorType +
+				", cacheAuditResult: " + cacheAuditResults +
+				", disableContextEnrichers: " + disableContextEnrichers +
+				", disableCustomConditions: " + disableContextEnrichers +
+				", disableTrieLookupPrefilter: " + disableTrieLookupPrefilter +
+				" }";
+
 	}
 }

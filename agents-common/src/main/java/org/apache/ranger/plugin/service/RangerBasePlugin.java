@@ -148,6 +148,8 @@ public class RangerBasePlugin {
 		policyEngineOptions.disableTagPolicyEvaluation = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.tagpolicy.evaluation", false);
 		policyEngineOptions.disableTrieLookupPrefilter = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 
+		LOG.info(policyEngineOptions);
+
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);

@@ -233,6 +233,33 @@
       "createdBy": "Admin",
       "updatedBy": "Admin",
       "version": 1
+    },
+    {
+      "service": "cl1_hadoop",
+      "name": "/tmp/get-content-summary",
+      "policyType": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "path": {"values": ["/tmp/get-content-summary", "/tmp/get-content-summary/tmpdir1", "/tmp/get-content-summary/tmpdir2"], "isExcludes": false, "isRecursive": false}
+      },
+      "policyItems": [
+        {
+          "accesses": [{"type": "read","isAllowed": true}, {"type": "execute","isAllowed": true}],
+          "users": ["bob"],
+          "groups": ["IT"],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 40,
+      "isEnabled": true,
+      "version": 1
     }
   ],
   "serviceDef": {

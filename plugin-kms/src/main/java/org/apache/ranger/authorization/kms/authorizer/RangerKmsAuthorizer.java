@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
@@ -46,6 +48,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +56,7 @@ import com.google.common.collect.Sets;
 
 public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizer.class);
+	private static final Log PERF_KMSAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kmsauth.request");
 
 	  private static final String KMS_USER_PRINCIPAL = "ranger.ks.kerberos.principal";
 	  private static final String KMS_USER_KEYTAB = "ranger.ks.kerberos.keytab";
@@ -200,6 +204,11 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		  if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + ")");
 			}
+		  RangerPerfTracer perf = null;
+
+		  if(RangerPerfTracer.isPerfTraceEnabled(PERF_KMSAUTH_REQUEST_LOG)) {
+			  perf = RangerPerfTracer.getPerfTracer(PERF_KMSAUTH_REQUEST_LOG, "RangerKmsAuthorizer.hasAccess(type=" + type + ")");
+		  }
 			boolean ret = false;
 			RangerKMSPlugin plugin = kmsPlugin;
 			String rangerAccessType = getRangerAccessType(type);
@@ -215,7 +224,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result == null ? false : result.getIsAllowed();
 			}
-			
+			RangerPerfTracer.log(perf);
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerkmsAuthorizer.hasAccess(" + type + ", " + ugi + "): " + ret);
 			}
