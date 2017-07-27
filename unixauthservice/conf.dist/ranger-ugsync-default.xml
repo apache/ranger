@@ -19,7 +19,7 @@
 <configuration>
 	<property>
 		<name>ranger.usersync.port</name>
-		<value>5151</value>
+                <value>5151</value>
 	</property>
 	<property>
 		<name>ranger.usersync.ssl</name>
