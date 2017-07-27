@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.thrift.TException;
 
 public class HiveClient extends BaseClient implements Closeable {
@@ -704,12 +705,24 @@ public class HiveClient extends BaseClient implements Closeable {
 				}
 			}
 
+			String decryptedPwd = null;
 			try {
-				
+				decryptedPwd = PasswordUtils.decryptPassword(password);
+			} catch (Exception ex) {
+				LOG.info("Password decryption failed; trying Hive connection with received password string");
+				decryptedPwd = null;
+			} finally {
+				if (decryptedPwd == null) {
+					decryptedPwd = password;
+				}
+			}
+
+			try {
+
 				if (userName == null && password == null) {
 					con = DriverManager.getConnection(url);
 				} else {
-					con = DriverManager.getConnection(url, userName, password);
+					con = DriverManager.getConnection(url, userName, decryptedPwd);
 				}
 			} catch (SQLException e) {
 				String msgDesc = "Unable to connect to Hive Thrift Server instance.";
