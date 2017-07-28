@@ -794,38 +794,20 @@ class RangerPolicyRepository {
             LOG.debug("==> reorderEvaluators()");
         }
 
-        if(policyResourceTrie != null) {
-            reorderPolicyEvaluators(policyResourceTrie);
-        } else {
+        if(policyResourceTrie == null) {
             policyEvaluators = getReorderedPolicyEvaluators(policyEvaluators);
         }
 
-        if(dataMaskResourceTrie != null) {
-            reorderPolicyEvaluators(dataMaskResourceTrie);
-        } else {
+        if(dataMaskResourceTrie == null) {
             dataMaskPolicyEvaluators = getReorderedPolicyEvaluators(dataMaskPolicyEvaluators);
         }
 
-        if(rowFilterResourceTrie != null) {
-            reorderPolicyEvaluators(rowFilterResourceTrie);
-        } else {
+        if(rowFilterResourceTrie == null) {
             rowFilterPolicyEvaluators = getReorderedPolicyEvaluators(rowFilterPolicyEvaluators);
         }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== reorderEvaluators()");
-        }
-    }
-
-    private void reorderPolicyEvaluators(Map<String, RangerResourceTrie> trieMap) {
-        if(trieMap != null) {
-            for(Map.Entry<String, RangerResourceTrie> entry : trieMap.entrySet()) {
-                RangerResourceTrie trie = entry.getValue();
-
-                if(trie != null) {
-                    trie.reorderEvaluators();
-                }
-            }
         }
     }
 
@@ -849,7 +831,7 @@ class RangerPolicyRepository {
             ret = new HashMap<String, RangerResourceTrie>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators));
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR));
             }
         } else {
             ret = null;

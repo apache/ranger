@@ -23,8 +23,6 @@ package org.apache.ranger.plugin.policyresourcematcher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
-import java.io.Serializable;
-import java.util.Comparator;
 import java.util.Map;
 
 public interface RangerPolicyResourceEvaluator {
@@ -37,11 +35,4 @@ public interface RangerPolicyResourceEvaluator {
     RangerResourceMatcher getResourceMatcher(String resourceName);
 
     Integer getLeafResourceLevel();
-
-    class IdComparator implements Comparator<RangerPolicyResourceEvaluator>, Serializable {
-        @Override
-        public int compare(RangerPolicyResourceEvaluator me, RangerPolicyResourceEvaluator other) {
-            return Long.compare(me.getId(), other.getId());
-        }
-    }
 }
