@@ -39,6 +39,8 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvalua
 
 
 public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
+	Comparator<RangerPolicyEvaluator> EVAL_ORDER_COMPARATOR = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
+
 	String EVALUATOR_TYPE_AUTO   = "auto";
 	String EVALUATOR_TYPE_OPTIMIZED = "optimized";
 	String EVALUATOR_TYPE_CACHED    = "cached";
@@ -96,11 +98,14 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 				result = 1;
 			} else {
 				result = Long.compare(other.getUsageCount(), me.getUsageCount());
+
 				if (result == 0) {
 					result = Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 				}
 			}
+
 			return result;
 		}
 	}
+
 }

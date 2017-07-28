@@ -160,7 +160,7 @@ public class RangerBasePlugin {
 			LOG.debug(propertyPrefix + ".policy.policyReorderInterval:" + policyReorderIntervalMs);
 		}
 
-		if (policyReorderIntervalMs > 0) {
+		if (policyEngineOptions.disableTrieLookupPrefilter && policyReorderIntervalMs > 0) {
 			policyEngineRefreshTimer = new Timer("PolicyEngineRefreshTimer", true);
 			try {
 				policyEngineRefreshTimer.schedule(new PolicyEngineRefresher(this), policyReorderIntervalMs, policyReorderIntervalMs);
@@ -173,8 +173,7 @@ public class RangerBasePlugin {
 				policyEngineRefreshTimer = null;
 			}
 		} else {
-			LOG.info("Policies will NOT be reordered based on number of evaluations because "
-					+ propertyPrefix + ".policy.policyReorderInterval is set to a negative number[" + policyReorderIntervalMs +"]");
+			LOG.info("Policies will NOT be reordered based on number of evaluations");
 		}
 	}
 
