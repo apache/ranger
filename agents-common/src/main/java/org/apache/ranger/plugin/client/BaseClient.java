@@ -37,6 +37,9 @@ public abstract class BaseClient {
 
 
 	private static final String DEFAULT_NAME_RULE = "DEFAULT";
+	private static final String DEFAULT_ERROR_MESSAGE = " You can still save the repository and start creating "
+				+ "policies, but you would not be able to use autocomplete for "
+				+ "resource names. Check ranger_admin.log for more info.";
 
 
 	private String serviceName;
@@ -71,9 +74,6 @@ public abstract class BaseClient {
 
 	protected void login() {
 		ClassLoader prevCl = Thread.currentThread().getContextClassLoader();
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
 		try {
 			//Thread.currentThread().setContextClassLoader(configHolder.getClassLoader());
 			 String lookupPrincipal = SecureClientLogin.getPrincipal(configHolder.getLookupPrincipal(), java.net.InetAddress.getLocalHost().getCanonicalHostName());
@@ -88,13 +88,7 @@ public abstract class BaseClient {
 			 String userName = configHolder.getUserName();
 			 if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){
 				 if (userName == null) {
-					 String msgDesc = "Unable to find login username for hadoop environment, ["
-						+ serviceName + "]";
-					 HadoopException hdpException = new HadoopException(msgDesc);
-					 hdpException.generateResponseDataMap(false, msgDesc + errMsg, msgDesc + errMsg,
-						null, null);
-
-					 throw hdpException;
+					throw createException("Unable to find login username for hadoop environment, [" + serviceName + "]", null);
 				 }
 				 String keyTabFile = configHolder.getKeyTabFile();
 				 if (keyTabFile != null) {
@@ -139,23 +133,24 @@ public abstract class BaseClient {
 				 }
 			 }
 		} catch (IOException ioe) {
-			String msgDesc = "Unable to login to Hadoop environment ["
-					+ serviceName + "]";
-
-			HadoopException hdpException = new HadoopException(msgDesc, ioe);
-			hdpException.generateResponseDataMap(false, getMessage(ioe) +  errMsg,
-					msgDesc + errMsg, null, null);
-			throw hdpException;
+			throw createException(ioe);
 		} catch (SecurityException se) {
-			String msgDesc = "Unable to login to Hadoop environment ["
-					+ serviceName + "]";
-			HadoopException hdpException = new HadoopException(msgDesc, se);
-			hdpException.generateResponseDataMap(false, getMessage(se) +  errMsg,
-					msgDesc + errMsg, null, null);
-			throw hdpException;
+			throw createException(se);
 		} finally {
 			Thread.currentThread().setContextClassLoader(prevCl);
 		}
+	}
+
+	private HadoopException createException(Exception exp) {
+		return createException("Unable to login to Hadoop environment [" + serviceName + "]", exp);
+	}
+
+	private HadoopException createException(String msgDesc, Exception exp) {
+		HadoopException hdpException = new HadoopException(msgDesc, exp);
+		final String fullDescription = exp != null ? getMessage(exp) : msgDesc;
+		hdpException.generateResponseDataMap(false, fullDescription + DEFAULT_ERROR_MESSAGE,
+			msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+		return hdpException;
 	}
 
 	public String getSerivceName() {
@@ -183,10 +178,9 @@ public abstract class BaseClient {
 	public static String getMessage(Throwable excp) {
 		List<String> errList = new ArrayList<>();
 		while (excp != null) {
-			if (!errList.contains(excp.getMessage() + ". \n")) {
-				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
-					errList.add(excp.getMessage() + ". \n");
-				}
+			String message = excp.getMessage();
+			if (StringUtils.isNotEmpty(message) && !errList.contains(message + ". \n")) {
+				errList.add(message + ". \n");
 			}
 			excp = excp.getCause();
 		}
