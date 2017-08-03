@@ -354,7 +354,7 @@ define(function(require){
                                           table:localization.tt('lbl.tableName')   , tag : localization.tt('h.tagsMsg'),
                                           taxonomy:localization.tt('h.taxonomy')  ,term: localization.tt('h.term') ,
                                           topic:localization.tt('h.topic')    ,topology:localization.tt('lbl.topologyName'),
-                                          type:localization.tt('h.type')    ,udf:localization.tt('h.udf') ,
+                                          type:localization.tt('h.type')    ,udf:localization.tt('h.udf') , url:localization.tt('h.url')
                                                  };
 			var serverRsrcAttrName = _.map(resourceSearchOpt,function(opt){ 
                                         return {

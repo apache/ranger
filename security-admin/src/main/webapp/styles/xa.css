@@ -1713,6 +1713,7 @@ background-color: #444444;
 }
 .alert {
 	border:none;
+	word-break: break-all;
 }
 tr.disable-policy td {
 	background-color: #F0F0F0;
@@ -2215,4 +2216,13 @@ td.subgrid-custom-cell{
 .recursive-toggle-hdfs-2{
 	margin-left: 388px;
 	margin-top: -27px;
+}
+.subgridTable{
+        width : 25% !important;
+}
+.trim-containt{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 95%;
 }

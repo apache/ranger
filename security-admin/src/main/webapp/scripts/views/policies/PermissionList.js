@@ -485,7 +485,7 @@ define(function(require) {
 			});
 			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
 				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
-					that.model.get('dataMaskInfo').valueExpr = e.currentTarget.value;
+                                        that.model.get('dataMaskInfo').valueExpr = _.escape(e.currentTarget.value);
 				}
 			}).trigger('change');
 			if(!this.accessPermSetForTagMasking){
@@ -707,6 +707,7 @@ define(function(require) {
 						$(this).siblings('[data-id="maskTypeCustom"]').css("display","");
 					}else{
 						$(this).siblings('[data-id="maskTypeCustom"]').css("display","none");
+                                                $(this).siblings('[data-id="maskTypeCustom"]').val(" ")
 					}
 					
 					$(this).html("<span class='label label-info'>" + obj.text + "</span>");
@@ -723,7 +724,7 @@ define(function(require) {
 			});
 			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
 				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
-					that.model.get('dataMaskInfo').valueExpr = e.currentTarget.value;
+                                        that.model.get('dataMaskInfo').valueExpr = _.escape(e.currentTarget.value);
 				}
 			}).trigger('change');
 		},

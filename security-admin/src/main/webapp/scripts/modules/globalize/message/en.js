@@ -330,7 +330,8 @@ define(function(require) {
                 type                        :'Policy for all type.',
                 udf                         :'Hive udf.',
                 pluginStatus                :'Plugin Status',
-                        clusterName                 :'Name of ambari cluster'
+                clusterName                 :'Name of ambari cluster',
+                url        					:'Hive url.',
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',

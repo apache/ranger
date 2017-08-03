@@ -327,14 +327,20 @@ define(function(require){
 			if(itemType === 'Masked Policy Items') {
 		//   its for new created record  
 					for(var i = 0; i < newPolicyItems.length ; i++){
-						if(newPolicyItems[i].DataMasklabel){
+						if(newPolicyItems[i].DataMasklabel && newPolicyItems[i].DataMasklabel == "Custom"){
 						var maskingType = newPolicyItems[i].dataMaskInfo.dataMaskType;
-						newPolicyItems[i].dataMaskInfo.dataMaskType = newPolicyItems[i].DataMasklabel;
+						newPolicyItems[i].dataMaskInfo.dataMaskType = newPolicyItems[i].DataMasklabel +' : '+newPolicyItems[i].dataMaskInfo.valueExpr;
+						}else if(newPolicyItems[i].DataMasklabel){
+							var maskingType = newPolicyItems[i].dataMaskInfo.dataMaskType;
+							newPolicyItems[i].dataMaskInfo.dataMaskType = newPolicyItems[i].DataMasklabel;
 						}
 					}
 					
 					for(var i = 0; i < oldPolicyItems.length ; i++){
-						if(oldPolicyItems[i].DataMasklabel){
+						if(oldPolicyItems[i].DataMasklabel && oldPolicyItems[i].DataMasklabel == "Custom"){
+							var maskingType = oldPolicyItems[i].dataMaskInfo.dataMaskType;
+							oldPolicyItems[i].dataMaskInfo.dataMaskType = oldPolicyItems[i].DataMasklabel +' : '+oldPolicyItems[i].dataMaskInfo.valueExpr;
+						}else if(oldPolicyItems[i].DataMasklabel){
 							var maskingType = oldPolicyItems[i].dataMaskInfo.dataMaskType;
 							oldPolicyItems[i].dataMaskInfo.dataMaskType = oldPolicyItems[i].DataMasklabel;
 						}
