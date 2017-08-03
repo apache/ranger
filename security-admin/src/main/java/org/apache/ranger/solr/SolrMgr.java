@@ -144,7 +144,6 @@ public class SolrMgr {
 											httpSolrClient
 													.setConnectionTimeout(1000);
 											// httpSolrClient.setSoTimeout(10000);
-											httpSolrClient.setMaxRetries(1);
 											httpSolrClient
 													.setRequestWriter(new BinaryRequestWriter());
 										}

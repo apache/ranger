@@ -435,7 +435,6 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 								.setAllowCompression(true);
 						httpSolrClient
 								.setConnectionTimeout(1000);
-						httpSolrClient.setMaxRetries(1);
 						httpSolrClient
 								.setRequestWriter(new BinaryRequestWriter());
 						}

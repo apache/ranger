@@ -108,7 +108,6 @@ public class SolrAuditProvider extends AuditDestination {
 							httpSolrClient.setAllowCompression(true);
 							httpSolrClient.setConnectionTimeout(1000);
 							// solrClient.setSoTimeout(10000);
-							httpSolrClient.setMaxRetries(1);
 						}
 					} catch (Throwable t) {
 						LOG.fatal("Can't connect to Solr server. URL="
