@@ -209,4 +209,20 @@
       <name>ranger.usersync.truststore.password</name>
       <value></value>
     </property>
+    <property>
+      <name>ranger.usersync.role.assignment.list.delimiter</name>
+          <value></value>
+        </property>
+        <property>
+      <name>ranger.usersync.users.groups.assignment.list.delimiter</name>
+      <value></value>
+        </property>
+        <property>
+      <name>ranger.usersync.username.groupname.assignment.list.delimiter</name>
+      <value></value>
+        </property>
+    <property>
+          <name>ranger.usersync.group.based.role.assignment.rules</name>
+      <value></value>
+    </property>
 </configuration>

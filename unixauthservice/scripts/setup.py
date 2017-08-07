@@ -366,6 +366,24 @@ def main():
     pid_dir_path = globalDict['USERSYNC_PID_DIR_PATH']
     unix_user = globalDict['unix_user']
 
+    if globalDict['SYNC_SOURCE'].lower() == SYNC_SOURCE_LDAP and globalDict.has_key('ROLE_ASSIGNMENT_LIST_DELIMITER') \
+     and globalDict.has_key('USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER') and globalDict.has_key('USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER'):
+        roleAssignmentDelimiter = globalDict['ROLE_ASSIGNMENT_LIST_DELIMITER']
+        userGroupAssignmentDelimiter= globalDict['USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER']
+        userNameGroupNameAssignmentListDelimiter= globalDict['USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER'];
+        if roleAssignmentDelimiter != "" :
+            if roleAssignmentDelimiter == userGroupAssignmentDelimiter or roleAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter :
+                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                sys.exit(1)
+        if userGroupAssignmentDelimiter != "" :
+            if roleAssignmentDelimiter == userGroupAssignmentDelimiter or userGroupAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter:
+                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                sys.exit(1)
+        if userNameGroupNameAssignmentListDelimiter != "":
+            if roleAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter or userGroupAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter:
+                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                sys.exit(1)
+
     if pid_dir_path == "":
         pid_dir_path = "/var/run/ranger"
 

@@ -31,6 +31,7 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
@@ -167,7 +168,12 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 			xxUser = new XXUser();
 			userExists = false;
 		}
-
+        XXPortalUser xxPortalUser = daoManager.getXXPortalUser().findByLoginId(
+                vxUser.getName());
+        if (xxPortalUser != null
+                && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+            vxUser.setIsVisible(xxUser.getIsVisible());
+        }
 		xxUser = mapViewToEntityBean(vxUser, xxUser, 0);
 		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
 		if (xXPortalUser != null) {

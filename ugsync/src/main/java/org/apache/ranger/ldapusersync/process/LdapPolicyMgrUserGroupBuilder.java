@@ -29,7 +29,11 @@ import java.security.KeyStore;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
@@ -116,7 +120,9 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	String principal;
 	String keytab;
 	String nameRules;
-	
+    Map<String, String> userMap = new LinkedHashMap<String, String>();
+    Map<String, String> groupMap = new LinkedHashMap<String, String>();
+
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -147,8 +153,11 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
-
-	}
+        String userGroupRoles = config.getGroupRoleRules();
+        if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
+            getRoleForUserGroups(userGroupRoles);
+        }
+    }
 
 	@Override
 	public void addOrUpdateUser(String userName, List<String> groups) throws Throwable {
@@ -331,7 +340,11 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		xuserInfo.setName(aUserName);
 		
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
-	   	
+        if (userMap.containsKey(aUserName)) {
+            List<String> roleList = new ArrayList<String>();
+            roleList.add(userMap.get(aUserName));
+            xuserInfo.setUserRoleList(roleList);
+        }
 		usergroupInfo.setXuserInfo(xuserInfo);
 		
 		return xuserInfo;
@@ -413,12 +426,14 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			groupUserInfo = getGroupUserInfo(groupName);
 		}	
 		
-		List<String> oldUsers = new ArrayList<String>();
-		if (groupUserInfo != null && groupUserInfo.getXuserInfo() != null) {
-			for (XUserInfo xUserInfo : groupUserInfo.getXuserInfo()) {
-				oldUsers.add(xUserInfo.getName());
-			}
-			LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
+        List<String> oldUsers = new ArrayList<String>();
+        Map<String, List<String>> oldUserMap = new HashMap<String, List<String>>();
+        if (groupUserInfo != null && groupUserInfo.getXuserInfo() != null) {
+            for (XUserInfo xUserInfo : groupUserInfo.getXuserInfo()) {
+                oldUsers.add(xUserInfo.getName());
+                oldUserMap.put(xUserInfo.getName(), xUserInfo.getUserRoleList());
+            }
+        LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
 		}
 		
 		List<String> addUsers = new ArrayList<String>();
@@ -432,10 +447,10 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		if (oldUsers.isEmpty()) {
 			addUsers = users;
 		} else {
-			for (String user : users) {
-				if (!oldUsers.contains(user)) {
-					addUsers.add(user);
-				}
+            for (String user : users) {
+                if (!oldUsers.contains(user)|| !(oldUserMap.get(user).equals(groupMap.get(groupName)))) {
+                    addUsers.add(user);
+                }
 			}
 		}
 		
@@ -568,10 +583,32 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		
 		WebResource r = c.resource(getURL(PM_ADD_GROUP_USER_INFO_URI));
 		
-		Gson gson = new GsonBuilder().create();
-		
-		String jsonString = gson.toJson(groupuserInfo);
-		
+        Gson gson = new GsonBuilder().create();
+        if (groupuserInfo != null
+                && groupuserInfo.getXgroupInfo() != null
+                && groupuserInfo.getXuserInfo() != null
+                && groupMap
+                        .containsKey(groupuserInfo.getXgroupInfo().getName())
+                && groupuserInfo.getXuserInfo().size() > 0) {
+            List<String> userRoleList = new ArrayList<String>();
+            userRoleList.add(groupMap.get(groupuserInfo.getXgroupInfo()
+                    .getName()));
+            int i = groupuserInfo.getXuserInfo().size();
+            for (int j = 0; j < i; j++) {
+                if (userMap.containsKey(groupuserInfo.getXuserInfo().get(j)
+                        .getName())) {
+                    List<String> userRole = new ArrayList<String>();
+                    userRole.add(userMap.get(groupuserInfo.getXuserInfo()
+                            .get(j).getName()));
+                    groupuserInfo.getXuserInfo().get(j)
+                            .setUserRoleList(userRole);
+                } else {
+                    groupuserInfo.getXuserInfo().get(j)
+                            .setUserRoleList(userRoleList);
+                }
+            }
+        }
+        String jsonString = gson.toJson(groupuserInfo);
 		LOG.debug("GROUP USER MAPPING" + jsonString);
 		
 		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
@@ -590,10 +627,17 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
-		userInfo.setLastName(aUserName);
-
-		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-			try {
+        userInfo.setLastName(aUserName);
+        String str[] = new String[1];
+        if (userMap.containsKey(aUserName)) {
+            str[0] = userMap.get(aUserName);
+        }
+        userInfo.setUserRoleList(str);
+        if (authenticationType != null
+                && AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
+                && SecureClientLogin.isKerberosCredentialExists(principal,
+                        keytab)) {
+            try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final MUserInfo result = ret;
 				final MUserInfo userInfoFinal = userInfo;
@@ -804,4 +848,72 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		return ret;
 	}
 
+    private void getRoleForUserGroups(String userGroupRolesData) {
+        String roleDelimiter = config.getRoleDelimiter();
+        String userGroupDelimiter = config.getUserGroupDelimiter();
+        String userNameDelimiter = config.getUserGroupNameDelimiter();
+        if (roleDelimiter == null || roleDelimiter.isEmpty()) {
+            roleDelimiter = "&";
+        }
+        if (userGroupDelimiter == null || userGroupDelimiter.isEmpty()) {
+            userGroupDelimiter = ":";
+        }
+        if (userNameDelimiter == null || userNameDelimiter.isEmpty()) {
+            userNameDelimiter = ",";
+        }
+        StringTokenizer str = new StringTokenizer(userGroupRolesData,
+                roleDelimiter);
+        int flag = 0;
+        String userGroupCheck = null;
+        String roleName = null;
+        while (str.hasMoreTokens()) {
+            flag = 0;
+            String tokens = str.nextToken();
+            if (tokens != null && !tokens.isEmpty()) {
+                StringTokenizer userGroupRoles = new StringTokenizer(tokens,
+                        userGroupDelimiter);
+                if (userGroupRoles != null) {
+                    while (userGroupRoles.hasMoreElements()) {
+                        String userGroupRolesTokens = userGroupRoles
+                                .nextToken();
+                        if (userGroupRolesTokens != null
+                                && !userGroupRolesTokens.isEmpty()) {
+                            flag++;
+                            switch (flag) {
+                            case 1:
+                                roleName = userGroupRolesTokens;
+                                break;
+                            case 2:
+                                userGroupCheck = userGroupRolesTokens;
+                                break;
+                            case 3:
+                                StringTokenizer userGroupNames = new StringTokenizer(
+                                        userGroupRolesTokens, userNameDelimiter);
+                                if (userGroupNames != null) {
+                                    while (userGroupNames.hasMoreElements()) {
+                                        String userGroup = userGroupNames
+                                                .nextToken();
+                                        if (userGroup != null
+                                                && !userGroup.isEmpty()) {
+                                            if (userGroupCheck.trim().equalsIgnoreCase("u")) {
+                                                userMap.put(userGroup.trim(), roleName.trim());
+                                            } else if (userGroupCheck.trim().equalsIgnoreCase("g")) {
+                                                groupMap.put(userGroup.trim(),
+                                                        roleName.trim());
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                userMap.clear();
+                                groupMap.clear();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

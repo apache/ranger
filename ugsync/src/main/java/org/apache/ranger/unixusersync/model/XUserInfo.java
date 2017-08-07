@@ -26,8 +26,8 @@ public class XUserInfo {
 	private String id;
 	private String name;
 	private String 	description;
-	
-	private List<String>  	groupNameList = new ArrayList<String>();
+    private List<String> groupNameList = new ArrayList<String>();
+    private List<String> userRoleList = new ArrayList<String>();
 	
 	public String getId() {
 		return id;
@@ -59,5 +59,19 @@ public class XUserInfo {
 	public List<String> getGroups() {
 		return groupNameList;
 	}
-	
+
+    public List<String> getUserRoleList() {
+        return userRoleList;
+    }
+
+    public void setUserRoleList(List<String> userRoleList) {
+        this.userRoleList = userRoleList;
+    }
+
+    @Override
+    public String toString() {
+        return "XUserInfo [id=" + id + ", name=" + name + ", description="
+                + description + ", groupNameList=" + groupNameList
+                + ", userRoleList=" + userRoleList + "]";
+    }
 }

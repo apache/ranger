@@ -223,6 +223,13 @@ public class UserGroupSyncConfig  {
 	private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
 	private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
 
+    private static final String ROLE_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.role.assignment.list.delimiter";
+
+    private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.users.groups.assignment.list.delimiter";
+
+    private static final String USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.username.groupname.assignment.list.delimiter";
+
+    private static final String GROUP_BASED_ROLE_ASSIGNMENT_RULES = "ranger.usersync.group.based.role.assignment.rules";
 	private Properties prop = new Properties();
 
 	private static volatile UserGroupSyncConfig me = null;
@@ -868,6 +875,52 @@ public class UserGroupSyncConfig  {
 		return val;
 	}
 
+    public String getGroupRoleRules() {
+        if (prop != null && prop.containsKey(GROUP_BASED_ROLE_ASSIGNMENT_RULES)) {
+            String GroupRoleRules = prop
+                    .getProperty(GROUP_BASED_ROLE_ASSIGNMENT_RULES);
+            if (GroupRoleRules != null && !GroupRoleRules.isEmpty()) {
+                return GroupRoleRules.trim();
+            }
+        }
+        return null;
+    }
+
+    public String getUserGroupDelimiter() {
+        if (prop != null
+                && prop.containsKey(USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER)) {
+            String UserGroupDelimiter = prop
+                    .getProperty(USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER);
+            if (UserGroupDelimiter != null && !UserGroupDelimiter.isEmpty()) {
+                return UserGroupDelimiter;
+            }
+        }
+        return null;
+    }
+
+    public String getUserGroupNameDelimiter() {
+        if (prop != null
+                && prop.containsKey(USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER)) {
+            String UserGroupNameDelimiter = prop
+                    .getProperty(USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER);
+            if (UserGroupNameDelimiter != null
+                    && !UserGroupNameDelimiter.isEmpty()) {
+                return UserGroupNameDelimiter;
+            }
+        }
+        return null;
+    }
+
+    public String getRoleDelimiter() {
+        if (prop != null && prop.containsKey(ROLE_ASSIGNMENT_LIST_DELIMITER)) {
+            String roleDelimiter = prop
+                    .getProperty(ROLE_ASSIGNMENT_LIST_DELIMITER);
+            if (roleDelimiter != null && !roleDelimiter.isEmpty()) {
+                return roleDelimiter;
+            }
+        }
+        return null;
+    }
 	public boolean isStartTlsEnabled() {
 		boolean starttlsEnabled;
 		String val = prop.getProperty(LGSYNC_LDAP_STARTTLS_ENABLED);
