@@ -49,7 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
+import org.apache.ranger.common.RangerCommonEnums;
 @Service
 @Scope("singleton")
 public class XUserService extends XUserServiceBase<XXUser, VXUser> {
@@ -168,7 +168,10 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 			xxUser = new XXUser();
 			userExists = false;
 		}
-
+                XXPortalUser xxPortalUser = daoManager.getXXPortalUser().findByLoginId(vxUser.getName());
+                if (xxPortalUser != null && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+                         vxUser.setIsVisible(xxUser.getIsVisible());
+                }
 		xxUser = mapViewToEntityBean(vxUser, xxUser, 0);
 		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
 		if (xXPortalUser != null) {

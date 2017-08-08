@@ -300,6 +300,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		str += "isVisible={" + isVisible + "} ";
 		str += "groupIdList={" + groupIdList + "} ";
 		str += "groupNameList={" + groupNameList + "} ";
+                str += "roleList={" + userRoleList + "} ";
 		str += "}";
 		return str;
 	}

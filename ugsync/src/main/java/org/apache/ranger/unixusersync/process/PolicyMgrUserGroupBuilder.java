@@ -68,7 +68,9 @@ import org.apache.ranger.unixusersync.model.XUserInfo;
 import org.apache.ranger.unixusersync.model.UserGroupInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usersync.util.UserSyncUtil;
-
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class);
@@ -121,7 +123,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	String principal;
 	String keytab;
 	String nameRules;
-	
+        Map<String, String> userMap = new LinkedHashMap<String, String>();
+        Map<String, String> groupMap = new LinkedHashMap<String, String>();
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -160,6 +163,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
+                String userGroupRoles = config.getGroupRoleRules();
+                if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
+                        getRoleForUserGroups(userGroupRoles);
+                }
 		buildUserGroupInfo();
 	}
 	
@@ -366,7 +373,28 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  			}
  			if (! isMockRun) {
  				if (!addGroups.isEmpty()){
- 					ugInfo.setXuserInfo(addXUserInfo(userName));
+                                         XUserInfo obj = addXUserInfo(userName);
+                                                            if (obj != null) {
+                                                                for (int i = 0; i < addGroups.size(); i++) {
+                                                                    if (groupMap.containsKey(addGroups.get(i))) {
+                                                                        List<String> userRoleList = new ArrayList<String>();
+                                                                        userRoleList
+                                                                                .add(groupMap.get(addGroups.get(i)));
+                                                                        if (userMap.containsKey(obj.getName())) {
+                                                                            List<String> userRole = new ArrayList<String>();
+                                                                            userRole.add(userMap.get(obj.getName()));
+                                                                            if (!obj.getUserRoleList().equals(userRole)) {
+                                                                                obj.setUserRoleList(userRole);
+
+                                                                            }
+                                                                        } else if (!obj.getUserRoleList().equals(
+                                                                                userRoleList)) {
+                                                                            obj.setUserRoleList(userRoleList);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                        ugInfo.setXuserInfo(obj);
  				    ugInfo.setXgroupInfo(getXGroupInfoList(addGroups));
 					try{
 						// If the rest call to ranger admin fails, 
@@ -393,7 +421,27 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  			}
 			if (! isMockRun) {
 				if (!updateGroups.isEmpty()){
-					ugInfo.setXuserInfo(addXUserInfo(userName));
+                                         XUserInfo obj = addXUserInfo(userName);
+                                                             if (obj != null) {
+                                                                 for (int i = 0; i < updateGroups.size(); i++) {
+                                                                     if (groupMap.containsKey(updateGroups.get(i))) {
+                                                                         List<String> userRoleList = new ArrayList<String>();
+                                                                         userRoleList.add(groupMap.get(updateGroups
+                                                                                 .get(i)));
+                                                                         if (userMap.containsKey(obj.getName())) {
+                                                                             List<String> userRole = new ArrayList<String>();
+                                                                             userRole.add(userMap.get(obj.getName()));
+                                                                             if (!obj.getUserRoleList().equals(userRole)) {
+                                                                                 obj.setUserRoleList(userRole);
+                                                                             }
+                                                                         } else if (!obj.getUserRoleList().equals(
+                                                                                 userRoleList)) {
+                                                                             obj.setUserRoleList(userRoleList);
+                                                                         }
+                                                                     }
+                                                                 }
+                                                             }
+                                                             ugInfo.setXuserInfo(obj);
 					ugInfo.setXgroupInfo(getXGroupInfoList(updateGroups));
 					try{
 						// If the rest call to ranger admin fails, 
@@ -409,8 +457,53 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					}
 				}
 			}
-		}
-	}
+                        if (!isMockRun) {
+                                                XUserInfo obj = addXUserInfo(userName);
+                                                boolean roleFlag = false;
+                                                if (obj != null && updateGroups.isEmpty()
+                                                        && addGroups.isEmpty()) {
+                                                    if (userMap.containsKey(obj.getName())) {
+                                                        List<String> userRole = new ArrayList<String>();
+                                                        userRole.add(userMap.get(obj.getName()));
+                                                        if (!obj.getUserRoleList().equals(userRole)) {
+                                                            obj.setUserRoleList(userRole);
+                                                            roleFlag = true;
+                                                        }
+                                            } else {
+                                                        for (int i = 0; i < groups.size(); i++) {
+                                                            if (groupMap.containsKey(groups.get(i))) {
+                                                                List<String> userRoleList = new ArrayList<String>();
+                                                                userRoleList.add(groupMap.get(groups.get(i)));
+                                                                if (!obj.getUserRoleList().equals(userRoleList)) {
+                                                                    obj.setUserRoleList(userRoleList);
+                                                                    roleFlag = true;
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                    ugInfo.setXuserInfo(obj);
+                                                    ugInfo.setXgroupInfo(getXGroupInfoList(groups));
+                                                }
+                                                if (roleFlag) {
+                                                    try {
+                                                        // If the rest call to ranger admin fails,
+                                                        // propagate the failure to the caller for retry in next
+                                                        // sync cycle.
+                                                        if (addUserGroupInfo(ugInfo) == null) {
+                                                            String msg = "Failed to add user group info";
+                                                            LOG.error(msg);
+                                                            throw new Exception(msg);
+                                                        }
+                                                    } catch (Throwable t) {
+                                                        LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: "
+                                                                + t.getMessage()
+                                                                + ", for user-group entry: "
+                                                                + ugInfo);
+                                                    }
+                                                }
+                                            }
+                }	}
 	
 	private void buildGroupList() {
 		if (LOG.isDebugEnabled()) {
@@ -530,6 +623,23 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (! isMockRun) {
 			user = addXUserInfo(userName);
 		}
+             if (!groups.isEmpty() && user != null) {
+                                     for (int i = 0; i < groups.size(); i++) {
+                                         if (groupMap.containsKey(groups.get(i))) {
+                                             List<String> userRoleList = new ArrayList<String>();
+                                             userRoleList.add(groupMap.get(groups.get(i)));
+                                             if (userMap.containsKey(user.getName())) {
+                                                 List<String> userRole = new ArrayList<String>();
+                                                 userRole.add(userMap.get(user.getName()));
+                                                 user.setUserRoleList(userRole);
+                                             } else {
+                                                 user.setUserRoleList(userRoleList);
+                                             }
+                                         }
+                                     }
+                                 }
+                                 usergroupInfo.setXuserInfo(user);
+
 		
 		for(String g : groups) {
 				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
@@ -809,7 +919,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
 		userInfo.setLastName(aUserName);
-
+                String str[] = new String[1];
+                        if (userMap.containsKey(aUserName)) {
+                            str[0] = userMap.get(aUserName);
+                        }
+                        userInfo.setUserRoleList(str);
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
@@ -1080,6 +1194,73 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		// TODO Auto-generated method stub
 		
 	}
+         private void getRoleForUserGroups(String userGroupRolesData) {
 
-	
-}
+                         String roleDelimiter = config.getRoleDelimiter();
+                         String userGroupDelimiter = config.getUserGroupDelimiter();
+                         String userNameDelimiter = config.getUserGroupNameDelimiter();
+                         if (roleDelimiter == null || roleDelimiter.isEmpty()) {
+                             roleDelimiter = "&";
+                         }
+                         if (userGroupDelimiter == null || userGroupDelimiter.isEmpty()) {
+                             userGroupDelimiter = ":";
+                         }
+                         if (userNameDelimiter == null || userNameDelimiter.isEmpty()) {
+                             userNameDelimiter = ",";
+                         }
+                         StringTokenizer str = new StringTokenizer(userGroupRolesData,
+                                 roleDelimiter);
+                         int flag = 0;
+                         String userGroupCheck = null;
+                         String roleName = null;
+                         while (str.hasMoreTokens()) {
+                             flag = 0;
+                             String tokens = str.nextToken();
+                             if (tokens != null && !tokens.isEmpty()) {
+                                 StringTokenizer userGroupRoles = new StringTokenizer(tokens,
+                                         userGroupDelimiter);
+                                 if (userGroupRoles != null) {
+                                     while (userGroupRoles.hasMoreElements()) {
+                                         String userGroupRolesTokens = userGroupRoles
+                                                 .nextToken();
+                                         if (userGroupRolesTokens != null
+                                                && !userGroupRolesTokens.isEmpty()) {
+                                             flag++;
+                                            switch (flag) {
+                                             case 1:
+                                                roleName = userGroupRolesTokens;
+                                                 break;
+                                             case 2:
+                                                 userGroupCheck = userGroupRolesTokens;
+                                                 break;
+                                             case 3:
+                                                 StringTokenizer userGroupNames = new StringTokenizer(
+                                                         userGroupRolesTokens, userNameDelimiter);
+                                                 if (userGroupNames != null) {
+                                                     while (userGroupNames.hasMoreElements()) {
+                                                         String userGroup = userGroupNames
+                                                                 .nextToken();
+                                                         if (userGroup != null
+                                                                 && !userGroup.isEmpty()) {
+                                                             if (userGroupCheck.trim().equalsIgnoreCase("u")) {
+                                                                 userMap.put(userGroup.trim(), roleName.trim());
+                                                             } else if (userGroupCheck.trim().equalsIgnoreCase("g")) {
+                                                                 groupMap.put(userGroup.trim(),
+                                                                         roleName.trim());
+                                                             }
+                                                         }
+                                                     }
+                                                 }
+                                                 break;
+                                             default:
+                                                 userMap.clear();
+                                                 groupMap.clear();
+                                                 break;
+                                             }
+                                       }
+                                     }
+                                 }
+                             }
+                         }
+                     }
+        }

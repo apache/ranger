@@ -24,7 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -175,6 +176,10 @@ public class TestXUserMgr {
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
+                XXPortalUser gjUser = new XXPortalUser();
+                gjUser.setLoginId("test");
+                gjUser.setId(1L);
+                currentUserSession.setXXPortalUser(gjUser);
 	}
 
 	private VXUser vxUser() {
@@ -628,14 +633,16 @@ public class TestXUserMgr {
 
 		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(
 				vxUser);
-
+                XXModuleDefDao xxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+                Mockito.when(daoManager.getXXModuleDef()).thenReturn(xxModuleDefDao);
 		VXUser dbVXUser = xUserMgr.getXUserByUserName(userName);
 		Assert.assertNotNull(dbVXUser);
 		userId = dbVXUser.getId();
 		Assert.assertEquals(userId, dbVXUser.getId());
 		Assert.assertEquals(dbVXUser.getName(), vxUser.getName());
 		Assert.assertEquals(dbVXUser.getOwner(), vxUser.getOwner());
-		Mockito.verify(xUserService).getXUserByUserName(userName);
+                Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(
+                                userName);
 	}
 
 	@Test
@@ -873,6 +880,20 @@ public class TestXUserMgr {
 		Mockito.when(
 				xGroupUserService.createXGroupUserWithOutLogin(vXGroupUser2))
 				.thenReturn(vXGroupUser2);
+                XXPortalUserDao portalUser = Mockito.mock(XXPortalUserDao.class);
+                Mockito.when(daoManager.getXXPortalUser()).thenReturn(portalUser);
+                XXPortalUser user = new XXPortalUser();
+                user.setId(1L);
+                user.setUserSource(RangerCommonEnums.USER_APP);
+                Mockito.when(portalUser.findByLoginId(vXUser.getName())).thenReturn(
+                                user);
+                XXPortalUserRoleDao userDao = Mockito.mock(XXPortalUserRoleDao.class);
+                Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(userDao);
+                List<String> lstRole = new ArrayList<String>();
+                lstRole.add(RangerConstants.ROLE_SYS_ADMIN);
+                Mockito.when(
+                                userDao.findXPortalUserRolebyXPortalUserId(Mockito.anyLong()))
+                                .thenReturn(lstRole);
 
 		VXUserGroupInfo vxUserGroupTest = xUserMgr
 				.createXUserGroupFromMap(vXUserGroupInfo);
@@ -882,6 +903,11 @@ public class TestXUserMgr {
 		expected.add(vXGroup1);
 		expected.add(vXGroup2);
 		Assert.assertTrue(result.containsAll(expected));
+                Mockito.verify(daoManager).getXXPortalUser();
+                Mockito.verify(portalUser).findByLoginId(vXUser.getName());
+                Mockito.verify(daoManager).getXXPortalUserRole();
+                Mockito.verify(userDao).findXPortalUserRolebyXPortalUserId(
+                                Mockito.anyLong());
 	}
 
 	// Module permission
@@ -1312,9 +1338,20 @@ public class TestXUserMgr {
 		String userName = "test";
 		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(
 				vxUser);
+                XXModuleDefDao modDef = Mockito.mock(XXModuleDefDao.class);
+                Mockito.when(daoManager.getXXModuleDef()).thenReturn(modDef);
+                List<String> lstModule = new ArrayList<String>();
+                lstModule.add(RangerConstants.MODULE_USER_GROUPS);
+                Mockito.when(
+                                modDef.findAccessibleModulesByUserId(Mockito.anyLong(),
+                                                Mockito.anyLong())).thenReturn(lstModule);
 		Set<String> list = xUserMgr.getGroupsForUser(userName);
 		Assert.assertNotNull(list);
-		Mockito.verify(xUserService).getXUserByUserName(userName);	
+                Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(
+                                userName);
+                Mockito.verify(daoManager).getXXModuleDef();
+                Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(),
+                                Mockito.anyLong());
 	}
 
 	@Test

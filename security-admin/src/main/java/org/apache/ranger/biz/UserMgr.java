@@ -142,6 +142,7 @@ public class UserMgr {
 			Collection<String> userRoleList) {
 		XXPortalUser user = mapVXPortalUserToXXPortalUser(userProfile);
 		checkAdminAccess();
+                xUserMgr.checkAccessRoles((List<String>) userRoleList);
 		user = createUser(user, userStatus, userRoleList);
 
 		return user;
@@ -175,7 +176,11 @@ public class UserMgr {
 		Collection<String> reqRoleList = userProfile.getUserRoleList();
 		if (reqRoleList != null && reqRoleList.size() > 0) {
 			for (String role : reqRoleList) {
-				roleList.add(role);
+                                if (role != null) {
+                                        roleList.add(role);
+                                } else {
+                                        roleList.add(RangerConstants.ROLE_USER);
+                                }
 			}
 		} else {
 			roleList.add(RangerConstants.ROLE_USER);
@@ -1109,6 +1114,8 @@ public class UserMgr {
 		checkAdminAccess();
 		logger.info("create:" + userProfile.getLoginId());
 		XXPortalUser xXPortalUser = null;
+                Collection<String> existingRoleList = null;
+                Collection<String> reqRoleList = null;
 		String loginId = userProfile.getLoginId();
 		String emailAddress = userProfile.getEmailAddress();
 
@@ -1143,12 +1150,58 @@ public class UserMgr {
 				 */
 			}
 		}
+                VXPortalUser userProfileRes = null;
 		if (xXPortalUser != null) {
-			return mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
-		} else {
-			return null;
-		}
+                        userProfileRes = mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
+                        if (userProfile.getUserRoleList() != null
+                                        && userProfile.getUserRoleList().size() > 0
+                                        && ((List<String>) userProfile.getUserRoleList()).get(0) != null) {
+                                reqRoleList = userProfile.getUserRoleList();
+                                existingRoleList = this.getRolesByLoginId(loginId);
+                                XXPortalUser xxPortalUser = daoManager.getXXPortalUser()
+                                                .findByLoginId(userProfile.getLoginId());
+                                if (xxPortalUser != null && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+                                        userProfileRes = updateRoleForExternalUsers(reqRoleList, existingRoleList, userProfileRes);
+                                }
+                        }
+                }
+                return userProfileRes;
 	}
+
+                                protected VXPortalUser updateRoleForExternalUsers(Collection<String> reqRoleList, Collection<String> existingRoleList, VXPortalUser userProfileRes) {
+                                        UserSessionBase session = ContextUtil.getCurrentUserSession();
+                                        if ("rangerusersync".equals(session.getXXPortalUser().getLoginId())
+                                                        && reqRoleList != null && !reqRoleList.isEmpty()
+                                                        && existingRoleList != null && !existingRoleList.isEmpty()) {
+                                                if (!reqRoleList.equals(existingRoleList)) {
+                                                        userProfileRes.setUserRoleList(reqRoleList);
+                                                        userProfileRes.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+                                                        List<XXUserPermission> xuserPermissionList = daoManager.getXXUserPermission().findByUserPermissionId(userProfileRes.getId());
+
+                                                        if (xuserPermissionList!=null && xuserPermissionList.size()>0){
+
+                                                                for (XXUserPermission xXUserPermission : xuserPermissionList) {
+                                                                        if (xXUserPermission != null) {
+                                                                                try {
+                                                                                        xUserPermissionService.deleteResource(xXUserPermission.getId());
+                                                                                } catch (Exception e) {
+                                                                                        logger.error(e.getMessage());
+                                                                                }
+                                                                        }
+
+                                                                }
+                                                        }
+                                                        updateUser(userProfileRes);
+                                                }
+                                        } else {
+                                                if (logger.isDebugEnabled()) {
+                                                                logger.debug("Permission" + " denied. LoggedInUser="
+                                                                                + (session != null ? session.getXXPortalUser().getId() : "")
+                                                                                + " isn't permitted to perform the action.");
+                                                        }
+                                        }
+                                        return userProfileRes;
+                                }
 
 	protected VXPortalUser mapXXPortalUserToVXPortalUserForDefaultAccount(
 			XXPortalUser user) {

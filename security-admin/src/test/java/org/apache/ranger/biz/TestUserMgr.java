@@ -774,8 +774,8 @@ public class TestUserMgr {
 				dbVXPortalUser.getEmailAddress());
 		Assert.assertEquals(user.getPassword(), dbVXPortalUser.getPassword());
 
-		Mockito.verify(daoManager).getXXPortalUser();
-		Mockito.verify(daoManager).getXXPortalUserRole();
+                Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUser();
+                Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUserRole();
 	}
 
 	@Test
