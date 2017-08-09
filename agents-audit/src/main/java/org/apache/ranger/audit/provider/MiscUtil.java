@@ -44,7 +44,6 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -676,59 +675,6 @@ public class MiscUtil {
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("<=== MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: " + jaasConfigAppName + " UGI: " + ugi + " principal: " + principal + " keytab: " + keytabFile);
-		}
-	}
-        public static void authWithConfig(String appName, Configuration config) throws LoginException {
-                LoginContext loginContext = null;
-		try {
-			if (config != null) {
-				logger.info("Getting AppConfigrationEntry[] for appName="
-						+ appName + ", config=" + config.toString());
-				AppConfigurationEntry[] entries = config
-						.getAppConfigurationEntry(appName);
-				if (entries != null) {
-					logger.info("Got " + entries.length
-							+ "  AppConfigrationEntry elements for appName="
-							+ appName);
-					for (AppConfigurationEntry appEntry : entries) {
-						logger.info("APP_ENTRY:getLoginModuleName()="
-								+ appEntry.getLoginModuleName());
-						logger.info("APP_ENTRY:getControlFlag()="
-								+ appEntry.getControlFlag());
-						logger.info("APP_ENTRY.getOptions()="
-								+ appEntry.getOptions());
-					}
-				}
-
-                                loginContext = new LoginContext(appName,
-						new Subject(), null, config);
-				logger.info("Login in for appName=" + appName);
-				loginContext.login();
-				logger.info("Principals after login="
-						+ loginContext.getSubject().getPrincipals());
-				logger.info("UserGroupInformation.loginUserFromSubject(): appName="
-						+ appName
-						+ ", principals="
-						+ loginContext.getSubject().getPrincipals());
-
-				UserGroupInformation ugi = MiscUtil
-						.createUGIFromSubject(loginContext.getSubject());
-				if (ugi != null) {
-					MiscUtil.setUGILoginUser(ugi, loginContext.getSubject());
-				}
-
-				// UserGroupInformation.loginUserFromSubject(loginContext
-				// .getSubject());
-				logger.info("POST UserGroupInformation.loginUserFromSubject UGI="
-						+ UserGroupInformation.getLoginUser());
-			}
-		} catch (Throwable t) {
-			logger.fatal("Error logging as appName=" + appName + ", config="
-					+ config.toString() + ", error=" + t.getMessage());
-                } finally {
-                        if (loginContext != null) {
-                                loginContext.logout();
-                        }
 		}
 	}
 

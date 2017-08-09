@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.security.auth.login.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
@@ -126,12 +124,8 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 	private void authToJAASFile() {
 		try {
-			// logger.info("DEFAULT UGI=" +
-			// UserGroupInformation.getLoginUser());
-
-			Configuration config = Configuration.getConfiguration();
-			MiscUtil.authWithConfig(solrAppName, config);
-			logger.info("POST AUTH UGI=" + UserGroupInformation.getLoginUser());
+			MiscUtil.setUGIFromJAASConfig(solrAppName);
+			logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
 		} catch (Throwable t) {
 			logger.error("Error authenticating for appName=" + solrAppName, t);
 		}
