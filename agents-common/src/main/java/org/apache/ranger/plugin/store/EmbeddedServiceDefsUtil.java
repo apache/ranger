@@ -49,7 +49,6 @@ public class EmbeddedServiceDefsUtil {
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
 	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
-	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
@@ -81,6 +80,7 @@ public class EmbeddedServiceDefsUtil {
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
 	private boolean          createEmbeddedServiceDefs = true;
+	private Set<String> supportedServiceDefs;
 	private RangerServiceDef hdfsServiceDef;
 	private RangerServiceDef hBaseServiceDef;
 	private RangerServiceDef hiveServiceDef;
@@ -209,7 +209,7 @@ public class EmbeddedServiceDefsUtil {
 		}
 
 		RangerServiceDef ret = null;
-		boolean createServiceDef = (CollectionUtils.isEmpty(supportedServiceDefs) || supportedServiceDefs.contains(serviceDefName));
+		boolean createServiceDef = (!CollectionUtils.isEmpty(supportedServiceDefs) && supportedServiceDefs.contains(serviceDefName));
 		try {
 			ret = store.getServiceDefByName(serviceDefName);
 			if(ret == null && createEmbeddedServiceDefs && createServiceDef) {
@@ -261,23 +261,20 @@ public class EmbeddedServiceDefsUtil {
 		return ret;
 	}
 
-	private Set<String> getSupportedServiceDef(){
-		Set<String> supportedServiceDef =new HashSet<>();
-		try{
-			String ranger_supportedcomponents=RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
-			if(StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)){
-				ranger_supportedcomponents=DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
-			}
-			String[] supportedComponents=ranger_supportedcomponents.split(",");
-			if(supportedComponents!=null && supportedComponents.length>0){
-				for(String element:supportedComponents){
-					if(!StringUtils.isBlank(element)){
-						element=element.toLowerCase();
-						supportedServiceDef.add(element);
-					}
+	private Set<String> getSupportedServiceDef() {
+		Set<String> supportedServiceDef = new HashSet<>();
+		String ranger_supportedcomponents = RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
+		if (StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)) {
+			ranger_supportedcomponents = DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
+		}
+		String[] supportedComponents = ranger_supportedcomponents.split(",");
+		if (supportedComponents != null && supportedComponents.length > 0) {
+			for (String element : supportedComponents) {
+				if (!StringUtils.isBlank(element)) {
+					element = element.toLowerCase();
+					supportedServiceDef.add(element);
 				}
 			}
-		}catch(Exception ex){
 		}
 		return supportedServiceDef;
 	}
