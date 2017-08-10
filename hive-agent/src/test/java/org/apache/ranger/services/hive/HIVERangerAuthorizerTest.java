@@ -900,4 +900,13 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
 
+    @Test
+    public void testShowPrivileges() throws Exception {
+        String initialUrl = "jdbc:hive2://localhost:" + port;
+        Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
+        Statement statement = connection.createStatement();
+        Assert.assertTrue(statement.execute("show grant user admin"));
+        statement.close();
+    }
+
 }

@@ -1457,51 +1457,60 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public List<HivePrivilegeInfo> showPrivileges(HivePrincipal principal,
 			HivePrivilegeObject privObj) throws HiveAuthzPluginException {
 		try {
+
 			LOG.debug("RangerHiveAuthorizer.showPrivileges()");
 			IMetaStoreClient mClient = getMetastoreClientFactory()
 					.getHiveMetastoreClient();
 			List<HivePrivilegeInfo> resPrivInfos = new ArrayList<HivePrivilegeInfo>();
-			String principalName = principal == null ? null : principal
-					.getName();
-			PrincipalType principalType = principal == null ? null
-					: AuthorizationUtils.getThriftPrincipalType(principal
-							.getType());
+			String principalName = null;
+			PrincipalType principalType = null;
+			if (principal != null) {
+				principalName = principal.getName();
+				principalType = AuthorizationUtils
+						.getThriftPrincipalType(principal.getType());
+			}
 
 			List<HiveObjectPrivilege> msObjPrivs = mClient.list_privileges(
 					principalName, principalType,
 					this.getThriftHiveObjectRef(privObj));
+			if (msObjPrivs != null) {
+				for (HiveObjectPrivilege msObjPriv : msObjPrivs) {
+					HiveObjectRef msObjRef = msObjPriv.getHiveObject();
+					org.apache.hadoop.hive.metastore.api.HiveObjectType objectType = msObjRef
+							.getObjectType();
+					if (!isSupportedObjectType(objectType)) {
+						continue;
+					}
+					HivePrincipal resPrincipal = new HivePrincipal(
+							msObjPriv.getPrincipalName(),
+							AuthorizationUtils.getHivePrincipalType(msObjPriv
+									.getPrincipalType()));
 
-			for (HiveObjectPrivilege msObjPriv : msObjPrivs) {
-				HivePrincipal resPrincipal = new HivePrincipal(
-						msObjPriv.getPrincipalName(),
-						AuthorizationUtils.getHivePrincipalType(msObjPriv
-								.getPrincipalType()));
+					PrivilegeGrantInfo msGrantInfo = msObjPriv.getGrantInfo();
+					HivePrivilege resPrivilege = new HivePrivilege(
+							msGrantInfo.getPrivilege(), null);
 
-				PrivilegeGrantInfo msGrantInfo = msObjPriv.getGrantInfo();
-				HivePrivilege resPrivilege = new HivePrivilege(
-						msGrantInfo.getPrivilege(), null);
+					HivePrivilegeObject resPrivObj = new HivePrivilegeObject(
+							getPluginPrivilegeObjType(objectType),
+							msObjRef.getDbName(), msObjRef.getObjectName(),
+							msObjRef.getPartValues(), msObjRef.getColumnName());
 
-				HiveObjectRef msObjRef = msObjPriv.getHiveObject();
-				org.apache.hadoop.hive.metastore.api.HiveObjectType objectType = msObjRef
-						.getObjectType();
-				if (!isSupportedObjectType(msObjRef.getObjectType())) {
-					continue;
+					HivePrincipal grantorPrincipal = new HivePrincipal(
+							msGrantInfo.getGrantor(),
+							AuthorizationUtils.getHivePrincipalType(msGrantInfo
+									.getGrantorType()));
+
+					HivePrivilegeInfo resPrivInfo = new HivePrivilegeInfo(
+							resPrincipal, resPrivilege, resPrivObj,
+							grantorPrincipal, msGrantInfo.isGrantOption(),
+							msGrantInfo.getCreateTime());
+					resPrivInfos.add(resPrivInfo);
 				}
-				HivePrivilegeObject resPrivObj = new HivePrivilegeObject(
-						getPluginPrivilegeObjType(objectType),
-						msObjRef.getDbName(), msObjRef.getObjectName(),
-						msObjRef.getPartValues(), msObjRef.getColumnName());
 
-				HivePrincipal grantorPrincipal = new HivePrincipal(
-						msGrantInfo.getGrantor(),
-						AuthorizationUtils.getHivePrincipalType(msGrantInfo
-								.getGrantorType()));
-
-				HivePrivilegeInfo resPrivInfo = new HivePrivilegeInfo(
-						resPrincipal, resPrivilege, resPrivObj,
-						grantorPrincipal, msGrantInfo.isGrantOption(),
-						msGrantInfo.getCreateTime());
-				resPrivInfos.add(resPrivInfo);
+			} else {
+				throw new HiveAccessControlException(
+						"RangerHiveAuthorizer.showPrivileges():User has to specify"
+								+ " a user name or role in the show grant. ");
 			}
 			return resPrivInfos;
 
