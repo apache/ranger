@@ -23,21 +23,16 @@ import java.util.Map;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
 public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroupPermission, VXGroupPermission>{
-
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 
 	public XGroupPermissionService() {
 		searchFields.add(new SearchField("id", "obj.id",
@@ -69,7 +64,7 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
 	@Override
 	public VXGroupPermission populateViewBean(XXGroupPermission xObj) {
 		VXGroupPermission vObj = super.populateViewBean(xObj);
-		XXGroup xGroup = rangerDaoManager.getXXGroup().getById(
+		XXGroup xGroup = daoManager.getXXGroup().getById(
 				xObj.getGroupId());
 
 		if (xGroup == null) {

@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
@@ -41,8 +40,6 @@ import org.springframework.util.CollectionUtils;
 public class XModuleDefService extends
 		XModuleDefServiceBase<XXModuleDef, VXModuleDef> {
 
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 
 	@Autowired
 	XUserPermissionService xUserPermService;
@@ -95,9 +92,9 @@ public class XModuleDefService extends
                 Map<Long, XXGroup> xXGroupMap=xGroupService.getXXGroupIdXXGroupMap();
 		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
 		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
-		List<XXUserPermission> xuserPermissionList = rangerDaoManager
+		List<XXUserPermission> xuserPermissionList = daoManager
 				.getXXUserPermission().findByModuleId(xObj.getId(), false);
-		List<XXGroupPermission> xgroupPermissionList = rangerDaoManager
+		List<XXGroupPermission> xgroupPermissionList = daoManager
 				.getXXGroupPermission().findByModuleId(xObj.getId(), false);
                 if(CollectionUtils.isEmpty(xXPortalUserIdXXUserMap)){
                         for (XXUserPermission xUserPerm : xuserPermissionList) {

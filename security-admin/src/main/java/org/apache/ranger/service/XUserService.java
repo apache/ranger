@@ -37,7 +37,6 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
@@ -54,11 +53,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 @Scope("singleton")
 public class XUserService extends XUserServiceBase<XXUser, VXUser> {
-
 	private final Long createdByUserId;
-
-	@Autowired
-	RangerDaoManager daoManager;
 
 	@Autowired
 	XPermMapService xPermMapService;
@@ -253,7 +248,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				}
 				vObj.setStatus(xXPortalUser.getStatus());
 				vObj.setUserSource(xXPortalUser.getUserSource());
-				List<XXPortalUserRole> gjUserRoleList = daoMgr.getXXPortalUserRole().findByParentId(
+				List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(
 						xXPortalUser.getId());
 				
 				for (XXPortalUserRole gjUserRole : gjUserRoleList) {

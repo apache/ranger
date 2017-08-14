@@ -29,7 +29,6 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupUser;
@@ -48,9 +47,6 @@ public class XGroupUserService extends
 		XGroupUserServiceBase<XXGroupUser, VXGroupUser> {
 
 	private final Long createdByUserId;
-	
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
@@ -87,7 +83,7 @@ public class XGroupUserService extends
 		XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vxGroupUser.getName());
 		vxGroupUser.setParentGroupId(xGroup.getId());
 		xxGroupUser = mapViewToEntityBean(vxGroupUser, xxGroupUser, 0);
-		XXPortalUser xXPortalUser = rangerDaoManager.getXXPortalUser().getById(createdByUserId);
+		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
 		if (xXPortalUser != null) {
 			xxGroupUser.setAddedByUserId(createdByUserId);
 			xxGroupUser.setUpdatedByUserId(createdByUserId);
@@ -120,11 +116,11 @@ public class XGroupUserService extends
 //		}
 		
 		Long groupId = vObj.getParentGroupId();
-		XXGroup xGroup = rangerDaoManager.getXXGroup().getById(groupId);
+		XXGroup xGroup = daoManager.getXXGroup().getById(groupId);
 		String groupName = xGroup.getName();
 
 		Long userId = vObj.getUserId();
-		XXUser xUser = rangerDaoManager.getXXUser().getById(userId);
+		XXUser xUser = daoManager.getXXUser().getById(userId);
 		String userName = xUser.getName();
 
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
@@ -151,7 +147,7 @@ public class XGroupUserService extends
 					value = xaEnumUtil.getLabel(enumName, enumValue);
 				} else {
 					value = ""+field.get(vObj);
-					XXGroup xXGroup = rangerDaoManager.getXXGroup().getById(Long.parseLong(value));
+					XXGroup xXGroup = daoManager.getXXGroup().getById(Long.parseLong(value));
 					value = xXGroup.getName();
 				}
 				

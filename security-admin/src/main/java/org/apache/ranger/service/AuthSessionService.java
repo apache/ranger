@@ -103,7 +103,7 @@ public class AuthSessionService extends
 	 */
 	@Override
 	protected BaseDao<XXAuthSession> getDao() {
-		return daoMgr.getXXAuthSession();
+		return daoManager.getXXAuthSession();
 	}
 
 	/*
@@ -171,7 +171,7 @@ public class AuthSessionService extends
 		if (resource.getUserId() != null) {
 			viewObj.setUserId(resource.getUserId());
 
-			XXPortalUser gjUser = daoMgr.getXXPortalUser().getById(resource.getUserId());
+			XXPortalUser gjUser = daoManager.getXXPortalUser().getById(resource.getUserId());
 			if (gjUser != null) {
 				viewObj.setEmailAddress(gjUser.getEmailAddress());
 				viewObj.setFamilyScreenName(gjUser.getLastName());

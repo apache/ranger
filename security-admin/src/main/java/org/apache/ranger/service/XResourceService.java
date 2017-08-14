@@ -38,7 +38,6 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXPermMap;
@@ -71,8 +70,6 @@ public class XResourceService extends
 	@Autowired
 	StringUtil stringUtil;
 	
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 	@Autowired
 	RangerBizUtil xaBizUtil;
 	
@@ -187,7 +184,7 @@ public class XResourceService extends
 		}
 		Long assetId = vObj.getAssetId();
 		if(assetId != null){
-			XXAsset xAsset = rangerDaoManager.getXXAsset().getById(assetId);
+			XXAsset xAsset = daoManager.getXXAsset().getById(assetId);
 			if(xAsset == null){
 				throw restErrorUtil.createRESTException("The repository for which "
 						+ "the policy is created, doesn't exist in the system.",
@@ -323,7 +320,7 @@ public class XResourceService extends
 	}
 
 	private void populateAssetProperties(VXResource vXResource) {
-		XXAsset xxAsset = rangerDaoManager.getXXAsset().getById(
+		XXAsset xxAsset = daoManager.getXXAsset().getById(
 				vXResource.getAssetId());
 		if (xxAsset != null) {
 			vXResource.setAssetName(xxAsset.getName());
@@ -417,7 +414,7 @@ public class XResourceService extends
 			XXPortalUser xXPortalUser= null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					xXPortalUser=daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
 					if(xXPortalUser!=null){
 						mObj.setAddedByUserId(xXPortalUser.getId());
 					}
@@ -425,7 +422,7 @@ public class XResourceService extends
 			}
 			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					xXPortalUser= daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 					if(xXPortalUser!=null){
 						mObj.setUpdatedByUserId(xXPortalUser.getId());
 					}		
@@ -444,13 +441,13 @@ public class XResourceService extends
 		    populateAssetProperties(vObj);
 			XXPortalUser xXPortalUser= null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser=rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+				xXPortalUser=daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setOwner(xXPortalUser.getLoginId());
 				}
 			}
 			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+				xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setUpdatedBy(xXPortalUser.getLoginId());
 				}
@@ -468,7 +465,7 @@ public class XResourceService extends
 			return null;
 		}
 
-		XXAsset xAsset = rangerDaoManager.getXXAsset().getById(vObj.getAssetId());
+		XXAsset xAsset = daoManager.getXXAsset().getById(vObj.getAssetId());
 		String parentObjectName = xAsset.getName();
 		
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();

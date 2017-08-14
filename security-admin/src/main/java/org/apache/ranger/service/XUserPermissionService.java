@@ -22,22 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXUserPermission;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPermission, VXUserPermission>{
-
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 
 	public XUserPermissionService() {
 		searchFields.add(new SearchField("id", "obj.id",
@@ -62,7 +57,7 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 	public VXUserPermission populateViewBean(XXUserPermission xObj) {
 		VXUserPermission vObj = super.populateViewBean(xObj);
 
-		XXPortalUser xPortalUser = rangerDaoManager.getXXPortalUser().getById(xObj.getUserId());
+		XXPortalUser xPortalUser = daoManager.getXXPortalUser().getById(xObj.getUserId());
 		if (xPortalUser != null) {
 			vObj.setUserName(xPortalUser.getLoginId());
 		}

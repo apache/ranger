@@ -39,13 +39,11 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.view.VXXTrxLog;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -53,8 +51,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 @Scope("singleton")
 public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
-	@Autowired
-	RangerDaoManager rangerDaoManager;
+
 	public XTrxLogService(){
 		searchFields.add(new SearchField("attributeName", "obj.attributeName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
@@ -82,7 +79,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 
 	@Override
 	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {		
-		EntityManager em = daoMgr.getEntityManager();
+		EntityManager em = daoManager.getEntityManager();
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<VXXTrxLog> selectCQ = criteriaBuilder.createQuery(VXXTrxLog.class);
 		Root<VXXTrxLog> rootEntityType = selectCQ.from(VXXTrxLog.class);
@@ -103,7 +100,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 			VXTrxLog trxLog = mapCustomViewToViewObj(xTrxLog);
 
 			if(trxLog.getUpdatedBy() != null){
-				XXPortalUser xXPortalUser= rangerDaoManager.getXXPortalUser().getById(
+				XXPortalUser xXPortalUser= daoManager.getXXPortalUser().getById(
 						Long.parseLong(trxLog.getUpdatedBy()));
 				if(xXPortalUser != null){
 					trxLog.setOwner(xXPortalUser.getLoginId());
@@ -121,7 +118,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 	}
 
 	public Long searchXTrxLogsCount(SearchCriteria searchCriteria) {
-		EntityManager em = daoMgr.getEntityManager();
+		EntityManager em = daoManager.getEntityManager();
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<VXXTrxLog> selectCQ = criteriaBuilder.createQuery(VXXTrxLog.class);
 		Root<VXXTrxLog> rootEntityType = selectCQ.from(VXXTrxLog.class);
@@ -259,7 +256,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 			XXPortalUser xXPortalUser=null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					xXPortalUser=daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
 					if(xXPortalUser!=null){
 						mObj.setAddedByUserId(xXPortalUser.getId());
 					}
@@ -267,7 +264,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 			}
 			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					xXPortalUser= daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 					if(xXPortalUser!=null){
 						mObj.setUpdatedByUserId(xXPortalUser.getId());
 					}		
@@ -283,13 +280,13 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
             super.mapEntityToViewBean(vObj, mObj);
             XXPortalUser xXPortalUser=null;
             if(stringUtil.isEmpty(vObj.getOwner())){
-                xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+                xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
                 if(xXPortalUser!=null){
                     vObj.setOwner(xXPortalUser.getLoginId());
                 }
             }
             if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-                xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+                xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
                 if(xXPortalUser!=null){
                     vObj.setUpdatedBy(xXPortalUser.getLoginId());
                 }

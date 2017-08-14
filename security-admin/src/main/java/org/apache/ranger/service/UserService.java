@@ -291,7 +291,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 			userProfile.setUserSource(sess.getAuthProvider());
 		}
 
-		List<XXPortalUserRole> gjUserRoleList = daoMgr.getXXPortalUserRole().findByParentId(
+		List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(
 				user.getId());
 
 		for (XXPortalUserRole gjUserRole : gjUserRoleList) {
@@ -320,7 +320,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 			userProfile.setUserSource(sess.getAuthProvider());
 		}
 
-		List<XXPortalUserRole> gjUserRoleList = daoMgr.getXXPortalUserRole().findByParentId(
+		List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(
 				user.getId());
 
 		for (XXPortalUserRole gjUserRole : gjUserRoleList) {

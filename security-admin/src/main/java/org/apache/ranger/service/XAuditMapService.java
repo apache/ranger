@@ -28,7 +28,6 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
@@ -46,9 +45,6 @@ public class XAuditMapService extends
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
-
-	@Autowired
-	RangerDaoManager rangerDaoManager;
 	
 	@Autowired
 	RangerBizUtil rangerBizUtil;
@@ -117,7 +113,7 @@ public class XAuditMapService extends
 					value = xaEnumUtil.getLabel(enumName, enumValue);
 				} else {
 					value = ""+field.get(vObj);
-					XXUser xUser = rangerDaoManager.getXXUser().getById(Long.parseLong(value));
+					XXUser xUser = daoManager.getXXUser().getById(Long.parseLong(value));
 					value = xUser.getName();
 				}
 				
@@ -159,7 +155,7 @@ public class XAuditMapService extends
 			XXPortalUser xXPortalUser=null;
 			if(mObj.getAddedByUserId()==null || mObj.getAddedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getOwner());	
+					xXPortalUser=daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
 					if(xXPortalUser!=null){
 						mObj.setAddedByUserId(xXPortalUser.getId());
 					}
@@ -167,7 +163,7 @@ public class XAuditMapService extends
 			}
 			if(mObj.getUpdatedByUserId()==null || mObj.getUpdatedByUserId()==0){
 				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= rangerDaoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());			
+					xXPortalUser= daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 					if(xXPortalUser!=null){
 						mObj.setUpdatedByUserId(xXPortalUser.getId());
 					}		
@@ -183,13 +179,13 @@ public class XAuditMapService extends
 			super.mapEntityToViewBean(vObj, mObj);
 			XXPortalUser xXPortalUser=null;
 			if(stringUtil.isEmpty(vObj.getOwner())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getAddedByUserId());	
+				xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setOwner(xXPortalUser.getLoginId());
 				}
 			}
 			if(stringUtil.isEmpty(vObj.getUpdatedBy())){
-				xXPortalUser= rangerDaoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());		
+				xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
 				if(xXPortalUser!=null){
 					vObj.setUpdatedBy(xXPortalUser.getLoginId());
 				}

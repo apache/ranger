@@ -37,7 +37,6 @@ import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.util.RangerEnumUtil;
@@ -54,9 +53,6 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 
 	@Autowired
 	JSONUtil jsonUtil;
-
-	@Autowired
-	RangerDaoManager appDaoMgr;
 	
 	@Autowired
 	StringUtil stringUtil;
@@ -87,7 +83,7 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 
 	@Override
 	protected void validateForCreate(VXAsset vObj) {
-		XXAsset xxAsset = appDaoMgr.getXXAsset()
+		XXAsset xxAsset = daoManager.getXXAsset()
 				.findByAssetName(vObj.getName());
 		if (xxAsset != null) {
 			String errorMessage = "Repository Name already exists";

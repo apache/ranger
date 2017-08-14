@@ -88,9 +88,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	public List<SortField> sortFields = new ArrayList<SortField>();
 	public List<SearchField> searchFields = new ArrayList<SearchField>();
 
-	@Autowired
-	RangerDaoManager daoManager;
-
 	protected static final HashMap<Class<?>, String> tEntityValueMap = new HashMap<Class<?>, String>();
 	static {
 		tEntityValueMap.put(XXAuthSession.class, "Auth Session");
@@ -103,7 +100,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	StringUtil stringUtil;
 
 	@Autowired
-	protected RangerDaoManager daoMgr;
+	protected RangerDaoManager daoManager;
 
 	@Autowired
 	protected SearchUtil searchUtil;
@@ -172,7 +169,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	@SuppressWarnings("unchecked")
 	protected BaseDao<T> getDao() {
 		if (entityDao == null) {
-			entityDao = (BaseDao<T>) daoMgr.getDaoForClassName(tEntityClass
+			entityDao = (BaseDao<T>) daoManager.getDaoForClassName(tEntityClass
 					.getSimpleName());
 
 		}
