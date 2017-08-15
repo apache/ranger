@@ -130,13 +130,13 @@ public class HIVERangerAuthorizerTest {
 
         statement.close();
         connection.close();
-        
+
         // Enable ranger authorization after the initial db setup and table creating is done.
         conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER.varname,
                  "org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory");
-        
+
     }
 
     @org.junit.AfterClass
@@ -907,6 +907,7 @@ public class HIVERangerAuthorizerTest {
         Statement statement = connection.createStatement();
         Assert.assertTrue(statement.execute("show grant user admin"));
         statement.close();
+        connection.close();
     }
 
 }
