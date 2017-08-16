@@ -142,7 +142,8 @@ public class UserMgr {
 			Collection<String> userRoleList) {
 		XXPortalUser user = mapVXPortalUserToXXPortalUser(userProfile);
 		checkAdminAccess();
-                xUserMgr.checkAccessRoles((List<String>) userRoleList);
+                List<String> userRolesList = new ArrayList<String>(userRoleList);
+                xUserMgr.checkAccessRoles(userRolesList);
 		user = createUser(user, userStatus, userRoleList);
 
 		return user;
