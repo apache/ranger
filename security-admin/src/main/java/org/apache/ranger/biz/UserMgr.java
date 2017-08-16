@@ -142,7 +142,8 @@ public class UserMgr {
 			Collection<String> userRoleList) {
 		XXPortalUser user = mapVXPortalUserToXXPortalUser(userProfile);
 		checkAdminAccess();
-        xUserMgr.checkAccessRoles((List<String>) userRoleList);
+                List<String> userRolesList = new ArrayList<String>(userRoleList);
+        xUserMgr.checkAccessRoles(userRolesList);
 		user = createUser(user, userStatus, userRoleList);
 
 		return user;
@@ -1169,7 +1170,7 @@ public class UserMgr {
             Collection<String> reqRoleList,
             Collection<String> existingRoleList, VXPortalUser userProfileRes) {
         UserSessionBase session = ContextUtil.getCurrentUserSession();
-        if ("rangerusersync".equals(session.getXXPortalUser().getLoginId())
+        if (session != null && session.getXXPortalUser() != null && session.getXXPortalUser().getLoginId() != null &&  "rangerusersync".equals(session.getXXPortalUser().getLoginId())
                 && reqRoleList != null && !reqRoleList.isEmpty()
                 && existingRoleList != null && !existingRoleList.isEmpty()) {
             if (!reqRoleList.equals(existingRoleList)) {

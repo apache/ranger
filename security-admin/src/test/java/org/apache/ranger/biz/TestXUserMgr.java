@@ -848,9 +848,9 @@ public class TestXUserMgr {
         expected.add(vXGroup1);
         expected.add(vXGroup2);
         Assert.assertTrue(result.containsAll(expected));
-        Mockito.verify(daoManager).getXXPortalUser();
+//        Mockito.verify(daoManager).getXXPortalUser();
         Mockito.verify(portalUser).findByLoginId(vXUser.getName());
-        Mockito.verify(daoManager).getXXPortalUserRole();
+  //      Mockito.verify(daoManager).getXXPortalUserRole();
         Mockito.verify(userDao).findXPortalUserRolebyXPortalUserId(
         Mockito.anyLong());
 
@@ -1275,7 +1275,7 @@ public class TestXUserMgr {
         Set<String> list = xUserMgr.getGroupsForUser(userName);
         Assert.assertNotNull(list);
         Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(daoManager).getXXModuleDef();
+//        Mockito.verify(daoManager).getXXModuleDef();
         Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(),Mockito.anyLong());
     }
 

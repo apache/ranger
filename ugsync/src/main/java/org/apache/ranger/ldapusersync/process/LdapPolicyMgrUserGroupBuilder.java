@@ -448,7 +448,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			addUsers = users;
 		} else {
             for (String user : users) {
-                if (!oldUsers.contains(user)|| !(oldUserMap.get(user).equals(groupMap.get(groupName)))) {
+                if (!oldUsers.contains(user)|| !(oldUserMap.get(user).contains(groupMap.get(groupName)))) {
                     addUsers.add(user);
                 }
 			}

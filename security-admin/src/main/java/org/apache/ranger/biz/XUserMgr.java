@@ -1337,8 +1337,8 @@ public class XUserMgr extends XUserMgrBase {
                 } else {
                     logger.info("LoggedInUser="
                             + (session != null ? session.getXXPortalUser()
-                                    .getId()
-                                    : " is permitted to perform the action"));
+                                    .getId() : "")
+                                    + " is permitted to perform the action.");
                 }
             }
         } else {
