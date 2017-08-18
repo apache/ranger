@@ -152,7 +152,9 @@ define(function(require){
 				  var labelName = this.column.attributes.label;
 				  $(this.el).html("");
 				  if (this.state == "collasped"){
-					  $(this.el).parent().addClass("warning");
+//					  $(this.el).parent().addClass("warning");
+//					 Add warning class to sub grid table
+                                          $(this.el).addClass("warning");
 					  this.state = "expanded";
 					  this.subrow = new SubgridCustomRow({
 						  columns: this.column.collection,
@@ -164,7 +166,9 @@ define(function(require){
 					  $(this.el).parent("tr").after(this.subrow.render().$el);
 				  } else {
 					  if( $(this.el).parent().siblings('.warning').length <= 1 ){
-						  $(this.el).parent().removeClass("warning")
+//						  $(this.el).parent().removeClass("warning")
+//						  Remove warning class from sub grid table
+                                                  $(this.el).removeClass("warning")
 					  }
 					  this.state = "collasped";
 					  this.subrow.remove();

@@ -242,7 +242,8 @@ define(function(require) {
                 selectAndAddGroup               : 'Select and Add Group',
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
-		clusterName                     : 'Cluster Name'
+                clusterName                     : 'Cluster Name',
+                url                             : 'Hive url.'
 			},
 			btn : {
 				add							: 'Add',

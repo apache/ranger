@@ -141,10 +141,11 @@ define(function(require) {'use strict';
 			this.initializePlugins();
 			this.setupGroupAutoComplete();
 			this.renderComponentAndPolicyTypeSelect();
-			//Show policies listing for each service and GET policies for each service
+                        var policyType = this.ui.policyType.val();
+//			Show policies listing for each service and GET policies for each service
 			_.each(this.policyCollList, function(obj,i){
 				this.renderTable(obj.collName, obj.serviceDefName);
-				this.getResourceLists(obj.collName,obj.serviceDefName);
+                                this.getResourceLists(obj.collName,obj.serviceDefName,policyType);
 			},this);
 			this.$el.find('[data-js="policyName"]').focus()
 			var urlString = XAUtil.getBaseUrl();
@@ -161,11 +162,15 @@ define(function(require) {'use strict';
 	                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
 	                 {text :'Resource'    , info :localization.tt('msg.resourceMsg')}]
          },
-         getResourceLists: function(collName, serviceDefName){
+         getResourceLists: function(collName, serviceDefName , policyType){
 
 			var that = this, coll = this[collName];
 			that.allowDownload = false;
 			coll.queryParams.serviceType = serviceDefName;
+                        if(policyType){
+//				to set default value access type in policy type
+                                coll.queryParams.policyType = policyType;
+                        }
 			coll.fetch({
 				cache : false,
 				reset: true,
@@ -178,9 +183,13 @@ define(function(require) {'use strict';
 				_.each(that[collName].models,function(model,ind){
 					if (XAUtil.isMaskingPolicy(model.get('policyType'))) {
 						//'<name>Collection' must be same as subgrid custom column name
-						model.attributes.allowCollection = model.get('dataMaskPolicyItems');
+                                                model.attributes.maskCollection = model.get('dataMaskPolicyItems');
+//						Add service type in masking condition
+                                                _.each(model.attributes.dataMaskPolicyItems , function(m){
+                                                        m.type = model.collection.queryParams.serviceType;
+                                                })
 					} else if (XAUtil.isRowFilterPolicy(model.get('policyType'))) {
-						model.attributes.allowCollection = model.get('rowFilterPolicyItems');
+                                                model.attributes.rowlvlCollection = model.get('rowFilterPolicyItems');
 					} else {
 						model.attributes.allowCollection = model.get('policyItems');
 					}
@@ -215,16 +224,15 @@ define(function(require) {'use strict';
 					label: 'Groups',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model, coll) {
-							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
 							var group_str = '';
 							if(_.isEmpty(model.get('groups'))){
 								return '<center>--</center>';
 							} else {
 								_.each(model.get('groups'),function(group,index){
 									if(index < 4) {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + endSpanEle  + " ";
+                                                                                group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
 									} else {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + endSpanEle  + " ";
+                                                                                group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
 									}
 								});
 								if(model.get('groups').length > 4) {
@@ -247,16 +255,15 @@ define(function(require) {'use strict';
 					label: 'Users',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
-							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
 							var user_str = '';
 							if(_.isEmpty(model.get('users'))){
 								return '<center>--</center>';
 							} else {
 								_.each(model.get('users'),function(user,index){
 									if(index < 4) {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + endSpanEle  + " ";
+                                                                                user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
 									} else {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + endSpanEle  + " ";
+                                                                                user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
 									}
 								});
 								if(model.get('users').length > 4) {
@@ -278,13 +285,12 @@ define(function(require) {'use strict';
 					label: 'Accesses',
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
-							var startSpanEle = '<span class="label label-info cellWidth-1 float-left-margin-2" style="">',endSpanEle = '</span>';
 							var access_str = '';
 							_.each(model.get('accesses'),function(access,index){
 								if(index < 4){
-									access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+ endSpanEle  + " ";
+                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
 								} else {
-									access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+ endSpanEle  + " ";
+                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
 								}
 							});
 							if(model.get('accesses').length > 4) {
@@ -301,6 +307,66 @@ define(function(require) {'use strict';
 					sortable: false
 				}
 			];
+               if(XAUtil.isMaskingPolicy(this.ui.policyType.val())){
+                        subcolumns.push({
+                                name: 'maskingCondition',
+                                cell: 'html',
+                                cell: Backgrid.HtmlCell.extend({
+                                                        className : 'subgridTable'
+                        }),
+                        label: 'Masking Condition',
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                            fromRaw: function (rawValue,model) {
+                                var access_str = '';
+                                var servicedef = _.find(that.serviceDefList.models ,function(m){
+									return m.get('name') == model.get('type');
+                                });
+                                var maskValue = _.find(servicedef.get('dataMaskDef').maskTypes,function(m){
+									return m.name == model.get('dataMaskInfo').dataMaskType
+                                })
+                                if(maskValue.label){
+									if(maskValue.label == "Custom"){
+										var title = model.attributes.dataMaskInfo.dataMaskType +' : '+model.attributes.dataMaskInfo.valueExpr;
+										access_str = '<span class="label label-info trim-containt" title="'+_.escape(title)+'">'+_.escape(title)+'</span>';
+									}else{
+										access_str = '<span class="label label-info trim-containt" title="'+_.escape(maskValue.label)+'">'+_.escape(maskValue.label)+'</span>';
+									}
+                                }else {
+                                  access_str ='<center>--</center>';
+                                }
+                                return access_str;
+                            }
+                        }),
+                        editable: false,
+                        click: false,
+                        sortable: false
+
+                })
+            };
+            if(XAUtil.isRowFilterPolicy(this.ui.policyType.val())){
+                    subcolumns.push({
+                            name: 'rowLevelFilter',
+                            cell: 'html',
+                            cell: Backgrid.HtmlCell.extend({
+                                                className : 'subgridTable'
+                                        }),
+                            label: 'Row Level Filter',
+                            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                fromRaw: function (rawValue,model) {
+                                    var access_str = '';
+                                    if(model.get('rowFilterInfo').filterExpr){
+                                           access_str = '<span class="label label-info trim-containt" title="'+_.escape(model.get('rowFilterInfo').filterExpr)+'">' + _.escape(model.get('rowFilterInfo').filterExpr)+ '</span>'  + " ";
+                                    } else {
+                                           access_str ='<center>--</center>';
+                                    }
+                                    return access_str;
+                                }
+                            }),
+                            editable: false,
+                            click: false,
+                            sortable: false
+                    })
+            }
 			var columns = {
 				id : {
 					cell : "uri",
@@ -401,18 +467,43 @@ define(function(require) {'use strict';
 			if(serviceDefName === XAEnums.ServiceType.SERVICE_TAG.label){
 				enableDenyAndExceptionsInPolicies = true;
 			}
+            if(XAUtil.isAccessPolicy(this.ui.policyType.val())){
+                permissions = {
+                        allow:{
+                                label: 'Allow Conditions',
+                                cell: "subgrid-custom",
+                                optionValues : subcolumns,
+                                editable: false,
+                                sortable: false,
+                                click : false
+                           }
+                        };
+            }else if(XAUtil.isMaskingPolicy(this.ui.policyType.val())){
+                                permissions = {
+                                        mask:{
+                                                        label: 'Masking Conditions',
+                                                        cell: "subgrid-custom",
+                                                        optionValues : subcolumns,
+                                                        editable: false,
+                                                        sortable: false,
+                                                        click : false
+                                        }
+                            };
+                   }else if(XAUtil.isRowFilterPolicy(this.ui.policyType.val())){
+                                permissions = {
+                                                rowlvl:{
+                                                                label: 'Row Level Conditions',
+                                                                cell: "subgrid-custom",
+                                                                optionValues : subcolumns,
+                                                                editable: false,
+                                                                sortable: false,
+                                                                click : false
+                                                }
+                                    };
+                        }
 
-            permissions = {
-        		allow:{
-					label: 'Allow Conditions',
-					cell: "subgrid-custom",
-					optionValues : subcolumns,
-					editable: false,
-					sortable: false,
-					click : false
-		        }
-            };
-            if(enableDenyAndExceptionsInPolicies) {
+
+            if(enableDenyAndExceptionsInPolicies && that.ui.policyType.val() == 0) {
             	cols = {
             			allowExclude:{
             				label: 'Allow Exclude',
@@ -460,11 +551,11 @@ define(function(require) {'use strict';
 			    data: options
 			});
 			this.ui.policyType.select2({
-				closeOnSelect: true,
-				placeholder: 'Select policy type',
+                                closeOnSelect: false,
 				maximumSelectionSize : 1,
 				width: '220px',
-				allowClear: true,
+                                value : this.ui.policyType.val("0"),
+                                allowClear: false,
 				data: policyTypes
 	
 			});
@@ -666,7 +757,10 @@ define(function(require) {'use strict';
 			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val();
 			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType};
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
-
+            that.initializeRequiredData();
+            _.each(this.policyCollList, function(obj,i){
+                    this.renderTable(obj.collName, obj.serviceDefName);
+            },this);
 			var compFlag = false;
 			if(!_.isUndefined(component)) {
 				compFlag = true;
