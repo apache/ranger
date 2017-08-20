@@ -26,11 +26,22 @@
 LINUX_USER=ranger
 BIN_PATH=/usr/bin
 MOD_NAME=ranger-usersync
-pidf=/var/run/ranger/usersync.pid
+
+if [ -z "${USERSYNC_PID_DIR_PATH}" ]; then
+        USERSYNC_PID_DIR_PATH=/var/run/ranger
+fi
+if [ -z "${USERSYNC_PID_NAME}" ]
+then
+        USERSYNC_PID_NAME=usersync.pid
+fi
+pidf=${USERSYNC_PID_DIR_PATH}/${USERSYNC_PID_NAME}
+
 pid=""
 if [ -f ${pidf} ]
 then
-    pid=`cat $pidf`
+    pid=`cat $pidf` > /dev/null 2>&1
+else
+    pid=`ps -ef | grep java | grep -- '-Dproc_rangerusersync' | grep -v grep | awk '{ print $2 }'`
 fi
 
 case $1 in
