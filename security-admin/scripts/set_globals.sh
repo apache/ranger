@@ -60,13 +60,17 @@ log() {
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 
-groupadd ${unix_group}
-ret=$?
-if [ $ret -ne 0 ] && [ $ret -ne 9 ]; then
-	echo "Error creating group $unix_group"
-	exit 1
+#create group if it does not exist
+egrep "^$unix_group" /etc/group >& /dev/null
+if [ $? -ne 0 ]; then
+	groupadd ${unix_group}
+	ret=$?
+	if [ $ret -ne 0 ] && [ $ret -ne 9 ]; then
+		echo "Error creating group $unix_group"
+		exit 1
+	fi
 fi
-
+#create user if it does not exists
 id -u ${unix_user} > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     useradd ${unix_user} -g ${unix_group} -m
