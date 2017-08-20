@@ -55,9 +55,13 @@ def populate_global_dict():
 	global globalDict
 	read_config_file = open(os.path.join(os.getcwd(),'install.properties'))
 	for each_line in read_config_file.read().split('\n') :
-		if len(each_line) == 0 : continue
+		each_line = each_line.strip();
+		if len(each_line) == 0:
+			continue
+		elif each_line[0] == "#":
+			continue
 		if re.search('=', each_line):
-			key , value = each_line.strip().split("=",1)
+			key , value = each_line.split("=",1)
 			key = key.strip()
 
 			if 'PASSWORD' in key:
