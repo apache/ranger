@@ -208,8 +208,6 @@ define(function(require) {
 				selectTopologyName				: 'Select Topology Name',
 				selectServiceName				: 'Select Service Name',
 				topologyName					: 'Topology Name',
-				serivceName						: 'Service Name',
-				serivceType						: 'Service Type',
 				ipAddress						: 'IP Address',
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
@@ -242,8 +240,8 @@ define(function(require) {
                 selectAndAddGroup               : 'Select and Add Group',
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
-  		modules		                : 'Modules',
-		clusterName                     : 'Cluster Name'
+		  		modules		                	: 'Modules',
+				clusterName                     : 'Cluster Name'
 			},
 			btn : {
 				add							: 'Add',

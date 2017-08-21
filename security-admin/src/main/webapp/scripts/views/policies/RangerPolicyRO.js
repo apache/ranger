@@ -35,8 +35,17 @@ define(function(require) {
 
 		template: RangerPolicyROTmpl,
 		templateHelpers: function() {
+            var isDelegatAdminChk;
+            if(this.policyDetails.serviceType !== XAEnums.ServiceType.SERVICE_TAG.label
+                && !XAUtils.isMaskingPolicy(this.policy.get('policyType'))
+                && !XAUtils.isRowFilterPolicy(this.policy.get('policyType'))) {
+                isDelegatAdminChk = true;
+            } else {
+            	isDelegatAdminChk = false;
+            }
 			return {
 				PolicyDetails: this.policyDetails,
+                isDelegatAdmin: isDelegatAdminChk
 			};
 		},
 		breadCrumbs: [],
@@ -79,6 +88,12 @@ define(function(require) {
 		},
 
 		initializePolicyDetailsObj : function(){
+            // In this.policy service type is undefined then we take repotype.
+            if(_.isUndefined(this.policy.get('serviceType'))){
+                    this.serviceDef = this.serviceDefList.findWhere({'id' : this.repoType})
+            }else{
+                    this.serviceDef = this.serviceDefList.findWhere({'name':this.policy.get('serviceType')});
+            }
 			var self = this;
 			var details = this.policyDetails = {};
 			details.id = this.policy.get('id');
@@ -109,6 +124,18 @@ define(function(require) {
 			perm.allowException  = this.policy.get('allowExceptions');
 			perm.denyPolicyItems = this.policy.get('denyPolicyItems');
 			perm.denyExceptions  = this.policy.get('denyExceptions');
+            if(this.policy.get('dataMaskPolicyItems')){
+	            _.each(this.policy.get('dataMaskPolicyItems'), function(mask){
+	                var maskingInfo = _.find(self.serviceDef.get("dataMaskDef").maskTypes, function(m){
+	                	return m.name == mask.dataMaskInfo.dataMaskType;
+	                });
+	                if(maskingInfo){
+	                	_.extend(mask.dataMaskInfo , _.pick(maskingInfo, 'label'));	
+	                }
+	            })
+	            perm.maskingPolicy  = this.policy.get('dataMaskPolicyItems');
+            }
+            perm.rowLevelPolicy  = this.policy.get('rowFilterPolicyItems');
 			details.createdBy  = this.policy.get('createdBy');
 			details.createTime = Globalize.format(new Date(this.policy.get('createTime')),  "MM/dd/yyyy hh:mm tt");
 			details.updatedBy = this.policy.get('updatedBy');
@@ -124,7 +151,9 @@ define(function(require) {
 			var items = [{'itemName': 'policyItems',title : 'Allow Condition'},
 			             {'itemName': 'allowExceptions',title : 'Exclude from Allow Conditions'},
 			             {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
-			             {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'},]
+                         {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'},
+                         {'itemName': 'dataMaskPolicyItems',title : 'Masking Conditions'},
+                         {'itemName': 'rowFilterPolicyItems',title : 'Row Level Conditions'}]
 			_.each(items, function(item){
 				if(!_.isUndefined(this.policy.get(item.itemName)) && !_.isEmpty(this.policy.get(item.itemName))){
 					this.policyDetails['policyItemsCond'].push({ title : item.title, headers : headers.header, policyItems : this.policy.get(item.itemName)})
@@ -145,9 +174,23 @@ define(function(require) {
 
 		getPermHeaders : function(){
 			var permList = [], 
-				policyCondition = false;
-			permList.unshift(localization.tt('lbl.delegatedAdmin'));
-			permList.unshift(localization.tt('lbl.permissions'));
+            policyCondition = false;
+            if(this.policyDetails.serviceType !== XAEnums.ServiceType.SERVICE_TAG.label
+                && !XAUtils.isMaskingPolicy(this.policy.get('policyType'))
+                && !XAUtils.isRowFilterPolicy(this.policy.get('policyType'))){
+                permList.unshift(localization.tt('lbl.delegatedAdmin'));
+            }
+            if(XAUtils.isRowFilterPolicy(this.policy.get('policyType'))){
+                permList.unshift(localization.tt('lbl.rowLevelFilter'));
+            }
+            if(XAUtils.isMaskingPolicy(this.policy.get('policyType'))){
+                permList.unshift(localization.tt('lbl.selectMaskingOption'));
+            }
+            if(XAUtils.isRowFilterPolicy(this.policy.get('policyType')) || XAUtils.isMaskingPolicy(this.policy.get('policyType'))){
+                permList.unshift(localization.tt('lbl.accessTypes'));
+            }else{
+                permList.unshift(localization.tt('lbl.permissions'));
+            }
 			if(!_.isEmpty(this.serviceDef.get('policyConditions'))){
 				permList.unshift(localization.tt('h.policyCondition'));
 				policyCondition = true;
@@ -177,6 +220,8 @@ define(function(require) {
 		},
 
 		getPolicyByVersion : function(ver, e){
+			//to support old policy log after updating that policy.
+			this.policy.set('serviceType',undefined);
 			this.policy.fetchByVersion(ver, {
 				cache : false,
 				async : false

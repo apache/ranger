@@ -116,14 +116,14 @@ define(function(require) {
 			this.timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 			this.initializeServiceDefColl();
             if(_.isUndefined(App.vsHistory)){
-                    var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
-                    App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
+	            var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
+	            App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
             }
 		},
 
 		/** all events binding here */
 		bindEvents : function() {
-                        this.listenTo(this.accessAuditList, "sync",this.showTagsAttributes, this);
+            this.listenTo(this.accessAuditList, "sync",this.showTagsAttributes, this);
 		},
 
 		initializeServiceDefColl : function() {
@@ -146,7 +146,7 @@ define(function(require) {
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
-                        this.showTagsAttributes();
+            this.showTagsAttributes();
 
 		},
 		modifyTableForSubcolumns : function(){
@@ -190,16 +190,16 @@ define(function(require) {
 					this.renderBigDataTable();
 					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
-                                        this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
+                    this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
                                         this.showTagsAttributes();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
-                                        App.vsHistory.admin = XAUtils.removeEmptySearchValue(App.vsHistory.admin);
+                    App.vsHistory.admin = XAUtils.removeEmptySearchValue(App.vsHistory.admin);
 					this.trxLogList = new VXTrxLogList();
 					this.renderAdminTable();
-                                        if(_.isEmpty(App.vsHistory.admin) && _.isUndefined(App.sessionId)){
+                    if(_.isEmpty(App.vsHistory.admin) && _.isUndefined(App.sessionId)){
 			     	    this.trxLogList.fetch({
 							   cache : false
 						});
@@ -211,16 +211,16 @@ define(function(require) {
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
-                                        App.vsHistory.loginSession = XAUtils.removeEmptySearchValue(App.vsHistory.loginSession);
+                    App.vsHistory.loginSession = XAUtils.removeEmptySearchValue(App.vsHistory.loginSession);
 					this.authSessionList = new VXAuthSession();
 					this.renderLoginSessionTable();
 					//Setting SortBy as id and sortType as desc = 1
 					this.authSessionList.setSorting('id',1); 
-                                        if(_.isEmpty(App.vsHistory.loginSession)){
-                                                this.authSessionList.fetch({
-                                                        cache:false,
-                                                });
-                                        }
+                    if(_.isEmpty(App.vsHistory.loginSession)){
+                        this.authSessionList.fetch({
+                        	cache:false,
+                        });
+                    }
 					this.addSearchForLoginSessionTab();
 					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
                     this.ui.iconSearchInfo.hide();
@@ -233,12 +233,12 @@ define(function(require) {
 					var params = { priAcctId : 1 };
 					that.renderAgentTable();
 					this.policyExportAuditList.setSorting('createDate',1);
-                                        if(_.isEmpty(App.vsHistory.plugin)){
-                                                this.policyExportAuditList.fetch({
-                                                        cache : false,
-                                                        data :params
-                                                });
-                                        }
+                    if(_.isEmpty(App.vsHistory.plugin)){
+                    this.policyExportAuditList.fetch({
+	                    cache : false,
+	                    data :params
+                    });
+                    }
 					this.addSearchForAgentTab();
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
                     this.ui.iconSearchInfo.hide();
@@ -845,19 +845,18 @@ define(function(require) {
 					Backgrid.Row.prototype.initialize.apply(this, args);
 				},
 				onClick: function (e) {
-					var self = this;
-                                        if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
-                                                return;
-                                        }
+                    var self = this ;
+                    if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
+                            return;
+                    }
+                    if(this.model.get('repoType')){
+                        var repoType =  this.model.get('repoType');
+                    }
 					var policyId = this.model.get('policyId');
 					if(policyId == -1){
 						return;
 					}
-					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
-					if(_.isUndefined(serviceDef)){
-						return ;
-					}
-					var eventTime = this.model.get('eventTime');
+                    var eventTime = this.model.get('eventTime');
 
 					var policy = new RangerPolicy({
 						id: policyId
@@ -866,17 +865,19 @@ define(function(require) {
 					var view = new RangerPolicyRO({
 						policy: policy,
 						policyVersionList : policyVersionList,
-						serviceDef: serviceDef,
-						eventTime : eventTime
+                        serviceDefList: that.serviceDefList,
+                        eventTime : eventTime,
+                        repoType : repoType
 					});
 					var modal = new Backbone.BootstrapModal({
 						animate : true, 
 						content		: view,
 						title: localization.tt("h.policyDetails"),
 						okText :localization.tt("lbl.ok"),
-						allowCancel : false,
+                        allowCancel : true,
 						escape : true
 					}).open();
+                    modal.$el.find('.cancel').hide();
 					var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
 					policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
 						view.previousVer(e);
