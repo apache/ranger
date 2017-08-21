@@ -32,12 +32,9 @@ from datetime import datetime
 os_name = platform.system()
 os_name = os_name.upper()
 
-if os_name == "LINUX":
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
-	if RANGER_ADMIN_HOME is None:
-		RANGER_ADMIN_HOME = os.getcwd()
-elif os_name == "WINDOWS":
-	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
+if RANGER_ADMIN_HOME is None:
+	RANGER_ADMIN_HOME = os.getcwd()
 
 def log(msg,type):
 	if type == 'info':
