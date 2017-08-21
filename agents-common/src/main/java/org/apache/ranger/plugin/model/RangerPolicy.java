@@ -70,6 +70,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private List<RangerPolicyItem>            denyExceptions	= null;
 	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems  = null;
 	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems = null;
+	private String                            serviceType       = null;
 
 
 	/**
@@ -210,6 +211,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	public void setIsAuditEnabled(Boolean isAuditEnabled) {
 		this.isAuditEnabled = isAuditEnabled == null ? Boolean.TRUE : isAuditEnabled;
 	}
+
+        public String getServiceType() {
+                return serviceType;
+        }
+
+        public void setServiceType(String serviceType) {
+                this.serviceType = serviceType;
+        }
 
 	/**
 	 * @return the resources
@@ -415,6 +424,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		sb.append("description={").append(description).append("} ");
 		sb.append("resourceSignature={").append(resourceSignature).append("} ");
 		sb.append("isAuditEnabled={").append(isAuditEnabled).append("} ");
+                sb.append("serviceType={").append(serviceType).append("} ");
 
 		sb.append("resources={");
 		if(resources != null) {

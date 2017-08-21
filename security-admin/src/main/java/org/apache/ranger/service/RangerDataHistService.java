@@ -26,6 +26,8 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDataHist;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -92,6 +94,14 @@ public class RangerDataHistService {
 			RangerPolicy policy = (RangerPolicy) baseModelObj;
 			objectName = policy.getName();
 			classType = AppConstants.CLASS_TYPE_RANGER_POLICY;
+                        XXService xXService = daoMgr.getXXService().findByName(policy.getService());
+                        XXServiceDef xxServiceDef = null;
+                        if(xXService != null){
+                                xxServiceDef = daoMgr.getXXServiceDef().getById(xXService.getType());
+                        }
+                        if(xxServiceDef != null){
+                                policy.setServiceType(xxServiceDef.getName());
+                        }
 			content = writeObjectAsString(policy);
 		}
 		

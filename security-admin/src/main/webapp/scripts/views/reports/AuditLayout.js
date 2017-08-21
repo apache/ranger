@@ -845,19 +845,18 @@ define(function(require) {
 					Backgrid.Row.prototype.initialize.apply(this, args);
 				},
 				onClick: function (e) {
-					var self = this;
-                                        if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
-                                                return;
-                                        }
+                    var self = this ;
+                    if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
+                            return;
+                    }
+                    if(this.model.get('repoType')){
+			var repoType =  this.model.get('repoType');
+                    }
 					var policyId = this.model.get('policyId');
 					if(policyId == -1){
 						return;
 					}
-					var	serviceDef = that.serviceDefList.findWhere({'id':this.model.get('repoType')});
-					if(_.isUndefined(serviceDef)){
-						return ;
-					}
-					var eventTime = this.model.get('eventTime');
+                    var eventTime = this.model.get('eventTime');
 
 					var policy = new RangerPolicy({
 						id: policyId
@@ -866,17 +865,19 @@ define(function(require) {
 					var view = new RangerPolicyRO({
 						policy: policy,
 						policyVersionList : policyVersionList,
-						serviceDef: serviceDef,
-						eventTime : eventTime
+                                                serviceDefList: that.serviceDefList,
+                                                eventTime : eventTime,
+                                                repoType : repoType
 					});
 					var modal = new Backbone.BootstrapModal({
 						animate : true, 
 						content		: view,
 						title: localization.tt("h.policyDetails"),
 						okText :localization.tt("lbl.ok"),
-						allowCancel : false,
+                                                allowCancel : true,
 						escape : true
 					}).open();
+                                        modal.$el.find('.cancel').hide();
 					var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
 					policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
 						view.previousVer(e);

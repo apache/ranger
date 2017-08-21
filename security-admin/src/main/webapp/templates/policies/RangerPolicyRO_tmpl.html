@@ -17,12 +17,12 @@
 <div class="serviceInfo row-fluid">
   <div class="pull-left">
     <p>
-      <strong>{{tt 'lbl.serivceName'}} :</strong> {{PolicyDetails.service}}
+      <strong>{{tt 'lbl.serviceName'}} :</strong> {{PolicyDetails.service}}
     </p>
   </div>
   <div class="pull-right">
     <p>
-      <strong>{{tt 'lbl.serivceType'}} :</strong> {{PolicyDetails.serviceType}}
+      <strong>{{tt 'lbl.serviceType'}} :</strong> {{PolicyDetails.serviceType}}
     </p>
   </div>
 </div>
@@ -66,9 +66,15 @@
         <td>
           {{tt 'lbl.description'}}
         </td>
-        <td>
-          {{PolicyDetails.description}}
-        </td>
+        {{#ifCond PolicyDetails.description '==' ""}}
+          <td>
+            --
+          </td>
+        {{else}}
+          <td>
+            {{PolicyDetails.description}}
+          </td>
+        {{/ifCond}}
       </tr>
       {{#if PolicyDetails.isRecursive}}
       <tr>
@@ -106,12 +112,24 @@
 	    <tbody>
 	      {{#each this.policyItems}}
 	      <tr>
-	        <td>{{#each this.groups}}
-	          <span class="label label-info">{{this}}</span>
-	          {{/each}}</td>
-	        <td>{{#each this.users}}
-	          <span class="label label-info">{{this}}</span>
-	          {{/each}}</td>
+          <td>
+            {{#if this.groups}}
+              {{#each this.groups}}
+               <span class="label label-info">{{this}}</span>
+              {{/each}}
+            {{else}}
+                 --
+            {{/if}}
+          </td>
+          <td>
+            {{#if this.users}}
+              {{#each this.users}}
+               <span class="label label-info">{{this}}</span>
+              {{/each}}
+            {{else}}
+              --
+            {{/if}}
+          </td>
 	        {{#if ../../PolicyDetails.policyCondition}}
 	 			<td>
 	 	  		{{#if this.conditions}}	
@@ -131,9 +149,31 @@
 	        <td>{{#each this.accesses}}
 	          <span class="label label-info">{{#if this.isAllowed}}{{this.type}}{{/if}}</span>
 	          {{/each}}</td>
-	        <td>
-	          <input type="checkbox" {{#if this.delegateAdmin}}checked{{/if}} disabled="disabled">
-	        </td>
+            {{#if this.dataMaskInfo}}
+              {{#ifCond this.dataMaskInfo.dataMaskType '==' "CUSTOM"}}
+                <td>
+                  <span class="label label-info ">{{this.dataMaskInfo.label}}  :  {{this.dataMaskInfo.valueExpr}} </span>
+                </td>
+              {{else}}
+                <td>
+                <span class="label label-info">{{this.dataMaskInfo.label}}</span>
+                </td>
+             {{/ifCond}}
+          {{/if}}
+          {{#if this.rowFilterInfo}}
+            <td>
+              {{#if this.rowFilterInfo.filterExpr}}
+                <span class="label label-info">{{this.rowFilterInfo.filterExpr}}</span>
+              {{else}}
+                --
+              {{/if}}
+            </td>
+          {{/if}}
+          {{#if ../../isDelegatAdmin}}
+            <td>
+                   <input type="checkbox" {{#if this.delegateAdmin}}checked{{/if}} disabled="disabled">
+                  </td>
+          {{/if}}
 	      </tr>
 	      {{/each}}
 	    </tbody>

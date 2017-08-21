@@ -208,8 +208,6 @@ define(function(require) {
 				selectTopologyName				: 'Select Topology Name',
 				selectServiceName				: 'Select Service Name',
 				topologyName					: 'Topology Name',
-				serivceName						: 'Service Name',
-				serivceType						: 'Service Type',
 				ipAddress						: 'IP Address',
 				isVisible                       : 'Visible',
 				delegatedAdmin					: 'Delegate Admin',
