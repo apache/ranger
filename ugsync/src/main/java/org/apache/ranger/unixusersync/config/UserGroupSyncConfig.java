@@ -1004,7 +1004,12 @@ public class UserGroupSyncConfig  {
 	}
 	
 	/* Used only for unit testing */
-    public void setDeltaSync(boolean deltaSyncEnabled) {
-        prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
-    }
+    	public void setDeltaSync(boolean deltaSyncEnabled) {
+        	prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
+    	}	
+
+	/* Used only for unit testing */
+    	public void setUserNameAttribute(String userNameAttr) {
+		prop.setProperty(LGSYNC_USER_NAME_ATTRIBUTE, userNameAttr);
+	}
 }

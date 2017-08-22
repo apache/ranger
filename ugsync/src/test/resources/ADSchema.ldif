@@ -280,7 +280,7 @@ cn: User1000
 userPassword: password
 distinguishedName: CN=User1000,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 memberOf: CN=Group10,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
-sAMAccountName: User1000
+sAMAccountName: U1000
 #codePage: 0
 #badPasswordTime: 0
 pwdLastSet: 130850196406172191
