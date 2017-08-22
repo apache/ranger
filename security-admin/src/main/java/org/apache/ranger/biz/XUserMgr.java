@@ -1906,7 +1906,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public void deleteXUser(Long id, boolean force) {
+        public synchronized void deleteXUser(Long id, boolean force) {
 		checkAdminAccess();
 		XXUserDao xXUserDao = daoManager.getXXUser();
 		XXUser xXUser =	xXUserDao.getById(id);

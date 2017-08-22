@@ -520,38 +520,65 @@ define(function(require){
 						XAUtil.blockUI();
 						if(that.showUsers){
 							var model = new VXUser();
-							model.deleteUsers(jsonUsers,{
-								success: function(response,options){
-									XAUtil.blockUI('unblock');
-									that.collection.getFirstPage({fetch:true});
-									XAUtil.notifySuccess('Success','User deleted successfully!');
-									that.collection.selected = {};
-								},
-								error:function(response,options){
-									XAUtil.blockUI('unblock');
-									XAUtil.notifyError('Error', 'Error deleting User!');
-								}
-							});
-						}
-						else {
+                            var count = 0 , notDeletedUserName = "";
+                            _.map(jsonUsers.vXStrings , function(m){
+                                    model.deleteUsers(m.value,{
+					success: function(response,options){
+                                                    count += 1;
+                                                    that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                                        },
+                                        error:function(response,options){
+                                                count += 1;
+                                                notDeletedUserName += m.value + ", ";
+                                                that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                                        }
+                                    });
+                            });
+                        }else {
 							var model = new VXGroup();
-							model.deleteGroups(jsonUsers,{
-								success: function(response){
-									XAUtil.blockUI('unblock');
-									that.groupList.getFirstPage({fetch:true});
-									XAUtil.notifySuccess('Success','Group deleted successfully!');
-									that.groupList.selected  = {};
-								},
-								error:function(response,options){
-									XAUtil.blockUI('unblock');
-									XAUtil.notifyError('Error', 'Error deleting Group!');
-								}
-							});
+                            var count = 0, notDeletedGroupName ="";
+                            _.map(jsonUsers.vXStrings, function(m){
+                                    model.deleteGroups(m.value,{
+					success: function(response){
+                                                    count += 1;
+                                                    that.groupCollection(jsonUsers.vXStrings.length,count,notDeletedGroupName)
+                                        },
+                                        error:function(response,options){
+                                                count += 1;
+                                                notDeletedGroupName += m.value + ", ";
+                                                that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName)
+                                        }
+                                    })
+                            });
 						}
 					}
 				});
 			}
 		},
+        userCollection : function(numberOfUser, count, notDeletedUserName){
+                if(count == numberOfUser){
+                        this.collection.getFirstPage({fetch:true});
+                        this.collection.selected = {};
+                        XAUtil.blockUI('unblock');
+                        if(notDeletedUserName === ""){
+                                XAUtil.notifySuccess('Success','User deleted successfully!');
+                        }else{
+                                XAUtil.notifyError('Error', 'Error occurred during deleting Users: '+ notDeletedUserName.slice(0 , -2));
+                        }
+                }
+        },
+        groupCollection : function(numberOfGroup, count ,notDeletedGroupName){
+                if(count == numberOfGroup){
+                        this.groupList.getFirstPage({fetch:true});
+                        this.groupList.selected  = {};
+                        XAUtil.blockUI('unblock');
+                        if(notDeletedGroupName === ""){
+                                XAUtil.notifySuccess('Success','User deleted successfully!');
+                        } else {
+                                XAUtil.notifyError('Error', 'Error occurred during deleting Groups: '+ notDeletedGroupName.slice(0 , -2));
+                        }
+                }
+        },
 		addVisualSearch : function(){
 			var that = this;
 			var coll,placeholder;
