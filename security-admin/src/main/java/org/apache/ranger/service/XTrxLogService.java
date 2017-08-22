@@ -35,13 +35,19 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXPortalUserRole;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.view.VXXTrxLog;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
 import org.springframework.context.annotation.Scope;
@@ -51,6 +57,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 @Scope("singleton")
 public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
+	Long keyadminCount = 0L;
 
 	public XTrxLogService(){
 		searchFields.add(new SearchField("attributeName", "obj.attributeName",
@@ -78,7 +85,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 	protected void validateForUpdate(VXTrxLog vObj, XXTrxLog mObj) {}
 
 	@Override
-	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {		
+	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
 		EntityManager em = daoManager.getEntityManager();
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<VXXTrxLog> selectCQ = criteriaBuilder.createQuery(VXXTrxLog.class);
@@ -86,23 +93,32 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		Predicate predicate = generatePredicate(searchCriteria, em, criteriaBuilder, rootEntityType);
 
 		selectCQ.where(predicate);
-		if("asc".equalsIgnoreCase(searchCriteria.getSortType())){
+		if ("asc".equalsIgnoreCase(searchCriteria.getSortType())) {
 			selectCQ.orderBy(criteriaBuilder.asc(rootEntityType.get("createTime")));
-		}else{
+		} else {
 			selectCQ.orderBy(criteriaBuilder.desc(rootEntityType.get("createTime")));
 		}
 		int startIndex = searchCriteria.getStartIndex();
 		int pageSize = searchCriteria.getMaxRows();
-		List<VXXTrxLog> resultList = em.createQuery(selectCQ).setFirstResult(startIndex).setMaxResults(pageSize).getResultList();
+		List<VXXTrxLog> resultList = em.createQuery(selectCQ).setFirstResult(startIndex).setMaxResults(pageSize)
+				.getResultList();
+
+		int maxRowSize = Integer.MAX_VALUE;
+		int minRowSize = 0;
+		XXServiceDef xxServiceDef = daoManager.getXXServiceDef()
+				.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null && session.isKeyAdmin()) {
+			resultList = em.createQuery(selectCQ).setFirstResult(minRowSize).setMaxResults(maxRowSize).getResultList();
+		}
 
 		List<VXTrxLog> trxLogList = new ArrayList<VXTrxLog>();
-		for(VXXTrxLog xTrxLog : resultList){
+		for (VXXTrxLog xTrxLog : resultList) {
 			VXTrxLog trxLog = mapCustomViewToViewObj(xTrxLog);
 
-			if(trxLog.getUpdatedBy() != null){
-				XXPortalUser xXPortalUser= daoManager.getXXPortalUser().getById(
-						Long.parseLong(trxLog.getUpdatedBy()));
-				if(xXPortalUser != null){
+			if (trxLog.getUpdatedBy() != null) {
+				XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(Long.parseLong(trxLog.getUpdatedBy()));
+				if (xXPortalUser != null) {
 					trxLog.setOwner(xXPortalUser.getLoginId());
 				}
 			}
@@ -110,10 +126,61 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 			trxLogList.add(trxLog);
 		}
 
+		List<VXTrxLog> keyAdminTrxLogList = new ArrayList<VXTrxLog>();
+		if (session != null && session.isKeyAdmin() && xxServiceDef != null && resultList != null) {
+			List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
+			for (VXTrxLog xTrxLog : trxLogList) {
+				int parentObjectClassType = xTrxLog.getParentObjectClassType();
+				Long parentObjectId = xTrxLog.getParentObjectId();
+				if (parentObjectClassType == AppConstants.CLASS_TYPE_XA_SERVICE_DEF
+						&& parentObjectId == xxServiceDef.getId()) {
+					vXTrxLogs.add(xTrxLog);
+				} else if (parentObjectClassType == AppConstants.CLASS_TYPE_XA_SERVICE
+						&& parentObjectId != xxServiceDef.getId()) {
+					for (VXTrxLog vxTrxLog : trxLogList) {
+						if (parentObjectClassType == vxTrxLog.getObjectClassType()
+								&& parentObjectId == vxTrxLog.getObjectId()
+								&& vxTrxLog.getParentObjectId() == xxServiceDef.getId()) {
+							vXTrxLogs.add(xTrxLog);
+							break;
+						}
+					}
+				} else if (xTrxLog.getObjectClassType() == AppConstants.CLASS_TYPE_XA_USER
+						|| xTrxLog.getObjectClassType() == AppConstants.CLASS_TYPE_RANGER_POLICY
+						|| xTrxLog.getObjectClassType() == AppConstants.HIST_OBJ_STATUS_UPDATED) {
+					XXPortalUser xxPortalUser = null;
+					if (xTrxLog.getUpdatedBy() != null) {
+						xxPortalUser = daoManager.getXXPortalUser()
+								.getById(Long.parseLong(xTrxLog.getUpdatedBy()));
+					}
+					if (xxPortalUser != null && xxPortalUser.getId() != null) {
+						List<XXPortalUserRole> xxPortalUserRole = daoManager.getXXPortalUserRole()
+								.findByUserId(xxPortalUser.getId());
+						if (xxPortalUserRole != null
+								&& xxPortalUserRole.get(0).getUserRole().equalsIgnoreCase("ROLE_KEY_ADMIN")) {
+							vXTrxLogs.add(xTrxLog);
+						}
+					}
+				}
+			}
+			keyadminCount = (long) vXTrxLogs.size();
+			if (vXTrxLogs != null && !vXTrxLogs.isEmpty()) {
+				for (int k = startIndex; k <= pageSize; k++) {
+					if (k < vXTrxLogs.size()) {
+						keyAdminTrxLogList.add(vXTrxLogs.get(k));
+					}
+				}
+			}
+		}
+
 		VXTrxLogList vxTrxLogList = new VXTrxLogList();
 		vxTrxLogList.setStartIndex(startIndex);
 		vxTrxLogList.setPageSize(pageSize);
-		vxTrxLogList.setVXTrxLogs(trxLogList);
+		if (session != null && session.isKeyAdmin()) {
+			vxTrxLogList.setVXTrxLogs(keyAdminTrxLogList);
+		} else {
+			vxTrxLogList.setVXTrxLogs(trxLogList);
+		}
 		return vxTrxLogList;
 	}
 
@@ -133,6 +200,10 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 			if(count == null) {
 				count = 0L;
 			}
+		}
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session != null && session.isKeyAdmin()) {
+			count = keyadminCount;
 		}
 		return count;
 	}
@@ -240,6 +311,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		}
 		//We will have to get this from XXUser
 		//vXTrxLog.setOwner(vXXTrxLog.getAddedByUserName());
+		vXTrxLog.setParentObjectId(vXXTrxLog.getParentObjectId());
 		vXTrxLog.setParentObjectClassType(vXXTrxLog.getParentObjectClassType());
 		vXTrxLog.setParentObjectName(vXXTrxLog.getParentObjectName());
 		vXTrxLog.setObjectClassType(vXXTrxLog.getObjectClassType());
