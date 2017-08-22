@@ -89,10 +89,9 @@ define(function(require){
 			this.modelName = 'VXGroupBase';
 		},
 	 deleteGroups : function(groupNameValues, options){
-		var url = this.urlRoot  + '/delete?forceDelete=true';
+                var url = this.urlRoot+'/'+ groupNameValues + '?forceDelete=true';
 
 		options = _.extend({
-			data : JSON.stringify(groupNameValues),
 			contentType : 'application/json',
 			dataType : 'json',
 

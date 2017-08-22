@@ -43,9 +43,8 @@ define(function(require){
 		},
 
 		deleteUsers : function(userNameValues,options){
-			var url = this.urlRoot + '/delete?forceDelete=true';
+                        var url = this.urlRoot +'/'+ userNameValues +'?forceDelete=true';
 			options = _.extend({
-				data : JSON.stringify(userNameValues),
 				contentType : 'application/json',
 				dataType : 'json',
 			}, options);
