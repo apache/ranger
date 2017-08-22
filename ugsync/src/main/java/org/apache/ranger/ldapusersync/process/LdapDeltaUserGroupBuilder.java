@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.HashMap;
 
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
@@ -111,6 +112,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
   //private Map<String, UserInfo> userGroupMap;
   
   private Table<String, String, String> groupUserTable; 
+  private Map<String, String> userNameMap;
 
 	public static void main(String[] args) throws Throwable {
 		LdapDeltaUserGroupBuilder  ugBuilder = new LdapDeltaUserGroupBuilder();
@@ -149,6 +151,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
 		deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
 		deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
+		userNameMap = new HashMap<String, String>();
 		setConfig();
 	}
 	
@@ -324,8 +327,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			Map<String,String> groupUsersMap =  groupUserTable.row(groupName);
 			Set<String> userSet = new HashSet<String>();
 			for(Map.Entry<String, String> entry : groupUsersMap.entrySet()){
-				String transformUserName = userNameTransform(entry.getKey()); 
-		         userSet.add(transformUserName);
+				//String transformUserName = userNameTransform(entry.getKey()); 
+		         userSet.add(entry.getValue());
 		    }
 			List<String> userList = new ArrayList<>(userSet);
 			String transformGroupName = groupNameTransform(groupName);
@@ -387,6 +390,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							}
 							continue;
 						}
+						//System.out.println("userEntry = " + userEntry);
 
 						Attributes attributes =   userEntry.getAttributes();
 						if (attributes == null)  {
@@ -405,7 +409,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							}
 							continue;
 						}
-
+						
+						String userFullName = (userEntry.getNameInNamespace()).toLowerCase();
 						String userName = (String) userNameAttr.get();
 
 						if (userName == null || userName.trim().isEmpty())  {
@@ -446,6 +451,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 								+ ", for user: " + transformUserName);
 							}
+							//System.out.println("Adding user fullname = " + userFullName + " username = " + transformUserName);
+							userNameMap.put(userFullName, transformUserName);
 							Set<String> groups = new HashSet<String>();
 
 							// Get all the groups from the group name attribute of the user only when group search is not enabled.
@@ -467,6 +474,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							List<String> groupList = new ArrayList<String>(groups);
 							try {
 								sink.addOrUpdateUser(transformUserName, groupList);
+								
 							} catch (Throwable t) {
 								LOG.error("sink.addOrUpdateUserGroups failed with exception: " + t.getMessage()
 								+ ", for user: " + transformUserName + " and groups: " + groupList);
@@ -495,7 +503,6 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 						} else {
 							// If the user from the search result is present in the group user table,
 							// then addorupdate user to ranger admin.
-							String userFullName = (userEntry.getNameInNamespace()).toLowerCase();
 							LOG.debug("Chekcing if the user " + userFullName + " is part of the retrieved groups");
 							if (groupUserTable.containsColumn(userFullName) || groupUserTable.containsColumn(userName)) {
 								String transformUserName = userNameTransform(userName);
@@ -504,6 +511,13 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								} catch (Throwable t) {
 									LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 									+ ", for user: " + transformUserName);
+								}
+								userNameMap.put(userFullName, transformUserName);
+								//Also update the username in the groupUserTable with the one from username attribute.
+								Map<String,String> userMap =  groupUserTable.column(userFullName);
+								for(Map.Entry<String, String> entry : userMap.entrySet()){
+									LOG.debug("Updating groupUserTable " + entry.getValue() + " with: " + transformUserName + " for " + entry.getKey());
+									groupUserTable.put(entry.getKey(), userFullName, transformUserName);
 								}
 							}
 						}
@@ -537,7 +551,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 				} while (cookie != null);
 				LOG.info("LdapDeltaUserGroupBuilder.getUsers() completed with user count: "
 						+ counter);
-				} catch (Throwable t) {
+				} catch (Exception t) {
 					LOG.error("LdapDeltaUserGroupBuilder.getUsers() failed with exception: " + t);
 					LOG.info("LdapDeltaUserGroupBuilder.getUsers() user count: "
 							+ counter);
@@ -653,6 +667,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								}
 								userCount++;
 								String userName = getShortUserName(originalUserFullName);
+								originalUserFullName = originalUserFullName.toLowerCase();
 								if (groupSearchFirstEnabled && !userSearchEnabled) {
 									String transformUserName = userNameTransform(userName);
 									try {
@@ -661,8 +676,14 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 										LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 										+ ", for user: " + transformUserName);
 									}
+									userNameMap.put(originalUserFullName, transformUserName);
 								}
-								groupUserTable.put(gName, userName, userName);
+								//System.out.println("Adding " + userNameMap.get(originalUserFullName) + " and fullname = " + originalUserFullName + " to " + gName);
+								if (userNameMap.get(originalUserFullName) != null) {
+									groupUserTable.put(gName, originalUserFullName, userNameMap.get(originalUserFullName));
+								} else {
+									groupUserTable.put(gName, originalUserFullName, originalUserFullName);
+								}
 							}
 							LOG.info("No. of members in the group " + gName + " = " + userCount);
 						}
@@ -693,7 +714,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 					} while (cookie != null);
 					LOG.info("LdapDeltaUserGroupBuilder.getGroups() completed with group count: "
 							+ counter);
-				} catch (Throwable t) {
+				} catch (Exception t) {
 					LOG.error("LdapDeltaUserGroupBuilder.getGroups() failed with exception: " + t); 
 					LOG.info("LdapDeltaUserGroupBuilder.getGroups() group count: "
 							+ counter);
