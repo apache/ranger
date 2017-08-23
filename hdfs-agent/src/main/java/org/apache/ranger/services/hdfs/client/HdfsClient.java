@@ -295,7 +295,7 @@ public class HdfsClient extends BaseClient {
       String dfsNameNodes = configs.get("dfs.ha.namenodes." + dfsNameservices);
       dfsNameNodes = (dfsNameNodes == null) ? "" : dfsNameNodes.trim();
       if (dfsNameNodes.isEmpty())  {
-        throw new IllegalArgumentException("Value for " + "dfs.ha.namenodes." + proxyProvider + " not specified");
+        throw new IllegalArgumentException("Value for " + "dfs.ha.namenodes." + dfsNameservices + " not specified");
       }
       String[] dfsNameNodeElements = dfsNameNodes.split(",");
       for (String dfsNameNodeElement : dfsNameNodeElements)  {
