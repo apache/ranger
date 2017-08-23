@@ -49,6 +49,7 @@ import org.junit.Test;
  * d) "dave" can do a select on the table "words" but only if the "count" column is >= 80
  * e) "jane" can do a select on the table "words", but only get a "hash" of the word, and not the word itself.
  * f) "da_test_user" is delegate admin for rangerauthz database.
+ * g) "tom" has all permissions on database "test1" and has all permissions on all databases with regard to UDF
  *
  * In addition we have some TAG based policies created in Atlas and synced into Ranger:
  *
@@ -328,6 +329,35 @@ public class HIVERangerAuthorizerTest {
             }
         });
     }
+
+    @Test
+    public void testHiveUdfCreateOnWildcardDatabase() throws Exception {
+		String url = "jdbc:hive2://localhost:" + port;
+		// "tom" has:
+		// ranger permissions to create/read/update/drop the database
+		// ranger permissions to create/read/update/drop UDFs on test1 database
+		try (	Connection connection = DriverManager.getConnection(url, "tom", "tom");
+				Statement statement = connection.createStatement()) {
+			statement.execute("DROP DATABASE IF EXISTS test1");
+			statement.execute("CREATE DATABASE test1");
+			statement.execute("USE test1");
+			statement.execute("CREATE TEMPORARY FUNCTION tmp AS \"org.apache.hadoop.hive.ql.udf.UDFPI\"");
+			statement.execute("CREATE FUNCTION tmp AS \"org.apache.hadoop.hive.ql.udf.UDFPI\"");
+			ResultSet resultSet = statement.executeQuery("SHOW FUNCTIONS LIKE '*tmp'");
+			int rowCounter = 0;
+			while (resultSet.next()) {
+				String value = resultSet.getString(1);
+				if (value.contains("tmp")) {
+				  ++rowCounter;
+				}
+			}
+			Assert.assertEquals(2, rowCounter);
+			// clean up
+			statement.execute("DROP FUNCTION IF EXISTS tmp");
+			statement.execute("DROP FUNCTION IF EXISTS test1.tmp");
+			statement.execute("DROP DATABASE IF EXISTS test1");
+		}
+	}
 
     @Test
     public void testHiveCreateDropDatabase() throws Exception {

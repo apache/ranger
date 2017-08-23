@@ -544,7 +544,179 @@
       "id": 9,
       "isEnabled": true,
       "version": 2
-    }
+    },
+    {
+      "service": "cl1_hive",
+      "name": "Tom - database: ALL, udf: ALL, permissions: ALL",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "database": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "udf": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+			"accesses": [
+				{
+					"type": "select",
+					"isAllowed": true
+				},
+				{
+					"type": "update",
+					"isAllowed": true
+				},
+				{
+					"type": "create",
+					"isAllowed": true
+				},
+				{
+					"type": "drop",
+					"isAllowed": true
+				},
+				{
+					"type": "alter",
+					"isAllowed": true
+				},
+				{
+					"type": "index",
+					"isAllowed": true
+				},
+				{
+					"type": "lock",
+					"isAllowed": true
+				},
+				{
+					"type": "all",
+					"isAllowed": true
+				},
+				{
+					"type": "read",
+					"isAllowed": true
+				},
+				{
+					"type": "write",
+					"isAllowed": true
+				}
+			],
+			"users": [
+				"tom"
+			],
+			"groups": [],
+			"conditions": [],
+			"delegateAdmin": false
+		}
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 9,
+      "isEnabled": true,
+      "version": 1
+    },
+{
+	"service": "cl1_hive",
+	"name": "Tom - database: ALL, permissions: ALL",
+	"policyType": 0,
+	"description": "",
+	"isAuditEnabled": true,
+	"resources": {
+		"database": {
+			"values": [
+				"test1"
+			],
+			"isExcludes": false,
+			"isRecursive": false
+		},
+		"column": {
+			"values": [
+				"*"
+			],
+			"isExcludes": false,
+			"isRecursive": false
+		},
+		"table": {
+			"values": [
+				"*"
+			],
+			"isExcludes": false,
+			"isRecursive": false
+		}
+	},
+	"policyItems": [
+		{
+			"accesses": [
+				{
+					"type": "select",
+					"isAllowed": true
+				},
+				{
+					"type": "update",
+					"isAllowed": true
+				},
+				{
+					"type": "create",
+					"isAllowed": true
+				},
+				{
+					"type": "drop",
+					"isAllowed": true
+				},
+				{
+					"type": "alter",
+					"isAllowed": true
+				},
+				{
+					"type": "index",
+					"isAllowed": true
+				},
+				{
+					"type": "lock",
+					"isAllowed": true
+				},
+				{
+					"type": "all",
+					"isAllowed": true
+				},
+				{
+					"type": "read",
+					"isAllowed": true
+				},
+				{
+					"type": "write",
+					"isAllowed": true
+				}
+			],
+			"users": [
+				"tom"
+			],
+			"groups": [],
+			"conditions": [],
+			"delegateAdmin": false
+		}
+	],
+	"denyPolicyItems": [],
+	"allowExceptions": [],
+	"denyExceptions": [],
+	"dataMaskPolicyItems": [],
+	"rowFilterPolicyItems": [],
+	"id": 15,
+	"isEnabled": true,
+	"version": 2
+	}
   ],
   "serviceDef": {
     "name": "hive",
