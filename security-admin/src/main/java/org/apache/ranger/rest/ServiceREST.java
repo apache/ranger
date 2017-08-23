@@ -1410,6 +1410,11 @@ public class ServiceREST {
 				String serviceName    = request.getParameter(PARAM_SERVICE_NAME);
 				String policyName     = request.getParameter(PARAM_POLICY_NAME);
 				String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
+				
+				if (serviceName == null && policyName == null && updateIfExists != null && updateIfExists.equalsIgnoreCase("true")){
+					serviceName    = (String) request.getAttribute(PARAM_SERVICE_NAME);
+					policyName     = (String) request.getAttribute(PARAM_POLICY_NAME);
+				}
 
 				if(StringUtils.isNotEmpty(serviceName)) {
 					policy.setService(serviceName);
@@ -1430,7 +1435,8 @@ public class ServiceREST {
 							existingPolicy = getPolicyByName(policy.getService(), policy.getName());
 						}
 
-						if(existingPolicy != null) {
+						if (existingPolicy != null) {
+							policy.setId(existingPolicy.getId());
 							ret = updatePolicy(policy);
 						}
 					} catch(Exception excp) {
@@ -2010,7 +2016,13 @@ public class ServiceREST {
 							}
 						}
 					}
-					if (isOverride){
+					String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
+					if (updateIfExists == null || updateIfExists.isEmpty()) {
+						updateIfExists = "false";
+					} else if (updateIfExists.equalsIgnoreCase("true")) {
+						isOverride = false;
+					}
+					if (isOverride && updateIfExists.equalsIgnoreCase("false")){
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file...");
 						}
@@ -2034,20 +2046,28 @@ public class ServiceREST {
 									for (String service : serviceNameList) {
 										if (StringUtils.isNotEmpty(service.trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
 											if (policy.getService().trim().equalsIgnoreCase(service.trim())) {
-												createPolicy(policy, null);
+												if (updateIfExists != null && !updateIfExists.isEmpty()){
+													request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
+													request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+												}
+												createPolicy(policy, request);
 												totalPolicyCreate = totalPolicyCreate + 1;
 												if (LOG.isDebugEnabled()) {
 													LOG.debug("Policy " + policy.getName() + " created successfully.");
 												}
 												break;
 											}
-										}else{
+										} else {
 											LOG.error("Service Name or Policy Name is not provided!!");
 											throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
 										}
 									}
-								}else{
-									createPolicy(policy, null);
+								} else {
+									if (updateIfExists != null && !updateIfExists.isEmpty()){
+										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
+										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+									}
+									createPolicy(policy, request);
 									totalPolicyCreate = totalPolicyCreate + 1;
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("Policy " + policy.getName() + " created successfully.");
