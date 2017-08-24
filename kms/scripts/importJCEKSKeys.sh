@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -------------------------------------------------------------------------------------
+if [ "$JAVA_HOME" != "" ]; then
+    export PATH=$JAVA_HOME/bin:$PATH
+else
+    exit ;
+fi
 RANGER_KMS_HOME=`dirname $0`
 cp="${RANGER_KMS_HOME}/cred/lib/*:${RANGER_KMS_HOME}/./ews/webapp/WEB-INF/classes/conf/:${RANGER_KMS_HOME}/ews/webapp/config:${RANGER_KMS_HOME}/ews/lib/*:${RANGER_KMS_HOME}/ews/webapp/lib/*:${RANGER_KMS_HOME}/ews/webapp/META-INF"
 java -cp "${cp}" org.apache.hadoop.crypto.key.JKS2RangerUtil ${1} ${2}
