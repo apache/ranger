@@ -58,7 +58,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 public class XKeyREST {
 	private static final Logger logger = Logger.getLogger(XKeyREST.class);
 
-	private static String UNAUTHENTICATED_MSG = "Unauthenticated : Please check the premission in the policy for the user";
+	private static String UNAUTHENTICATED_MSG = "Unauthenticated : Please check the permission in the policy for the user";
 	
 	@Autowired
 	KmsKeyMgr keyMgr;
