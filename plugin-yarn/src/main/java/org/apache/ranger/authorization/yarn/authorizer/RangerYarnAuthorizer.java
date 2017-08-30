@@ -128,7 +128,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 
 			ret = isAllowedByYarnAcl(accessType, entity, ugi, auditHandler);
 		} else {
-			ret = result == null ? false : result.getIsAllowed();
+			ret = result != null && result.getIsAllowed();
 		}
 
 		if(auditHandler != null) {

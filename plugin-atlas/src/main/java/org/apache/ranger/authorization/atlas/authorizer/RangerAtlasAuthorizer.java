@@ -115,7 +115,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
         if (plugin != null) {
             RangerAccessResult rangerResult = plugin.isAccessAllowed(request);
-            isAccessAllowed = (rangerResult == null) ? false : rangerResult.getIsAllowed();
+            isAccessAllowed = rangerResult != null && rangerResult.getIsAllowed();
         } else {
             isAccessAllowed = false;
             LOG.warn("AtlasPlugin not initialized properly : " + plugin+"... Access blocked!!!");

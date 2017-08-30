@@ -693,8 +693,7 @@ public class RangerBizUtil {
 			String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null
 					: stringUtil.split(xResource.getTables(), ",");
 
-			boolean matchFound = (xTables == null || xTables.length == 0) ? true
-					: matchPath(tblName, xTables);
+			boolean matchFound = (xTables == null || xTables.length == 0) || matchPath(tblName, xTables);
 
 			if (matchFound) {
 				// 2. does the policy match the column?
@@ -702,8 +701,8 @@ public class RangerBizUtil {
 						.getColumnFamilies()) ? null : stringUtil.split(
 						xResource.getColumnFamilies(), ",");
 
-				matchFound = (xColumnFamilies == null || xColumnFamilies.length == 0) ? true
-						: matchPath(colFamName, xColumnFamilies);
+				matchFound = (xColumnFamilies == null || xColumnFamilies.length == 0)
+						|| matchPath(colFamName, xColumnFamilies);
 
 				if (matchFound) {
 					// 3. does the policy match the columnFamily?
@@ -711,8 +710,8 @@ public class RangerBizUtil {
 							.getColumns()) ? null : stringUtil.split(
 							xResource.getColumns(), ",");
 
-					matchFound = (xColumns == null || xColumns.length == 0) ? true
-							: matchPath(colName, xColumns);
+					matchFound = (xColumns == null || xColumns.length == 0)
+							|| matchPath(colName, xColumns);
 				}
 			}
 
@@ -783,8 +782,8 @@ public class RangerBizUtil {
 			String[] xDatabases = stringUtil.isEmpty(xResource.getDatabases()) ? null
 					: stringUtil.split(xResource.getDatabases(), ",");
 
-			boolean matchFound = (xDatabases == null || xDatabases.length == 0) ? true
-					: matchPath(dbName, xDatabases);
+			boolean matchFound = (xDatabases == null || xDatabases.length == 0)
+					|| matchPath(dbName, xDatabases);
 
 			if (!matchFound) {
 				continue;
@@ -812,8 +811,8 @@ public class RangerBizUtil {
 				String[] xTables = stringUtil.isEmpty(xResource.getTables()) ? null
 						: stringUtil.split(xResource.getTables(), ",");
 
-				matchFound = (xTables == null || xTables.length == 0) ? true
-						: matchPath(tblName, xTables);
+				matchFound = (xTables == null || xTables.length == 0)
+						|| matchPath(tblName, xTables);
 
 				if (xResource.getTableType() == AppConstants.POLICY_EXCLUSION) {
 					matchFound = !matchFound;
@@ -827,8 +826,8 @@ public class RangerBizUtil {
 				String[] xColumns = stringUtil.isEmpty(xResource.getColumns()) ? null
 						: stringUtil.split(xResource.getColumns(), ",");
 
-				matchFound = (xColumns == null || xColumns.length == 0) ? true
-						: matchPath(colName, xColumns);
+				matchFound = (xColumns == null || xColumns.length == 0)
+						|| matchPath(colName, xColumns);
 
 				if (xResource.getColumnType() == AppConstants.POLICY_EXCLUSION) {
 					matchFound = !matchFound;

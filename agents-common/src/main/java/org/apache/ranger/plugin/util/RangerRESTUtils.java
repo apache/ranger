@@ -106,7 +106,7 @@ public class RangerRESTUtils {
 	}
 
 	public boolean isSsl(String _baseUrl) {
-		return StringUtils.isEmpty(_baseUrl) ? false : _baseUrl.toLowerCase().startsWith("https");
+		return !StringUtils.isEmpty(_baseUrl) && _baseUrl.toLowerCase().startsWith("https");
 	}
 
 	public String getUrlForGrantAccess(String baseUrl, String serviceName) {
