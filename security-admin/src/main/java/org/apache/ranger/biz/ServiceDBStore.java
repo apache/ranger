@@ -1859,6 +1859,29 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return createdPolicy;
 	}
 
+        private boolean validatePolicyItem(List<RangerPolicyItem> policyItems) {
+                boolean isPolicyItemValid=true;
+                for (RangerPolicyItem policyItem : policyItems) {
+                        if (policyItem != null) {
+                                if (CollectionUtils.isEmpty(policyItem.getUsers())
+                                                || (policyItem.getUsers() != null) && policyItem.getUsers().contains(null)
+                                                || (policyItem.getUsers().contains(""))) {
+                                        if (CollectionUtils.isEmpty(policyItem.getGroups())
+                                                        || (policyItem.getGroups() != null) && policyItem.getGroups().contains(null)
+                                                        || (policyItem.getGroups().contains(""))) {
+
+                                                isPolicyItemValid = false;
+                                        }
+                                }
+                                if (CollectionUtils.isEmpty(policyItem.getAccesses())
+                                                || (policyItem.getAccesses() != null) && policyItem.getAccesses().contains(null)) {
+                                        isPolicyItemValid = false;
+                                }
+                        }
+                }
+                return isPolicyItemValid;
+        }
+
 	@Override
 	public RangerPolicy updatePolicy(RangerPolicy policy) throws Exception {
 		if(LOG.isDebugEnabled()) {
@@ -2502,6 +2525,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				createDefaultPolicyUsersAndGroups(defaultPolicies);
 
 				for (RangerPolicy defaultPolicy : defaultPolicies) {
+                                        List<RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
 					if (CollectionUtils.isNotEmpty(serviceCheckUsers)
 							&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
 
@@ -2513,7 +2537,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 						defaultPolicy.getPolicyItems().add(policyItem);
 					}
-					createPolicy(defaultPolicy);
+                                        boolean isPolicyItemValid=validatePolicyItem(policyItems);
+                                        if (isPolicyItemValid) {
+                                                createPolicy(defaultPolicy);
+                                        } else {
+                                                LOG.warn("Default policy won't be created,since policyItems not valid-either users/groups not present or access not present in policy.");
+                                        }
+
 				}
 			}
 		}
