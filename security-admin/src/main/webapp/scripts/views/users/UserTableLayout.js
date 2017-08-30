@@ -573,7 +573,7 @@ define(function(require){
                         this.groupList.selected  = {};
                         XAUtil.blockUI('unblock');
                         if(notDeletedGroupName === ""){
-                                XAUtil.notifySuccess('Success','User deleted successfully!');
+                                XAUtil.notifySuccess('Success','Group deleted successfully!');
                         } else {
                                 XAUtil.notifyError('Error', 'Error occurred during deleting Groups: '+ notDeletedGroupName.slice(0 , -2));
                         }
