@@ -15,8 +15,11 @@
 
 # ---------------------------------------------------------------------
 # Build Instruction for Apache Ranger Documentation
+# apidocs are only added if mvn install is run on the root directory
+# first
 # ---------------------------------------------------------------------
 
+$ mvn clean install
 $ export DOC_SRC_DIR=ranger/docs
 $ cd ${DOC_SRC_DIR}
 
