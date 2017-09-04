@@ -67,8 +67,8 @@ RUN yum install -y wget
 RUN yum install -y git
 RUN yum install -y gcc
 
-#Download and install JDK8 from Oracle
-RUN wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-x64.rpm
+#Download and install JDK8 from AWS s3's docker-assets 
+RUN wget https://s3.eu-central-1.amazonaws.com/docker-assets/dist/jdk-8u101-linux-x64.rpm
 RUN rpm -i jdk-8u101-linux-x64.rpm
 
 ENV JAVA_HOME /usr/java/latest
