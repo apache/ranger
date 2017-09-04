@@ -453,6 +453,10 @@ IF (OBJECT_ID('x_service_version_info_service_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_service_version_info] DROP CONSTRAINT x_service_version_info_service_id
 END
+IF (OBJECT_ID('x_group_UK_group_name') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_group] DROP CONSTRAINT x_group_UK_group_name
+END
 IF (OBJECT_ID('x_plugin_info_UK') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_plugin_info] DROP CONSTRAINT x_plugin_info_UK
@@ -851,7 +855,7 @@ CREATE TABLE [dbo].[x_group](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](1024) NOT NULL,
+        [group_name] [varchar](767) NOT NULL,
         [descr] [varchar](4000) NOT NULL,
         [status] [int] DEFAULT 0  NOT NULL,
         [group_type] [int] DEFAULT 0 NOT NULL,
@@ -861,6 +865,10 @@ CREATE TABLE [dbo].[x_group](
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_group$x_group_UK_group_name] UNIQUE NONCLUSTERED
+(
+        [group_name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -915,12 +923,17 @@ CREATE TABLE [dbo].[x_group_users](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](1024) NOT NULL,
+        [group_name] [varchar](767) NOT NULL,
         [p_group_id] [bigint] DEFAULT NULL NULL,
         [user_id] [bigint] DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [[x_group_users$x_group_users_UK_uid_gname] UNIQUE NONCLUSTERED
+(
+        [user_id] ASC,
+	[group_name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -2975,6 +2988,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('025',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('026',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('027',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
@@ -3000,6 +3014,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10004',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10005',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10006',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10007',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10008',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 CREATE VIEW [dbo].[vx_trx_log] AS
