@@ -147,12 +147,8 @@ define(function(require){
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible')){
-					$(this).append('<a href="#" class="wrap-expand pull-right" >show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>')
-						   .append('<a href="#" class="wrap-collapse pull-right" style="display: none">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
-					if( i === 0 ) {
-						$(this).find('.wrap-expand').hide();
-						$(this).find('.wrap-collapse').show();
-					}
+					$(this).append('<a href="#" class="wrap-expand pull-right" style="display: none">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>')
+						   .append('<a href="#" class="wrap-collapse pull-right" >hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
 				}
 			});
 			// Collapse wrap
@@ -175,16 +171,23 @@ define(function(require){
 			var parentPermsObj = { groupPermsDeny : this.formInputDenyList,  };
 			var childPermsObj = { groupPermsAllowExclude : this.formInputAllowExceptionList, groupPermsDenyExclude : this.formInputDenyExceptionList}
 			_.each(childPermsObj, function(val, name){
-				if(val.length <= 0)
-					this.$el.find('[data-customfields="'+name+'"]').parent().hide();
+				if(val.length <= 0) {
+					var wrap = this.$el.find('[data-customfields="'+name+'"]').parent();
+					wrap.hide();
+					$('.wrap-collapse', wrap.prev('.wrap-header')).hide();
+					$('.wrap-expand', wrap.prev('.wrap-header')).show();
+				}
 			},this)
 			
-			_.each(parentPermsObj, function(val, name, i){
+			_.each(parentPermsObj, function(val, name){
 				if(val.length <= 0){
-					var tmp = this.$el.find('[data-customfields="'+name+'"]').next()
+					var tmp = this.$el.find('[data-customfields="'+name+'"]').next();
 					var childPerm = tmp.find('[data-customfields^="groupPerms"]');
 					if(childPerm.parent().css('display') == 'none'){
-						this.$el.find('[data-customfields="'+name+'"]').parent().hide();
+						var wrap = this.$el.find('[data-customfields="'+name+'"]').parent();
+						wrap.hide();
+						$('.wrap-collapse', wrap.prev('.wrap-header')).hide();
+						$('.wrap-expand', wrap.prev('.wrap-header')).show();
 					}
 				}
 			},this)
