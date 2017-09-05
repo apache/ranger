@@ -1424,7 +1424,7 @@ public class ServiceREST {
 					policy.setName(StringUtils.trim(policyName));
 				}
 
-				if(Boolean.valueOf(updateIfExists)) {
+                                if(updateIfExists != null && Boolean.valueOf(updateIfExists)) {
 					RangerPolicy existingPolicy = null;
 					try {
 						if(StringUtils.isNotEmpty(policy.getGuid())) {

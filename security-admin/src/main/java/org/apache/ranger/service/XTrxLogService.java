@@ -127,20 +127,20 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		}
 
 		List<VXTrxLog> keyAdminTrxLogList = new ArrayList<VXTrxLog>();
-		if (session != null && session.isKeyAdmin() && xxServiceDef != null && resultList != null) {
+                if (session != null && session.isKeyAdmin() && xxServiceDef != null) {
 			List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
 			for (VXTrxLog xTrxLog : trxLogList) {
 				int parentObjectClassType = xTrxLog.getParentObjectClassType();
 				Long parentObjectId = xTrxLog.getParentObjectId();
 				if (parentObjectClassType == AppConstants.CLASS_TYPE_XA_SERVICE_DEF
-						&& parentObjectId == xxServiceDef.getId()) {
+                                                && parentObjectId.equals(xxServiceDef.getId())) {
 					vXTrxLogs.add(xTrxLog);
 				} else if (parentObjectClassType == AppConstants.CLASS_TYPE_XA_SERVICE
-						&& parentObjectId != xxServiceDef.getId()) {
+                                                && !(parentObjectId.equals(xxServiceDef.getId()))) {
 					for (VXTrxLog vxTrxLog : trxLogList) {
 						if (parentObjectClassType == vxTrxLog.getObjectClassType()
-								&& parentObjectId == vxTrxLog.getObjectId()
-								&& vxTrxLog.getParentObjectId() == xxServiceDef.getId()) {
+                                                                && parentObjectId.equals(vxTrxLog.getObjectId())
+                                                                && vxTrxLog.getParentObjectId().equals(xxServiceDef.getId())) {
 							vXTrxLogs.add(xTrxLog);
 							break;
 						}

@@ -14,7 +14,7 @@
       "mandatory":true,
       "lookupSupported":true,
       "recursiveSupported":false,
-      "excludesSupported":true,
+      "excludesSupported":false,
       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
       "matcherOptions":{
         "wildCard":true,
