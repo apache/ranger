@@ -34,4 +34,7 @@
 		<php-json-client disabled="true"/>
 		<jaxws disabled="true"/>
 	</modules>
+  <api-classes>
+    <include pattern="org.apache.hadoop.crypto.key.kms.server.*"/>
+  </api-classes>
 </enunciate>
