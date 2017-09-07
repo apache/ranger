@@ -177,4 +177,9 @@
       <name>ranger.usersync.ldap.deltasync</name>
       <value>false</value>
     </property>
+
+    <property>
+      <name>ranger.usersync.group.hierarchylevels</name>
+      <value>2</value>
+    </property>
   </configuration>
