@@ -837,6 +837,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private HiveObjectType getObjectType(HivePrivilegeObject hiveObj, HiveOperationType hiveOpType) {
 		HiveObjectType objType = HiveObjectType.NONE;
+		if (hiveObj.getType() == null) {
+			return HiveObjectType.DATABASE;
+		}
 
 		switch(hiveObj.getType()) {
 			case DATABASE:

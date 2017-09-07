@@ -46,9 +46,12 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 
 		switch(objectType) {
 			case DATABASE:
+				if (databaseorUrl == null) {
+					databaseorUrl = "*";
+				}
 				setValue(KEY_DATABASE, databaseorUrl);
 			break;
-	
+
 			case FUNCTION:
 				if (databaseorUrl == null) {
 					databaseorUrl = "";
