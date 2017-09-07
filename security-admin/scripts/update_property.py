@@ -30,6 +30,7 @@ def write_properties_to_xml(xml_path, property_name='', property_value=''):
 			name = child.find("name").text.strip()
 			if name == property_name:
 				child.find("value").text = property_value
+				break
 		xml.write(xml_path)
 		return 0
 	else:
