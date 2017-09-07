@@ -200,6 +200,9 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
 	private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
 
+    private static final String LGSYNC_GROUP_HIERARCHY_LEVELS = "ranger.usersync.ldap.grouphierarchylevels";
+    private static final int DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS = 0;
+
 	private static final String UGSYNC_UPDATE_MILLIS_MIN = "ranger.usersync.unix.updatemillismin";
 	private final static long DEFAULT_UGSYNC_UPDATE_MILLIS_MIN = 1 * 60 * 1000; // ms
 
@@ -864,6 +867,20 @@ public class UserGroupSyncConfig  {
 		return val;
 	}
 
+    public int getGroupHierarchyLevels() {
+        int groupHierarchyLevels;
+        String val = prop.getProperty(LGSYNC_GROUP_HIERARCHY_LEVELS);
+        if(val == null || val.trim().isEmpty()) {
+            groupHierarchyLevels = DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS;
+        } else {
+            groupHierarchyLevels = Integer.parseInt(val);
+        }
+        if (groupHierarchyLevels < 0)  {
+            groupHierarchyLevels = DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS;
+        }
+        return groupHierarchyLevels;
+    }
+
 	public String getProperty(String aPropertyName) {
 		return prop.getProperty(aPropertyName);
 	}
@@ -1065,14 +1082,19 @@ public class UserGroupSyncConfig  {
 	}
 	
 	/* Used only for unit testing */
-    	public void setDeltaSync(boolean deltaSyncEnabled) {
-        	prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
-    	}
+    public void setDeltaSync(boolean deltaSyncEnabled) {
+        prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
+    }
 
-    	/* Used only for unit testing */
-    	public void setUserNameAttribute(String userNameAttr) {
-		prop.setProperty(LGSYNC_USER_NAME_ATTRIBUTE, userNameAttr);
-    	}
+    /* Used only for unit testing */
+    public void setUserNameAttribute(String userNameAttr) {
+        prop.setProperty(LGSYNC_USER_NAME_ATTRIBUTE, userNameAttr);
+    }
+
+	/* Used only for unit testing */
+	public void setGroupHierarchyLevel(int groupHierarchyLevel) {
+		prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
+	}
 
     public String getGroupRoleRules() {
         if(prop != null && prop.containsKey(GROUP_BASED_ROLE_ASSIGNMENT_RULES)) {

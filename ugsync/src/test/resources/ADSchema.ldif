@@ -2362,6 +2362,7 @@ objectClass: top
 objectClass: groupOfNames
 cn: Group10
 member: CN=User1000,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
+member: CN=Group19,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 distinguishedName: CN=Group10,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 sAMAccountName: Group10
 sn: Group10
@@ -2571,6 +2572,7 @@ member: CN=User1804,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 member: CN=User1803,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 member: CN=User1802,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
 member: CN=User1801,CN=Users,DC=ranger,DC=qe,DC=hortonworks,DC=com
+member: CN=Group18,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 distinguishedName: CN=Group19,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com
 sAMAccountName: Group19
 sn: Group19

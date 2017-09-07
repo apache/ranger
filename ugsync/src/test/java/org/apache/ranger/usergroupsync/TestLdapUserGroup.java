@@ -104,6 +104,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		config.setGroupSearchEnabled(false);
 		config.setPagedResultsEnabled(true);
 		config.setGroupSearchFirstEnabled(false);
+		//config.setGroupHierarchyLevel(0);
 		ldapBuilder.init();
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
 		sink.init();
@@ -123,6 +124,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		config.setGroupSearchEnabled(false);
 		config.setPagedResultsEnabled(false);
 		config.setGroupSearchFirstEnabled(false);
+		//config.setGroupHierarchyLevel(0);
 		ldapBuilder.init();
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
 		sink.init();
@@ -318,11 +320,12 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		config.setGroupObjectClass("groupOfNames");
 		config.setGroupSearchEnabled(true);
 		config.setGroupSearchFirstEnabled(true);
+		config.setUserSearchEnabled(false);
 		ldapBuilder.init();
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
 		sink.init();
 		ldapBuilder.updateSink(sink);
-		assertEquals(2, sink.getTotalUsers());
+		assertEquals(3, sink.getTotalUsers());
 		assertEquals(2, sink.getTotalGroups());
 	}
 
@@ -444,7 +447,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
 		sink.init();
 		ldapBuilder.updateSink(sink);
-		assertEquals(2, sink.getTotalUsers());
+		assertEquals(3, sink.getTotalUsers());
 		assertEquals(2, sink.getTotalGroups());
 	}
 
@@ -561,7 +564,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
 		sink.init();
 		ldapBuilder.updateSink(sink);
-		assertEquals(1, sink.getTotalUsers());
+		assertEquals(2, sink.getTotalUsers());
 		assertEquals(1, sink.getTotalGroups());
 	}
 	
@@ -694,7 +697,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		LdapPolicyMgrUserGroupBuilderTest sink = new LdapPolicyMgrUserGroupBuilderTest();
 		sink.init();
 		ldapBuilder.updateSink(sink);
-		assertEquals(2, sink.getTotalUsers());
+		assertEquals(3, sink.getTotalUsers());
 		assertEquals(2, sink.getTotalGroups());
 	}
 
