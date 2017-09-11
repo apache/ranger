@@ -20,6 +20,7 @@
 # ---------------------------------------------------------------------
 
 $ mvn clean install
+$ mvn enunciate:docs
 $ export DOC_SRC_DIR=ranger/docs
 $ cd ${DOC_SRC_DIR}
 
