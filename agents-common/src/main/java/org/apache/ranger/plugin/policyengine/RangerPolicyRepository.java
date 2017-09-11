@@ -258,7 +258,8 @@ class RangerPolicyRepository {
         Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
 
         if(CollectionUtils.isNotEmpty(resourceKeys)) {
-            boolean isRetModifiable = false;
+            List<List<RangerPolicyEvaluator>> resourceEvaluatorsList = null;
+            List<RangerPolicyEvaluator> smallestList = null;
 
             for(String resourceName : resourceKeys) {
                 RangerResourceTrie trie = resourceTrie.get(resourceName);
@@ -270,34 +271,41 @@ class RangerPolicyRepository {
                 List<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
                 if(CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
-                    ret = null;
-                } else if(ret == null) { // initialize ret with policies found for this resource
-                    ret = resourceEvaluators;
-                } else { // remove policies from ret that are not in resourceEvaluators
-                    if(isRetModifiable) {
-                        ret.retainAll(resourceEvaluators);
-                    } else {
-                        final List<RangerPolicyEvaluator> shorterList;
-                        final List<RangerPolicyEvaluator> longerList;
-
-                        if (ret.size() < resourceEvaluators.size()) {
-                            shorterList = ret;
-                            longerList  = resourceEvaluators;
-                        } else {
-                            shorterList = resourceEvaluators;
-                            longerList  = ret;
-                        }
-
-                        ret = new ArrayList<>(shorterList);
-                        ret.retainAll(longerList);
-                        isRetModifiable = true;
-                    }
-                }
-
-                if(CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
-                    ret = null;
+                    resourceEvaluatorsList = null;
+                    smallestList = null;
                     break;
                 }
+
+                if (smallestList == null) {
+                    smallestList = resourceEvaluators;
+                } else {
+                    if (resourceEvaluatorsList == null) {
+                        resourceEvaluatorsList = new ArrayList<>();
+                        resourceEvaluatorsList.add(smallestList);
+                    }
+                    resourceEvaluatorsList.add(resourceEvaluators);
+
+                    if (smallestList.size() > resourceEvaluators.size()) {
+                        smallestList = resourceEvaluators;
+                    }
+                }
+            }
+
+            if (resourceEvaluatorsList != null) {
+                ret = new ArrayList<>(smallestList);
+                for (List<RangerPolicyEvaluator> resourceEvaluators : resourceEvaluatorsList) {
+                    if (resourceEvaluators != smallestList) {
+                        // remove policies from ret that are not in resourceEvaluators
+                        ret.retainAll(resourceEvaluators);
+
+                        if (CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
+                            ret = null;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                ret = smallestList;
             }
         }
 
