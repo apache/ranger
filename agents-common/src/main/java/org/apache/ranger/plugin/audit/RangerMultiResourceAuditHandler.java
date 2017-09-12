@@ -43,7 +43,7 @@ public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
 
 	@Override
 	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
-		auditEvents.addAll(auditEvents);
+		this.auditEvents.addAll(auditEvents);
 	}
 
 	public void flushAudit() {
