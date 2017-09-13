@@ -79,7 +79,7 @@ public abstract class BufferedAuditProvider extends BaseAuditHandler {
 				break;
 			}
 		}
-		return false;
+		return ret;
 	}
 
 	@Override
