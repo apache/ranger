@@ -96,6 +96,9 @@ define(function(require){
 					$(e.currentTarget).children('ul').hide();
 			});
 
+			this.$el.find(".dropdown-menu li").click(function(e){
+				$(e.currentTarget).parent('ul').hide();
+			});
 		},
 
 		/** all post render plugin initialization */
