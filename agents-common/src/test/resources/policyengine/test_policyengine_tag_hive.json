@@ -143,11 +143,11 @@
       "policyConditions": [
         {
           "itemId":1,
-          "name":"ScriptConditionEvaluator",
-          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-          "evaluatorOptions" : {"engineName":"JavaScript"},
-          "label":"Script",
-          "description": "Script to execute"
+          "name":"expression",
+      	  "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      	  "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true"},
+      	  "label":"Enter boolean expression",
+      	  "description": "Boolean expression"
         },
         {
           "itemId":2,
@@ -166,7 +166,7 @@
           {
             "accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
             "conditions":[{
-              "type":"ScriptConditionEvaluator",
+              "type":"expression",
               "values":["if ( ctx.isAccessedBefore('expiry') ) ctx.result = true;"]
             }]
           }
@@ -197,7 +197,7 @@
         "denyExceptions":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
             "conditions":[{
-              "type":"ScriptConditionEvaluator",
+              "type":"expression",
               "values":["if ( ctx.isAccessedBefore('expiry') ) ctx.result = true;"]
             }]
           }

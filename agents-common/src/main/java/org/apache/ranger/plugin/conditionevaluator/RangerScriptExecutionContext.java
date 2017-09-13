@@ -368,23 +368,23 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
-	public void logDebug(String msg) {
+	public void logDebug(Object msg) {
 		LOG.debug(msg);
 	}
 
-	public void logInfo(String msg) {
+	public void logInfo(Object msg) {
 		LOG.info(msg);
 	}
 
-	public void logWarn(String msg) {
+	public void logWarn(Object msg) {
 		LOG.warn(msg);
 	}
 
-	public void logError(String msg) {
+	public void logError(Object msg) {
 		LOG.error(msg);
 	}
 
-	public void logFatal(String msg) {
+	public void logFatal(Object msg) {
 		LOG.fatal(msg);
 	}
 }
