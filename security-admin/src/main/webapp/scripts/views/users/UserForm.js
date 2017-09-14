@@ -54,6 +54,10 @@ define(function(require){
 		bindEvents : function(){
 			this.on('userRoleList:change', function(form, fieldEditor){
 				//this.userRoleListChange(form, fieldEditor);
+				if(this.model.get('userSource') === XAEnums.UserTypes.USER_EXTERNAL.value){
+					var externalUserRoleProperty = "<b> Warning !!</b> :  Please make sure that <i>"+ this.model.get('name') + "</i> user's role change performed here is consistent with <i>ranger.usersync.group.based.role.assignment.rules</i> property in ranger usersync configuration.";
+					XAUtils.alertPopup({msg : externalUserRoleProperty});
+				}
     		});
 		},
 		
