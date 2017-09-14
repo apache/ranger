@@ -80,6 +80,10 @@ define(function(require){
 		        	}
 		        	
 		        },
+                        error : function(data,status,response){
+				XAUtil.blockUI('unblock');
+				XAUtil.defaultErrorHandler(status,data);
+                        },
 		    });
         },
 	 	onRender: function() {

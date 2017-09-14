@@ -41,9 +41,9 @@ define(function(require){
 		},
 		bindErrorEvents :function(){
 			//Moved require inside fuctn expression due to ie issue
-                        this.bind("error", function(e){
+			this.bind("error", function(e, error){
 				var XAUtils = require('utils/XAUtils');
-                                XAUtils.defaultErrorHandler(undefined, e);
+				XAUtils.defaultErrorHandler(undefined, error, e);
 			});
 		},
 		/**

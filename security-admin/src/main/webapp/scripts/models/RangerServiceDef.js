@@ -107,6 +107,14 @@ define(function(require){
 							return {results : results};
 						}
 						return {results : results};
+					},
+					transport : function (options) {
+						$.ajax(options).error(function(respones) {
+							XAUtils.defaultErrorHandler('error',respones);
+							this.success({
+								resultSize : 0
+							});
+						});
 					}
 				},	
 				formatResult : function(result){

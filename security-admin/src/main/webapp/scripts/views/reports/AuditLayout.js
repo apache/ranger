@@ -619,7 +619,14 @@ define(function(require) {
 					
 					var fullTrxLogListForTrxId = new VXTrxLogList();
 					fullTrxLogListForTrxId.getFullTrxLogListForTrxId(this.model.get('transactionId'),{
-						cache : false
+                                                cache : false,
+                                                error : function(response , error){
+                                                        if (response && response.status === 419 ) {
+                                                                XAUtils.defaultErrorHandler(error , response);
+                                                        } else {
+                                                                XAUtils.showErrorMsg(response.responseJSON.msgDesc);
+                                                        }
+                                                }
 					}).done(function(coll,mm){
 						XAUtils.blockUI('unblock');
 						fullTrxLogListForTrxId = new VXTrxLogList(coll.vXTrxLogs);

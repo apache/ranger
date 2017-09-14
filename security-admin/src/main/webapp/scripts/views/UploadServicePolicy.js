@@ -207,11 +207,15 @@ define(function(require){
 		   	      error : function(response,model){
 		   	    	XAUtil.blockUI('unblock');
 		   	 	if ( response && response.responseJSON && response.responseJSON.msgDesc){
-					XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-			        } else {
+					if(response.status == '419'){
+						XAUtil.defaultErrorHandler(model,response);
+					}else{
+						XAUtil.notifyError('Error', response.responseJSON.msgDesc);
+					}
+				} else {
 			       	XAUtil.notifyError('Error', 'File import failed.');
-		     	    }
-				  }
+				}
+			      }
 		    });
 	    },
 	    onAddClick : function(){

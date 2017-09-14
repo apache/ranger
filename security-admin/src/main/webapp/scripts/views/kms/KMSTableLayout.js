@@ -266,6 +266,7 @@ define(function(require){
 			this.ui.selectServiceName.select2({
 				maximumSelectionSize : 1,
 				closeOnSelect : true,
+                                allowClear: true,
 				width :'220px',
 				placeholder : 'Please select KMS service',
 				initSelection : function (element, callback) {
@@ -284,6 +285,14 @@ define(function(require){
 							return { results : results };
 						}
 						return { results : results };
+                                        },
+                                        transport: function (options) {
+                                                $.ajax(options).error(function(respones) {
+                                                        XAUtil.defaultErrorHandler('error',respones);
+                                                        this.success({
+                                                                resultSize : 0
+                                                        });
+                                                });
 					}
 				},	
 				formatResult : function(result){
