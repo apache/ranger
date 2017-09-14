@@ -231,7 +231,7 @@ define(function(require){
 							},
 							error :function(model, response) {
 								XAUtil.blockUI('unblock');
-								if(!_.isUndefined(response) && !_.isUndefined(response.responseJSON) && !_.isUndefined(response.responseJSON.msgDesc)){
+                                                                if(!_.isUndefined(response) && !_.isUndefined(response.responseJSON) && !_.isUndefined(response.responseJSON.msgDesc && response.status !='419')){
 									XAUtil.notifyError('Error', response.responseJSON.msgDesc);
 								}
 							}

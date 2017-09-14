@@ -617,7 +617,9 @@ define(function(require) {
 	XAUtils.defaultErrorHandler = function(model, error) {
 		var App = require('App');
 		var vError = require('views/common/ErrorView');
-		if(!_.isUndefined(model) && !_.isUndefined(model.modelName) &&  model.modelName == XAEnums.ClassTypes.CLASS_TYPE_XA_ACCESS_AUDIT.modelName){
+		if(!_.isUndefined(model) && !_.isUndefined(model.modelName) 
+				&&  model.modelName == XAEnums.ClassTypes.CLASS_TYPE_XA_ACCESS_AUDIT.modelName
+				&& error.status !== 419){
 			return;
 		}
 		if (error.status == 404) {
@@ -629,7 +631,7 @@ define(function(require) {
 				status : error.status
 			}));
 		} else if (error.status == 419) {
-			window.location = 'login.jsp'
+			window.location = 'login.jsp?sessionTimeout=true';
 		}
 	};
 	XAUtils.select2Focus = function(event) {

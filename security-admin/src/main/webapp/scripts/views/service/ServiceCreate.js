@@ -238,6 +238,9 @@ define(function(require){
 						}
 					},
 					error: function (msResponse, options) {
+                                                if(msResponse.status === 419){
+                                                        XAUtil.defaultErrorHandler(options , msResponse);
+                                                }
 						bootbox.alert("Connection Failed.");
 					}	
 				});

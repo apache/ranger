@@ -178,8 +178,9 @@ define(function(require) {
 							return { results : results};
 						},
 						transport: function (options) {
-							$.ajax(options).error(function() {
+                                                        $.ajax(options).error(function(respones) {
 								console.log("ajax failed");
+                                                                XAUtil.defaultErrorHandler('error',respones);
 								this.success({
 									resultSize : 0
 								});

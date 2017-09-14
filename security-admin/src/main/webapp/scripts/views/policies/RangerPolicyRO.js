@@ -83,7 +83,14 @@ define(function(require) {
 			this.policy.fetchByEventTime({
 				async: false,
 				cache: false,
-				data : data
+                                data : data,
+                                error : function(error , response){
+                                        if (response && response.status === 419 ) {
+                                                XAUtils.defaultErrorHandler(error , response);
+                                        } else {
+                                                XAUtils.showErrorMsg(response.responseJSON.msgDesc);
+                                        }
+                                }
 			});
 		},
 

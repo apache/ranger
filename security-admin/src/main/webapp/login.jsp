@@ -44,6 +44,11 @@
 					});
 				};
 				$(window).resize(updateBoxPosition);
+				var queryParams = JSON.parse('{"' + decodeURI((location.href.split('?')[1] || 'g=0').replace(/=/g, "\":\"")) + '"}');
+              	if(queryParams.sessionTimeout){
+                	window.alert('Session Timeout');
+                	location.replace("login.jsp");
+               	}
 				setTimeout(updateBoxPosition, 50);
 			});
 		</script>
