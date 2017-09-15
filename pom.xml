@@ -105,7 +105,6 @@
         <module>ranger-solr-plugin-shim</module>
         <module>ranger-atlas-plugin-shim</module>
         <module>ranger-kms-plugin-shim</module>
-        <module>ranger-hive-utils</module>
         <module>ranger-examples</module>
         <module>ranger-tools</module>
         <module>plugin-atlas</module>
