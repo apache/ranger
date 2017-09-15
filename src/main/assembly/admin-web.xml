@@ -378,7 +378,8 @@
 			<include>ranger_credential_helper.py</include>
 			<include>deleteUserGroupUtil.py</include>
 			<include>changepasswordutil.py</include>
-                        <include>changeusernameutil.py</include>
+                <include>changeusernameutil.py</include>
+                <include>rolebasedusersearchutil.py</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>
