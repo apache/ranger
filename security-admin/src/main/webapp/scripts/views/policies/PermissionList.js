@@ -247,12 +247,8 @@ define(function(require) {
 		renderPerms :function(){
 			var that = this;
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
-			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
-			//set default access type 'select' for add new masking & row filter policies
-			if(this.perms.length == 2){
-				if(!_.isUndefined(this.perms[0].value) && _.isEmpty(this.permsIds)){
-					this.permsIds.push(this.perms[0].value);	
-				}
+			if(this.perms.length > 1){
+				this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
 			}
 			//create x-editable for permissions
 			this.ui.addPerms.editable({
@@ -318,10 +314,6 @@ define(function(require) {
 			this.ui.addPerms.attr('title','Components Permissions')
 			this.ui.delegatedAdmin.parent('td').hide();
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
-			//select defatult access type if single component exists
-			if(this.perms.length == 1 && this.permsIds.length >= 0){
-				this.permsIds.push(this.perms[0].value)
-			}
 			var select2optn = { width :'600px' };
 			if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
 				select2optn = {width :'600px' , maximumSelectionSize : 1 };
