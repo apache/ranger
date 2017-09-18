@@ -23,7 +23,7 @@ DECLARE loginID bigint(20);
                 /* check unique constraint exist on group_name column or not */
                 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_group' and column_name='group_name' and column_key='UNI') then
                         if not exists (select * from information_schema.table_constraints where table_schema=database() and table_name = 'x_group' and constraint_name='x_group_UK_group_name') then
-                                ALTER IGNORE TABLE x_group ADD UNIQUE INDEX x_group_UK_group_name(group_name(767));
+                                ALTER TABLE x_group ADD UNIQUE INDEX x_group_UK_group_name(group_name(767));
 --	 			ALTER TABLE x_group MODIFY COLUMN group_name varchar(767) NOT NULL, ADD CONSTRAINT x_group_UK_group_name UNIQUE(group_name(767));
                         end if;
                 end if;
@@ -32,7 +32,7 @@ DECLARE loginID bigint(20);
                 if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_group_users' and column_name='user_id') then
                 /* check unique constraint exist on group_name column or not */
                         if not exists (select * from information_schema.table_constraints where table_schema=database() and table_name = 'x_group_users' and constraint_name='x_group_users_UK_uid_gname') then
-                                ALTER IGNORE TABLE x_group_users ADD UNIQUE INDEX x_group_users_UK_uid_gname(user_id,group_name(740));
+                                ALTER TABLE x_group_users ADD UNIQUE INDEX x_group_users_UK_uid_gname(user_id,group_name(740));
 -- 				ALTER TABLE x_group_users MODIFY COLUMN group_name varchar(767), ADD CONSTRAINT x_group_users_UK_uid_gname UNIQUE(user_id,group_name(767));
                         end if;
                 end if;
