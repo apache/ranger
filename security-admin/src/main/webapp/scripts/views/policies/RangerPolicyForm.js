@@ -333,7 +333,8 @@ define(function(require){
 						field.editor.validators = this.defaultValidator[key];
 						if($.inArray('required',field.editor.validators) >= 0){
 							var label = field.$el.find('label').html();
-							field.$el.find('label').html(label+"*");
+							label=label.indexOf("*")>-1?label:label+"*";
+							field.$el.find('label').html(label);
 						}
 					}
 				}
