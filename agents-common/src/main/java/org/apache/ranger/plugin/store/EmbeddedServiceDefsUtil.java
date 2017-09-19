@@ -278,6 +278,7 @@ public class EmbeddedServiceDefsUtil {
 				}
 			}
 		}catch(Exception ex){
+			LOG.error("EmbeddedServiceDefsUtil.getSupportedServiceDef(): failed", ex);
 		}
 		return supportedServiceDef;
 	}
