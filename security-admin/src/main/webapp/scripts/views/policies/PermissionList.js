@@ -508,6 +508,17 @@ define(function(require) {
 				$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
 				
 			});
+			that.$('.editable-checklist input[type="checkbox"]').click(function(e){
+				if(this.value!="-1"){
+					var selectAll = true;
+					that.$('.editable-checklist input[type="checkbox"]').each(function(index,item){
+						if(item.value!="-1" && !item.checked){
+							selectAll = false;
+						}
+					});
+					that.$('input[type="checkbox"][value="-1"]').prop('checked',selectAll);
+				}
+			});
 		},
 		renderPolicyCondtion : function() {
 			var that = this;
