@@ -234,7 +234,7 @@ public class HiveClient extends BaseClient implements Closeable {
 						ret = getTblList(tblNameMatching,dbList,tblList);
 					}
 				} catch (HadoopException he) {
-					LOG.error("<== HiveClient getTblList() :Unable to get the Table List", he);
+					LOG.error("<== HiveClient getTableList() :Unable to get the Table List", he);
 					throw he;
 				}
 				return ret;
