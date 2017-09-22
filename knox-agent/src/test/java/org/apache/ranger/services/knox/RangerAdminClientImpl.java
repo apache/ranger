@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -60,7 +61,7 @@ public class RangerAdminClientImpl implements RangerAdminClient {
         java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
         byte[] cacheBytes = Files.readAllBytes(cachePath);
 
-        return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
+        return gson.fromJson(new String(cacheBytes, Charsets.UTF_8), ServicePolicies.class);
     }
 
     public void grantAccess(GrantRevokeRequest request) throws Exception {

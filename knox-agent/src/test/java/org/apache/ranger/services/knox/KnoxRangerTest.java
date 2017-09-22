@@ -40,6 +40,7 @@ import org.apache.hadoop.gateway.services.ServiceLifecycleException;
 import org.apache.hadoop.test.mock.MockServer;
 import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -95,8 +96,7 @@ public class KnoxRangerTest {
         ldap.stop( true );
     }
 
-
-    public static void setupLdap() throws Exception {
+    private static void setupLdap() throws Exception {
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
@@ -107,11 +107,11 @@ public class KnoxRangerTest {
         ldap.start();
     }
 
-    public static void setupGateway() throws Exception {
+    private static void setupGateway() throws Exception {
 
         File targetDir = new File( System.getProperty( "user.dir" ), "target" );
         File gatewayDir = new File( targetDir, "gateway-home-" + UUID.randomUUID() );
-        gatewayDir.mkdirs();
+        Assert.assertTrue(gatewayDir.mkdirs());
 
         config = new GatewayTestConfig();
         config.setGatewayHomeDir( gatewayDir.getAbsolutePath() );
@@ -119,10 +119,10 @@ public class KnoxRangerTest {
         config.setGatewayServicesDir(targetDir.getPath() + File.separator + "services");
 
         File topoDir = new File( config.getGatewayTopologyDir() );
-        topoDir.mkdirs();
+        Assert.assertTrue(topoDir.mkdirs());
 
         File deployDir = new File( config.getGatewayDeploymentDir() );
-        deployDir.mkdirs();
+        Assert.assertTrue(deployDir.mkdirs());
 
         File descriptor = new File( topoDir, "cluster.xml" );
         FileOutputStream stream = new FileOutputStream( descriptor );
