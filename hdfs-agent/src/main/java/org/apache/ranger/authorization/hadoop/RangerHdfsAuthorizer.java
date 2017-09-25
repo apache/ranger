@@ -97,7 +97,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 		RangerHdfsPlugin plugin = new RangerHdfsPlugin();
 		plugin.init();
 
-		if (plugin.isOptimizeSubAccessAuthEnabled()) {
+		if (RangerHdfsPlugin.isOptimizeSubAccessAuthEnabled()) {
 			LOG.info(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP + " is enabled");
 		}
 
