@@ -2018,21 +2018,34 @@ public class ServiceREST {
 						}
 					}
 					String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
+					String polResource = request.getParameter(SearchFilter.POL_RESOURCE);
 					if (updateIfExists == null || updateIfExists.isEmpty()) {
 						updateIfExists = "false";
 					} else if (updateIfExists.equalsIgnoreCase("true")) {
 						isOverride = false;
 					}
 
-					if (isOverride && updateIfExists.equalsIgnoreCase("false")){
+					if (isOverride && "false".equalsIgnoreCase(updateIfExists) && StringUtils.isEmpty(polResource)) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file...");
 						}
-						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)){
-							deletePoliciesProvidedInServiceMap(sourceServices,
-									destinationServices, null);
+						if (CollectionUtils.isNotEmpty(sourceServices)
+								&& CollectionUtils.isNotEmpty(destinationServices)) {
+							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices, null);
 						}
 					}
+					if ("true".equalsIgnoreCase(updateIfExists) && StringUtils.isNotEmpty(polResource)) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(
+									"Deleting Policy from provided services in servicesMapJson file for specific resource...");
+						}
+						if (CollectionUtils.isNotEmpty(sourceServices)
+								&& CollectionUtils.isNotEmpty(destinationServices)) {
+							deletePoliciesForResource(sourceServices, destinationServices, polResource, request,
+									policies);
+						}
+					}
+
 					if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 						for (RangerPolicy policyInJson: policies){
 							if (policyInJson != null){
@@ -2263,6 +2276,66 @@ public class ServiceREST {
 			LOG.debug("Total Deleted Policy : " + totalDeletedPilicies);
 		}
 	}
+
+	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices,
+			String resource, HttpServletRequest request, List<RangerPolicy> exportPolicies) {
+		int totalDeletedPilicies = 0;
+		if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)) {
+			Set<String> exportedPolicyNames = new HashSet<String>();
+			if (CollectionUtils.isNotEmpty(exportPolicies)) {
+				for (RangerPolicy rangerPolicy : exportPolicies) {
+					if (rangerPolicy != null) {
+						exportedPolicyNames.add(rangerPolicy.getName());
+					}
+				}
+			}
+			for (int i = 0; i < sourceServices.size(); i++) {
+				if (!destinationServices.get(i).isEmpty()) {
+					RangerPolicyList servicePolicies = null;
+					servicePolicies = getServicePoliciesByName(destinationServices.get(i), request);
+					if (servicePolicies != null) {
+						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
+						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
+							for (RangerPolicy rangerPolicy : rangerPolicyList) {
+								if (rangerPolicy != null) {
+									Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap = rangerPolicy
+											.getResources();
+									if (rangerPolicyResourceMap != null) {
+										RangerPolicy.RangerPolicyResource rangerPolicyResource = null;
+										if (rangerPolicyResourceMap.containsKey("path")) {
+											rangerPolicyResource = rangerPolicyResourceMap.get("path");
+										} else if (rangerPolicyResourceMap.containsKey("database")) {
+											rangerPolicyResource = rangerPolicyResourceMap.get("database");
+										}
+										if (rangerPolicyResource != null) {
+											if (CollectionUtils.isNotEmpty(rangerPolicyResource.getValues())
+													&& rangerPolicyResource.getValues().size() > 1) {
+												continue;
+											}
+										}
+									}
+									if (rangerPolicy.getId() != null) {
+										if (!exportedPolicyNames.contains(rangerPolicy.getName())) {
+											deletePolicy(rangerPolicy.getId());
+											if (LOG.isDebugEnabled()) {
+												LOG.debug(
+														"Policy " + rangerPolicy.getName() + " deleted successfully.");
+											}
+											totalDeletedPilicies = totalDeletedPilicies + 1;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Total Deleted Policy : " + totalDeletedPilicies);
+		}
+	}
+
 
 	public List<RangerPolicy> getPolicies(SearchFilter filter) {
 		if(LOG.isDebugEnabled()) {
