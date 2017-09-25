@@ -240,18 +240,19 @@ public class ServiceMgr {
 						((RangerServiceTag)ret).setTagStore(tagStore);
 					}
 				} else {
-					LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find service class '" + serviceDef.getImplClass() + "'");
+					LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find service class '"
+						 + serviceDef.getImplClass() + "' for the service type '" + serviceType + "'");
 				}
 			} else {
-				LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find the service-type '" + serviceType + "'");
+				LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find the service-def for the service type '" + serviceType + "'");
 			}
 		} else {
-			LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find the service-type");
+			LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find the service-type '" + serviceType + "'");
 		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceMgr.getRangerServiceByService(" + service + "): " + ret);
-		}		
+		}
 
 		return ret;
 	}
