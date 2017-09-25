@@ -38,7 +38,7 @@
       	{ "name":"mixed-case","input":"SiMpLe", "result":true},
       	{ "name":"invalid-all-lower-wild","input":"other-simple", "result":false},
       	{ "name":"invalid-all-upper-wild","input":"OTHER-SIMPLE", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"OtHeR-SiMpLe", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"OtHeR-SiMpLe", "result":false}
       ]
   	}
   	,
@@ -58,7 +58,7 @@
       	{ "name":"mixed-case","input":"SiMpLe", "result":false},
       	{ "name":"invalid-all-lower-wild","input":"other-simple", "result":true},
       	{ "name":"invalid-all-upper-wild","input":"OTHER-SIMPLE", "result":true},
-      	{ "name":"invalid-mixed-case-wild","input":"OtHeR-SiMpLe", "result":true},
+        { "name":"invalid-mixed-case-wild","input":"OtHeR-SiMpLe", "result":true}
       ]
   	}
   	,
@@ -77,7 +77,7 @@
       	{ "name":"mixed-case","input":"SiMpLe", "result":false},
       	{ "name":"invalid-all-lower","input":"other-string", "result":false},
       	{ "name":"invalid-all-upper","input":"OTHER-STRING", "result":false},
-      	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
+        { "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false}
       ]
   	}
   	,
@@ -96,7 +96,7 @@
       	{ "name":"mixed-case","input":"SiMpLe", "result":true},
       	{ "name":"invalid-all-lower","input":"other-string", "result":false},
       	{ "name":"invalid-all-upper","input":"OTHER-STRING", "result":false},
-      	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
+        { "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false}
       ]
   	}
   	,
@@ -124,7 +124,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -152,7 +152,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-SiMpLe-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -183,7 +183,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-SiMpLe-TeSt-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -217,7 +217,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-SiMpLe-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -242,7 +242,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalidmixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalidmixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -276,7 +276,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -304,7 +304,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg-simple", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -335,7 +335,7 @@
       	{ "name":"invalid-mixed-case","input":"oThEr-StRiNg", "result":false},
       	{ "name":"invalid-lower-wild","input":"simpele-test-string", "result":false},
       	{ "name":"invalid-upper-wild","input":"SIMPELE-TEST-STRING", "result":false},
-      	{ "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false},
+        { "name":"invalid-mixed-case-wild","input":"SiMpeLe-TeSt-StRiNg", "result":false}
       ]
   	}
   	,
@@ -369,7 +369,7 @@
       	{ "name":"val3-extra-at-begin-wild","input":"mywildstring", "result":false},
       	{ "name":"val3-extra-at-begin-wild","input":"mywildstring", "result":false},
       	{ "name":"val4-all-lower","input":"onechar11", "result":false},
-      	{ "name":"val5-all-lower","input":"star-studded-onechar11", "result":false},
+        { "name":"val5-all-lower","input":"star-studded-onechar11", "result":false}
       ]
   	}
   ]
