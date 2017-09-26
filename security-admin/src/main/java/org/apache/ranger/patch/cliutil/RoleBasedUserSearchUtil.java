@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -63,59 +64,59 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
         public static String userRole = "";
 
         public static void main(String[] args) {
-                logger.info("RoleBaseUserSearchUtil : main()");
-                try {
-                        RoleBasedUserSearchUtil loader = (RoleBasedUserSearchUtil) CLIUtil.getBean(RoleBasedUserSearchUtil.class);
-                        loader.init();
-                        if (args.length == 3 || args.length == 2) {
-                                userLoginId = args[0];
-                                currentPassword = args[1];
-                                if (args.length == 3) {
-                                        userRole = args[2];
-                                        List<String> roles = new ArrayList<String>();
-                                        roles.add(RangerConstants.ROLE_USER);
-                                        roles.add(RangerConstants.ROLE_SYS_ADMIN);
-                                        roles.add(RangerConstants.ROLE_KEY_ADMIN);
-                                        if (!StringUtils.isBlank(userRole)) {
-                                                userRole = userRole.toUpperCase();
-                                                if (!roles.contains(userRole)) {
-                                                        System.out.println("Invalid UserRole. Exiting!!!");
-                                                        logger.info("Invalid UserRole. Exiting!!!");
-                                                        System.exit(1);
-                                                } else {
-                                                        checkRole = false;
-                                                }
-                                        }
-                                }
-                                if (StringUtils.isBlank(userLoginId)) {
-                                        System.out.println("Invalid login ID. Exiting!!!");
-                                        logger.info("Invalid login ID. Exiting!!!");
-                                        System.exit(1);
-                                }
-                                if (StringUtils.isBlank(currentPassword)) {
-                                        System.out.println("Invalid current password. Exiting!!!");
-                                        logger.info("Invalid current password. Exiting!!!");
-                                        System.exit(1);
-                                }
-                                while (loader.isMoreToProcess()) {
-                                        loader.load();
-                                }
-                                logger.info("Load complete. Exiting!!!");
-                                System.exit(0);
-                        } else {
-                                System.out.println("RoleBaseUserSearchUtil: Incorrect Arguments \n Usage: \n <UserRole> ");
-                                logger.error("RoleBaseUserSearchUtil: Incorrect Arguments \n Usage: \n <UserRole> ");
-                                System.exit(1);
-                        }
-                } catch (Exception e) {
-                        logger.error("Error loading", e);
+            logger.info("RoleBaseUserSearchUtil : main()");
+            try {
+		        RoleBasedUserSearchUtil loader = (RoleBasedUserSearchUtil) CLIUtil.getBean(RoleBasedUserSearchUtil.class);
+		        loader.init();
+		        if (args.length == 3 || args.length == 2) {
+	                userLoginId = args[0];
+	                currentPassword = args[1];
+	                if (args.length == 3) {
+	                    userRole = args[2];
+	                    List<String> roles = new ArrayList<String>();
+	                    roles.add(RangerConstants.ROLE_USER);
+	                    roles.add(RangerConstants.ROLE_SYS_ADMIN);
+	                    roles.add(RangerConstants.ROLE_KEY_ADMIN);
+	                    if (!StringUtils.isBlank(userRole)) {
+	                        userRole = userRole.toUpperCase();
+	                        if (!roles.contains(userRole)) {
+	                            System.out.println("Invalid UserRole. Exiting!!!");
+	                            logger.info("Invalid UserRole. Exiting!!!");
+	                            System.exit(1);
+	                        } else {
+	                        	checkRole = false;
+	                        }
+	                    }
+	                }
+	                if (StringUtils.isBlank(userLoginId)) {
+	                    System.out.println("Invalid login ID. Exiting!!!");
+	                    logger.info("Invalid login ID. Exiting!!!");
+	                    System.exit(1);
+	                }
+	                if (StringUtils.isBlank(currentPassword)) {
+                        System.out.println("Invalid current password. Exiting!!!");
+                        logger.info("Invalid current password. Exiting!!!");
                         System.exit(1);
-                }
+	                }
+	                while (loader.isMoreToProcess()) {
+	                	loader.load();
+	                }
+	                logger.info("Load complete. Exiting!!!");
+	                System.exit(0);
+		        } else {
+		            System.out.println("RoleBaseUserSearchUtil: Incorrect Arguments \n Usage: \n <UserRole> ");
+		            logger.error("RoleBaseUserSearchUtil: Incorrect Arguments \n Usage: \n <UserRole> ");
+		            System.exit(1);
+		        }
+            } catch (Exception e) {
+	            logger.error("Error loading", e);
+	            System.exit(1);
+            }
         }
 
         @Override
         public void init() throws Exception {
-                logger.info("==> RoleBaseUserSearchUtil.init()");
+        	logger.info("==> RoleBaseUserSearchUtil.init()");
         }
 
         @Override
@@ -124,148 +125,146 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 
         @Override
         public void execLoad() {
-                logger.info("==> RoleBaseUserSearchUtil.execLoad()");
-                validateUserAndFetchUserList();
-                logger.info("<== RoleBaseUserSearchUtil.execLoad()");
+	        logger.info("==> RoleBaseUserSearchUtil.execLoad()");
+	        validateUserAndFetchUserList();
+	        logger.info("<== RoleBaseUserSearchUtil.execLoad()");
         }
 
         public void getUsersBasedOnRole(List<String> userRoleList) {
-                try {
-                        if (!CollectionUtils.isEmpty(userRoleList) && userRoleList != null) {
-                                Map<String, String> roleSysAdminMap = new HashMap<String, String>();
-                                Map<String, String> roleKeyAdminMap = new HashMap<String, String>();
-                                Map<String, String> roleUserMap = new HashMap<String, String>();
-                                for (String userRole : userRoleList) {
-                                        List<XXPortalUser> listXXPortalUser = daoMgr.getXXPortalUser().findByRole(userRole);
-                                        if (listXXPortalUser != null && !CollectionUtils.isEmpty(listXXPortalUser)) {
-                                                if (userRole.equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
-                                                        for (XXPortalUser xXPortalUser : listXXPortalUser) {
-                                                                roleSysAdminMap.put(xXPortalUser.getLoginId(),userRole);
-                                                        }
-                                                } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN)) {
-                                                        for (XXPortalUser xXPortalUser : listXXPortalUser) {
-                                                                roleKeyAdminMap.put(xXPortalUser.getLoginId(),userRole);
-                                                        }
-                                                } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                        for (XXPortalUser xXPortalUser : listXXPortalUser) {
-                                                                roleUserMap.put(xXPortalUser.getLoginId(),userRole);
-                                                        }
-                                                }
-                                        }
+        	try {
+        		if (!CollectionUtils.isEmpty(userRoleList) && userRoleList != null) {
+	                Map<String, String> roleSysAdminMap = new HashMap<String, String>();
+	                Map<String, String> roleKeyAdminMap = new HashMap<String, String>();
+	                Map<String, String> roleUserMap = new HashMap<String, String>();
+	                for (String userRole : userRoleList) {
+	                    List<XXPortalUser> listXXPortalUser = daoMgr.getXXPortalUser().findByRole(userRole);
+	                    if (listXXPortalUser != null && !CollectionUtils.isEmpty(listXXPortalUser)) {
+	                        if (userRole.equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
+	                            for (XXPortalUser xXPortalUser : listXXPortalUser) {
+	                                    roleSysAdminMap.put(xXPortalUser.getLoginId(),userRole);
+	                            }
+	                        } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN)) {
+                                for (XXPortalUser xXPortalUser : listXXPortalUser) {
+                                        roleKeyAdminMap.put(xXPortalUser.getLoginId(),userRole);
                                 }
-                                if (MapUtils.isEmpty( roleSysAdminMap) && MapUtils.isEmpty(roleKeyAdminMap) && MapUtils.isEmpty(roleUserMap)) {
-                                        System.out.println("users with given user role are not there");
-                                        logger.error("users with given user role are not there");
-                                        System.exit(1);
-                                } else {
-                                        if (!MapUtils.isEmpty(roleSysAdminMap)) {
-                                                for (String key : roleSysAdminMap.keySet()) {
-                                                        System.out.println(roleSysAdminMap.get(key) + " : " + key);
-                                                }
-                                        }
-                                        if (!MapUtils.isEmpty(roleKeyAdminMap)) {
-                                                for (String key : roleKeyAdminMap.keySet()) {
-                                                        System.out.println(roleKeyAdminMap.get(key) + " : " + key);
-                                                }
-                                        }
-                                        if (!MapUtils.isEmpty(roleUserMap)) {
-                                                for (String key : roleUserMap.keySet()) {
-                                                        System.out.println(roleUserMap.get(key) + " : " + key);
-                                                }
-                                        }
-                                        if (userRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
-                                                System.out.println("ROLE_SYS_ADMIN Total Count : " + roleSysAdminMap.size());
-                                        }
-                                        if (userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
-                                                System.out.println("ROLE_KEY_ADMIN Total Count : " + roleKeyAdminMap.size());
-                                        }
-                                        if (userRoleList.contains(RangerConstants.ROLE_USER)) {
-                                                System.out.println("ROLE_USER Total Count : " + roleUserMap.size());
-                                        }
-                                        int total = roleSysAdminMap.size() + roleKeyAdminMap.size() + roleUserMap.size();
-                                        System.out.println("Total Count : " + total);
+	                        } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                for (XXPortalUser xXPortalUser : listXXPortalUser) {
+                                        roleUserMap.put(xXPortalUser.getLoginId(),userRole);
                                 }
+	                        }
+	                    }
+	                }
+                    if (MapUtils.isEmpty( roleSysAdminMap) && MapUtils.isEmpty(roleKeyAdminMap) && MapUtils.isEmpty(roleUserMap)) {
+                        System.out.println("users with given user role are not there");
+                        logger.error("users with given user role are not there");
+                        System.exit(1);
+                    } else {
+	                    if (!MapUtils.isEmpty(roleSysAdminMap)) {
+	                    	for(Entry<String, String> entry : roleSysAdminMap.entrySet()){
+	                    		System.out.println(entry.getValue() + " : " + entry.getKey());
+	                        }
+	                    }
+                        if (!MapUtils.isEmpty(roleKeyAdminMap)) {
+	                    	for(Entry<String, String> entry : roleKeyAdminMap.entrySet()){
+	                          System.out.println(entry.getValue() + " : " + entry.getKey());
+	                        }
                         }
-
-                } catch (Exception e) {
-                        logger.error("Error getting User's List with the mentioned role: "+ e.getMessage());
-                }
+                        if (!MapUtils.isEmpty(roleUserMap)) {
+                        	for(Entry<String, String> entry : roleUserMap.entrySet()){
+                              System.out.println(entry.getValue() + " : " + entry.getKey());
+                            }
+                        }
+                        if (userRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
+                        	System.out.println("ROLE_SYS_ADMIN Total Count : " + roleSysAdminMap.size());
+                        }
+                        if (userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+                        	System.out.println("ROLE_KEY_ADMIN Total Count : " + roleKeyAdminMap.size());
+                        }
+                        if (userRoleList.contains(RangerConstants.ROLE_USER)) {
+                        	System.out.println("ROLE_USER Total Count : " + roleUserMap.size());
+                        }
+                        int total = roleSysAdminMap.size() + roleKeyAdminMap.size() + roleUserMap.size();
+                        System.out.println("Total Count : " + total);
+                    }
+        		}
+	
+	        } catch (Exception e) {
+	                logger.error("Error getting User's List with the mentioned role: "+ e.getMessage());
+	        }
         }
 
         public void validateUserAndFetchUserList() {
-                userLoginId = userLoginId.toLowerCase();
-                XXPortalUser xxPortalUser = daoMgr.getXXPortalUser().findByLoginId(
-                                userLoginId);
-                Boolean isUserAuthorized = false;
-                if (xxPortalUser != null) {
-                        String dbPassword = xxPortalUser.getPassword();
-                        String currentEncryptedPassword = null;
-                        try {
-                                currentEncryptedPassword = userMgr.encrypt(userLoginId,currentPassword);
-                                if (currentEncryptedPassword != null && currentEncryptedPassword.equals(dbPassword)) {
-                                        VXUser vxUser = xUserService.getXUserByUserName(xxPortalUser.getLoginId());
-                                        if (vxUser != null) {
-                                                List<String> existingRole = (List<String>) vxUser.getUserRoleList();
-                                                List<String> permissionList = daoMgr.getXXModuleDef().findAccessibleModulesByUserId(xxPortalUser.getId(), vxUser.getId());
-                                                if (permissionList != null && permissionList.contains(RangerConstants.MODULE_USER_GROUPS) && !CollectionUtils.isEmpty(existingRole) &&  !StringUtils.isBlank(existingRole.get(0))) {
-                                                        List<String> userRoleList = new ArrayList<String>();
-                                                        if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                                userRoleList.add(RangerConstants.ROLE_USER);
-                                                                if (checkRole) {
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else {
-                                                                        isUserAuthorized = true;
-                                                                }
-                                                        } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
-                                                                if (checkRole) {
-                                                                        userRoleList.add(RangerConstants.ROLE_SYS_ADMIN);
-                                                                        userRoleList.add(RangerConstants.ROLE_USER);
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                                        userRoleList.add(userRole);
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else {
-                                                                        isUserAuthorized = true;
-                                                                }
-                                                        } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                                if (checkRole) {
-                                                                        userRoleList.add(RangerConstants.ROLE_KEY_ADMIN);
-                                                                        userRoleList.add(RangerConstants.ROLE_USER);
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
-                                                                        userRoleList.add(userRole);
-                                                                        getUsersBasedOnRole(userRoleList);
-                                                                } else {
-                                                                        isUserAuthorized = true;
-                                                                }
-
-                                                        }
-                                                        if (isUserAuthorized == true) {
-                                                                System.out.println("user is not authorized to fetch this list");
-                                                                logger.error("user is not authorized to fetch this list");
-                                                                System.exit(1);
-                                                        }
-                                                } else {
-                                                        System.out.println("user permission denied");
-                                                        logger.error("user permission denied");
-                                                        System.exit(1);
-                                                }
-                                        }
-                                } else {
-                                        System.out.println("Invalid user password");
-                                        logger.error("Invalid user password");
-                                        System.exit(1);
+            userLoginId = userLoginId.toLowerCase();
+            XXPortalUser xxPortalUser = daoMgr.getXXPortalUser().findByLoginId(userLoginId);
+            Boolean isUserAuthorized = false;
+            if (xxPortalUser != null) {
+            	String dbPassword = xxPortalUser.getPassword();
+                String currentEncryptedPassword = null;
+                try {
+                	currentEncryptedPassword = userMgr.encrypt(userLoginId,currentPassword);
+                    if (currentEncryptedPassword != null && currentEncryptedPassword.equals(dbPassword)) {
+                        VXUser vxUser = xUserService.getXUserByUserName(xxPortalUser.getLoginId());
+                        if (vxUser != null) {
+                            List<String> existingRole = (List<String>) vxUser.getUserRoleList();
+                            List<String> permissionList = daoMgr.getXXModuleDef().findAccessibleModulesByUserId(xxPortalUser.getId(), vxUser.getId());
+                            if (permissionList != null && permissionList.contains(RangerConstants.MODULE_USER_GROUPS) && !CollectionUtils.isEmpty(existingRole) &&  !StringUtils.isBlank(existingRole.get(0))) {
+                                List<String> userRoleList = new ArrayList<String>();
+                                if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+	                                userRoleList.add(RangerConstants.ROLE_USER);
+	                                if (checkRole) {
+	                                	getUsersBasedOnRole(userRoleList);
+	                                } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+	                                	getUsersBasedOnRole(userRoleList);
+	                                } else {
+	                                	isUserAuthorized = true;
+	                                }
+                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
+                                	if (checkRole) {
+	                                    userRoleList.add(RangerConstants.ROLE_SYS_ADMIN);
+	                                    userRoleList.add(RangerConstants.ROLE_USER);
+	                                    getUsersBasedOnRole(userRoleList);
+                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                        userRoleList.add(userRole);
+                                        getUsersBasedOnRole(userRoleList);
+                                    } else {
+                                    	isUserAuthorized = true;
+                                    }
+                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                    if (checkRole) {
+	                                    userRoleList.add(RangerConstants.ROLE_KEY_ADMIN);
+	                                    userRoleList.add(RangerConstants.ROLE_USER);
+	                                    getUsersBasedOnRole(userRoleList);
+                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                        userRoleList.add(userRole);
+                                        getUsersBasedOnRole(userRoleList);
+                                    } else {
+                                    	isUserAuthorized = true;
+                                    }
                                 }
-                        } catch (Exception e) {
-                                logger.error("Getting User's List with the mentioned role failure. Detail:  \n",e);
+                                if (isUserAuthorized == true) {
+                                    System.out.println("user is not authorized to fetch this list");
+                                    logger.error("user is not authorized to fetch this list");
+                                    System.exit(1);
+                                }
+                            } else {
+                                System.out.println("user permission denied");
+                                logger.error("user permission denied");
                                 System.exit(1);
+                            }
                         }
-                } else {
-                        System.out.println("User does not exist in DB!!");
-                        logger.error("User does not exist in DB");
+                    } else {
+                    	System.out.println("Invalid user password");
+                        logger.error("Invalid user password");
                         System.exit(1);
+                    }
+                } catch (Exception e) {
+                    logger.error("Getting User's List with the mentioned role failure. Detail:  \n",e);
+                    System.exit(1);
                 }
+            } else {
+                System.out.println("User does not exist in DB!!");
+                logger.error("User does not exist in DB");
+                System.exit(1);
+            }
         }
 }
