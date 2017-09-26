@@ -89,7 +89,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 		RangerKMSMKI rangerMasterKey = null;
 		String password = conf.get(ENCRYPTION_KEY);
 		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
-			throw new IOException("Master Key Jceks does not exists");
+			throw new IOException("The Ranger MasterKey Password is empty or not a valid Password");
 		}
 		if(StringUtils.isEmpty(conf.get(HSM_ENABLED)) || conf.get(HSM_ENABLED).equalsIgnoreCase("false")){
 			rangerMasterKey = new RangerMasterKey(daoManager);
