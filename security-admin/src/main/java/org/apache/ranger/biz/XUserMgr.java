@@ -386,10 +386,16 @@ public class XUserMgr extends XUserMgrBase {
 				&& password.equals(hiddenPasswordString)) {
 			vXPortalUser.setPassword(oldUserProfile.getPassword());
 		}
-                else if(password != null){
-                        validatePassword(vXUser);
-                        vXPortalUser.setPassword(password);
+        else if(password != null){
+                validatePassword(vXUser);
+                if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+                    vXPortalUser.setPassword(oldUserProfile.getPassword());
                 }
+                else if(oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP)
+                {
+			vXPortalUser.setPassword(password);
+                }
+        }
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
 		XXPortalUser xXPortalUser = new XXPortalUser();
 		xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
@@ -441,7 +447,13 @@ public class XUserMgr extends XUserMgrBase {
 		// There is nothing to log anything in XXUser so far.
 		vXUser = xUserService.updateResource(vXUser);
 		vXUser.setUserRoleList(roleList);
+        if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP) {
 		vXUser.setPassword(password);
+        }
+        else if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+            vXUser.setPassword(oldUserProfile.getPassword());
+        }
+
 		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
 				oldUserProfile, "update");
 		vXUser.setPassword(hiddenPasswordString);

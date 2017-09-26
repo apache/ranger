@@ -401,7 +401,13 @@ public class UserMgr {
 			logger.warn("SECURITY:changePassword(). User not found. LoginId="+ pwdChange.getLoginId());
 			throw restErrorUtil.createRESTException("serverMsg.userMgrInvalidUser",MessageEnums.DATA_NOT_FOUND, null, null,pwdChange.getLoginId());
 		}
-
+        if (gjUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+            logger.info("SECURITY:changePassword().Ranger External Users cannot change password. LoginId=" + pwdChange.getLoginId());
+            VXResponse vXResponse = new VXResponse();
+            vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+            vXResponse.setMsgDesc("SECURITY:changePassword().Ranger External Users cannot change password. LoginId=" + pwdChange.getLoginId());
+            throw restErrorUtil.generateRESTException(vXResponse);
+        }
 		//check current password and provided old password is same or not
 		String encryptedOldPwd = encrypt(pwdChange.getLoginId(),pwdChange.getOldPassword());
 		if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
@@ -484,9 +490,12 @@ public class UserMgr {
 
 		String saltEncodedpasswd = encrypt(gjUser.getLoginId(),
 				changeEmail.getOldPassword());
-
+        if (gjUser.getUserSource() == RangerCommonEnums.USER_APP) {
 		gjUser.setPassword(saltEncodedpasswd);
-
+       }
+        else if (gjUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+                gjUser.setPassword(gjUser.getPassword());
+        }
 		daoManager.getXXPortalUser().update(gjUser);
 		return mapXXPortalUserVXPortalUser(gjUser);
 	}
@@ -1243,7 +1252,7 @@ public class UserMgr {
 
 	public XXPortalUser updateUserWithPass(VXPortalUser userProfile) {
 		String updatedPassword = userProfile.getPassword();
-		XXPortalUser xXPortalUser = this.updateUser(userProfile);
+        XXPortalUser xXPortalUser = this.updateUser(userProfile);
 
 		if (xXPortalUser == null) {
 			return null;
@@ -1264,8 +1273,13 @@ public class UserMgr {
 
 			String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),
 					updatedPassword);
-			xXPortalUser.setPassword(encryptedNewPwd);
-			xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
+            if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
+		xXPortalUser.setPassword(encryptedNewPwd);
+             }
+             else if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
+		 xXPortalUser.setPassword(xXPortalUser.getPassword());
+             }
+             xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
 		}
 		return xXPortalUser;
 	}
@@ -1283,7 +1297,13 @@ public class UserMgr {
 		}
                 String dbOldPwd =xXPortalUser.getPassword();
 		String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),userPassword);
-		xXPortalUser.setPassword(encryptedNewPwd);
+       if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
+                xXPortalUser.setPassword(encryptedNewPwd);
+       }
+       else if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
+	   xXPortalUser.setPassword(xXPortalUser.getPassword());
+       }
+
 		xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
                 if(xXPortalUser!=null && logAudits){
                         String dbNewPwd=xXPortalUser.getPassword();
@@ -1360,7 +1380,12 @@ public class UserMgr {
                 xXPortalUser.setLoginId(newUserName);
                 // The old password needs to be encrypted by the new user name
                 String updatedPwd = encrypt(newUserName,currentPassword);
-                xXPortalUser.setPassword(updatedPwd);
+                if (xXPortalUser.getUserSource() == RangerCommonEnums.USER_APP) {
+                        xXPortalUser.setPassword(updatedPwd);
+                }
+                else  if (xXPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+                    xXPortalUser.setPassword(xXPortalUser.getPassword());
+                }
                 xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
                 List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
                 XXTrxLog xTrxLog = new XXTrxLog();
