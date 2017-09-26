@@ -349,6 +349,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		    }
 			List<String> userList = new ArrayList<>(userSet);
 			String transformGroupName = groupNameTransform(groupName);
+			LOG.debug("addOrUpdateGroup(): group = " + groupName + " users = " + userList);
 			try {
 				sink.addOrUpdateGroup(transformGroupName, userList);
 			} catch (Throwable t) {
@@ -751,8 +752,10 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		}
 
         if (groupHierarchyLevels > 0) {
+			LOG.debug("deltaSyncGroupTime = " + deltaSyncGroupTime);
             if (deltaSyncGroupTime > 0) {
-                goUpGroupHierarchyLdap(groupNameMap.keySet(), groupHierarchyLevels-1);
+				LOG.info("LdapDeltaUserGroupBuilder.getGroups(): Going through group hierarchy for nested group evaluation for deltasync");
+				goUpGroupHierarchyLdap(groupNameMap.keySet(), groupHierarchyLevels-1);
             }
         }
 
@@ -942,7 +945,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
                                 } else {
                                     groupUserTable.put(gName, originalUserFullName, originalUserFullName);
                                 }
-
+								groupNameMap.put(groupEntry.getNameInNamespace().toLowerCase(), gName);
 							}
 							LOG.info("No. of members in the group " + gName + " = " + userCount);
 						}
