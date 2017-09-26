@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupUser;
@@ -114,4 +115,21 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 		}
 	}
 
+	public XXGroupUser findByGroupNameAndUserId(String groupName, Long userId) {
+		if (StringUtils.isNotBlank(groupName) && userId != null) {
+			try {
+				return getEntityManager()
+						.createNamedQuery("XXGroupUser.findByGroupNameAndUserId", XXGroupUser.class)
+						.setParameter("userId", userId)
+						.setParameter("groupName", groupName)
+						.getSingleResult();
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("userId and/or groupId not provided.");
+			return new XXGroupUser();
+		}
+		return null;
+	}
 }

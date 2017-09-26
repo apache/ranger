@@ -189,6 +189,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findByGroupNameAndUserId">
+		<query>SELECT obj FROM XXGroupUser obj WHERE obj.name=:groupName AND obj.userId=:userId
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
