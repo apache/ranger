@@ -86,7 +86,7 @@ public class TestRoleBasedUserSearchUtil {
 
            roleBasedUserSearchUtil.getUsersBasedOnRole(userRoleList);
 
-           Mockito.verify(daoMgr).getXXPortalUser();
+
            Mockito.verify(xXPortalUserDao).findByRole(RangerConstants.ROLE_SYS_ADMIN);
 
        } catch(Exception e) {
@@ -126,10 +126,10 @@ public class TestRoleBasedUserSearchUtil {
         Mockito.when(xXPortalUserDao.findByRole(Mockito.anyString())).thenReturn(listXXPortalUser);
 
         roleBasedUserSearchUtil.validateUserAndFetchUserList();
-        Mockito.verify(daoMgr, Mockito.atLeast(2)).getXXPortalUser();
+
         Mockito.verify(xXPortalUserDao).findByLoginId(Mockito.anyString());
         Mockito.verify(xUserService).getXUserByUserName(xxPortalUser.getLoginId());
-        Mockito.verify(daoMgr).getXXModuleDef();
+
         Mockito.verify(xXModuleDefDao).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
         Mockito.verify(userMgr).encrypt(Mockito.anyString(),Mockito.anyString());
         Mockito.verify(xXPortalUserDao, Mockito.atLeast(2)).findByRole(Mockito.anyString());
