@@ -314,7 +314,11 @@ public class TestXUserMgr {
 	public void test12UpdateXUser() {
 		setup();
 		VXUser vxUser = vxUser();
+		vxUser.setUserSource(RangerCommonEnums.USER_APP);
+		vxUser.setName("name");
 		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);
+		VXPortalUser vXPortalUser = new VXPortalUser();
+		Mockito.when(userMgr.getUserProfileByLoginId(vxUser.getName())).thenReturn(vXPortalUser);
 
 		VXUser dbvxUser = xUserMgr.updateXUser(vxUser);
 		Assert.assertNotNull(dbvxUser);
