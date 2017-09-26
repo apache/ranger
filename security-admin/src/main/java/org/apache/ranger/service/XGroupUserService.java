@@ -79,7 +79,13 @@ public class XGroupUserService extends
 	}
 	
 	public VXGroupUser createXGroupUserWithOutLogin(VXGroupUser vxGroupUser) {
-		XXGroupUser xxGroupUser = new XXGroupUser();
+		boolean groupUserMappingExists = true;
+		XXGroupUser xxGroupUser = daoManager.getXXGroupUser().findByGroupNameAndUserId(vxGroupUser.getName(), vxGroupUser.getUserId());
+		if (xxGroupUser == null) {
+			xxGroupUser = new XXGroupUser();
+			groupUserMappingExists = false;
+		}
+
 		XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vxGroupUser.getName());
 		vxGroupUser.setParentGroupId(xGroup.getId());
 		xxGroupUser = mapViewToEntityBean(vxGroupUser, xxGroupUser, 0);
@@ -88,7 +94,11 @@ public class XGroupUserService extends
 			xxGroupUser.setAddedByUserId(createdByUserId);
 			xxGroupUser.setUpdatedByUserId(createdByUserId);
 		}
-		xxGroupUser = getDao().create(xxGroupUser);
+		if (groupUserMappingExists) {
+			xxGroupUser = getDao().update(xxGroupUser);
+		} else {
+			xxGroupUser = getDao().create(xxGroupUser);
+		}
 		vxGroupUser = postCreate(xxGroupUser);
 		return vxGroupUser;
 	}

@@ -573,6 +573,7 @@ public class XUserMgr extends XUserMgrBase {
                     .findByLoginId(vXUser.getName());
             if (xUser != null) {
 				// Add or update group user mapping only if the user already exists in x_user table.
+				logger.debug(String.format("createXGroupUserFromMap(): Create or update group %s ", vXGroup.getName()));
 				vXGroup = xGroupService.createXGroupWithOutLogin(vXGroup);
 				vxGUInfo.setXgroupInfo(vXGroup);
 				vxu.add(vXUser);
@@ -582,6 +583,8 @@ public class XUserMgr extends XUserMgrBase {
                 if (xXPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
                     vXGroupUser = xGroupUserService
                             .createXGroupUserWithOutLogin(vXGroupUser);
+		    logger.debug(String.format("createXGroupUserFromMap(): Create or update group user mapping with groupname =  " + vXGroup.getName()
+											+ " username = %s userId = %d", xXPortalUser.getLoginId(), xUser.getId()));
                 }
                 Collection<String> reqRoleList = vXUser.getUserRoleList();
 
