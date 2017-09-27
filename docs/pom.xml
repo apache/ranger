@@ -384,6 +384,18 @@
                 ZTE
             </organization>
         </developer>
+	<developer>
+            <id>pengjianhua</id>
+            <name>Jianhua Peng</name>
+            <email>pengjianhua@apache.org</email>
+            <timezone>+8</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                ZTE
+            </organization>
+        </developer>
     </developers>
     <contributors>
         <contributor>
