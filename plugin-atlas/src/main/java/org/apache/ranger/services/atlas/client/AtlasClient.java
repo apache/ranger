@@ -53,6 +53,7 @@ public class AtlasClient extends BaseClient {
 
 	private static final Logger LOG = Logger.getLogger(AtlasClient.class);
 	private static final String EXPECTED_MIME_TYPE = "application/json";
+	private static final String WEB_RESOURCE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 	private static final String ATLAS_STATUS_API_ENDPOINT = "/j_spring_security_check";
 	/*** TYPE **/
 	private static final String ATLAS_LIST_TYPE_API_ENDPOINT = "/api/atlas/types/";
@@ -191,11 +192,11 @@ public class AtlasClient extends BaseClient {
 			}
 			formData.add("j_password", decryptedPwd);
 			try {
-				statusResponse = webResource.type("application/x-www-form-urlencoded").post(ClientResponse.class,
+				statusResponse = webResource.type(WEB_RESOURCE_CONTENT_TYPE).post(ClientResponse.class,
 						formData);
 			} catch (Exception e) {
-				String msgDesc = "Unable to get a valid statusResponse for " + "expected mime type : ["
-						+ EXPECTED_MIME_TYPE + "] URL : " + statusUrl + " - got null response.";
+				String msgDesc = "Unable to get a valid statusResponse for expected mime type : ["
+						+ WEB_RESOURCE_CONTENT_TYPE + "] URL : " + statusUrl + " - got null response.";
 				LOG.error(msgDesc);
 			}
 			if (LOG.isDebugEnabled()) {
