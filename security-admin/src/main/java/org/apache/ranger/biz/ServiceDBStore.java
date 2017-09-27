@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -2925,15 +2926,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xPolRes = daoMgr.getXXPolicyResource().create(xPolRes);
 
 			List<String> values = policyRes.getValues();
-			if(CollectionUtils.isNotEmpty(values)){
-				for(int i = 0; i < values.size(); i++) {
-					if(values.get(i)!=null){
-						XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
-						xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap, xPolRes);
-						xPolResMap.setResourceId(xPolRes.getId());
-						xPolResMap.setValue(values.get(i));
-						xPolResMap.setOrder(i);
-						xPolResMap = daoMgr.getXXPolicyResourceMap().create(xPolResMap);
+			if (CollectionUtils.isNotEmpty(values)) {
+				Set<String> uniqueValues = new LinkedHashSet<String>(values);
+				int i = 0;
+				if (CollectionUtils.isNotEmpty(uniqueValues)) {
+					for (String uniqValue : uniqueValues) {
+						if (!StringUtils.isEmpty(uniqValue)) {
+							XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
+							xPolResMap = (XXPolicyResourceMap) rangerAuditFields.populateAuditFields(xPolResMap,xPolRes);
+							xPolResMap.setResourceId(xPolRes.getId());
+							xPolResMap.setValue(uniqValue);
+							xPolResMap.setOrder(i);
+							xPolResMap = daoMgr.getXXPolicyResourceMap().create(xPolResMap);
+							i++;
+						}
 					}
 				}
 			}

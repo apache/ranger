@@ -39,9 +39,14 @@ import org.apache.ranger.util.CLIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Disables the Nifi plugin's exclude toggle in Ranger UI.
+ * After running this patch user wont be able to add exclude resource policies in NIFI.
+ *
+ */
 @Component
-public class PatchForNifiResourceUpdateExclude_J10008 extends BaseLoader {
-        private static final Logger logger = Logger.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
+public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
+        private static final Logger logger = Logger.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
         @Autowired
         RangerDaoManager daoMgr;
 
@@ -66,7 +71,7 @@ public class PatchForNifiResourceUpdateExclude_J10008 extends BaseLoader {
         public static void main(String[] args) {
                 logger.info("main()");
                 try {
-                        PatchForNifiResourceUpdateExclude_J10008 loader = (PatchForNifiResourceUpdateExclude_J10008) CLIUtil.getBean(PatchForNifiResourceUpdateExclude_J10008.class);
+                        PatchForNifiResourceUpdateExclude_J10011 loader = (PatchForNifiResourceUpdateExclude_J10011) CLIUtil.getBean(PatchForNifiResourceUpdateExclude_J10011.class);
                         loader.init();
                         while (loader.isMoreToProcess()) {
                                 loader.load();
@@ -135,7 +140,6 @@ public class PatchForNifiResourceUpdateExclude_J10008 extends BaseLoader {
                         }
                         if (ret == null) {
                                 logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME+ "service-def");
-                                System.exit(1);
                         }
                 } catch (Exception e) {
                         logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME + "service-def", e);
