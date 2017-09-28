@@ -249,7 +249,7 @@ public class HBaseClient extends BaseClient {
 						admin = new HBaseAdmin(conf);
 						HTableDescriptor [] htds = admin.listTables(tableNameMatching);
 						if (htds != null) {
-							for (HTableDescriptor htd : admin.listTables(tableNameMatching)) {
+							for (HTableDescriptor htd : htds) {
 								String tableName = htd.getNameAsString();
 								if (existingTableList != null && existingTableList.contains(tableName)) {
 									continue;
