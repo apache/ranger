@@ -144,8 +144,6 @@ public abstract class BaseDao<T> {
 			return true;
 		}
 
-		boolean ret = false;
-
 		boolean trxBegan = beginTransaction();
 
 		getEntityManager().remove(obj);
@@ -154,9 +152,7 @@ public abstract class BaseDao<T> {
 			commitTransaction();
 		}
 
-		ret = true;
-
-		return ret;
+		return trxBegan;
 	}
 
 	public T getById(Long id) {
