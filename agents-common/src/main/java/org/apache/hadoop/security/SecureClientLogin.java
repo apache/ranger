@@ -71,7 +71,6 @@ public class SecureClientLogin {
 	}
 
 	public synchronized static Subject loginUserWithPassword(String user, String password) throws IOException {
-		String tmpPass = password;
 		try {
 			Subject subject = new Subject();
 			SecureClientLoginConfiguration loginConf = new SecureClientLoginConfiguration(false, user, password);
@@ -80,7 +79,7 @@ public class SecureClientLogin {
 			login.login();
 			return login.getSubject();
 		} catch (LoginException le) {
-			throw new IOException("Login failure for " + user + " using password " + tmpPass.replaceAll(".","*"), le);
+			throw new IOException("Login failure for " + user + " using password ****", le);
 		}
 	}
 

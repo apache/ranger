@@ -1215,7 +1215,9 @@ define(function(require) {
 		_.each(XAEnums.UserRoles,function(val, key){
 			if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_SYS_ADMIN.value != val.value){
 				userRoleList.push(key)
-			}else if(!SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
+			}else if(SessionMgr.isSystemAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
+				userRoleList.push(key)
+			}else if(SessionMgr.isUser() && XAEnums.UserRoles.ROLE_USER.value == val.value){
 				userRoleList.push(key)
 			}
 		})
