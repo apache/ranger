@@ -20,6 +20,8 @@
  package org.apache.ranger.rest;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -31,12 +33,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
@@ -346,18 +350,35 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_USERS + "\")")
 	public VXUserList searchXUsers(@Context HttpServletRequest request) {
+		String UserRoleParamName = RangerConstants.ROLE_USER;
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xUserService.sortFields);
-
+		String userName = null;
+		if(request != null && request.getUserPrincipal() != null){
+			userName = request.getUserPrincipal().getName();
+		}
 		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
 		searchUtil.extractString(request, searchCriteria, "emailAddress", "Email Address",
 				null);		
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
-		searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
+		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
 				null);
 		searchUtil.extractString(request, searchCriteria, "userRole", "UserRole", null);
+		if (CollectionUtils.isNotEmpty(userRolesList) && CollectionUtils.size(userRolesList) == 1 && userRolesList.get(0).equalsIgnoreCase(UserRoleParamName)) {
+			if (!(searchCriteria.getParamList().containsKey("name"))) {
+				searchCriteria.addParam("name", userName);
+			}
+			else if ((searchCriteria.getParamList().containsKey("name")) && userName.contains((String) searchCriteria.getParamList().get("name"))) {
+				searchCriteria.addParam("name", userName);
+			}
+			else {
+				String randomString = new Random().toString();
+				searchCriteria.addParam("name", randomString);
+			}
+		}
+
 		return xUserMgr.searchXUsers(searchCriteria);
 	}
 
