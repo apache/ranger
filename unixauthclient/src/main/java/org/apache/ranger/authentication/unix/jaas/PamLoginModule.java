@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authentication.unix.jaas;
 
+import org.apache.commons.lang.StringUtils;
 import org.jvnet.libpam.PAM;
 import org.jvnet.libpam.PAMException;
 import org.jvnet.libpam.UnixUser;
@@ -147,11 +148,14 @@ public class PamLoginModule implements LoginModule
     {
         try
         {
-            UnixUser user = _pam.authenticate(_username, _password);
-            _principal = new PamPrincipal(user);
-            _authSucceeded = true;
-
-            return true;
+		if (StringUtils.isNotEmpty(_password)) {
+                                UnixUser user = _pam.authenticate(_username, _password);
+                                _principal = new PamPrincipal(user);
+                                _authSucceeded = true;
+                                return true;
+                        } else {
+                                throw new PAMException("Password is Null or Empty!!!");
+                        }
         }
         catch (PAMException ex)
         {
