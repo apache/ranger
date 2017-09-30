@@ -29,6 +29,7 @@
     <analyzer>
       <tokenizer class="solr.KeywordTokenizerFactory"/>
       <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.LengthFilterFactory" min="0" max="2500"/>
     </analyzer>
   </fieldType>
   <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
