@@ -90,7 +90,7 @@ def processRequest(url,usernamepassword,data,method,isHttps,certfile,isDebug):
 	return response_code
 def validateArgs(argv):
 	if(len(argv)<7):
-		log("[E] insufficient number of arguments. Found " + len(argv) + "; expected at least 7","error")
+		log("[E] insufficient number of arguments. Found " + str(len(argv)) + "; expected at least 7","error")
 		printUsage()
 	if not "-users" in argv and not "-groups" in argv:
 		log("[E] -users or -groups switch was missing!","error")
