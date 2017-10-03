@@ -58,5 +58,26 @@
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+			<groupId>be.ceau</groupId>
+			<artifactId>chart</artifactId>
+			<version>2.2.0</version>
+		</dependency>        
     </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.20</version>
+                    <configuration>
+                    <excludes>
+                        <exclude>**/RangerPolicyEnginePerformanceTest*</exclude>
+                    </excludes>
+                    </configuration>
+            </plugin>
+            </plugins>
+        </pluginManagement>
+        </build>
 </project>
