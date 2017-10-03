@@ -42,14 +42,14 @@ public class PerfTestClient extends Thread {
 	final int maxCycles;
 
 	List<RequestData> requests = null;
-	static Gson gsonBuilder  = null;
+	private static Gson gson  = null;
 
 	static {
-
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+		GsonBuilder builder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z");
+		gson = builder
 				.setPrettyPrinting()
-				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-				.registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
+				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer(builder))
+				.registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer(builder))
 				.create();
 	}
 
@@ -89,7 +89,7 @@ public class PerfTestClient extends Thread {
 			Type listType = new TypeToken<List<RequestData>>() {
 			}.getType();
 
-			requests = gsonBuilder.fromJson(reader, listType);
+			requests = gson.fromJson(reader, listType);
 
 			ret = true;
 		}
@@ -155,25 +155,5 @@ public class PerfTestClient extends Thread {
 		public void setName(String name) { this.name = name;}
 		public void setRequest(RangerAccessRequest request) { this.request = request;}
 		public void setResult(RangerAccessResult result) { this.result = result;}
-	}
-
-	static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
-		@Override
-		public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-											   JsonDeserializationContext context) throws JsonParseException {
-			RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
-
-			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
-
-			return ret;
-		}
-	}
-
-	static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
-		@Override
-		public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-												JsonDeserializationContext context) throws JsonParseException {
-			return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
-		}
 	}
 }
