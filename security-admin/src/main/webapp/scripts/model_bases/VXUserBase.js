@@ -42,8 +42,8 @@ define(function(require){
 			this.modelName = 'VXUserBase';
 		},
 
-		deleteUsers : function(userNameValues,options){
-                        var url = this.urlRoot +'/'+ userNameValues +'?forceDelete=true';
+		deleteUsers : function(userId,options){
+			var url = this.urlRoot + '/id/' + userId +'?forceDelete=true';
 			options = _.extend({
 				contentType : 'application/json',
 				dataType : 'json',
