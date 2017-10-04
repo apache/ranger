@@ -88,14 +88,12 @@ define(function(require){
 		initialize: function() {
 			this.modelName = 'VXGroupBase';
 		},
-	 deleteGroups : function(groupNameValues, options){
-                var url = this.urlRoot+'/'+ groupNameValues + '?forceDelete=true';
-
-		options = _.extend({
+	 deleteGroups : function(groupId, options){
+		 var url = this.urlRoot + '/id/' + groupId + '?forceDelete=true';
+		 options = _.extend({
 			contentType : 'application/json',
 			dataType : 'json',
-
-		}, options);
+		 }, options);
 
 		return this.constructor.nonCrudOperation.call(this, url, 'DELETE', options);
 	},

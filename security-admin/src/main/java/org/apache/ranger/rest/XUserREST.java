@@ -354,7 +354,7 @@ public class XUserREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xUserService.sortFields);
 		String userName = null;
-		if(request != null && request.getUserPrincipal() != null){
+		if (request.getUserPrincipal() != null){
 			userName = request.getUserPrincipal().getName();
 		}
 		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
@@ -370,7 +370,7 @@ public class XUserREST {
 			if (!(searchCriteria.getParamList().containsKey("name"))) {
 				searchCriteria.addParam("name", userName);
 			}
-			else if ((searchCriteria.getParamList().containsKey("name")) && userName.contains((String) searchCriteria.getParamList().get("name"))) {
+			else if ((searchCriteria.getParamList().containsKey("name")) && userName!= null && userName.contains((String) searchCriteria.getParamList().get("name"))) {
 				searchCriteria.addParam("name", userName);
 			}
 			else {
@@ -1120,6 +1120,36 @@ public class XUserREST {
                 if (StringUtils.isNotEmpty(groupName)) {
                         VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName.trim());
                         xUserMgr.deleteXGroup(vxGroup.getId(), forceDelete);
+                }
+        }
+
+        @DELETE
+        @Path("/secure/users/id/{userId}")
+        @Produces({ "application/xml", "application/json" })
+        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+        public void deleteSingleUserByUserId(@Context HttpServletRequest request, @PathParam("userId") Long userId) {
+                String forceDeleteStr = request.getParameter("forceDelete");
+                boolean forceDelete = false;
+                if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+                        forceDelete = true;
+                }
+                if (userId != null) {
+                        xUserMgr.deleteXUser(userId, forceDelete);
+                }
+        }
+
+        @DELETE
+        @Path("/secure/groups/id/{groupId}")
+        @Produces({ "application/xml", "application/json" })
+        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+        public void deleteSingleGroupByGroupId(@Context HttpServletRequest request, @PathParam("groupId") Long groupId) {
+                String forceDeleteStr = request.getParameter("forceDelete");
+                boolean forceDelete = false;
+                if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+                        forceDelete = true;
+                }
+                if (groupId != null) {
+                        xUserMgr.deleteXGroup(groupId, forceDelete);
                 }
         }
 }

@@ -485,15 +485,16 @@ define(function(require){
 			var message = '';
 			collection.each(function(obj){
 				if(obj.selected){
-	                selArr.push(obj.get('name'));
+	                selArr.push({"value" : obj.get('name') , "id" : obj.get('id')});
 	            }
             });
 			var  vXStrings = [];
 			var jsonUsers  = {};
 			for(var i in selArr) {
-				var item = selArr[i];
+				var itemName = selArr[i].value , itemId = selArr[i].id;
 				vXStrings.push({
-					"value" : item,
+					"value" : itemName,
+					"id" : itemId
 				});
 			}
 			jsonUsers.vXStrings = vXStrings;
@@ -522,33 +523,33 @@ define(function(require){
 							var model = new VXUser();
                             var count = 0 , notDeletedUserName = "";
                             _.map(jsonUsers.vXStrings , function(m){
-                                    model.deleteUsers(m.value,{
-					success: function(response,options){
-                                                    count += 1;
-                                                    that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
-                                        },
-                                        error:function(response,options){
-                                                count += 1;
-                                                notDeletedUserName += m.value + ", ";
-                                                that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
-                                        }
-                                    });
+                            	model.deleteUsers(m.id,{
+                            		success: function(response,options){
+                            			count += 1;
+                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                            		},
+                            		error:function(response,options){
+                            			count += 1;
+                            			notDeletedUserName += m.value + ", ";
+                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                            		}
+                            	});
                             });
                         }else {
 							var model = new VXGroup();
                             var count = 0, notDeletedGroupName ="";
                             _.map(jsonUsers.vXStrings, function(m){
-                                    model.deleteGroups(m.value,{
-					success: function(response){
-                                                    count += 1;
-                                                    that.groupCollection(jsonUsers.vXStrings.length,count,notDeletedGroupName)
-                                        },
-                                        error:function(response,options){
-                                                count += 1;
-                                                notDeletedGroupName += m.value + ", ";
-                                                that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName)
-                                        }
-                                    })
+                            	model.deleteGroups(m.id,{
+                            		success: function(response){
+                            			count += 1;
+                            			that.groupCollection(jsonUsers.vXStrings.length,count,notDeletedGroupName)
+                            		},
+                            		error:function(response,options){
+                            			count += 1;
+                            			notDeletedGroupName += m.value + ", ";
+                            			that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName)
+                            		}
+                            	})
                             });
 						}
 					}

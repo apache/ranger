@@ -114,7 +114,7 @@ public class PasswordValidator implements Runnable {
 			if (userName != null && writer != null ) {
                                 String res = "FAILED: unable to validate due to error " + t.getMessage();
 				writer.println(res);
-                                LOG.error("Response [" + res + "] for user: " + userName+","+ t.getMessage());
+                                LOG.error("Response [" + res + "] for user: " + userName+", "+ t.getMessage());
 			}
 		}
 		finally {
