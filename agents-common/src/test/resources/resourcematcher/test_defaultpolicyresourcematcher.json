@@ -815,12 +815,12 @@
         ,
         {
           "name": "MATCH for parent 'default'",
-          "type": "ancestorMatch",
+          "type": "anyMatch",
           "resource": {
             "elements": {"database": "default"}
           },
           "evalContext": {},
-          "result": true
+          "result": false
         }
       ]
     }

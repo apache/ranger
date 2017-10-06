@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 
 public abstract class RangerBaseService {
@@ -133,18 +135,6 @@ public abstract class RangerBaseService {
 		return ret;
 	}
 
-	public List<RangerPolicy.RangerPolicyItemAccess> getAndAllowAllAccesses() {
-		List<RangerPolicy.RangerPolicyItemAccess> ret = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
-
-		for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-			RangerPolicy.RangerPolicyItemAccess access = new RangerPolicy.RangerPolicyItemAccess();
-			access.setType(accessTypeDef.getName());
-			access.setIsAllowed(true);
-			ret.add(access);
-		}
-		return ret;
-	}
-
 	private RangerPolicy getDefaultPolicy(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
@@ -165,7 +155,7 @@ public abstract class RangerBaseService {
 
 		List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
 		//Create Default policy item for the service user
-		RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem();
+		RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(policy.getResources());
 		policyItems.add(policyItem);
 		policy.setPolicyItems(policyItems);
 
@@ -176,7 +166,7 @@ public abstract class RangerBaseService {
 		return policy;
 	}
 
-	private RangerPolicy.RangerPolicyItem createDefaultPolicyItem() throws Exception {
+	private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(Map<String, RangerPolicy.RangerPolicyResource> policyResources) throws Exception {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBaseService.createDefaultPolicyItem()");
@@ -185,7 +175,10 @@ public abstract class RangerBaseService {
 		RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
 		policyItem.setUsers(getUserList());
-		policyItem.setAccesses(getAndAllowAllAccesses());
+
+		List<RangerPolicy.RangerPolicyItemAccess> accesses = getAllowedAccesses(policyResources);
+		policyItem.setAccesses(accesses);
+
 		policyItem.setDelegateAdmin(true);
 
 		if (LOG.isDebugEnabled()) {
@@ -194,7 +187,29 @@ public abstract class RangerBaseService {
 		return policyItem;
 	}
 
-	private Map<String, RangerPolicy.RangerPolicyResource> createDefaultPolicyResource(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
+	protected List<RangerPolicy.RangerPolicyItemAccess> getAllowedAccesses(Map<String, RangerPolicy.RangerPolicyResource> policyResources) {
+		List<RangerPolicy.RangerPolicyItemAccess> ret = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+
+		RangerServiceDef.RangerResourceDef leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, policyResources);
+
+		if (leafResourceDef != null) {
+			Set<String> accessTypeRestrictions = leafResourceDef.getAccessTypeRestrictions();
+
+			for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+				boolean isAccessTypeAllowed = CollectionUtils.isEmpty(accessTypeRestrictions) || accessTypeRestrictions.contains(accessTypeDef.getName());;
+
+				if (isAccessTypeAllowed) {
+					RangerPolicy.RangerPolicyItemAccess access = new RangerPolicy.RangerPolicyItemAccess();
+					access.setType(accessTypeDef.getName());
+					access.setIsAllowed(true);
+					ret.add(access);
+				}
+			}
+		}
+		return ret;
+	}
+
+	protected Map<String, RangerPolicy.RangerPolicyResource> createDefaultPolicyResource(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBaseService.createDefaultPolicyResource()");
 		}

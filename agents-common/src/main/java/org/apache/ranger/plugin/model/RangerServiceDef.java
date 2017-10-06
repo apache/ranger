@@ -22,8 +22,10 @@ package org.apache.ranger.plugin.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -1242,9 +1244,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String              rbKeyLabel;
 		private String              rbKeyDescription;
 		private String              rbKeyValidationMessage;
+		private Set<String>         accessTypeRestrictions;
+		private Boolean             isValidLeaf;
 
 		public RangerResourceDef() {
-			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 
 		public RangerResourceDef(RangerResourceDef other) {
@@ -1267,9 +1271,11 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyLabel(other.getRbKeyLabel());
 			setRbKeyDescription(other.getRbKeyDescription());
 			setRbKeyValidationMessage(other.getRbKeyValidationMessage());
+			setAccessTypeRestrictions(other.getAccessTypeRestrictions());
+			setIsValidLeaf(other.getIsValidLeaf());
 		}
 
-		public RangerResourceDef(Long itemId, String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage) {
+		public RangerResourceDef(Long itemId, String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage, Set<String> accessTypeRestrictions, Boolean isValidLeaf) {
 			setItemId(itemId);
 			setName(name);
 			setType(type);
@@ -1289,6 +1295,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyLabel(rbKeyLabel);
 			setRbKeyDescription(rbKeyDescription);
 			setRbKeyValidationMessage(rbKeyValidationMessage);
+			setAccessTypeRestrictions(accessTypeRestrictions);
+			setIsValidLeaf(isValidLeaf);
 		}
 
 		/**
@@ -1557,6 +1565,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyValidationMessage = rbKeyValidationMessage;
 		}
 
+		public Set<String> getAccessTypeRestrictions() {
+			return accessTypeRestrictions;
+		}
+
+		public void setAccessTypeRestrictions(Set<String> accessTypeRestrictions) {
+			this.accessTypeRestrictions = accessTypeRestrictions == null ? new HashSet<String>() : new HashSet<String>(accessTypeRestrictions);
+		}
+
+		public Boolean getIsValidLeaf() { return isValidLeaf; }
+
+		public void setIsValidLeaf(Boolean isValidLeaf) {
+		    this.isValidLeaf = isValidLeaf;
+        }
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1587,6 +1609,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
 			sb.append("rbKeyDescription={").append(rbKeyDescription).append("} ");
 			sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
+			sb.append("accessTypeRestrictions={").append(accessTypeRestrictions == null ? "null" : accessTypeRestrictions.toString()).append("} ");
+			sb.append("isValidLeaf={").append(isValidLeaf == null ? "null" : isValidLeaf.toString()).append("} ");
 			sb.append("}");
 
 			return sb;
@@ -1643,6 +1667,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 					* result
 					+ ((validationRegEx == null) ? 0 : validationRegEx
 							.hashCode());
+			result = prime
+					* result
+					+ ((accessTypeRestrictions == null) ? 0 : accessTypeRestrictions.hashCode());
+			result = prime
+					* result
+					+ ((isValidLeaf == null) ? 0 : isValidLeaf.hashCode());
 			return result;
 		}
 
@@ -1746,7 +1776,17 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 					return false;
 			} else if (!validationRegEx.equals(other.validationRegEx))
 				return false;
-			return true;
+			if (accessTypeRestrictions == null) {
+				if (other.accessTypeRestrictions != null)
+					return false;
+			} else if (!accessTypeRestrictions.equals(other.accessTypeRestrictions))
+				return false;
+            if (isValidLeaf == null) {
+                if (other.isValidLeaf != null)
+                    return false;
+            } else if (!isValidLeaf.equals(other.isValidLeaf))
+                return false;
+            return true;
 		}
 		
 	}

@@ -275,6 +275,7 @@ public class ValidationTestUtils {
 				when(aDef.getRecursiveSupported()).thenReturn(isRecursiveSupported);
 				when(aDef.getParent()).thenReturn(parent);
 				when(aDef.getLevel()).thenReturn(level);
+				when(aDef.getIsValidLeaf()).thenReturn(null);
 			}
 			defs.add(aDef);
 		}

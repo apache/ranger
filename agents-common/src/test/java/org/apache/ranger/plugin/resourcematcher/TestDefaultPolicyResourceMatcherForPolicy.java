@@ -74,8 +74,9 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 
 	@Test
 	public void testDefaultPolicyResourceMatcherForPolicy() throws Exception {
-		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher_for_policy.json",
-				"/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json"};
+		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher_for_resource_specific_policy.json",
+				"/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json",
+				"/resourcematcher/test_defaultpolicyresourcematcher_for_policy.json"};
 
 		runTestsFromResourceFiles(tests);
 	}

@@ -179,12 +179,34 @@ public class RangerServiceDefHelper {
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
 
 		for (List<RangerResourceDef> hierarchy : getResourceHierarchies(policyType)) {
-			if (getAllResourceNames(hierarchy).containsAll(keys)) {
+			if (hierarchyHasAllResources(hierarchy, keys)) {
 				ret.add(hierarchy);
 			}
 		}
 
 		return ret;
+	}
+
+	public boolean hierarchyHasAllResources(List<RangerResourceDef> hierarchy, Collection<String> resourceNames) {
+		boolean foundAllResourceKeys = true;
+
+		for (String resourceKey : resourceNames) {
+			boolean found = false;
+
+			for (RangerResourceDef resourceDef : hierarchy) {
+				if (resourceDef.getName().equals(resourceKey)) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				foundAllResourceKeys = false;
+				break;
+			}
+		}
+
+		return foundAllResourceKeys;
 	}
 
 	public Set<String> getMandatoryResourceNames(List<RangerResourceDef> hierarchy) {
@@ -249,9 +271,10 @@ public class RangerServiceDefHelper {
 				DirectedGraph graph = createGraph(resources);
 
 				if(graph != null) {
-					if (isValid(graph)) {
-						Set<List<String>> hierarchies = getHierarchies(graph);
-						_hierarchies.put(policyType, Collections.unmodifiableSet(convertHierarchies(hierarchies, getResourcesAsMap(resources))));
+					Map<String, RangerResourceDef> resourceDefMap = getResourcesAsMap(resources);
+					if (isValid(graph, resourceDefMap)) {
+						Set<List<RangerResourceDef>> hierarchies = getHierarchies(graph, resourceDefMap);
+						_hierarchies.put(policyType, Collections.unmodifiableSet(hierarchies));
 					} else {
 						isValid = false;
 						_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
@@ -265,6 +288,9 @@ public class RangerServiceDefHelper {
 				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName,
 						_serviceDefFreshnessDate == null ? null : _serviceDefFreshnessDate.toString(), _hierarchies);
 				LOG.debug(message);
+			}
+			if (!_valid) {
+				LOG.error("ERROR: Service resource-definitions do not form valid DAG!!");
 			}
 		}
 		
@@ -357,40 +383,76 @@ public class RangerServiceDefHelper {
 		 *
 		 * @return
 		 */
-		boolean isValid(DirectedGraph graph) {
-			return !graph.getSources().isEmpty() && !graph.getSinks().isEmpty();
-		}
+        boolean isValid(DirectedGraph graph, Map<String, RangerResourceDef> resourceDefMap) {
+            boolean     ret     = true;
+            Set<String> sources = graph.getSources();
+            Set<String> sinks   = graph.getSinks();
+
+            if (CollectionUtils.isEmpty(sources) || CollectionUtils.isEmpty(sinks)) {
+                ret = false;
+            } else {
+                for (String sink : sinks) {
+                    RangerResourceDef sinkResourceDef = resourceDefMap.get(sink);
+                    if (Boolean.FALSE.equals(sinkResourceDef.getIsValidLeaf())) {
+                        LOG.error("Error in path: sink node:[" + sink + "] is not leaf node");
+
+                        ret = false;
+                        break;
+                    } else if (sinkResourceDef.getIsValidLeaf() == null) {
+                        LOG.info("Setting sink ResourceDef's isValidLeaf from null to 'true'");
+                        sinkResourceDef.setIsValidLeaf(true);
+                    }
+                }
+            }
+
+            return ret;
+        }
 
 		/**
 		 * Returns all valid resource hierarchies for the configured resource-defs. Behavior is undefined if it is called on and invalid graph. Use <code>isValid</code> to check validation first.
 		 *
 		 * @param graph
+		 * @param resourceMap
 		 * @return
 		 */
-		Set<List<String>> getHierarchies(DirectedGraph graph) {
-			Set<List<String>> hierarchies = new HashSet<>();
-			Set<String> sources = graph.getSources();
-			Set<String> sinks = graph.getSinks();
-			for (String source : sources) {
-				/*
-				 * A disconnected node, i.e. one that does not have any arc coming into or out of it is a hierarchy in itself!
-				 * A source by definition does not have any arcs coming into it.  So if it also doesn't have any neighbors then we know
-				 * it is a disconnected node.
-				 */
-				if (!graph.hasNeighbors(source)) {
-					List<String> path = Lists.newArrayList(source);
-					hierarchies.add(path);
-				} else {
-					for (String sink : sinks) {
-						List<String> path = graph.getAPath(source, sink, new HashSet<String>());
-						if (!path.isEmpty()) {
-							hierarchies.add(path);
-						}
-					}
-				}
-			}
-			return hierarchies;
-		}
+        Set<List<RangerResourceDef>> getHierarchies(DirectedGraph graph, Map<String, RangerResourceDef> resourceMap) {
+            Set<List<String>> hierarchies = new HashSet<>();
+            Set<String>       sources     = graph.getSources();
+            Set<String>       sinks       = graph.getSinks();
+
+            for (String source : sources) {
+                /*
+                 * A disconnected node, i.e. one that does not have any arc coming into or out of it is a hierarchy in itself!
+                 * A source by definition does not have any arcs coming into it.  So if it also doesn't have any neighbors then we know
+                 * it is a disconnected node.
+                 */
+                if (!graph.hasNeighbors(source)) {
+                    hierarchies.add(Lists.newArrayList(source));
+                } else {
+                    for (String sink : sinks) {
+                        List<String> path = graph.getAPath(source, sink, new HashSet<String>());
+
+                        if (!path.isEmpty()) {
+                            hierarchies.add(path);
+
+                            List<String> workingPath = new ArrayList<String>();
+
+                            for (int index = 0, pathSize = path.size(); index < pathSize -1; index++) {
+                                String node = path.get(index);
+
+                                workingPath.add(node);
+
+                                if (Boolean.TRUE.equals(resourceMap.get(node).getIsValidLeaf())) {
+                                    hierarchies.add(new ArrayList<String>(workingPath));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return convertHierarchies(hierarchies, resourceMap);
+        }
 		
 		Set<List<RangerResourceDef>> convertHierarchies(Set<List<String>> hierarchies, Map<String, RangerResourceDef> resourceMap) {
 			Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
@@ -408,7 +470,7 @@ public class RangerServiceDefHelper {
 		/**
 		 * Converts resource list to resource map for efficient querying
 		 *
-		 * @param resourceList
+		 * @param resourceList - is guaranteed to be non-null and non-empty
 		 * @return
 		 */
 		Map<String, RangerResourceDef> getResourcesAsMap(List<RangerResourceDef> resourceList) {

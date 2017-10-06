@@ -120,7 +120,7 @@ public class TestRangerPolicyValidator {
 			{ "col", false,             true,               false,     "col\\d{1,2}", "tbl" },      // valid: col1, col47, etc.; invalid: col, col238, col1, etc., excludes == false, recursive == true
 			{ "udf", true,              true,               true,      null,          "db" }        // same parent as tbl (simulating hive's multiple resource hierarchies)
 	};
-		
+
 	private final Object[][] policyResourceMap_good = new Object[][] {
 			// resource-name, values, excludes, recursive
 			{ "db", new String[] { "db1", "db2" }, null, null },
@@ -804,17 +804,17 @@ public class TestRangerPolicyValidator {
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData_multipleHierarchies);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		// setup policy
-		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);				
+		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad);
 		when(_policy.getResources()).thenReturn(policyResources);
 		Assert.assertFalse("Missing required resource and unknown resource", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
 		_utils.checkFailureForSemanticError(_failures, "policy resources");
-		
+
 		// another bad resource map that straddles multiple hierarchies
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies);
 		when(_policy.getResources()).thenReturn(policyResources);
 		_failures.clear(); Assert.assertFalse("Policy with resources for multiple hierarchies", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
 		_utils.checkFailureForSemanticError(_failures, "policy resources", "incompatible");
-		
+
 		// another bad policy resource map that could match multiple hierarchies but is short on mandatory resources for all of those matches
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_multiple_hierarchies_missing_mandatory);
 		when(_policy.getResources()).thenReturn(policyResources);

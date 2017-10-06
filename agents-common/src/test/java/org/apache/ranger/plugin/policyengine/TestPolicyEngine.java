@@ -151,7 +151,11 @@ public class TestPolicyEngine {
 				"                <name>ranger.plugin.tag.attr.additional.date.formats</name>\n" +
 				"                <value>abcd||xyz||yyyy/MM/dd'T'HH:mm:ss.SSS'Z'</value>\n" +
 				"        </property>\n" +
-				"</configuration>\n");
+                "        <property>\n" +
+                "                <name>ranger.plugin.use-cache-for-service-def-helper</name>\n" +
+                "                <value>false</value>\n" +
+                "        </property>\n" +
+                "</configuration>\n");
 		writer.close();
 
 		RangerConfiguration config = RangerConfiguration.getInstance();

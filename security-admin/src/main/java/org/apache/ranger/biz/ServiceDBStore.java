@@ -1862,28 +1862,41 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return createdPolicy;
 	}
 
-        private boolean validatePolicyItem(List<RangerPolicyItem> policyItems) {
-                boolean isPolicyItemValid=true;
-                for (RangerPolicyItem policyItem : policyItems) {
-                        if (policyItem != null) {
-                                if (CollectionUtils.isEmpty(policyItem.getUsers())
-                                                || (policyItem.getUsers() != null) && policyItem.getUsers().contains(null)
-                                                || (policyItem.getUsers().contains(""))) {
-                                        if (CollectionUtils.isEmpty(policyItem.getGroups())
-                                                        || (policyItem.getGroups() != null) && policyItem.getGroups().contains(null)
-                                                        || (policyItem.getGroups().contains(""))) {
+	private boolean validatePolicyItems(List<? extends RangerPolicyItem> policyItems) {
 
-                                                isPolicyItemValid = false;
-                                        }
-                                }
-                                if (CollectionUtils.isEmpty(policyItem.getAccesses())
-                                                || (policyItem.getAccesses() != null) && policyItem.getAccesses().contains(null)) {
-                                        isPolicyItemValid = false;
-                                }
-                        }
-                }
-                return isPolicyItemValid;
-        }
+		boolean isPolicyItemValid = true;
+
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			for (RangerPolicyItem policyItem : policyItems) {
+				if (policyItem == null) {
+					isPolicyItemValid = false;
+					break;
+				}
+
+				if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+					isPolicyItemValid = false;
+					break;
+				}
+
+				if (policyItem.getUsers() != null && (policyItem.getUsers().contains(null) || policyItem.getUsers().contains(""))) {
+					isPolicyItemValid = false;
+					break;
+				}
+
+				if (policyItem.getGroups() != null && (policyItem.getGroups().contains(null) || policyItem.getGroups().contains(""))) {
+					isPolicyItemValid = false;
+					break;
+				}
+
+				if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null) || policyItem.getAccesses().contains("")) {
+					isPolicyItemValid = false;
+					break;
+				}
+			}
+		}
+
+		return isPolicyItemValid;
+	}
 
 	@Override
 	public RangerPolicy updatePolicy(RangerPolicy policy) throws Exception {
@@ -2547,8 +2560,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
 
-			List<RangerPolicy.RangerPolicyItemAccess> allAccesses = svc.getAndAllowAllAccesses();
-
 			List<RangerPolicy> defaultPolicies = svc.getDefaultRangerPolicies();
 
 			if (CollectionUtils.isNotEmpty(defaultPolicies)) {
@@ -2556,25 +2567,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 				createDefaultPolicyUsersAndGroups(defaultPolicies);
 
 				for (RangerPolicy defaultPolicy : defaultPolicies) {
-                                        List<RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
-					if (CollectionUtils.isNotEmpty(serviceCheckUsers)
-							&& StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+					if (CollectionUtils.isNotEmpty(serviceCheckUsers) && StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+						RangerPolicyItem defaultAllowPolicyItem = CollectionUtils.isNotEmpty(defaultPolicy.getPolicyItems()) ? defaultPolicy.getPolicyItems().get(0) : null;
 
-						RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+						if (defaultAllowPolicyItem == null) {
+							LOG.error("There is no allow-policy-item in the default-policy:[" + defaultPolicy + "]");
+						} else {
+							RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
-						policyItem.setUsers(serviceCheckUsers);
-						policyItem.setAccesses(allAccesses);
-						policyItem.setDelegateAdmin(true);
+							policyItem.setUsers(serviceCheckUsers);
+							policyItem.setAccesses(defaultAllowPolicyItem.getAccesses());
+							policyItem.setDelegateAdmin(true);
 
-						defaultPolicy.getPolicyItems().add(policyItem);
+							defaultPolicy.getPolicyItems().add(policyItem);
+						}
 					}
-                                        boolean isPolicyItemValid=validatePolicyItem(policyItems);
-                                        if (isPolicyItemValid) {
-                                                createPolicy(defaultPolicy);
-                                        } else {
-                                                LOG.warn("Default policy won't be created,since policyItems not valid-either users/groups not present or access not present in policy.");
-                                        }
 
+					boolean isPolicyItemValid = validatePolicyItems(defaultPolicy.getPolicyItems())
+							&& validatePolicyItems(defaultPolicy.getDenyPolicyItems())
+							&& validatePolicyItems(defaultPolicy.getAllowExceptions())
+							&& validatePolicyItems(defaultPolicy.getDenyExceptions())
+							&& validatePolicyItems(defaultPolicy.getDataMaskPolicyItems())
+							&& validatePolicyItems(defaultPolicy.getRowFilterPolicyItems());
+
+					if (isPolicyItemValid) {
+						createPolicy(defaultPolicy);
+					} else {
+						LOG.warn("Default policy won't be created,since policyItems not valid-either users/groups not present or access not present in policy.");
+					}
 				}
 			}
 		}

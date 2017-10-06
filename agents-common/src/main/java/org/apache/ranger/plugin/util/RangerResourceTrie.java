@@ -46,7 +46,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final boolean  optWildcard;
     private final String   wildcardChars;
     private final TrieNode root;
-    private final Comparator<T> comparator;
 
     public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators) {
         this(resourceDef, evaluators, null);
@@ -78,7 +77,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optWildcard   = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
         this.root          = new TrieNode(Character.valueOf((char)0));
-        this.comparator    = comparator;
 
         for(T evaluator : evaluators) {
             Map<String, RangerPolicyResource> policyResources = evaluator.getPolicyResource();

@@ -461,7 +461,18 @@ public class RangerPolicyValidator extends RangerValidator {
 		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
 		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policy.getPolicyType()); // this can be empty but not null!
 		if (hierarchies.isEmpty()) {
-			LOG.warn("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to a old/migrated service def!  Skipping this check!");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to invalid service def!!");
+			}
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_NO_COMPATIBLE_HIERARCHY;
+			failures.add(new ValidationFailureDetailsBuilder()
+					.field("service def resource hierarchies")
+					.subField("incompatible")
+					.isSemanticallyIncorrect()
+					.becauseOf(error.getMessage(serviceDef.getName(), " does not have any resource hierarchies"))
+					.errorCode(error.getErrorCode())
+					.build());
+			valid = false;
 		} else {
 			/*
 			 * A policy is for a single hierarchy however, it doesn't specify which one.  So we have to guess which hierarchy(s) it possibly be for.  First, see if the policy could be for
@@ -572,8 +583,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		// helper function skipping sanity checks of getting null arguments passed
 		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
 		for (List<RangerResourceDef> aHierarchy : hierarchies) {
-			Set<String> hierarchyResources = defHelper.getAllResourceNames(aHierarchy);
-			if (hierarchyResources.containsAll(policyResources)) {
+			if (defHelper.hierarchyHasAllResources(aHierarchy, policyResources)) {
 				result.add(aHierarchy);
 			}
 		}

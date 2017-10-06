@@ -20,9 +20,12 @@ package org.apache.ranger.service;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +57,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
 		extends RangerBaseModelService<T, V> {
 	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
+
+	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
+	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
 
 	@Autowired
 	RangerAuditFields rangerAuditFields;
@@ -207,10 +213,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		xObj.setImplclassname(vObj.getImplClass());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
-		xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setRbkeydescription(vObj.getRbKeyDescription());
 		xObj.setIsEnabled(vObj.getIsEnabled());
+
+		xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
+
 		return xObj;
 	}
 
@@ -293,7 +301,25 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		xObj.setRecursivesupported(vObj.getRecursiveSupported());
 		xObj.setExcludessupported(vObj.getExcludesSupported());
 		xObj.setMatcher(vObj.getMatcher());
-		xObj.setMatcheroptions(mapToJsonString(vObj.getMatcherOptions()));
+
+		String              accessTypeRestrictions = objectToJson((HashSet<String>)vObj.getAccessTypeRestrictions());
+		String              isValidLeaf            = objectToJson(vObj.getIsValidLeaf());
+		Map<String, String> matcherOptions         = vObj.getMatcherOptions();
+
+		if (StringUtils.isNotBlank(accessTypeRestrictions)) {
+			matcherOptions.put(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS, accessTypeRestrictions);
+		} else {
+			matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
+		}
+
+		if (StringUtils.isNotBlank(isValidLeaf)) {
+			matcherOptions.put(OPTION_RESOURCE_IS_VALID_LEAF, isValidLeaf);
+		} else {
+			matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
+		}
+
+        xObj.setMatcheroptions(mapToJsonString(matcherOptions));
+
 		xObj.setValidationRegEx(vObj.getValidationRegEx());
 		xObj.setValidationMessage(vObj.getValidationMessage());
 		xObj.setUiHint(vObj.getUiHint());
@@ -317,7 +343,30 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setRecursiveSupported(xObj.getRecursivesupported());
 		vObj.setExcludesSupported(xObj.getExcludessupported());
 		vObj.setMatcher(xObj.getMatcher());
-		vObj.setMatcherOptions(jsonStringToMap(xObj.getMatcheroptions()));
+
+		Map<String, String> matcherOptions = jsonStringToMap(xObj.getMatcheroptions());
+
+		if (MapUtils.isNotEmpty(matcherOptions)) {
+			String optionAccessTypeRestrictions = matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
+			String optionIsValidLeaf            = matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
+
+			if (StringUtils.isNotBlank(optionAccessTypeRestrictions)) {
+				Set<String> accessTypeRestrictions = new HashSet<>();
+
+				accessTypeRestrictions = jsonToObject(optionAccessTypeRestrictions, accessTypeRestrictions.getClass());
+
+				vObj.setAccessTypeRestrictions(accessTypeRestrictions);
+			}
+
+			if (StringUtils.isNotBlank(optionIsValidLeaf)) {
+				Boolean isValidLeaf = jsonToObject(optionIsValidLeaf, Boolean.class);
+
+				vObj.setIsValidLeaf(isValidLeaf);
+			}
+		}
+
+		vObj.setMatcherOptions(matcherOptions);
+
 		vObj.setValidationRegEx(xObj.getValidationRegEx());
 		vObj.setValidationMessage(xObj.getValidationMessage());
 		vObj.setUiHint(xObj.getUiHint());
@@ -326,7 +375,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
 		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
-		
+
 		XXResourceDef parent = daoMgr.getXXResourceDef().getById(xObj.getParent());
 		String parentName = (parent != null) ? parent.getName() : null;
 		vObj.setParent(parentName);
@@ -641,4 +690,5 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 		return ret;
 	}
+
 }

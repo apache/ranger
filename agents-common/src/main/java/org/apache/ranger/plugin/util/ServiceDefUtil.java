@@ -94,21 +94,51 @@ public class ServiceDefUtil {
     public static Integer getLeafResourceLevel(RangerServiceDef serviceDef, Map<String, RangerPolicy.RangerPolicyResource> policyResource) {
         Integer ret = null;
 
+        RangerResourceDef resourceDef = getLeafResourceDef(serviceDef, policyResource);
+
+        if (resourceDef != null) {
+            ret = resourceDef.getLevel();
+        }
+
+        return ret;
+    }
+
+    public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicy.RangerPolicyResource> policyResource) {
+        RangerResourceDef ret = null;
+
         if(serviceDef != null && policyResource != null) {
             for(Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : policyResource.entrySet()) {
-                String            resource    = entry.getKey();
-                RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
+                if (!isEmpty(entry.getValue())) {
+                    String            resource    = entry.getKey();
+                    RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
 
-                if(resourceDef != null && resourceDef.getLevel() != null) {
-                    if(ret == null) {
-                        ret = resourceDef.getLevel();
-                    } else if(ret < resourceDef.getLevel()) {
-                        ret = resourceDef.getLevel();
+                    if (resourceDef != null && resourceDef.getLevel() != null) {
+                        if (ret == null) {
+                            ret = resourceDef;
+                        } else if(ret.getLevel() < resourceDef.getLevel()) {
+                            ret = resourceDef;
+                        }
                     }
                 }
             }
         }
 
+        return ret;
+    }
+
+    public static boolean isEmpty(RangerPolicy.RangerPolicyResource policyResource) {
+        boolean ret = true;
+        if (policyResource != null) {
+            List<String> resourceValues = policyResource.getValues();
+            if (CollectionUtils.isNotEmpty(resourceValues)) {
+                for (String resourceValue : resourceValues) {
+                    if (StringUtils.isNotBlank(resourceValue)) {
+                        ret = false;
+                        break;
+                    }
+                }
+            }
+        }
         return ret;
     }
 
@@ -275,6 +305,12 @@ public class ServiceDefUtil {
 
         if(StringUtils.isNotEmpty(delta.getRbKeyValidationMessage()))
             ret.setRbKeyValidationMessage(delta.getRbKeyValidationMessage());
+
+        if(CollectionUtils.isNotEmpty(delta.getAccessTypeRestrictions()))
+            ret.setAccessTypeRestrictions(delta.getAccessTypeRestrictions());
+
+        if (delta.getIsValidLeaf() != null)
+            ret.setIsValidLeaf(delta.getIsValidLeaf());
 
         return ret;
     }

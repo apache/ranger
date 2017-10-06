@@ -72,9 +72,9 @@ public class TestRangerServiceDefHelper {
 		RangerResourceDef UDF = createResourceDef("UDF", "Database");
 		RangerResourceDef Table = createResourceDef("Table", "Database");
 		RangerResourceDef Column = createResourceDef("Column", "Table");
-		RangerResourceDef Table_Atrribute = createResourceDef("Table-Attribute", "Table");
+		RangerResourceDef Table_Attribute = createResourceDef("Table-Attribute", "Table");
 		// order of resources in list sould not matter
-		List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Atrribute, UDF);
+		List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Attribute, UDF);
 		// stuff this into a service-def
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		// now assert the behavior
@@ -86,7 +86,7 @@ public class TestRangerServiceDefHelper {
 		assertTrue(hierarchies.contains(hierarchy));
 		hierarchy = Lists.newArrayList(Database, Table, Column);
 		assertTrue(hierarchies.contains(hierarchy));
-		hierarchy = Lists.newArrayList(Database, Table, Table_Atrribute);
+		hierarchy = Lists.newArrayList(Database, Table, Table_Attribute);
 		assertTrue(hierarchies.contains(hierarchy));
 	}
 	
@@ -144,7 +144,7 @@ public class TestRangerServiceDefHelper {
 		expectedHierarchies.add(Lists.newArrayList("database", "table", "column"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
-		
+
 		for (List<RangerResourceDef> aHierarchy : hierarchies) {
 			List<String> resourceNames = _helper.getAllResourceNamesOrdered(aHierarchy);
 			assertTrue(expectedHierarchies.contains(resourceNames));
@@ -185,7 +185,7 @@ public class TestRangerServiceDefHelper {
 		expectedHierarchies.add(Lists.newArrayList("server"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "package"));
 		expectedHierarchies.add(Lists.newArrayList("namespace", "function"));
-		
+
 		for (List<RangerResourceDef> aHierarchy : hierarchies) {
 			List<String> resourceNames = _helper.getAllResourceNamesOrdered(aHierarchy);
 			assertTrue(expectedHierarchies.contains(resourceNames));
@@ -227,13 +227,107 @@ public class TestRangerServiceDefHelper {
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertTrue("Didn't get a delegate different than what was put in the cache", newDelegate == _helper._delegate);
 	}
-	
+
+    @Test
+    public void test_getResourceHierarchies_with_leaf_specification() {
+		/*
+		 * Leaf Spec for resources:
+		 *      Database: non-leaf
+		 *      UDF: Not-specified
+		 *      Table: Leaf
+		 *      Column: Leaf
+		 *      Table-Attribute: Leaf
+		 *
+		 * Create a service-def with following resource graph
+		 *
+		 *   Database -> UDF
+		 *       |
+		 *       v
+		 *      Table -> Column
+		 *         |
+		 *         v
+		 *        Table-Attribute
+		 *
+		 *  It contains following hierarchies
+		 *  - [ Database UDF]
+		 *  - [ Database Table Column ]
+		 *  - [ Database Table ]
+		 *  - [ Database Table Table-Attribute ]
+		 */
+        RangerResourceDef Database = createResourceDef("Database", "", false);
+        RangerResourceDef UDF = createResourceDef("UDF", "Database");
+        RangerResourceDef Table = createResourceDef("Table", "Database", true);
+        RangerResourceDef Column = createResourceDef("Column", "Table", true);
+        RangerResourceDef Table_Attribute = createResourceDef("Table-Attribute", "Table", true);
+        // order of resources in list should not matter
+        List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Attribute, UDF);
+        // stuff this into a service-def
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        // now assert the behavior
+        _helper = new RangerServiceDefHelper(_serviceDef);
+        assertTrue(_helper.isResourceGraphValid());
+        Set<List<RangerResourceDef>> hierarchies = _helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
+        // there should be
+        List<RangerResourceDef> hierarchy = Lists.newArrayList(Database, UDF);
+        assertTrue(hierarchies.contains(hierarchy));
+        hierarchy = Lists.newArrayList(Database, Table, Column);
+        assertTrue(hierarchies.contains(hierarchy));
+        hierarchy = Lists.newArrayList(Database, Table, Table_Attribute);
+        assertTrue(hierarchies.contains(hierarchy));
+        hierarchy = Lists.newArrayList(Database, Table);
+        assertTrue(hierarchies.contains(hierarchy));
+        hierarchy = Lists.newArrayList(Database);
+        assertFalse(hierarchies.contains(hierarchy));
+    }
+
+    @Test
+    public void test_invalid_resourceHierarchies_with_leaf_specification() {
+		/*
+		 * Leaf Spec for resources:
+		 *      Database: non-leaf
+		 *      UDF: Not-specified
+		 *      Table: Leaf
+		 *      Column: non-Leaf
+		 *      Table-Attribute: Leaf
+		 *
+		 * Create a service-def with following resource graph
+		 *
+		 *   Database -> UDF
+		 *       |
+		 *       v
+		 *      Table -> Column
+		 *         |
+		 *         v
+		 *        Table-Attribute
+		 *
+		 *  It should fail as the hierarchy is invalid ("Error in path: sink node:[Column] is not leaf node")
+         *
+		 */
+        RangerResourceDef Database = createResourceDef("Database", "", false);
+        RangerResourceDef UDF = createResourceDef("UDF", "Database");
+        RangerResourceDef Table = createResourceDef("Table", "Database", true);
+        RangerResourceDef Column = createResourceDef("Column", "Table", false);
+        RangerResourceDef Table_Attribute = createResourceDef("Table-Attribute", "Table", true);
+        // order of resources in list should not matter
+        List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Attribute, UDF);
+        // stuff this into a service-def
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        // now assert the behavior
+        _helper = new RangerServiceDefHelper(_serviceDef);
+        assertFalse(_helper.isResourceGraphValid());
+    }
+
 	RangerResourceDef createResourceDef(String name, String parent) {
-		RangerResourceDef resourceDef = mock(RangerResourceDef.class);
-		when(resourceDef.getName()).thenReturn(name);
-		when(resourceDef.getParent()).thenReturn(parent);
-		return resourceDef;
+	    return createResourceDef(name, parent, null);
 	}
+
+    RangerResourceDef createResourceDef(String name, String parent, Boolean isValidLeaf) {
+        RangerResourceDef resourceDef = mock(RangerResourceDef.class);
+        when(resourceDef.getName()).thenReturn(name);
+        when(resourceDef.getParent()).thenReturn(parent);
+        when(resourceDef.getIsValidLeaf()).thenReturn(isValidLeaf);
+        return resourceDef;
+    }
 
 	Date getLastMonth() {
 		Calendar cal = GregorianCalendar.getInstance();
