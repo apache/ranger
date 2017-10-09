@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, RangerPolicy> {
+	private static final Log logger = LogFactory.getLog(RangerPolicyService.class);
 
 	@Autowired
 	JSONUtil jsonUtil;
@@ -165,9 +168,9 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 		} catch (IllegalAccessException illegalAcc) {
-			illegalAcc.printStackTrace();
+			logger.error("Transaction log failure.", illegalAcc);
 		} catch (NoSuchFieldException noSuchField) {
-			noSuchField.printStackTrace();
+			logger.error("Transaction log failure.", noSuchField);
 		}
 		
 		return trxLogList;
@@ -391,7 +394,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				xTrxLog.setNewValue(value);
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+			logger.error("Process field to create trx log failure.", e);
 		}
 
 		xTrxLog.setAction(actionString);

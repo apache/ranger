@@ -222,13 +222,13 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				
 			}
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			logger.error("Transaction log failure.", e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			logger.error("Transaction log failure.", e);
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
+			logger.error("Transaction log failure.", e);
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			logger.error("Transaction log failure.", e);
 		}
 		
 		return trxLogList;
