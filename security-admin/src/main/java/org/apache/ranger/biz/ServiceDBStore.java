@@ -1657,9 +1657,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		List<XXPolicy> policies = daoMgr.getXXPolicy().findByServiceId(service.getId());
+		RangerPolicy rangerPolicy =null;
 		for(XXPolicy policy : policies) {
 			LOG.info("Deleting Policy, policyName: " + policy.getName());
-			deletePolicy(policy.getId());
+			rangerPolicy = getPolicy(policy.getId());
+			deletePolicy(rangerPolicy);
 		}
 
 		XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
@@ -2006,6 +2008,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 		bizUtil.createTrxLog(trxLogList);
 		
 		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
+	}
+
+	public void deletePolicy(RangerPolicy policy) throws Exception {
+		if(policy == null) {
+			return;
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.deletePolicy(" + policy.getId() + ")");
+		}
+		RangerService service = getServiceByName(policy.getService());
+		if(service == null) {
+			throw new Exception("service does not exist - name='" + policy.getService());
+		}
+		Long version = policy.getVersion();
+		if(version == null) {
+			version = Long.valueOf(1);
+			LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
+		} else {
+			version = Long.valueOf(version.longValue() + 1);
+		}
+		policy.setVersion(version);
+		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+		deleteExistingPolicyItemsNative(policy);
+		deleteExistingPolicyResourcesNative(policy);
+		daoMgr.getXXPolicy().deletePolicyIDReference("id",policy.getId());
+		handlePolicyUpdate(service, true);
+		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
+		bizUtil.createTrxLog(trxLogList);
 	}
 
 	@Override
@@ -3015,6 +3045,37 @@ public class ServiceDBStore extends AbstractServiceStore {
 				resMapDao.remove(resMap);
 			}
 			resDao.remove(resource);
+		}
+		return true;
+	}
+
+	private Boolean deleteExistingPolicyItemsNative(RangerPolicy policy) {
+		if(policy == null) {
+			return false;
+		}
+		XXPolicyItemDao policyItemDao = daoMgr.getXXPolicyItem();
+		List<XXPolicyItem> policyItems = policyItemDao.findByPolicyId(policy.getId());
+		for(XXPolicyItem policyItem : policyItems) {
+			Long polItemId = policyItem.getId();
+			daoMgr.getXXPolicyItemRowFilterInfo().deletePolicyIDReference("policy_item_id", polItemId);
+			daoMgr.getXXPolicyItemDataMaskInfo().deletePolicyIDReference("policy_item_id", polItemId);
+			daoMgr.getXXPolicyItemGroupPerm().deletePolicyIDReference("policy_item_id", polItemId);
+			daoMgr.getXXPolicyItemUserPerm().deletePolicyIDReference("policy_item_id", polItemId);
+			daoMgr.getXXPolicyItemCondition().deletePolicyIDReference("policy_item_id", polItemId);
+			daoMgr.getXXPolicyItemAccess().deletePolicyIDReference("policy_item_id", polItemId);
+		}
+		daoMgr.getXXPolicyItem().deletePolicyIDReference("policy_id", policy.getId());
+		return true;
+	}
+
+	private Boolean deleteExistingPolicyResourcesNative(RangerPolicy policy) {
+		if(policy == null) {
+			return false;
+		}
+		List<XXPolicyResource> resources = daoMgr.getXXPolicyResource().findByPolicyId(policy.getId());
+		for(XXPolicyResource resource : resources) {
+			daoMgr.getXXPolicyResourceMap().deletePolicyIDReference("resource_id", resource.getId());
+			daoMgr.getXXPolicyResource().deletePolicyIDReference("id", resource.getId());
 		}
 		return true;
 	}

@@ -250,6 +250,25 @@ public abstract class BaseDao<T> {
 		}
 	}
 
+	public boolean deletePolicyIDReference(String paramName,long oldID) {
+		Table table = tClass.getAnnotation(Table.class);
+		if(table != null) {
+			String tableName = table.name();
+			String query = "delete from " + tableName + " where " +paramName+"=" + oldID;
+			if (logger.isDebugEnabled()) {
+				logger.debug("Delete Query:" + query);
+			}
+			int count=getEntityManager().createNativeQuery(query).executeUpdate();
+			getEntityManager().flush();
+			if(count>0){
+				return true;
+			}
+		}else{
+			logger.warn("Required annotation `Table` not found");
+		}
+		return false;
+	}
+
 	public String getDBVersion(){
 		String dbVersion="Not Available";
 		String query ="SELECT 1";

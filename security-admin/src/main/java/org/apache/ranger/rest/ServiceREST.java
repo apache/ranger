@@ -2243,6 +2243,7 @@ public class ServiceREST {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
+			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			for (int i = 0; i < sourceServices.size(); i++) {
 				if (!destinationServices.get(i).isEmpty()) {
 					RangerPolicyList servicePolicies = null;
@@ -2252,12 +2253,17 @@ public class ServiceREST {
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
 							for (RangerPolicy rangerPolicy : rangerPolicyList) {
 								if (rangerPolicy != null) {
-									if (rangerPolicy.getId() != null){
-										deletePolicy(rangerPolicy.getId());
+									try {
+										validator.validate(rangerPolicy.getId(), Action.DELETE);
+										ensureAdminAccess(rangerPolicy.getService(), rangerPolicy.getResources());
+										svcStore.deletePolicy(rangerPolicy);
+										totalDeletedPilicies = totalDeletedPilicies + 1;
 										if (LOG.isDebugEnabled()) {
 											LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully." );
+											LOG.debug("TotalDeletedPilicies: " +totalDeletedPilicies);
 										}
-										totalDeletedPilicies = totalDeletedPilicies + 1;
+									} catch(Throwable excp) {
+										LOG.error("deletePolicy(" + rangerPolicy.getId() + ") failed", excp);
 									}
 								}
 							}
