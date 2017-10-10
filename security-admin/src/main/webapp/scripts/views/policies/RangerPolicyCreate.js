@@ -163,8 +163,10 @@ define(function(require){
 			var userPerm = (validateObj1.userPerm || validateObj2.userPerm
 					  || validateObj3.userPerm || validateObj4.userPerm);
 			var groupPerm = (validateObj1.groupPermSet || validateObj2.groupPermSet 
-					|| validateObj3.groupPermSet || validateObj4.groupPermSet)
-			if((!validateObj1.auditLoggin) && !(groupPerm || userPerm)){
+                                        || validateObj3.groupPermSet || validateObj4.groupPermSet);
+                        var delegatePerm  = (validateObj1.delegateAdmin || validateObj2.delegateAdmin
+                                        || validateObj3.delegateAdmin || validateObj4.delegateAdmin);
+                        if((!validateObj1.auditLoggin) && !(groupPerm || userPerm || delegatePerm )){
 				XAUtil.alertPopup({ msg :localization.tt('msg.yourAuditLogginIsOff') });
 				return;
 			}
@@ -177,6 +179,13 @@ define(function(require){
 		},
 		validatePolicyItem : function(validateObj){
 			var that = this, valid = false;
+                        //DelegateAdmin checks
+                        if((validateObj.groupSet || validateObj.userSet) && validateObj.delegateAdmin){
+                                return true;
+                        }else if(validateObj.delegateAdmin && !(validateObj.groupSet || validateObj.userSet)) {
+                                this.popupCallBack(localization.tt('msg.addUserOrGroupForDelegateAdmin'),validateObj);
+                                return false;
+                        }
 			valid = (validateObj.groupSet && validateObj.permSet) || (validateObj.userSet && validateObj.userPerm);
 			if(!valid){
 				if((!validateObj.groupSet && !validateObj.userSet) && (validateObj.condSet)) {

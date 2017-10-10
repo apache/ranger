@@ -395,7 +395,8 @@ define(function(require) {
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
                 activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
-                pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.'
+                pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
+                addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
  
 			},
 			plcHldr : {

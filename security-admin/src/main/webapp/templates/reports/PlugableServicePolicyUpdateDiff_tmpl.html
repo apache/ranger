@@ -76,7 +76,7 @@
 			<h3>Old Value</h3>
 				{{#each oldPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.permissions}}
+						{{#ifCond this.users '||' this.groups }}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -111,7 +111,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}	
+						{{/ifCond}}	
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -119,7 +119,7 @@
 			<h3>New Value</h3>
 			{{#each newPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.permissions}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -154,7 +154,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}	
+				{{/ifCond}}	
 				</ol><br/>		
 			{{/each}}
 		</div>
@@ -168,7 +168,7 @@
 			<h3>Old Value</h3>
 				{{#each oldAllowExceptionPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.permissions}}
+						{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -203,7 +203,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}	
+						{{/ifCond}}	
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -211,7 +211,7 @@
 			<h3>New Value</h3>
 			{{#each newAllowExceptionPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.permissions}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -246,7 +246,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}	
+				{{/ifCond}}	
 				</ol><br/>		
 			{{/each}}
 		</div>
@@ -261,7 +261,7 @@
 			<h3>Old Value</h3>
 				{{#each oldDenyPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.permissions}}
+						{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -296,7 +296,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}	
+						{{/ifCond}}	
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -304,7 +304,7 @@
 			<h3>New Value</h3>
 			{{#each newDenyPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.permissions}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -339,7 +339,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}	
+				{{/ifCond}}	
 				</ol><br/>		
 			{{/each}}
 		</div>
@@ -355,7 +355,7 @@
 			<h3>Old Value</h3>
 				{{#each oldDenyExceptionPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.permissions}}
+						{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -390,7 +390,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}	
+						{{/ifCond}}	
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -398,7 +398,7 @@
 			<h3>New Value</h3>
 			{{#each newDenyExceptionPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.permissions}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;		 
@@ -433,7 +433,7 @@
 							<li class="change-row"><i>Delegate Admin</i>: {{this.delegateAdmin}}</li>
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}	
+				{{/ifCond}}	
 				</ol><br/>		
 			{{/each}}
 		</div>
@@ -448,7 +448,7 @@
 			<h3>Old Value</h3>
 				{{#each oldMaskPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.accesses}}
+						{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;
@@ -480,7 +480,7 @@
 							{{/if}}
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}
+						{{/ifCond}}
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -488,7 +488,7 @@
 			<h3>New Value</h3>
 			{{#each newMaskPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.accesses}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;
@@ -521,7 +521,7 @@
 
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}
+				{{/ifCond}}
 				</ol><br/>
 			{{/each}}
 		</div>
@@ -536,7 +536,7 @@
 			<h3>Old Value</h3>
 				{{#each oldRowFilterPolicyItems}}
 					<ol class="unstyled data">
-						{{#if this.accesses}}
+						{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;
@@ -568,7 +568,7 @@
 							{{/if}}
 						{{else}}
 							<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-						{{/if}}
+						{{/ifCond}}
 					</ol><br/>
 			{{/each}}
 		</div>
@@ -576,7 +576,7 @@
 			<h3>New Value</h3>
 			{{#each newRowFilterPolicyItems}}
 				<ol class="unstyled data">
-				{{#if this.accesses}}
+				{{#ifCond this.users '||' this.groups}}
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt;
@@ -609,7 +609,7 @@
 
 				{{else}}
 						<li style=" min-height: 99px; line-height: 102px; text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
-				{{/if}}
+				{{/ifCond}}
 				</ol><br/>
 			{{/each}}
 		</div>

@@ -386,15 +386,13 @@ public class XUserMgr extends XUserMgrBase {
 				&& password.equals(hiddenPasswordString)) {
 			vXPortalUser.setPassword(oldUserProfile.getPassword());
 		}
+                else if(oldUserProfile != null && oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL && password != null){
+                        vXPortalUser.setPassword(oldUserProfile.getPassword());
+                        logger.debug("User is trrying to change external user password which we are not allowing it to change");
+                }
         else if(password != null){
                 validatePassword(vXUser);
-                if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
-                    vXPortalUser.setPassword(oldUserProfile.getPassword());
-                }
-                else if(oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP)
-                {
-			vXPortalUser.setPassword(password);
-                }
+                vXPortalUser.setPassword(password);
         }
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
 		XXPortalUser xXPortalUser = new XXPortalUser();
