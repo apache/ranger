@@ -37,6 +37,8 @@ public interface RangerPolicyResourceMatcher {
 
 	void setPolicyResources(Map<String, RangerPolicyResource> policyResources);
 
+	void setPolicyResources(Map<String, RangerPolicyResource> policyResources, int policyType);
+
 	void init();
 
 	RangerServiceDef getServiceDef();
