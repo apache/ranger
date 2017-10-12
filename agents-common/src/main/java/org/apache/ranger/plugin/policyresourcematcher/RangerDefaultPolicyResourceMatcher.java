@@ -46,7 +46,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyResourceMatcher.class);
 
 	protected RangerServiceDef                  serviceDef      = null;
-	protected RangerPolicy                      policy          = null;
+	protected int                               policyType;
 	protected Map<String, RangerPolicyResource> policyResources = null;
 
 	private Map<String, RangerResourceMatcher> matchers = null;
@@ -70,14 +70,23 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
 	@Override
 	public void setPolicy(RangerPolicy policy) {
-		this.policy = policy;
 
-		setPolicyResources(policy == null ? null : policy.getResources());
+		if (policy == null) {
+			setPolicyResources(null, RangerPolicy.POLICY_TYPE_ACCESS);
+		} else {
+			setPolicyResources(policy.getResources(), policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType());
+		}
 	}
 
 	@Override
 	public void setPolicyResources(Map<String, RangerPolicyResource> policyResources) {
+		setPolicyResources(policyResources, RangerPolicy.POLICY_TYPE_ACCESS);
+	}
+
+	@Override
+	public void setPolicyResources(Map<String, RangerPolicyResource> policyResources, int policyType) {
 		this.policyResources = policyResources;
+		this.policyType = policyType;
 	}
 
 	@Override
@@ -98,7 +107,6 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 			Set<String> policyResourceKeySet = policyResources.keySet();
 
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
-			int policyType = policy != null && policy.getPolicyType() != null ? policy.getPolicyType() : RangerPolicy.POLICY_TYPE_ACCESS;
 			Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType);
 
 			for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
@@ -371,6 +379,10 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 		boolean ret = false;
 		MatchType matchType = MatchType.NONE;
 
+		if (policy.getPolicyType() != policyType) {
+			return ret;
+		}
+
 		Map<String, RangerPolicyResource> resources = policy.getResources();
 
 		if (MapUtils.isNotEmpty(resources)) {
@@ -539,7 +551,6 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 						aValidHierarchy = firstValidResourceDefHierarchy;
 					} else {
 						RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
-						int policyType = policy != null && policy.getPolicyType() != null ? policy.getPolicyType() : RangerPolicy.POLICY_TYPE_ACCESS;
 						Set<List<RangerResourceDef>> validResourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType);
 
 						for (List<RangerResourceDef> resourceHierarchy : validResourceHierarchies) {
