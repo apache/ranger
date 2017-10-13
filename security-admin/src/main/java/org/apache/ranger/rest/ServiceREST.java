@@ -2227,6 +2227,7 @@ public class ServiceREST {
 				}
 			}
 		}
+		policyLists=serviceUtil.getMatchingPoliciesForResource(request, policyLists);
 		Map<Long, RangerPolicy> orderedPolicies = new TreeMap<Long, RangerPolicy>();
 		
 		if (!CollectionUtils.isEmpty(policyLists)) {
