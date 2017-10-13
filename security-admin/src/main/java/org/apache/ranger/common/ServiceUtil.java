@@ -1561,5 +1561,59 @@ public class ServiceUtil {
 		
 		return assetType;
 	}
+
+	public List<RangerPolicy> getMatchingPoliciesForResource(HttpServletRequest request,
+			List<RangerPolicy> policyLists) {
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		if (request != null) {
+			String resource = request.getParameter(SearchFilter.POL_RESOURCE);
+			String serviceType = request.getParameter(SearchFilter.SERVICE_TYPE);
+			if (!StringUtil.isEmpty(resource) && !StringUtil.isEmpty(serviceType)) {
+				List<String> resourceList = null;
+				Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap = null;
+				RangerPolicy.RangerPolicyResource rangerPolicyResource = null;
+				for (RangerPolicy rangerPolicy : policyLists) {
+					if (rangerPolicy != null) {
+						rangerPolicyResourceMap = rangerPolicy.getResources();
+						if (rangerPolicyResourceMap != null) {
+							if (rangerPolicyResourceMap.containsKey("path")) {
+								rangerPolicyResource = rangerPolicyResourceMap.get("path");
+								if (rangerPolicyResource != null) {
+									resourceList = rangerPolicyResource.getValues();
+									if (CollectionUtils.isNotEmpty(resourceList) && resourceList.size() == 1) {
+										String resourcePath = resourceList.get(0);
+										if (!StringUtil.isEmpty(resourcePath)) {
+											if (resourcePath.equals(resource)
+													|| resourcePath.startsWith(resource + "/")) {
+												policies.add(rangerPolicy);
+											}
+										}
+									}
+								}
+							} else if (rangerPolicyResourceMap.containsKey("database")) {
+								rangerPolicyResource = rangerPolicyResourceMap.get("database");
+								if (rangerPolicyResource != null) {
+									resourceList = rangerPolicyResource.getValues();
+									if (CollectionUtils.isNotEmpty(resourceList) && resourceList.size() == 1) {
+										String resourcePath = resourceList.get(0);
+										if (!StringUtil.isEmpty(resourcePath)) {
+											if (resourcePath.equals(resource)) {
+												policies.add(rangerPolicy);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				policyLists.clear();
+				if (CollectionUtils.isNotEmpty(policies)) {
+					policyLists.addAll(policies);
+				}
+			}
+		}
+		return policyLists;
+	}
 }
 	
