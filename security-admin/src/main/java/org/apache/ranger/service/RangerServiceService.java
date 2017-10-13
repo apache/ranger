@@ -25,13 +25,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
-import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
@@ -41,6 +41,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerServiceService extends RangerServiceServiceBase<XXService, RangerService> {
-	private static final Logger LOG = Logger.getLogger(RangerServiceService.class.getName());
+	private static final Log LOG = LogFactory.getLog(RangerServiceService.class.getName());
 	@Autowired
 	JSONUtil jsonUtil;
 
@@ -166,9 +167,9 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 				}
 			}
 		} catch (IllegalAccessException e) {
-			LOG.info("Get transaction log failure." + e);
+			LOG.error("Transaction log failure.", e);
 		} catch (NoSuchFieldException e) {
-			LOG.info("Get transaction log failure." + e);
+			LOG.error("Transaction log failure.", e);
 		}
 		return trxLogList;
 	}
@@ -275,7 +276,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 				xTrxLog.setNewValue(value);
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
-			LOG.info("Process field to create trx log failure." + e);
+			LOG.error("Process field to create trx log failure." , e);
 		}
 
 		xTrxLog.setAction(actionString);
