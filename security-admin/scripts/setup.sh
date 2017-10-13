@@ -1164,7 +1164,7 @@ do_authentication_setup(){
 }
 #=====================================================================
 setup_unix_user_group(){
-	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group}";
+	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group}"
 
 	#create group if it does not exist
 	egrep "^$unix_group" /etc/group >& /dev/null
@@ -1179,7 +1179,7 @@ setup_unix_user_group(){
 	if [ $? -ne 0 ]
 	then
 		check_user_pwd ${unix_user_pwd}
-	    log "[I] Creating new user and adding to group";
+	    log "[I] Creating new user and adding to group"
         useradd ${unix_user} -g ${unix_group} -m
 		check_ret_status $? "useradd ${unix_user} failed"
 
@@ -1193,10 +1193,17 @@ EOF
 		chpasswd <  ${passwdtmpfile}
 		rm -rf  ${passwdtmpfile}
 	else
-	    log "[I] User already exists, adding it to group";
-	    usermod -g ${unix_group} ${unix_user}
+	    useringroup=`id ${unix_user}`
+        useringrouparr=(${useringroup// / })
+	    if [[  ${useringrouparr[1]} =~ "(${unix_group})" ]]
+		then
+			log "[I] the ${unix_user} user already exists and belongs to group ${unix_group}"
+		else
+			log "[I] User already exists, adding it to group ${unix_group}"
+			usermod -g ${unix_group} ${unix_user}
+		fi
 	fi
-	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group} DONE";
+	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group} DONE"
 }
 
 setup_install_files(){
