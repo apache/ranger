@@ -61,6 +61,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourc
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
@@ -1463,7 +1464,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public RangerService updateService(RangerService service) throws Exception {
+	public RangerService updateService(RangerService service, Map<String, Object> options) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.updateService()");
 		}
@@ -1481,13 +1482,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
 
 		if(renamed) {
-			XXService newNameService = daoMgr.getXXService().findByName(service.getName());
+            XXService newNameService = daoMgr.getXXService().findByName(service.getName());
 
-			if(newNameService != null) {
-				throw restErrorUtil.createRESTException("another service already exists with name '"
-						+ service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
-			}
-		}
+            if (newNameService != null) {
+                throw restErrorUtil.createRESTException("another service already exists with name '"
+                        + service.getName() + "'. ID=" + newNameService.getId(), MessageEnums.DATA_NOT_UPDATABLE);
+            }
+
+            long countOfTaggedResources = daoMgr.getXXServiceResource().countTaggedResourcesInServiceId(existing.getId());
+
+            Boolean isForceRename =  options != null && options.get(ServiceStore.OPTION_FORCE_RENAME) != null ? (Boolean) options.get(ServiceStore.OPTION_FORCE_RENAME) : Boolean.FALSE;
+
+            if (countOfTaggedResources != 0L) {
+                if (isForceRename) {
+                    LOG.warn("Forcing the renaming of service from " + existingName + " to " + service.getName() + " although it is associated with " + countOfTaggedResources
+                    + " service-resources!");
+                } else {
+                    throw restErrorUtil.createRESTException("Service " + existingName + " cannot be renamed, as it has associated service-resources", MessageEnums.DATA_NOT_UPDATABLE);
+                }
+            }
+        }
 
 		Map<String, String> configs = service.getConfigs();
 		Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
@@ -3922,7 +3936,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							chkServiceUpdate = true;
 		                }
 		                if(chkServiceUpdate){
-		                	updateService(rangerService);
+		                	updateService(rangerService, null);
 							if(LOG.isDebugEnabled()){
 								LOG.debug("Updated service "+rangerService.getName()+" with custom properties in secure environment");
 							}
@@ -3931,7 +3945,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			} catch (Throwable e) {
 				LOG.fatal("updateServiceWithCustomProperty failed with exception : "+e.getMessage());
-				return;
 			}
 	}
 

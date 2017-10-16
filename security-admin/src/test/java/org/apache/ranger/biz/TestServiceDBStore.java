@@ -1215,10 +1215,12 @@ public class TestServiceDBStore {
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
 				.mock(XXServiceConfigDefDao.class);
 		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
-		XXUser xUser = Mockito.mock(XXUser.class);
+        XXUser xUser = Mockito.mock(XXUser.class);
+        XXServiceResourceDao xServiceResourceDao = Mockito.mock(XXServiceResourceDao.class);
 
 		VXUser vXUser = null;
 		RangerService rangerService = rangerService();
+		Map<String, Object> options = null;
 		String name = "fdfdfds";
 
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
@@ -1247,12 +1249,9 @@ public class TestServiceDBStore {
 		xServiceConfigDefList.add(serviceConfigDefObj);
 		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
 				xServiceConfigDefDao);
-		Mockito.when(xServiceConfigDefDao.findByServiceDefName(name))
-				.thenReturn(xServiceConfigDefList);
+		Mockito.when(daoManager.getXXServiceResource()).thenReturn(xServiceResourceDao);
 
-		Mockito.when(svcService.getTransactionLog(rangerService, xService, 0))
-				.thenReturn(trxLogList);
-
+		Mockito.when(xServiceResourceDao.countTaggedResourcesInServiceId(xService.getId())).thenReturn(0L);
 		Mockito.when(svcService.update(rangerService))
 				.thenReturn(rangerService);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -1303,7 +1302,7 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		RangerService dbRangerService = serviceDBStore
-				.updateService(rangerService);
+				.updateService(rangerService, options);
 		Assert.assertNotNull(dbRangerService);
 		Assert.assertEquals(dbRangerService, rangerService);
 		Assert.assertEquals(dbRangerService.getId(), rangerService.getId());

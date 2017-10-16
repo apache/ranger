@@ -1085,6 +1085,12 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXServiceResource.countTaggedResourcesInServiceId">
+		<query>select count(obj.id) from XXServiceResource obj where obj.serviceId = :serviceId and obj.id in
+			(select tagResMap.resourceId from XXTagResourceMap tagResMap)
+		</query>
+	</named-query>
+
 	<named-query name="XXServiceResource.findForServicePlugin">
 		<query>
 			select obj from XXServiceResource obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.serviceId = service.id and obj.id in

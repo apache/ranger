@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -28,6 +29,9 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface ServiceStore {
+
+    String OPTION_FORCE_RENAME = "forceRename";
+
 	void init() throws Exception;
 
 	RangerServiceDef createServiceDef(RangerServiceDef serviceDef) throws Exception;
@@ -48,7 +52,7 @@ public interface ServiceStore {
 
 	RangerService createService(RangerService service) throws Exception;
 
-	RangerService updateService(RangerService service) throws Exception;
+	RangerService updateService(RangerService service, Map<String, Object> options) throws Exception;
 
 	void deleteService(Long id) throws Exception;
 

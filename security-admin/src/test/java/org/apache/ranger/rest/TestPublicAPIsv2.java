@@ -403,31 +403,33 @@ public class TestPublicAPIsv2 {
 	@Test
 	public void test13updateService() throws Exception {
 		RangerService rangerService = rangerService();
-		Mockito.when(serviceREST.updateService(rangerService)).thenReturn(rangerService);
-		RangerService dbRangerService = publicAPIsv2.updateService(rangerService, Id);
+		HttpServletRequest request = null;
+		Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
+		RangerService dbRangerService = publicAPIsv2.updateService(rangerService, Id, request);
 		Assert.assertNotNull(dbRangerService);
 		Assert.assertEquals(dbRangerService, rangerService);
 		Assert.assertEquals(dbRangerService.getId(),
 				rangerService.getId());
 		Assert.assertEquals(dbRangerService.getName(),
 				rangerService.getName());
-		Mockito.verify(serviceREST).updateService(rangerService);
+		Mockito.verify(serviceREST).updateService(rangerService, request);
 	}
 	
 	@Test
 	public void test14updateServiceByName() throws Exception {
 		RangerService rangerService = rangerService();
+        HttpServletRequest request = null;
 		String name = rangerService.getName();
 		Mockito.when(serviceREST.getServiceByName(name)).thenReturn(rangerService);
-		Mockito.when(serviceREST.updateService(rangerService)).thenReturn(rangerService);
-		RangerService dbRangerService = publicAPIsv2.updateServiceByName(rangerService, name);
+		Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
+		RangerService dbRangerService = publicAPIsv2.updateServiceByName(rangerService, name, request);
 		Assert.assertNotNull(dbRangerService);
 		Assert.assertEquals(dbRangerService, rangerService);
 		Assert.assertEquals(dbRangerService.getId(),
 				rangerService.getId());
 		Assert.assertEquals(dbRangerService.getName(),
 				rangerService.getName());
-		Mockito.verify(serviceREST).updateService(rangerService);
+		Mockito.verify(serviceREST).updateService(rangerService, request);
 		Mockito.verify(serviceREST).getServiceByName(name);
 	}
 	

@@ -144,7 +144,7 @@ public class PublicAPIs {
 		RangerService service = serviceUtil.toRangerService(vXAsset);
 		service.setVersion(existing.getVersion());
 
-		RangerService updatedService = serviceREST.updateService(service);
+		RangerService updatedService = serviceREST.updateService(service, null);
 		
 		VXAsset retvXAsset = serviceUtil.toVXAsset(updatedService);
 		
