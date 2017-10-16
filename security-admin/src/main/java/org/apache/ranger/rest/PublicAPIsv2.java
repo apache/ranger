@@ -209,7 +209,8 @@ public class PublicAPIsv2 {
 	@Path("/api/service/{id}")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	@Produces({ "application/json", "application/xml" })
-	public RangerService updateService(RangerService service, @PathParam("id") Long id) {
+	public RangerService updateService(RangerService service, @PathParam("id") Long id,
+                                       @Context HttpServletRequest request) {
 		// if service.id is specified, it should be same as the param 'id'
 		if(service.getId() == null) {
 			service.setId(id);
@@ -217,7 +218,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "service id mismatch", true);
 		}
 
-		return serviceREST.updateService(service);
+		return serviceREST.updateService(service, request);
 	}
 
 
@@ -226,7 +227,8 @@ public class PublicAPIsv2 {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	@Produces({ "application/json", "application/xml" })
 	public RangerService updateServiceByName(RangerService service,
-	                                               @PathParam("name") String name) {
+                                             @PathParam("name") String name,
+                                             @Context HttpServletRequest request) {
 		// ignore service.id - if specified. Retrieve using the given name and use id from the retrieved object
 		RangerService existingService = getServiceByName(name);
 		service.setId(existingService.getId());
@@ -237,7 +239,7 @@ public class PublicAPIsv2 {
 			service.setName(existingService.getName());
 		}
 
-		return serviceREST.updateService(service);
+		return serviceREST.updateService(service, request);
 	}
 
 	/*

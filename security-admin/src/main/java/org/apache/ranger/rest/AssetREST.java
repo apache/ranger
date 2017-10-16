@@ -190,7 +190,7 @@ public class AssetREST {
 
 		RangerService service = serviceUtil.toRangerService(vXAsset);
 
-		RangerService updatedService = serviceREST.updateService(service);
+		RangerService updatedService = serviceREST.updateService(service, null);
 		
 		VXAsset ret = serviceUtil.toVXAsset(updatedService);
 

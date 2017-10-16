@@ -84,6 +84,18 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 		}
 	}
 
+	public long countTaggedResourcesInServiceId(Long serviceId) {
+		if (serviceId == null) {
+			return -1;
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXServiceResource.countTaggedResourcesInServiceId", Long.class)
+					.setParameter("serviceId", serviceId).getSingleResult();
+		} catch (NoResultException e) {
+			return -1;
+		}
+	}
+
 	public List<XXServiceResource> findForServicePlugin(Long serviceId) {
 		if (serviceId == null) {
 			return new ArrayList<XXServiceResource>();

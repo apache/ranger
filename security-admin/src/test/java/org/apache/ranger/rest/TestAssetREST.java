@@ -325,14 +325,15 @@ public class TestAssetREST {
 	@Test
 	public void testUpdateXAsset() {
 		RangerService rangerService = rangerService(Id);
+		HttpServletRequest request = null;
 		VXAsset vXAsset = vXAsset(Id);
 		Mockito.when(serviceUtil.toRangerService(vXAsset)).thenReturn(rangerService);
-		Mockito.when(serviceREST.updateService(rangerService)).thenReturn(rangerService);
+		Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
 		Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
 		VXAsset asset = assetREST.updateXAsset(vXAsset);
 		Assert.assertNotNull(asset);
 		Assert.assertEquals(vXAsset, asset);
-		Mockito.verify(serviceREST).updateService(rangerService);
+		Mockito.verify(serviceREST).updateService(rangerService, request);
 		Mockito.verify(serviceUtil).toRangerService(vXAsset);
 		Mockito.verify(serviceUtil).toVXAsset(rangerService);
 	}

@@ -101,6 +101,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -670,7 +671,8 @@ public class ServiceREST {
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
-	public RangerService updateService(RangerService service) {
+	public RangerService updateService(RangerService service,
+                                       @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateService(): " + service);
 		}
@@ -693,7 +695,9 @@ public class ServiceREST {
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 
-			ret = svcStore.updateService(service);
+			Map<String, Object> options = getOptions(request);
+
+            ret = svcStore.updateService(service, options);
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -3291,4 +3295,16 @@ public class ServiceREST {
 			}
 		}
 	}
+
+	private Map<String, Object> getOptions(HttpServletRequest request) {
+	    Map<String, Object> ret = null;
+	    if (request != null) {
+	        String isForceRenameOption = request.getParameter(ServiceStore.OPTION_FORCE_RENAME);
+	        if (StringUtils.isNotBlank(isForceRenameOption)) {
+	            ret = new HashMap<String, Object>();
+	            ret.put(ServiceStore.OPTION_FORCE_RENAME, Boolean.valueOf(isForceRenameOption));
+            }
+        }
+        return ret;
+    }
 }

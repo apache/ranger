@@ -293,6 +293,7 @@ public class TestPublicAPIs {
 	public void test3updateRepository() throws Exception {
 		VXAsset vXAsset = new VXAsset();
 		RangerService rangerService = rangerService();
+        HttpServletRequest request = null;
 		VXRepository vXRepository = vXRepository(rangerService);
 		XXService xService = xService();
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
@@ -300,7 +301,7 @@ public class TestPublicAPIs {
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 		Mockito.when(serviceUtil.publicObjecttoVXAsset(vXRepository)).thenReturn(vXAsset);
 		Mockito.when(serviceUtil.toRangerService(vXAsset)).thenReturn(rangerService);
-		Mockito.when(serviceREST.updateService(rangerService)).thenReturn(rangerService);
+		Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
 		Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
 		Mockito.when(serviceUtil.vXAssetToPublicObject(vXAsset)).thenReturn(vXRepository);
 		VXRepository dbVXRepository = publicAPIs.updateRepository(vXRepository, Id);
@@ -311,7 +312,7 @@ public class TestPublicAPIs {
 				vXRepository.getId());
 		Assert.assertEquals(dbVXRepository.getName(),
 				vXRepository.getName());
-		Mockito.verify(serviceREST).updateService(rangerService);
+		Mockito.verify(serviceREST).updateService(rangerService, request);
 		Mockito.verify(serviceUtil).publicObjecttoVXAsset(vXRepository);
 		Mockito.verify(serviceUtil).toRangerService(vXAsset);
 		Mockito.verify(serviceUtil).toVXAsset(rangerService);
