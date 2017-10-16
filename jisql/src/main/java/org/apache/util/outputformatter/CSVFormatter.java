@@ -22,14 +22,8 @@ package org.apache.util.outputformatter;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-
-import java.nio.charset.Charset;
-
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-
-import com.csvreader.CsvWriter;
-
 
 /**
  * This is the default formatter for Jisql.  It outputs data in a &quot;normal&quot;
@@ -117,8 +111,7 @@ public class CSVFormatter implements JisqlFormatter {
 
 
     /**
-     * Called to output the data.  This class uses a third party library to output
-     * the CSV data.  The library escapes the data as needed.
+     * Called to output the data.
      *
      * @param out the PrintStream to output data to.
      * @param resultSet the ResultSet for the row.
@@ -126,25 +119,7 @@ public class CSVFormatter implements JisqlFormatter {
      *
      *
      */
-    public void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception {
-    	
-    	CsvWriter csvWriter = new CsvWriter( out, delimiter, Charset.forName( "us-ascii" )  );
-    	
-        while( resultSet.next() ) {
-            int numColumns = metaData.getColumnCount();
-
-            for (int i = 1; i <= numColumns; i++) {
-            	String result = resultSet.getString(i);
-            	if( !resultSet.wasNull() )
-            		csvWriter.write( result );
-            	else
-            		csvWriter.write( "" );
-            }
-
-            csvWriter.endRecord();
-        }
-
-        csvWriter.flush();
+    public void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception{
     }
 
 
