@@ -2227,7 +2227,10 @@ public class ServiceREST {
 				}
 			}
 		}
-		policyLists=serviceUtil.getMatchingPoliciesForResource(request, policyLists);
+		if (StringUtils.isNotEmpty(request.getParameter("resourceMatch"))
+				&& "full".equalsIgnoreCase(request.getParameter("resourceMatch"))) {
+			policyLists = serviceUtil.getMatchingPoliciesForResource(request, policyLists);
+		}
 		Map<Long, RangerPolicy> orderedPolicies = new TreeMap<Long, RangerPolicy>();
 		
 		if (!CollectionUtils.isEmpty(policyLists)) {
