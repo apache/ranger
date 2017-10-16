@@ -54,6 +54,16 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setResourcePath(resourcePath);
 		auditEvent.setResourceType("@" + resourceType); // to be consistent with earlier release
 
+		if (request instanceof RangerHiveAccessRequest && resource instanceof RangerHiveResource) {
+			RangerHiveAccessRequest hiveAccessRequest = (RangerHiveAccessRequest) request;
+			RangerHiveResource hiveResource = (RangerHiveResource) resource;
+
+			if (hiveAccessRequest.getHiveAccessType() == HiveAccessType.USE && hiveResource.getObjectType() == HiveObjectType.DATABASE) {
+				// this should happen only for SHOWDATABASES and USE <db-name> commands
+				auditEvent.setTags(null);
+			}
+		}
+
 		return auditEvent;
 	}
 	
