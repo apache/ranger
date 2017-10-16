@@ -50,6 +50,7 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
@@ -75,6 +76,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public static final String JWT_AUTH_PROVIDER_URL = "ranger.sso.providerurl";
 	public static final String JWT_PUBLIC_KEY = "ranger.sso.publicKey";
 	public static final String JWT_COOKIE_NAME = "ranger.sso.cookiename";
+	public static final String JWT_AUDIENCES = "ranger.sso.audiences";
 	public static final String JWT_ORIGINAL_URL_QUERY_PARAM = "ranger.sso.query.param.originalurl";
 	public static final String JWT_COOKIE_NAME_DEFAULT = "hadoop-jwt";
 	public static final String JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT = "originalUrl";
@@ -382,12 +384,22 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		boolean sigValid = validateSignature(jwtToken);
 		if (!sigValid) {
 			LOG.warn("Signature of JWT token could not be verified. Please check the public key");
+			return false;
 		}
+
 		boolean expValid = validateExpiration(jwtToken);
 		if (!expValid) {
 			LOG.warn("Expiration time validation of JWT token failed.");
+			return false;
 		}
-		return sigValid && expValid;
+
+		boolean audiencesValid = validateAudiences(jwtToken);
+        if (!audiencesValid) {
+            LOG.warn("Audience validation of JWT token failed.");
+            return false;
+        }
+
+		return true;
 	}
 
 	/**
@@ -457,6 +469,34 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		return valid;
 	}
 
+	protected boolean validateAudiences(SignedJWT jwtToken) {
+	    boolean valid = false;
+
+	    if (jwtProperties.getAudiences().isEmpty()) {
+	        // if there were no expected audiences configured then just
+	        // consider any audience acceptable
+	        valid = true;
+	    } else {
+	        try {
+	            List<String> tokenAudienceList = jwtToken.getJWTClaimsSet().getAudience();
+	            // if any of the configured audiences is found then consider it acceptable
+	            if (tokenAudienceList != null) {
+	                for (String aud : tokenAudienceList) {
+	                    if (jwtProperties.getAudiences().contains(aud)) {
+	                        LOG.debug("Audience claim has been validated.");
+	                        valid = true;
+	                        break;
+	                    }
+	                }
+	            }
+	        } catch (ParseException pe) {
+	            LOG.warn("Audience validation failed.", pe);
+	        }
+	    }
+
+	    return valid;
+	}
+
 	@Override
 	public void destroy() {
 	}
@@ -481,6 +521,10 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				userAgent = defaultUserAgent;
 				jwtProperties.setUserAgentList(userAgent.split(","));
 			}
+			String audiences = PropertiesUtil.getProperty(JWT_AUDIENCES);
+            if (audiences != null && !audiences.isEmpty()) {
+                jwtProperties.setAudiences(Arrays.asList(audiences.split(",")));
+            }
 			try {
 				RSAPublicKey publicKey = parseRSAPublicKey(publicKeyPath);
 				jwtProperties.setPublicKey(publicKey);
