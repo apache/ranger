@@ -62,9 +62,7 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * default is the term "go" on a single line like Sybase's isql or MS/SQL's
  * isql/osql. Note that there is a dependency on <a
  * href="http://jopt-simple.sourceforge.net/">JOpt Simple</a> in for the base
- * configuration. Additionally, if you are using the CSVFormatter then it is
- * dependent on <a href="http://sourceforge.net/projects/javacsv/">Java CSV</a>.
- * <p>
+ * configuration.
  *
  *
  * Options:

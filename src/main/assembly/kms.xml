@@ -165,7 +165,6 @@
                 <outputDirectory>/jisql/lib</outputDirectory>
                 <unpack>false</unpack>
 				<includes>
-                    <include>net.sourceforge.javacsv:javacsv</include>
                     <include>net.sf.jopt-simple:jopt-simple</include>
 				</includes>
             </dependencySet>
