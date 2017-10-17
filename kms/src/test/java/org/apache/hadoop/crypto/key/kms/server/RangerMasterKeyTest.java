@@ -96,7 +96,7 @@ public class RangerMasterKeyTest {
         try {
             rangerMasterKey.getMasterKey("badpass");
             Assert.fail("Failure expected on retrieving a key with the wrong password");
-        } catch (Throwable t) {
+        } catch (Exception ex) {
             // expected
         }
 
@@ -105,7 +105,7 @@ public class RangerMasterKeyTest {
         try {
             rangerMasterKey.getMasterSecretKey("badpass");
             Assert.fail("Failure expected on retrieving a key with the wrong password");
-        } catch (Throwable t) {
+        } catch (Exception ex) {
             // expected
         }
     }

@@ -97,7 +97,7 @@ public class StormRangerAuthorizerTest {
                 try {
                     cluster.submitTopology("word-count2", conf, builder.createTopology());
                     Assert.fail("Authorization failure expected");
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     // expected
                 }
 
@@ -129,7 +129,7 @@ public class StormRangerAuthorizerTest {
                 try {
                     cluster.deactivate("temp1");
                     Assert.fail("Authorization failure expected");
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     // expected
                 }
 
@@ -165,7 +165,7 @@ public class StormRangerAuthorizerTest {
                 try {
                     cluster.rebalance("temp2", options);
                     Assert.fail("Authorization failure expected");
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     // expected
                 }
 
@@ -200,7 +200,7 @@ public class StormRangerAuthorizerTest {
                 try {
                     cluster.submitTopology("stormdev2", conf, builder.createTopology());
                     Assert.fail("Authorization failure expected");
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     // expected
                 }
 
