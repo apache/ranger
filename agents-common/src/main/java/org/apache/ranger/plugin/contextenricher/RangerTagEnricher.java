@@ -27,9 +27,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
@@ -46,6 +48,7 @@ import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +64,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
 	public static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
 	public static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
+	public static final int[] allPolicyTypes                        = new int[] {RangerPolicy.POLICY_TYPE_ACCESS, RangerPolicy.POLICY_TYPE_DATAMASK, RangerPolicy.POLICY_TYPE_ROWFILTER};
 
 	private RangerTagRefresher                 tagRefresher               = null;
 	private RangerTagRetriever                 tagRetriever               = null;
@@ -148,6 +152,52 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 	}
 
+	/*
+	 * This class implements a cache of result of look-up of keyset of policy-resources for each of the collections of hierarchies
+	 * for policy types: access, datamask and rowfilter. If a keyset is examined for validity in a hierarchy of a policy-type,
+	 * then that record is maintained in this cache for later look-up.
+	 *
+	 * The basic idea is that with a large number of tagged service-resources, this cache will speed up performance as well as put
+	 * a cap on the upper bound because it is expected	that the cardinality of set of all possible keysets for all resource-def
+	 * combinations in a service-def will be much smaller than the number of service-resources.
+	 */
+
+	static private class ResourceHierarchies {
+		private final Map<Collection<String>, Boolean> accessHierarchies    = new HashMap<>();
+		private final Map<Collection<String>, Boolean> dataMaskHierarchies  = new HashMap<>();
+		private final Map<Collection<String>, Boolean> rowFilterHierarchies = new HashMap<>();
+
+		public Boolean isValidHierarchy(int policyType, Collection<String> resourceKeys) {
+			switch (policyType) {
+				case RangerPolicy.POLICY_TYPE_ACCESS:
+					return accessHierarchies.get(resourceKeys);
+				case RangerPolicy.POLICY_TYPE_DATAMASK:
+					return dataMaskHierarchies.get(resourceKeys);
+				case RangerPolicy.POLICY_TYPE_ROWFILTER:
+					return rowFilterHierarchies.get(resourceKeys);
+				default:
+					return null;
+			}
+		}
+
+		public void addHierarchy(int policyType, Collection<String> resourceKeys, Boolean isValid) {
+			switch (policyType) {
+				case RangerPolicy.POLICY_TYPE_ACCESS:
+					accessHierarchies.put(resourceKeys, isValid);
+					break;
+				case RangerPolicy.POLICY_TYPE_DATAMASK:
+					dataMaskHierarchies.put(resourceKeys, isValid);
+					break;
+				case RangerPolicy.POLICY_TYPE_ROWFILTER:
+					rowFilterHierarchies.put(resourceKeys, isValid);
+					break;
+				default:
+					LOG.error("unknown policy-type " + policyType);
+					break;
+			}
+		}
+	}
+
 	public void setServiceTags(final ServiceTags serviceTags) {
 
 		if (serviceTags == null || CollectionUtils.isEmpty(serviceTags.getServiceResources())) {
@@ -157,28 +207,51 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<RangerServiceResourceMatcher>();
 
+			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+
 			List<RangerServiceResource> serviceResources = serviceTags.getServiceResources();
 
-			if (CollectionUtils.isNotEmpty(serviceResources)) {
+			ResourceHierarchies hierarchies = new ResourceHierarchies();
 
-				for (RangerServiceResource serviceResource : serviceResources) {
-					RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+			for (RangerServiceResource serviceResource : serviceResources) {
+				final Collection<String> resourceKeys = serviceResource.getResourceElements().keySet();
 
-					matcher.setServiceDef(this.serviceDef);
-					matcher.setPolicyResources(serviceResource.getResourceElements());
+				for (int policyType : allPolicyTypes) {
+					Boolean isValidHierarchy = hierarchies.isValidHierarchy(policyType, resourceKeys);
 
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource
-								+ ", serviceDef=" + this.serviceDef.getName() + ")");
+					if (isValidHierarchy == null) { // hierarchy not yet validated
+						isValidHierarchy = Boolean.FALSE;
 
+						for (List<RangerServiceDef.RangerResourceDef> hierarchy : serviceDefHelper.getResourceHierarchies(policyType)) {
+							if (serviceDefHelper.hierarchyHasAllResources(hierarchy, resourceKeys)) {
+								isValidHierarchy = Boolean.TRUE;
+
+								break;
+							}
+						}
+
+						hierarchies.addHierarchy(policyType, resourceKeys, isValidHierarchy);
 					}
-					matcher.init();
 
-					RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);
-					resourceMatchers.add(serviceResourceMatcher);
+					if (isValidHierarchy) {
+						RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+
+						matcher.setServiceDef(this.serviceDef);
+						matcher.setPolicyResources(serviceResource.getResourceElements(), policyType);
+
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource
+									+ ", serviceDef=" + this.serviceDef.getName() + ")");
+
+						}
+						matcher.init();
+
+						RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);
+						resourceMatchers.add(serviceResourceMatcher);
+					}
 				}
-
 			}
+
 
 			Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
 
@@ -287,17 +360,16 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		List<RangerServiceResourceMatcher> ret = null;
 
-		final List<RangerServiceResourceMatcher> serviceResourceMatchers = enrichedServiceTags.getServiceResourceMatchers();
 		final Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = enrichedServiceTags.getServiceResourceTrie();
 
-		if (resource == null || resource.getKeys() == null || resource.getKeys().size() == 0 || serviceResourceTrie == null) {
-			ret = serviceResourceMatchers;
+		if (resource == null || resource.getKeys() == null || resource.getKeys().isEmpty() || serviceResourceTrie == null) {
+			ret = enrichedServiceTags.getServiceResourceMatchers();
 		} else {
 			Set<String> resourceKeys = resource.getKeys();
+			List<List<RangerServiceResourceMatcher>> serviceResourceMatchersList = null;
+			List<RangerServiceResourceMatcher> smallestList = null;
 
 			if (CollectionUtils.isNotEmpty(resourceKeys)) {
-
-				boolean isRetModifiable = false;
 
 				for (String resourceName : resourceKeys) {
 					RangerResourceTrie<RangerServiceResourceMatcher> trie = serviceResourceTrie.get(resourceName);
@@ -306,37 +378,42 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						continue;
 					}
 
-					List<RangerServiceResourceMatcher> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+					List<RangerServiceResourceMatcher> serviceResourceMatchers = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
-					if (CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
-						ret = null;
-					} else if (ret == null) { // initialize ret with policies found for this resource
-						ret = resourceEvaluators;
-					} else { // remove matchers from ret that are not in resourceEvaluators
-						if (isRetModifiable) {
-							ret.retainAll(resourceEvaluators);
-						} else {
-							final List<RangerServiceResourceMatcher> shorterList;
-							final List<RangerServiceResourceMatcher> longerList;
-
-							if (ret.size() < resourceEvaluators.size()) {
-								shorterList = ret;
-								longerList = resourceEvaluators;
-							} else {
-								shorterList = resourceEvaluators;
-								longerList = ret;
-							}
-
-							ret = new ArrayList<>(shorterList);
-							ret.retainAll(longerList);
-							isRetModifiable = true;
-						}
-					}
-
-					if (CollectionUtils.isEmpty(ret)) { // if no matcher exists, bail out and return empty list
-						ret = null;
+					if (CollectionUtils.isEmpty(serviceResourceMatchers)) { // no policies for this resource, bail out
+						serviceResourceMatchersList = null;
+						smallestList = null;
 						break;
 					}
+
+					if (smallestList == null) {
+						smallestList = serviceResourceMatchers;
+					} else {
+						if (serviceResourceMatchersList == null) {
+							serviceResourceMatchersList = new ArrayList<>();
+							serviceResourceMatchersList.add(smallestList);
+						}
+						serviceResourceMatchersList.add(serviceResourceMatchers);
+
+						if (smallestList.size() > serviceResourceMatchers.size()) {
+							smallestList = serviceResourceMatchers;
+						}
+					}
+				}
+				if (serviceResourceMatchersList != null) {
+					ret = new ArrayList<>(smallestList);
+					for (List<RangerServiceResourceMatcher> serviceResourceMatchers : serviceResourceMatchersList) {
+						if (serviceResourceMatchers != smallestList) {
+							// remove policies from ret that are not in serviceResourceMatchers
+							ret.retainAll(serviceResourceMatchers);
+							if (CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
+								ret = null;
+								break;
+							}
+						}
+					}
+				} else {
+					ret = smallestList;
 				}
 			}
 		}

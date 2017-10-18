@@ -180,12 +180,34 @@ public class RangerServiceDefHelper {
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
 
 		for (List<RangerResourceDef> hierarchy : getResourceHierarchies(policyType)) {
-			if (getAllResourceNames(hierarchy).containsAll(keys)) {
+			if (hierarchyHasAllResources(hierarchy, keys)) {
 				ret.add(hierarchy);
 			}
 		}
 
 		return ret;
+	}
+
+	public boolean hierarchyHasAllResources(List<RangerResourceDef> hierarchy, Collection<String> resourceNames) {
+		boolean foundAllResourceKeys = true;
+
+		for (String resourceKey : resourceNames) {
+			boolean found = false;
+
+			for (RangerResourceDef resourceDef : hierarchy) {
+				if (resourceDef.getName().equals(resourceKey)) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				foundAllResourceKeys = false;
+				break;
+			}
+		}
+
+		return foundAllResourceKeys;
 	}
 
 	public Set<String> getMandatoryResourceNames(List<RangerResourceDef> hierarchy) {
