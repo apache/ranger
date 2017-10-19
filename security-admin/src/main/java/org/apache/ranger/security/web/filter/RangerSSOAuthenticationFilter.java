@@ -80,9 +80,17 @@ public class RangerSSOAuthenticationFilter implements Filter {
 	public static final String JWT_ORIGINAL_URL_QUERY_PARAM = "ranger.sso.query.param.originalurl";
 	public static final String JWT_COOKIE_NAME_DEFAULT = "hadoop-jwt";
 	public static final String JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT = "originalUrl";
+	 /**
+     * If specified, this configuration property refers to the signature algorithm which a received
+     * token must match. Otherwise, the default value "RS256" is used
+     */
+    public static final String JWT_EXPECTED_SIGALG = "ranger.sso.expected.sigalg";
+    public static final String JWT_DEFAULT_SIGALG = "RS256";
+
 	public static final String LOCAL_LOGIN_URL = "locallogin";
 	public static final String DEFAULT_BROWSER_USERAGENT = "ranger.default.browser-useragents";
-        public static final String PROXY_RANGER_URL_PATH = "/ranger";
+    public static final String PROXY_RANGER_URL_PATH = "/ranger";
+
 
 	private SSOAuthenticationProperties jwtProperties;
 
@@ -438,6 +446,14 @@ public class RangerSSOAuthenticationFilter implements Filter {
 					LOG.warn("Error while validating signature", e);
 				}
 			}
+
+			// Now check that the signature algorithm was as expected
+			if (valid) {
+			  String receivedSigAlg = jwtToken.getHeader().getAlgorithm().getName();
+			  if (!receivedSigAlg.equals(jwtProperties.getExpectedSigAlg())) {
+			    valid = false;
+			  }
+			}
 		}
 		return valid;
 	}
@@ -525,6 +541,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
             if (audiences != null && !audiences.isEmpty()) {
                 jwtProperties.setAudiences(Arrays.asList(audiences.split(",")));
             }
+            jwtProperties.setExpectedSigAlg(PropertiesUtil.getProperty(JWT_EXPECTED_SIGALG, JWT_DEFAULT_SIGALG));
 			try {
 				RSAPublicKey publicKey = parseRSAPublicKey(publicKeyPath);
 				jwtProperties.setPublicKey(publicKey);

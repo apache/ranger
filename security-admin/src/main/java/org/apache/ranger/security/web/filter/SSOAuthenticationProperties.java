@@ -31,6 +31,7 @@ public class SSOAuthenticationProperties {
     private String originalUrlQueryParam;
     private String[] userAgentList;
     private List<String> audiences = Collections.emptyList();
+    private String expectedSigAlg;
 
     public String getAuthenticationProviderUrl() {
         return authenticationProviderUrl;
@@ -84,6 +85,14 @@ public class SSOAuthenticationProperties {
 
     public void setAudiences(List<String> audiences) {
         this.audiences = audiences;
+    }
+
+    public String getExpectedSigAlg() {
+        return expectedSigAlg;
+    }
+
+    public void setExpectedSigAlg(String expectedSigAlg) {
+        this.expectedSigAlg = expectedSigAlg;
     }
 }
 
