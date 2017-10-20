@@ -85,6 +85,9 @@ define(function(require) {
 								}else if(v.name == 'jdbc.url'){
 									formObj.type = 'TextFiledWithIcon';
 									formObj.errorMsg = localization.tt("hintMsg.hiveJDBCUrl");
+								}else if(v.name == 'fs.default.name'){
+									formObj.type = 'TextFiledWithIcon';
+									formObj.errorMsg = localization.tt("hintMsg.hdfsNameNodeUrl");
 								}else{
 									formObj.type = 'Text';
 								}

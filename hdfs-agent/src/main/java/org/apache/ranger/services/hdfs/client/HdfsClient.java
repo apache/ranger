@@ -270,18 +270,44 @@ public class HdfsClient extends BaseClient {
 			  throw new IllegalArgumentException("Value for password not specified");
 		  }
 	  }
+	// hadoop.security.authentication
+	String authentication = configs.get("hadoop.security.authentication");
+	if ((authentication == null || authentication.isEmpty())) {
+		throw new IllegalArgumentException("Value for hadoop.security.authentication not specified");
+	}
 
-    // hadoop.security.authentication
-    String authentication = configs.get("hadoop.security.authentication");
-    if ((authentication == null || authentication.isEmpty()))  {
-      throw new IllegalArgumentException("Value for hadoop.security.authentication not specified");
-    }
-
-    String fsDefaultName = configs.get("fs.default.name");
-    fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
-    if (fsDefaultName.isEmpty())  {
-      throw new IllegalArgumentException("Value for fs.default.name not specified");
-    }
+	String fsDefaultName = configs.get("fs.default.name");
+	fsDefaultName = (fsDefaultName == null) ? "" : fsDefaultName.trim();
+	if (fsDefaultName.isEmpty()) {
+		throw new IllegalArgumentException("Value for fs.default.name not specified");
+	} else {
+		String[] fsDefaultNameElements = fsDefaultName.split(",");
+		for (String fsDefaultNameElement : fsDefaultNameElements) {
+			if (fsDefaultNameElement.isEmpty()) {
+				throw new IllegalArgumentException(
+						"Value for " + "fs.default.name element" + fsDefaultNameElement + " not specified");
+			}
+		}
+		if (fsDefaultNameElements != null && fsDefaultNameElements.length >= 2) {
+			String cluster = "";
+			String clusters = "";
+			configs.put("dfs.nameservices", "hdfscluster");
+			configs.put("fs.default.name", "hdfs://" + configs.get("dfs.nameservices"));
+			configs.put("dfs.client.failover.proxy.provider." + configs.get("dfs.nameservices"),
+					"org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
+			for (int i = 0; i < fsDefaultNameElements.length; i++) {
+				cluster = "namenode" + (i + 1);
+				configs.put("dfs.namenode.rpc-address." + configs.get("dfs.nameservices") + "." + cluster,
+						fsDefaultNameElements[i]);
+				if (i == (fsDefaultNameElements.length - 1)) {
+					clusters += cluster;
+				} else {
+					clusters += cluster + ",";
+				}
+			}
+			configs.put("dfs.ha.namenodes." + configs.get("dfs.nameservices"), clusters);
+		}
+	}
 
     String dfsNameservices = configs.get("dfs.nameservices");
     dfsNameservices = (dfsNameservices == null) ? "" : dfsNameservices.trim();
