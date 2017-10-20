@@ -291,23 +291,23 @@ check_java_version() {
 		log "[E] JAVA_HOME environment property not defined, aborting installation."
 		exit 1
 	fi
-
         export JAVA_BIN=${JAVA_HOME}/bin/java
 
 	if is_command ${JAVA_BIN} ; then
 		log "[I] '${JAVA_BIN}' command found"
 	else
-               log "[E] '${JAVA_BIN}' command not found"
-               exit 1;
+        log "[E] '${JAVA_BIN}' command not found"
+        exit 1;
 	fi
 
 	version=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
 	major=`echo ${version} | cut -d. -f1`
 	minor=`echo ${version} | cut -d. -f2`
-	if [[ "${major}" == 1 && "${minor}" < 7 ]] ; then
-		log "[E] Java 1.7 is required, current java version is $version"
+	current_java_version="$major.$minor"
+    if [[ "$current_java_version" != "$JAVA_VERSION_REQUIRED" ]];then
+        log "[E] Java $JAVA_VERSION_REQUIRED is required, current java version is $version"
 		exit 1;
-	fi
+    fi
 }
 
 sanity_check_files() {
