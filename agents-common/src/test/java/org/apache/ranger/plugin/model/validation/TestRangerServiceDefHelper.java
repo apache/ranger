@@ -109,7 +109,7 @@ public class TestRangerServiceDefHelper {
 		_helper = new RangerServiceDefHelper(_serviceDef);
 		assertFalse("Graph was valid!", _helper.isResourceGraphValid());
 	}
-	
+
 	@Test
 	public final void test_isResourceGraphValid_forest() {
 		/*

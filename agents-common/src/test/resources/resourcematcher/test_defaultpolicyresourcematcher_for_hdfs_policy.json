@@ -132,8 +132,8 @@
       },
       "tests": [
         {
-          "name": "No match for 'path=/finance/tax/refund' policy",
-          "type": "anyMatch",
+          "name": "Exact match for 'path=/finance/tax/refund' policy",
+          "type": "exactMatch",
           "policy" : {
             "service" : "any",
             "name" : "test",

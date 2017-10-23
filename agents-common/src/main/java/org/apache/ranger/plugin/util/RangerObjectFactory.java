@@ -34,6 +34,6 @@ public class RangerObjectFactory {
 	}
 
 	public RangerServiceDefHelper createServiceDefHelper(RangerServiceDef serviceDef, boolean useCache) {
-		return new RangerServiceDefHelper(serviceDef, useCache);
+		return new RangerServiceDefHelper(serviceDef, useCache, true);
 	}
 }

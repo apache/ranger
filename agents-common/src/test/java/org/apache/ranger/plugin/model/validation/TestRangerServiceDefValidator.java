@@ -432,8 +432,24 @@ public class TestRangerServiceDefValidator {
 		_utils.checkFailureForMissingValue(_failures, "resource level");
 		_utils.checkFailureForSemanticError(_failures, "resource level", "20"); // level 20 is duplicate for 1 hierarchy
 		_utils.checkFailureForSemanticError(_failures, "resource level", "10"); // level 10 is duplicate for another hierarchy
-		
-		Object[][] data_good = new Object[][] {
+
+        data_bad = new Object[][] {
+                //  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+                { "db",            null, null, null, null, "" ,             10 },
+                { "table",         null, null, null, null, "db",            20 },
+                { "column-family", null, null, null, null, "table",         15 }, // level is smaller than table!
+                { "column",        null, null, null, null, "column-family", 30 },
+                { "udf",           null, null, null, null, "db",            15 },
+        };
+        resourceDefs = _utils.createResourceDefs(data_bad);
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        when(_serviceDef.getName()).thenReturn("service-name");
+        when(_serviceDef.getUpdateTime()).thenReturn(new Date());
+
+        _failures.clear(); assertFalse(_validator.isValidResourceGraph(_serviceDef, _failures));
+        _utils.checkFailureForSemanticError(_failures, "resource level", "15"); // level 20 is duplicate for 1 hierarchy
+
+        Object[][] data_good = new Object[][] {
 			//  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
 				{ "db",     null, null, null, null, "" ,     -10 }, // -ve level is ok
 				{ "table",  null, null, null, null, "db",    0 },   // 0 level is ok
@@ -444,7 +460,21 @@ public class TestRangerServiceDefValidator {
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_failures.clear(); assertTrue(_validator.isValidResourceGraph(_serviceDef, _failures));
 		assertTrue(_failures.isEmpty());
-	}
+
+        Object[][] data_cycles = new Object[][] {
+                //  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+                { "db",     null, null, null, null, "column" ,     -10 }, // -ve level is ok
+                { "table",  null, null, null, null, "db",    0 },   // 0 level is ok
+                { "column", null, null, null, null, "table", 10 },  // level is null!
+                { "udf",    null, null, null, null, "db",    -5 },   // should not conflict as it belong to a different hierarchy
+        };
+
+        resourceDefs = _utils.createResourceDefs(data_cycles);
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        _failures.clear(); assertFalse("Graph was valid!", _validator.isValidResourceGraph(_serviceDef, _failures));
+        assertFalse(_failures.isEmpty());
+        _utils.checkFailureForSemanticError(_failures, "resource graph");
+    }
 	
 	@Test
 	public final void test_isValidResources_happyPath() {

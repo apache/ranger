@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -119,15 +120,19 @@ public class RangerServiceDefHelper {
 	}
 
 	public RangerServiceDefHelper(RangerServiceDef serviceDef) {
-		this(serviceDef, true);
+		this(serviceDef, true, false);
 	}
-	
+
+	public RangerServiceDefHelper(RangerServiceDef serviceDef, boolean useCache) {
+		this(serviceDef, useCache, false);
+	}
+
 	/**
 	 * Intended for use when serviceDef object is not-trusted, e.g. when service-def is being created or updated.
 	 * @param serviceDef
 	 * @param useCache
 	 */
-	public RangerServiceDefHelper(RangerServiceDef serviceDef, boolean useCache) {
+	public RangerServiceDefHelper(RangerServiceDef serviceDef, boolean useCache, boolean checkForCycles) {
 		// NOTE: we assume serviceDef, its name and update time are can never by null.
 		
 		if(LOG.isDebugEnabled()) {
@@ -149,7 +154,7 @@ public class RangerServiceDefHelper {
 			}
 		}
 		if (delegate == null) { // either not found in cache or date didn't match
-			delegate = new Delegate(serviceDef);
+			delegate = new Delegate(serviceDef, checkForCycles);
 			if (useCache) {
 				LOG.debug("RangerServiceDefHelper(): Created new delegate and put in delegate cache!");
 				_Cache.put(serviceName, delegate);
@@ -256,14 +261,16 @@ public class RangerServiceDefHelper {
 		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
+		final boolean _checkForCycles;
 		final boolean _valid;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
-		public Delegate(RangerServiceDef serviceDef) {
+		public Delegate(RangerServiceDef serviceDef, boolean checkForCycles) {
 			// NOTE: we assume serviceDef, its name and update time are can never by null.
 			_serviceName = serviceDef.getName();
 			_serviceDefFreshnessDate = serviceDef.getUpdateTime();
+			_checkForCycles = checkForCycles;
 
 			boolean isValid = true;
 			for(Integer policyType : RangerPolicy.POLICY_TYPES) {
@@ -288,9 +295,6 @@ public class RangerServiceDefHelper {
 				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName,
 						_serviceDefFreshnessDate == null ? null : _serviceDefFreshnessDate.toString(), _hierarchies);
 				LOG.debug(message);
-			}
-			if (!_valid) {
-				LOG.error("ERROR: Service resource-definitions do not form valid DAG!!");
 			}
 		}
 		
@@ -390,6 +394,12 @@ public class RangerServiceDefHelper {
 
             if (CollectionUtils.isEmpty(sources) || CollectionUtils.isEmpty(sinks)) {
                 ret = false;
+            } else if (_checkForCycles) {
+                List<String> cycle = graph.getACycle(sources, sinks);
+                if (cycle != null) {
+                    LOG.error("Graph contains cycle! - " + cycle);
+                    ret = false;
+                }
             } else {
                 for (String sink : sinks) {
                     RangerResourceDef sinkResourceDef = resourceDefMap.get(sink);
@@ -574,6 +584,45 @@ public class RangerServiceDefHelper {
 			return sinks;
 		}
 
+		List<String> getACycle(Set<String> sources, Set<String> sinks) {
+			List<String> ret = null;
+			Set<String> nonSourceOrSinkNodes = Sets.difference(_nodes.keySet(), Sets.union(sources, sinks));
+			for (String node : nonSourceOrSinkNodes) {
+				List<String> seenNodes = new ArrayList<>();
+				seenNodes.add(node);
+				ret = findCycle(node, seenNodes);
+				if (ret != null) {
+					break;
+				}
+			}
+			return ret;
+		}
+
+		/**
+		 * Does a depth first traversal of a graph starting from given node. Returns a sequence of nodes that form first cycle or null if no cycle is found.
+		 *
+		 * @param node Start node
+		 * @param seenNodes List of nodes seen thus far
+		 * @return list of nodes comprising first cycle in graph; null if no cycle was found
+		 */
+		List<String> findCycle(String node, List<String> seenNodes) {
+			List<String> ret = null;
+			Set<String> nbrs = _nodes.get(node);
+			for (String nbr : nbrs) {
+				boolean foundCycle = seenNodes.contains(nbr);
+				seenNodes.add(nbr);
+				if (foundCycle) {
+					ret = seenNodes;
+					break;
+				} else {
+					ret = findCycle(nbr, seenNodes);
+					if (ret != null) {
+						break;
+					}
+				}
+			}
+			return ret;
+		}
 		/**
 		 * Attempts to do a depth first traversal of a graph and returns the resulting path. Note that there could be several paths that connect node "from" to node "to".
 		 *

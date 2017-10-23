@@ -139,7 +139,7 @@
       },
       "tests": [
         {
-          "name": "Ancestor match for 'finance,hr,tmp*:tax,employee,tmp*' policy",
+          "name": "Descendant match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
           "type": "descendantMatch",
           "policy" : {
             "service" : "any",
@@ -259,7 +259,7 @@
       },
       "tests": [
         {
-          "name": "Ancestor match for 'finance,hr,tmp*:tax,employee,tmp*:refund,salary,tmp*' policy",
+          "name": "Ancestor match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
           "type": "ancestorMatch",
           "policy" : {
             "service" : "any",
@@ -283,7 +283,7 @@
           "result" : true
         },
         {
-          "name": "Ancestor match for 'finance,hr,tmp*' policy",
+          "name": "No match for 'finance,hr,tmp*::refund,salary,tmp*' policy",
           "type": "anyMatch",
           "policy" : {
             "service" : "any",
@@ -307,7 +307,7 @@
           "result" : false
         },
         {
-          "name": "No match for 'finance,hr,tmp*::*,salary,tmp*' policy",
+          "name": "Ancestor match for 'finance,hr,tmp*::' policy",
           "type": "ancestorMatch",
           "policy" : {
             "service" : "any",

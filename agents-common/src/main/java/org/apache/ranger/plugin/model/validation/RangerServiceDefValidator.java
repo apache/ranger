@@ -478,7 +478,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
 	boolean isValidResourceGraph(RangerServiceDef serviceDef, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceDefValidator.isValidResourceGraph(%s, %s)", serviceDef, failures));
@@ -504,6 +504,26 @@ public class RangerServiceDefValidator extends RangerValidator {
 				for (RangerResourceDef resourceDef : aHierarchy) {
 					valid = isUnique(resourceDef.getLevel(), levels, "resource level", "resources", failures) && valid;
 				}
+
+				// Ensure that aHierarchy contains resource-defs with increasing level values
+				int lastResourceLevel = Integer.MIN_VALUE;
+				for (RangerResourceDef resourceDef : aHierarchy) {
+					Integer resourceDefLevel = resourceDef.getLevel();
+					if (resourceDefLevel == null || resourceDefLevel < lastResourceLevel) {
+						ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS;
+						failures.add(new ValidationFailureDetailsBuilder()
+								.field("resource level")
+								.subField(String.valueOf(resourceDefLevel))
+								.isSemanticallyIncorrect()
+								.errorCode(error.getErrorCode())
+								.becauseOf(error.getMessage())
+								.build());
+						valid = false;
+						break;
+					} else {
+						lastResourceLevel = resourceDef.getLevel();
+					}
+				}
 			}
 		}
 
@@ -512,7 +532,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
 	boolean isValidEnums(List<RangerEnumDef> enumDefs, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceDefValidator.isValidEnums(%s, %s)", enumDefs, failures));
