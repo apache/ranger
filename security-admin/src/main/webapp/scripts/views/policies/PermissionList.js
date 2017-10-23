@@ -485,7 +485,7 @@ define(function(require) {
 			});
 			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
 				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
-                                        that.model.get('dataMaskInfo').valueExpr = _.escape(e.currentTarget.value);
+                                        that.model.get('dataMaskInfo').valueExpr = (e.currentTarget.value);
 				}
 			}).trigger('change');
 			if(!this.accessPermSetForTagMasking){
@@ -724,7 +724,7 @@ define(function(require) {
 			});
 			this.$el.find('input[data-id="maskTypeCustom"]').on('change', function(e){
 				if(!_.isUndefined(that.model.get('dataMaskInfo'))){
-                                        that.model.get('dataMaskInfo').valueExpr = _.escape(e.currentTarget.value);
+                                        that.model.get('dataMaskInfo').valueExpr = (e.currentTarget.value);
 				}
 			}).trigger('change');
 		},
