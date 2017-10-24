@@ -328,6 +328,19 @@
           </includes>
       </moduleSet>
 
+      <moduleSet>
+          <binaries>
+              <includeDependencies>true</includeDependencies>
+              <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/sqoop</outputDirectory>
+              <unpack>false</unpack>
+              <directoryMode>755</directoryMode>
+              <fileMode>644</fileMode>
+          </binaries>
+          <includes>
+              <include>org.apache.ranger:ranger-sqoop-plugin</include>
+          </includes>
+      </moduleSet>
+
   </moduleSets>
 
   <fileSets>

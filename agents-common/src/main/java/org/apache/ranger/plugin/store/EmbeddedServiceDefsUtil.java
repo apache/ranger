@@ -47,7 +47,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi";
+	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,sqoop";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -63,6 +63,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
 	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
 	public static final String EMBEDDED_SERVICEDEF_WASB_NAME  = "wasb";
+	public static final String EMBEDDED_SERVICEDEF_SQOOP_NAME = "sqoop";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -93,6 +94,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef nifiServiceDef;
 	private RangerServiceDef atlasServiceDef;
 	private RangerServiceDef wasbServiceDef;
+	private RangerServiceDef sqoopServiceDef;
 
 	private RangerServiceDef tagServiceDef;
 
@@ -132,7 +134,7 @@ public class EmbeddedServiceDefsUtil {
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
-
+			sqoopServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SQOOP_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -186,6 +188,10 @@ public class EmbeddedServiceDefsUtil {
     public long getAtlasServiceDefId() {
         return getId(atlasServiceDef);
     }
+
+	public long getSqoopServiceDefId() {
+		return getId(sqoopServiceDef);
+	}
 
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 

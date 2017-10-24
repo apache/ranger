@@ -108,6 +108,8 @@
         <module>ranger-examples</module>
         <module>ranger-tools</module>
         <module>plugin-atlas</module>
+        <module>plugin-sqoop</module>
+        <module>ranger-sqoop-plugin-shim</module>
   </modules>
     <properties>
         <maven.version.required>3.3.3</maven.version.required>
@@ -208,6 +210,7 @@
         <springframework.security.version>3.2.10.RELEASE</springframework.security.version>
         <springframework.test.version>3.2.10.RELEASE</springframework.test.version>
         <springframework.version>3.2.10.RELEASE</springframework.version>
+        <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.0.2</storm.version>
         <tomcat.embed.version>7.0.77</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
@@ -414,6 +417,7 @@
                             <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-src.xml</descriptor>
                             <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
+                            <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                         </descriptors>
                     </configuration>
                 </plugin>
