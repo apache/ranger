@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -549,6 +550,9 @@ class RangerPolicyRepository {
     }
 
     private void init(RangerPolicyEngineOptions options) {
+        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+        options.setServiceDefHelper(serviceDefHelper);
+
         List<RangerPolicyEvaluator> policyEvaluators = new ArrayList<>();
         List<RangerPolicyEvaluator> dataMaskPolicyEvaluators  = new ArrayList<>();
         List<RangerPolicyEvaluator> rowFilterPolicyEvaluators = new ArrayList<>();

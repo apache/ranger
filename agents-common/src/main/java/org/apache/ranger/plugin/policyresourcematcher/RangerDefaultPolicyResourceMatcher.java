@@ -31,7 +31,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -94,6 +93,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     }
 
     @Override
+    public void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper) {
+        this.serviceDefHelper = serviceDefHelper;
+    }
+
+    @Override
     public boolean getNeedsDynamicEval() { return needsDynamicEval; }
 
     @Override
@@ -110,10 +114,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
         String errorText = "";
 
-        boolean useCache = RangerConfiguration.getInstance().getBoolean("ranger.plugin.use-cache-for-service-def-helper", false);
-
         if (policyResources != null && !policyResources.isEmpty() && serviceDef != null) {
-            serviceDefHelper                                    = new RangerServiceDefHelper(serviceDef, useCache);
+            serviceDefHelper                                    = serviceDefHelper == null ? new RangerServiceDefHelper(serviceDef, false) : serviceDefHelper;
 
             Set<List<RangerResourceDef>> resourceHierarchies   = serviceDefHelper.getResourceHierarchies(policyType, policyResources.keySet());
             int                          validHierarchiesCount = 0;

@@ -19,6 +19,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 
 public class RangerPolicyEngineOptions {
@@ -31,6 +32,8 @@ public class RangerPolicyEngineOptions {
 	public boolean cacheAuditResults = true;
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
+
+	private RangerServiceDefHelper serviceDefHelper;
 
 	public void configureForPlugin(Configuration conf, String propertyPrefix) {
 		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
@@ -79,6 +82,14 @@ public class RangerPolicyEngineOptions {
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = true;
+	}
+
+	public RangerServiceDefHelper getServiceDefHelper() {
+		 return serviceDefHelper;
+	}
+
+	void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper) {
+		this.serviceDefHelper = serviceDefHelper;
 	}
 
 	/*

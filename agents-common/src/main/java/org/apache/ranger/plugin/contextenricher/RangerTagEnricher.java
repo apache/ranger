@@ -241,6 +241,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 									+ ", serviceDef=" + this.serviceDef.getName() + ")");
 
 						}
+						matcher.setServiceDefHelper(serviceDefHelper);
 						matcher.init();
 
 						RangerServiceResourceMatcher serviceResourceMatcher = new RangerServiceResourceMatcher(serviceResource, matcher);

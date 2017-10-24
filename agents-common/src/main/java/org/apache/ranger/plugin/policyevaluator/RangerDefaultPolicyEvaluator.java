@@ -117,6 +117,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		resourceMatcher.setServiceDef(serviceDef);
 		resourceMatcher.setPolicy(policy);
+		resourceMatcher.setServiceDefHelper(options.getServiceDefHelper());
 		resourceMatcher.init();
 
 		if(policy != null) {
