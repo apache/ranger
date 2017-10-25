@@ -34,12 +34,9 @@ is_unix = os_name == "LINUX" or os_name == "DARWIN"
 
 jisql_debug=True
 
-if is_unix:
-	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
-	if RANGER_KMS_HOME is None:
-		RANGER_KMS_HOME = os.getcwd()
-elif os_name == "WINDOWS":
-	RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+RANGER_KMS_HOME = os.getenv("RANGER_KMS_HOME")
+if RANGER_KMS_HOME is None:
+	RANGER_KMS_HOME = os.getcwd()
 
 def check_output(query):
 	if is_unix:
