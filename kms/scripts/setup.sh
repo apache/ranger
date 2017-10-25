@@ -22,11 +22,6 @@
 PROPFILE=$PWD/install.properties
 propertyValue=''
 
-pidFolderName='/var/run/ranger_kms'
-if [ ! -d "${pidFolderName}" ]; then
-    mkdir -p "${pidFolderName}"
-fi
-
 if [ ! -f ${PROPFILE} ]
 then
 	echo "$PROPFILE file not found....!!";
@@ -866,13 +861,21 @@ setup_install_files(){
         echo "export RANGER_KMS_LOG_DIR=${RANGER_KMS_LOG_DIR}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
     	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-logdir.sh
 
+        if [ -z "${RANGER_KMS_PID_DIR_PATH}" ]
+		then
+			RANGER_KMS_PID_DIR_PATH=/var/run/ranger_kms
+		fi
         if [ ! -d ${RANGER_KMS_PID_DIR_PATH} ]; then
-                log "[I] Creating KMS PID folder: ${RANGER_KMS_PID_DIR_PATH}"
-                mkdir -p ${RANGER_KMS_PID_DIR_PATH}
+            log "[I] Creating KMS PID folder: ${RANGER_KMS_PID_DIR_PATH}"
+            mkdir -p ${RANGER_KMS_PID_DIR_PATH}
+            if [ ! $? = "0" ];then
+                log "Make $RANGER_KMS_PID_DIR_PATH failure....!!";
+                exit 1;
+            fi
         fi
-        if [ -d ${RANGER_KMS_PID_DIR_PATH} ]; then
-                chown -R ${unix_user} ${RANGER_KMS_PID_DIR_PATH}
-        fi
+
+        chown -R ${unix_user} ${RANGER_KMS_PID_DIR_PATH}
+
         echo "export RANGER_KMS_PID_DIR_PATH=${RANGER_KMS_PID_DIR_PATH}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
         echo "export KMS_USER=${unix_user}" >> ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-piddir.sh
