@@ -290,7 +290,7 @@ public class HdfsClient extends BaseClient {
 		}
 		if (fsDefaultNameElements != null && fsDefaultNameElements.length >= 2) {
 			String cluster = "";
-			String clusters = "";
+			StringBuilder clusters = new StringBuilder();
 			configs.put("dfs.nameservices", "hdfscluster");
 			configs.put("fs.default.name", "hdfs://" + configs.get("dfs.nameservices"));
 			configs.put("dfs.client.failover.proxy.provider." + configs.get("dfs.nameservices"),
@@ -300,12 +300,12 @@ public class HdfsClient extends BaseClient {
 				configs.put("dfs.namenode.rpc-address." + configs.get("dfs.nameservices") + "." + cluster,
 						fsDefaultNameElements[i]);
 				if (i == (fsDefaultNameElements.length - 1)) {
-					clusters += cluster;
+					clusters.append(cluster);
 				} else {
-					clusters += cluster + ",";
+					clusters.append(cluster).append(",");
 				}
 			}
-			configs.put("dfs.ha.namenodes." + configs.get("dfs.nameservices"), clusters);
+			configs.put("dfs.ha.namenodes." + configs.get("dfs.nameservices"), clusters.toString());
 		}
 	}
 
