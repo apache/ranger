@@ -133,30 +133,11 @@ public class RemoteUnixLoginModule implements LoginModule {
 			this.callbackHandler = new ConsolePromptCallbackHandler();
 		}
 
-		/*
-		Properties config = null;
-
-		String val = (String) options.get(REMOTE_UNIX_AUTHENICATION_CONFIG_FILE_PARAM);
-		log("Remote Unix Auth Configuration file [" + val + "]");
-		if (val != null) {
-			XMLUtils.loadConfig(val, config);
-		}
-		
-		if (config == null) {
-			logError("Remote Unix Auth Configuration is being loaded from XML configuration - not Properties");
-			config = new Properties();
-			config.putAll(options);
-		}
-		
-		*/
-		
 		Properties config = new Properties();
 		config.putAll(options);
 		initParams(config);
 		
 	}
-	
-	
 	
 	public void initParams(Properties  options) {
 		
@@ -165,7 +146,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 		if (val != null) {
 			remoteLoginEnabled = val.trim().equalsIgnoreCase("true");
 			if (! remoteLoginEnabled) {
-				System.err.println("Skipping RemoteLogin - [" + JAAS_ENABLED_PARAM + "] => [" + val + "]");
+				log("Skipping RemoteLogin - [" + JAAS_ENABLED_PARAM + "] => [" + val + "]");
 				return;
 			}
 		}
@@ -218,7 +199,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 			}
 			
 			String certValidationFlag = (String) options.get(SERVER_CERT_VALIDATION_PARAM);
-			serverCertValidation = (! (certValidationFlag != null && ("false".equalsIgnoreCase(certValidationFlag.trim().toLowerCase()))));
+			serverCertValidation = (! (certValidationFlag != null && ("false".equalsIgnoreCase(certValidationFlag.trim()))));
 			log("Server Cert Validation : " + serverCertValidation);
 		}
 
