@@ -129,7 +129,11 @@ define(function(require) {
 								//same level resources check
 								var optionsAttrs = [];
 								if(!_.isUndefined(v.level)){
-									optionsAttrs = _.filter(config,function(field){ if(field.level == v.level) return field;})
+									optionsAttrs = _.filter(config,function(field){ 
+										if(field.level == v.level && field.parent == v.parent){
+											return field;	
+										}
+									});
 								}
 								//TODO
 								//if policyType is masking then check for supported resources
