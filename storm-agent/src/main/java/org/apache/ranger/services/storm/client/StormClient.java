@@ -251,6 +251,7 @@ public class StormClient {
 						null, loginConf);
 
 				LOG.debug("executeUnderKerberos():Logging in..");
+				loginContext.logout();
 				loginContext.login();
 				LOG.info("Init Login: using username/password");
 				loginSubj = loginContext.getSubject();
