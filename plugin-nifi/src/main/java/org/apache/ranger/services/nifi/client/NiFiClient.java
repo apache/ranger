@@ -196,20 +196,21 @@ public class NiFiClient {
                 return new ArrayList<>();
             }
 
-            final List<String> result = new ArrayList<>();
-            for (final List<?> generalName : altNames) {
+			final List<String> result = new ArrayList<>();
+			for (final List<?> generalName : altNames) {
                 /**
                  * generalName has the name type as the first element a String or byte array for the second element. We return any general names that are String types.
                  *
                  * We don't inspect the numeric name type because some certificates incorrectly put IPs and DNS names under the wrong name types.
                  */
-                final Object value = generalName.get(1);
-                if (value instanceof String) {
-                    result.add(((String) value).toLowerCase());
-                }
+				if (generalName.size() > 1) {
+					final Object value = generalName.get(1);
+					if (value instanceof String) {
+						result.add(((String) value).toLowerCase());
+					}
+				}
 
             }
-
             return result;
         }
     }
