@@ -240,6 +240,9 @@ define(function(require) {
 			var that = this;
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+			// Disable delegating admin privilages
+			this.ui.delegatedAdmin.parent('td').hide();
+
 			//set default access type 'select' for add new masking & row filter policies
 			if(!XAUtil.isAccessPolicy(this.rangerPolicyType) && !_.contains(this.permsIds,'select')) {
 				this.permsIds.push('select');
@@ -701,7 +704,8 @@ define(function(require) {
 			var permList = [];
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 				if(XAUtil.isAccessPolicy(this.rangerPolicyType)){
-					permList.unshift(localization.tt('lbl.delegatedAdmin'));
+				    // Disable delegating admin privilages
+//					permList.unshift(localization.tt('lbl.delegatedAdmin'));
 				}
 				if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
 					permList.unshift(localization.tt('lbl.rowLevelFilter'));

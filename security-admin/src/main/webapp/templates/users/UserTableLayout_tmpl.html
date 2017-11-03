@@ -29,7 +29,8 @@
 		<div class="span8" style=" margin-bottom: 11px; ">
 			<div class="visual_search"></div>
 		</div>
-		<div class="clearfix" data-id="addNewBtnDiv">
+		<!--   Disable user and group management from Ranger Admin Portal UI ----- To enable these functionalities, remove comment
+        <div class="clearfix" data-id="addNewBtnDiv">
 			{{#isSystemAdmin .}}
 				<a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
 			{{/isSystemAdmin}}
@@ -46,6 +47,7 @@
       <a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
       <a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
 		</div>
+		-->
 		<div data-id="r_tableList" class="clickable">
           <b class="_prevNav"></b>
 		</div>

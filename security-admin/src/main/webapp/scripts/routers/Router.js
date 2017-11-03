@@ -45,15 +45,15 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/userprofile"		: "userProfileAction",
 			
 			"!/users/:tab"		: "userManagerAction",
-			"!/user/create"		: "userCreateAction",
-			"!/user/:id"		: "userEditAction",
+//			"!/user/create"		: "userCreateAction",
+//			"!/user/:id"		: "userEditAction",
 			
-			"!/group/create"	: "groupCreateAction",
-			"!/group/:id"		: "groupEditAction",
+//			"!/group/create"	: "groupCreateAction",
+//			"!/group/:id"		: "groupEditAction",
 
 			/************GENERIC UI *****************************************/
-			"!/service/:serviceType/create" 	: "serviceCreateAction",
-			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
+//			"!/service/:serviceType/create" 	: "serviceCreateAction",
+//			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
 			
 			"!/service/:serviceId/policies/:policyType"			: "policyManageAction",
 			"!/service/:serviceId/policies/create/:policyType"	: "RangerPolicyCreateAction",

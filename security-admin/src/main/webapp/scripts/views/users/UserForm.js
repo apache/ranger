@@ -154,7 +154,7 @@ define(function(require){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
 				
-				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
+				/*if(SessionMgr.getUserProfile().get('loginId') != "admin"){
 					if(this.model.get('name') != "admin"){
 						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN') 
 								|| _.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_KEY_ADMIN')){
@@ -169,7 +169,12 @@ define(function(require){
 					}
 				} else {
 					this.fields.userRoleList.editor.$el.attr('disabled',false);
-				}
+				}*/
+
+				// Disable user role change from Ranger Admin portal
+                // This will be maintained by our own Portal
+				this.fields.userRoleList.editor.$el.attr('disabled',true);
+
 				//User does not allowed to change his role (it's own role)
 				if(this.model.get('name') == SessionMgr.getUserProfile().get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);

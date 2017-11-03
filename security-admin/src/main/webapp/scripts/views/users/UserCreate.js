@@ -116,6 +116,10 @@ define(function(require){
 				model : this.model,
 				showBasicFields : this.showBasicFields
 			});
+
+			// Disable save button for our purposes
+			this.ui.btnSave.hide();
+
 			this.rForm.show(this.form);
 			if(!this.showBasicFields){
 				this.form.fields.passwordConfirm.editor.$el.on('keypress',function(e){
