@@ -82,7 +82,7 @@
 			"mandatory": true,
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1.For one Namenode Url, eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;<br>2.For HA Namenode Urls(use , delimiter), eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;,hdfs://&lt;host2&gt;:&lt;port2&gt;<br>\"}",
 			"label": "Namenode URL"
 		},
 

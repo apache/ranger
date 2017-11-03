@@ -67,7 +67,7 @@ define(function(require){
 		schema :function(){
 			return{
 				name : {
-					type		: 'TextFiledWithIcon',
+					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.userName") +' *',
 					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i, 
 						            message :' Invalid user name'}],
@@ -91,14 +91,14 @@ define(function(require){
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
 				firstName : { 
-					type		: 'TextFiledWithIcon',
+					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.firstName")+' *',
                                         validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid first name'}],
 					errorMsg    :localization.tt('validationMessages.firstNameValidationMsg'),
 				},
 				lastName : { 
-					type		: 'TextFiledWithIcon',
+					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.lastName"),
                                         validators  : [{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid last name'}],

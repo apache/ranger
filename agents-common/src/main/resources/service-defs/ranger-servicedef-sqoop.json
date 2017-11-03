@@ -101,7 +101,7 @@
 			"defaultValue": "",
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"eg. 'http://&lt;ipaddr&gt;:12000'\"}",
 			"label": "Sqoop URL"
 		}
 

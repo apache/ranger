@@ -358,7 +358,7 @@
 	  
 	  //costume text filed
 	  
-	    Form.editors.TextFiledWithIcon = Form.editors.Base.extend({
+	    Form.editors.TextFieldWithIcon = Form.editors.Base.extend({
 
 	  	      tagName: 'span',
 	  
@@ -454,9 +454,9 @@
 	  /**
 	    * Password editor
 	   	*/
-	  Form.editors.PasswordFiled = Form.editors.TextFiledWithIcon.extend({
+	  Form.editors.PasswordFiled = Form.editors.TextFieldWithIcon.extend({
           initialize: function(options) {
-	  	        Form.editors.TextFiledWithIcon.prototype.initialize.call(this, options);
+	            Form.editors.TextFieldWithIcon.prototype.initialize.call(this, options);
 	  	        this.$el.find('input').attr('type', 'password');
 		  	    
 	  	    },

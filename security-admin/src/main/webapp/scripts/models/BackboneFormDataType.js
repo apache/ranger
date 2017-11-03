@@ -79,20 +79,13 @@ define(function(require) {
 					switch (v.type) {
 						case 'string':
 							if(!isPolicyForm) {
-								if(v.name == 'yarn.url'){
-									formObj.type = 'TextFiledWithIcon';
-									formObj.errorMsg = localization.tt("hintMsg.yarnRestUrl");
-								}else if(v.name == 'sqoop.url'){
-									formObj.type = 'TextFiledWithIcon';
-									formObj.errorMsg = localization.tt("hintMsg.sqoopRestUrl");
-								}else if(v.name == 'jdbc.url'){
-									formObj.type = 'TextFiledWithIcon';
-									formObj.errorMsg = localization.tt("hintMsg.hiveJDBCUrl");
-								}else if(v.name == 'fs.default.name'){
-									formObj.type = 'TextFiledWithIcon';
-									formObj.errorMsg = localization.tt("hintMsg.hdfsNameNodeUrl");
-								}else{
-									formObj.type = 'Text';
+								formObj.type = 'Text';
+								if(!_.isUndefined(v.uiHint) && !_.isEmpty(v.uiHint)){
+									var UIHint = JSON.parse(v.uiHint);
+									if(!_.isUndefined(UIHint.TextFieldWithIcon) && UIHint.TextFieldWithIcon){
+										formObj.type = 'TextFieldWithIcon';
+										formObj.errorMsg = UIHint.info;
+									}
 								}
 								break;
 							}
