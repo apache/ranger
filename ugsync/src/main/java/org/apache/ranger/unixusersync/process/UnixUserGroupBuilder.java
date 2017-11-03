@@ -222,7 +222,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 				int len = tokens.length;
 
-				if (len < 3) {
+				if (len < 4) {
 					LOG.warn("Unable to parse: " + line);
 					continue;
 				}
@@ -350,7 +350,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		String[] tokens = line.split(":");
 
-		if (tokens.length < 2)
+		if (tokens.length < 3)
 			return;
 
 		String groupName = tokens[0];
