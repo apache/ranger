@@ -39,7 +39,7 @@ public class RangerKMSDB {
 	private EntityManagerFactory entityManagerFactory;
 	private DaoManager daoManager;
 	
-	private static Map<String, String> DB_PROPERTIES = null;
+	private final Map<String, String> jpaProperties = new HashMap<>();
 	
 	private static final String PROPERTY_PREFIX = "ranger.ks.";
 	private static final String DB_DIALECT = "jpa.jdbc.dialect";
@@ -88,12 +88,11 @@ public class RangerKMSDB {
 	private void initDBConnectivity(){
 		try {
 			
-			DB_PROPERTIES = new HashMap<String, String>();
-			DB_PROPERTIES.put(JPA_DB_DIALECT, conf.get(PROPERTY_PREFIX+DB_DIALECT));
-			DB_PROPERTIES.put(JPA_DB_DRIVER, conf.get(PROPERTY_PREFIX+DB_DRIVER));
-			DB_PROPERTIES.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
-			DB_PROPERTIES.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
-			DB_PROPERTIES.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
+			jpaProperties.put(JPA_DB_DIALECT, conf.get(PROPERTY_PREFIX+DB_DIALECT));
+			jpaProperties.put(JPA_DB_DRIVER, conf.get(PROPERTY_PREFIX+DB_DRIVER));
+			jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
+			jpaProperties.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
+			jpaProperties.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
 			if(getDBFlavor(conf)==DB_FLAVOR_MYSQL){
 				updateDBSSLURL();
 			}
@@ -110,7 +109,7 @@ public class RangerKMSDB {
    			}
 			*/
 				
-			entityManagerFactory = Persistence.createEntityManagerFactory("persistence_ranger_server", DB_PROPERTIES);
+			entityManagerFactory = Persistence.createEntityManagerFactory("persistence_ranger_server", jpaProperties);
 	   	    	daoManager = new DaoManager();
 	   	    	daoManager.setEntityManagerFactory(entityManagerFactory);
 	   	    	daoManager.getEntityManager(); // this forces the connection to be made to DB
@@ -140,11 +139,11 @@ public class RangerKMSDB {
 		return null;
 	}
 
-	public int getDBFlavor(Configuration newConfig) {
+	private int getDBFlavor(Configuration newConfig) {
 		String[] propertyNames = { PROPERTY_PREFIX+DB_DIALECT,PROPERTY_PREFIX+DB_DRIVER,PROPERTY_PREFIX+DB_URL};
 
 		for(String propertyName : propertyNames) {
-			String propertyValue = DB_PROPERTIES.get(propertyName);
+			String propertyValue = newConfig.get(propertyName);
 			if(StringUtils.isBlank(propertyValue)) {
 				continue;
 			}
@@ -174,67 +173,61 @@ public class RangerKMSDB {
 
 	private void updateDBSSLURL(){
 		if(conf!=null && conf.get(PROPERTY_PREFIX+DB_SSL_ENABLED)!=null){
-			String db_ssl_enabled=conf.get(PROPERTY_PREFIX+DB_SSL_ENABLED);
-			if(StringUtils.isEmpty(db_ssl_enabled)|| !"true".equalsIgnoreCase(db_ssl_enabled)){
-				db_ssl_enabled="false";
-			}
-			db_ssl_enabled=db_ssl_enabled.toLowerCase();
+			final String db_ssl_enabled = normalize(conf.get(PROPERTY_PREFIX+DB_SSL_ENABLED));
 			if("true".equalsIgnoreCase(db_ssl_enabled)){
-				String db_ssl_required=conf.get(PROPERTY_PREFIX+DB_SSL_REQUIRED);
-				if(StringUtils.isEmpty(db_ssl_required)|| !"true".equalsIgnoreCase(db_ssl_required)){
-					db_ssl_required="false";
-				}
-				db_ssl_required=db_ssl_required.toLowerCase();
-				String db_ssl_verifyServerCertificate=conf.get(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate);
-				if(StringUtils.isEmpty(db_ssl_verifyServerCertificate)|| !"true".equalsIgnoreCase(db_ssl_verifyServerCertificate)){
-					db_ssl_verifyServerCertificate="false";
-				}
-				db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.toLowerCase();
+				final String db_ssl_required=normalize(conf.get(PROPERTY_PREFIX+DB_SSL_REQUIRED));
+				final String db_ssl_verifyServerCertificate=normalize(conf.get(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate));
 				conf.set(PROPERTY_PREFIX+DB_SSL_ENABLED, db_ssl_enabled);
 				conf.set(PROPERTY_PREFIX+DB_SSL_REQUIRED, db_ssl_required);
 				conf.set(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate, db_ssl_verifyServerCertificate);
 				String ranger_jpa_jdbc_url=conf.get(PROPERTY_PREFIX+DB_URL);
 				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
-					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
-					ranger_jpa_jdbc_url_ssl.append("?useSSL="+db_ssl_enabled+"&requireSSL="+db_ssl_required+"&verifyServerCertificate="+db_ssl_verifyServerCertificate);
-					conf.set(PROPERTY_PREFIX+DB_URL, ranger_jpa_jdbc_url_ssl.toString());
-					DB_PROPERTIES.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
-					logger.info(PROPERTY_PREFIX+DB_URL+"="+ranger_jpa_jdbc_url_ssl.toString());
+					String ranger_jpa_jdbc_url_ssl= ranger_jpa_jdbc_url + "?useSSL=" + db_ssl_enabled + 
+					        "&requireSSL=" + db_ssl_required + "&verifyServerCertificate=" + db_ssl_verifyServerCertificate;
+					conf.set(PROPERTY_PREFIX+DB_URL, ranger_jpa_jdbc_url_ssl);
+					jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
+					logger.info(PROPERTY_PREFIX+DB_URL+"="+ranger_jpa_jdbc_url_ssl);
 				}
 
 				if("true".equalsIgnoreCase(db_ssl_verifyServerCertificate)){
-					if (conf!=null) {
-						// update system key store path with custom key store.
-						String keystore=conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE);
-						if(!StringUtils.isEmpty(keystore)){
-							Path path = Paths.get(keystore);
-							if (Files.exists(path) && Files.isReadable(path)) {
-								System.setProperty("javax.net.ssl.keyStore", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE));
-								System.setProperty("javax.net.ssl.keyStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE_PASSWORD));
-								System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
-							}else{
-								logger.debug("Could not find or read keystore file '"+keystore+"'");
-							}
+					// update system key store path with custom key store.
+					String keystore=conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE);
+					if(!StringUtils.isEmpty(keystore)){
+						Path path = Paths.get(keystore);
+						if (Files.exists(path) && Files.isReadable(path)) {
+							System.setProperty("javax.net.ssl.keyStore", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE));
+							System.setProperty("javax.net.ssl.keyStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE_PASSWORD));
+							System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
 						}else{
-							logger.debug("keystore property '"+PROPERTY_PREFIX+DB_SSL_KEYSTORE+"' value not found!");
+							logger.debug("Could not find or read keystore file '"+keystore+"'");
 						}
-						// update system trust store path with custom trust store.
-						String truststore=conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE);
-						if(!StringUtils.isEmpty(truststore)){
-							Path path = Paths.get(truststore);
-							if (Files.exists(path) && Files.isReadable(path)) {
-								System.setProperty("javax.net.ssl.trustStore", conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE));
-								System.setProperty("javax.net.ssl.trustStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE_PASSWORD));
-								System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
-							}else{
-								logger.debug("Could not find or read truststore file '"+truststore+"'");
-							}
+					}else{
+						logger.debug("keystore property '"+PROPERTY_PREFIX+DB_SSL_KEYSTORE+"' value not found!");
+					}
+					// update system trust store path with custom trust store.
+					String truststore=conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE);
+					if(!StringUtils.isEmpty(truststore)){
+						Path path = Paths.get(truststore);
+						if (Files.exists(path) && Files.isReadable(path)) {
+							System.setProperty("javax.net.ssl.trustStore", conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE));
+							System.setProperty("javax.net.ssl.trustStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE_PASSWORD));
+							System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
 						}else{
-							logger.debug("truststore property '"+PROPERTY_PREFIX+DB_SSL_TRUSTSTORE+"' value not found!");
+							logger.debug("Could not find or read truststore file '"+truststore+"'");
 						}
+					}else{
+						logger.debug("truststore property '"+PROPERTY_PREFIX+DB_SSL_TRUSTSTORE+"' value not found!");
 					}
 				}
 			}
 		}
 	}
+
+    private String normalize(String booleanFlag) {
+        if(StringUtils.isEmpty(booleanFlag)|| !"true".equalsIgnoreCase(booleanFlag)){
+            return "false";
+        } else {
+            return booleanFlag.toLowerCase();
+        }
+    }
 }
