@@ -750,8 +750,15 @@ EOF
 		chpasswd <  ${passwdtmpfile}
 		rm -rf  ${passwdtmpfile}
 	else
-	    log "[I] User already exists, adding it to group";
-	    usermod -g ${unix_group} ${unix_user}
+	    useringroup=`id ${unix_user}`
+        useringrouparr=(${useringroup// / })
+	    if [[  ${useringrouparr[1]} =~ "(${unix_group})" ]]
+		then
+			log "[I] the ${unix_user} user already exists and belongs to group ${unix_group}"
+		else
+			log "[I] User already exists, adding it to group ${unix_group}"
+			usermod -g ${unix_group} ${unix_user}
+		fi
 	fi
 
 	log "[I] Setting up UNIX user : ${unix_user} and group: ${unix_group} DONE";
