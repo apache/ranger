@@ -36,6 +36,7 @@ Build Process
 
 
    ranger-<version>-admin.tar.gz
+   ranger-<version>-atlas-plugin.tar.gz
    ranger-<version>-hbase-plugin.tar.gz
    ranger-<version>-hdfs-plugin.tar.gz
    ranger-<version>-hive-plugin.tar.gz
@@ -43,9 +44,12 @@ Build Process
    ranger-<version>-kms.tar.gz
    ranger-<version>-knox-plugin.tar.gz
    ranger-<version>-migration-util.tar.gz
+   ranger-<version>-ranger-tools.tar.gz
    ranger-<version>-solr-plugin.tar.gz
+   ranger-<version>-sqoop-plugin.tar.gz
    ranger-<version>-src.tar.gz
    ranger-<version>-storm-plugin.tar.gz
+   ranger-<version>-tagsync.tar.gz
    ranger-<version>-usersync.tar.gz
    ranger-<version>-yarn-plugin.tar.gz
 
@@ -71,7 +75,8 @@ Installation Host Information
     (d)  Knox Plugin needs to be installed on Knox gateway host.
     (e)  Storm Plugin needs to be installed on Storm hosts.
     (f)  Kafka/Solr Plugin needs to be installed on their respective component hosts.
-    (g)  YARN plugin need to be installed on YARN Resource Manager hosts
+    (g)  YARN plugin needs to be installed on YARN Resource Manager hosts
+    (h)  Sqoop plugin needs to be installed on Sqoop2 hosts
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
