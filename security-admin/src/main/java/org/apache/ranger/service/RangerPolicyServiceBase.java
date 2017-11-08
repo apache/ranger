@@ -83,7 +83,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		XXService xService = daoMgr.getXXService().findByName(vObj.getService());
 		if (xService == null) {
 			throw restErrorUtil.createRESTException("No corresponding service found for policyName: " + vObj.getName()
-					+ "Service Not Found : " + vObj.getName(), MessageEnums.INVALID_INPUT_DATA);
+					+ "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
 		}
 		xObj.setService(xService.getId());
 		xObj.setName(StringUtils.trim(vObj.getName()));
