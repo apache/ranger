@@ -185,6 +185,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.codehaus.jettison.json.JSONException;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
@@ -3631,10 +3632,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 		putMetaDataInfo(rangerExportPolicyList);
 		rangerExportPolicyList.setPolicies(policies);
-		
-		Gson gson = new Gson();
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
-
 		try {
 			out = response.getOutputStream();
 			response.setStatus(HttpServletResponse.SC_OK);
