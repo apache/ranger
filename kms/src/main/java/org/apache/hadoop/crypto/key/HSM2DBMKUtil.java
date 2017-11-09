@@ -16,11 +16,6 @@
  */
 package org.apache.hadoop.crypto.key;
 
-import java.io.Console;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
 
@@ -70,7 +65,7 @@ public class HSM2DBMKUtil {
 	
 	private void doImportMKFromHSM(String hsmType, String partitionName) {
 		try {
-			String partitionPassword = getPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ");
+			String partitionPassword = ConsoleUtil.getStringPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			conf.set(HSM_TYPE, hsmType);
 			conf.set(PARTITION_NAME, partitionName);
@@ -93,34 +88,4 @@ public class HSM2DBMKUtil {
 			throw new RuntimeException("Unable to import Master key from HSM to Ranger DB", t);
 		}
 	}
-		
-	private String getPasswordFromConsole(String prompt) throws IOException {
-		String ret = null;
-		Console c=System.console();
-	    if (c == null) {
-	        System.out.print(prompt + " ");
-	        InputStream in=System.in;
-	        int max=50;
-	        byte[] b=new byte[max];
-	        int l= in.read(b);
-	        l--;     //last character is \n
-	        if (l>0) {
-	            byte[] e=new byte[l];
-	            System.arraycopy(b,0, e, 0, l);
-	            ret = new String(e, Charset.defaultCharset());
-	        }
-	    } else {
-	    	char[] pwd = c.readPassword(prompt + " ");
-	    	if (pwd == null) {
-	    		ret = null;
-	    	}
-	    	else {
-	    		ret = new String(pwd);
-	    	}
-	    }
-	    if (ret == null) {
-	    	ret = "";
-	    }
-	    return ret;
-	}	
 }

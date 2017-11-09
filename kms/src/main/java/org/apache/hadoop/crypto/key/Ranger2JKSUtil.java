@@ -16,13 +16,10 @@
  */
 package org.apache.hadoop.crypto.key;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 
@@ -76,8 +73,8 @@ public class Ranger2JKSUtil {
 	
 	private void doExportKeysFromJKS(String keyStoreFileName, String keyStoreType) {
 		try {
-			char[] keyStorePassword = getPasswordFromConsole("Enter Password for the keystore FILE :");
-			char[] keyPassword = getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
+			char[] keyStorePassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the keystore FILE :");
+			char[] keyPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
@@ -105,33 +102,5 @@ public class Ranger2JKSUtil {
 		}
 	}
 	
-	private char[] getPasswordFromConsole(String prompt) throws IOException {
-		String ret = null;
-		Console c=System.console();
-	    if (c == null) {
-	        System.out.print(prompt + " ");
-	        InputStream in=System.in;
-	        int max=50;
-	        byte[] b=new byte[max];
-	        int l= in.read(b);
-	        l--;     //last character is \n
-	        if (l>0) {
-	            byte[] e=new byte[l];
-	            System.arraycopy(b,0, e, 0, l);
-	            ret = new String(e, Charset.defaultCharset());
-	        }
-	    } else {
-	    	char[] pwd = c.readPassword(prompt + " ");
-	    	if (pwd == null) {
-	    		ret = null;
-	    	}
-	    	else {
-	    		ret = new String(pwd);
-	    	}
-	    }
-	    if (ret == null) {
-	    	ret = "";
-	    }
-	    return ret.toCharArray();
-	}
+
 }
