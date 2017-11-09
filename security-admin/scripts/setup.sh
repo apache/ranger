@@ -678,26 +678,26 @@ update_properties() {
 
 	if [ "${policymgr_user_group_management_enabled}" != "" ]
 	then
-        propertyName=ranger.user.group.management.enabled
-        newPropertyValue="${policymgr_user_group_management_enabled}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-    fi
+		propertyName=ranger.user.group.management.enabled
+		newPropertyValue="${policymgr_user_group_management_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
-    if [ "${policymgr_service_management_enabled}" != "" ]
-    then
-        propertyName=ranger.service.management.enabled
-        newPropertyValue="${policymgr_service_management_enabled}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-    fi
+	if [ "${policymgr_service_management_enabled}" != "" ]
+	then
+		propertyName=ranger.service.management.enabled
+		newPropertyValue="${policymgr_service_management_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
-    if [ "${policymgr_delegation_enabled}" != "" ]
-    then
-        propertyName=ranger.admin.delegation.enabled
-        newPropertyValue="${policymgr_delegation_enabled}"
-        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-    fi
+	if [ "${policymgr_delegation_enabled}" != "" ]
+	then
+		propertyName=ranger.admin.delegation.enabled
+		newPropertyValue="${policymgr_delegation_enabled}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
 
-   	propertyName=ranger.jpa.jdbc.user
+	propertyName=ranger.jpa.jdbc.user
 	newPropertyValue="${db_user}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
