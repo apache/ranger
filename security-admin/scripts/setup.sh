@@ -86,6 +86,9 @@ policymgr_https_keystore_file=$(get_prop 'policymgr_https_keystore_file' $PROPFI
 policymgr_https_keystore_keyalias=$(get_prop 'policymgr_https_keystore_keyalias' $PROPFILE)
 policymgr_https_keystore_password=$(get_prop 'policymgr_https_keystore_password' $PROPFILE)
 policymgr_supportedcomponents=$(get_prop 'policymgr_supportedcomponents' $PROPFILE)
+policymgr_user_group_management_enabled=$(get_prop 'policymgr_user_group_management_enabled' $PROPFILE)
+policymgr_service_management_enabled=$(get_prop 'policymgr_service_management_enabled' $PROPFILE)
+policymgr_delegation_enabled=$(get_prop 'policymgr_delegation_enabled' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 authentication_method=$(get_prop 'authentication_method' $PROPFILE)
@@ -673,7 +676,28 @@ update_properties() {
 	newPropertyValue="${policymgr_supportedcomponents}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
-	propertyName=ranger.jpa.jdbc.user
+	if [ "${policymgr_user_group_management_enabled}" != "" ]
+	then
+        propertyName=ranger.user.group.management.enabled
+        newPropertyValue="${policymgr_user_group_management_enabled}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+    fi
+
+    if [ "${policymgr_service_management_enabled}" != "" ]
+    then
+        propertyName=ranger.service.management.enabled
+        newPropertyValue="${policymgr_service_management_enabled}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+    fi
+
+    if [ "${policymgr_delegation_enabled}" != "" ]
+    then
+        propertyName=ranger.admin.delegation.enabled
+        newPropertyValue="${policymgr_delegation_enabled}"
+        updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+    fi
+
+   	propertyName=ranger.jpa.jdbc.user
 	newPropertyValue="${db_user}"
 	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 

@@ -32,6 +32,7 @@ define(function(require){
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
 	var vUploadServicePolicy		= require('views/UploadServicePolicy');
 	var vDownloadServicePolicy		= require('views/DownloadServicePolicy');
+	var RangerConfigMgr             = require('mgrs/RangerConfigMgr');
 	require('Backbone.BootstrapModal');
 	return Backbone.Marionette.Layout.extend(
 	/** @lends Servicemanagerlayout */
@@ -41,11 +42,22 @@ define(function(require){
     	template: ServicemanagerlayoutTmpl,
 
 		templateHelpers: function(){
+		    console.log("Start fetching RangerConfigMgr.getRangerManagementConfig()");
+		    console.log("isAdminDelegated: " + RangerConfigMgr.isAdminDelegationEnabled());
+		    console.log("isServiceManagementEnabled: " + RangerConfigMgr.isServiceManagementEnabled());
+		    console.log("isUserGroupManagementEnabled: " + RangerConfigMgr.isUserGroupManagementEnabled());
+		    console.log("End fetching RangerConfigMgr.getRangerManagementConfig()");
 			return {
 				operation 	: SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,
 				services 	: this.services.groupBy("type"),
-				showImportExportBtn : SessionMgr.isUser() ? false : true
+				showImportExportBtn : function(){
+				    if(!RangerConfigMgr.isServiceManagementEnabled()){
+				        return false;
+				    }
+				    return SessionMgr.isUser() ? false : true;
+				},
+				showServiceAddBtn : RangerConfigMgr.isServiceManagementEnabled()
 			};
 			
 		},

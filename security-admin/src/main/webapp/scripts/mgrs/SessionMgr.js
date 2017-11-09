@@ -24,6 +24,7 @@ define(function(require){
 
 	var VXPortalUser		= require('models/VXPortalUser');
 
+
 	// Private properties
 	var vXPortalUser = null;
 	var vSessionSettings = null;

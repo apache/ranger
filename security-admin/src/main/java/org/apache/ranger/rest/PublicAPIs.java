@@ -392,4 +392,27 @@ public class PublicAPIs {
 		return vXlong;
 	}
 
+	@GET
+	@Path("/api/mgr/config")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/xml", "application/json" })
+	public RangerManagementConfig getManagementConfiguration(@Context HttpServletRequest request) {
+
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIs.getManagementConfiguration(): ");
+		}
+
+		RangerManagementConfig rangerManagementConfig = new RangerManagementConfig();
+		RangerConfigUtil rangerConfigUtil = new RangerConfigUtil();
+		rangerManagementConfig.setUserGroupManagementEnabled(rangerConfigUtil.isUserGroupManagementEnabled());
+		rangerManagementConfig.setAdminDelegationEnabled(rangerConfigUtil.isAdminDelegationEnabled());
+		rangerManagementConfig.setServiceManagementEnabled(rangerConfigUtil.isServiceManagementEnabled());
+
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIs.getManagementConfiguration()");
+		}
+
+		return rangerManagementConfig;
+	}
+
 }

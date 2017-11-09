@@ -32,6 +32,7 @@ define(function(require){
 	var UserTableLayout	= require('views/users/UserTableLayout');
 	var VXUserList		= require('collections/VXUserList');
 	var UserCreateTmpl  = require('hbs!tmpl/users/UserCreate_tmpl');
+	var RangerConfigMgr = require('mgrs/RangerConfigMgr');
 
 	var UserCreate = Backbone.Marionette.Layout.extend(
 	/** @lends UserCreate */
@@ -117,8 +118,11 @@ define(function(require){
 				showBasicFields : this.showBasicFields
 			});
 
-			// Disable save button for our purposes
-			this.ui.btnSave.hide();
+			// Disable save button if user management not supported
+			if(!RangerConfigMgr.isUserGroupManagementEnabled()){
+			    this.ui.btnSave.hide();
+			}
+
 
 			this.rForm.show(this.form);
 			if(!this.showBasicFields){

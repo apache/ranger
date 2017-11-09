@@ -23,6 +23,7 @@
 	var XAUtil	   		= require('utils/XAUtils');
     var localization 	= require('utils/XALangSupport');
     var SessionMgr   	= require('mgrs/SessionMgr');
+    var RangerConfigMgr = require('mgrs/RangerConfigMgr');
 	require('moment');
 	/*
 	 * General guidelines while writing helpers:
@@ -507,11 +508,13 @@
 			_.each(services[serviceType],function(serv){
 				serviceName = serv.get('name');
 				if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
-					serviceOperationDiv = '<div class="pull-right">\
-					<a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
-					<a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
-					<i class="icon-trash"></i></a>\
-					</div>'
+				    if(RangerConfigMgr.isServiceManagementEnabled()){
+				        serviceOperationDiv = '<div class="pull-right">\
+                        <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
+                        <a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
+                        <i class="icon-trash"></i></a>\
+                        </div>'
+				    }
 				}
 				tr += '<tr><td><div>\
 						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
@@ -540,7 +543,7 @@
 		var XAEnums		= require('utils/XAEnums');
 		return XAUtil.isRenderRowFilter(XAEnums.RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value);
 	});
-	
+
 
 	return HHelpers;
 });

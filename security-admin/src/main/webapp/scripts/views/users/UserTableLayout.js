@@ -28,6 +28,7 @@ define(function(require){
 	var XABackgrid		= require('views/common/XABackgrid');
 	var localization	= require('utils/XALangSupport');
 	var SessionMgr  	= require('mgrs/SessionMgr');
+	var RangerConfigMgr = require('mgrs/RangerConfigMgr');
 
 	var VXGroupList		= require('collections/VXGroupList');
 	var VXGroup			= require('models/VXGroup');
@@ -45,6 +46,15 @@ define(function(require){
 		_viewName : 'UserTableLayout',
 		
     	template: UsertablelayoutTmpl,
+    	templateHelpers: function(){
+    	    var isShow = RangerConfigMgr.isUserGroupManagementEnabled();
+            return {
+                showVisibilityDropDown 	: isShow,
+                showAddNewUser          : isShow,
+                showAddNewGroup         : isShow,
+                showDeleteUserGroup     : isShow
+            };
+        },
     	breadCrumbs :[XALinks.get('Users')],
 		/** Layout sub regions */
     	regions: {
@@ -372,6 +382,11 @@ define(function(require){
 					sortable:false
 				}
 			};
+
+            if(!RangerConfigMgr.isUserGroupManagementEnabled()){
+                delete cols.select;
+            }
+
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		
@@ -464,6 +479,11 @@ define(function(require){
 					sortable:false
 				}
 			};
+
+			if(!RangerConfigMgr.isUserGroupManagementEnabled()){
+                delete cols.select;
+            }
+
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 
