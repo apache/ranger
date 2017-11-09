@@ -18,7 +18,7 @@
  */
 
 
-// Manages the user session
+// Manages the ranger configuration
 define(function(require){
 	'use strict';
 
@@ -36,7 +36,6 @@ define(function(require){
 	 *
 	 * @returns RangerConfigMgr
 	 */
-
 	RangerConfigMgr.getRangerManagementConfig = function() {
 		if ( rangerManagementConfig){
 			return rangerManagementConfig;
@@ -49,6 +48,10 @@ define(function(require){
 		return rangerManagementConfig;
 	};
 
+    /**
+     *
+     * @returns isUserGroupManagementEnabled
+     */
 	RangerConfigMgr.isUserGroupManagementEnabled = function() {
 	    if(!rangerManagementConfig){
 	        rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
@@ -57,6 +60,10 @@ define(function(require){
 	    return rangerManagementConfig.get('isUserGroupManagementEnabled');
 	};
 
+    /**
+     *
+     * @returns isAdminDelegationEnabled
+     */
 	RangerConfigMgr.isAdminDelegationEnabled = function() {
         if(!rangerManagementConfig){
             rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
@@ -65,6 +72,10 @@ define(function(require){
         return rangerManagementConfig.get('isAdminDelegationEnabled');
     };
 
+    /**
+     *
+     * @returns isServiceManagementEnabled
+     */
     RangerConfigMgr.isServiceManagementEnabled = function() {
         if(!rangerManagementConfig){
             rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();

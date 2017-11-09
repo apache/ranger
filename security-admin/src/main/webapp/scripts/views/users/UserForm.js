@@ -171,13 +171,10 @@ define(function(require){
 				} else {
 					this.fields.userRoleList.editor.$el.attr('disabled',false);
 				}
-
 				// Disable user role change if not supported
 				if(!RangerConfigMgr.isUserGroupManagementEnabled()){
 				    this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
-
-
 				//User does not allowed to change his role (it's own role)
 				if(this.model.get('name') == SessionMgr.getUserProfile().get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);

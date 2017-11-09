@@ -117,12 +117,10 @@ define(function(require){
 				model : this.model,
 				showBasicFields : this.showBasicFields
 			});
-
-			// Disable save button if user management not supported
+			// Disable save button if user management is not supported
 			if(!RangerConfigMgr.isUserGroupManagementEnabled()){
 			    this.ui.btnSave.hide();
 			}
-
 
 			this.rForm.show(this.form);
 			if(!this.showBasicFields){

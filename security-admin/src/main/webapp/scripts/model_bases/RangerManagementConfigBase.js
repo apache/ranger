@@ -82,15 +82,8 @@ define(function(require){
 		/*************************
 		 * Non - CRUD operations
 		 *************************/
-        getRangerManagementConfig : function(options){
-            /*var url = XAGlobals.baseURL + 'public/api/mgr/config';
 
-            options = _.extend({
-                //data : JSON.stringify(postData),
-                contentType : 'application/json',
-                dataType : 'json'
-            }, options);
-            */
+        getRangerManagementConfig : function(options){
             return this.constructor.nonCrudOperation.call(this, this.url, 'GET', options);
         }
 	}, {

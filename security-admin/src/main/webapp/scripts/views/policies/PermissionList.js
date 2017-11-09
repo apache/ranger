@@ -242,12 +242,10 @@ define(function(require) {
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
 
-
-			// Disable delegating admin privilages if not supported
+			// Disable delegating admin privileges if not supported
 			if(!RangerConfigMgr.isAdminDelegationEnabled()){
 			    this.ui.delegatedAdmin.parent('td').hide();
 			}
-
 
 			//set default access type 'select' for add new masking & row filter policies
 			if(!XAUtil.isAccessPolicy(this.rangerPolicyType) && !_.contains(this.permsIds,'select')) {
@@ -710,7 +708,7 @@ define(function(require) {
 			var permList = [];
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 				if(XAUtil.isAccessPolicy(this.rangerPolicyType)){
-				    // Enable delegating admin privilages if supported
+				    // Enable delegating admin privileges if supported
 				    if(RangerConfigMgr.isAdminDelegationEnabled()){
                         permList.unshift(localization.tt('lbl.delegatedAdmin'));
                     }

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.common;
 
-
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -97,7 +96,7 @@ public class RangerConfigUtil {
 
 	/**
 	 *
-	 * @param userGroupManagementEnabled
+	 * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
 	 */
 	public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
 		isUserGroupManagementEnabled = userGroupManagementEnabled; }
@@ -111,7 +110,7 @@ public class RangerConfigUtil {
 
 	/**
 	 *
-	 * @param adminDelegationEnabled
+	 * @param adminDelegationEnabled sets the value of isAdminDelegationEnabled
 	 */
 	public void setAdminDelegationEnabled(boolean adminDelegationEnabled) {
 		isAdminDelegationEnabled = adminDelegationEnabled;
@@ -127,7 +126,7 @@ public class RangerConfigUtil {
 
 	/**
 	 *
-	 * @param serviceManagementEnabled
+	 * @param serviceManagementEnabled sets the value of isServiceManagementEnabled
 	 */
 	public void setServiceManagementEnabled(boolean serviceManagementEnabled) {
 		isServiceManagementEnabled = serviceManagementEnabled;

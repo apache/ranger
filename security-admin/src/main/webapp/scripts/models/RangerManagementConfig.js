@@ -22,8 +22,6 @@ define(function(require){
 	'use strict';
 
 	var RangerManagementConfigBase	= require('model_bases/RangerManagementConfigBase');
-	//var XAEnums			= require('utils/XAEnums');
-	//var localization		= require('utils/XALangSupport');
 
 	var RangerManagementConfig = RangerManagementConfigBase.extend(
 	/** @lends RangerManagementConfig.prototype */

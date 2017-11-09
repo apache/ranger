@@ -386,7 +386,6 @@ define(function(require){
             if(!RangerConfigMgr.isUserGroupManagementEnabled()){
                 delete cols.select;
             }
-
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		
@@ -483,7 +482,6 @@ define(function(require){
 			if(!RangerConfigMgr.isUserGroupManagementEnabled()){
                 delete cols.select;
             }
-
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 

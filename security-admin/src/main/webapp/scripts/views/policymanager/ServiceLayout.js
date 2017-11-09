@@ -42,11 +42,6 @@ define(function(require){
     	template: ServicemanagerlayoutTmpl,
 
 		templateHelpers: function(){
-		    console.log("Start fetching RangerConfigMgr.getRangerManagementConfig()");
-		    console.log("isAdminDelegated: " + RangerConfigMgr.isAdminDelegationEnabled());
-		    console.log("isServiceManagementEnabled: " + RangerConfigMgr.isServiceManagementEnabled());
-		    console.log("isUserGroupManagementEnabled: " + RangerConfigMgr.isUserGroupManagementEnabled());
-		    console.log("End fetching RangerConfigMgr.getRangerManagementConfig()");
 			return {
 				operation 	: SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,

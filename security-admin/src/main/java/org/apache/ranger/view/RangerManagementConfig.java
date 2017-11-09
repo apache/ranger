@@ -50,7 +50,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @return
+     * @return the isUserGroupManagementEnabled
      */
     public boolean isUserGroupManagementEnabled() {
         return isUserGroupManagementEnabled;
@@ -58,7 +58,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @param userGroupManagementEnabled
+     * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
      */
     public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
         isUserGroupManagementEnabled = userGroupManagementEnabled;
@@ -66,7 +66,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @return
+     * @return the isAdminDelegationEnabled
      */
     public boolean isAdminDelegationEnabled() {
         return isAdminDelegationEnabled;
@@ -74,7 +74,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @param adminDelegationEnabled
+     * @param adminDelegationEnabled sets the value of isAdminDelegationEnabled
      */
     public void setAdminDelegationEnabled(boolean adminDelegationEnabled) {
         isAdminDelegationEnabled = adminDelegationEnabled;
@@ -82,7 +82,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @return
+     * @return the isServiceManagementEnabled
      */
     public boolean isServiceManagementEnabled() {
         return isServiceManagementEnabled;
@@ -90,7 +90,7 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     /**
      *
-     * @param serviceManagementEnabled
+     * @param serviceManagementEnabled sets the value of isServiceManagementEnabled
      */
     public void setServiceManagementEnabled(boolean serviceManagementEnabled) {
         isServiceManagementEnabled = serviceManagementEnabled;
@@ -98,6 +98,10 @@ public class RangerManagementConfig extends VXDataObject implements java.io.Seri
 
     @Override
     public String toString() {
-        return "this is a temoporary msg";
+        String str = "RangerManagementConfig = [ ";
+        str += "isUserGroupManagementEnabled: " + isUserGroupManagementEnabled + ", ";
+        str += "isAdminDelegationEnabled: " + isAdminDelegationEnabled + ", ";
+        str += "isServiceManagementEnabled: " + isServiceManagementEnabled + " ]";
+        return str;
     }
 }
