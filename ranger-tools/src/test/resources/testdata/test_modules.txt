@@ -23,3 +23,5 @@ RangerPolicyEngine.preProcess
 RangerPolicyEngine.isAccessAllowedNoAudit
 RangerPolicyEngine.reorderPolicyEvaluators
 RangerPolicyEngine.usage
+RangerDefaultPolicyResourceMatcher.init
+RangerDefaultPolicyResourceMatcher.getMatchType

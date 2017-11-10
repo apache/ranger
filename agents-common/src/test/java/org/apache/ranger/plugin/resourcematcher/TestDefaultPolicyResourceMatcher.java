@@ -50,12 +50,31 @@ import com.google.gson.GsonBuilder;
 public class TestDefaultPolicyResourceMatcher {
 	static Gson gsonBuilder;
 
+	static RangerServiceDef hdfsServiceDef;
+	static RangerServiceDef hiveServiceDef;
+	static RangerServiceDef hbaseServiceDef;
+	static RangerServiceDef tagServiceDef;
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
 				.setPrettyPrinting()
 				.registerTypeAdapter(RangerAccessResource.class, new TestDefaultPolicyResourceMatcher.RangerResourceDeserializer())
 				.create();
+		initializeServiceDefs();
+	}
+
+	private static void initializeServiceDefs() {
+		hdfsServiceDef = readServiceDef("hdfs");
+		hiveServiceDef = readServiceDef("hive");
+		hbaseServiceDef = readServiceDef("hbase");
+		tagServiceDef = readServiceDef("tag");
+	}
+
+	private static RangerServiceDef readServiceDef(String name) {
+		InputStream inStream = TestDefaultPolicyResourceMatcher.class.getResourceAsStream("/admin/service-defs/test-" + name + "-servicedef.json");
+		InputStreamReader reader = new InputStreamReader(inStream);
+		return gsonBuilder.fromJson(reader, RangerServiceDef.class);
 	}
 
 	@AfterClass
@@ -74,23 +93,30 @@ public class TestDefaultPolicyResourceMatcher {
 	public void testDefaultPolicyResourceMatcher() throws Exception {
 		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher.json" };
 
-		runTestsFromResourceFiles(tests);
+		runTestsFromResourceFiles(tests, null);
 	}
 
-	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
-		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+	@Test
+	public void testDefaultPolicyResourceMatcher_ResourceSpecific() throws Exception {
+		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher.json" };
 
-			runTests(reader);
-		}
+		runTestsFromResourceFiles(tests, hiveServiceDef);
 	}
 
-	private void runTests(InputStreamReader reader) throws Exception {
+	private void runTestsFromResourceFiles(String[] resourceNames, RangerServiceDef serviceDef) throws Exception {
+	    for (String resourceName : resourceNames) {
+            InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader = new InputStreamReader(inStream);
+
+            runTests(reader, serviceDef);
+        }
+    }
+
+	private void runTests(InputStreamReader reader, RangerServiceDef serviceDef) throws Exception {
 		DefaultPolicyResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, DefaultPolicyResourceMatcherTestCases.class);
 
 		for (DefaultPolicyResourceMatcherTestCases.TestCase testCase : testCases.testCases) {
-			runTest(testCase, testCases.serviceDef);
+			runTest(testCase, serviceDef == null ? testCases.serviceDef : serviceDef);
 		}
 	}
 		private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) throws Exception {
@@ -120,7 +146,7 @@ public class TestDefaultPolicyResourceMatcher {
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorMatch")) {
 				scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "anyMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT;
+				scope = RangerPolicyResourceMatcher.MatchScope.ANY;
 			} else {
 				continue;
 			}

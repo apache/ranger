@@ -205,7 +205,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			String policyValue = policyValues.get(0);
 
 			if(isMatchAny) {
-				ret = StringUtils.containsOnly(resource, WILDCARD_ASTERISK);
+				ret = StringUtils.isEmpty(resource) || StringUtils.containsOnly(resource, WILDCARD_ASTERISK);
 			} else {
 				ret = optIgnoreCase ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
 			}

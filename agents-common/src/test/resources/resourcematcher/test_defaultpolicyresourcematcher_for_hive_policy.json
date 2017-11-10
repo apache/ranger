@@ -139,6 +139,31 @@
       },
       "tests": [
         {
+          "name": "Exact match for 'finance,hr,tmp*:tax,employee,tmp*:refund,salary,tmp*' policy",
+          "type": "exactMatch",
+          "policy" : {
+            "service" : "any",
+            "name" : "test",
+            "policyType":0,
+            "description":"",
+            "resourceSignature":"",
+            "isAuditEnabled":true,
+            "resources" : {
+              "database": {"values": ["finance", "hr", "tmp*"], "isExcludes": false, "isRecursive": false},
+              "table": {"values": ["tax","employee","tmp*"], "isExcludes": false, "isRecursive": false},
+              "column": {"values": ["refund","salary","tmp*"], "isExcludes": false, "isRecursive": false}
+            },
+            "policyItems":[],
+            "denyPolicyItems":[],
+            "allowExceptions":[],
+            "denyExceptions":[],
+            "dataMaskPolicyItems":[],
+            "rowFilterPolicyItems":[]
+          },
+          "evalContext": {},
+          "result" : true
+        },
+        {
           "name": "Descendant match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
           "type": "descendantMatch",
           "policy" : {
@@ -190,7 +215,7 @@
       ]
     },
     {
-      "name": "database=hr:table=*:column:refund",
+      "name": "database=hr:table=*:column=refund",
       "policyResources": {
         "database": {"values": ["hr"]},
         "table": {"values": ["*"]},
@@ -251,13 +276,38 @@
       ]
     },
     {
-      "name": "database=hr:table=*:column:*",
+      "name": "database=hr:table=*:column=*",
       "policyResources": {
         "database": {"values": ["hr"]},
         "table": {"values": ["*"]},
         "column":{"values":["*"]}
       },
       "tests": [
+        {
+          "name": "Exact match for 'finance,hr,tmp*:tax,employee,tmp*:refund,salary,tmp*' policy",
+          "type": "exactMatch",
+          "policy" : {
+            "service" : "any",
+            "name" : "test",
+            "policyType":0,
+            "description":"",
+            "resourceSignature":"",
+            "isAuditEnabled":true,
+            "resources" : {
+              "database": {"values": ["finance", "hr", "tmp*"], "isExcludes": false, "isRecursive": false},
+              "table": {"values": ["tax","employee","tmp*"], "isExcludes": false, "isRecursive": false},
+              "column": {"values": ["refund","salary","tmp*"], "isExcludes": false, "isRecursive": false}
+            },
+            "policyItems":[],
+            "denyPolicyItems":[],
+            "allowExceptions":[],
+            "denyExceptions":[],
+            "dataMaskPolicyItems":[],
+            "rowFilterPolicyItems":[]
+          },
+          "evalContext": {},
+          "result" : true
+        },
         {
           "name": "Ancestor match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
           "type": "ancestorMatch",
@@ -271,6 +321,31 @@
             "resources" : {
               "database": {"values": ["finance", "hr", "tmp*"], "isExcludes": false, "isRecursive": false},
               "table": {"values": ["tax","employee","tmp*"], "isExcludes": false, "isRecursive": false}
+            },
+            "policyItems":[],
+            "denyPolicyItems":[],
+            "allowExceptions":[],
+            "denyExceptions":[],
+            "dataMaskPolicyItems":[],
+            "rowFilterPolicyItems":[]
+          },
+          "evalContext": {},
+          "result" : true
+        },
+        {
+          "name": "Exact match for 'finance,hr,tmp*:*,employee,tmp*:*,salary,tmp*' policy",
+          "type": "exactMatch",
+          "policy" : {
+            "service" : "any",
+            "name" : "test",
+            "policyType":0,
+            "description":"",
+            "resourceSignature":"",
+            "isAuditEnabled":true,
+            "resources" : {
+              "database": {"values": ["finance", "hr", "tmp*"], "isExcludes": false, "isRecursive": false},
+              "table": {"values": ["*","employee","tmp*"], "isExcludes": false, "isRecursive": false},
+              "column": {"values": ["*","salary","tmp*"], "isExcludes": false, "isRecursive": false}
             },
             "policyItems":[],
             "denyPolicyItems":[],

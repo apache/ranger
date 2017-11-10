@@ -26,9 +26,8 @@
         </layout>
     </appender>
 
-    <!--
-    <appender name="ranger_perf_appender" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="./ranger_admin_perf.log" />
+    <appender name="ranger_perf_appender" class="org.apache.log4j.ConsoleAppender">
+        <param name="target" value="System.err" />
         <param name="datePattern" value="'.'yyyy-MM-dd" />
         <param name="append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -36,6 +35,7 @@
         </layout>
     </appender>
 
+    <!--
     <logger name="org.apache.ranger.perf.policyengine" additivity="false">
         <level value="debug" />
         <appender-ref ref="ranger_perf_appender" />
@@ -47,6 +47,11 @@
     </logger>
 
     <logger name="org.apache.ranger.perf.policyitem" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
+
+    <logger name="org.apache.ranger.perf.policyresourcematcher" additivity="false">
         <level value="debug" />
         <appender-ref ref="ranger_perf_appender" />
     </logger>
@@ -70,7 +75,12 @@
         <level value="debug" />
         <appender-ref ref="ranger_perf_appender" />
     </logger>
-    -->
+        -->
+
+    <logger name="org.apache.ranger.perf.policyresourcematcher" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
 
     <root>
         <level value="warn" />

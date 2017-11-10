@@ -52,12 +52,31 @@ import com.google.gson.GsonBuilder;
 public class TestDefaultPolicyResourceMatcherForPolicy {
 	static Gson gsonBuilder;
 
+	static RangerServiceDef hdfsServiceDef;
+	static RangerServiceDef hiveServiceDef;
+	static RangerServiceDef hbaseServiceDef;
+	static RangerServiceDef tagServiceDef;
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
 				.setPrettyPrinting()
 				.registerTypeAdapter(RangerAccessResource.class, new TestDefaultPolicyResourceMatcherForPolicy.RangerResourceDeserializer())
 				.create();
+		initializeServiceDefs();
+	}
+
+	private static void initializeServiceDefs() {
+		hdfsServiceDef = readServiceDef("hdfs");
+		hiveServiceDef = readServiceDef("hive");
+		hbaseServiceDef = readServiceDef("hbase");
+		tagServiceDef = readServiceDef("tag");
+	}
+
+	private static RangerServiceDef readServiceDef(String name) {
+		InputStream inStream = TestDefaultPolicyResourceMatcherForPolicy.class.getResourceAsStream("/admin/service-defs/test-" + name + "-servicedef.json");
+		InputStreamReader reader = new InputStreamReader(inStream);
+		return gsonBuilder.fromJson(reader, RangerServiceDef.class);
 	}
 
 	@AfterClass
@@ -73,28 +92,40 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 	}
 
 	@Test
-	public void testDefaultPolicyResourceMatcherForPolicy() throws Exception {
-		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher_for_resource_specific_policy.json",
-				"/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json",
-				"/resourcematcher/test_defaultpolicyresourcematcher_for_policy.json"};
+	public void testDefaultPolicyResourceMatcherForHdfs() throws Exception {
+		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json" };
 
-		runTestsFromResourceFiles(tests);
+		runTestsFromResourceFiles(tests, null);
 	}
 
-	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
-		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream, Charset.defaultCharset());
+	@Test
+	public void testDefaultPolicyResourceMatcherForHive() throws Exception {
+		String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
 
-			runTests(reader);
+		runTestsFromResourceFiles(tests, null);
+	}
+
+	@Test
+	public void testDefaultPolicyResourceMatcherForHive_ResourceSpecific() throws Exception {
+		String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
+
+		runTestsFromResourceFiles(tests, hiveServiceDef);
+	}
+
+	private void runTestsFromResourceFiles(String[] resourceNames, RangerServiceDef serviceDef) throws Exception {
+		for(String resourceName : resourceNames) {
+			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+			InputStreamReader reader = new InputStreamReader(inStream, Charset.defaultCharset());
+
+			runTests(reader, serviceDef);
 		}
 	}
 
-	private void runTests(InputStreamReader reader) throws Exception {
+	private void runTests(InputStreamReader reader, RangerServiceDef serviceDef) throws Exception {
 		DefaultPolicyResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, DefaultPolicyResourceMatcherTestCases.class);
 
 		for (DefaultPolicyResourceMatcherTestCases.TestCase testCase : testCases.testCases) {
-			runTest(testCase, testCases.serviceDef);
+			runTest(testCase, serviceDef == null ? testCases.serviceDef : serviceDef);
 		}
 	}
 	private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) throws Exception {
@@ -124,7 +155,7 @@ public class TestDefaultPolicyResourceMatcherForPolicy {
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorMatch")) {
 				scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "anyMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT;
+				scope = RangerPolicyResourceMatcher.MatchScope.ANY;
 			} else {
 				continue;
 			}

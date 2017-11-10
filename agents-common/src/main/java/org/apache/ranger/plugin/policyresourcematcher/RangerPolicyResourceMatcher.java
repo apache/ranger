@@ -29,7 +29,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 public interface RangerPolicyResourceMatcher {
-	enum MatchScope { SELF_OR_ANCESTOR_OR_DESCENDANT, SELF, SELF_OR_DESCENDANT, SELF_OR_ANCESTOR, DESCENDANT, ANCESTOR };
+	enum MatchScope { SELF, SELF_OR_DESCENDANT, SELF_OR_ANCESTOR, DESCENDANT, ANCESTOR, ANY };
 	enum MatchType { NONE, SELF, DESCENDANT, ANCESTOR };
 
 	void setServiceDef(RangerServiceDef serviceDef);

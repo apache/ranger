@@ -572,7 +572,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					for (List<RangerPolicyEvaluator> evaluators : likelyEvaluators) {
 						for (RangerPolicyEvaluator evaluator : evaluators) {
 							RangerPolicyResourceMatcher matcher = evaluator.getPolicyResourceMatcher();
-							if (matcher != null && matcher.isMatch(tagResource, RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT, null)) {
+							if (matcher != null && matcher.isMatch(tagResource, RangerPolicyResourceMatcher.MatchScope.ANY, null)) {
 								ret.add(evaluator.getPolicy());
 							}
 						}
@@ -591,7 +591,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			for (List<RangerPolicyEvaluator> evaluators : likelyEvaluators) {
 				for (RangerPolicyEvaluator evaluator : evaluators) {
 					RangerPolicyResourceMatcher matcher = evaluator.getPolicyResourceMatcher();
-					if (matcher != null && matcher.isMatch(resource, RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR_OR_DESCENDANT, null)) {
+					if (matcher != null && matcher.isMatch(resource, RangerPolicyResourceMatcher.MatchScope.ANY, null)) {
 						ret.add(evaluator.getPolicy());
 					}
 				}

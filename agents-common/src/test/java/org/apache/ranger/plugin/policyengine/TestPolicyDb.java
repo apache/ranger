@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyDb.PolicyDbTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -43,13 +44,32 @@ import com.google.gson.GsonBuilder;
 
 public class TestPolicyDb {
 	static Gson gsonBuilder;
+    static RangerServiceDef hdfsServiceDef;
+    static RangerServiceDef hiveServiceDef;
+    static RangerServiceDef hbaseServiceDef;
+    static RangerServiceDef tagServiceDef;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
 									   .setPrettyPrinting()
 									   .create();
+		initializeServiceDefs();
 	}
+
+	private static void initializeServiceDefs() {
+        hdfsServiceDef = readServiceDef("hdfs");
+        hiveServiceDef = readServiceDef("hive");
+        hbaseServiceDef = readServiceDef("hbase");
+        tagServiceDef = readServiceDef("tag");
+    }
+
+    private static RangerServiceDef readServiceDef(String name) {
+        InputStream inStream = TestPolicyDb.class.getResourceAsStream("/admin/service-defs/test-" + name + "-servicedef.json");
+        InputStreamReader reader = new InputStreamReader(inStream);
+        return gsonBuilder.fromJson(reader, RangerServiceDef.class);
+
+    }
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
@@ -57,22 +77,34 @@ public class TestPolicyDb {
 
 	@Test
 	public void testPolicyDb_hdfs() {
+
 		String[] hdfsTestResourceFiles = { "/policyengine/test_policydb_hdfs.json" };
 
-		runTestsFromResourceFiles(hdfsTestResourceFiles);
+		runTestsFromResourceFiles(hdfsTestResourceFiles, hdfsServiceDef);
 	}
 
-	private void runTestsFromResourceFiles(String[] resourceNames) {
+    @Test
+    public void testPolicyDb_hive() {
+        String[] hiveTestResourceFiles = { "/policyengine/test_policydb_hive.json" };
+
+        runTestsFromResourceFiles(hiveTestResourceFiles, hiveServiceDef);
+    }
+
+	private void runTestsFromResourceFiles(String[] resourceNames, RangerServiceDef serviceDef) {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
 			InputStreamReader reader   = new InputStreamReader(inStream);
 
-			runTests(reader, resourceName);
+			runTests(reader, resourceName, serviceDef);
 		}
 	}
 
-	private void runTests(InputStreamReader reader, String testName) {
+	private void runTests(InputStreamReader reader, String testName, RangerServiceDef serviceDef) {
 		PolicyDbTestCase testCase = gsonBuilder.fromJson(reader, PolicyDbTestCase.class);
+		if (serviceDef != null) {
+			// Override serviceDef in the json test-file with a global service-def
+			testCase.servicePolicies.setServiceDef(serviceDef);
+		}
 
 		assertTrue("invalid input: " + testName, testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null);
 

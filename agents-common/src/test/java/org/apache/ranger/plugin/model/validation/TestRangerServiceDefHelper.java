@@ -71,8 +71,8 @@ public class TestRangerServiceDefHelper {
 		RangerResourceDef Database = createResourceDef("Database", "");
 		RangerResourceDef UDF = createResourceDef("UDF", "Database");
 		RangerResourceDef Table = createResourceDef("Table", "Database");
-		RangerResourceDef Column = createResourceDef("Column", "Table");
-		RangerResourceDef Table_Attribute = createResourceDef("Table-Attribute", "Table");
+		RangerResourceDef Column = createResourceDef("Column", "Table", true);
+		RangerResourceDef Table_Attribute = createResourceDef("Table-Attribute", "Table", true);
 		// order of resources in list sould not matter
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(Column, Database, Table, Table_Attribute, UDF);
 		// stuff this into a service-def
@@ -127,12 +127,12 @@ public class TestRangerServiceDefHelper {
 		 * Check that helper corrects reports back all of the hierarchies: levels in it and their order.
 		 */
 		RangerResourceDef database = createResourceDef("database", "");
-		RangerResourceDef tableSpace = createResourceDef("table-space", "database");
+		RangerResourceDef tableSpace = createResourceDef("table-space", "database", true);
 		RangerResourceDef table = createResourceDef("table", "database");
-		RangerResourceDef column = createResourceDef("column", "table");
+		RangerResourceDef column = createResourceDef("column", "table", true);
 		RangerResourceDef namespace = createResourceDef("namespace", "");
-		RangerResourceDef function = createResourceDef("function", "namespace");
-		RangerResourceDef Package = createResourceDef("package", "namespace");
+		RangerResourceDef function = createResourceDef("function", "namespace", true);
+		RangerResourceDef Package = createResourceDef("package", "namespace", true);
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, tableSpace, table, column, namespace, function, Package);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);
@@ -172,8 +172,8 @@ public class TestRangerServiceDefHelper {
 		RangerResourceDef database = createResourceDef("database", "");
 		RangerResourceDef server = createResourceDef("server", "");
 		RangerResourceDef namespace = createResourceDef("namespace", "");
-		RangerResourceDef function = createResourceDef("function", "namespace");
-		RangerResourceDef Package = createResourceDef("package", "namespace");
+		RangerResourceDef function = createResourceDef("function", "namespace", true);
+		RangerResourceDef Package = createResourceDef("package", "namespace", true);
 		List<RangerResourceDef> resourceDefs = Lists.newArrayList(database, server, namespace, function, Package);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		_helper = new RangerServiceDefHelper(_serviceDef);

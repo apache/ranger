@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.policyresourcematcher;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -40,9 +39,13 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceMatcher {
     private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyResourceMatcher.class);
+
+    private static final Log PERF_POLICY_RESOURCE_MATCHER_INIT_LOG = RangerPerfTracer.getPerfLogger("policyresourcematcher.init");
+    private static final Log PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG = RangerPerfTracer.getPerfLogger("policyresourcematcher.match");
 
     protected RangerServiceDef                  serviceDef;
     protected int                               policyType;
@@ -74,7 +77,6 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         } else {
             setPolicyResources(policy.getResources(), policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType());
         }
-
     }
 
     @Override
@@ -98,6 +100,16 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     }
 
     @Override
+    public RangerServiceDef getServiceDef() {
+        return serviceDef;
+    }
+
+    @Override
+    public RangerResourceMatcher getResourceMatcher(String resourceName) {
+        return allMatchers != null ? allMatchers.get(resourceName) : null;
+    }
+
+    @Override
     public boolean getNeedsDynamicEval() { return needsDynamicEval; }
 
     @Override
@@ -110,9 +122,14 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         needsDynamicEval       = false;
         validResourceHierarchy = null;
         isInitialized          = false;
-        serviceDefHelper       = null;
 
         String errorText = "";
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_INIT_LOG, "RangerDefaultPolicyResourceMatcher.init()");
+        }
 
         if (policyResources != null && !policyResources.isEmpty() && serviceDef != null) {
             serviceDefHelper                                    = serviceDefHelper == null ? new RangerServiceDefHelper(serviceDef, false) : serviceDefHelper;
@@ -204,41 +221,49 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
             isInitialized = true;
         }
 
+        RangerPerfTracer.log(perf);
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerDefaultPolicyResourceMatcher.init(): ret=" + isInitialized);
         }
     }
 
     @Override
-    public RangerServiceDef getServiceDef() {
-        return serviceDef;
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        return toString(sb).toString();
     }
 
     @Override
-    public RangerResourceMatcher getResourceMatcher(String resourceName) {
-        return allMatchers != null ? allMatchers.get(resourceName) : null;
-    }
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerDefaultPolicyResourceMatcher={");
 
-    @Override
-    public boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDefaultPolicyResourceMatcher.isMatch(" + resources  + ", " + evalContext + ")");
+        sb.append("isInitialized=").append(isInitialized).append(", ");
+
+        sb.append("matchers={");
+        if(allMatchers != null) {
+            for(RangerResourceMatcher matcher : allMatchers.values()) {
+                sb.append("{").append(matcher).append("} ");
+            }
         }
+        sb.append("} ");
 
-        boolean ret = isMatch(resources, MatchScope.SELF_OR_ANCESTOR, true, evalContext);
+        sb.append("}");
 
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyResourceMatcher.isMatch(" + resources  + ", " + evalContext + "): " + ret);
-        }
-
-        return ret;
+        return sb;
     }
 
     @Override
     public boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.isCompleteMatch(" + resource + ", " + evalContext + ")");
+        }
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.grantRevokeMatch()");
         }
 
         boolean            ret          = false;
@@ -268,6 +293,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
             }
         }
 
+        RangerPerfTracer.log(perf);
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerDefaultPolicyResourceMatcher.isCompleteMatch(" + resource + ", " + evalContext + "): " + ret);
         }
@@ -279,6 +306,12 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     public boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.isCompleteMatch(" + resources + ", " + evalContext + ")");
+        }
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.applyPolicyMatch()");
         }
 
         boolean            ret          = false;
@@ -308,6 +341,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
             }
         }
 
+        RangerPerfTracer.log(perf);
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerDefaultPolicyResourceMatcher.isCompleteMatch(" + resources + ", " + evalContext + "): " + ret);
         }
@@ -316,19 +351,18 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     }
 
     @Override
-    public boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
-        return isMatch(resource, MatchScope.SELF_OR_ANCESTOR, evalContext);
-    }
-
-    @Override
     public boolean isMatch(RangerPolicy policy, MatchScope scope, Map<String, Object> evalContext) {
-        return policy.getPolicyType() == policyType && isMatch(policy.getResources(), scope, false, evalContext);
-    }
-
-    private boolean isMatch(Map<String, RangerPolicyResource> resources, MatchScope scope, boolean mustMatchAllPolicyValues, Map<String, Object> evalContext) {
         boolean ret = false;
 
-        if (MapUtils.isNotEmpty(resources)) {
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.getPoliciesNonLegacy()");
+        }
+
+        Map<String, RangerPolicyResource> resources = policy.getResources();
+
+        if (policy.getPolicyType() == policyType && MapUtils.isNotEmpty(resources)) {
             List<RangerResourceDef> hierarchy = getMatchingHierarchy(resources.keySet());
 
             if (CollectionUtils.isNotEmpty(hierarchy)) {
@@ -349,9 +383,10 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 // level, the final matchType (which is for the entire policy) is checked against
                 // requested scope to determine the match-result.
 
-                // Unit tests in TestDefaultPolicyResourceForPolicy.java, test_defaultpolicyresourcematcher_for_policy.json,
+                // Unit tests in TestDefaultPolicyResourceForPolicy.java, TestDefaultPolicyResourceMatcher.java
                 // test_defaultpolicyresourcematcher_for_hdfs_policy.json, and
-                // test_defaultpolicyresourcematcher_for_resource_specific_policy.json
+                // test_defaultpolicyresourcematcher_for_hive_policy.json, and
+                // test_defaultPolicyResourceMatcher.json
 
                 boolean skipped = false;
 
@@ -371,10 +406,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
                                 if (matchType != MatchType.NONE) { // One value for this resourceDef matched
                                     ret = true;
-
-                                    if (!mustMatchAllPolicyValues) {
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
                         } else {
@@ -388,8 +420,105 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                         break;
                     }
                 }
+
                 ret = ret && isMatch(scope, matchType);
             }
+        }
+
+        RangerPerfTracer.log(perf);
+
+        return ret;
+    }
+
+    @Override
+    public boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.grantRevokeMatch()");
+        }
+
+        /*
+        * There is already API to get the delegateAdmin permissions for a map of policyResources.
+        * That implementation should be reused for figuring out delegateAdmin permissions for a resource as well.
+         */
+
+        Map<String, RangerPolicyResource> policyResources = null;
+
+        for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+            String resourceName = resourceDef.getName();
+            String resourceValue = resource.getValue(resourceName);
+            if (resourceValue != null) {
+                if (policyResources == null) {
+                    policyResources = new HashMap<>();
+                }
+                policyResources.put(resourceName, new RangerPolicyResource(resourceValue));
+            }
+        }
+        final boolean ret = MapUtils.isNotEmpty(policyResources) && isMatch(policyResources, evalContext);
+
+        RangerPerfTracer.log(perf);
+
+        return ret;
+    }
+
+    @Override
+    public boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerDefaultPolicyResourceMatcher.isMatch(" + resources  + ", " + evalContext + ")");
+        }
+
+        boolean ret = false;
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.delegateAdminMatch()");
+        }
+
+        if(serviceDef != null && serviceDef.getResources() != null) {
+            Collection<String> resourceKeys = resources == null ? null : resources.keySet();
+            Collection<String> policyKeys   = policyResources == null ? null : policyResources.keySet();
+
+            boolean keysMatch = CollectionUtils.isEmpty(resourceKeys) || (policyKeys != null && policyKeys.containsAll(resourceKeys));
+
+            if(keysMatch) {
+                for(RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    String                resourceName   = resourceDef.getName();
+                    RangerPolicyResource  resourceValues = resources == null ? null : resources.get(resourceName);
+                    List<String>          values         = resourceValues == null ? null : resourceValues.getValues();
+                    RangerResourceMatcher matcher        = allMatchers == null ? null : allMatchers.get(resourceName);
+
+                    if (matcher != null) {
+                        if (CollectionUtils.isNotEmpty(values)) {
+                            for (String value : values) {
+                                ret = matcher.isMatch(value, evalContext);
+                                if (!ret) {
+                                    break;
+                                }
+                            }
+                        } else {
+                            ret = matcher.isMatchAny();
+                        }
+                    } else {
+                        ret = CollectionUtils.isEmpty(values);
+                    }
+
+                    if(! ret) {
+                        break;
+                    }
+                }
+            } else {
+                if(LOG.isDebugEnabled()) {
+                    LOG.debug("isMatch(): keysMatch=false. resourceKeys=" + resourceKeys + "; policyKeys=" + policyKeys);
+                }
+            }
+        }
+
+        RangerPerfTracer.log(perf);
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerDefaultPolicyResourceMatcher.isMatch(" + resources  + ", " + evalContext + "): " + ret);
         }
 
         return ret;
@@ -406,90 +535,80 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.getMatchType(" + resource + evalContext + ")");
         }
-
         MatchType ret              = MatchType.NONE;
-        int       policyKeysSize   = policyResources == null ? 0 : policyResources.size();
-        int       resourceKeysSize = resource == null || resource.getKeys() == null ? 0 : resource.getKeys().size();
 
-        if (policyKeysSize == 0 && resourceKeysSize == 0) {
-            ret = MatchType.SELF;
-        } else {
-            List<RangerResourceDef> hierarchy = getMatchingHierarchy(resource);
-            if (CollectionUtils.isNotEmpty(hierarchy)) {
-                int lastNonAnyMatcherIndex = 0;
-                /*
-                 * For hive resource policy:
-                 *     lastNonAnyMatcherIndex will be set to
-                 *         0 : if all matchers in policy are '*'; such as database=*, table=*, column=*
-                 *         1 : database=hr, table=*, column=*
-                 *         2 : database=<any>, table=employee, column=*
-                 *         3 : database=<any>, table=<any>, column=ssn
-                */
-                int matchersSize = 0;
+        RangerPerfTracer perf = null;
 
-                for (RangerResourceDef resourceDef : hierarchy) {
-                    RangerResourceMatcher matcher = getResourceMatcher(resourceDef.getName());
-                    if (matcher != null) {
-                        matchersSize++;
-                        if (!matcher.isMatchAny()) {
-                            lastNonAnyMatcherIndex = matchersSize;
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG, "RangerDefaultPolicyResourceMatcher.getMatchType()");
+        }
+
+        if (resource != null && policyResources != null) {
+            int resourceKeysSize = resource.getKeys() == null ? 0 : resource.getKeys().size();
+
+            if (policyResources.size() == 0 && resourceKeysSize == 0) {
+                ret = MatchType.SELF;
+            } else {
+                List<RangerResourceDef> hierarchy = getMatchingHierarchy(resource);
+                if (CollectionUtils.isNotEmpty(hierarchy)) {
+
+                    int lastNonAnyMatcherIndex = -1;
+                    int matchersSize = 0;
+
+                    for (RangerResourceDef resourceDef : hierarchy) {
+                        RangerResourceMatcher matcher = getResourceMatcher(resourceDef.getName());
+                        if (matcher != null) {
+                            if (!matcher.isMatchAny()) {
+                                lastNonAnyMatcherIndex = matchersSize;
+                            }
+                            matchersSize++;
+                        } else {
+                            break;
                         }
                     }
-                }
 
-                if (resourceKeysSize == 0 && lastNonAnyMatcherIndex == 0) {
-                    ret = MatchType.SELF;
-                } else if (lastNonAnyMatcherIndex == 0) {
-                    ret = MatchType.ANCESTOR;
-                } else if (resourceKeysSize == 0) {
-                    ret = MatchType.DESCENDANT;
-                } else {
-                    int index = 0;
+                    int lastMatchedMatcherIndex = -1;
+
                     for (RangerResourceDef resourceDef : hierarchy) {
 
-                        String resourceName = resourceDef.getName();
-                        RangerResourceMatcher matcher = getResourceMatcher(resourceName);
-                        String resourceValue = resource.getValue(resourceName);
+                        RangerResourceMatcher matcher = getResourceMatcher(resourceDef.getName());
+                        String resourceValue = resource.getValue(resourceDef.getName());
 
-                        if (resourceValue != null) {
-                            if (matcher != null) {
-                                index++;
+                        if (matcher != null) {
+                            if (resourceValue != null) {
                                 if (matcher.isMatch(resourceValue, evalContext)) {
-                                    ret = index == resourceKeysSize && matcher.isMatchAny() ? MatchType.ANCESTOR : MatchType.SELF;
+                                    ret = MatchType.SELF;
+                                    lastMatchedMatcherIndex++;
                                 } else {
                                     ret = MatchType.NONE;
                                     break;
                                 }
                             } else {
-                                // More resource-levels than matchers
-                                ret = MatchType.ANCESTOR;
+                                // More matchers than resource-values
+                                ret = MatchType.DESCENDANT;
+
+                                if (lastMatchedMatcherIndex >= lastNonAnyMatcherIndex) {
+                                    ret = MatchType.ANCESTOR;
+                                    if (lastMatchedMatcherIndex == lastNonAnyMatcherIndex && lastMatchedMatcherIndex == -1) {
+                                        // For degenerate case : resourceKeysSize == 0 and all matchers are of type Any
+                                        ret = MatchType.SELF;
+                                    }
+                                }
                                 break;
                             }
                         } else {
-                            if (matcher != null) {
-                                // More matchers than resource-levels
-                                if (index >= lastNonAnyMatcherIndex) {
-                                    // All AnyMatch matchers after this
-                                    ret = MatchType.ANCESTOR;
-                                } else {
-                                    ret = MatchType.DESCENDANT;
-                                }
-                            } else {
-                                // Common part of several possible hierarchies matched
-                                if (resourceKeysSize > index) {
-                                    ret = MatchType.ANCESTOR;
-                                }
+                            if (resourceValue != null) {
+                                // More resource-values than matchers
+                                ret = MatchType.ANCESTOR;
                             }
                             break;
                         }
                     }
-                    if (ret == MatchType.SELF && resourceKeysSize > matchersSize) {
-                        ret = MatchType.ANCESTOR;
-                    }
                 }
             }
-
         }
+
+        RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerDefaultPolicyResourceMatcher.getMatchType(" + resource + evalContext + "): " + ret);
@@ -519,15 +638,18 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                     }
                 }
             }
-        }
+        } else {
+            ret = false;
+         }
 
         return ret;
     }
+
     private List<RangerResourceDef> getMatchingHierarchy(Set<String> resourceKeys) {
         List<RangerResourceDef> ret = null;
 
-        if (CollectionUtils.isNotEmpty(resourceKeys)) {
-            Set<List<RangerResourceDef>> resourceHierarchies = serviceDefHelper == null ? Collections.EMPTY_SET : serviceDefHelper.getResourceHierarchies(policyType, resourceKeys);
+        if (CollectionUtils.isNotEmpty(resourceKeys) && serviceDefHelper != null) {
+            Set<List<RangerResourceDef>> resourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType, resourceKeys);
 
             // pick the shortest hierarchy
             for (List<RangerResourceDef> resourceHierarchy : resourceHierarchies) {
@@ -554,25 +676,26 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
         final List<RangerResourceDef> ret;
 
-        Set<String> policyResourcesKeySet = policyResources == null ? Collections.EMPTY_SET : policyResources.keySet();
+        Set<String> policyResourcesKeySet = policyResources.keySet();
+        Set<String> resourceKeySet = resource.getKeys();
 
-        if (resource != null && resource.getKeys() != null) {
+        if (CollectionUtils.isNotEmpty(resourceKeySet)) {
             List<RangerResourceDef> aValidHierarchy = null;
 
             if (validResourceHierarchy != null && serviceDefHelper != null) {
-                if (serviceDefHelper.hierarchyHasAllResources(validResourceHierarchy, resource.getKeys())) {
+                if (serviceDefHelper.hierarchyHasAllResources(validResourceHierarchy, resourceKeySet)) {
                     aValidHierarchy = validResourceHierarchy;
                 }
             } else {
-                if (policyResourcesKeySet.containsAll(resource.getKeys())) {
+                if (policyResourcesKeySet.containsAll(resourceKeySet)) {
                     aValidHierarchy = getMatchingHierarchy(policyResourcesKeySet);
-                } else if (resource.getKeys().containsAll(policyResourcesKeySet)) {
-                    aValidHierarchy = getMatchingHierarchy(resource.getKeys());
+                } else if (resourceKeySet.containsAll(policyResourcesKeySet)) {
+                    aValidHierarchy = getMatchingHierarchy(resourceKeySet);
                 }
             }
             ret = isHierarchyValidForResources(aValidHierarchy, resource.getAsMap()) ? aValidHierarchy : null;
         } else {
-            ret = getMatchingHierarchy(policyResourcesKeySet);
+            ret = validResourceHierarchy != null ? validResourceHierarchy : getMatchingHierarchy(policyResourcesKeySet);
         }
 
         if (LOG.isDebugEnabled()) {
@@ -585,10 +708,6 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     private boolean isMatch(final MatchScope scope, final MatchType matchType) {
         final boolean ret;
         switch (scope) {
-            case SELF_OR_ANCESTOR_OR_DESCENDANT: {
-                ret = matchType != MatchType.NONE;
-                break;
-            }
             case SELF: {
                 ret = matchType == MatchType.SELF;
                 break;
@@ -609,39 +728,12 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 ret = matchType == MatchType.ANCESTOR;
                 break;
             }
-            default:
+            default: {
                 ret = matchType != MatchType.NONE;
                 break;
-        }
-        return ret;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        toString(sb);
-
-        return sb.toString();
-    }
-
-    @Override
-    public StringBuilder toString(StringBuilder sb) {
-        sb.append("RangerDefaultPolicyResourceMatcher={");
-
-        sb.append("isInitialized=").append(isInitialized).append(", ");
-
-        sb.append("matchers={");
-        if(allMatchers != null) {
-            for(RangerResourceMatcher matcher : allMatchers.values()) {
-                sb.append("{").append(matcher).append("} ");
             }
         }
-        sb.append("} ");
-
-        sb.append("}");
-
-        return sb;
+        return ret;
     }
 
     private static RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
