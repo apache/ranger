@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.plugin.util.RangerRESTClient;
@@ -36,6 +37,7 @@ import org.apache.ranger.tagsync.process.TagSyncConfig;
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Properties;
@@ -95,14 +97,31 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 		if (StringUtils.isNotBlank(restUrl)) {
 			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
-			if(!(!StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))){
+			if(isKerberosEnabled()) {
+				Subject subject = null;
+				try {
+					subject = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				} catch(IOException exception) {
+					LOG.error("Could not get Subject from principal:[" + principal + "], keytab:[" + keytab + "], nameRules:[" + nameRules + "]", exception);
+				}
+				if (subject != null) {
+					try {
+						UserGroupInformation.loginUserFromSubject(subject);
+						ret = true;
+					} catch (IOException exception) {
+						LOG.error("Failed to get UGI from Subject:[" + subject + "]");
+					}
+				}
+			} else {
 				tagRESTClient.setBasicAuthInfo(userName, password);
+				ret = true;
 			}
-			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
-
-			ret = true;
 		} else {
 			LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
+		}
+
+		if (ret) {
+			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -133,26 +152,43 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		return ret;
 	}
 
+	private boolean isKerberosEnabled() {
+		return !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab);
+	}
+
 	private ServiceTags doUpload(ServiceTags serviceTags) throws Exception {
-			if(!StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+			if(isKerberosEnabled()) {
 				try{
-					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
-					}
-					final ServiceTags serviceTag = serviceTags;
-					ServiceTags ret = Subject.doAs(sub, new PrivilegedAction<ServiceTags>() {
-						@Override
-						public ServiceTags run() {
-							try{
-								return uploadServiceTags(serviceTag);
-							}catch (Exception e) {
-								LOG.error("Upload of service-tags failed with message ", e);
-						    }
-							return null;
+					UserGroupInformation userGroupInformation = UserGroupInformation.getLoginUser();
+					if (userGroupInformation != null) {
+						try {
+							userGroupInformation.checkTGTAndReloginFromKeytab();
+						} catch (IOException ioe) {
+							LOG.error("Error renewing TGT and relogin", ioe);
+							userGroupInformation = null;
 						}
-					});
-					return ret;
+					}
+					if (userGroupInformation != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Using Principal = " + principal + ", keytab = " + keytab);
+						}
+						final ServiceTags serviceTag = serviceTags;
+						ServiceTags ret = userGroupInformation.doAs(new PrivilegedAction<ServiceTags>() {
+							@Override
+							public ServiceTags run() {
+								try {
+									return uploadServiceTags(serviceTag);
+								} catch (Exception e) {
+									LOG.error("Upload of service-tags failed with message ", e);
+								}
+								return null;
+							}
+						});
+						return ret;
+					} else {
+						LOG.error("Failed to get UserGroupInformation.getLoginUser()");
+						return null; // This will cause retries !!!
+					}
 				}catch(Exception e){
 					LOG.error("Upload of service-tags failed with message ", e);
 				}
