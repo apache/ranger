@@ -543,12 +543,26 @@ public class RangerAPIMapping {
 		apiForUserGroupManagement.add(RangerAPIList.MODIFY_GROUPS_VISIBILITY);
 		apiForUserGroupManagement.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiForUserGroupManagement.add(RangerAPIList.MODIFY_USER_VISIBILITY);
-
 		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP);
 		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_USER_BY_USER_NAME);
-
-
-
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP_AND_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP_BY_GROUP_NAME);
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP_USER);
+		apiForUserGroupManagement.add(RangerAPIList.UPDATE_X_GROUP_USER);
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.SECURE_UPDATE_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.UPDATE_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.SECURE_CREATE_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_X_USER_GROUP_FROM_MAP);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_X_USER);
+		apiForUserGroupManagement.add(RangerAPIList.SECURE_UPDATE_X_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.UPDATE_X_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.SECURE_CREATE_X_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_X_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_X_GROUP_USER);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_X_GROUP_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.UPDATE_X_GROUP_GROUP);
 
 		rangerAPIMappingWithConfig.put(USER_GROUP_MANAGEMENT_CONFIG, apiForUserGroupManagement);
 	}
@@ -567,7 +581,6 @@ public class RangerAPIMapping {
 		apiForServiceManagement.add(RangerAPIList.DELETE_SERVICE_DEF);
 		apiForServiceManagement.add(RangerAPIList.UPDATE_SERVICE);
 		apiForServiceManagement.add(RangerAPIList.UPDATE_SERVICE_DEF);
-		apiForServiceManagement.add(RangerAPIList.VALIDATE_CONFIG);
 
 		rangerAPIMappingWithConfig.put(SERVICE_MANAGEMENT_CONFIG, apiForServiceManagement);
 	}

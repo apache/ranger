@@ -99,7 +99,8 @@ public class RangerConfigUtil {
 	 * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
 	 */
 	public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
-		isUserGroupManagementEnabled = userGroupManagementEnabled; }
+		isUserGroupManagementEnabled = userGroupManagementEnabled;
+	}
 
 	/**
 	 * @return the adminDelegationEnabled

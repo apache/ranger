@@ -86,8 +86,6 @@ define(function(require){
 		getRangerManagementConfig : function(options){
 			return this.constructor.nonCrudOperation.call(this, this.url, 'GET', options);
 		}
-	}, {
-		// static class members
 	});
 
 	return RangerManagementConfigBase;

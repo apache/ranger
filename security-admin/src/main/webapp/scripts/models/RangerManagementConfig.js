@@ -48,8 +48,6 @@ define(function(require){
 			return /*this.get('name')*/;
 		}
 
-	}, {
-		// static class members
 	});
 
     return RangerManagementConfig;

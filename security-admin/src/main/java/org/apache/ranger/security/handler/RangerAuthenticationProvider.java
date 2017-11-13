@@ -95,13 +95,13 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			}
 		} else {
 			String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
-			if (rangerAuthenticationMethod==null) {
-				rangerAuthenticationMethod="NONE";
+			if (rangerAuthenticationMethod == null) {
+				rangerAuthenticationMethod = "NONE";
 			}
 			if (authentication != null && rangerAuthenticationMethod != null) {
 				if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
 					authentication = getLdapAuthentication(authentication);
-					if (authentication!=null && authentication.isAuthenticated()) {
+					if (authentication != null && authentication.isAuthenticated()) {
 						return authentication;
 					} else {
 						authentication=getLdapBindAuthentication(authentication);
@@ -136,32 +136,32 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				}
 				String encoder="SHA256";
 				try {
-					authentication = getJDBCAuthentication(authentication,encoder);
+					authentication = getJDBCAuthentication(authentication, encoder);
 				} catch (Exception e) {
 					logger.debug("JDBC Authentication failure: ", e);
 				}
-				if (authentication !=null && authentication.isAuthenticated()) {
+				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
 				}
 				if (authentication != null && !authentication.isAuthenticated()) {
 					logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
-					encoder="MD5";
+					encoder = "MD5";
 					String userName = authentication.getName();
 					String userPassword = null;
 					if (authentication.getCredentials() != null) {
 						userPassword = authentication.getCredentials().toString();
 					}
 					try {
-						authentication = getJDBCAuthentication(authentication,encoder);
+						authentication = getJDBCAuthentication(authentication, encoder);
 					} catch (Exception e) {
 						throw e;
 					}
 					if (authentication != null && authentication.isAuthenticated()) {
 						if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
-							userMgr.updatePasswordInSHA256(userName,userPassword,false);
+							userMgr.updatePasswordInSHA256(userName, userPassword, false);
 						}
 						return authentication;
-					}else{
+					} else {
 						return authentication;
 					}
 				}

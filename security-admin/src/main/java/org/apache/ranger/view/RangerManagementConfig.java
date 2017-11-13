@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.ranger.view;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;

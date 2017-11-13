@@ -207,7 +207,7 @@ public class ServiceREST {
 	@POST
 	@Path("/definitions")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE_DEF + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isServiceManagementAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE_DEF + "\")")
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createServiceDef(" + serviceDef + ")");
@@ -247,7 +247,7 @@ public class ServiceREST {
 	@PUT
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isServiceManagementAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
 	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateServiceDef(serviceDefName=" + serviceDef.getName() + ")");
@@ -287,7 +287,7 @@ public class ServiceREST {
 	@DELETE
 	@Path("/definitions/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE_DEF + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isServiceManagementAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE_DEF + "\")")
 	public void deleteServiceDef(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
@@ -476,7 +476,7 @@ public class ServiceREST {
 	@POST
 	@Path("/services")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isServiceManagementAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE + "\")")
 	public RangerService createService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createService(" + service + ")");
@@ -577,7 +577,7 @@ public class ServiceREST {
 	@DELETE
 	@Path("/services/{id}")
 	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isServiceManagementAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE + "\")")
 	public void deleteService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
@@ -1320,6 +1320,7 @@ public class ServiceREST {
 						LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
 					}
 				}
+				bizUtil.ensureAdminDelegationEnabledIfPolicyRequires(policy);
 				RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 				validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
@@ -1408,6 +1409,7 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updatePolicy(policyId=" + policy.getId() + ")");
 			}
+			bizUtil.ensureAdminDelegationEnabledIfPolicyRequires(policy);
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 

@@ -24,7 +24,6 @@ define(function(require){
 
 	var RangerManagementConfig = require('models/RangerManagementConfig');
 
-
 	// Private properties
 	var rangerManagementConfig = null;
 
