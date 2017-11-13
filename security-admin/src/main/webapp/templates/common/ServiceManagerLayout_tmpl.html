@@ -38,18 +38,17 @@
 									<img alt="HDFS" src="images/folder-grey.png">
 									{{./this.attributes.name}} 
 									{{#if ../operation}}
-
 										{{#if ../../showImportExportBtn}}
-									<a href="javascript:void(0)" title="Export" type="button" class="download  pull-right text-decoration" data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" >
-                                          <i class="icon-external-link-sign"> </i>
-	                                   </a>
+											<a href="javascript:void(0)" title="Export" type="button" class="download  pull-right text-decoration" data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" >
+												<i class="icon-external-link-sign"> </i>
+											</a>
 	                                   
-                                           <a href="javascript:void(0)" title="Import"  data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right importbtn text-decoration">
-									    <i class="icon-rotate-180 icon-external-link-sign"> </i>
-									   </a>
+											<a href="javascript:void(0)" title="Import"  data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right importbtn text-decoration">
+												<i class="icon-rotate-180 icon-external-link-sign"> </i>
+											</a>
 										{{/if}}
 										{{#if ../../showServiceAddBtn}}
-									<a href="#!/service/{{./this.id}}/create"class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+											<a href="#!/service/{{./this.id}}/create"class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
 										{{/if}}
 									{{/if}}
 								</span>	
