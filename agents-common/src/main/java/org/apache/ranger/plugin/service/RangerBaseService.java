@@ -252,7 +252,10 @@ public abstract class RangerBaseService {
 		List<String> ret = new ArrayList<>();
 		Map<String, String> serviceConfig =  service.getConfigs();
 		if (serviceConfig != null ) {
-			ret.add(serviceConfig.get("username"));
+                        String serviceConfigUser = serviceConfig.get("username");
+                        if (StringUtils.isNotBlank(serviceConfigUser)){
+                                ret.add(serviceConfig.get("username"));
+                        }
 			String defaultUsers = serviceConfig.get("default.policy.users");
 			if (!StringUtils.isEmpty(defaultUsers)) {
 				List<String> defaultUserList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultUsers,",")));

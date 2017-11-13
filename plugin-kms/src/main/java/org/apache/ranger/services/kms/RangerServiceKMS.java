@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.kms.client.KMSResourceMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -128,7 +129,9 @@ public class RangerServiceKMS extends RangerBaseService {
 			List<RangerPolicy.RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
 			for (RangerPolicy.RangerPolicyItem item : policyItems) {
 				List<String> users = item.getUsers();
-				users.add(adminUser);
+                                if(StringUtils.isNotBlank(adminUser)){
+                                        users.add(adminUser);
+                                }
 				item.setUsers(users);
 			}
 
@@ -156,7 +159,6 @@ public class RangerServiceKMS extends RangerBaseService {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceKMS.getDefaultRangerPolicies() : " + ret);
 		}
-
 		return ret;
 	}
 
