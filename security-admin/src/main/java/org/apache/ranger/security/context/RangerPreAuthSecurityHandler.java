@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,10 @@ public class RangerPreAuthSecurityHandler {
 	
 	@Autowired
 	SessionMgr sessionMgr;
+
+	@Autowired
+	RangerConfigUtil configUtil;
+
 
 	public boolean isAPIAccessible(String methodName) throws Exception {
 
@@ -109,5 +114,33 @@ public class RangerPreAuthSecurityHandler {
 			return true;
 		}
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User is not allowed to access the API", true);
+	}
+
+	public boolean isUGManagementAPIAccessible(String methodName) throws Exception{
+		if (methodName == null) {
+			return false;
+		}
+
+		if(!configUtil.isUserGroupManagementEnabled()){
+			Set<String> associatedAPIs = rangerAPIMapping.getAssociatedAPIWithConfig(RangerAPIMapping.USER_GROUP_MANAGEMENT_CONFIG);
+			if(associatedAPIs.contains(methodName)){
+				return false;
+			}
+		}
+		return isAPIAccessible(methodName);
+	}
+
+	public boolean isServiceManagementAPIAccessible(String methodName) throws Exception{
+		if (methodName == null) {
+			return false;
+		}
+
+		if(!configUtil.isServiceManagementEnabled()){
+			Set<String> associatedAPIs = rangerAPIMapping.getAssociatedAPIWithConfig(RangerAPIMapping.SERVICE_MANAGEMENT_CONFIG);
+			if(associatedAPIs.contains(methodName)){
+				return false;
+			}
+		}
+		return isAPIAccessible(methodName);
 	}
 }

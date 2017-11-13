@@ -44,26 +44,26 @@ define(function(require){
 				"dataType" : "Date"
 			},
 			"owner" : {
-            	"dataType" : "String"
-            },
-            "updatedBy" : {
-                "dataType" : "String"
-            },
+				"dataType" : "String"
+			},
+			"updatedBy" : {
+				"dataType" : "String"
+			},
 			"isUserGroupManagementEnabled" : {
-			    "dataType" : "boolean"
+				"dataType" : "boolean"
 			},
 			"isAdminDelegationEnabled" : {
-			    "dataType" : "boolean"
+				"dataType" : "boolean"
 			},
 			"isServiceManagementEnabled" : {
-			    "dataType" : "boolean"
+				"dataType" : "boolean"
 			},
 			"addedByUserId" : {
-                "dataType" : "Long"
-            },
-            "updatedByUserId" : {
-                "dataType" : "Long"
-            }
+				"dataType" : "Long"
+			},
+			"updatedByUserId" : {
+				"dataType" : "Long"
+			}
 		},
 
 
@@ -83,14 +83,14 @@ define(function(require){
 		 * Non - CRUD operations
 		 *************************/
 
-        getRangerManagementConfig : function(options){
-            return this.constructor.nonCrudOperation.call(this, this.url, 'GET', options);
-        }
+		getRangerManagementConfig : function(options){
+			return this.constructor.nonCrudOperation.call(this, this.url, 'GET', options);
+		}
 	}, {
 		// static class members
 	});
 
-    return RangerManagementConfigBase;
+	return RangerManagementConfigBase;
 
 });
 

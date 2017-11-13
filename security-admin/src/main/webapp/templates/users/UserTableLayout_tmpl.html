@@ -31,11 +31,11 @@
 		</div>
 		<div class="clearfix" data-id="addNewBtnDiv">
 			{{#isSystemAdmin .}}
-                {{#if ../showDeleteUserGroup}}
+				{{#if ../showDeleteUserGroup}}
 				<a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
-                {{/if}}
+				{{/if}}
 			{{/isSystemAdmin}}
-      {{#if showVisibilityDropDown}}
+			{{#if showVisibilityDropDown}}
       <div class="btn-group btn-right">
         <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
           {{tt 'btn.setVisibility'}}
@@ -46,13 +46,13 @@
           <li><a href="javascript:void(0);" data-id="hidden">{{tt 'lbl.VisibilityStatus_IS_HIDDEN'}}</a></li>
         </ul>
       </div>
-      {{/if}}
-      {{#if showAddNewUser}}
+			{{/if}}
+			{{#if showAddNewUser}}
       <a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
-       {{/if}}
-       {{#if showAddNewGroup}}
+			{{/if}}
+			{{#if showAddNewGroup}}
       <a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
-       {{/if}}
+			{{/if}}
 		</div>
 		<div data-id="r_tableList" class="clickable">
           <b class="_prevNav"></b>

@@ -29,7 +29,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtils			= require('utils/XAUtils');
 	var AddGroup 		= require('views/common/AddGroup');
-	var RangerConfigMgr = require('mgrs/RangerConfigMgr');
+	var RangerConfigMgr	= require('mgrs/RangerConfigMgr');
 	
 	require('backbone-forms');
 	require('backbone-forms.templates');
@@ -55,7 +55,7 @@ define(function(require){
 		bindEvents : function(){
 			this.on('userRoleList:change', function(form, fieldEditor){
 				//this.userRoleListChange(form, fieldEditor);
-    		});
+			});
 		},
 		
 	    /** fields for the form

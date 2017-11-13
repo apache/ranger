@@ -30,78 +30,78 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 public class RangerManagementConfig extends VXDataObject implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Autowired
-    protected boolean isUserGroupManagementEnabled;
+	@Autowired
+	protected boolean isUserGroupManagementEnabled;
 
-    @Autowired
-    protected boolean isAdminDelegationEnabled;
+	@Autowired
+	protected boolean isAdminDelegationEnabled;
 
-    @Autowired
-    protected boolean isServiceManagementEnabled;
+	@Autowired
+	protected boolean isServiceManagementEnabled;
 
 
-    /**
-     * Default constructor. This will set all the attributes to default value.
-     */
-    public RangerManagementConfig() {
-    }
+	/**
+	 * Default constructor. This will set all the attributes to default value.
+	 */
+	public RangerManagementConfig() {
+	}
 
-    /**
-     *
-     * @return the isUserGroupManagementEnabled
-     */
-    public boolean isUserGroupManagementEnabled() {
-        return isUserGroupManagementEnabled;
-    }
+	/**
+	 *
+	 * @return the isUserGroupManagementEnabled
+	 */
+	public boolean isUserGroupManagementEnabled() {
+		return isUserGroupManagementEnabled;
+	}
 
-    /**
-     *
-     * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
-     */
-    public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
-        isUserGroupManagementEnabled = userGroupManagementEnabled;
-    }
+	/**
+	 *
+	 * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
+	 */
+	public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
+		isUserGroupManagementEnabled = userGroupManagementEnabled;
+	}
 
-    /**
-     *
-     * @return the isAdminDelegationEnabled
-     */
-    public boolean isAdminDelegationEnabled() {
-        return isAdminDelegationEnabled;
-    }
+	/**
+	 *
+	 * @return the isAdminDelegationEnabled
+	 */
+	public boolean isAdminDelegationEnabled() {
+		return isAdminDelegationEnabled;
+	}
 
-    /**
-     *
-     * @param adminDelegationEnabled sets the value of isAdminDelegationEnabled
-     */
-    public void setAdminDelegationEnabled(boolean adminDelegationEnabled) {
-        isAdminDelegationEnabled = adminDelegationEnabled;
-    }
+	/**
+	 *
+	 * @param adminDelegationEnabled sets the value of isAdminDelegationEnabled
+	 */
+	public void setAdminDelegationEnabled(boolean adminDelegationEnabled) {
+		isAdminDelegationEnabled = adminDelegationEnabled;
+	}
 
-    /**
-     *
-     * @return the isServiceManagementEnabled
-     */
-    public boolean isServiceManagementEnabled() {
-        return isServiceManagementEnabled;
-    }
+	/**
+	 *
+	 * @return the isServiceManagementEnabled
+	 */
+	public boolean isServiceManagementEnabled() {
+		return isServiceManagementEnabled;
+	}
 
-    /**
-     *
-     * @param serviceManagementEnabled sets the value of isServiceManagementEnabled
-     */
-    public void setServiceManagementEnabled(boolean serviceManagementEnabled) {
-        isServiceManagementEnabled = serviceManagementEnabled;
-    }
+	/**
+	 *
+	 * @param serviceManagementEnabled sets the value of isServiceManagementEnabled
+	 */
+	public void setServiceManagementEnabled(boolean serviceManagementEnabled) {
+		isServiceManagementEnabled = serviceManagementEnabled;
+	}
 
-    @Override
-    public String toString() {
-        String str = "RangerManagementConfig = [ ";
-        str += "isUserGroupManagementEnabled: " + isUserGroupManagementEnabled + ", ";
-        str += "isAdminDelegationEnabled: " + isAdminDelegationEnabled + ", ";
-        str += "isServiceManagementEnabled: " + isServiceManagementEnabled + " ]";
-        return str;
-    }
+	@Override
+	public String toString() {
+		String str = "RangerManagementConfig = [ ";
+		str += "isUserGroupManagementEnabled: " + isUserGroupManagementEnabled + ", ";
+		str += "isAdminDelegationEnabled: " + isAdminDelegationEnabled + ", ";
+		str += "isServiceManagementEnabled: " + isServiceManagementEnabled + " ]";
+		return str;
+	}
 }

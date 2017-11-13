@@ -61,8 +61,8 @@ function(Backbone, Marionette, localization, MAppState, XAUtil, RangerConfigMgr)
 			"!/service/:serviceId/policies/:id/edit"			: "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/
-            "!/permissions"					: "modulePermissionsAction",
-            "!/permissions/:id/edit"        : "modulePermissionEditAction",
+			"!/permissions"					: "modulePermissionsAction",
+			"!/permissions/:id/edit"        : "modulePermissionEditAction",
 			
 			/************ KMS ***************************/
 			"!/kms/keys/:isService/manage/:serviceName"	: "kmsManagerAction",

@@ -38,10 +38,13 @@ public class RangerAPIMapping {
 	public static final String TAB_KEY_MANAGER = "Key Manager";
 	public static final String TAB_TAG_BASED_POLICIES = "Tag Based Policies";
 	public static final String TAB_REPORTS = "Reports";
+	public static final String USER_GROUP_MANAGEMENT_CONFIG = "Users/GroupsMngConfig";
+	public static final String SERVICE_MANAGEMENT_CONFIG = "ServiceMngConfig";
 
 	private static HashMap<String, Set<String>> rangerAPIMappingWithUI = null;
 	private static Set<String> tabList = new HashSet<String>();
 	private static Map<String, Set<String>> mapApiToTabs = null;
+	private static Map<String, Set<String>> rangerAPIMappingWithConfig = null;
 
 	public RangerAPIMapping() {
 		init();
@@ -54,6 +57,9 @@ public class RangerAPIMapping {
 		if (mapApiToTabs == null) {
 			mapApiToTabs = new HashMap<String, Set<String>>();
 		}
+		if (rangerAPIMappingWithConfig == null){
+			rangerAPIMappingWithConfig = new HashMap<String, Set<String>>();
+		}
 
 		mapResourceBasedPoliciesWithAPIs();
 		mapAuditWithAPIs();
@@ -62,6 +68,8 @@ public class RangerAPIMapping {
 		mapKeyManagerWithAPIs();
 		mapTagBasedPoliciesWithAPIs();
 		mapReportsWithAPIs();
+		mapUserGroupManagementAPIWithConfig();
+		mapServiceManagementAPIWithConfig();
 
 		if (CollectionUtils.isEmpty(tabList)) {
 			populateAvailableUITabs();
@@ -517,6 +525,53 @@ public class RangerAPIMapping {
 		}
 	}
 
+	/**
+	 * This is mapping of APIs that requires additional authorization
+	 * depending on status of user/group management
+	 * if user/group management is not required, the API calls are inaccessible
+	 */
+	private void mapUserGroupManagementAPIWithConfig(){
+		Set<String> apiForUserGroupManagement = new HashSet<String>();
+
+		apiForUserGroupManagement.add(RangerAPIList.CREATE);
+		apiForUserGroupManagement.add(RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER);
+		apiForUserGroupManagement.add(RangerAPIList.UPDATE);
+		apiForUserGroupManagement.add(RangerAPIList.SET_USER_ROLES);
+		apiForUserGroupManagement.add(RangerAPIList.DEACTIVATE_USER);
+		apiForUserGroupManagement.add(RangerAPIList.SET_USER_ROLES_BY_ID);
+		apiForUserGroupManagement.add(RangerAPIList.SET_USER_ROLES_BY_NAME);
+		apiForUserGroupManagement.add(RangerAPIList.MODIFY_GROUPS_VISIBILITY);
+		apiForUserGroupManagement.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
+		apiForUserGroupManagement.add(RangerAPIList.MODIFY_USER_VISIBILITY);
+
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_GROUP);
+		apiForUserGroupManagement.add(RangerAPIList.DELETE_X_USER_BY_USER_NAME);
+
+
+
+
+		rangerAPIMappingWithConfig.put(USER_GROUP_MANAGEMENT_CONFIG, apiForUserGroupManagement);
+	}
+
+    /**
+     * This is mapping of APIs that requires additional authorization
+     * depending on status of service management
+     * if service management is not required, the API calls are inaccessible
+     */
+	private void mapServiceManagementAPIWithConfig(){
+		Set<String> apiForServiceManagement = new HashSet<String>();
+
+		apiForServiceManagement.add(RangerAPIList.CREATE_SERVICE);
+		apiForServiceManagement.add(RangerAPIList.CREATE_SERVICE_DEF);
+		apiForServiceManagement.add(RangerAPIList.DELETE_SERVICE);
+		apiForServiceManagement.add(RangerAPIList.DELETE_SERVICE_DEF);
+		apiForServiceManagement.add(RangerAPIList.UPDATE_SERVICE);
+		apiForServiceManagement.add(RangerAPIList.UPDATE_SERVICE_DEF);
+		apiForServiceManagement.add(RangerAPIList.VALIDATE_CONFIG);
+
+		rangerAPIMappingWithConfig.put(SERVICE_MANAGEMENT_CONFIG, apiForServiceManagement);
+	}
+
 	// * Utility methods starts from here, to retrieve API-UItab mapping information *
 
 	public Set<String> getAvailableUITabs() {
@@ -537,4 +592,9 @@ public class RangerAPIMapping {
 		Set<String> associatedTabs = mapApiToTabs.get(apiName);
 		return associatedTabs;
 	}
+
+	public Set<String> getAssociatedAPIWithConfig(String configName) {
+	    Set<String> associatedAPIs = rangerAPIMappingWithConfig.get(configName);
+	    return associatedAPIs;
+    }
 }

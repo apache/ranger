@@ -48,41 +48,41 @@ define(function(require){
 		return rangerManagementConfig;
 	};
 
-    /**
-     *
-     * @returns isUserGroupManagementEnabled
-     */
+	/**
+	 *
+	 * @returns isUserGroupManagementEnabled
+	 */
 	RangerConfigMgr.isUserGroupManagementEnabled = function() {
-	    if(!rangerManagementConfig){
-	        rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
-	    }
+		if(!rangerManagementConfig){
+			rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
+		}
 
-	    return rangerManagementConfig.get('isUserGroupManagementEnabled');
+		return rangerManagementConfig.get('isUserGroupManagementEnabled');
 	};
 
-    /**
-     *
-     * @returns isAdminDelegationEnabled
-     */
+	/**
+	 *
+	 * @returns isAdminDelegationEnabled
+	 */
 	RangerConfigMgr.isAdminDelegationEnabled = function() {
-        if(!rangerManagementConfig){
-            rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
-        }
+		if(!rangerManagementConfig){
+			rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
+		}
 
-        return rangerManagementConfig.get('isAdminDelegationEnabled');
-    };
+		return rangerManagementConfig.get('isAdminDelegationEnabled');
+	};
 
-    /**
-     *
-     * @returns isServiceManagementEnabled
-     */
-    RangerConfigMgr.isServiceManagementEnabled = function() {
-        if(!rangerManagementConfig){
-            rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
-        }
+	/**
+	 *
+	 * @returns isServiceManagementEnabled
+	 */
+	RangerConfigMgr.isServiceManagementEnabled = function() {
+		if(!rangerManagementConfig){
+			rangerManagementConfig = RangerConfigMgr.getRangerManagementConfig();
+		}
 
-        return rangerManagementConfig.get('isServiceManagementEnabled');
-    };
+		return rangerManagementConfig.get('isServiceManagementEnabled');
+	};
 
 	return RangerConfigMgr;
 });

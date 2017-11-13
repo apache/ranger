@@ -204,7 +204,7 @@ public class XUserREST {
 	@PUT
 	@Path("/secure/groups/visibility")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_GROUPS_VISIBILITY + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.MODIFY_GROUPS_VISIBILITY + "\")")
 	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap){
 		 xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
 	}
@@ -698,9 +698,11 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/users/userName/{userName}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_USER_BY_USER_NAME + "\")")
 	public void deleteXUserByUserName(@PathParam("userName") String userName,
 			@Context HttpServletRequest request) {
+		xUserMgr.checkAdminAccess();
 		String forceDeleteStr = request.getParameter("forceDelete");
 		boolean forceDelete = false;
 		if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
@@ -712,10 +714,12 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/groups/groupName/{groupName}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_GROUP_BY_GROUP_NAME + "\")")
 	public void deleteXGroupByGroupName(
 			@PathParam("groupName") String groupName,
 			@Context HttpServletRequest request) {
+		xUserMgr.checkAdminAccess();
 		String forceDeleteStr = request.getParameter("forceDelete");
 		boolean forceDelete = false;
 		if(!StringUtils.isEmpty(forceDeleteStr) && forceDeleteStr.equalsIgnoreCase("true")) {
@@ -727,10 +731,12 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/group/{groupName}/user/{userName}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_GROUP_AND_X_USER + "\")")
 	public void deleteXGroupAndXUser(@PathParam("groupName") String groupName,
 			@PathParam("userName") String userName,
 			@Context HttpServletRequest request) {
+		xUserMgr.checkAdminAccess();
 		xUserMgr.deleteXGroupAndXUser(groupName, userName);
 	}
 	
@@ -983,7 +989,7 @@ public class XUserREST {
 	@PUT
 	@Path("/secure/users/activestatus")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_USER_ACTIVE_STATUS + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.MODIFY_USER_ACTIVE_STATUS + "\")")
 	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap){
 		 xUserMgr.modifyUserActiveStatus(statusMap);
 	}
@@ -991,7 +997,7 @@ public class XUserREST {
 	@PUT
 	@Path("/secure/users/roles/{userId}")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_ID + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_ID + "\")")
 	public VXStringList setUserRolesByExternalID(@PathParam("userId") Long userId,
 			VXStringList roleList) {
 		return xUserMgr.setUserRolesByExternalID(userId, roleList.getVXStrings());
@@ -1000,7 +1006,7 @@ public class XUserREST {
 	@PUT
 	@Path("/secure/users/roles/userName/{userName}")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_NAME + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_NAME + "\")")
 	public VXStringList setUserRolesByName(@PathParam("userName") String userName,
 			VXStringList roleList) {
 		return xUserMgr.setUserRolesByName(userName, roleList.getVXStrings());
@@ -1029,8 +1035,10 @@ public class XUserREST {
 	@DELETE
 	@Path("/secure/users/delete")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_USER_BY_USER_NAME + "\")")
 	public void deleteUsersByUserName(@Context HttpServletRequest request,VXStringList userList){
+		xUserMgr.checkAdminAccess();
 		String forceDeleteStr = request.getParameter("forceDelete");
 		boolean forceDelete = false;
 		if(StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
@@ -1049,9 +1057,11 @@ public class XUserREST {
 	@DELETE
 	@Path("/secure/groups/delete")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_GROUP + "\")")
 	public void deleteGroupsByGroupName(
 			@Context HttpServletRequest request,VXStringList groupList) {
+		xUserMgr.checkAdminAccess();
 		String forceDeleteStr = request.getParameter("forceDelete");
 		boolean forceDelete = false;
 		if(StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {

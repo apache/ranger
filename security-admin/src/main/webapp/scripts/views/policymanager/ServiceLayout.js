@@ -26,13 +26,13 @@ define(function(require){
 	var XAEnums 			= require('utils/XAEnums');
 	var XAUtil				= require('utils/XAUtils');
 	var SessionMgr 			= require('mgrs/SessionMgr');
-	var localization	= require('utils/XALangSupport');
+	var localization		= require('utils/XALangSupport');
 	var RangerServiceList 	= require('collections/RangerServiceList');
 	var RangerService 		= require('models/RangerService');
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
 	var vUploadServicePolicy		= require('views/UploadServicePolicy');
 	var vDownloadServicePolicy		= require('views/DownloadServicePolicy');
-	var RangerConfigMgr             = require('mgrs/RangerConfigMgr');
+	var RangerConfigMgr				= require('mgrs/RangerConfigMgr');
 	require('Backbone.BootstrapModal');
 	return Backbone.Marionette.Layout.extend(
 	/** @lends Servicemanagerlayout */
@@ -47,33 +47,33 @@ define(function(require){
 				serviceDefs : this.collection.models,
 				services 	: this.services.groupBy("type"),
 				showImportExportBtn : function(){
-				    if(!RangerConfigMgr.isServiceManagementEnabled()){
-				        return false;
-				    }
-				    return SessionMgr.isUser() ? false : true;
+					if(!RangerConfigMgr.isServiceManagementEnabled()){
+						return false;
+					}
+					return SessionMgr.isUser() ? false : true;
 				},
 				showServiceAddBtn : RangerConfigMgr.isServiceManagementEnabled()
 			};
 			
 		},
-    	breadCrumbs :function(){
-    		if(this.type == "tag"){
-    			return [XALinks.get('TagBasedServiceManager')];
-    		}
-    		return [XALinks.get('ServiceManager')];
-    	},
+		breadCrumbs :function(){
+			if(this.type == "tag"){
+				return [XALinks.get('TagBasedServiceManager')];
+			}
+			return [XALinks.get('ServiceManager')];
+		},
 
 		/** Layout sub regions */
-    	regions: {},
+		regions: {},
 
-    	/** ui selector cache */
-    	ui: {
-    		'btnDelete' : '.deleteRepo',
-    		'downloadReport'      : '[data-id="downloadBtnOnService"]',
-    		'uploadServiceReport' :'[data-id="uploadBtnOnServices"]',
-    		'exportReport'      : '[data-id="exportBtn"]',
-        	'importServiceReport' :'[data-id="importBtn"]'
-    	},
+		/** ui selector cache */
+		ui: {
+			'btnDelete' : '.deleteRepo',
+			'downloadReport'      : '[data-id="downloadBtnOnService"]',
+			'uploadServiceReport' :'[data-id="uploadBtnOnServices"]',
+			'exportReport'      : '[data-id="exportBtn"]',
+			'importServiceReport' :'[data-id="importBtn"]'
+		},
 
 		/** ui events hash */
 		events : function(){

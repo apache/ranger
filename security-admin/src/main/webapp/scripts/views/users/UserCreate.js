@@ -31,31 +31,31 @@ define(function(require){
 	var UserForm		= require('views/users/UserForm');
 	var UserTableLayout	= require('views/users/UserTableLayout');
 	var VXUserList		= require('collections/VXUserList');
-	var UserCreateTmpl  = require('hbs!tmpl/users/UserCreate_tmpl');
-	var RangerConfigMgr = require('mgrs/RangerConfigMgr');
+	var UserCreateTmpl	= require('hbs!tmpl/users/UserCreate_tmpl');
+	var RangerConfigMgr	= require('mgrs/RangerConfigMgr');
 
 	var UserCreate = Backbone.Marionette.Layout.extend(
 	/** @lends UserCreate */
 	{
 		_viewName : 'UserCreate',
 		
-    	template: UserCreateTmpl,
-    	breadCrumbs :function(){
-    		return this.model.isNew() ? [XALinks.get('Users'),XALinks.get('UserCreate')]
-    					: [XALinks.get('Users'),XALinks.get('UserEdit')];
-    	},
-        
-		/** Layout sub regions */
-    	regions: {
-    		'rForm' :'div[data-id="r_form"]'
-    	},
+		template: UserCreateTmpl,
+		breadCrumbs :function(){
+			return this.model.isNew() ? [XALinks.get('Users'),XALinks.get('UserCreate')]
+						: [XALinks.get('Users'),XALinks.get('UserEdit')];
+		},
 
-    	/** ui selector cache */
-    	ui: {
-    		'tab' 		: '.nav-tabs',
-    		'btnSave'	: '[data-id="save"]',
-    		'btnCancel' : '[data-id="cancel"]'
-    	},
+		/** Layout sub regions */
+		regions: {
+			'rForm' :'div[data-id="r_form"]'
+		},
+
+		/** ui selector cache */
+		ui: {
+			'tab' 		: '.nav-tabs',
+			'btnSave'	: '[data-id="save"]',
+			'btnCancel' : '[data-id="cancel"]'
+		},
 
 		/** ui events hash */
 		events: function() {
