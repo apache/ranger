@@ -98,6 +98,8 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_KERBEROS_PRICIPAL = "ranger.tagsync.kerberos.principal";
 	private static final String TAGSYNC_KERBEROS_KEYTAB = "ranger.tagsync.kerberos.keytab";
 
+	public static final String TAGSYNC_KERBEROS_IDENTITY = "tagsync.kerberos.identity";
+
 	private static String LOCAL_HOSTNAME = "unknown";
 
 	private Properties props;
@@ -397,6 +399,10 @@ public class TagSyncConfig extends Configuration {
 			}
 		}
 		return ret;
+	}
+
+	static public String getTagsyncKerberosIdentity(Properties prop) {
+		return prop.getProperty(TAGSYNC_KERBEROS_IDENTITY);
 	}
 
 	private TagSyncConfig() {

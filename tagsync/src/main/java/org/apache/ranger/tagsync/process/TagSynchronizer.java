@@ -22,10 +22,14 @@ package org.apache.ranger.tagsync.process;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
 
+import javax.security.auth.Subject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,8 @@ import java.util.StringTokenizer;
 public class TagSynchronizer {
 
 	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
+
+	private static final String AUTH_TYPE_KERBEROS = "kerberos";
 
 	private static final String TAGSYNC_SOURCE_BASE = "ranger.tagsync.source.";
 	private static final String PROP_CLASS_NAME = "class";
@@ -97,15 +103,19 @@ public class TagSynchronizer {
 
 		printConfigurationProperties(properties);
 
-		boolean ret = false;
+		boolean ret = initializeKerberosIdentity(properties);
 
-		LOG.info("Initializing TAG source and sink");
+		if (ret) {
+			LOG.info("Initializing TAG source and sink");
 
-		tagSink = initializeTagSink(properties);
+			tagSink = initializeTagSink(properties);
 
-		if (tagSink != null) {
-			initializeTagSources();
-			ret = true;
+			if (tagSink != null) {
+				initializeTagSources();
+				ret = true;
+			}
+		} else {
+			LOG.error("Error initializing kerberos identity");
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -342,6 +352,78 @@ public class TagSynchronizer {
 			}
 		}
 		return tagSource;
+	}
+
+	private static boolean initializeKerberosIdentity(Properties props) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
+		}
+
+		boolean ret = false;
+
+		String authenticationType = TagSyncConfig.getAuthenticationType(props);
+		String principal = TagSyncConfig.getKerberosPrincipal(props);
+		String keytab = TagSyncConfig.getKerberosKeytab(props);
+		String nameRules = TagSyncConfig.getNameRules(props);
+
+		if (LOG.isDebugEnabled()) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("authenticationType=" + authenticationType);
+				LOG.debug("principal=" + principal);
+				LOG.debug("keytab" + keytab);
+				LOG.debug("nameRules=" + nameRules);
+			}
+		}
+		final boolean isKerberized = !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab);
+
+		if (isKerberized) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Trying to get kerberos identitiy");
+			}
+			Subject subject = null;
+			try {
+				subject = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+			} catch(IOException exception) {
+				LOG.error("Could not get Subject from principal:[" + principal + "], keytab:[" + keytab + "], nameRules:[" + nameRules + "]", exception);
+			}
+
+			UserGroupInformation kerberosIdentity;
+
+			if (subject != null) {
+				try {
+					UserGroupInformation.loginUserFromSubject(subject);
+					kerberosIdentity = UserGroupInformation.getLoginUser();
+					if (kerberosIdentity != null) {
+						props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Got UGI, user:[" + kerberosIdentity.getUserName() + "]");
+						}
+						ret = true;
+					} else {
+						LOG.error("KerberosIdentity is null!");
+					}
+				} catch (IOException exception) {
+					LOG.error("Failed to get UGI from Subject:[" + subject + "]", exception);
+				}
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Not configured for Kerberos Authentication");
+			}
+			props.remove(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY);
+
+			ret = true;
+		}
+
+		if (!ret) {
+			props.remove(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagSynchronizer.initializeKerberosIdentity() : " + ret);
+		}
+
+		return ret;
 	}
 
 	private static String getStringProperty(Properties props, String propName) {
