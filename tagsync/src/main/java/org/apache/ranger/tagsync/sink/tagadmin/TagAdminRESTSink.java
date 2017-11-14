@@ -26,7 +26,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.tagsync.model.TagSink;
@@ -34,7 +33,6 @@ import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
@@ -55,18 +53,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
 
-	private static final String AUTH_TYPE_KERBEROS = "kerberos";
-
 	private long rangerAdminConnectionCheckInterval;
 
 	private RangerRESTClient tagRESTClient = null;
 
+	private boolean isKerberized;
+
 	private BlockingQueue<UploadWorkItem> uploadWorkItems;
-	
-	private String authenticationType;	
-	private String principal;
-	private String keytab;
-	private String nameRules;
 
 	private Thread myThread = null;
 
@@ -83,45 +76,26 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		String userName = TagSyncConfig.getTagAdminUserName(properties);
 		String password = TagSyncConfig.getTagAdminPassword(properties);
 		rangerAdminConnectionCheckInterval = TagSyncConfig.getTagAdminConnectionCheckInterval(properties);
-		authenticationType = TagSyncConfig.getAuthenticationType(properties);
-		nameRules = TagSyncConfig.getNameRules(properties);
-		principal = TagSyncConfig.getKerberosPrincipal(properties);
-		keytab = TagSyncConfig.getKerberosKeytab(properties);
+		isKerberized = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
+
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("restUrl=" + restUrl);
 			LOG.debug("sslConfigFile=" + sslConfigFile);
 			LOG.debug("userName=" + userName);
-			LOG.debug("rangerAdminConnectionCheckInterval" + rangerAdminConnectionCheckInterval);
+			LOG.debug("rangerAdminConnectionCheckInterval=" + rangerAdminConnectionCheckInterval);
+			LOG.debug("isKerberized=" + isKerberized);
 		}
 
 		if (StringUtils.isNotBlank(restUrl)) {
 			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
-			if(isKerberosEnabled()) {
-				Subject subject = null;
-				try {
-					subject = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				} catch(IOException exception) {
-					LOG.error("Could not get Subject from principal:[" + principal + "], keytab:[" + keytab + "], nameRules:[" + nameRules + "]", exception);
-				}
-				if (subject != null) {
-					try {
-						UserGroupInformation.loginUserFromSubject(subject);
-						ret = true;
-					} catch (IOException exception) {
-						LOG.error("Failed to get UGI from Subject:[" + subject + "]");
-					}
-				}
-			} else {
+			if(!isKerberized) {
 				tagRESTClient.setBasicAuthInfo(userName, password);
-				ret = true;
 			}
+			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
+			ret = true;
 		} else {
 			LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
-		}
-
-		if (ret) {
-			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -152,12 +126,8 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		return ret;
 	}
 
-	private boolean isKerberosEnabled() {
-		return !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab);
-	}
-
 	private ServiceTags doUpload(ServiceTags serviceTags) throws Exception {
-			if(isKerberosEnabled()) {
+			if(isKerberized) {
 				try{
 					UserGroupInformation userGroupInformation = UserGroupInformation.getLoginUser();
 					if (userGroupInformation != null) {
@@ -170,7 +140,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 					}
 					if (userGroupInformation != null) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("Using Principal = " + principal + ", keytab = " + keytab);
+							LOG.debug("Using Principal = " + userGroupInformation.getUserName());
 						}
 						final ServiceTags serviceTag = serviceTags;
 						ServiceTags ret = userGroupInformation.doAs(new PrivilegedAction<ServiceTags>() {

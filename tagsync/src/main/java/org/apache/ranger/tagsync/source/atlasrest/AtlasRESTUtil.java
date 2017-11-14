@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,14 +28,14 @@ import org.apache.atlas.typesystem.json.InstanceSerialization;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.tagsync.source.atlas.AtlasEntityWithTraits;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapperUtil;
 
-import javax.security.auth.Subject;
+import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,22 +66,17 @@ public class AtlasRESTUtil {
 	private final Gson gson = new Gson();
 
 	private final RangerRESTClient atlasRESTClient;
-	private final String principal;
-	private final String keytab;
-	private final String nameRules;
-	private final boolean kerberized;
 
-	public AtlasRESTUtil(RangerRESTClient atlasRESTClient, boolean kerberized, String authenticationType, String principal, String keytab, String nameRules) {
+	private final boolean isKerberized;
+
+	public AtlasRESTUtil(RangerRESTClient atlasRESTClient, boolean isKerberized) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> AtlasRESTUtil()");
 		}
 
-		this.kerberized = kerberized;
-
 		this.atlasRESTClient = atlasRESTClient;
-		this.principal = principal;
-		this.keytab = keytab;
-		this.nameRules = nameRules;
+
+		this.isKerberized = isKerberized;
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== AtlasRESTUtil()");
@@ -249,13 +244,23 @@ public class AtlasRESTUtil {
 		Map<String, Object> ret = new HashMap<String, Object>();
 
 		try {
-			if (kerberized) {
-				LOG.debug("Using kerberos authentication");
-				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("Using Principal = "+ principal + ", keytab = "+keytab);
+			UserGroupInformation userGroupInformation = null;
+			if (isKerberized) {
+				userGroupInformation = UserGroupInformation.getLoginUser();
+
+				try {
+					userGroupInformation.checkTGTAndReloginFromKeytab();
+				} catch (IOException ioe) {
+					LOG.error("Error renewing TGT and relogin", ioe);
+					userGroupInformation = null;
 				}
-				ret = Subject.doAs(sub, new PrivilegedAction<Map<String, Object>>() {
+			}
+			if (userGroupInformation != null) {
+				LOG.debug("Using kerberos authentication");
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Using Principal = "+ userGroupInformation.getUserName());
+				}
+				ret = userGroupInformation.doAs(new PrivilegedAction<Map<String, Object>>() {
 					@Override
 					public Map<String, Object> run() {
 						try{

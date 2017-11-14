@@ -29,7 +29,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -47,16 +46,9 @@ import java.util.Properties;
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private static final Log LOG = LogFactory.getLog(AtlasRESTTagSource.class);
 
-	static final String AUTH_TYPE_KERBEROS = "kerberos";
-
 	private long sleepTimeBetweenCycleInMillis;
 
-	AtlasRESTUtil atlasRESTUtil = null;
-
-	private String authenticationType;
-	private String principal;
-	private String keytab;
-	private String nameRules;
+	private AtlasRESTUtil atlasRESTUtil = null;
 
 	private Thread myThread = null;
 
@@ -103,30 +95,18 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 		boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
 		sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceAtlasDownloadIntervalInMillis(properties);
+		final boolean isKerberized = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
 
 		String restUrl       = TagSyncConfig.getAtlasRESTEndpoint(properties);
 		String sslConfigFile = TagSyncConfig.getAtlasRESTSslConfigFile(properties);
 		String userName = TagSyncConfig.getAtlasRESTUserName(properties);
 		String password = TagSyncConfig.getAtlasRESTPassword(properties);
 
-		authenticationType = TagSyncConfig.getAuthenticationType(properties);
-		nameRules = TagSyncConfig.getNameRules(properties);
-		principal = TagSyncConfig.getKerberosPrincipal(properties);
-		keytab = TagSyncConfig.getKerberosKeytab(properties);
-
-		final boolean kerberized = StringUtils.isNotEmpty(authenticationType)
-				&& authenticationType.trim().equalsIgnoreCase(AtlasRESTTagSource.AUTH_TYPE_KERBEROS)
-				&& SecureClientLogin.isKerberosCredentialExists(principal, keytab);
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("restUrl=" + restUrl);
 			LOG.debug("sslConfigFile=" + sslConfigFile);
 			LOG.debug("userName=" + userName);
-			LOG.debug("authenticationType=" + authenticationType);
-			LOG.debug("principal=" + principal);
-			LOG.debug("keytab=" + keytab);
-			LOG.debug("nameRules=" + nameRules);
-			LOG.debug("kerberized=" + kerberized);
+			LOG.debug("kerberized=" + isKerberized);
 		}
 
 		if (StringUtils.isNotEmpty(restUrl)) {
@@ -135,10 +115,10 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 			}
 			RangerRESTClient atlasRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
 
-			if (!kerberized) {
+			if (!isKerberized) {
 				atlasRESTClient.setBasicAuthInfo(userName, password);
 			}
-			atlasRESTUtil = new AtlasRESTUtil(atlasRESTClient, kerberized, authenticationType, principal, keytab, nameRules);
+			atlasRESTUtil = new AtlasRESTUtil(atlasRESTClient, isKerberized);
 		} else {
 			LOG.info("AtlasEndpoint not specified, Initial download of Atlas-entities cannot be done.");
 			ret = false;
