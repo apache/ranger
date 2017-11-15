@@ -1389,13 +1389,17 @@ setup_install_files(){
 	fi
 	log "[I] Setting up installation files and directory DONE";
 
-	if [ ! -f ${INSTALL_DIR}/rpm ]; then
-	    if [ -d ${INSTALL_DIR} ]
-	    then
-		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
-		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
-	    fi
-	fi
+	# Jack: Since the hadoop core-site.xml file is symlinked to the install directory,
+	#       the script will change ownership of the hadoop core-site.xml
+	#       to the unix_user and unix_group specified in the install.properties file. Not good!
+       #
+	#if [ ! -f ${INSTALL_DIR}/rpm ]; then
+	#    if [ -d ${INSTALL_DIR} ]
+	#    then
+	#	chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
+	#	chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
+	#    fi
+	#fi
 
 	# Copy ranger-admin-services to /usr/bin
 	if [ ! \( -e /usr/bin/ranger-admin \) ]
@@ -1429,8 +1433,12 @@ else
 fi
 if [ "$?" == "0" ]
 then
-	echo "ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf"
-	ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf
+	echo "ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf (skipped)"
+	# Jack: Setup assumes ln -f will replace a symlink of a folder, when in fact it does not,
+	#       and instead creates the link to the folder one child below. Therefore, we get a symlink loop
+	#       when the link already exists.
+       #
+	# ln -sf ${WEBAPP_ROOT}/WEB-INF/classes/conf ${INSTALL_DIR}/conf
 else
 	exit 1
 fi
