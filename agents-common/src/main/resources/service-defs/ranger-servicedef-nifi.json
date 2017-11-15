@@ -49,7 +49,7 @@
       "defaultValue":"http://localhost:8080/nifi-api/resources",
       "validationRegEx":"",
       "validationMessage":"",
-      "uiHint":"The URL of the NiFi REST API that provides the available resources.",
+      "uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"The URL of the NiFi REST API that provides the available resources.\"}",
       "label":"NiFi URL"
     },
     {
