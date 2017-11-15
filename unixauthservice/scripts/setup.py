@@ -450,10 +450,10 @@ def main():
 	except KeyError, e:
 		ownerId = createUser(ownerName, groupName)
 
-	os.chown(logFolderName,ownerId,groupId)
-	os.chown(ugsyncLogFolderName,ownerId,groupId)
-	os.chown(rangerBaseDirName,ownerId,groupId)
-	os.chown(usersyncBaseDirFullName,ownerId,groupId)
+	os.lchown(logFolderName,ownerId,groupId)
+	os.lchown(ugsyncLogFolderName,ownerId,groupId)
+	os.lchown(rangerBaseDirName,ownerId,groupId)
+	os.lchown(usersyncBaseDirFullName,ownerId,groupId)
 
 	initializeInitD(ownerName)
 
@@ -470,7 +470,7 @@ def main():
 		else:
 			updateProppertyInJCKSFile(cryptPath,aliasName," ")
 	
-	os.chown(cryptPath,ownerId,groupId)
+	os.lchown(cryptPath,ownerId,groupId)
 
 	if ('ranger.usersync.policymgr.keystore' not in mergeProps):
 		mergeProps['ranger.usersync.policymgr.keystore'] = cryptPath
@@ -491,7 +491,7 @@ def main():
 	pmgrPasswd = mergeProps['ranger.usersync.policymgr.password']
 
 	updateProppertyInJCKSFile(usersyncKSPath,pmgrAlias,pmgrPasswd)
-	os.chown(ugsyncCryptPath,ownerId,groupId)
+	os.lchown(ugsyncCryptPath,ownerId,groupId)
 
 	writeXMLUsingProperties(fn, mergeProps, outfn)
 
@@ -499,37 +499,37 @@ def main():
 
 	for dir in fixPermList:
 		for root, dirs, files in os.walk(dir):
-			os.chown(root, ownerId, groupId)
+			os.lchown(root, ownerId, groupId)
 			os.chmod(root,0755)
 			for obj in dirs:
 				dn = join(root,obj)
-				os.chown(dn, ownerId, groupId)
+				os.lchown(dn, ownerId, groupId)
 				os.chmod(dn, 0755)
 			for obj in files:
 				fn = join(root,obj)
-				os.chown(fn, ownerId, groupId)
+				os.lchown(fn, ownerId, groupId)
 				os.chmod(fn, 0750)
 
 	if isfile(nativeAuthProgramName):
-		os.chown(nativeAuthProgramName, rootOwnerId, groupId)
+		os.lchown(nativeAuthProgramName, rootOwnerId, groupId)
 		os.chmod(nativeAuthProgramName, 04555)
 	else:
-		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
+		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), lchown(%s:%s) " % (nativeAuthProgramName, "root", groupName)
 
 	if isfile(pamAuthProgramName):
-		os.chown(pamAuthProgramName, rootOwnerId, groupId)
+		os.lchown(pamAuthProgramName, rootOwnerId, groupId)
 		os.chmod(pamAuthProgramName, 04555)
 	else:
-		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (pamAuthProgramName, "root", groupName)
+		print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), lchown(%s:%s) " % (pamAuthProgramName, "root", groupName)
 
         write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
         write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
         write_env_files("USERSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
-        os.chown(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
+        os.lchown(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_LOGDIR_FILE),0755)
-        os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
+        os.lchown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
-        os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
+        os.lchown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
         os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0755)
 
         f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
@@ -543,7 +543,7 @@ def main():
                 f = open(usersync_conf_full_path, "w")
                 f.write("<configuration></configuration>")
                 f.close()
-		os.chown(usersync_conf_full_path,ownerId,groupId)
+		os.lchown(usersync_conf_full_path,ownerId,groupId)
 		os.chmod(usersync_conf_full_path,0750)
         else:
                 if os.path.islink(usersync_conf_full_path):
