@@ -72,9 +72,10 @@ public class EmbeddedServer {
 	public EmbeddedServer(String[] args) {
 		if (args.length > 0) {
 			configFile = args[0];
+		} else {
+			XMLUtils.loadConfig(DEFAULT_CONFIG_FILENAME, serverConfigProperties);
 		}
-        XMLUtils.loadConfig(CORE_SITE_CONFIG_FILENAME, serverConfigProperties);
-        XMLUtils.loadConfig(DEFAULT_CONFIG_FILENAME, serverConfigProperties);
+		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILENAME, serverConfigProperties);
         XMLUtils.loadConfig(configFile, serverConfigProperties);
 	}
 	
