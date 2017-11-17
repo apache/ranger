@@ -19,6 +19,9 @@
 
  package org.apache.ranger.rest;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -39,6 +42,7 @@ import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
@@ -92,6 +96,14 @@ public class UserREST {
 	@Autowired
 	XUserMgr xUserMgr;
 
+	private final static List<SortField> SORT_FIELDS = Arrays.asList(
+			new SortField("requestDate", "requestDate"),
+			new SortField("approvedDate", "approvedDate"),
+			new SortField("activationDate", "activationDate"),
+			new SortField("emailAddress", "emailAddress"),
+			new SortField("firstName", "firstName"),
+			new SortField("lastName", "lastName")
+		);
 	/**
 	 * Implements the traditional search functionalities for UserProfile
 	 *
@@ -102,12 +114,8 @@ public class UserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_USERS + "\")")
 	public VXPortalUserList searchUsers(@Context HttpServletRequest request) {
-		String[] approvedSortByParams = new String[] { "requestDate",
-				"approvedDate", "activationDate", "emailAddress", "firstName",
-				"lastName" };
-		@SuppressWarnings("deprecation")
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, approvedSortByParams);
+				request, SORT_FIELDS);
 
 		// userId
 		searchUtil.extractLong(request, searchCriteria, "userId", "User Id");

@@ -32,6 +32,7 @@ import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPortalUserDao;
@@ -50,6 +51,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -110,7 +112,6 @@ public class TestUserREST {
 	String loginId = "xyzId";
 	String emailId = "abc@Example.com";
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void test1SearchUsers() {
 		SearchCriteria searchCriteria = new SearchCriteria();
@@ -119,10 +120,8 @@ public class TestUserREST {
 		List<Integer> status = new ArrayList<Integer>();
 		String publicScreenName = "nrp";
 		List<String> roles = new ArrayList<String>();
-		String[] approvedSortByParams = new String[] { "requestDate", "approvedDate", "activationDate", "emailAddress",
-				"firstName", "lastName" };
 
-		Mockito.when(searchUtil.extractCommonCriterias(request, approvedSortByParams)).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractCommonCriterias(Matchers.eq(request), Matchers.anyListOf(SortField.class))).thenReturn(searchCriteria);
 		Mockito.when(searchUtil.extractLong(request, searchCriteria, "userId", "User Id")).thenReturn(userId);
 		Mockito.when(searchUtil.extractString(request, searchCriteria, "loginId", "Login Id", null))
 				.thenReturn(loginId);
@@ -147,7 +146,7 @@ public class TestUserREST {
 		Assert.assertEquals(vXPUserExpList, vXPUserListAct);
 		Assert.assertEquals(vXPUserExpList.getPageSize(), vXPUserListAct.getPageSize());
 
-		Mockito.verify(searchUtil).extractCommonCriterias(request, approvedSortByParams);
+		Mockito.verify(searchUtil).extractCommonCriterias(Matchers.eq(request), Matchers.anyListOf(SortField.class));
 		Mockito.verify(searchUtil).extractLong(request, searchCriteria, "userId", "User Id");
 		Mockito.verify(searchUtil).extractString(request, searchCriteria, "loginId", "Login Id", null);
 		Mockito.verify(searchUtil).extractString(request, searchCriteria, "emailAddress", "Email Address", null);
