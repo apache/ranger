@@ -148,41 +148,43 @@ public class RangerServiceTag extends RangerBaseService {
 		if (isConditionDefFound) {
 
 			ret = super.getDefaultRangerPolicies();
+			String tagResourceName = null;
+			if (!serviceDef.getResources().isEmpty()) {
+				tagResourceName = serviceDef.getResources().get(0).getName();
 
-			String tagResourceName = serviceDef.getResources().get(0).getName();
+				for (RangerPolicy defaultPolicy : ret) {
 
-			for (RangerPolicy defaultPolicy : ret) {
+					RangerPolicy.RangerPolicyResource tagPolicyResource = defaultPolicy.getResources().get(tagResourceName);
 
-				RangerPolicy.RangerPolicyResource tagPolicyResource = defaultPolicy.getResources().get(tagResourceName);
+					if (tagPolicyResource != null) {
 
-				if (tagPolicyResource != null) {
+						String value = RANGER_TAG_NAME_EXPIRES_ON;
 
-					String value = RANGER_TAG_NAME_EXPIRES_ON;
+						tagPolicyResource.setValue(value);
+						defaultPolicy.setName(value);
+						defaultPolicy.setDescription("Policy for data with " + value + " tag");
 
-					tagPolicyResource.setValue(value);
-					defaultPolicy.setName(value);
-					defaultPolicy.setDescription("Policy for data with " + value + " tag");
+						List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
 
-					List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
+						for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicyItems) {
 
-					for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicyItems) {
+							List<String> groups = new ArrayList<String>();
+							groups.add(GROUP_PUBLIC);
+							defaultPolicyItem.setGroups(groups);
 
-						List<String> groups = new ArrayList<String>();
-						groups.add(GROUP_PUBLIC);
-						defaultPolicyItem.setGroups(groups);
+							List<RangerPolicy.RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicy.RangerPolicyItemCondition>();
+							List<String> values = new ArrayList<String>();
+							values.add("yes");
+							RangerPolicy.RangerPolicyItemCondition policyItemCondition = new RangerPolicy.RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
+							policyItemConditions.add(policyItemCondition);
 
-						List<RangerPolicy.RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicy.RangerPolicyItemCondition>();
-						List<String> values = new ArrayList<String>();
-						values.add("yes");
-						RangerPolicy.RangerPolicyItemCondition policyItemCondition = new RangerPolicy.RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
-						policyItemConditions.add(policyItemCondition);
+							defaultPolicyItem.setConditions(policyItemConditions);
+							defaultPolicyItem.setDelegateAdmin(Boolean.FALSE);
+						}
 
-						defaultPolicyItem.setConditions(policyItemConditions);
-						defaultPolicyItem.setDelegateAdmin(Boolean.FALSE);
+						defaultPolicy.setDenyPolicyItems(defaultPolicyItems);
+						defaultPolicy.setPolicyItems(null);
 					}
-
-					defaultPolicy.setDenyPolicyItems(defaultPolicyItems);
-					defaultPolicy.setPolicyItems(null);
 				}
 			}
 		} else {

@@ -55,12 +55,12 @@ public class RangerServiceStorm extends RangerBaseService {
 			try  {
 				ret = StormResourceMgr.validateConfig(serviceName, configs);
 			} catch (Exception e) {
-				LOG.error("<== RangerServiceKnox.validateConfig Error:" + e);
+				LOG.error("<== RangerServiceStorm.validateConfig Error:" + e);
 				throw e;
 			}
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKnox.validateConfig Response : (" + ret + " )");
+			LOG.debug("<== RangerServiceStorm.validateConfig Response : (" + ret + " )");
 		}
 		return ret;
 	}
@@ -72,19 +72,19 @@ public class RangerServiceStorm extends RangerBaseService {
 		String 	serviceName  	   = getServiceName();
 		Map<String,String> configs = getConfigs();
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKnox.lookupResource Context: (" + context + ")");
+			LOG.debug("==> RangerServiceStorm.lookupResource Context: (" + context + ")");
 		}
 		if (context != null) {
 			try {
 				ret  = StormResourceMgr.getStormResources(serviceName,configs,context);
 						
 			} catch (Exception e) {
-			  LOG.error( "<==RangerServiceKnox.lookupResource Error : " + e);
+			  LOG.error( "<==RangerServiceStorm.lookupResource Error : " + e);
 			  throw e;
 			}
 		}
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKnox.lookupResource Response: (" + ret + ")");
+			LOG.debug("<== RangerServiceStorm.lookupResource Response: (" + ret + ")");
 		}
 		return ret;
 	}
