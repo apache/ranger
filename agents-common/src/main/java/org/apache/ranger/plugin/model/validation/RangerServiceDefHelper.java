@@ -394,24 +394,23 @@ public class RangerServiceDefHelper {
 
             if (CollectionUtils.isEmpty(sources) || CollectionUtils.isEmpty(sinks)) {
                 ret = false;
-            } else if (_checkForCycles) {
-                List<String> cycle = graph.getACycle(sources, sinks);
-                if (cycle != null) {
+            } else {
+                List<String> cycle = _checkForCycles ? graph.getACycle(sources, sinks) : null;
+                if (cycle == null) {
+                    for (String sink : sinks) {
+                        RangerResourceDef sinkResourceDef = resourceDefMap.get(sink);
+                        if (Boolean.FALSE.equals(sinkResourceDef.getIsValidLeaf())) {
+                            LOG.error("Error in path: sink node:[" + sink + "] is not leaf node");
+                            ret = false;
+                            break;
+                        } else if (sinkResourceDef.getIsValidLeaf() == null) {
+                            LOG.info("Setting sink ResourceDef's isValidLeaf from null to 'true'");
+                            sinkResourceDef.setIsValidLeaf(true);
+                        }
+                    }
+                } else {
                     LOG.error("Graph contains cycle! - " + cycle);
                     ret = false;
-                }
-            } else {
-                for (String sink : sinks) {
-                    RangerResourceDef sinkResourceDef = resourceDefMap.get(sink);
-                    if (Boolean.FALSE.equals(sinkResourceDef.getIsValidLeaf())) {
-                        LOG.error("Error in path: sink node:[" + sink + "] is not leaf node");
-
-                        ret = false;
-                        break;
-                    } else if (sinkResourceDef.getIsValidLeaf() == null) {
-                        LOG.info("Setting sink ResourceDef's isValidLeaf from null to 'true'");
-                        sinkResourceDef.setIsValidLeaf(true);
-                    }
                 }
             }
 
