@@ -19,6 +19,7 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
@@ -69,6 +70,30 @@ public class AtlasResourceMapperUtil {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== getRangerServiceResource(" + atlasEntity.getId()._getId() +"): resource=" + resource);
+		}
+
+		return resource;
+	}
+
+	public static RangerServiceResource getRangerServiceResource(AtlasEntityHeader atlasEntity) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> getRangerServiceResource(" + atlasEntity.getGuid() +")");
+		}
+
+		RangerServiceResource resource = null;
+
+		AtlasResourceMapper mapper = atlasResourceMappers.get(atlasEntity.getTypeName());
+
+		if (mapper != null) {
+			try {
+				resource = mapper.buildResource(atlasEntity);
+			} catch (Exception exception) {
+				LOG.error("Could not get serviceResource for atlas entity:" + atlasEntity.getGuid() + ": ", exception);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== getRangerServiceResource(" + atlasEntity.getGuid() +"): resource=" + resource);
 		}
 
 		return resource;

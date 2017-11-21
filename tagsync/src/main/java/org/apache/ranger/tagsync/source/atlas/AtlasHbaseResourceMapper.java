@@ -22,6 +22,7 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -48,7 +49,23 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 
 	@Override
 	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
+		String entityGuid    = entity.getId() != null ? entity.getId()._getId() : null;
+		String entityType    = entity.getTypeName();
 		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+
+		return getServiceResource(entityGuid, entityType, qualifiedName);
+	}
+
+	@Override
+	public RangerServiceResource buildResource(final AtlasEntityHeader entity) throws Exception {
+		String entityGuid    = entity.getGuid();
+		String entityType    = entity.getTypeName();
+		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+
+		return getServiceResource(entityGuid, entityType, qualifiedName);
+	}
+
+	private RangerServiceResource getServiceResource(String entityGuid, String entityType, String qualifiedName) throws Exception {
 		if (StringUtils.isEmpty(qualifiedName)) {
 			throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
 		}
@@ -63,8 +80,6 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 			throwExceptionWithMessage("cluster-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 		}
 
-		String entityType  = entity.getTypeName();
-		String entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String serviceName = getRangerServiceName(clusterName);
 
 		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();

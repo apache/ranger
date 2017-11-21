@@ -40,12 +40,16 @@
 					<include>com.google.inject:guice:jar:${guice.version}</include>
 					<include>com.google.inject.extensions:guice-multibindings:jar:${guice.version}</include>
 					<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+					<include>com.sun.jersey.contribs:jersey-multipart:jar:${sun-jersey-bundle.version}</include>
 					<include>com.thoughtworks.paranamer:paranamer:jar:${paranamer.version}</include>
 					<include>com.yammer.metrics:metrics-core</include>
 					<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-typesystem:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-client:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-client-common:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-client-v2:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
+					<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
 					<include>org.apache.hadoop:hadoop-auth</include>
 					<include>org.apache.hadoop:hadoop-common</include>
 					<include>org.apache.kafka:kafka_${scala.binary.version}:jar:${kafka.version}</include>
@@ -55,10 +59,10 @@
 					<include>org.apache.ranger:ranger-plugins-common</include>
 					<include>org.apache.ranger:ranger-util</include>
 					<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-					<include>org.codehaus.jackson:jackson-core-asl</include>
-					<include>org.codehaus.jackson:jackson-jaxrs</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl</include>
-					<include>org.codehaus.jackson:jackson-xc</include>
+					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
+					<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
+					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+					<include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 					<include>org.json4s:json4s-native_${scala.binary.version}:jar:${json4s.version}</include>
 					<include>org.json4s:json4s-core_${scala.binary.version}:jar:${json4s.version}</include>

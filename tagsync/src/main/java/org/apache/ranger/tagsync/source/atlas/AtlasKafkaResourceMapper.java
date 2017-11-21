@@ -22,6 +22,7 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -42,8 +43,21 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
 
 	@Override
 	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
+		String entityGuid    = entity.getId() != null ? entity.getId()._getId() : null;
 		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
+		return getServiceResource(entityGuid, qualifiedName);
+	}
+
+	@Override
+	public RangerServiceResource buildResource(final AtlasEntityHeader entity) throws Exception {
+		String entityGuid    = entity.getGuid();
+		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+
+		return getServiceResource(entityGuid, qualifiedName);
+	}
+
+	private RangerServiceResource getServiceResource(String entityGuid, String qualifiedName) throws Exception {
 		String topic = getResourceNameFromQualifiedName(qualifiedName);
 
 		if(StringUtils.isEmpty(topic)) {
@@ -67,7 +81,6 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
 
 		elements.put(RANGER_TYPE_KAFKA_TOPIC, new RangerPolicyResource(topic, isExcludes, isRecursive));
 
-		String  entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String  serviceName = getRangerServiceName(clusterName);
 
 		return new RangerServiceResource(entityGuid, serviceName, elements);

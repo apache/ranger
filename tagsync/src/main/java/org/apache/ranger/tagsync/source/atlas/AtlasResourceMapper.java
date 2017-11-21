@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Map;
 
 import org.apache.atlas.AtlasException;
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -74,6 +75,8 @@ public abstract class AtlasResourceMapper {
 	}
 
 	abstract public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception;
+
+	abstract public RangerServiceResource buildResource(final AtlasEntityHeader entity) throws Exception;
 
 	protected String getCustomRangerServiceName(String atlasInstanceName) {
 		if(properties != null) {
@@ -130,6 +133,10 @@ public abstract class AtlasResourceMapper {
 		}
 
 		return ret;
+	}
+
+	static protected <T> T getEntityAttribute(AtlasEntityHeader entity, String name, Class<T> type) {
+		return getAttribute(entity.getAttributes(), name, type);
 	}
 
 	static protected <T> T getAttribute(Map<String, Object> map, String name, Class<T> type) {

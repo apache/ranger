@@ -22,6 +22,7 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -57,10 +58,25 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 
 	@Override
 	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
+		String entityGuid    = entity.getId() != null ? entity.getId()._getId() : null;
 		String path          = getEntityAttribute(entity, ENTITY_ATTRIBUTE_PATH, String.class);
 		String clusterName   = getEntityAttribute(entity, ENTITY_ATTRIBUTE_CLUSTER_NAME, String.class);
 		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
+		return getServiceResource(entityGuid, path, clusterName, qualifiedName);
+	}
+
+	@Override
+	public RangerServiceResource buildResource(final AtlasEntityHeader entity) throws Exception {
+		String entityGuid    = entity.getGuid();
+		String path          = getEntityAttribute(entity, ENTITY_ATTRIBUTE_PATH, String.class);
+		String clusterName   = getEntityAttribute(entity, ENTITY_ATTRIBUTE_CLUSTER_NAME, String.class);
+		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+
+		return getServiceResource(entityGuid, path, clusterName, qualifiedName);
+	}
+
+	private RangerServiceResource getServiceResource(String entityGuid, String path, String clusterName, String qualifiedName) throws Exception {
 		if(StringUtils.isEmpty(path)) {
 			path = getResourceNameFromQualifiedName(qualifiedName);
 
@@ -81,7 +97,6 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 			}
 		}
 
-		String  entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String  serviceName = getRangerServiceName(clusterName);
 		Boolean isExcludes  = Boolean.FALSE;
 		Boolean isRecursive = Boolean.TRUE;
