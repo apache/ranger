@@ -56,6 +56,9 @@
                     <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.solr:solr-solrj</include>
+                    <include>org.apache.ranger:ranger-plugins-audit</include>
+                    <include>org.apache.ranger:ranger-plugins-cred</include>
+                    <include>org.apache.ranger:ranger-plugins-common</include>
 		    	</includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -83,9 +86,6 @@
         <outputDirectory>/lib/ranger-atlas-plugin-impl</outputDirectory>
      </binaries>
      <includes>
-		<include>org.apache.ranger:ranger-plugins-audit</include>
-		<include>org.apache.ranger:ranger-plugins-cred</include>
-		<include>org.apache.ranger:ranger-plugins-common</include>
 		<include>org.apache.ranger:ranger-atlas-plugin</include>
      </includes>
     </moduleSet>
