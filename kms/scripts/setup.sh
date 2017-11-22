@@ -302,8 +302,13 @@ check_java_version() {
 	version=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
 	major=`echo ${version} | cut -d. -f1`
 	minor=`echo ${version} | cut -d. -f2`
-	if [[ "${major}" == 1 && "${minor}" < 7 ]] ; then
-		log "[E] Java 1.7 is required, current java version is $version"
+	current_java_version="$major.$minor"
+	num_current_java_version=`echo $current_java_version|awk ' { printf("%3.2f\n", $0); } '`
+	JAVA_VERSION_REQUIRED=`echo $JAVA_VERSION_REQUIRED | awk '{gsub(/ /,"")}1'`
+	JAVA_VERSION_REQUIRED=`echo $JAVA_VERSION_REQUIRED | awk '{gsub(/'"'"'/,"")}1'`
+	num_required_java_version=`echo $JAVA_VERSION_REQUIRED|awk ' { printf("%3.2f\n", $0); } '`
+	if [ `echo "$num_current_java_version < $num_required_java_version" | bc` -eq 1 ];then
+		log "[E] The java version must be greater than or equal to $JAVA_VERSION_REQUIRED, the current java version is $version"
 		exit 1;
 	fi
 }
