@@ -55,7 +55,6 @@
                     <include>com.google.guava:guava:jar:${atlas.guava.version}</include>
                     <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj</include>
 		    	</includes>
                 <unpack>false</unpack>
