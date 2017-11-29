@@ -369,6 +369,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerAccessTypeDef>   rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : rowFilterDef.getAccessTypes();
 		List<RangerResourceDef>     rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<RangerResourceDef>() : rowFilterDef.getResources();
 
+		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef, false);
+		defHelper.patchServiceDefWithDefaultValues();
+
 		// While creating, value of version should be 1.
 		serviceDef.setVersion(Long.valueOf(1));
 		
@@ -624,6 +627,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerEnumDef> enums 						= serviceDef.getEnums() != null 			? serviceDef.getEnums() 			  : new ArrayList<RangerEnumDef>();
 		RangerDataMaskDef dataMaskDef                   = serviceDef.getDataMaskDef();
 		RangerRowFilterDef rowFilterDef                 = serviceDef.getRowFilterDef();
+
+		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef, false);
+		defHelper.patchServiceDefWithDefaultValues();
 
 		serviceDef.setCreateTime(existing.getCreateTime());
 		serviceDef.setGuid(existing.getGuid());

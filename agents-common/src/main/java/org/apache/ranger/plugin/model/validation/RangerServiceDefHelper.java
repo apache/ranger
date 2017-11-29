@@ -162,7 +162,11 @@ public class RangerServiceDefHelper {
 		}
 		_delegate = delegate;
 	}
-	
+
+	public void patchServiceDefWithDefaultValues() {
+		_delegate.patchServiceDefWithDefaultValues();
+	}
+
 	/**
 	 * for a resource definition as follows:
 	 *
@@ -297,7 +301,21 @@ public class RangerServiceDefHelper {
 				LOG.debug(message);
 			}
 		}
-		
+
+		public void patchServiceDefWithDefaultValues() {
+			for(int policyType : RangerPolicy.POLICY_TYPES) {
+				Set<List<RangerResourceDef>> resourceHierarchies = getResourceHierarchies(policyType);
+				for (List<RangerResourceDef> resourceHierarchy : resourceHierarchies) {
+					for (int index = 0; index < resourceHierarchy.size(); index++) {
+						RangerResourceDef resourceDef = resourceHierarchy.get(index);
+						if (!Boolean.TRUE.equals(resourceDef.getIsValidLeaf())) {
+							resourceDef.setIsValidLeaf(index == resourceHierarchy.size()-1);
+						}
+					}
+				}
+			}
+		}
+
 		public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
 			if(policyType == null) {
 				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
@@ -403,9 +421,6 @@ public class RangerServiceDefHelper {
                             LOG.error("Error in path: sink node:[" + sink + "] is not leaf node");
                             ret = false;
                             break;
-                        } else if (sinkResourceDef.getIsValidLeaf() == null) {
-                            LOG.info("Setting sink ResourceDef's isValidLeaf from null to 'true'");
-                            sinkResourceDef.setIsValidLeaf(true);
                         }
                     }
                 } else {
