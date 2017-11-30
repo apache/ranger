@@ -22,7 +22,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -57,8 +59,16 @@ public class RangerAdminClientImpl implements RangerAdminClient {
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+	    String hdfsVersion = RangerConfiguration.getInstance().get("hdfs.version", "");
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
+        final String relativePath;
+        if (StringUtils.isNotBlank(hdfsVersion)) {
+            relativePath = "/src/test/resources/" + hdfsVersion + "/";
+        } else {
+            relativePath = "/src/test/resources/";
+        }
+
+        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, relativePath + cacheFilename);
         byte[] cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
@@ -77,8 +87,16 @@ public class RangerAdminClientImpl implements RangerAdminClient {
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+        String hdfsVersion = RangerConfiguration.getInstance().get("hdfs.version", "");
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + tagFilename);
+        final String relativePath;
+        if (StringUtils.isNotBlank(hdfsVersion)) {
+            relativePath = "/src/test/resources/" + hdfsVersion + "/";
+        } else {
+            relativePath = "/src/test/resources/";
+        }
+        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, relativePath + tagFilename);
+
         byte[] cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServiceTags.class);
