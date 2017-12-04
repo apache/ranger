@@ -19,11 +19,10 @@
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
-DROP FUNCTION if exists getTempPolicyCount $$
-CREATE FUNCTION `getTempPolicyCount`(assetId bigint, resId bigint) RETURNS int(11)
+DROP PROCEDURE if exists getTempPolicyCount $$
+CREATE PROCEDURE `getTempPolicyCount`(IN assetId bigint, IN resId bigint, OUT tempPolicyCount int) 
 BEGIN
 
-DECLARE tempPolicyCount int default 1;
 DECLARE dbResourceId bigint;
 DECLARE exitLoop int DEFAULT FALSE;
 
@@ -32,6 +31,7 @@ DECLARE policyList CURSOR FOR
 
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET exitLoop = true;
 OPEN policyList;
+SET tempPolicyCount = 1;
 readPolicy : LOOP
 	FETCH policyList into dbResourceId;
 
@@ -48,7 +48,6 @@ readPolicy : LOOP
 END LOOP;
 CLOSE policyList;
 
-RETURN tempPolicyCount;
 END $$
 
 
@@ -125,7 +124,7 @@ OPEN policyList;
 	set totalPolicyCount = (select count(*) from x_resource where asset_id = assetId);
 	set assetName = (select asset_name from x_asset asset where asset.id = assetId);
 	
-	set tempPolicyCount = getTempPolicyCount(assetId, resId);
+	call getTempPolicyCount(assetId, resId, tempPolicyCount);
 	set currentTime = DATE_FORMAT(utc_timestamp(), "%Y%m%d%H%i%s");
 
 	set genPolicyName = concat(assetName, '-', tempPolicyCount, '-', currentTime);
@@ -182,5 +181,5 @@ END $$
 DELIMITER ;
 call updateBlankPolicyName();
 
-DROP FUNCTION if exists getTempPolicyCount;
+DROP PROCEDURE if exists getTempPolicyCount;
 DROP PROCEDURE if exists updateBlankPolicyName;

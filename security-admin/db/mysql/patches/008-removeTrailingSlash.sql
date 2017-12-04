@@ -19,12 +19,12 @@
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
-DROP FUNCTION if exists removeTrailingSlash $$
-CREATE FUNCTION `removeTrailingSlash`(resName varchar(4000), resId bigint, assetId bigint, policyName varchar(1000)) RETURNS varchar(4000)
+DROP PROCEDURE if exists getUpdatedResourceName $$
+CREATE PROCEDURE `getUpdatedResourceName`(IN resName varchar(4000), IN resId bigint, IN assetId bigint, IN policyName varchar(1000), OUT updatedResName varchar(4000)) 
 BEGIN
 
 DECLARE noOfCommas int;
-DECLARE updatedResName varchar(4000) default '';
+
 DECLARE resource varchar(1000);
 DECLARE count int default 0;
 DECLARE proceedLoop boolean default true;
@@ -47,7 +47,7 @@ DECLARE sessType varchar(30);
 DECLARE transId varchar(50);
 DECLARE assetTypeInt int;
 DECLARE assetType varchar(30);
-
+set updatedResName='';
 set noOfCommas = (LENGTH(resName)-LENGTH(REPLACE (resName, ",", "")));
 set assetTypeInt = (select asset_type from x_asset where id = assetId);
 
@@ -135,10 +135,46 @@ insert into x_trx_log (create_time, update_time, added_by_id, upd_by_id,
 
 end if;
 
-RETURN updatedResName;
+
+END $$
+DELIMITER $$
+
+DROP PROCEDURE if exists removeTrailingSlash $$
+CREATE PROCEDURE `removeTrailingSlash`()
+BEGIN
+
+DECLARE done INT;
+DECLARE resId bigint;
+DECLARE assetId bigint;
+DECLARE policyName varchar(1000);
+DECLARE resourceName varchar(4000);
+DECLARE trimmedResourceName varchar(4000);
+
+DECLARE resourceNames CURSOR FOR 
+	select res.res_name, res.id, res.asset_id, res.policy_name from x_resource res, x_asset asset
+		where asset.asset_type = 1 and asset.id = res.asset_id;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+OPEN resourceNames;
+
+	SET done = 0;
+	iLoop : LOOP
+	FETCH resourceNames into resourceName, resId, assetId, policyName;
+
+	if(done = 1) then
+		LEAVE iLoop;
+	end if;
+
+	call getUpdatedResourceName(resourceName, resId, assetId, policyName, trimmedResourceName);
+	update x_resource res set res_name = trimmedResourceName where id=resId and res_name=resourceName;
+
+	END LOOP;
+
+CLOSE resourceNames;
+
 END $$
 DELIMITER ;
-UPDATE x_resource res, x_asset asset set res_name = removeTrailingSlash(res.res_name, res.id, res.asset_id, res.policy_name) 
-	WHERE asset.asset_type = 1 and asset.id = res.asset_id;
+call removeTrailingSlash();
 
-DROP FUNCTION if exists removeTrailingSlash;
+DROP PROCEDURE if exists getUpdatedResourceName;
+DROP PROCEDURE if exists removeTrailingSlash;
