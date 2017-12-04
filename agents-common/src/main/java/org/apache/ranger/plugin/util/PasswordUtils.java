@@ -83,7 +83,7 @@ public class PasswordUtils {
                 count = StringUtils.countMatches(aPassword, ",");
                 crypt_algo_array = aPassword.split(",");
             }
-            if (crypt_algo_array != null && crypt_algo_array.length > 1) {
+            if (crypt_algo_array != null && crypt_algo_array.length > 4) {
                 CRYPT_ALGO = crypt_algo_array[0];
                 ENCRYPT_KEY = crypt_algo_array[1].toCharArray();
                 SALT = crypt_algo_array[2].getBytes();
