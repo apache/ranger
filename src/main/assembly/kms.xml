@@ -137,6 +137,7 @@
                 <outputDirectory>/ews/webapp/WEB-INF/classes/lib</outputDirectory>
                 <includes>
                     <include>org.apache.tomcat.embed:tomcat-embed*</include>
+                    <include>org.apache.tomcat:tomcat-annotations-api*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 		    		<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>

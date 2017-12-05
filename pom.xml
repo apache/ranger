@@ -212,7 +212,7 @@
         <springframework.version>3.2.10.RELEASE</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.0.2</storm.version>
-        <tomcat.embed.version>7.0.77</tomcat.embed.version>
+        <tomcat.embed.version>7.0.82</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.6</zookeeper.version>
         <hive.thrift.version>0.9.3</hive.thrift.version>
