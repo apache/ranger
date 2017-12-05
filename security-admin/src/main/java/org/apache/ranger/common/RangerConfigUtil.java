@@ -36,6 +36,10 @@ public class RangerConfigUtil {
 	boolean accessFilterEnabled = true;
 	boolean isModerationEnabled = false;
 	boolean isUserPrefEnabled = false;
+	boolean isUserGroupManagementEnabled = true;
+	boolean isAdminDelegationEnabled = true;
+	boolean isServiceManagementEnabled = true;
+
 
 	public RangerConfigUtil() {
 
@@ -51,6 +55,9 @@ public class RangerConfigUtil {
 		accessFilterEnabled = PropertiesUtil.getBooleanProperty("ranger.db.access.filter.enable", true);
 		isModerationEnabled = PropertiesUtil.getBooleanProperty("ranger.moderation.enabled", isModerationEnabled);
 		isUserPrefEnabled = PropertiesUtil.getBooleanProperty("ranger.userpref.enabled", isUserPrefEnabled);
+		isUserGroupManagementEnabled = PropertiesUtil.getBooleanProperty("ranger.user.group.management.enabled", isUserGroupManagementEnabled);
+		isAdminDelegationEnabled = PropertiesUtil.getBooleanProperty("ranger.admin.delegation.enabled", isAdminDelegationEnabled);
+		isServiceManagementEnabled = PropertiesUtil.getBooleanProperty("ranger.service.management.enabled", isServiceManagementEnabled);
 	}	
 
 	/**
@@ -81,4 +88,48 @@ public class RangerConfigUtil {
 		return webappRootURL;
 	}
 
+	/**
+	 *
+	 * @return the userGroupManagementEnabled
+	 */
+	public boolean isUserGroupManagementEnabled() { return isUserGroupManagementEnabled; }
+
+	/**
+	 *
+	 * @param userGroupManagementEnabled sets the value of isUserGroupManagementEnabled
+	 */
+	public void setUserGroupManagementEnabled(boolean userGroupManagementEnabled) {
+		isUserGroupManagementEnabled = userGroupManagementEnabled;
+	}
+
+	/**
+	 * @return the adminDelegationEnabled
+	 */
+	public boolean isAdminDelegationEnabled() {
+		return isAdminDelegationEnabled;
+	}
+
+	/**
+	 *
+	 * @param adminDelegationEnabled sets the value of isAdminDelegationEnabled
+	 */
+	public void setAdminDelegationEnabled(boolean adminDelegationEnabled) {
+		isAdminDelegationEnabled = adminDelegationEnabled;
+	}
+
+	/**
+	 *
+	 * @return the serviceManagementEnabled
+	 */
+	public boolean isServiceManagementEnabled() {
+		return isServiceManagementEnabled;
+	}
+
+	/**
+	 *
+	 * @param serviceManagementEnabled sets the value of isServiceManagementEnabled
+	 */
+	public void setServiceManagementEnabled(boolean serviceManagementEnabled) {
+		isServiceManagementEnabled = serviceManagementEnabled;
+	}
 }

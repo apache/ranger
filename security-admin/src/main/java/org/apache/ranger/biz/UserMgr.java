@@ -365,7 +365,7 @@ public class UserMgr {
 
 	/**
 	 * @param userId
-	 * @param vStrings
+	 * @param vStringRolesList
 	 */
 	public void setUserRoles(Long userId, List<VXString> vStringRolesList) {
 		List<String> stringRolesList = new ArrayList<String>();
@@ -486,7 +486,7 @@ public class UserMgr {
 	}
 
 	/**
-	 * @param userId
+	 * @param gjUser
 	 */
 	public VXPortalUser deactivateUser(XXPortalUser gjUser) {
 		checkAdminAccess();

@@ -271,6 +271,18 @@
 		<name>ranger.downloadpolicy.session.log.enabled</name>
 		<value>false</value>
 	</property>
+	<property>
+		<name>ranger.user.group.management.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.admin.delegation.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.service.management.enabled</name>
+		<value>true</value>
+	</property>
 	<!-- Service user for KMS -->
     <property>
     	<name>ranger.kms.service.user.hdfs</name>

@@ -22,9 +22,10 @@
 	'backbone.marionette',
 	'utils/XALangSupport',
 	'models/VAppState',
-	'utils/XAUtils'
+	'utils/XAUtils',
+	'mgrs/RangerConfigMgr'
 ],
-function(Backbone, Marionette, localization, MAppState, XAUtil){
+function(Backbone, Marionette, localization, MAppState, XAUtil, RangerConfigMgr){
     'use strict';
 
 	return Backbone.Marionette.AppRouter.extend({
@@ -45,23 +46,23 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/userprofile"		: "userProfileAction",
 			
 			"!/users/:tab"		: "userManagerAction",
-			"!/user/create"		: "userCreateAction",
+			"!/user/create"		: RangerConfigMgr.isUserGroupManagementEnabled()? "userCreateAction":"pageNotFoundAction",
 			"!/user/:id"		: "userEditAction",
 			
-			"!/group/create"	: "groupCreateAction",
+			"!/group/create"	: RangerConfigMgr.isUserGroupManagementEnabled()? "groupCreateAction":"pageNotFoundAction",
 			"!/group/:id"		: "groupEditAction",
 
 			/************GENERIC UI *****************************************/
-			"!/service/:serviceType/create" 	: "serviceCreateAction",
-			"!/service/:serviceType/edit/:id"	: "serviceEditAction",
+			"!/service/:serviceType/create" 	: RangerConfigMgr.isServiceManagementEnabled()? "serviceCreateAction":"pageNotFoundAction",
+			"!/service/:serviceType/edit/:id"	: RangerConfigMgr.isServiceManagementEnabled()? "serviceEditAction":"pageNotFoundAction",
 			
 			"!/service/:serviceId/policies/:policyType"			: "policyManageAction",
 			"!/service/:serviceId/policies/create/:policyType"	: "RangerPolicyCreateAction",
 			"!/service/:serviceId/policies/:id/edit"			: "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/
-            "!/permissions"					: "modulePermissionsAction",
-            "!/permissions/:id/edit"        : "modulePermissionEditAction",
+			"!/permissions"				: "modulePermissionsAction",
+			"!/permissions/:id/edit"	: "modulePermissionEditAction",
 			
 			/************ KMS ***************************/
 			"!/kms/keys/:isService/manage/:serviceName"	: "kmsManagerAction",

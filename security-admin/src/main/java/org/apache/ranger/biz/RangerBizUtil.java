@@ -44,6 +44,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
@@ -56,7 +57,9 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.AbstractBaseResourceService;
 import org.apache.ranger.view.VXDataObject;
@@ -87,6 +90,9 @@ public class RangerBizUtil {
 
 	@Autowired
 	GUIDUtil guidUtil;
+
+	@Autowired
+	RangerConfigUtil configUtil;
 	
 	Set<Class<?>> groupEditableClasses;
 	private Class<?>[] groupEditableClassesList = {};
@@ -349,7 +355,7 @@ public class RangerBizUtil {
 	}
 
 	/**
-	 * @param obj
+	 * @param objs
 	 */
 	void deleteObjects(List<XXDBBase> objs) {
 
@@ -1585,6 +1591,24 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
-	}	
+	}
 
+	/**
+	 *
+	 * @param policy
+	 * @throws Exception
+	 */
+	public void ensureAdminDelegationEnabledIfPolicyRequires(RangerPolicy policy) throws Exception{
+
+		if(configUtil.isAdminDelegationEnabled()){
+			return;
+		}
+
+		List<RangerPolicyItem> rangerPolicyItemList = policy.getPolicyItems();
+		for (RangerPolicyItem rangerPolicyItem:rangerPolicyItemList) {
+			if (rangerPolicyItem.getDelegateAdmin()) {
+				throw new IllegalArgumentException("Invalid policy definition: Admin delegation is not allowed");
+			}
+		}
+	}
 }

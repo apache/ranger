@@ -94,79 +94,79 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				}
 			}
 		} else {
-		String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
-		if (rangerAuthenticationMethod==null) {
-			rangerAuthenticationMethod="NONE";
-		}
-		if (authentication != null && rangerAuthenticationMethod != null) {
-			if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
-				authentication = getLdapAuthentication(authentication);
-				if (authentication!=null && authentication.isAuthenticated()) {
-					return authentication;
-				} else {
-					authentication=getLdapBindAuthentication(authentication);
+			String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
+			if (rangerAuthenticationMethod == null) {
+				rangerAuthenticationMethod = "NONE";
+			}
+			if (authentication != null && rangerAuthenticationMethod != null) {
+				if (rangerAuthenticationMethod.equalsIgnoreCase("LDAP")) {
+					authentication = getLdapAuthentication(authentication);
+					if (authentication != null && authentication.isAuthenticated()) {
+						return authentication;
+					} else {
+						authentication=getLdapBindAuthentication(authentication);
+						if (authentication != null && authentication.isAuthenticated()) {
+							return authentication;
+						}
+					}
+				}
+				if (rangerAuthenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")) {
+					authentication = getADBindAuthentication(authentication);
+					if (authentication != null && authentication.isAuthenticated()) {
+						return authentication;
+					} else {
+						authentication = getADAuthentication(authentication);
+						if (authentication != null && authentication.isAuthenticated()) {
+							return authentication;
+						}
+					}
+				}
+				if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
+					boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
+					authentication= (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
 					if (authentication != null && authentication.isAuthenticated()) {
 						return authentication;
 					}
 				}
-			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("ACTIVE_DIRECTORY")) {
-				authentication = getADBindAuthentication(authentication);
-				if (authentication != null && authentication.isAuthenticated()) {
-					return authentication;
-				} else {
-					authentication = getADAuthentication(authentication);
+				if (rangerAuthenticationMethod.equalsIgnoreCase("PAM")) {
+					authentication = getPamAuthentication(authentication);
 					if (authentication != null && authentication.isAuthenticated()) {
 						return authentication;
 					}
 				}
-			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("UNIX")) {
-                boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
-                authentication= (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
+				String encoder="SHA256";
+				try {
+					authentication = getJDBCAuthentication(authentication, encoder);
+				} catch (Exception e) {
+					logger.debug("JDBC Authentication failure: ", e);
+				}
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
 				}
-			}
-			if (rangerAuthenticationMethod.equalsIgnoreCase("PAM")) {
-				authentication = getPamAuthentication(authentication);
-				if (authentication != null && authentication.isAuthenticated()) {
-					return authentication;
+				if (authentication != null && !authentication.isAuthenticated()) {
+					logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
+					encoder = "MD5";
+					String userName = authentication.getName();
+					String userPassword = null;
+					if (authentication.getCredentials() != null) {
+						userPassword = authentication.getCredentials().toString();
+					}
+					try {
+						authentication = getJDBCAuthentication(authentication, encoder);
+					} catch (Exception e) {
+						throw e;
+					}
+					if (authentication != null && authentication.isAuthenticated()) {
+						if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
+							userMgr.updatePasswordInSHA256(userName, userPassword, false);
+						}
+						return authentication;
+					} else {
+						return authentication;
+					}
 				}
-			}
-			String encoder="SHA256";
-			try {
-				authentication = getJDBCAuthentication(authentication,encoder);
-			} catch (Exception e) {
-				logger.debug("JDBC Authentication failure: ", e);
-			}
-			if (authentication !=null && authentication.isAuthenticated()) {
 				return authentication;
 			}
-			if (authentication != null && !authentication.isAuthenticated()) {
-				logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
-				encoder="MD5";
-				String userName = authentication.getName();
-				String userPassword = null;
-				if (authentication.getCredentials() != null) {
-					userPassword = authentication.getCredentials().toString();
-				}
-				try {
-					authentication = getJDBCAuthentication(authentication,encoder);
-				} catch (Exception e) {
-					throw e;
-				}
-				if (authentication != null && authentication.isAuthenticated()) {
-					if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
-                                                userMgr.updatePasswordInSHA256(userName,userPassword,false);
-					}
-					return authentication;
-				}else{
-					return authentication;
-				}
-			}
-			return authentication;
-		}
 		}
 		return authentication;
 	}
@@ -266,7 +266,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
 					"ranger.ldap.default.role", "ROLE_USER");
 			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty(
-                                       "ranger.ldap.ad.user.searchfilter", "(sAMAccountName={0})");
+					"ranger.ldap.ad.user.searchfilter", "(sAMAccountName={0})");
 
 			ActiveDirectoryLdapAuthenticationProvider adAuthenticationProvider = new ActiveDirectoryLdapAuthenticationProvider(
 					rangerADDomain, rangerADURL);
@@ -600,7 +600,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		}
 		return authentication;
 	}
-	
+
 	private List<GrantedAuthority> getAuthorities(String username) {
 		Collection<String> roleList=userMgr.getRolesByLoginId(username);
 		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
@@ -621,7 +621,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		}
 		return authentication;
 	}
-	
+
 	private Authentication getSSOAuthentication(Authentication authentication) throws AuthenticationException{
 		return authentication;
 	}

@@ -404,7 +404,7 @@ define(function(require) {
 			bootbox.alert(params.msg, params.callback);
 		}
 	};
-     
+
 	//Alert box with time set 
 	XAUtils.alertBoxWithTimeSet = function(msg) {
 		var alert = bootbox.alert(msg);
@@ -1028,7 +1028,7 @@ define(function(require) {
 					if($(elem).is('input')){
 						pluginOpts.maximumSelectionSize = selectionList[index];
 						$(elem).select2(pluginOpts);
-				    }	
+				    }
 				})
 						
 			},
@@ -1283,51 +1283,51 @@ define(function(require) {
 		return !_.isUndefined(obj['resources']) && !_.isEmpty(obj['resources'])
 		 		&& !_.isNull(obj['resources']) ? false : true;
 	};
-    XAUtils.removeEmptySearchValue = function(arr) {
-            return  _.reject(arr,function(m){
-                    return (m.get('value')=="");
-            });
-    };
-        XAUtils.showAuditLogTags = function(rawValue, model) {
-                var showMoreLess = false, id = model.id, tagLabels = '';
-                var tagNames = _.pluck(rawValue, 'type');
-                if (!_.isUndefined(rawValue)) {
-                        var tagArr = _.map(rawValue, function(tag, i) {
-                                if(tag.attributes && !_.isEmpty(tag.attributes)){
-                                        tagLabels = '<a href="javascript:void(0)" data-name="tags" data-id="'+model.id+''+i+'" class="tagsColumn">'+tag.type+'</a>';
-                                }else{
-                                        tagLabels = tag.type;
-                                }
-                                tagLabels += (i+1 < rawValue.length) ? '&nbsp;,&nbsp;' : '';
-                                if (i >= 4){
-                                        return '<span class="float-left-margin-1" audit-log-id="'
-                                        + id + '" style="display:none;">' + tagLabels
-                                        + '</span>';
-                                }
-                                else{
-                                        if (i == 3 && rawValue.length > 4) {
-                                                showMoreLess = true;
-                                                return '<span class="float-left-margin-1" audit-log-id="'
-                                                                + id + '">' + tagLabels + '</span>';
-                                        } else{
-                                                return '<span class="float-left-margin-1" audit-log-id="'
-                                                + id + '">' + tagLabels + '</span>';
-                                        }
-                                }
-                        });
-                        if (showMoreLess) {
-                                tagArr.push('<span class="float-left-margin-1"><a href="javascript:void(0);" data-id="showMore" class="" audit-log-id="'
-                                                                + id
-                                                                + '"><code style=""> + More..</code></a></span><span class="float-left-margin-1"><a href="javascript:void(0);" data-id="showLess" class="" audit-log-id="'
-                                                                + id
-                                                                + '" style="display:none;"><code> - Less..</code></a></span>');
-                        }
-                        tagArr.unshift('<div data-id="tagDiv" class="popovertag">');
-                        tagArr.push('</div>');
-                        return tagArr.length ? tagArr.join(' ') : '--';
-                } else{
-                        return '--';
-                }
-        };
+	XAUtils.removeEmptySearchValue = function(arr) {
+			return  _.reject(arr,function(m){
+					return (m.get('value')=="");
+			});
+	};
+	XAUtils.showAuditLogTags = function(rawValue, model) {
+			var showMoreLess = false, id = model.id, tagLabels = '';
+			var tagNames = _.pluck(rawValue, 'type');
+			if (!_.isUndefined(rawValue)) {
+					var tagArr = _.map(rawValue, function(tag, i) {
+							if(tag.attributes && !_.isEmpty(tag.attributes)){
+									tagLabels = '<a href="javascript:void(0)" data-name="tags" data-id="'+model.id+''+i+'" class="tagsColumn">'+tag.type+'</a>';
+							}else{
+									tagLabels = tag.type;
+							}
+							tagLabels += (i+1 < rawValue.length) ? '&nbsp;,&nbsp;' : '';
+							if (i >= 4){
+									return '<span class="float-left-margin-1" audit-log-id="'
+									+ id + '" style="display:none;">' + tagLabels
+									+ '</span>';
+							}
+							else{
+									if (i == 3 && rawValue.length > 4) {
+											showMoreLess = true;
+											return '<span class="float-left-margin-1" audit-log-id="'
+															+ id + '">' + tagLabels + '</span>';
+									} else{
+											return '<span class="float-left-margin-1" audit-log-id="'
+											+ id + '">' + tagLabels + '</span>';
+									}
+							}
+					});
+					if (showMoreLess) {
+							tagArr.push('<span class="float-left-margin-1"><a href="javascript:void(0);" data-id="showMore" class="" audit-log-id="'
+															+ id
+															+ '"><code style=""> + More..</code></a></span><span class="float-left-margin-1"><a href="javascript:void(0);" data-id="showLess" class="" audit-log-id="'
+															+ id
+															+ '" style="display:none;"><code> - Less..</code></a></span>');
+					}
+					tagArr.unshift('<div data-id="tagDiv" class="popovertag">');
+					tagArr.push('</div>');
+					return tagArr.length ? tagArr.join(' ') : '--';
+			} else{
+					return '--';
+			}
+	};
 	return XAUtils;
 });

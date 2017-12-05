@@ -48,4 +48,22 @@ public class TestRangerConfigUtil {
 		String[] str=xaConfigUtil.getRoles();
 		Assert.assertArrayEquals(str, xaConfigUtil.roles);
 	}
+
+	@Test
+	public void testIsUserGroupManagementEnabled(){
+		boolean value = xaConfigUtil.isUserGroupManagementEnabled();
+		Assert.assertTrue(value);
+	}
+
+	@Test
+	public void testIsAdminDelegationEnabled(){
+		boolean value = xaConfigUtil.isAdminDelegationEnabled();
+		Assert.assertTrue(value);
+	}
+
+	@Test
+	public void testIsServiceManagementEnabled(){
+		boolean value = xaConfigUtil.isServiceManagementEnabled();
+		Assert.assertTrue(value);
+	}
 }

@@ -22,13 +22,14 @@
  */
 define(function(require) {
     'use strict';
-    
+
 	var Backbone		= require('backbone');
     var App		        = require('App');
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtil			= require('utils/XAUtils');
 	var localization	= require('utils/XALangSupport');
 	var SessionMgr 		= require('mgrs/SessionMgr');
+	var RangerConfigMgr	= require('mgrs/RangerConfigMgr');
 
 	var VXGroup			= require('models/VXGroup');
 	var VXUser				= require('models/VXUser');
@@ -37,7 +38,7 @@ define(function(require) {
 	
 	require('bootstrap-editable');
 	require('esprima');
-    	
+
 	var PermissionItem = Backbone.Marionette.ItemView.extend({
 		_msvName : 'PermissionItem',
 		template : require('hbs!tmpl/policies/PermissionItem'),
@@ -240,6 +241,12 @@ define(function(require) {
 			var that = this;
 			this.perms =  _.map(this.accessTypes,function(m){return {text:m.label, value:m.name};});
 			this.perms.push({'value' : -1, 'text' : 'Select/Deselect All'});
+
+			// Disable delegating admin privileges if not supported
+			if(!RangerConfigMgr.isAdminDelegationEnabled()){
+			    this.ui.delegatedAdmin.parent('td').hide();
+			}
+
 			//set default access type 'select' for add new masking & row filter policies
 			if(!XAUtil.isAccessPolicy(this.rangerPolicyType) && !_.contains(this.permsIds,'select')) {
 				this.permsIds.push('select');
@@ -624,7 +631,7 @@ define(function(require) {
 			//create x-editable for permissions
 			this.ui.rowLeveFilter.editable({
 			    emptytext : 'Add Row Filter',
-			    placeholder : 'enter expression',	
+			    placeholder : 'enter expression',
 				value : this.rowFilterExprVal,
 				display: function(value,srcData) {
 					if(_.isNull(value) || _.isEmpty(value)){
@@ -701,7 +708,10 @@ define(function(require) {
 			var permList = [];
 			if(this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
 				if(XAUtil.isAccessPolicy(this.rangerPolicyType)){
-					permList.unshift(localization.tt('lbl.delegatedAdmin'));
+					// Enable delegating admin privileges if supported
+					if(RangerConfigMgr.isAdminDelegationEnabled()){
+						permList.unshift(localization.tt('lbl.delegatedAdmin'));
+					}
 				}
 				if(XAUtil.isRowFilterPolicy(this.rangerPolicyType)){
 					permList.unshift(localization.tt('lbl.rowLevelFilter'));

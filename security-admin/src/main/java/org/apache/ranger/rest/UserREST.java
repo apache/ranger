@@ -173,7 +173,7 @@ public class UserREST {
 	@POST
 	@Consumes({ "application/json", "application/xml" })
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.CREATE + "\")")
 	public VXPortalUser create(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		logger.info("create:" + userProfile.getEmailAddress());
@@ -186,7 +186,7 @@ public class UserREST {
 	@Path("/default")
 	@Consumes({ "application/json", "application/xml" })
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		VXPortalUser vxPortalUser;
@@ -203,7 +203,7 @@ public class UserREST {
 	@Consumes({ "application/json", "application/xml" })
 	@Produces({ "application/xml", "application/json" })
 	@RangerAnnotationRestAPI(updates_classes = "VUserProfile")
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
 	public VXPortalUser update(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		logger.info("update:" + userProfile.getEmailAddress());
@@ -225,7 +225,7 @@ public class UserREST {
 	@PUT
 	@Path("/{userId}/roles")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES + "\")")
 	public VXResponse setUserRoles(@PathParam("userId") Long userId,
 			VXStringList roleList) {
 		userManager.checkAccess(userId);
@@ -244,7 +244,7 @@ public class UserREST {
 	@POST
 	@Path("{userId}/deactivate")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DEACTIVATE_USER + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DEACTIVATE_USER + "\")")
 	@RangerAnnotationClassName(class_name = VXPortalUser.class)
 	public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
 		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
