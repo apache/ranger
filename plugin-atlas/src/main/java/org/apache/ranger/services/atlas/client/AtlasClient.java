@@ -259,9 +259,6 @@ public class AtlasClient extends BaseClient {
 			if (resultResponse != null) {
 				resultResponse.close();
 			}
-			if (client != null) {
-				client.destroy();
-			}
 		}
 		return lret;
 	}
@@ -326,9 +323,6 @@ public class AtlasClient extends BaseClient {
 			}
 			if (resultResponse != null) {
 				resultResponse.close();
-			}
-			if (client != null) {
-				client.destroy();
 			}
 		}
 		return lret;
@@ -615,8 +609,8 @@ public class AtlasClient extends BaseClient {
 		String errMsg = errMessage;
 		boolean connectivityStatus = false;
 		HashMap<String, Object> responseData = new HashMap<String, Object>();
-		AtlasClient AtlasClient = getAtlasClient(serviceName, configs);
-		List<String> strList = getAtlasResource(AtlasClient, "", "", null);
+		AtlasClient atlasClient = getAtlasClient(serviceName, configs);
+		List<String> strList = getAtlasResource(atlasClient, "", "", null);
 
 		if (strList != null && strList.size() > 0) {
 			if (LOG.isDebugEnabled()) {
@@ -636,7 +630,7 @@ public class AtlasClient extends BaseClient {
 	}
 
 	public static AtlasClient getAtlasClient(String serviceName, Map<String, String> configs) {
-		AtlasClient AtlasClient = null;
+		AtlasClient atlasClient = null;
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting AtlasClient for datasource: " + serviceName);
 		}
@@ -648,9 +642,9 @@ public class AtlasClient extends BaseClient {
 			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
 			throw hdpException;
 		} else {
-			AtlasClient = new AtlasClient(serviceName, configs);
+			atlasClient = new AtlasClient(serviceName, configs);
 		}
-		return AtlasClient;
+		return atlasClient;
 	}
 
 	public static List<String> getAtlasResource(final AtlasClient atlasClient, String atlasResourceName,
