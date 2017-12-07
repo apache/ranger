@@ -23,8 +23,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,15 +80,15 @@ public class PerfDataRecorder {
 			long averageTimeSpent = 0L;
 
 			if (perfStatistic.numberOfInvocations.get() != 0L) {
-				averageTimeSpent = perfStatistic.microSecondsSpent.get()/perfStatistic.numberOfInvocations.get();
+				averageTimeSpent = perfStatistic.millisecondsSpent.get()/perfStatistic.numberOfInvocations.get();
 			}
 
 			String logMsg = "[" + tag + "]" +
-                             " execCount: " + perfStatistic.numberOfInvocations.get() +
-                             ", totalTimeTaken: " + perfStatistic.microSecondsSpent.get() + " μs" +
-                             ", maxTimeTaken: " + perfStatistic.maxTimeSpent.get() + " μs" +
-                             ", minTimeTaken: " + perfStatistic.minTimeSpent.get() + " μs" +
-                             ", avgTimeTaken: " + averageTimeSpent + " μs";
+                             " execCount:" + perfStatistic.numberOfInvocations.get() +
+                             ", totalTimeTaken:" + perfStatistic.millisecondsSpent.get() +
+                             ", maxTimeTaken:" + perfStatistic.maxTimeSpent.get() +
+                             ", minTimeTaken:" + perfStatistic.minTimeSpent.get() +
+                             ", avgTimeTaken:" + averageTimeSpent;
 
 			LOG.info(logMsg);
 			PERF.debug(logMsg);
@@ -127,22 +125,15 @@ public class PerfDataRecorder {
 		}
 	}
 
-	public static Map<String, PerfStatistic> exposeStatistics() {
-		if (instance != null) {
-			return ImmutableMap.copyOf(instance.perfStatistics);
-		}
-		return ImmutableMap.of();
-	}
-
-	public static class PerfStatistic {
+	private static class PerfStatistic {
 		private AtomicLong numberOfInvocations = new AtomicLong(0L);
-		private AtomicLong microSecondsSpent = new AtomicLong(0L);
+		private AtomicLong millisecondsSpent = new AtomicLong(0L);
 		private AtomicLong minTimeSpent = new AtomicLong(Long.MAX_VALUE);
 		private AtomicLong maxTimeSpent = new AtomicLong(Long.MIN_VALUE);
 
 		void addPerfDataItem(final long timeTaken) {
 			numberOfInvocations.getAndIncrement();
-			microSecondsSpent.getAndAdd(timeTaken);
+			millisecondsSpent.getAndAdd(timeTaken);
 
 			long min = minTimeSpent.get();
 			if(timeTaken < min) {
@@ -153,22 +144,6 @@ public class PerfDataRecorder {
 			if(timeTaken > max) {
 				maxTimeSpent.compareAndSet(max, timeTaken);
 			}
-		}
-
-		public long getNumberOfInvocations() {
-			return numberOfInvocations.get();
-		}
-
-		public long getMicroSecondsSpent() {
-			return microSecondsSpent.get();
-		}
-
-		public long getMinTimeSpent() {
-			return minTimeSpent.get();
-		}
-
-		public long getMaxTimeSpent() {
-			return maxTimeSpent.get();
 		}
 	}
 }
