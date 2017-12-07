@@ -130,7 +130,6 @@
         <atlas.gson.version>2.5</atlas.gson.version>
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.commons.logging.version>1.1.3</atlas.commons.logging.version>
-        <avatica.version>1.7.1</avatica.version>
         <bouncycastle.version>1.55</bouncycastle.version>
         <c3p0.version>0.9.1.2</c3p0.version>
         <cglib.version>2.2.0-b23</cglib.version>
@@ -161,7 +160,7 @@
         <guice.version>4.0</guice.version>
         <hadoop.version>2.7.1</hadoop.version>
         <hamcrest.all.version>1.3</hamcrest.all.version>
-        <hbase.version>1.1.3</hbase.version>
+        <hbase.version>1.2.6</hbase.version>
         <hive.version>2.1.0</hive.version>
         <htrace-core.version>3.1.0-incubating</htrace-core.version>
         <httpcomponents.httpclient.version>4.5.3</httpcomponents.httpclient.version>
@@ -179,7 +178,6 @@
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
-        <joda-time.version>2.5</joda-time.version>
         <json4s.version>3.2.11</json4s.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.12</junit.version>
@@ -215,7 +213,6 @@
         <tomcat.embed.version>7.0.82</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.6</zookeeper.version>
-        <hive.thrift.version>0.9.3</hive.thrift.version>
     </properties>
     <profiles>
         <profile>
