@@ -225,6 +225,52 @@
 		<value>Mozilla,chrome</value>
 	</property>
 	<!-- SSO Properties Ends-->
+	<!-- Altiscale SSO Properties Starts-->
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.type</name>
+		<value>com.company.example.AuthenticationHandler</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.signature.secret.file</name>
+		<value>/path/to/secret/file</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.token.validity</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.cookie.domain</name>
+		<value>localhost</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.algorithm</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.certificatedir</name>
+		<value>/path/to/certificate/directory</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.portal</name>
+		<value>https://localhost/sso/authorize</value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.clusterid</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.accountid</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.web.authentication.alt-kerberos.non-browser.user-agents</name>
+		<value>java,curl,wget,perl,ruby</value>
+	</property>
+	<!-- Altiscale SSO Properties Ends-->
 	<!-- Kerberos Properties starts-->	
 	<property>
 		<name>ranger.admin.kerberos.token.valid.seconds</name>
