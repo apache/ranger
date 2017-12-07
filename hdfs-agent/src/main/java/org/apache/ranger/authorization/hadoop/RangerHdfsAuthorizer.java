@@ -470,7 +470,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				ret = AuthzStatus.ALLOW;
 			}
 
-			if (!skipAuditOnAllow || ret == AuthzStatus.DENY) {
+			if (result != null && (!skipAuditOnAllow || ret == AuthzStatus.DENY)) {
 				auditHandler.processResult(result);
 			}
 

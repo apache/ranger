@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
@@ -56,7 +57,7 @@ public class RangerHdfsAuthorizerTest {
     private static RangerHdfsAuthorizer authorizer;
     private static AccessControlEnforcer rangerControlEnforcer;
 
-    class TestFileSystem {
+    static class TestFileSystem {
         final String path;
         final String[] pathSegments;
         final INode[] nodes;
@@ -133,7 +134,7 @@ public class RangerHdfsAuthorizerTest {
             try {
                 checkDirAccess(access, userName, groups);
                 Assert.fail("Access should be blocked for parent directory of " + path + " access=" + access
-                        + " for user=" + userName + " groups=" + groups);
+                        + " for user=" + userName + " groups=" + Arrays.asList(groups));
             } catch (AccessControlException ace) {
                 Assert.assertNotNull(ace);
             }
@@ -148,16 +149,16 @@ public class RangerHdfsAuthorizerTest {
             File file = File.createTempFile("hdfs-version-site", ".xml");
             file.deleteOnExit();
 
-            FileOutputStream outStream = new FileOutputStream(file);
-            OutputStreamWriter writer = new OutputStreamWriter(outStream);
-            writer.write("<configuration>\n" +
+            try(final FileOutputStream outStream = new FileOutputStream(file);
+                final OutputStreamWriter writer = new OutputStreamWriter(outStream, StandardCharsets.UTF_8)) {
+                writer.write("<configuration>\n" +
                     "        <property>\n" +
                     "                <name>hdfs.version</name>\n" +
                     "                <value>hdfs_version_3.0</value>\n" +
                     "        </property>\n" +
                     "</configuration>\n");
+            }
 
-            writer.close();
             RangerConfiguration config = RangerConfiguration.getInstance();
             config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
         } catch (Exception exception) {
