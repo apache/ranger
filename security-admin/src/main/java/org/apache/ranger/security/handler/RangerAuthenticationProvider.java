@@ -78,17 +78,26 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 	private LdapAuthenticator authenticator;
 
 	private boolean ssoEnabled = false;
+	private boolean alt_ssoEnabled = false;
 
 	public RangerAuthenticationProvider() {
-
+		this.alt_ssoEnabled = Boolean.parseBoolean(PropertiesUtil.getProperty("ranger.web.authentication.alt-kerberos.enabled"));
 	}
 
 	@Override
 	public Authentication authenticate(Authentication authentication)
 			throws AuthenticationException {
+		logger.debug("RangerAuthenticationProvider: [ssoEnabled : " + ssoEnabled + ", alt_ssoEnabled : " + alt_ssoEnabled+"]");
 		if (isSsoEnabled()) {
 			if (authentication != null) {
 				authentication = getSSOAuthentication(authentication);
+				if (authentication != null && authentication.isAuthenticated()) {
+					return authentication;
+				}
+			}
+		}else if (isAlt_ssoEnabled()){
+			if(authentication != null){
+				authentication = getAltiscaleSSOAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
 				}
@@ -626,6 +635,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		return authentication;
 	}
 
+	private Authentication getAltiscaleSSOAuthentication(Authentication authentication) throws AuthenticationException{
+		return authentication;
+	}
+
 	/**
 	 * @return the ssoEnabled
 	 */
@@ -638,5 +651,19 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 	 */
 	public void setSsoEnabled(boolean ssoEnabled) {
 		this.ssoEnabled = ssoEnabled;
+	}
+
+	/**
+	 * @return the alt_ssoEnabled
+	 */
+	public boolean isAlt_ssoEnabled() {
+		return alt_ssoEnabled;
+	}
+
+	/**
+	 * @param alt_ssoEnabled the alt_ssoEnabled to set
+	 */
+	public void setAlt_ssoEnabled(boolean alt_ssoEnabled) {
+		this.alt_ssoEnabled = alt_ssoEnabled;
 	}
 }
