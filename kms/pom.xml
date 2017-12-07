@@ -247,11 +247,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-           <groupId>org.apache.solr</groupId>
-           <artifactId>solr-solrj</artifactId>
-          <version>${solr.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>${derby.version}</version>
