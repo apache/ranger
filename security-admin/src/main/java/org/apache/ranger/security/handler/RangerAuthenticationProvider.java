@@ -94,8 +94,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					return authentication;
 				}
 			}
-		}else if (isAlt_ssoEnabled()){
-			if(authentication != null){
+		} else if (isAlt_ssoEnabled()) {
+			if (authentication != null) {
 				authentication = getAltiscaleSSOAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
@@ -634,7 +634,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		return authentication;
 	}
 
-	private Authentication getAltiscaleSSOAuthentication(Authentication authentication) throws AuthenticationException{
+	private Authentication getAltiscaleSSOAuthentication(Authentication authentication) throws AuthenticationException {
 		return authentication;
 	}
 

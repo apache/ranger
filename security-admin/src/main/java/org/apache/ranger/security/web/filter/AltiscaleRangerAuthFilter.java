@@ -8,6 +8,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.security.handler.RangerAuthenticationProvider;
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +43,14 @@ import java.util.*;
  * Portal session.
  * </p>
  */
-public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
+public class AltiscaleRangerAuthFilter extends AuthenticationFilter {
 	private static final Logger LOG = LoggerFactory.getLogger(AltiscaleRangerAuthFilter.class);
 
 	// Constants to initialize configuration parameters
 	private static final String CONFIG_PREFIX = "ranger.web.authentication.";
 	private static final String AUTH_TYPE = "type";
 	private static final String RANGER_ALGORITHM = "ranger.web.authentication.alt-kerberos.algorithm";
+	private static final String RANGER_AUTH_TYPE = "ranger.web.authentication.alt-kerberos.type";
 	private static final String RANGER_CERTIFICATE_DIR = "ranger.web.authentication.alt-kerberos.certificatedir";
 	private static final String RANGER_AUTHENTICATION_PORTAL = "ranger.web.authentication.alt-kerberos.portal";
 	private static final String RANGER_ACCOUNT_ID = "ranger.web.authentication.alt-kerberos.accountid";
@@ -61,6 +63,8 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 	private static final String PRINCIPAL = "ranger.spnego.kerberos.principal";
 	private static final String KEYTAB = "ranger.spnego.kerberos.keytab";
 	private static final String HOST_NAME = "ranger.service.host";
+	private static final String PRINCIPAL_PARAM = "kerberos.principal";
+	private static final String KEYTAB_PARAM = "kerberos.keytab";
 
 	@Autowired
 	UserMgr userMgr;
@@ -69,7 +73,7 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 		try {
 			init(null);
 		} catch (ServletException e) {
-			LOG.error("Error while initializing AltiscaleRangerAuthFilter: "+e.getMessage());
+			LOG.error("Error while initializing AltiscaleRangerAuthFilter: " + e.getMessage());
 		}
 	}
 
@@ -79,23 +83,23 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 
 		final FilterConfig globalConf = filterConfig;
 		final Map<String, String> params = new HashMap<String, String>();
-		params.put(RANGER_ALGORITHM.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_ALGORITHM));
-		params.put(RANGER_CERTIFICATE_DIR.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_CERTIFICATE_DIR));
-		params.put(RANGER_AUTHENTICATION_PORTAL.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_AUTHENTICATION_PORTAL));
-		params.put(RANGER_ACCOUNT_ID.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_ACCOUNT_ID));
-		params.put(RANGER_CLUSTER_ID.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_CLUSTER_ID));
-		params.put(RANGER_ALT_KERBEROS_ENABLED.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_ALT_KERBEROS_ENABLED));
-		params.put(RANGER_SIGNATURE_SECRET_FILE.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_SIGNATURE_SECRET_FILE));
-		params.put(RANGER_TOKEN_VALIDITY.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_TOKEN_VALIDITY));
-		params.put(RANGER_COOKIE_DOMAIN.replaceFirst(CONFIG_PREFIX+"alt-kerberos.",""), PropertiesUtil.getProperty(RANGER_COOKIE_DOMAIN));
+		params.put(RANGER_ALGORITHM.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_ALGORITHM));
+		params.put(RANGER_CERTIFICATE_DIR.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_CERTIFICATE_DIR));
+		params.put(RANGER_AUTHENTICATION_PORTAL.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_AUTHENTICATION_PORTAL));
+		params.put(RANGER_ACCOUNT_ID.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_ACCOUNT_ID));
+		params.put(RANGER_CLUSTER_ID.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_CLUSTER_ID));
+		params.put(RANGER_ALT_KERBEROS_ENABLED.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_ALT_KERBEROS_ENABLED));
+		params.put(RANGER_SIGNATURE_SECRET_FILE.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_SIGNATURE_SECRET_FILE));
+		params.put(RANGER_TOKEN_VALIDITY.replaceFirst(CONFIG_PREFIX, ""), PropertiesUtil.getProperty(RANGER_TOKEN_VALIDITY));
+		params.put(RANGER_COOKIE_DOMAIN.replaceFirst(CONFIG_PREFIX + "alt-kerberos.",""), PropertiesUtil.getProperty(RANGER_COOKIE_DOMAIN));
 		params.put(RANGER_NON_BROWSER_USER_AGENTS.replaceFirst(CONFIG_PREFIX,""), PropertiesUtil.getProperty(RANGER_NON_BROWSER_USER_AGENTS));
 		try {
-			params.put("kerberos.principal", SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL,""), PropertiesUtil.getProperty(HOST_NAME)));
+			params.put(PRINCIPAL_PARAM, SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL, ""), PropertiesUtil.getProperty(HOST_NAME)));
 		} catch (IOException ignored) {
-			// do nothing
+			LOG.warn("Kerberos principal is not found!");
 		}
-		params.put("kerberos.keytab", PropertiesUtil.getProperty(KEYTAB,""));
-		params.put(AUTH_TYPE, "com.altiscale.hadoop.security.AltiscaleAuthenticationHandler");
+		params.put(KEYTAB_PARAM, PropertiesUtil.getProperty(KEYTAB, ""));
+		params.put(AUTH_TYPE, PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "kerberos"));
 		FilterConfig myConf = new FilterConfig() {
 			@Override
 			public ServletContext getServletContext() {
@@ -119,7 +123,7 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 
 			@Override
 			public String getFilterName() {
-				return "KerberosFilter";
+				return "AltiscaleRangerAuthFilter";
 			}
 		};
 		super.init(myConf);
@@ -132,48 +136,35 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 	 */
 	@Override
 	protected void doFilter(FilterChain filterChain, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-
 		String userName = null;
 		boolean checkCookie = response.containsHeader("Set-Cookie");
-		if(checkCookie){
+		// TODO: Try to use an existing library to parse cookie text and extract userName from there
+		if (checkCookie) {
 			Collection<String> authUserName = response.getHeaders("Set-Cookie");
-			if(authUserName != null){
-				Iterator<String> i = authUserName.iterator();
-				while(i.hasNext()){
-					String cookie = i.next();
-					if(!StringUtils.isEmpty(cookie)){
-						if(cookie.toLowerCase().startsWith(AuthenticatedURL.AUTH_COOKIE.toLowerCase()) && cookie.contains("u=")){
-							String[] split = cookie.split(";");
-							if(split != null){
-								for(String s : split){
-									if(!StringUtils.isEmpty(s) && s.toLowerCase().startsWith(AuthenticatedURL.AUTH_COOKIE.toLowerCase())){
-										int ustr = s.indexOf("u=");
-										if(ustr != -1){
-											int andStr = s.indexOf("&", ustr);
-											if(andStr != -1){
-												try{
-													userName = s.substring(ustr+2, andStr);
-												}catch(Exception e){
-													userName = null;
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
+			if (authUserName != null) {
+				userName = extractUserNameFromCookieHeader(authUserName);
 			}
 		}
 		// if security context does not have a user session, authenticate the security context and create a session
-		if(!isAuthenticated()){
+		createSessionForUser(userName, request);
+
+		// Delegate call to next filters
+		super.doFilter(filterChain, request, response);
+	}
+
+	/**
+	 *
+	 * @param userName
+	 * @param request
+	 */
+	private void createSessionForUser (String userName, HttpServletRequest request) {
+		if (!isAuthenticated()) {
 			String defaultUserRole = "ROLE_USER";
-			//if the userName is found on the token then log into ranger using the same user
+			// if the userName is found on the token then log into ranger using the same user
 			if (userName != null && !userName.trim().isEmpty()) {
 				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 				grantedAuths.add(new SimpleGrantedAuthority(defaultUserRole));
-				final UserDetails principal = new User(userName, "",grantedAuths);
+				final UserDetails principal = new User(userName, "", grantedAuths);
 				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
 				WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
 				((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
@@ -184,16 +175,64 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
 		}
-		// Delegate call to next filters
-		super.doFilter(filterChain, request, response);
+	}
+
+	/**
+	 *
+	 * @param authUserName
+	 * @return the userName
+	 */
+	private String extractUserNameFromCookieHeader (Collection<String> authUserName) {
+		String userName = null;
+		Iterator<String> i = authUserName.iterator();
+		while (i.hasNext()) {
+			String cookie = i.next();
+			if (!StringUtils.isEmpty(cookie)) {
+				if (cookie.toLowerCase().startsWith(AuthenticatedURL.AUTH_COOKIE.toLowerCase()) && cookie.contains("u=")) {
+					userName = extractUserNameFromCookie(cookie);
+				}
+			}
+		}
+		return userName;
+	}
+
+	/**
+	 *
+	 * @param cookieStr
+	 * @return the userName
+	 */
+	private String extractUserNameFromCookie (String cookieStr){
+		String userName = null;
+		if (cookieStr == null) {
+			return null;
+		}
+		String[] split = cookieStr.split(";");
+		if (split != null) {
+			for (String s : split) {
+				if (!StringUtils.isEmpty(s) && s.toLowerCase().startsWith(AuthenticatedURL.AUTH_COOKIE.toLowerCase())) {
+					int ustr = s.indexOf("u=");
+					if (ustr != -1) {
+						int andStr = s.indexOf("&", ustr);
+						if (andStr != -1) {
+							try {
+								userName = s.substring(ustr+2, andStr);
+							} catch (Exception e) {
+								userName = null;
+							}
+						}
+					}
+				}
+			}
+		}
+		return userName;
 	}
 
 	private Authentication getGrantedAuthority(Authentication authentication) {
-		UsernamePasswordAuthenticationToken result=null;
-		if(authentication!=null && authentication.isAuthenticated()){
-			final List<GrantedAuthority> grantedAuths=getAuthorities(authentication.getName().toString());
-			final UserDetails userDetails = new User(authentication.getName().toString(), authentication.getCredentials().toString(),grantedAuths);
-			result = new UsernamePasswordAuthenticationToken(userDetails,authentication.getCredentials(),grantedAuths);
+		if (authentication != null && authentication.isAuthenticated()) {
+			UsernamePasswordAuthenticationToken result = null;
+			final List<GrantedAuthority> grantedAuths = getAuthorities(authentication.getName().toString());
+			final UserDetails userDetails = new User(authentication.getName().toString(), authentication.getCredentials().toString(), grantedAuths);
+			result = new UsernamePasswordAuthenticationToken(userDetails, authentication.getCredentials(), grantedAuths);
 			result.setDetails(authentication.getDetails());
 			return result;
 		}
@@ -201,9 +240,9 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter{
 	}
 
 	private List<GrantedAuthority> getAuthorities(String username) {
-		Collection<String> roleList=userMgr.getRolesByLoginId(username);
+		Collection<String> roleList = userMgr.getRolesByLoginId(username);
 		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
-		for(String role:roleList){
+		for (String role:roleList) {
 			grantedAuths.add(new SimpleGrantedAuthority(role));
 		}
 		return grantedAuths;

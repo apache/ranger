@@ -231,36 +231,40 @@
 		<value>false</value>
 	</property>
 	<property>
+		<name>ranger.web.authentication.alt-kerberos.type</name>
+		<value>com.company.example.AuthenticationHandler</value>
+	</property>
+	<property>
 		<name>ranger.web.authentication.alt-kerberos.signature.secret.file</name>
-		<value>/etc/verticloud/secrets/auth_secret</value>
+		<value>/path/to/secret/file</value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.token.validity</name>
-		<value>36000</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.cookie.domain</name>
-		<value>sn-zoran215.test.altiscale.com</value>
+		<value>localhost</value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.algorithm</name>
-		<value>SHA256withRSA</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.certificatedir</name>
-		<value>/etc/verticloud/certs/sso</value>
+		<value>/path/to/certificate/directory</value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.portal</name>
-		<value>https://portal-staging.test.altiscale.com/sso/authorize</value>
+		<value>https://localhost/sso/authorize</value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.clusterid</name>
-		<value>zoran215</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.accountid</name>
-		<value>10077597</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.web.authentication.alt-kerberos.non-browser.user-agents</name>

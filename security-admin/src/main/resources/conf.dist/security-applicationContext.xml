@@ -48,7 +48,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/**" access="isAuthenticated()"/>       
-		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
+		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" /> 
 		<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
 		<security:custom-filter ref="altiAuthFilter" before="FORM_LOGIN_FILTER" />
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
