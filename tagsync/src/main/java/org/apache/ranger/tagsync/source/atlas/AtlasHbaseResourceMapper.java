@@ -22,10 +22,10 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 	public static final String ENTITY_TYPE_HBASE_TABLE          = "hbase_table";
@@ -36,10 +36,6 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 	public static final String RANGER_TYPE_HBASE_COLUMN_FAMILY  = "column-family";
 	public static final String RANGER_TYPE_HBASE_COLUMN         = "column";
 
-	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME  = "qualifiedName";
-	public static final String QUALIFIED_NAME_DELIMITER         = "\\.";
-	public static final Character QUALIFIED_NAME_DELIMITER_CHAR    = '.';
-
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_HBASE_TABLE, ENTITY_TYPE_HBASE_COLUMN_FAMILY, ENTITY_TYPE_HBASE_COLUMN };
 
 	public AtlasHbaseResourceMapper() {
@@ -47,8 +43,8 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 	}
 
 	@Override
-	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
-		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+	public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
+		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
 		if (StringUtils.isEmpty(qualifiedName)) {
 			throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
 		}
@@ -64,7 +60,7 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 		}
 
 		String entityType  = entity.getTypeName();
-		String entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
+		String entityGuid  = entity.getGuid();
 		String serviceName = getRangerServiceName(clusterName);
 
 		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();

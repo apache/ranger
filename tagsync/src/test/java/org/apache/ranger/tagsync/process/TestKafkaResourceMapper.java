@@ -22,9 +22,9 @@ package org.apache.ranger.tagsync.process;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper;
+import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -46,7 +46,7 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
 
-        IReferenceableInstance entity   = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertServiceResource(resource);
@@ -58,7 +58,7 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, TOPIC);
 
-        IReferenceableInstance entity   = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -75,7 +75,7 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, CLUSTER_NAME);
 
-        IReferenceableInstance entity   = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -90,7 +90,7 @@ public class TestKafkaResourceMapper {
     public void testKafkaResourceFromMissingAttribs() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        IReferenceableInstance entity  = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity  = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -101,11 +101,11 @@ public class TestKafkaResourceMapper {
         }
     }
 
-    private IReferenceableInstance getKafkaTopicEntity(Map<String, Object> entAttribs) throws Exception {
-        IReferenceableInstance entity = Mockito.mock(IReferenceableInstance.class);
+    private RangerAtlasEntity getKafkaTopicEntity(Map<String, Object> entAttribs) throws Exception {
+        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
 
         Mockito.when(entity.getTypeName()).thenReturn(AtlasKafkaResourceMapper.ENTITY_TYPE_KAFKA_TOPIC);
-        Mockito.when(entity.getValuesMap()).thenReturn(entAttribs);
+        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
 
         return entity;
     }

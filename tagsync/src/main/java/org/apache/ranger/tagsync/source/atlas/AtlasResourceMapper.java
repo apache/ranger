@@ -20,19 +20,20 @@
 package org.apache.ranger.tagsync.source.atlas;
 
 import java.util.Properties;
-import java.util.Map;
 
-import org.apache.atlas.AtlasException;
-import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public abstract class AtlasResourceMapper {
 	private static final Log LOG = LogFactory.getLog(AtlasResourceMapper.class);
 
 	public static final String TAGSYNC_DEFAULT_CLUSTER_NAME = "ranger.tagsync.atlas.default.cluster.name";
+	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
+	public static final String QUALIFIED_NAME_DELIMITER        = "\\.";
+	public static final Character QUALIFIED_NAME_DELIMITER_CHAR    = '.';
 
 	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX                  = "ranger.tagsync.atlas.";
 	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX                  = ".ranger.service";
@@ -73,7 +74,7 @@ public abstract class AtlasResourceMapper {
 		this.defaultClusterName = properties != null ? properties.getProperty(TAGSYNC_DEFAULT_CLUSTER_NAME) : null;
 	}
 
-	abstract public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception;
+	abstract public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception;
 
 	protected String getCustomRangerServiceName(String atlasInstanceName) {
 		if(properties != null) {
@@ -117,22 +118,5 @@ public abstract class AtlasResourceMapper {
 		LOG.error(msg);
 
 		throw new Exception(msg);
-	}
-
-	static protected <T> T getEntityAttribute(IReferenceableInstance entity, String name, Class<T> type) {
-		T ret = null;
-
-		try {
-			Map<String, Object> valueMap = entity.getValuesMap();
-			ret = getAttribute(valueMap, name, type);
-		} catch (AtlasException exception) {
-			LOG.error("Cannot get map of values for entity: " + entity.getId()._getId(), exception);
-		}
-
-		return ret;
-	}
-
-	static protected <T> T getAttribute(Map<String, Object> map, String name, Class<T> type) {
-		return type.cast(map.get(name));
 	}
 }

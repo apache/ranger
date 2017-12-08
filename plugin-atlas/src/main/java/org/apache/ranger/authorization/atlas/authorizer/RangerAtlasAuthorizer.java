@@ -19,26 +19,21 @@
 
 package org.apache.ranger.authorization.atlas.authorizer;
 
-import java.util.Date;
-import java.util.Set;
 
-import org.apache.atlas.authorize.AtlasAccessRequest;
+import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
+import org.apache.atlas.authorize.AtlasEntityAccessRequest;
+import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
-import org.apache.atlas.authorize.AtlasResourceTypes;
-import org.apache.commons.logging.Log;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
-    private static final Log PERF_ATLASAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("atlasauth.request");
-    private static boolean isDebugEnabled = LOG.isDebugEnabled();
+
     private static volatile RangerBasePlugin atlasPlugin = null;
 
     @Override
@@ -55,10 +50,11 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
                 if (plugin == null) {
                     plugin = new RangerAtlasPlugin();
+
                     plugin.init();
                     plugin.setResultProcessor(new RangerDefaultAuditHandler());
-                    atlasPlugin = plugin;
 
+                    atlasPlugin = plugin;
                 }
             }
         }
@@ -68,66 +64,61 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public boolean isAccessAllowed(AtlasAccessRequest request) throws AtlasAuthorizationException {
-        boolean isAccessAllowed = true;
-        if (isDebugEnabled) {
-            LOG.debug("==> isAccessAllowed( " + request + " )");
+    public void cleanUp() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> cleanUp ");
         }
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_ATLASAUTH_REQUEST_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_ATLASAUTH_REQUEST_LOG, "RangerAtlasAuthorizer.isAccessAllowed(request=" + request + ")");
-        }
-
-        String resource = request.getResource();
-        String user = request.getUser();
-        Set<String> userGroups = request.getUserGroups();
-        String action = request.getAction().name();
-        Set<AtlasResourceTypes> resourceTypes = request.getResourceTypes();
-        String clientIPAddress = request.getClientIPAddress();
-        String clusterName = atlasPlugin.getClusterName();
-
-        for (AtlasResourceTypes resourceType : resourceTypes) {
-            RangerAtlasAccessRequest rangerRequest =
-                new RangerAtlasAccessRequest(resourceType, resource, action, user, userGroups, clientIPAddress, clusterName);
-            if (isDebugEnabled) {
-                LOG.debug("Creating RangerAtlasAccessRequest with values [resource : " + resource + ", user : " + user
-                    + ", Groups : " + userGroups + ", action : " + action + ", resourceType : " + resourceType
-                    + ", clientIP : " + clientIPAddress + ", clusterName : " + clusterName + "]");
-            }
-            isAccessAllowed = checkAccess(rangerRequest);
-            if (!isAccessAllowed) {
-                break;
-            }
-        }
-
-        RangerPerfTracer.log(perf);
-
-        if (isDebugEnabled) {
-            LOG.debug("<== isAccessAllowed Returning value :: " + isAccessAllowed);
-        }
-        return isAccessAllowed;
-    }
-
-    private boolean checkAccess(RangerAtlasAccessRequest request) {
-        boolean isAccessAllowed = false;
-        RangerBasePlugin plugin = atlasPlugin;
-
-        if (plugin != null) {
-            RangerAccessResult rangerResult = plugin.isAccessAllowed(request);
-            isAccessAllowed = rangerResult != null && rangerResult.getIsAllowed();
-        } else {
-            isAccessAllowed = false;
-            LOG.warn("AtlasPlugin not initialized properly : " + plugin+"... Access blocked!!!");
-        }
-        return isAccessAllowed;
     }
 
     @Override
-    public void cleanUp() {
-        if (isDebugEnabled) {
-            LOG.debug("==> cleanUp ");
+    public boolean isAccessAllowed(AtlasAdminAccessRequest request) throws AtlasAuthorizationException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> isAccessAllowed(AtlasAdminAccessRequest)");
         }
+
+        final boolean ret;
+
+        ret = true; // TODO: evaluate Ranger policies
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== isAccessAllowed(AtlasAdminAccessRequest)");
+        }
+
+        return ret;
+    }
+
+    @Override
+    public boolean isAccessAllowed(AtlasEntityAccessRequest request) throws AtlasAuthorizationException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> isAccessAllowed(AtlasEntityAccessRequest)");
+        }
+
+        final boolean ret;
+
+        ret = true; // TODO: evaluate Ranger policies
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== isAccessAllowed(AtlasEntityAccessRequest)");
+        }
+
+        return ret;
+    }
+
+    @Override
+    public boolean isAccessAllowed(AtlasTypeAccessRequest request) throws AtlasAuthorizationException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> isAccessAllowed(AtlasTypeAccessRequest)");
+        }
+
+        final boolean ret;
+
+        ret = true; // TODO: evaluate Ranger policies
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== isAccessAllowed(AtlasTypeAccessRequest)");
+        }
+
+        return ret;
     }
 
     class RangerAtlasPlugin extends RangerBasePlugin {
@@ -135,21 +126,4 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             super("atlas", "atlas");
         }
     }
-
-}
-
-class RangerAtlasAccessRequest extends RangerAccessRequestImpl {
-
-    public RangerAtlasAccessRequest(AtlasResourceTypes resType, String resource, String action, String user,
-        Set<String> userGroups, String clientIp, String clusterName) {
-        super.setResource(new RangerAtlasResource(resType, resource));
-        super.setAccessType(action);
-        super.setUser(user);
-        super.setUserGroups(userGroups);
-        super.setAccessTime(new Date(System.currentTimeMillis()));
-        super.setClientIPAddress(clientIp);
-        super.setAction(action);
-        super.setClusterName(clusterName);
-    }
-
 }
