@@ -22,16 +22,14 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasStormResourceMapper extends AtlasResourceMapper {
 	public static final String ENTITY_TYPE_STORM_TOPOLOGY = "storm_topology";
 	public static final String RANGER_TYPE_STORM_TOPOLOGY = "topology";
-
-	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
 
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_STORM_TOPOLOGY };
 
@@ -40,8 +38,8 @@ public class AtlasStormResourceMapper extends AtlasResourceMapper {
 	}
 
 	@Override
-	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
-		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
+    public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
+		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
 
 		String topology = getResourceNameFromQualifiedName(qualifiedName);
 
@@ -65,7 +63,7 @@ public class AtlasStormResourceMapper extends AtlasResourceMapper {
 
 		elements.put(RANGER_TYPE_STORM_TOPOLOGY, new RangerPolicyResource(topology, isExcludes, isRecursive));
 
-		String entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
+		String entityGuid  = entity.getGuid();
 		String serviceName = getRangerServiceName(clusterName);
 
 		return new RangerServiceResource(entityGuid, serviceName, elements);
