@@ -2892,6 +2892,22 @@ public class ServiceREST {
 	public String checkSSO() {
 		return String.valueOf(bizUtil.isSSOEnabled());
 	}
+
+	@GET
+	@Path ("/checkssotype")
+	@Produces ({"application/json"})
+	public HashMap<String, HashMap<String, String>> checkSSOType() {
+		HashMap<String, HashMap<String, String>> map = new HashMap<String, HashMap<String, String>>();
+		HashMap<String, String> knoxSSOMap = new HashMap<String, String>();
+		knoxSSOMap.put("isEnabled", String.valueOf(bizUtil.isSSOEnabled()));
+		map.put("knoxSSO", knoxSSOMap);
+		HashMap<String, String> altiSSOMap = new HashMap<String, String>();
+		altiSSOMap.put("isEnabled",
+				String.valueOf(PropertiesUtil.getBooleanProperty("ranger.web.authentication.alt-kerberos.enabled", false)));
+		altiSSOMap.put("logoutURL", PropertiesUtil.getProperty("ranger.web.authentication.alt-kerberos.portal.logout", ""));
+		map.put("altiSSO", altiSSOMap);
+		return map;
+	}
 	
 	@GET
 	@Path("/csrfconf")

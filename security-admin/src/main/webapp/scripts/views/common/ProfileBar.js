@@ -49,7 +49,7 @@ define(function(require){
 		events: function() {
 			var events = {};
 			//events['change ' + this.ui.input]  = 'onInputChange';
-			events['click ' + this.ui.logout]  = 'checkKnoxSSO';
+			events['click ' + this.ui.logout]  = 'checkSSO';
 			return events;
 		},
 		onLogout : function(checksso){
@@ -77,6 +77,32 @@ define(function(require){
 				
 			});
 		},
+		onLogoutSSO : function(checksso) {
+			var url = 'security-admin-web/logout.html',
+			that = this;
+			$.ajax({
+				url : url,
+				type : 'GET',
+				headers : {
+					"cache-control" : "no-cache"
+				},
+				success : function() {
+					if (checksso.altiSSO.isEnabled == 'true') {
+						window.location.replace(checksso.altiSSO.logoutURL);
+					} else if (!_.isUndefined(checksso) && checksso.knoxSSO) {
+						if(checksso.knoxSSO.isEnabled == 'false'){
+							window.location.replace('locallogin');
+						} else {
+							window.location.replace('');
+						}
+					} else {
+						window.location.replace('login.jsp');
+					}
+				},
+				error : function(jqXHR, textStatus, err ) {
+				}
+			});
+		},
 		checkKnoxSSO : function(){
 			var that =this, url = 'service/plugins/checksso';
 			$.ajax({
@@ -87,6 +113,24 @@ define(function(require){
 				},
 				success : function(resp) {
 					that.onLogout(resp);
+				},
+				error : function(jqXHR, textStatus, err ) {
+					if( jqXHR.status == 419 ){
+						window.location.replace('login.jsp');
+					}
+				}
+			});
+		},
+		checkSSO : function(){
+			var that =this, url = 'service/plugins/checkssotype';
+			$.ajax({
+				url : url,
+				type : 'GET',
+				headers : {
+					"cache-control" : "no-cache"
+				},
+				success : function(resp) {
+					that.onLogoutSSO(resp);
 				},
 				error : function(jqXHR, textStatus, err ) {
 					if( jqXHR.status == 419 ){

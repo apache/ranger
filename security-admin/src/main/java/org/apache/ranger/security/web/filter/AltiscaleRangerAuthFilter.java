@@ -147,6 +147,7 @@ public class AltiscaleRangerAuthFilter extends AuthenticationFilter {
 		}
 		// if security context does not have a user session, authenticate the security context and create a session
 		createSessionForUser(userName, request);
+		response.setHeader("Cache-Control", "no-cache");
 
 		// Delegate call to next filters
 		super.doFilter(filterChain, request, response);

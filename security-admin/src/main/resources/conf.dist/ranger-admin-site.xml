@@ -259,6 +259,10 @@
 		<value>https://localhost/sso/authorize</value>
 	</property>
 	<property>
+		<name>ranger.web.authentication.alt-kerberos.portal.logout</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.web.authentication.alt-kerberos.clusterid</name>
 		<value></value>
 	</property>
