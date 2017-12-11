@@ -396,6 +396,18 @@
                 ZTE
             </organization>
         </developer>
+        <developer>
+            <id>zsombor</id>
+            <name>Zsombor Gegesy</name>
+            <email>zsombor@apache.org</email>
+            <timezone>+1</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Hortonworks
+            </organization>
+        </developer>
     </developers>
     <contributors>
         <contributor>
