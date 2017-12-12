@@ -209,7 +209,7 @@
         <springframework.test.version>3.2.10.RELEASE</springframework.test.version>
         <springframework.version>3.2.10.RELEASE</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
-        <storm.version>1.0.2</storm.version>
+        <storm.version>1.1.1</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <tomcat.embed.version>7.0.82</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
