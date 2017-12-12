@@ -38,7 +38,6 @@ function getInstallProperty() {
 # Base env variable for Ranger related files/directories
 #
 PROJ_NAME=ranger
-BASE_CONF_DIR=/etc/${PROJ_NAME}
 
 #
 # The script should be run by "root" user
