@@ -96,6 +96,9 @@ if [ "${action}" == "START" ]; then
 	if [ -z "${logdir}" ]; then 
 	    logdir=${cdir}/logs
 	fi
+	if [ -z "${USERSYNC_CONF_DIR}" ]; then
+	    USERSYNC_CONF_DIR=${cdir}/conf
+	fi
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf`
 		if  ps -p $pid > /dev/null
@@ -107,7 +110,7 @@ if [ "${action}" == "START" ]; then
         fi
     fi
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:${RANGER_BASE_DIR}/usersync/conf/log4j.properties ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
+	nohup java -Dproc_rangerusersync -Dlog4j.configuration=file:${USERSYNC_CONF_DIR}/log4j.properties ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
 	VALUE_OF_PID=$!
     echo "Starting Apache Ranger Usersync Service"
     sleep $SLEEP_TIME_AFTER_START

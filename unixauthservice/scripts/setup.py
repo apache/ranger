@@ -88,10 +88,11 @@ SYNC_SOURCE_LIST = [SYNC_SOURCE_UNIX, SYNC_SOURCE_LDAP]
 SYNC_LDAP_BIND_PASSWORD_KEY = 'ranger.usersync.ldap.ldapbindpassword'
 credUpdateClassName = 'org.apache.ranger.credentialapi.buildks'
 ENV_LOGDIR_FILE = 'ranger-usersync-env-logdir.sh'
+
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-usersync-env-hadoopconfdir.sh"
 ENV_PID_FILE = 'ranger-usersync-env-piddir.sh'
-
+ENV_CONF_FILE = 'ranger-usersync-env-confdir.sh'
 
 def populate_global_dict():
     global globalDict
@@ -561,12 +562,15 @@ def main():
     write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
     write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
     write_env_files("USERSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
+    write_env_files("USERSYNC_CONF_DIR", confFolderName, ENV_CONF_FILE);
     os.chown(join(confBaseDirName, ENV_LOGDIR_FILE), ownerId, groupId)
     os.chmod(join(confBaseDirName, ENV_LOGDIR_FILE), 0755)
     os.chown(join(confBaseDirName, ENV_HADOOP_CONF_FILE), ownerId, groupId)
     os.chmod(join(confBaseDirName, ENV_HADOOP_CONF_FILE), 0755)
     os.chown(join(confBaseDirName, ENV_PID_FILE), ownerId, groupId)
     os.chmod(join(confBaseDirName, ENV_PID_FILE), 0755)
+    os.chown(join(confBaseDirName, ENV_CONF_FILE), ownerId, groupId)
+    os.chmod(join(confBaseDirName, ENV_CONF_FILE), 0755)
 
     f = open(join(confBaseDirName, ENV_PID_FILE), "a+")
     f.write("\nexport {0}={1}".format("UNIX_USERSYNC_USER", unix_user))
