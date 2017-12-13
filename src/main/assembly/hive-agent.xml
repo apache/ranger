@@ -47,7 +47,6 @@
             <dependencySet>
                 <outputDirectory>/lib/ranger-hive-plugin-impl</outputDirectory>
                 <includes>
-                    <include>com.google.code.gson:gson*</include>
 					<include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
 		    		<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
