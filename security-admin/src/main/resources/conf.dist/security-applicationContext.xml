@@ -100,7 +100,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
     <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
     </beans:bean>
 
-	<beans:bean id="altiAuthfilter" class="org.apache.ranger.security.web.filter.AltiscaleRangerAuthFilter">
+	<beans:bean id="altiAuthFilter" class="org.apache.ranger.security.web.filter.AltiscaleRangerAuthFilter">
 	</beans:bean>
 	
 	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
