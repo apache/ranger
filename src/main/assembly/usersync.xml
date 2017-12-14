@@ -77,6 +77,11 @@
     </moduleSet>
   </moduleSets> 	
   <fileSets>
+      <fileSet>
+          <outputDirectory>/ldaptool/lib</outputDirectory>
+          <directory>${project.basedir}/ugsync/ldapconfigchecktool/ldapconfigcheck/target/generated-tool-dependencies/lib</directory>
+          <fileMode>644</fileMode>
+      </fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
 	    	<fileMode>644</fileMode>
