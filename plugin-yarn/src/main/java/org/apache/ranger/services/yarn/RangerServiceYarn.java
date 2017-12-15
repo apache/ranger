@@ -117,7 +117,7 @@ public class RangerServiceYarn extends RangerBaseService {
 					if (StringUtils.isBlank(pathSeparator)) {
 						pathSeparator = ".";
 					}
-					String value = pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
+					String value = RangerAbstractResourceMatcher.WILDCARD_ASTERISK + pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
 					queuePolicyResource.setValue(value);
 				} else {
 					LOG.warn("No resourceDef found in YARN service-definition for '" + queueResourceName + "'");
