@@ -2226,3 +2226,6 @@ td.subgrid-custom-cell{
     text-overflow: ellipsis;
     max-width: 95%;
 }
+.control-group.error .select2-choices{
+    border-color: #b85355;
+}

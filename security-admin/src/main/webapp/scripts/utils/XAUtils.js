@@ -1341,6 +1341,17 @@ define(function(require) {
         };
         XAUtils.isTagBasedDef = function(def){
         	return def.get('name') == XAEnums.ServiceType.SERVICE_TAG.label ? true : false;
-        }
+        };
+    XAUtils.policyTypeResources = function(obj , policyType){
+    	if(XAUtils.isAccessPolicy(policyType)){
+    		return obj.get('resources');
+    	}else{
+    		if(XAUtils.isMaskingPolicy(policyType)){
+    			return obj.get('dataMaskDef').resources;
+    		}else{
+    			return obj.get('rowFilterDef').resources;
+    		}
+    	}
+    }
 	return XAUtils;
 });

@@ -493,7 +493,7 @@
 		    //(edit mode)set values for sameLevel if first option is not selected
             if(!_.isNull(this.value) && !_.isUndefined(this.value)
 				&& !_.isUndefined(this.value.resourceType)){
-				var def = _.findWhere(this.form.rangerServiceDefModel.get('resources'), {'name': this.value.resourceType });
+				var def = _.findWhere(XAUtil.policyTypeResources(this.form.rangerServiceDefModel , this.model.get('policyType')), {'name': this.value.resourceType});
 				this.recursiveSupport = def.recursiveSupported;
 				this.excludeSupport = def.excludesSupported;
             }
@@ -522,6 +522,7 @@
 		  },
 		  renderResource : function() {
 			  var that = this;
+                          var Vent = require('modules/Vent');
 			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 				this.value.values = _.map(this.value.values, function(val){ return _.escape(val); });
 			    	this.$resource.val(this.value.values.toString())
@@ -552,6 +553,10 @@
 		  renderToggles	: function() {
 			  var XAUtil = require('utils/XAUtils');
 			  var that = this, isExcludes = false, isRecursive = true;
+			  if(this.resourcesAtSameLevel && this.sameLevelOpts[0] == "none" && _.isEmpty(this.value)){
+				  this.excludeSupport = false;
+				  this.recursiveSupport = false;
+			  }
 			  	if(this.excludeSupport){
 			  		if(!_.isNull(this.value)){
 			  			this.value.isExcludes = _.isUndefined(this.value.isExcludes) ? false : this.value.isExcludes;
@@ -588,16 +593,16 @@
 		  		} else {
 		  			this.$recursiveSupport.hide();
 		  		}
-			  		
 		  },
 		  renderSameLevelResource : function() {
+                          var Vent	= require('modules/Vent');
                           var that = this, dirtyFieldValue = null;
-                          var XAUtil = require('utils/XAUtils'), localization	= require('utils/XALangSupport');;
+                          var XAUtil = require('utils/XAUtils'), localization	= require('utils/XALangSupport');
 			  if(!_.isUndefined(this.$resourceType) && this.$resourceType.length > 0){
 			  		if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 			  			this.$resourceType.val(this.value.resourceType);
 			  		}
-			  		this.$resourceType.on('change', function(e) {
+			  		this.$resourceType.on('change', function(e,onChangeResources) {
 		  				if(!_.isUndefined(that.preserveResourceValues[e.currentTarget.value])){
 		  					var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value].split(','); 
 		  					that.$resource.select2('val', val)
@@ -609,21 +614,34 @@
 			  			that.value.isRecursive = false;
 			  			that.$excludeSupport.trigger('toggleOn');
 			  			($(e.currentTarget).addClass('dirtyField'))
-			  			
 			  			//resource are shown if parent is selected or showned
 			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
-			  			that.formView.trigger('policyForm:parentChildHideShow',true);
+						//remove error class
+						that.$el.removeClass('error');
+//						if noneFlag is true not trigger parentChildHideShow
+						if(!onChangeResources){
+							that.formView.trigger('policyForm:parentChildHideShow',true, e.currentTarget.value , e);
+						}
 						if(!_.isUndefined(this.value)
                             && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
 							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
 						}
-                        //set flags for newly selected resource and re-render
-                        var def = _.findWhere(that.form.rangerServiceDefModel.get('resources'), {'name': this.value});
-                        that.recursiveSupport = def.recursiveSupported;
-                        if(that.recursiveSupport) that.value.isRecursive = true;
-                        that.excludeSupport = def.excludesSupported;
-                        that.renderToggles();
-
+//                      if value is "none" hide recursive/exclude toggles
+						if(this.value == "none"){
+                        	that.recursiveSupport = false;
+                        	that.excludeSupport = false;
+                        	that.renderToggles();
+                        }
+						//set flags for newly selected resource and re-render
+                        var def = _.findWhere(XAUtil.policyTypeResources(that.form.rangerServiceDefModel , that.model.get('policyType')), {'name': this.value});
+						if(def){
+                            that.recursiveSupport = def.recursiveSupported;
+                            if(that.recursiveSupport) that.value.isRecursive = true;
+                            that.excludeSupport = def.excludesSupported;
+                            that.renderToggles();
+                        }
+                        //trigger resource event for showing respective access permissions
+                        Vent.trigger('resourceType:change', changeType = 'resourceType', e.currentTarget.value, e.currentTarget.value, e);
 					});
 			  	}
 		  },

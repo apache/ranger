@@ -35,6 +35,7 @@ define(function(require){
 	var RangerPolicycreateTmpl = require('hbs!tmpl/policies/RangerPolicyCreate_tmpl');
 	var RangerPolicyForm = require('views/policies/RangerPolicyForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
+	var Vent			 = require('modules/Vent');
 
 	var RangerPolicyCreate = Backbone.Marionette.Layout.extend(
 	/** @lends RangerPolicyCreate */
@@ -286,6 +287,8 @@ define(function(require){
 		/** on close */
 		onClose: function(){
 			XAUtil.allowNavigation();
+//			clear Vent 
+			Vent._events['resourceType:change']=[];
 		}
 	});
 	return RangerPolicyCreate;
