@@ -21,15 +21,26 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.directory.server.protocol.shared.transport.TcpTransport;
+import org.apache.hadoop.gateway.GatewayServer;
 import org.apache.hadoop.gateway.GatewayTestConfig;
-import org.apache.hadoop.gateway.GatewayTestDriver;
+import org.apache.hadoop.gateway.security.ldap.SimpleLdapDirectoryServer;
+import org.apache.hadoop.gateway.services.DefaultGatewayServices;
+import org.apache.hadoop.gateway.services.ServiceLifecycleException;
+import org.apache.hadoop.test.mock.MockServer;
 import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,25 +55,91 @@ import io.restassured.response.ValidatableResponse;
  */
 public class KnoxRangerTest {
 
-    private static GatewayTestDriver driver = new GatewayTestDriver();
+    private static GatewayTestConfig config;
+    private static GatewayServer gateway;
+    private static SimpleLdapDirectoryServer ldap;
+    private static TcpTransport ldapTransport;
+    private static MockServer hdfsServer;
+    private static MockServer stormServer;
+    private static MockServer hbaseServer;
+    private static MockServer kafkaServer;
+    private static MockServer solrServer;
 
     @BeforeClass
     public static void setupSuite() throws Exception {
-        driver.setResourceBase(KnoxRangerTest.class);
-        driver.setupLdap(0);
-        GatewayTestConfig config = new GatewayTestConfig();
-        driver.setupService("WEBHDFS", "http://localhost:50070/webhdfs", "/cluster/webhdfs", true);
-        driver.setupService("STORM", "http://localhost:8477", "/cluster/storm", true);
-        driver.setupService("SOLR", "http://localhost:8983", "/cluster/solr", true);
-        driver.setupService("WEBHBASE", "http://localhost:60080", "/cluster/hbase", true);
-        driver.setupService("KAFKA", "http://localhost:8477", "/cluster/kafka", true);
+        setupLdap();
+        hdfsServer = new MockServer( "hdfs", true );
+        stormServer = new MockServer( "storm", true );
+        hbaseServer = new MockServer( "hbase", true );
+        kafkaServer = new MockServer( "kafka", true );
+        solrServer = new MockServer( "solr", true );
 
-        driver.setupGateway(config, "cluster", createTopology(), true);
+        setupGateway();
     }
 
     @AfterClass
     public static void cleanupSuite() throws Exception {
-        driver.cleanup();
+        gateway.stop();
+
+        FileUtils.deleteQuietly( new File( config.getGatewayTopologyDir() ) );
+        FileUtils.deleteQuietly( new File( config.getGatewayConfDir() ) );
+        FileUtils.deleteQuietly( new File( config.getGatewaySecurityDir() ) );
+        FileUtils.deleteQuietly( new File( config.getGatewayDeploymentDir() ) );
+        FileUtils.deleteQuietly( new File( config.getGatewayDataDir() ) );
+
+        hdfsServer.stop();
+        stormServer.stop();
+        hbaseServer.stop();
+        kafkaServer.stop();
+        solrServer.stop();
+
+        ldap.stop( true );
+    }
+
+    private static void setupLdap() throws Exception {
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
+        Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/users.ldif");
+        ldapTransport = new TcpTransport( 0 );
+        ldap = new SimpleLdapDirectoryServer( "dc=hadoop,dc=apache,dc=org", path.toFile(), ldapTransport );
+        ldap.start();
+    }
+
+    private static void setupGateway() throws Exception {
+
+        File targetDir = new File( System.getProperty( "user.dir" ), "target" );
+        File gatewayDir = new File( targetDir, "gateway-home-" + UUID.randomUUID() );
+        Assert.assertTrue(gatewayDir.mkdirs());
+
+        config = new GatewayTestConfig();
+        config.setGatewayHomeDir( gatewayDir.getAbsolutePath() );
+
+        config.setGatewayServicesDir(targetDir.getPath() + File.separator + "services");
+
+        File topoDir = new File( config.getGatewayTopologyDir() );
+        Assert.assertTrue(topoDir.mkdirs());
+
+        File deployDir = new File( config.getGatewayDeploymentDir() );
+        Assert.assertTrue(deployDir.mkdirs());
+
+        File descriptor = new File( topoDir, "cluster.xml" );
+        FileOutputStream stream = new FileOutputStream( descriptor );
+        createTopology().toStream( stream );
+        stream.close();
+
+        DefaultGatewayServices srvcs = new DefaultGatewayServices();
+        Map<String,String> options = new HashMap<>();
+        options.put( "persist-master", "false" );
+        options.put( "master", "password" );
+        try {
+            srvcs.init( config, options );
+        } catch ( ServiceLifecycleException e ) {
+            e.printStackTrace(); // I18N not required.
+        }
+
+        gateway = GatewayServer.startGateway( config, srvcs );
     }
 
     /**
@@ -93,7 +170,8 @@ public class KnoxRangerTest {
             .addTag( "value" ).addText( "uid={0},ou=people,dc=hadoop,dc=apache,dc=org" ).gotoParent()
             .addTag( "param" )
             .addTag( "name" ).addText( "main.ldapRealm.contextFactory.url" )
-            .addTag( "value" ).addText(driver.getLdapUrl() ).gotoParent()
+            .addTag( "value" ).addText( "ldap://localhost:" + ldapTransport.getAcceptor().getLocalAddress().getPort() ).gotoParent()
+            //.addTag( "value" ).addText(driver.getLdapUrl() ).gotoParent()
             .addTag( "param" )
             .addTag( "name" ).addText( "main.ldapRealm.contextFactory.authenticationMechanism" )
             .addTag( "value" ).addText( "simple" ).gotoParent()
@@ -111,19 +189,19 @@ public class KnoxRangerTest {
             .gotoRoot()
             .addTag("service")
             .addTag("role").addText("WEBHDFS")
-            .addTag("url").addText(driver.getRealUrl("WEBHDFS")).gotoParent()
+            .addTag("url").addText("http://localhost:" + hdfsServer.getPort()).gotoParent()
             .addTag("service")
             .addTag("role").addText("STORM")
-            .addTag("url").addText(driver.getRealUrl("STORM")).gotoParent()
+            .addTag("url").addText("http://localhost:" + stormServer.getPort()).gotoParent()
             .addTag("service")
             .addTag("role").addText("WEBHBASE")
-            .addTag("url").addText(driver.getRealUrl("WEBHBASE")).gotoParent()
+            .addTag("url").addText("http://localhost:" + hbaseServer.getPort()).gotoParent()
             .addTag("service")
             .addTag("role").addText("KAFKA")
-            .addTag("url").addText(driver.getRealUrl("KAFKA")).gotoParent()
+            .addTag("url").addText("http://localhost:" + kafkaServer.getPort()).gotoParent()
             .addTag("service")
             .addTag("role").addText("SOLR")
-            .addTag("url").addText(driver.getRealUrl("SOLR")).gotoParent()
+            .addTag("url").addText("http://localhost:" + solrServer.getPort() + "/solr").gotoParent()
             .gotoRoot();
         return xml;
     }
@@ -186,7 +264,7 @@ public class KnoxRangerTest {
         }
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/webhdfs-liststatus-test.json");
 
-        driver.getMock("WEBHDFS")
+        hdfsServer
         .expect()
           .method( "GET" )
           .pathInfo( "/v1/hdfstest" )
@@ -202,7 +280,7 @@ public class KnoxRangerTest {
           .header("X-XSRF-Header", "jksdhfkhdsf")
           .queryParam( "op", "LISTSTATUS" )
         .when()
-          .get( driver.getUrl("WEBHDFS") + "/v1/hdfstest" )
+          .get( "http://localhost:" + gateway.getAddresses()[0].getPort() + "/gateway/cluster/webhdfs" + "/v1/hdfstest" )
         .then()
           .statusCode(statusCode)
           .log().body();
@@ -219,7 +297,7 @@ public class KnoxRangerTest {
         }
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/cluster-configuration.json");
 
-        driver.getMock("STORM")
+        stormServer
             .expect()
             .method("GET")
             .pathInfo("/api/v1/cluster/configuration")
@@ -232,7 +310,7 @@ public class KnoxRangerTest {
             .auth().preemptive().basic(user, password)
             .header("X-XSRF-Header", "jksdhfkhdsf")
             .header("Accept", "application/json")
-            .when().get( driver.getUrl("STORM") + "/api/v1/cluster/configuration")
+            .when().get( "http://localhost:" + gateway.getAddresses()[0].getPort() + "/gateway/cluster/storm" + "/api/v1/cluster/configuration")
             .then()
             .log().all()
             .statusCode(statusCode);
@@ -247,7 +325,7 @@ public class KnoxRangerTest {
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/webhbase-table-list.xml");
 
 
-        driver.getMock("WEBHBASE")
+        hbaseServer
         .expect()
         .method( "GET" )
         .pathInfo( "/" )
@@ -262,7 +340,7 @@ public class KnoxRangerTest {
             .auth().preemptive().basic( user, password )
             .header("X-XSRF-Header", "jksdhfkhdsf")
             .header( "Accept", ContentType.XML.toString() )
-            .when().get( driver.getUrl("WEBHBASE") )
+            .when().get( "http://localhost:" + gateway.getAddresses()[0].getPort() + "/gateway/cluster/hbase" )
             .then()
             .statusCode( statusCode )
             .log().body();
@@ -270,7 +348,7 @@ public class KnoxRangerTest {
 
     private void makeKafkaInvocation(int statusCode, String user, String password) throws IOException {
 
-        driver.getMock("KAFKA")
+        kafkaServer
         .expect()
         .method( "GET" )
         .pathInfo( "/topics" )
@@ -282,7 +360,7 @@ public class KnoxRangerTest {
             .auth().preemptive().basic( user, password )
             .header("X-XSRF-Header", "jksdhfkhdsf")
         .when()
-            .get( driver.getUrl("KAFKA") + "/topics" )
+            .get( "http://localhost:" + gateway.getAddresses()[0].getPort() + "/gateway/cluster/kafka" + "/topics" )
         .then()
             .statusCode(statusCode)
             .log().body();
@@ -296,10 +374,10 @@ public class KnoxRangerTest {
         }
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/query_response.xml");
 
-        driver.getMock("SOLR")
+        solrServer
         .expect()
         .method("GET")
-        .pathInfo("/gettingstarted/select")
+        .pathInfo("/solr/gettingstarted/select")
         .queryParam("q", "author_s:William+Shakespeare")
         .respond()
         .status(HttpStatus.SC_OK)
@@ -310,7 +388,7 @@ public class KnoxRangerTest {
         .auth().preemptive().basic(user, password)
         .header("X-XSRF-Header", "jksdhfkhdsf")
         .header("Accept", "application/json")
-        .when().get( driver.getUrl("SOLR")
+        .when().get( "http://localhost:" + gateway.getAddresses()[0].getPort() + "/gateway/cluster/solr"
             + "/gettingstarted/select?q=author_s:William+Shakespeare")
         .then()
         .log().all()
