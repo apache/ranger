@@ -15,16 +15,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<schema name="ranger-audit-schema" version="1.5">
+<schema name="ranger-audit-schema" version="1.6">
   <uniqueKey>id</uniqueKey>
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
   <fieldType name="booleans" class="solr.BoolField" multiValued="true" sortMissingLast="true"/>
-  <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
-  <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" positionIncrementGap="0"/>
-  <fieldType name="float" class="solr.TrieFloatField" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="date" class="solr.TrieDateField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="double" class="solr.TrieDoubleField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="float" class="solr.TrieFloatField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="ignored" class="solr.StrField" multiValued="true" indexed="false" stored="false"/>
-  <fieldType name="int" class="solr.TrieIntField" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="int" class="solr.TrieIntField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="key_lower_case" class="solr.TextField" sortMissingLast="true" omitNorms="true">
     <analyzer>
       <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -32,13 +32,13 @@
       <filter class="solr.LengthFilterFactory" min="0" max="2500"/>
     </analyzer>
   </fieldType>
-  <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="long" class="solr.TrieLongField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
   <fieldType name="string" class="solr.StrField" sortMissingLast="true"/>
-  <fieldType name="tdate" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
-  <fieldType name="tdates" class="solr.TrieDateField" precisionStep="6" multiValued="true" positionIncrementGap="0"/>
-  <fieldType name="tdouble" class="solr.TrieDoubleField" precisionStep="8" positionIncrementGap="0"/>
-  <fieldType name="tdoubles" class="solr.TrieDoubleField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
+  <fieldType name="tdate" class="solr.TrieDateField" docValues="true" precisionStep="6" positionIncrementGap="0"/>
+  <fieldType name="tdates" class="solr.TrieDateField" docValues="true" precisionStep="6" multiValued="true" positionIncrementGap="0"/>
+  <fieldType name="tdouble" class="solr.TrieDoubleField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
+  <fieldType name="tdoubles" class="solr.TrieDoubleField" docValues="true" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
   <fieldType name="text_std_token_lower_case" class="solr.TextField" multiValued="true" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -50,15 +50,15 @@
       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
     </analyzer>
   </fieldType>
-  <fieldType name="tfloat" class="solr.TrieFloatField" precisionStep="8" positionIncrementGap="0"/>
-  <fieldType name="tfloats" class="solr.TrieFloatField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
-  <fieldType name="tint" class="solr.TrieIntField" precisionStep="8" positionIncrementGap="0"/>
-  <fieldType name="tints" class="solr.TrieIntField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
-  <fieldType name="tlong" class="solr.TrieLongField" precisionStep="8" positionIncrementGap="0"/>
-  <fieldType name="tlongs" class="solr.TrieLongField" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
+  <fieldType name="tfloat" class="solr.TrieFloatField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
+  <fieldType name="tfloats" class="solr.TrieFloatField" docValues="true" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
+  <fieldType name="tint" class="solr.TrieIntField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
+  <fieldType name="tints" class="solr.TrieIntField" docValues="true" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
+  <fieldType name="tlong" class="solr.TrieLongField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
+  <fieldType name="tlongs" class="solr.TrieLongField" docValues="true" precisionStep="8" multiValued="true" positionIncrementGap="0"/>
   <field name="_expire_at_" type="tdate" multiValued="false" stored="true" docValues="true"/>
   <field name="_ttl_" type="string" multiValued="false" indexed="true" stored="true"/>
-  <field name="_version_" type="long" indexed="true" stored="true"/>
+  <field name="_version_" type="long" indexed="false" stored="true"/>
   <field name="access" type="key_lower_case" multiValued="false"/>
   <field name="action" type="key_lower_case" multiValued="false"/>
   <field name="agent" type="key_lower_case" multiValued="false"/>
