@@ -88,19 +88,21 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			propPrefix = basePropertyName;
 		}
 		LOG.info("propPrefix=" + propPrefix);
-		// Get final token
-		List<String> tokens = MiscUtil.toArray(propPrefix, ".");
-		String finalToken = tokens.get(tokens.size() - 1);
 
 		String name = MiscUtil.getStringProperty(props, basePropertyName + "."
 				+ PROP_NAME);
 		if (name != null && !name.isEmpty()) {
 			setName(name);
 		}
+		// Get final token
 		if (providerName == null) {
-			setName(finalToken);
-			LOG.info("Using providerName from property prefix. providerName="
-					+ getName());
+			List<String> tokens = MiscUtil.toArray(propPrefix, ".");
+			if (!tokens.isEmpty()) {
+				String finalToken = tokens.get(tokens.size() - 1);
+				setName(finalToken);
+				LOG.info("Using providerName from property prefix. providerName="
+						+ getName());
+			}
 		}
 		LOG.info("providerName=" + getName());
 
