@@ -103,26 +103,18 @@ public class AtlasNotificationMapper {
 			try {
 				IReferenceableInstance entity = entityNotification.getEntity();
 
-				if (entity != null && AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName())) {
-					AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, entityNotification.getAllTraits());
-					if (entityNotification.getOperationType() == EntityNotification.OperationType.ENTITY_DELETE) {
-						ret = buildServiceTagsForEntityDeleteNotification(entityWithTraits);
-					} else {
-						if (entity.getId().getState() == Id.EntityState.ACTIVE) {
-							ret = buildServiceTags(entityWithTraits, null);
-						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Ignoring entityNotification for entity that is not ACTIVE: " + entityWithTraits);
-							}
-						}
-					}
-				} else {
-					logUnhandledEntityNotification(entityNotification);
-				}
+				AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(entity, entityNotification.getAllTraits());
 
+				if (entityNotification.getOperationType() == EntityNotification.OperationType.ENTITY_DELETE) {
+					ret = buildServiceTagsForEntityDeleteNotification(entityWithTraits);
+				} else {
+					ret = buildServiceTags(entityWithTraits, null);
+				}
 			} catch (Exception exception) {
 				LOG.error("createServiceTags() failed!! ", exception);
 			}
+		} else {
+			logUnhandledEntityNotification(entityNotification);
 		}
 		return ret;
 	}
@@ -144,12 +136,11 @@ public class AtlasNotificationMapper {
 
 		EntityNotification.OperationType opType = entityNotification.getOperationType();
 
-		if(opType != null) {
+		if (opType != null) {
 			switch (opType) {
-				case ENTITY_CREATE: {
-					LOG.debug("ENTITY_CREATE notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+				case ENTITY_CREATE:
+					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
 					break;
-				}
 				case ENTITY_UPDATE:
 				case ENTITY_DELETE:
 				case TRAIT_ADD:
@@ -160,6 +151,14 @@ public class AtlasNotificationMapper {
 				}
 				default:
 					LOG.error(opType + ": unknown notification received - not handled");
+					break;
+			}
+			if (ret) {
+				final IReferenceableInstance entity = entityNotification.getEntity();
+
+				ret = entity != null
+						&& entity.getId().getState() == Id.EntityState.ACTIVE
+						&& AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName());
 			}
 		}
 
