@@ -163,7 +163,7 @@ public final class RangerScriptExecutionContext {
 			ret = (RangerTagForEval)val;
 		} else {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
+				logDebug("RangerScriptExecutionContext.getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
 			}
 		}
 		return ret;
@@ -285,7 +285,7 @@ public final class RangerScriptExecutionContext {
 				ret = getAsDate(value, simpleDateFormat);
 				if (ret != null) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("The best match found for Format-String:[" + simpleDateFormat.toPattern() + "], date:[" + ret +"]");
+						logDebug("RangerScriptExecutionContext.getAsDate() -The best match found for Format-String:[" + simpleDateFormat.toPattern() + "], date:[" + ret +"]");
 					}
 					break;
 				}
@@ -293,7 +293,7 @@ public final class RangerScriptExecutionContext {
 		}
 
 		if (ret == null) {
-			LOG.error("RangerScriptExecutionContext.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
+			logError("RangerScriptExecutionContext.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
 		} else {
 			ret = StringUtil.getUTCDateForLocalDate(ret);
 		}
@@ -361,7 +361,7 @@ public final class RangerScriptExecutionContext {
 			if (LOG.isDebugEnabled()) {
 				String resource = accessRequest.getResource().getAsString();
 
-				LOG.debug("getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
+				logDebug("RangerScriptExecutionContext.getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
 			}
 		}
 
