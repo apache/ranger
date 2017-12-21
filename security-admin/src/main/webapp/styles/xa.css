@@ -1576,6 +1576,7 @@ background-color: #dc6343;
 }
 .modal-diff .modal-header {
   background-color: #eff3f8;
+  border-radius: 6px 6px 0px 0px;
 }
 .no-margin {
   margin: 0;
@@ -2228,4 +2229,13 @@ td.subgrid-custom-cell{
 }
 .control-group.error .select2-choices{
     border-color: #b85355;
+}
+textarea:read-only{
+    cursor: default;
+}
+#policyDetail>label{
+    margin-bottom: 6px;
+}
+.label-margin{
+    margin-left: 10px;
 }

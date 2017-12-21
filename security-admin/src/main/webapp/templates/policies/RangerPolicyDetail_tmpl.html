@@ -1,0 +1,79 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+
+<div id="policyDetail">
+	<label class="no-margin label-size13-weightbold">{{tt 'lbl.policyType'}} : &nbsp;<label class="label label-ranger"> {{policyType}} </label></label>
+	<label class="no-margin label-size13-weightbold">{{tt 'lbl.policyId'}} : &nbsp;<label class="label label-ranger"> {{id}} </label></label>
+	<label class="no-margin label-size13-weightbold">{{tt 'lbl.policyName'}} : {{name}}
+	{{#if isEnabled}}
+	<label class="label label-ranger label-margin">{{tt 'h.enabled'}}</label>
+	{{else}}
+	<label class="label label-important label-margin">{{tt 'h.disabled'}}</label>
+	{{/if}}
+	</label>
+	{{#each resources}}
+	<label class="no-margin label-size13-weightbold">{{./this.label}} : {{./this.values}}
+	{{#if ./this.isSupport}}
+		{{#if ./this.exBool}}
+		<label class="label label-ranger label-margin">{{./this.exLabel}}</label>
+		{{else}}
+		<label class="label label-important label-margin">{{./this.exLabel}}</label>
+		{{/if}}
+	{{/if}}
+	</label>
+	{{/each}}
+	<label class="no-margin label-size13-weightbold">{{tt 'lbl.auditLogging'}} : &nbsp;
+	{{#if isAuditEnabled}}
+		<label class="label label-ranger">{{tt 'h.yes'}}</label>
+	{{else}}
+		<label class="label label-important">{{tt 'h.no'}}</label>
+	{{/if}}
+	</label>
+	<label class="no-margin label-size13-weightbold" style="vertical-align:top;float:left;">{{tt 'lbl.description'}} : &nbsp;&nbsp;</label><textarea style="width: 400px;height: 80px;" readonly="readonly">{{description}}</textarea>
+</div>
+<div>
+	<div>
+		<p class="wrap-header formHeader">
+			{{conditionType}} {{tt 'h.conditions'}} :
+		</p>
+		<div data-id="allowCondition" style="margin-top: 15px;">
+		</div>
+	</div>
+	{{#if isAccessPolicy}}
+	<div>
+		<p class="wrap-header reportSearchHeader">
+			{{tt 'h.exAllowCondition'}} :
+		</p>
+		<div data-id="exAllowCondition">
+		</div>
+	</div>
+	<div>
+		<p class="wrap-header formHeader">
+			{{tt 'h.denyCondition'}} :
+		</p>
+		<div data-id="denyCondition" style="margin-top: 15px;">
+		</div>
+	</div>
+	<div>
+		<p class="wrap-header reportSearchHeader">
+			{{tt 'h.exDenyCondition'}} :
+		</p>
+		<div data-id="exDenyCondition">
+		</div>
+	</div>
+	{{/if}}
+</div>

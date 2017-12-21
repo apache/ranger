@@ -1,0 +1,79 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<div>
+	<table class="table table-bordered backgrid">
+		<thead>
+			<tr>
+				<th width="20%">{{tt 'lbl.groups'}}</th>
+				<th width="35%">{{tt 'lbl.users'}}</th>
+				{{#if isAccessPolicy}}
+				<th width="35%">{{tt 'lbl.permissions'}}</th>
+				<th width="10%">{{tt 'lbl.delegatedAdmin'}}</th>
+				{{/if}}
+				{{#if isMaskingPolicy}}
+				<th width="25%">{{tt 'lbl.accessTypes'}}</th>
+				<th width="20%">{{tt 'h.maskingOption'}}</th>
+				{{/if}}
+				{{#if isRowFilterPolicy}}
+				<th width="25%">{{tt 'lbl.accessTypes'}}</th>
+				<th width="20%">{{tt 'lbl.rowLevelFilter'}}</th>
+				{{/if}}
+			</tr>
+		</thead>
+		<tbody>
+			{{#each policyItems}}
+			<tr>
+				<td>
+					{{#each ./this.groups}}
+					<span class="label label-info float-left-margin-2">{{./this}}</span> {{/each}}
+				</td>
+				<td>
+					{{#each ./this.users}}
+					<span class="label label-info float-left-margin-2">{{./this}}</span> {{/each}}
+				</td>
+				<td>
+					{{#each ./this.accesses}}
+					<span class="label label-info float-left-margin-2">{{./this.type}}</span> {{/each}}
+				</td>
+				{{#if ../isAccessPolicy}}
+				<td style="text-align: center;vertical-align: middle;">
+					<div>
+						{{#if ./this.delegateAdmin}}
+						<label class="label label-ranger">{{tt 'h.yes'}}</label> {{else}}
+						<label class="label label-important">{{tt 'h.no'}}</label> {{/if}}
+					</div>
+				</td>
+				{{/if}}
+				{{#if ../isMaskingPolicy}}
+				<td>
+					{{#compare dataMaskInfo.dataMaskType 'eq' 'CUSTOM'}}
+					<span class="label label-info float-left-margin-2">{{tt 'h.custom'}}: {{dataMaskInfo.valueExpr}}</span>
+					{{else}}
+					<span class="label label-info float-left-margin-2">{{dataMaskInfo.dataMaskType}}</span>
+					{{/compare}}
+				</td>
+				{{/if}}
+				{{#if ../isRowFilterPolicy}}
+				<td>
+					<span class="label label-info float-left-margin-2">{{rowFilterInfo.filterExpr}}</span>
+				</td>
+				{{/if}}
+			</tr>
+			{{/each}}
+		</tbody>
+	</table>
+</div>
