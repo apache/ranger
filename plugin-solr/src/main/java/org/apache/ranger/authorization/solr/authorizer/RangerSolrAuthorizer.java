@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -196,19 +197,37 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			// broken
 			// into a request
 			List<RangerAccessRequestImpl> rangerRequests = new ArrayList<RangerAccessRequestImpl>();
-			for (CollectionRequest collectionRequest : context
-					.getCollectionRequests()) {
+			List<CollectionRequest>   collectionRequests = context.getCollectionRequests();
 
+			if (CollectionUtils.isEmpty(collectionRequests)) {
+				// if Collection is empty we set the collection to *. This happens when LIST is done.
 				RangerAccessRequestImpl requestForCollection = createRequest(
 						userName, userGroups, ip, eventTime, context,
-						collectionRequest);
+						null);
 				if (requestForCollection != null) {
 					rangerRequests.add(requestForCollection);
 				}
+			} else {
+				// Create the list of requests for access check. Each field is
+				// broken
+				// into a request
+				for (CollectionRequest collectionRequest : context
+						.getCollectionRequests()) {
+
+					RangerAccessRequestImpl requestForCollection = createRequest(
+							userName, userGroups, ip, eventTime, context,
+							collectionRequest);
+					if (requestForCollection != null) {
+						rangerRequests.add(requestForCollection);
+					}
+				}
+
 			}
+
 			if (logger.isDebugEnabled()) {
 				logger.debug("rangerRequests.size()=" + rangerRequests.size());
 			}
+
 			try {
 				// Let's check the access for each request/resource
 				for (RangerAccessRequestImpl rangerRequest : rangerRequests) {
@@ -333,25 +352,19 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 		String accessType = mapToRangerAccessType(context);
 		String action = accessType;
-
-		if (collectionRequest.collectionName != null) {
-			RangerAccessRequestImpl rangerRequest = createBaseRequest(userName,
-					userGroups, ip, eventTime);
-			RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
-			rangerResource.setValue(KEY_COLLECTION,
-					collectionRequest.collectionName);
-			rangerRequest.setResource(rangerResource);
-			rangerRequest.setAccessType(accessType);
-			rangerRequest.setAction(action);
-
-			return rangerRequest;
+		RangerAccessRequestImpl rangerRequest = createBaseRequest(userName,
+				userGroups, ip, eventTime);
+		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+		if (collectionRequest == null) {
+			rangerResource.setValue(KEY_COLLECTION, "*");
+		} else {
+			rangerResource.setValue(KEY_COLLECTION, collectionRequest.collectionName);
 		}
-		
-		logger.fatal("Can't create RangerRequest object. userName="
-				+ userName + ", accessType=" + accessType + ", ip=" + ip
-				+ ", collectionRequest=" + collectionRequest);
+		rangerRequest.setResource(rangerResource);
+		rangerRequest.setAccessType(accessType);
+		rangerRequest.setAction(action);
 
-		return null;
+		return rangerRequest;
 	}
 
 	private RangerAccessRequestImpl createBaseRequest(String userName,
