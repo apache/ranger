@@ -73,5 +73,16 @@ define(function(require){
 								'Permissions' : ['modulePermissionsAction','modulePermissionEditAction'] },
 		};
 	
+	XAGlobals.ActionType = {
+			Create : { value: 'create', label: 'Create' },
+			Update : { value: 'update', label: 'Update' },
+			Delete : { value: 'delete', label: 'Delete' },
+			Password_Change : { value: 'password change', label: 'Password Change' },
+			Export_Json  : { value: 'EXPORT JSON',  label: 'Export Json' },
+			Export_Csv   : { value: 'EXPORT CSV', 	label: 'Export Csv' },
+			Export_Excel : { value: 'EXPORT EXCEL', label: 'Export Excel' },
+			Import_End   : { value: 'IMPORT END', 	label: 'Import End' },
+			Import_Start : { value: 'IMPORT START', label: 'Import Start'}
+	};
 	return XAGlobals;
 });
