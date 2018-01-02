@@ -370,11 +370,11 @@ define(function(require) {
 			var that = this;
 			var searchOpt = ["Audit Type", "User", "Actions", "Session Id", "Start Date", "End Date"];
 			var serverAttrName  = [{text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes)},
-			                       {text : "User", label :"owner"},
-			                       {text : "Actions", label :"action"},{text :  "Session Id", label :"sessionId"},
-			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'} ];
+                                               {text : "User", label :"owner"}, {text :  "Session Id", label :"sessionId"},
+                                               {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
+                                               {text : "Actions", label :"action",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAGlobals.ActionType)},];
 			
-			var auditList = [],query = '';
+                        var auditList = [],query = '', actionTypeList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
 				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) 
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) 
@@ -384,6 +384,11 @@ define(function(require) {
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 					auditList.push({label :obj.label, value :obj.label+''});
 			});
+			_.each(XAGlobals.ActionType, function(obj){
+				if(obj.label){
+					actionTypeList.push({label :obj.label, value :obj.label})
+				}
+			})
 			if(!_.isUndefined(App.sessionId)){
                                 App.vsHistory.admin = [] ;
 				query = '"Session Id": "'+App.sessionId+'"';
@@ -404,7 +409,7 @@ define(function(require) {
 										callback(auditList);
 										break;
 									case 'Actions':
-										callback(["Create","Update","Delete","Password Change","Export Json","Export Csv","Export Excel","Import End","Import Start"]);
+										callback(actionTypeList);
 										break;
 									case 'Start Date' :
 											var endDate, models = that.visualSearch.searchQuery.where({category:"End Date"});
