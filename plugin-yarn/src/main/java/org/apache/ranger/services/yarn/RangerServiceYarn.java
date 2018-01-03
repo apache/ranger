@@ -22,13 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
-import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.yarn.client.YarnResourceMgr;
@@ -113,12 +111,7 @@ public class RangerServiceYarn extends RangerBaseService {
 					}
 				}
 				if (queueResourceDef != null) {
-					String pathSeparator = queueResourceDef.getMatcherOptions().get(RangerPathResourceMatcher.OPTION_PATH_SEPARATOR);
-					if (StringUtils.isBlank(pathSeparator)) {
-						pathSeparator = ".";
-					}
-					String value = RangerAbstractResourceMatcher.WILDCARD_ASTERISK + pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
-					queuePolicyResource.setValue(value);
+					queuePolicyResource.setValue(RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
 				} else {
 					LOG.warn("No resourceDef found in YARN service-definition for '" + queueResourceName + "'");
 				}
