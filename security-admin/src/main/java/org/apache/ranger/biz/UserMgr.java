@@ -456,16 +456,13 @@ public class UserMgr {
 			VXPasswordChange changeEmail) {
 		checkAccessForUpdate(gjUser);
 		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidEmail",
-					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-					"emailAddress", changeEmail.toString());
+			changeEmail.setEmailAddress(null);
 		}
 
 		String encryptedOldPwd = encrypt(gjUser.getLoginId(),
 				changeEmail.getOldPassword());
 
-		if (!stringUtil.validateEmail(changeEmail.getEmailAddress())) {
+		if (!StringUtils.isEmpty(changeEmail.getEmailAddress()) && !stringUtil.validateEmail(changeEmail.getEmailAddress())) {
 			logger.info("Invalid email address." + changeEmail);
 			throw restErrorUtil.createRESTException(
 					"serverMsg.userMgrInvalidEmail",

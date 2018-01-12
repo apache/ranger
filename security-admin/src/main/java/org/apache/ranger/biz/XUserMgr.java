@@ -1367,6 +1367,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(vXUser!=null && roleListNewProfile.size()>0){
 			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser.getName());
 			if(oldUserProfile!=null){
+				denySelfRoleChange(oldUserProfile.getLoginId());
 				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
 				portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
 				return getStringListFromUserRoleList(portalUserRoleList);
@@ -1389,6 +1390,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(userName!=null && roleListNewProfile.size()>0){
 			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(userName);
 			if(oldUserProfile!=null){
+				denySelfRoleChange(oldUserProfile.getLoginId());
 				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
 				List<XXPortalUserRole> portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
 				return getStringListFromUserRoleList(portalUserRoleList);
@@ -2216,4 +2218,17 @@ public class XUserMgr extends XUserMgrBase {
                         throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
                 }
         }
+
+        public void denySelfRoleChange(String userName) {
+            UserSessionBase session = ContextUtil.getCurrentUserSession();
+            if (session != null && session.getXXPortalUser()!=null) {
+                if (userName.equals(session.getXXPortalUser().getLoginId())) {
+                    throw restErrorUtil.create403RESTException("Permission"
+                            + " denied. LoggedInUser="
+                            + (session != null ? session.getXXPortalUser().getId()
+                                    : "Not Logged In")
+                            + " ,isn't permitted to change its own role.");
+                }
+            }
+	}
 }
