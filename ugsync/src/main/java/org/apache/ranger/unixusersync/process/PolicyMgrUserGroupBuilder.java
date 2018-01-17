@@ -31,6 +31,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
@@ -78,6 +80,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private static final String PRINCIPAL = "ranger.usersync.kerberos.principal";
 	private static final String KEYTAB = "ranger.usersync.kerberos.keytab";
 	private static final String NAME_RULE = "hadoop.security.auth_to_local";
+	private static final String ADMIN_LIST = "ranger.usersync.admin.groups";
 	
 	public static final String PM_USER_LIST_URI  = "/service/xusers/users/";				// GET
 	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo";	// POST
@@ -92,6 +95,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default";			// POST
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
+	private static Set<String> adminsGroupSet = new HashSet<String>();
 	
 	private static String LOCAL_HOSTNAME = "unknown";
 	private String recordsToPullPerCall = "1000";
@@ -160,6 +164,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
+		String adminGroupsList = config.getProperty(ADMIN_LIST, "admin");
+		String groupSplit[] = adminGroupsList.split(",");
+		for (String groupStr : groupSplit) {
+			adminsGroupSet.add(groupStr);
+		}
+
 		buildUserGroupInfo();
 	}
 	
@@ -319,7 +329,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 			LOG.debug("INFO: addPMAccount(" + userName + ")" );
 			if (! isMockRun) {
-				if (addMUser(userName) == null) {
+				if (addMUser(userName, groups) == null) {
 					String msg = "Failed to add portal user";
 					LOG.error(msg);
 					throw new Exception(msg);
@@ -801,7 +811,55 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 
 	}
-	
+
+	private MUserInfo addMUser(String aUserName, List<String> groups) {
+		MUserInfo ret = null;
+		MUserInfo userInfo = new MUserInfo();
+
+		userInfo.setLoginId(aUserName);
+		userInfo.setFirstName(aUserName);
+		userInfo.setLastName(aUserName);
+
+		if (isUserInAdminGroup (aUserName, groups)) {
+			String[] userRoleList = { "ROLE_SYS_ADMIN" };
+			userInfo.setUserRoleList(userRoleList);
+		}
+
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final MUserInfo result = ret;
+				final MUserInfo userInfoFinal = userInfo;
+				ret = Subject.doAs(sub, new PrivilegedAction<MUserInfo>() {
+					@Override
+					public MUserInfo run() {
+						try {
+							return getMUser(userInfoFinal, result);
+						} catch (Exception e) {
+							LOG.error("Failed to add User : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.warn("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return null;
+		} else {
+			return getMUser(userInfo, ret);
+		}
+	}
+
+	private boolean isUserInAdminGroup (String userName, List<String> groups) {
+		for (String group : groups) {
+			if (adminsGroupSet.contains(group)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private MUserInfo addMUser(String aUserName) {
 		MUserInfo ret = null;
 		MUserInfo userInfo = new MUserInfo();
@@ -852,7 +910,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	
 	    ret = gson.fromJson(response, MUserInfo.class);
 	
-	    LOG.debug("MUser Creation successful " + ret);
+	    LOG.info("MUser Creation successful " + ret);
 		
 		return ret;
 	}

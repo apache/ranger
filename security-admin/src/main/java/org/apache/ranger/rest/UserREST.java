@@ -186,7 +186,7 @@ public class UserREST {
 	@Path("/default")
 	@Consumes({ "application/json", "application/xml" })
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
 		VXPortalUser vxPortalUser;

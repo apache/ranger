@@ -177,4 +177,8 @@
       <name>ranger.usersync.ldap.deltasync</name>
       <value>false</value>
     </property>
+    <property>
+        <name>ranger.usersync.admin.groups</name>
+        <value>admin</value>
+    </property>
   </configuration>

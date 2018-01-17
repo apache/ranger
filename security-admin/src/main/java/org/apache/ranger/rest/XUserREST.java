@@ -174,7 +174,7 @@ public class XUserREST {
 	@POST
 	@Path("/groups/groupinfo")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_GROUP_FROM_MAP + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_GROUP_FROM_MAP + "\")")
 	public VXGroupUserInfo createXGroupUserFromMap(VXGroupUserInfo vXGroupUserInfo) {
 		return  xUserMgr.createXGroupUserFromMap(vXGroupUserInfo);
 	}
@@ -285,7 +285,7 @@ public class XUserREST {
 	@POST
 	@Path("/users/userinfo")
 	@Produces({ "application/xml", "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_GROUP_FROM_MAP + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_GROUP_FROM_MAP + "\")")
 	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
 		return  xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
 	}
@@ -737,7 +737,7 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/group/{groupName}/user/{userName}")
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isUGManagementAPIAccessible(\"" + RangerAPIList.DELETE_X_GROUP_AND_X_USER + "\")")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_X_GROUP_AND_X_USER + "\")")
 	public void deleteXGroupAndXUser(@PathParam("groupName") String groupName,
 			@PathParam("userName") String userName,
 			@Context HttpServletRequest request) {
