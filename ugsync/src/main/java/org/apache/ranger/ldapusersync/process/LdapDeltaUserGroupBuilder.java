@@ -372,6 +372,12 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 						new PagedResultsControl(pagedResultsSize, Control.NONCRITICAL) });
 			}
 			DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
+			if (groupSearchFirstEnabled && groupUserTable.rowKeySet().size() != 0) {
+				// Fix RANGER-1957: Perform full sync when group search is enabled and when there are updates to the groups
+				deltaSyncUserTime = 0;
+				deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
+			}
+
 			extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
 
 			if (userSearchFilter != null && !userSearchFilter.trim().isEmpty()) {
@@ -498,32 +504,13 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								LOG.error("sink.addOrUpdateUserGroups failed with exception: " + t.getMessage()
 								+ ", for user: " + transformUserName + " and groups: " + groupList);
 							}
-							counter++;
-							if (counter <= 2000) {
-								if (LOG.isInfoEnabled()) {
-									LOG.info("Updating user count: " + counter
-											+ ", userName: " + userName + ", groupList: "
-											+ groupList);
-								}
-								if ( counter == 2000 ) {
-									LOG.info("===> 2000 user records have been synchronized so far. From now on, only a summary progress log will be written for every 100 users. To continue to see detailed log for every user, please enable Trace level logging. <===");
-								}
-							} else {
-								if (LOG.isTraceEnabled()) {
-									LOG.trace("Updating user count: " + counter
-											+ ", userName: " + userName + ", groupList: "
-											+ groupList);
-								} else  {
-									if ( counter % 100 == 0) {
-										LOG.info("Synced " + counter + " users till now");
-									}
-								}
-							}
+                            counter++;
 						} else {
 							// If the user from the search result is present in the group user table,
 							// then addorupdate user to ranger admin.
 							LOG.debug("Chekcing if the user " + userFullName + " is part of the retrieved groups");
-							if (groupUserTable.containsColumn(userFullName) || groupUserTable.containsColumn(userName)) {
+							if ((groupUserTable.containsColumn(userFullName) || groupUserTable.containsColumn(userName))
+									&& !userNameMap.containsKey(userFullName)) {
 								String transformUserName = userNameTransform(userName);
 								try {
 									sink.addOrUpdateUser(transformUserName);
@@ -538,8 +525,28 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									LOG.debug("Updating groupUserTable " + entry.getValue() + " with: " + transformUserName + " for " + entry.getKey());
 									groupUserTable.put(entry.getKey(), userFullName, transformUserName);
 								}
+                                counter++;
 							}
 						}
+
+                        if (counter <= 2000) {
+                            if (LOG.isInfoEnabled()) {
+                                LOG.info("Updating user count: " + counter
+                                        + ", userName: " + userName);
+                            }
+                            if ( counter == 2000 ) {
+                                LOG.info("===> 2000 user records have been synchronized so far. From now on, only a summary progress log will be written for every 100 users. To continue to see detailed log for every user, please enable Trace level logging. <===");
+                            }
+                        } else {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Updating user count: " + counter
+                                        + ", userName: " + userName);
+                            } else  {
+                                if ( counter % 100 == 0) {
+                                    LOG.info("Synced " + counter + " users till now");
+                                }
+                            }
+                        }
 
 					}
 
@@ -579,7 +586,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			}
 			if (deltaSyncUserTime < highestdeltaSyncUserTime) {
 				// Incrementing highestdeltaSyncUserTime (for AD) in order to avoid search record repetition for next sync cycle.
-				deltaSyncUserTime = highestdeltaSyncUserTime+1;
+				deltaSyncUserTime = highestdeltaSyncUserTime + 1;
 				// Incrementing the highest timestamp value (for Openldap) with 1sec in order to avoid search record repetition for next sync cycle.
 				deltaSyncUserTimeStamp = dateFormat.format(new Date(highestdeltaSyncUserTime + 60l));
 			}
