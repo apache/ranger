@@ -42,7 +42,7 @@ public class RangerServicePoliciesCache {
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-	private static volatile RangerServicePoliciesCache sInstance = null;
+	public static volatile RangerServicePoliciesCache sInstance = null;
 	private final boolean useServicePoliciesCache;
 	private final int waitTimeInSeconds;
 

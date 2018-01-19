@@ -49,6 +49,7 @@ import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
@@ -428,6 +429,8 @@ public class TestXUserMgr {
 	@Test
 	public void test17UpdateXGroup() {
 		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+		XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		List<XXGroupUser> grpUsers =new ArrayList<XXGroupUser>();
 		setup();
 		VXGroup vXGroup = new VXGroup();
 		vXGroup.setId(userId);
@@ -438,7 +441,8 @@ public class TestXUserMgr {
 		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
 		Mockito.when(xxGroupDao.getById(vXGroup.getId())).thenReturn(xxGroup);
 		Mockito.when(xGroupService.updateResource(vXGroup)).thenReturn(vXGroup);
-
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+		Mockito.when(xxGroupUserDao.findByGroupId(vXGroup.getId())).thenReturn(grpUsers);
 		VXGroup dbvxGroup = xUserMgr.updateXGroup(vXGroup);
 		Assert.assertNotNull(dbvxGroup);
 		userId = dbvxGroup.getId();
@@ -447,7 +451,9 @@ public class TestXUserMgr {
 				dbvxGroup.getDescription());
 		Assert.assertEquals(vXGroup.getName(), dbvxGroup.getName());
 		Mockito.verify(daoManager).getXXGroup();
+		Mockito.verify(daoManager).getXXGroupUser();
 		Mockito.verify(xGroupService).updateResource(vXGroup);
+		Mockito.verify(xxGroupUserDao).findByGroupId(vXGroup.getId());
 	}
 
 	@Test
