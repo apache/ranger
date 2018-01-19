@@ -113,6 +113,7 @@ define(function(require){
 				success: function () {
 					XAUtil.blockUI('unblock');
 					XAUtil.allowNavigation();
+					Backbone.fetchCache._cache = {}
 					var msg = that.editGroup ? 'Group updated successfully' :'Group created successfully';
 					XAUtil.notifySuccess('Success', msg);
 					if(that.editGroup){
