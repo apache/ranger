@@ -820,7 +820,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		userInfo.setFirstName(aUserName);
 		userInfo.setLastName(aUserName);
 
-		if (isUserInAdminGroup (aUserName, groups)) {
+		if (isUserInAdminGroup (groups)) {
 			String[] userRoleList = { "ROLE_SYS_ADMIN" };
 			userInfo.setUserRoleList(userRoleList);
 		}
@@ -851,7 +851,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 	}
 
-	private boolean isUserInAdminGroup (String userName, List<String> groups) {
+	private boolean isUserInAdminGroup (List<String> groups) {
 		for (String group : groups) {
 			if (adminsGroupSet.contains(group)) {
 				return true;
@@ -859,41 +859,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		return false;
 	}
-
-	private MUserInfo addMUser(String aUserName) {
-		MUserInfo ret = null;
-		MUserInfo userInfo = new MUserInfo();
-
-		userInfo.setLoginId(aUserName);
-		userInfo.setFirstName(aUserName);
-		userInfo.setLastName(aUserName);
-
-		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-			try {
-				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				final MUserInfo result = ret;
-				final MUserInfo userInfoFinal = userInfo;
-				ret = Subject.doAs(sub, new PrivilegedAction<MUserInfo>() {
-					@Override
-					public MUserInfo run() {
-						try {
-							return getMUser(userInfoFinal, result);
-						} catch (Exception e) {
-							LOG.error("Failed to add User : ", e);
-						}
-						return null;
-					}
-				});
-				return ret;
-			} catch (Exception e) {
-				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
-			}
-			return null;
-		} else {
-			return getMUser(userInfo, ret);
-		}
-	}
-
 
 	private MUserInfo getMUser(MUserInfo userInfo, MUserInfo ret) {		
 		Client c = getClient();
