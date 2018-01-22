@@ -40,14 +40,6 @@ public class buildks {
 						buildksOBJ.createCredential(args);
 					}else if(command.equalsIgnoreCase("list")){
 						buildksOBJ.listCredential(args);
-					}else if(command.equalsIgnoreCase("get")){
-						String credential=buildksOBJ.getCredential(args);
-						if(credential!=null){
-							System.out.println(credential);
-							System.exit(0);
-						}else{
-							System.exit(1);
-						}
 					}else{
 						System.out.println(command +" is not supported in current version of CredentialBuilder API.");
 						System.exit(1);
