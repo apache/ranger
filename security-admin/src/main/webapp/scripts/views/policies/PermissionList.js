@@ -627,7 +627,7 @@ define(function(require) {
 				var tmpl = _.map(this.policyConditions,function(obj){
 					if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
 						return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span><i title="JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc." class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
-						</label><textarea name="'+obj.name+'" placeholder="Please enter condtion.."></textarea></div>'
+						</label><textarea name="'+obj.name+'" placeholder="Please enter condition.."></textarea></div>'
 					}
 					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
 						
