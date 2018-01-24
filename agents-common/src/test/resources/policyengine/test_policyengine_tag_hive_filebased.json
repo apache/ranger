@@ -283,7 +283,7 @@
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     },
-    {"name":"ALLOW 'desc default.table1;' for hive using PII, PII-FINAL tags",
+    {"name":"DENY 'desc default.table1;' for hive using PII, PII-FINAL tags",
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive"

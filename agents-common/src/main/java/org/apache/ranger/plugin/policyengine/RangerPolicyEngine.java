@@ -41,31 +41,29 @@ public interface RangerPolicyEngine {
 	String USER_CURRENT = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 	String RESOURCE_OWNER = "{OWNER}";
 
-	String getServiceName();
+	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
 
-	RangerServiceDef getServiceDef();
+	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
 
-	long getPolicyVersion();
+    RangerServiceDef getServiceDef();
 
-	RangerAccessResult createAccessResult(RangerAccessRequest request);
-
-	RangerDataMaskResult createDataMaskResult(RangerAccessRequest request);
-
-	RangerRowFilterResult createRowFilterResult(RangerAccessRequest request);
+    long getPolicyVersion();
 
 	void preProcess(RangerAccessRequest request);
 
 	void preProcess(Collection<RangerAccessRequest> requests);
 
-	RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
+	RangerAccessResult evaluatePolicies(RangerAccessRequest request, int policyType, RangerAccessResultProcessor resultProcessor);
 
-	Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor);
+	Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor);
 
-	RangerDataMaskResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
+	boolean preCleanup();
 
-	RangerRowFilterResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor);
+	void cleanup();
 
-	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
+	void reorderPolicyEvaluators();
+
+    boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
@@ -73,19 +71,10 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
-	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
-
 	List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource);
 
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 
-	void reorderPolicyEvaluators();
+	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
-	boolean preCleanup();
-
-	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
-
-	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
-
-	void cleanup();
 }

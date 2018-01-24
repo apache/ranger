@@ -131,112 +131,112 @@
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1"
       },
-      "dataMaskResult":{"maskType":"MASK","maskCondition":null,"maskValue":null,"policyId":101}
+      "dataMaskResult":{"additionalInfo": {"maskType":"MASK","maskCondition":null,"maskValue":null},"policyId":101}
     },
     {"name":"'select ssn from employee.personal;' for user2 - maskType=SHUFFLE",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select ssn from employee.personal;' for user2"
       },
-      "dataMaskResult":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null,"policyId":101}
+      "dataMaskResult":{"additionalInfo":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null},"policyId":101}
     },
     {"name":"'select ssn from employee.personal;' for user3 - no-mask",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
         "accessType":"select","user":"user3","userGroups":[],"requestData":"select ssn from employee.personal;' for user3"
       },
-      "dataMaskResult":{"maskType":null,"maskCondition":null,"maskValue":null,"policyId":-1}
+      "dataMaskResult":{"additionalInfo":{"maskType":null,"maskCondition":null,"maskValue":null},"policyId":-1}
     },
     {"name":"'select name from employee.personal;' for user1 - no-mask",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select name from employee.personal;' for user1"
       },
-      "dataMaskResult":{"maskType":null,"maskCondition":null,"maskValue":null,"policyId":-1}
+      "dataMaskResult":{"additionalInfo":{"maskType":null,"maskCondition":null,"maskValue":null},"policyId":-1}
     },
     {"name":"'select date_of_birth from hr.employee;' for user1 - maskType=MASK",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee", "column":"date_of_birth"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select date_of_birth from hr.employee;' for user1"
       },
-      "dataMaskResult":{"maskType":"MASK","maskCondition":null,"maskValue":null,"policyId":102}
+      "dataMaskResult":{"additionalInfo":{"maskType":"MASK","maskCondition":null,"maskValue":null},"policyId":102}
     },
     {"name":"'select date_of_birth from hr.employee;' for user2 - maskType=SHUFFLE",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee", "column":"date_of_birth"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr.employee2;' for user2"
       },
-      "dataMaskResult":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null,"policyId":102}
+      "dataMaskResult":{"additionalInfo":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null},"policyId":102}
     },
     {"name":"'select date_of_birth1 from hr.employee;' for user1 - no-mask",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee", "column":"date_of_birth1"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select date_of_birth1 from hr.employee;' for user1"
       },
-      "dataMaskResult":{"maskType":null,"maskCondition":null,"maskValue":null,"policyId":-1}
+      "dataMaskResult":{"additionalInfo":{"maskType":null,"maskCondition":null,"maskValue":null},"policyId":-1}
     },
     {"name":"'select date_of_birth from hr2.employee2;' for user2 - no-mask",
       "request":{
         "resource":{"elements":{"database":"hr2", "table":"employee2", "column":"date_of_birth"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr2.employee2;' for user2"
       },
-      "dataMaskResult":{"maskType":null,"maskCondition":null,"maskValue":null,"policyId":-1}
+      "dataMaskResult":{"additionalInfo":{"maskType":null,"maskCondition":null,"maskValue":null},"policyId":-1}
     },
     {"name":"'select ssn from employee.personal;' for user1 - filterExpr=location='US'",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select ssn from employee.personal;' for user1"
       },
-      "rowFilterResult":{"filterExpr":"location='US'","policyId":201}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":"location='US'"},"policyId":201}
     },
     {"name":"'select ssn from employee.personal;' for user2 - filterExpr=location='CA'",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select ssn from employee.personal;' for user2"
       },
-      "rowFilterResult":{"filterExpr":"location='CA'","policyId":201}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":"location='CA'"},"policyId":201}
     },
     {"name":"'select ssn from employee.personal;' for user3 - no-filter",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal"}},
         "accessType":"select","user":"user3","userGroups":[],"requestData":"select ssn from employee.personal;' for user3"
       },
-      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":null},"policyId":-1}
     },
     {"name":"'select name from employee.personal;' for group3 - no-filter",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal"}},
         "accessType":"select","user":"user5","userGroups":["group3"],"requestData":"select name from employee.personal;' for user5/group3"
       },
-      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":null},"policyId":-1}
     },
     {"name":"'select date_of_birth from hr.employee;' for user1 - filterExpr=dept='production'",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select date_of_birth from hr.employee;' for user1"
       },
-      "rowFilterResult":{"filterExpr":"dept='production'","policyId":202}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":"dept='production'"},"policyId":202}
     },
     {"name":"'select date_of_birth from hr.employee;' for user2 - filterExpr=dept='purchase'",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr.employee2;' for user2"
       },
-      "rowFilterResult":{"filterExpr":"dept='purchase'","policyId":202}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":"dept='purchase'"},"policyId":202}
     },
     {"name":"'select date_of_birth from hr.employee;' for user3 - no-filter",
       "request":{
         "resource":{"elements":{"database":"hr", "table":"employee"}},
         "accessType":"select","user":"user3","userGroups":[],"requestData":"select date_of_birth from hr.employee;' for user3"
       },
-      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":null},"policyId":-1}
     },
     {"name":"'select date_of_birth from hr2.employee2;' for user2 - no-mask",
       "request":{
         "resource":{"elements":{"database":"hr2", "table":"employee2"}},
         "accessType":"select","user":"user2","userGroups":[],"requestData":"select date_of_birth from hr2.employee2;' for user2"
       },
-      "rowFilterResult":{"filterExpr":null,"policyId":-1}
+      "rowFilterResult":{"additionalInfo":{"filterExpr":null},"policyId":-1}
     }
   ]
 }

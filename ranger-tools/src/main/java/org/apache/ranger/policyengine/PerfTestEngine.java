@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
@@ -115,7 +116,7 @@ public class PerfTestEngine {
 
 			policyEvaluationEngine.preProcess(request);
 
-			ret = policyEvaluationEngine.isAccessAllowed(request, null);
+			ret = policyEvaluationEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Executed request = {" + request + "}, result={" + ret + "}");

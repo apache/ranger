@@ -48,4 +48,11 @@ public class PolicyEvaluatorForTag {
             return me.getEvaluator().getPolicy().getName().compareTo(other.getEvaluator().getPolicy().getName());
         }
     }
+
+    public static class PolicyEvalOrderComparator implements Comparator<PolicyEvaluatorForTag>, Serializable {
+        @Override
+        public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
+            return RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR.compare(me.getEvaluator(), other.getEvaluator());
+        }
+    }
 }

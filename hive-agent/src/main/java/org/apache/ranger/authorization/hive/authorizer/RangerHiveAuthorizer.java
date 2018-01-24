@@ -66,8 +66,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
-import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -393,11 +391,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					request.setHiveAccessType(HiveAccessType.SELECT); // filtering/masking policies are defined only for SELECT
 					request.setResource(tblResource);
 
-					RangerRowFilterResult rowFilterResult = getRowFilterResult(request);
+					RangerAccessResult rowFilterResult = getRowFilterResult(request);
 
 					if (isRowFilterEnabled(rowFilterResult)) {
 						if(result == null) {
-							result = new RangerAccessResult(rowFilterResult.getServiceName(), rowFilterResult.getServiceDef(), request);
+							result = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, rowFilterResult.getServiceName(), rowFilterResult.getServiceDef(), request);
 						}
 
 						result.setIsAllowed(false);
@@ -407,16 +405,16 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						// check if masking is enabled for any column in the table/view
 						request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
 
-						RangerDataMaskResult dataMaskResult = getDataMaskResult(request);
+						RangerAccessResult dataMaskResult = getDataMaskResult(request);
 
 						if (isDataMaskEnabled(dataMaskResult)) {
 							if(result == null) {
-								result = new RangerAccessResult(dataMaskResult.getServiceName(), dataMaskResult.getServiceDef(), request);
+								result = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, dataMaskResult.getServiceName(), dataMaskResult.getServiceDef(), request);
 							}
 
 							result.setIsAllowed(false);
 							result.setPolicyId(dataMaskResult.getPolicyId());
-							result.setReason("User does not have acces to unmasked column values");
+							result.setReason("User does not have access to unmasked column values");
 						}
 					}
 
@@ -622,12 +620,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return true; // TODO: derive from the policies
 	}
 
-	private RangerDataMaskResult getDataMaskResult(RangerHiveAccessRequest request) {
+	private RangerAccessResult getDataMaskResult(RangerHiveAccessRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> getDataMaskResult(request=" + request + ")");
 		}
 
-		RangerDataMaskResult ret = hivePlugin.evalDataMaskPolicies(request, null);
+		RangerAccessResult ret = hivePlugin.evalDataMaskPolicies(request, null);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== getDataMaskResult(request=" + request + "): ret=" + ret);
@@ -636,12 +634,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private RangerRowFilterResult getRowFilterResult(RangerHiveAccessRequest request) {
+	private RangerAccessResult getRowFilterResult(RangerHiveAccessRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> getRowFilterResult(request=" + request + ")");
 		}
 
-		RangerRowFilterResult ret = hivePlugin.evalRowFilterPolicies(request, null);
+		RangerAccessResult ret = hivePlugin.evalRowFilterPolicies(request, null);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== getRowFilterResult(request=" + request + "): ret=" + ret);
@@ -650,11 +648,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private boolean isDataMaskEnabled(RangerDataMaskResult result) {
-		return result != null && result.isMaskEnabled() && !StringUtils.equalsIgnoreCase(result.getMaskType(), RangerPolicy.MASK_TYPE_NONE);
+	private boolean isDataMaskEnabled(RangerAccessResult result) {
+		return result != null && result.isMaskEnabled();
 	}
 
-	private boolean isRowFilterEnabled(RangerRowFilterResult result) {
+	private boolean isRowFilterEnabled(RangerAccessResult result) {
 		return result != null && result.isRowFilterEnabled() && StringUtils.isNotEmpty(result.getFilterExpr());
 	}
 
@@ -682,7 +680,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName);
 			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext, clusterName);
 
-			RangerRowFilterResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
+			RangerAccessResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
 
 			if(isRowFilterEnabled(result)) {
 				ret = result.getFilterExpr();
@@ -723,7 +721,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName, columnName);
 			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, objectType.name(), HiveAccessType.SELECT, context, sessionContext, clusterName);
 
-			RangerDataMaskResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
+			RangerAccessResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
 
 			ret = isDataMaskEnabled(result);
 

@@ -24,7 +24,9 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 
 public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerDataMaskPolicyItemEvaluator {
@@ -40,4 +42,20 @@ public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolic
 	public RangerPolicyItemDataMaskInfo getDataMaskInfo() {
 		return dataMaskPolicyItem == null ? null : dataMaskPolicyItem.getDataMaskInfo();
 	}
+
+	@Override
+	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+		RangerPolicyItemDataMaskInfo dataMaskInfo = getDataMaskInfo();
+
+		if (dataMaskInfo != null) {
+			result.setIsAllowed(true);
+			result.setIsAccessDetermined(true);
+
+			result.setMaskType(dataMaskInfo.getDataMaskType());
+			result.setMaskCondition(dataMaskInfo.getConditionExpr());
+			result.setMaskedValue(dataMaskInfo.getValueExpr());
+			result.setPolicyId(policyId);
+		}
+	}
+
 }

@@ -2353,14 +2353,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		String policyTypeStr = filter.getParam(SearchFilter.POLICY_TYPE);
 
-		List<Integer> policyTypes = new ArrayList<>();
+		int[] policyTypes = RangerPolicy.POLICY_TYPES;
 
 		if (StringUtils.isNotBlank(policyTypeStr)) {
-			policyTypes.add(Integer.parseInt(policyTypeStr));
-		} else {
-			policyTypes.add(RangerPolicy.POLICY_TYPE_ACCESS);
-			policyTypes.add(RangerPolicy.POLICY_TYPE_DATAMASK);
-			policyTypes.add(RangerPolicy.POLICY_TYPE_ROWFILTER);
+			policyTypes = new int[1];
+			policyTypes[0] = Integer.parseInt(policyTypeStr);
 		}
 
 		for (Integer policyType : policyTypes) {

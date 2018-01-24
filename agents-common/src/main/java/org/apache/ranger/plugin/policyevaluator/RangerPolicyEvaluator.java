@@ -31,10 +31,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
-import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 
 
@@ -70,10 +68,6 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	boolean isAuditEnabled();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
-
-	void evaluate(RangerAccessRequest request, RangerDataMaskResult result);
-
-	void evaluate(RangerAccessRequest request, RangerRowFilterResult result);
 
 	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 

@@ -62,9 +62,6 @@ class RangerPolicyRepository {
         final boolean isAudited;
         final long    auditPolicyId;
 
-        AuditInfo() {
-            this(false, -1);
-        }
         AuditInfo(boolean isAudited, long auditPolicyId) {
             this.isAudited = isAudited;
             this.auditPolicyId = auditPolicyId;
@@ -198,61 +195,180 @@ class RangerPolicyRepository {
         }
     }
 
-    public String getServiceName() { return serviceName; }
+    @Override
+    public String toString( ) {
+        StringBuilder sb = new StringBuilder();
 
-    public RangerServiceDef getServiceDef() {
+        toString(sb);
+
+        return sb.toString();
+    }
+
+    void reorderPolicyEvaluators() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> reorderEvaluators()");
+        }
+
+        if(policyResourceTrie == null) {
+            policyEvaluators = getReorderedPolicyEvaluators(policyEvaluators);
+        }
+
+        if(dataMaskResourceTrie == null) {
+            dataMaskPolicyEvaluators = getReorderedPolicyEvaluators(dataMaskPolicyEvaluators);
+        }
+
+        if(rowFilterResourceTrie == null) {
+            rowFilterPolicyEvaluators = getReorderedPolicyEvaluators(rowFilterPolicyEvaluators);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== reorderEvaluators()");
+        }
+    }
+
+    String getServiceName() { return serviceName; }
+
+    RangerServiceDef getServiceDef() {
         return serviceDef;
     }
 
-    public List<RangerPolicy> getPolicies() {
+    List<RangerPolicy> getPolicies() {
         return policies;
     }
 
-    public long getPolicyVersion() {
+    long getPolicyVersion() {
         return policyVersion;
     }
 
-    public List<RangerContextEnricher> getContextEnrichers() { return contextEnrichers; }
+    AuditModeEnum getAuditModeEnum() { return auditModeEnum; }
+
+    boolean setAuditEnabledFromCache(RangerAccessRequest request, RangerAccessResult result) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyRepository.setAuditEnabledFromCache()");
+        }
+
+        final AuditInfo auditInfo = accessAuditCache != null ? accessAuditCache.get(request.getResource().getAsString()) : null;
+
+        if (auditInfo != null) {
+            result.setIsAudited(auditInfo.getIsAudited());
+            result.setAuditPolicyId(auditInfo.getAuditPolicyId());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyRepository.setAuditEnabledFromCache():" + (auditInfo != null));
+        }
+
+        return auditInfo != null;
+    }
+
+    void storeAuditEnabledInCache(RangerAccessRequest request, RangerAccessResult result) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyRepository.storeAuditEnabledInCache()");
+        }
+
+        if (accessAuditCache != null && result.getIsAuditedDetermined()) {
+            accessAuditCache.put(request.getResource().getAsString(), new AuditInfo(result.getIsAudited(), result.getAuditPolicyId()));
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyRepository.storeAuditEnabledInCache()");
+        }
+    }
+
+    List<RangerContextEnricher> getContextEnrichers() { return contextEnrichers; }
 
     List<RangerPolicyEvaluator> getPolicyEvaluators() {
         return policyEvaluators;
-    }
-
-    List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource) {
-       String resourceStr = resource == null ? null : resource.getAsString();
-
-       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getLikelyMatchPolicyEvaluators(policyResourceTrie, resource);
     }
 
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
         return dataMaskPolicyEvaluators;
     }
 
-    List<RangerPolicyEvaluator> getLikelyMatchDataMaskPolicyEvaluators(RangerAccessResource resource) {
+    List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
+        return rowFilterPolicyEvaluators;
+    }
+
+    List<PolicyEvaluatorForTag> getLikelyMatchPolicyEvaluators(Set<RangerTagForEval> tags, int policyType) {
+        List<PolicyEvaluatorForTag> ret = Collections.EMPTY_LIST;
+
+        if (CollectionUtils.isNotEmpty(tags) && getServiceDef() != null) {
+
+            ret = new ArrayList<PolicyEvaluatorForTag>();
+
+            for (RangerTagForEval tag : tags) {
+                RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
+                List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
+
+                if (CollectionUtils.isNotEmpty(evaluators)) {
+                    for (RangerPolicyEvaluator evaluator : evaluators) {
+                        ret.add(new PolicyEvaluatorForTag(evaluator, tag));
+                    }
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(ret)) {
+                switch(policyType) {
+                    case RangerPolicy.POLICY_TYPE_ACCESS:
+                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyEvalOrderComparator());
+                        break;
+                    case RangerPolicy.POLICY_TYPE_DATAMASK:
+                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
+                        break;
+                    case RangerPolicy.POLICY_TYPE_ROWFILTER:
+                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
+                        break;
+                    default:
+                        LOG.warn("Unknown policy-type:[" + policyType + "]. Ignoring..");
+                        break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource) {
+        List<RangerPolicyEvaluator> ret = new ArrayList<>();
+
+        for (int policyType : RangerPolicy.POLICY_TYPES) {
+            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
+            if (CollectionUtils.isNotEmpty(evaluators)) {
+                ret.addAll(evaluators);
+            }
+        }
+        return ret;
+    }
+
+    List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource, int policyType) {
+        switch(policyType) {
+            case RangerPolicy.POLICY_TYPE_ACCESS:
+                return getLikelyMatchAccessPolicyEvaluators(resource);
+            case RangerPolicy.POLICY_TYPE_DATAMASK:
+                return getLikelyMatchDataMaskPolicyEvaluators(resource);
+            case RangerPolicy.POLICY_TYPE_ROWFILTER:
+                return getLikelyMatchRowFilterPolicyEvaluators(resource);
+            default:
+                return Collections.EMPTY_LIST;
+        }
+    }
+
+    private List<RangerPolicyEvaluator> getLikelyMatchAccessPolicyEvaluators(RangerAccessResource resource) {
+       String resourceStr = resource == null ? null : resource.getAsString();
+
+       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getLikelyMatchPolicyEvaluators(policyResourceTrie, resource);
+    }
+
+    private List<RangerPolicyEvaluator> getLikelyMatchDataMaskPolicyEvaluators(RangerAccessResource resource) {
         String resourceStr = resource == null ? null : resource.getAsString();
 
         return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getLikelyMatchPolicyEvaluators(dataMaskResourceTrie, resource);
     }
 
-    List<PolicyEvaluatorForTag> getLikelyMatchDataMaskPolicyEvaluators(Set<RangerTagForEval> tags) {
-        return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_DATAMASK);
-    }
-
-    List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
-        return rowFilterPolicyEvaluators;
-    }
-
-    List<RangerPolicyEvaluator> getLikelyMatchRowFilterPolicyEvaluators(RangerAccessResource resource) {
+    private List<RangerPolicyEvaluator> getLikelyMatchRowFilterPolicyEvaluators(RangerAccessResource resource) {
         String resourceStr = resource == null ? null : resource.getAsString();
 
         return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getLikelyMatchPolicyEvaluators(rowFilterResourceTrie, resource);
     }
-
-    List<PolicyEvaluatorForTag> getLikelyMatchRowFilterPolicyEvaluators(Set<RangerTagForEval> tags) {
-        return getSortedPolicyEvaluatorsForTags(tags, RangerPolicy.POLICY_TYPE_ROWFILTER);
-    }
-
-    AuditModeEnum getAuditModeEnum() { return auditModeEnum; }
 
     private List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
         List<RangerPolicyEvaluator> ret          = null;
@@ -318,36 +434,6 @@ class RangerPolicyRepository {
             LOG.debug("<== RangerPolicyRepository.getLikelyMatchPolicyEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
         }
 
-        return ret;
-    }
-
-    private List<PolicyEvaluatorForTag> getSortedPolicyEvaluatorsForTags(Set<RangerTagForEval> tags, int policyType) {
-        List<PolicyEvaluatorForTag> ret = null;
-
-        if (CollectionUtils.isNotEmpty(tags) && getServiceDef() != null
-                && (policyType == RangerPolicy.POLICY_TYPE_ACCESS || policyType == RangerPolicy.POLICY_TYPE_DATAMASK || policyType == RangerPolicy.POLICY_TYPE_ROWFILTER)) {
-            ret = new ArrayList<PolicyEvaluatorForTag>();
-
-            for (RangerTagForEval tag : tags) {
-                RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
-                List<RangerPolicyEvaluator> evaluators = null;
-                if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
-                    evaluators = getLikelyMatchDataMaskPolicyEvaluators(resource);
-                } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
-                    evaluators = getLikelyMatchRowFilterPolicyEvaluators(resource);
-                } else {
-                    evaluators = getLikelyMatchPolicyEvaluators(resource);
-                }
-                if (CollectionUtils.isNotEmpty(evaluators)) {
-                    for (RangerPolicyEvaluator evaluator : evaluators) {
-                        ret.add(new PolicyEvaluatorForTag(evaluator, tag));
-                    }
-                }
-            }
-        }
-        if (CollectionUtils.isNotEmpty(ret)) {
-            Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
-        }
         return ret;
     }
 
@@ -706,39 +792,6 @@ class RangerPolicyRepository {
         return ret;
     }
 
-    boolean setAuditEnabledFromCache(RangerAccessRequest request, RangerAccessResult result) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyRepository.setAuditEnabledFromCache()");
-        }
-
-        final AuditInfo auditInfo = accessAuditCache != null ? accessAuditCache.get(request.getResource().getAsString()) : null;
-
-        if (auditInfo != null) {
-            result.setIsAudited(auditInfo.getIsAudited());
-            result.setAuditPolicyId(auditInfo.getAuditPolicyId());
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.setAuditEnabledFromCache():" + (auditInfo != null));
-        }
-
-        return auditInfo != null;
-    }
-
-     void storeAuditEnabledInCache(RangerAccessRequest request, RangerAccessResult result) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyRepository.storeAuditEnabledInCache()");
-        }
-
-        if (accessAuditCache != null && result.getIsAuditedDetermined()) {
-            accessAuditCache.put(request.getResource().getAsString(), new AuditInfo(result.getIsAudited(), result.getAuditPolicyId()));
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyRepository.storeAuditEnabledInCache()");
-        }
-    }
-
     private boolean scrubPolicy(RangerPolicy policy) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyRepository.scrubPolicy(" + policy + ")");
@@ -800,28 +853,6 @@ class RangerPolicyRepository {
         }
     }
 
-    void reorderPolicyEvaluators() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> reorderEvaluators()");
-        }
-
-        if(policyResourceTrie == null) {
-            policyEvaluators = getReorderedPolicyEvaluators(policyEvaluators);
-        }
-
-        if(dataMaskResourceTrie == null) {
-            dataMaskPolicyEvaluators = getReorderedPolicyEvaluators(dataMaskPolicyEvaluators);
-        }
-
-        if(rowFilterResourceTrie == null) {
-            rowFilterPolicyEvaluators = getReorderedPolicyEvaluators(rowFilterPolicyEvaluators);
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== reorderEvaluators()");
-        }
-    }
-
     private List<RangerPolicyEvaluator> getReorderedPolicyEvaluators(List<RangerPolicyEvaluator> evaluators) {
         List<RangerPolicyEvaluator> ret = evaluators;
 
@@ -851,16 +882,7 @@ class RangerPolicyRepository {
         return ret;
     }
 
-    @Override
-    public String toString( ) {
-        StringBuilder sb = new StringBuilder();
-
-        toString(sb);
-
-        return sb.toString();
-    }
-
-    public StringBuilder toString(StringBuilder sb) {
+    private StringBuilder toString(StringBuilder sb) {
 
         sb.append("RangerPolicyRepository={");
 

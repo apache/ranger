@@ -39,12 +39,10 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
-import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
-import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
@@ -253,7 +251,7 @@ public class RangerBasePlugin {
 		if(policyEngine != null) {
 			policyEngine.preProcess(request);
 
-			return policyEngine.isAccessAllowed(request, resultProcessor);
+			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
 		}
 
 		return null;
@@ -265,31 +263,31 @@ public class RangerBasePlugin {
 		if(policyEngine != null) {
 			policyEngine.preProcess(requests);
 
-			return policyEngine.isAccessAllowed(requests, resultProcessor);
+			return policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
 		}
 
 		return null;
 	}
 
-	public RangerDataMaskResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+	public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
 			policyEngine.preProcess(request);
 
-			return policyEngine.evalDataMaskPolicies(request, resultProcessor);
+			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
 		}
 
 		return null;
 	}
 
-	public RangerRowFilterResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+	public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
 			policyEngine.preProcess(request);
 
-			return policyEngine.evalRowFilterPolicies(request, resultProcessor);
+			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
 		}
 
 		return null;

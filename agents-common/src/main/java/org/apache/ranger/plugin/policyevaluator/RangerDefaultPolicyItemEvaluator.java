@@ -38,8 +38,10 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 
@@ -347,6 +349,22 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		return ret;
 	}
 
+	@Override
+	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+		if(getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
+			if(matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
+				result.setIsAllowed(false);
+				result.setPolicyId(policyId);
+				result.setReason(getComments());
+			}
+		} else {
+			if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
+				result.setIsAllowed(true);
+				result.setPolicyId(policyId);
+				result.setReason(getComments());
+			}
+		}
+	}
 	RangerPolicyConditionDef getConditionDef(String conditionName) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyItemEvaluator.getConditionDef(" + conditionName + ")");

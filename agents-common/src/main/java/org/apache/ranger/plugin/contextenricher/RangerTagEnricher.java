@@ -64,7 +64,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
 	public static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
 	public static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
-	public static final int[] allPolicyTypes                        = new int[] {RangerPolicy.POLICY_TYPE_ACCESS, RangerPolicy.POLICY_TYPE_DATAMASK, RangerPolicy.POLICY_TYPE_ROWFILTER};
 
 	private RangerTagRefresher                 tagRefresher;
 	private RangerTagRetriever                 tagRetriever;
@@ -214,7 +213,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			for (RangerServiceResource serviceResource : serviceResources) {
 				final Collection<String> resourceKeys = serviceResource.getResourceElements().keySet();
 
-				for (int policyType : allPolicyTypes) {
+				for (int policyType : RangerPolicy.POLICY_TYPES) {
 					Boolean isValidHierarchy = hierarchies.isValidHierarchy(policyType, resourceKeys);
 					if (isValidHierarchy == null) { // hierarchy not yet validated
 						isValidHierarchy = Boolean.FALSE;

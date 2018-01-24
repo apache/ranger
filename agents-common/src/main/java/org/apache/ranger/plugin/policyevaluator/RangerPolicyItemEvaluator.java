@@ -26,6 +26,8 @@ import java.util.Set;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 public interface RangerPolicyItemEvaluator {
 	int POLICY_ITEM_TYPE_ALLOW            = 0;
@@ -63,4 +65,6 @@ public interface RangerPolicyItemEvaluator {
 			return Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 		}
 	}
+	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId);
+
 }

@@ -28,8 +28,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerDataMaskResult;
-import org.apache.ranger.plugin.policyengine.RangerRowFilterResult;
 
 import com.google.common.collect.Lists;
 
@@ -68,25 +66,21 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	}
 	
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result) {
+
+		AuthzAuditEvent ret = null;
+
 		RangerAccessRequest  request  = result.getAccessRequest();
 		RangerAccessResource resource = request.getResource();
 		String               resourcePath = resource != null ? resource.getAsString() : null;
+		int                  policyType = result.getPolicyType();
 
-		String accessType = null;
-
-		if(result instanceof RangerDataMaskResult) {
-			accessType = ((RangerDataMaskResult)result).getMaskType();
-
-			if(StringUtils.equals(accessType, RangerPolicy.MASK_TYPE_NONE)) {
-				return null;
-			}
-
-			return createAuditEvent(result, accessType, resourcePath);
-		} else if(result instanceof RangerRowFilterResult) {
-			accessType = ACCESS_TYPE_ROWFILTER;
-
-			return createAuditEvent(result, accessType, resourcePath);
+		if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK && result.isMaskEnabled()) {
+		    ret = createAuditEvent(result, result.getMaskType(), resourcePath);
+        } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+            ret = createAuditEvent(result, ACCESS_TYPE_ROWFILTER, resourcePath);
 		} else {
+			String accessType = null;
+
 			if (request instanceof RangerHiveAccessRequest) {
 				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;
 
@@ -97,8 +91,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				accessType = request.getAccessType();
 			}
 
-			return createAuditEvent(result, accessType, resourcePath);
+			ret = createAuditEvent(result, accessType, resourcePath);
 		}
+
+		return ret;
 	}
 
 	List<AuthzAuditEvent> createAuditEvents(Collection<RangerAccessResult> results) {

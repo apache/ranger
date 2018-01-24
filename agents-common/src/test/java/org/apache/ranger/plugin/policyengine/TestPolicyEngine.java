@@ -427,7 +427,7 @@ public class TestPolicyEngine {
 
 			if(test.result != null) {
 				RangerAccessResult expected = test.result;
-				RangerAccessResult result   = policyEngine.isAccessAllowed(request, auditHandler);
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
@@ -436,8 +436,8 @@ public class TestPolicyEngine {
 			}
 
 			if(test.dataMaskResult != null) {
-				RangerDataMaskResult expected = test.dataMaskResult;
-				RangerDataMaskResult result   = policyEngine.evalDataMaskPolicies(request, auditHandler);
+				RangerAccessResult expected = test.dataMaskResult;
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
@@ -447,8 +447,8 @@ public class TestPolicyEngine {
 			}
 
 			if(test.rowFilterResult != null) {
-				RangerRowFilterResult expected = test.rowFilterResult;
-				RangerRowFilterResult result   = policyEngine.evalRowFilterPolicies(request, auditHandler);
+				RangerAccessResult expected = test.rowFilterResult;
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
@@ -480,8 +480,8 @@ public class TestPolicyEngine {
 			public String              name;
 			public RangerAccessRequest request;
 			public RangerAccessResult  result;
-			public RangerDataMaskResult  dataMaskResult;
-			public RangerRowFilterResult rowFilterResult;
+			public RangerAccessResult  dataMaskResult;
+			public RangerAccessResult rowFilterResult;
 			public RangerResourceAccessInfo resourceAccessInfo;
 		}
 
