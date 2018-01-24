@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
@@ -40,9 +41,11 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Path("public")
@@ -415,4 +418,44 @@ public class PublicAPIs {
 		return rangerManagementConfig;
 	}
 
+	@GET
+	@Path("/admin/ok")
+	public String checkRangerHealth (@Context HttpServletRequest request) {
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIs.checkRangerHealth(): ");
+		}
+		HashMap<String, String> responseMap = new HashMap<>();
+		JSONUtil jsonUtil = new JSONUtil();
+
+		// Default Response Parameters
+		String serviceStatus = "partially running";
+		String dbStatus = "not running";
+		String version = RangerVersionInfo.getVersion();
+		boolean isSuccess = false;
+
+		// Get Database Version
+		String dbVersion = daoMgr.getXXDataHist().getDBVersion();
+
+		if (!BaseDao.NOT_AVAILABLE.equalsIgnoreCase(dbVersion)) {
+			serviceStatus = "ok";
+			dbStatus = "ok";
+			isSuccess = true;
+		}
+
+		responseMap.put("ranger-admin-service", serviceStatus);
+		responseMap.put("ranger-version", version);
+		responseMap.put("db-status", dbStatus);
+		responseMap.put("db-version", dbVersion);
+		String responseStr = jsonUtil.readMapToString(responseMap);
+
+		if (!isSuccess) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_SERVICE_UNAVAILABLE, responseStr, true);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIs.checkRangerHealth(): ");
+		}
+		return responseStr;
+	}
 }

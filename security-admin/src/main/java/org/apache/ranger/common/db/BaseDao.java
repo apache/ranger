@@ -43,6 +43,8 @@ import org.apache.ranger.db.RangerDaoManagerBase;
 public abstract class BaseDao<T> {
 	private static final Logger logger = Logger.getLogger(BaseDao.class);
 
+	public static final String NOT_AVAILABLE = "Not Available";
+
 	protected RangerDaoManager daoManager;
 
 	EntityManager em;
@@ -251,7 +253,7 @@ public abstract class BaseDao<T> {
 	}
 
 	public String getDBVersion(){
-		String dbVersion="Not Available";
+		String dbVersion = NOT_AVAILABLE;
 		String query ="SELECT 1";
 		try{
 			if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
