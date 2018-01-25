@@ -277,11 +277,6 @@ define(function(require) {
 							return "<span class='label label-info'>" + obj.text + "</span>";
 						}
 					});
-					var perms = []
-					if(that.model.has('accesses')){
-							perms = that.model.get('accesses');
-					}
-					
 					var items=[];
 					_.each(that.accessItems, function(item){ 
 						if($.inArray( item.type, values) >= 0){
@@ -357,11 +352,6 @@ define(function(require) {
 							return "<span class='label label-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
 						}
 					});
-					var perms = []
-					if(that.model.has('accesses')){
-							perms = that.model.get('accesses');
-					}
-					
 					var items=[];
 					_.each(that.accessItems, function(item){ 
 						if($.inArray( item.type, values) >= 0){

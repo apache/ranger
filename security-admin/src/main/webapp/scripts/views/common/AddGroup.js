@@ -93,8 +93,6 @@ define(function(require){
 			    		return;
 			    	}
 			    	that.checkDirtyFieldForGroup(values);
-			    	if(!_.isArray(values))	values=values.toString().split(',');
-			    	
 			    	var valArr = [];
 			    	if(!_.isUndefined($(that.el).find('.select2-container-multi')) 
 			    			&& $(that.el).find('.select2-container-multi').length > 0){

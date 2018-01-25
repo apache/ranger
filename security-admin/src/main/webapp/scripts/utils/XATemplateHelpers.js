@@ -165,7 +165,7 @@ define(function ( require ){
 			return moment(Date(context)).format(f);
 		}else{
 			return context;   //  moment plugin not available. return data as is.
-		};
+                }
 	});
 	return HHelpers;
 });

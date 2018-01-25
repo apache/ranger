@@ -36,7 +36,7 @@ if ( typeof require !== "undefined" &&
 */
 define(function(require) {
 	'use strict';
-	Globalize = require( "globalize" );
+        var Globalize = require( "globalize" );
 
 	Globalize.addCultureInfo( "en", {
         messages:                  {

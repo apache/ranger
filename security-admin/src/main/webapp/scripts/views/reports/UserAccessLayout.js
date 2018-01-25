@@ -310,9 +310,8 @@ define(function(require) {'use strict';
                if(XAUtil.isMaskingPolicy(this.ui.policyType.val())){
                         subcolumns.push({
                                 name: 'maskingCondition',
-                                cell: 'html',
                                 cell: Backgrid.HtmlCell.extend({
-                                                        className : 'subgridTable'
+                                        className : 'subgridTable'
                         }),
                         label: 'Masking Condition',
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
@@ -346,10 +345,9 @@ define(function(require) {'use strict';
             if(XAUtil.isRowFilterPolicy(this.ui.policyType.val())){
                     subcolumns.push({
                             name: 'rowLevelFilter',
-                            cell: 'html',
                             cell: Backgrid.HtmlCell.extend({
-                                                className : 'subgridTable'
-                                        }),
+                                className : 'subgridTable'
+                            }),
                             label: 'Row Level Filter',
                             formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                 fromRaw: function (rawValue,model) {

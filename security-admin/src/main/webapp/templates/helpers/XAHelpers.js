@@ -139,7 +139,7 @@
 			return moment(context).format(f);
 		}else{
 			return context;   //  moment plugin not available. return data as is.
-		};
+                }
 	});
 
 	/*
@@ -154,7 +154,6 @@
 	
 	Handlebars.registerHelper('tt', function(str) {
 		return localization.tt(str);
-		return str;
 	});
 	
 	Handlebars.registerHelper('getCopyrightDate', function() {
@@ -187,7 +186,7 @@
 	Handlebars.registerHelper('customPermString', function(permsString,kclass) {
 		if(permsString == "--")
 			return permsString;
-		permArr = permsString.split(',');
+                var permArr = permsString.split(',');
 		var cl = _.isObject(kclass) ? 'label label-info' : kclass;
 		var tempArr = [];
 		_.each(permArr, function(val){
@@ -424,7 +423,7 @@
 				html = '<span class="add-text">'+val+'</span>';
 		} else {
 			if($.inArray(val, arr) < 0)
-				return html = '<span class="delete-text">'+val+'</span>';
+                                return '<span class="delete-text">'+val+'</span>';
 		}
 	    return html;
 	});
@@ -442,9 +441,9 @@
 							isRemoved = false;
 					});
 					if(isRemoved)
-						return html = '<span class="delete-text">'+perm[type]+'</span>';
+                                                return '<span class="delete-text">'+perm[type]+'</span>';
 				} else {
-					return html = '<span class="delete-text">'+perm[type]+'</span>';
+                                        return '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		} else {
@@ -456,9 +455,9 @@
 							isNewAdd = false;
 					});
 					if(isNewAdd)
-						return html = '<span class="add-text">'+perm[type]+'</span>';
+                                                return '<span class="add-text">'+perm[type]+'</span>';
 				} else {
-					return html = '<span class="delete-text">'+perm[type]+'</span>';
+                                        return '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		}
@@ -479,9 +478,9 @@
 							isRemoved = false;
 					});
 					if(isRemoved)
-						return html = '<span class="delete-text">'+perm[type]+'</span>';
+                                                return  '<span class="delete-text">'+perm[type]+'</span>';
 				} else {
-					return html = '<span class="delete-text">'+perm[type]+'</span>';
+                                        return '<span class="delete-text">'+perm[type]+'</span>';
 				}
 			}
 		} else {
@@ -493,9 +492,9 @@
 							isNewAdd = false;
 					});
 					if(isNewAdd)
-						return html = '<span class="add-text">'+perm[type]+'</span>';
+                                                return  '<span class="add-text">'+perm[type]+'</span>';
 				} else {
-					return html = '<span class="add-text">'+perm[type]+'</span>';
+                                        return  '<span class="add-text">'+perm[type]+'</span>';
 				}
 			}
 		}
