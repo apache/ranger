@@ -137,7 +137,7 @@ define(function(require){
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
 				},
 				error: function (msResponse, options) {
-					if(!localization.tt(msResponse.responseJSON.msgDesc) == "Invalid new password"){
+                                        if(localization.tt(msResponse.responseJSON.msgDesc) == "Invalid new password"){
 						that.fields.oldPassword.setError(localization.tt('validationMessages.oldPasswordError'));
 						XAUtil.notifyInfo('',localization.tt('msg.myProfileError'));
 					}

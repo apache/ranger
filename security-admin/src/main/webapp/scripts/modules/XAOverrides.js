@@ -86,7 +86,7 @@
 		 render: function () {
 		     this.$el.empty();
 		     if(this.model.get(this.column.get("name")) != undefined){
-		    	 rawValue = (this.model.get(this.column.get("name")));
+                         var rawValue = (this.model.get(this.column.get("name")));
 		    	 this.switchStatus = this.formatter.fromRaw(rawValue, this.model);
 		     }
 		     
@@ -699,9 +699,8 @@
 			  }
 		  	},
 		  	getTemplate : function() {
-				  var that = this , resourcesType ;
-				  var optionsHtml="", selectTemplate = '',excludeSupportToggleDiv='', recursiveSupportToggleDiv='';
-				  this.preserveResourceValues = {},klass = '';
+                                  var that = this , resourcesType , optionsHtml="" , selectTemplate = '', excludeSupportToggleDiv='', recursiveSupportToggleDiv='', klass = '';
+                                  this.preserveResourceValues = {} ;
 				  if(this.resourcesAtSameLevel){
 					  _.each(this.sameLevelOpts, function(option){ return optionsHtml += "<option value='"+option+"'>"+option+"</option>"; },this);
 				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle sameLevelDropdown" >\

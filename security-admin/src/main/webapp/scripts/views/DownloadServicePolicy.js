@@ -42,7 +42,6 @@ define(function(require){
 		},
 		ui:{
 			'downloadReport'  	: '[data-id="downloadReport"]',
-			'selectService'		: '[data-id="selectService"]',
 			'servicesName'		: '[data-id="servicesName"]',
 			'componentTypeSelected'		: '[data-id="componentTypeSelected"]'
 		},
@@ -51,8 +50,8 @@ define(function(require){
 	    
 		okClicked: function (modal) {
 			var that = this, el = $(modal.currentTarget),
-			urls ='/service/plugins/policies/exportJson'
-            serviceName = this.ui.servicesName.val()
+                        urls ='/service/plugins/policies/exportJson',
+            serviceName = this.ui.servicesName.val();
             if (_.isEmpty(this.ui.componentTypeSelected.val())){
             	this.$el.find('.serviceValidationFile').show();
     		}
@@ -125,7 +124,7 @@ define(function(require){
 		serviceSelect :function(e){
 			var options =this.serviceNames.map(function(m){ return { 'id' : m.name, 'text' : m.name}; });
 			var serviceTyp = options.map(function(m){return m.text})
-            		this.ui.servicesName.val(serviceTyp);
+                        this.ui.servicesName.val(serviceTyp);
 			this.ui.servicesName.select2({
 				multiple: true,
 				closeOnSelect: true,

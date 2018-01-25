@@ -128,7 +128,7 @@ define(function(require){
 			var el = $(e.currentTarget), serviceType = el.attr('data-servicetype');
 			if(serviceType){
 				var componentServices = this.services.where({'type' : serviceType });
-	            if(serviceType !== undefined && componentServices.length == 0 ){
+                    if(componentServices.length == 0 ){
 	            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToExport'));
 	            	return;
 	            }
@@ -176,7 +176,7 @@ define(function(require){
 		    var el = $(e.currentTarget), serviceType = el.attr('data-servicetype');
 			if(serviceType){
 				var componentServices = this.services.where({'type' : serviceType });
-	            if(serviceType !== undefined && componentServices.length == 0 ){
+                    if(componentServices.length == 0 ){
 	            	XAUtil.alertBoxWithTimeSet(localization.tt('msg.noServiceToImport'));
 	            	return;
 	            }	

@@ -748,9 +748,9 @@ define(function(require) {
 								hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"];
 							if($.inArray(action,hasAction)>=0){
 								if(action == "EXPORT JSON" || action == "EXPORT EXCEL" || action == "EXPORT CSV")
-									return html = 	'Exported policies';
+                                                                        return 'Exported policies';
 								else
-									return html = 	action;
+                                                                        return action;
 							} else{	
 								 if(rawValue == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value || rawValue == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
 								 	 html = 	'Service '+action+'d '+'<b>'+name+'</b>';
@@ -968,7 +968,7 @@ define(function(require) {
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								return '<div title="'+rawValue+'">'+_.escape(rawValue)+'</div>\
-								<div title="'+model.get('serviceType')+'" style="border-top: 1px solid #ddd;">'+_.escape(model.get('serviceType'))+'</div>';;
+                                                                <div title="'+model.get('serviceType')+'" style="border-top: 1px solid #ddd;">'+_.escape(model.get('serviceType'))+'</div>';
 							}
 						})
 					},

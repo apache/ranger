@@ -23,7 +23,7 @@ define(function(require) {
 	var $ = require('jquery');
 	var XAEnums = {};
 
-	mergeParams = function(defaults, params) {
+        var mergeParams = function(defaults, params) {
 		if (!params) {
 			return defaults;
 		}
