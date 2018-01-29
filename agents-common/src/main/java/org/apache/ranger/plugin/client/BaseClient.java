@@ -104,15 +104,19 @@ public abstract class BaseClient {
 				 else {
 					 String encryptedPwd = configHolder.getPassword();
 					 String password = null;
-					 try {
-					     password = PasswordUtils.decryptPassword(encryptedPwd);
-					 } catch(Exception ex) {
-					     LOG.info("Password decryption failed; trying connection with received password string");
-					     password = null;
-					 } finally {
-					     if (password == null) {
-					         password = encryptedPwd;
+					 if (encryptedPwd != null) {
+					     try {
+					         password = PasswordUtils.decryptPassword(encryptedPwd);
+					     } catch(Exception ex) {
+					         LOG.info("Password decryption failed; trying connection with received password string");
+					         password = null;
+					     } finally {
+					         if (password == null) {
+					             password = encryptedPwd;
+					         }
 					     }
+					 } else {
+					     LOG.info("Password decryption failed: no password was configured");
 					 }
 					 if ( configHolder.isKerberosAuthentication() ) {
 						 LOG.info("Init Login: using username/password");
