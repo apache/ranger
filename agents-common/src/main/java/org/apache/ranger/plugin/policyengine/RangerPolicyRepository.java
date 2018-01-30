@@ -673,7 +673,8 @@ class RangerPolicyRepository {
         this.rowFilterPolicyEvaluators = Collections.unmodifiableList(rowFilterPolicyEvaluators);
 
         List<RangerContextEnricher> contextEnrichers = new ArrayList<RangerContextEnricher>();
-        if (CollectionUtils.isNotEmpty(this.policyEvaluators)) {
+        if (CollectionUtils.isNotEmpty(this.policyEvaluators) || CollectionUtils.isNotEmpty(this.dataMaskPolicyEvaluators)
+                || CollectionUtils.isNotEmpty(this.rowFilterPolicyEvaluators)) {
             if (CollectionUtils.isNotEmpty(serviceDef.getContextEnrichers())) {
                 for (RangerServiceDef.RangerContextEnricherDef enricherDef : serviceDef.getContextEnrichers()) {
                     if (enricherDef == null) {
@@ -716,7 +717,7 @@ class RangerPolicyRepository {
                 LOG.debug("dataMask policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
             }
 
-            LOG.debug("rowFilter policy evaluation order: " + this.dataMaskPolicyEvaluators.size() + " policies");
+            LOG.debug("rowFilter policy evaluation order: " + this.rowFilterPolicyEvaluators.size() + " policies");
             order = 0;
             for(RangerPolicyEvaluator policyEvaluator : this.rowFilterPolicyEvaluators) {
                 RangerPolicy policy = policyEvaluator.getPolicy();
@@ -898,6 +899,32 @@ class RangerPolicyRepository {
                 }
             }
         }
+        sb.append("} ");
+
+        sb.append("dataMaskPolicyEvaluators={");
+
+        if (this.dataMaskPolicyEvaluators != null) {
+            for (RangerPolicyEvaluator policyEvaluator : dataMaskPolicyEvaluators) {
+                if (policyEvaluator != null) {
+                    sb.append(policyEvaluator).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("rowFilterPolicyEvaluators={");
+
+        if (this.rowFilterPolicyEvaluators != null) {
+            for (RangerPolicyEvaluator policyEvaluator : rowFilterPolicyEvaluators) {
+                if (policyEvaluator != null) {
+                    sb.append(policyEvaluator).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("contextEnrichers={");
+
         if (contextEnrichers != null) {
             for (RangerContextEnricher contextEnricher : contextEnrichers) {
                 if (contextEnricher != null) {
@@ -905,6 +932,7 @@ class RangerPolicyRepository {
                 }
             }
         }
+        sb.append("} ");
 
         sb.append("} ");
 
