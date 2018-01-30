@@ -290,6 +290,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hiveTagMasking() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_tag_hive_mask.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_owner() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_owner.json"};
 
