@@ -70,45 +70,26 @@
     </mailingLists>
     <modules>
         <module>jisql</module>
-        <module>agents-audit</module>
         <module>agents-common</module>
         <module>agents-cred</module>
         <module>agents-installer</module>
         <module>credentialbuilder</module>
         <module>embeddedwebserver</module>
-        <module>kms</module>
-        <module>hbase-agent</module>
         <module>hdfs-agent</module>
         <module>hive-agent</module>
-        <module>knox-agent</module>
-        <module>storm-agent</module>
-        <module>plugin-yarn</module>
         <module>security-admin</module>
-        <module>plugin-kafka</module>
-        <module>plugin-solr</module>
-	    <module>plugin-nifi</module>
         <module>ugsync</module>
         <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
         <module>unixauthclient</module>
         <module>unixauthservice</module>
         <module>ranger-util</module>
-        <module>plugin-kms</module>
         <module>tagsync</module>
         <module>ranger-hdfs-plugin-shim</module>
         <module>ranger-plugin-classloader</module>
         <module>ranger-hive-plugin-shim</module>
-        <module>ranger-hbase-plugin-shim</module>
-        <module>ranger-knox-plugin-shim</module>
-        <module>ranger-yarn-plugin-shim</module>
-        <module>ranger-storm-plugin-shim</module>
-        <module>ranger-kafka-plugin-shim</module>
-        <module>ranger-solr-plugin-shim</module>
-        <module>ranger-atlas-plugin-shim</module>
-        <module>ranger-kms-plugin-shim</module>
         <module>ranger-hive-utils</module>
         <module>ranger-examples</module>
         <module>ranger-tools</module>
-        <module>plugin-atlas</module>
   </modules>
     <properties>
         <maven.version.required>3.3.3</maven.version.required>
@@ -135,8 +116,7 @@
         <c3p0.version>0.9.1.2</c3p0.version>
         <cglib.version>2.2.0-b23</cglib.version>
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
-        <commons.beanutils.collections.version>1.8.3</commons.beanutils.collections.version>
-        <commons.beanutils.core.version>1.8.3</commons.beanutils.core.version>
+        <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
         <commons.codec.version>1.9</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
@@ -144,7 +124,7 @@
         <commons.configuration.version>1.10</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
-        <commons.io.version>2.4</commons.io.version>
+        <commons.io.version>2.6</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.logging.version>1.2</commons.logging.version>
         <commons.math.version>2.2</commons.math.version>
@@ -160,12 +140,12 @@
         <gson.version>2.2.4</gson.version>
         <guava.version>11.0.2</guava.version>
         <guice.version>4.0</guice.version>
-        <hadoop.version>2.7.1</hadoop.version>
+        <hadoop.version>2.7.5</hadoop.version>
         <hamcrest.all.version>1.3</hamcrest.all.version>
-        <hbase.version>1.1.3</hbase.version>
-        <hive.version>2.1.0</hive.version>
+        <hbase.version>1.2.4</hbase.version>
+        <hive.version>2.3.2</hive.version>
         <htrace-core.version>3.1.0-incubating</htrace-core.version>
-		<httpcomponents.httpclient.version>4.5.1</httpcomponents.httpclient.version>
+		<httpcomponents.httpclient.version>4.5.4</httpcomponents.httpclient.version>
 		<httpcomponents.httpcore.version>4.4.4</httpcomponents.httpcore.version>
 		<httpcomponents.httpmime.version>4.5.2</httpcomponents.httpmime.version>
         <jackson.version>1.9.13</jackson.version>
@@ -182,7 +162,7 @@
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
         <joda-time.version>2.5</joda-time.version>
-        <jsch.version>0.1.42</jsch.version>
+        <jsch.version>0.1.54</jsch.version>
         <json4s.version>3.2.11</json4s.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.12</junit.version>
@@ -198,27 +178,26 @@
         <noggit.version>0.6</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
-        <poi.version>3.12</poi.version>
+        <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
-        <scala.version>2.11.8</scala.version>
+        <scala.version>2.12.4</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
-        <scala.xml.version>1.0.4</scala.xml.version>
+        <scala.xml.version>1.0.6</scala.xml.version>
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.5</slf4j-api.version>
         <snappy-java.version>1.0.4.1</snappy-java.version>
-        <solr.version>5.5.1</solr.version>
+        <solr.version>5.5.5</solr.version>
         <spring-ldap-core.version>1.3.1.RELEASE</spring-ldap-core.version>
         <springframework.security.version>3.2.10.RELEASE</springframework.security.version>
-        <springframework.test.version>3.2.10.RELEASE</springframework.test.version>
-        <springframework.version>3.2.10.RELEASE</springframework.version>
+        <springframework.test.version>3.2.18.RELEASE</springframework.test.version>
+        <springframework.version>3.2.18.RELEASE</springframework.version>
         <storm.version>1.0.2</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <sun.jersey.bundle.version>1.4</sun.jersey.bundle.version>
         <sun.jersey.core.version>1.4</sun.jersey.core.version>
         <sun.jersey.spring.version>1.4</sun.jersey.spring.version>
-        <tez.version>0.5.2</tez.version>
         <tomcat.embed.version>7.0.77</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <xmlenc.version>0.52</xmlenc.version>
@@ -407,20 +386,12 @@
                         <descriptors>
                             <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
                             <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                            <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                            <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                            <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                            <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                            <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                            <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
                             <descriptor>src/main/assembly/admin-web.xml</descriptor>
                             <descriptor>src/main/assembly/usersync.xml</descriptor>
                             <descriptor>src/main/assembly/tagsync.xml</descriptor>
                             <descriptor>src/main/assembly/migration-util.xml</descriptor>
-                            <descriptor>src/main/assembly/kms.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                             <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                            <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
                         </descriptors>
                     </configuration>
                 </plugin>
