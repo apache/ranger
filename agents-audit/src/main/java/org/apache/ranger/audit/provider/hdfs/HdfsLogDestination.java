@@ -168,8 +168,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	
 	@Override
 	public boolean send(AuditEventBase[] logs) {
-		for(int i = 0; i < logs.length; i++) {
-			boolean ret = send(logs[i]);
+		for (AuditEventBase log : logs) {
+			boolean ret = send(log);
 			if(!ret) {
 				return ret;
 			}
@@ -202,8 +202,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	@Override
 	public boolean sendStringified(String[] logs) {
-		for(int i = 0; i < logs.length; i++) {
-			boolean ret = sendStringified(logs[i]);
+		for (String log : logs) {
+			boolean ret = sendStringified(log);
 			if(!ret) {
 				return ret;
 			}

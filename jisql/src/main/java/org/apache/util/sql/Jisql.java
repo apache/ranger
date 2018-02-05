@@ -555,18 +555,18 @@ public class Jisql {
         System.out.println("driver.getMinorVersion() is " + driver.getMinorVersion());
         System.out.println("driver is " + (driver.jdbcCompliant() ? "" : "not ") + "JDBC compliant");
 
-        DriverPropertyInfo info[] = driver.getPropertyInfo(connectString, props);
+        DriverPropertyInfo[] infos = driver.getPropertyInfo(connectString, props);
 
-        for (int i = 0; i < info.length; i++) {
-            System.out.println("driver property named \"" + info[i].name + "\"");
-            if (info[i].choices != null) {
+        for (DriverPropertyInfo info : infos) {
+            System.out.println("driver property named \"" + info.name + "\"");
+            if (info.choices != null) {
                 System.out.println("choices:");
-                for (int j = 0; j < info[i].choices.length; j++)
-                    System.out.println("\tchoice " + j + ": \"" + info[i].choices[j] + "\"");
+                for (int j = 0; j < info.choices.length; j++)
+                    System.out.println("\tchoice " + j + ": \"" + info.choices[j] + "\"");
             }
-            System.out.println("description: \"" + info[i].description + "\"");
-            System.out.println("required parameter?: \"" + info[i].required + "\"");
-            System.out.println("current value: \"" + info[i].value + "\"\n");
+            System.out.println("description: \"" + info.description + "\"");
+            System.out.println("required parameter?: \"" + info.required + "\"");
+            System.out.println("current value: \"" + info.value + "\"\n");
         }
 
         DatabaseMetaData metaData = connection.getMetaData();

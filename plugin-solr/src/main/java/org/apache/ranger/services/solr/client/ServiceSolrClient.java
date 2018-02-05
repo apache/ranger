@@ -115,10 +115,10 @@ public class ServiceSolrClient {
 		if(CollectionUtils.isEmpty(responseCollectionList)) {
 			return list;
 		}
-		for (int i = 0; i < responseCollectionList.size(); i++) {
+		for (String responseCollection : responseCollectionList) {
 			if (ignoreCollectionList == null
-					|| !ignoreCollectionList.contains(responseCollectionList.get(i))) {
-				list.add(responseCollectionList.get(i));
+					|| !ignoreCollectionList.contains(responseCollection)) {
+				list.add(responseCollection);
 			}
 		}
 		return list;

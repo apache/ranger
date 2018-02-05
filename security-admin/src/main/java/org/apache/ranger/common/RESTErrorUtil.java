@@ -265,8 +265,8 @@ public class RESTErrorUtil {
 
 	public void validateStringList(String value, String[] validValues,
 			String errorMessage, Long objectId, String fieldName) {
-		for (int i = 0; i < validValues.length; i++) {
-			if (validValues[i].equals(value)) {
+		for (String validValue : validValues) {
+			if (validValue.equals(value)) {
 				return;
 			}
 		}

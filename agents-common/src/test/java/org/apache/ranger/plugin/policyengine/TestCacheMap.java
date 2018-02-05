@@ -25,7 +25,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Iterator;
 import java.util.Set;
 
 public class TestCacheMap {
@@ -100,21 +99,16 @@ public class TestCacheMap {
 
 		Set<String> keySet = testCacheMap.keySet();
 
-		int i = 0;
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("TestCacheMap.runTests(), KeySet Size:" + keySet.size());
 			LOG.debug("TestCacheMap.runTests(), printing keys..");
-		}
 
-		for (Iterator<String> iterator = keySet.iterator(); iterator.hasNext();) {
-			String key = iterator.next();
-			if (LOG.isDebugEnabled()) {
+		    int i = 0;
+
+		    for (String key : keySet) {
 				LOG.debug("TestCacheMap.runTests(), index:" + i++ + ", key:" + key);
 			}
-		}
 
-		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== TestCacheMap.runTests()");
 		}
 

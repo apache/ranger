@@ -121,8 +121,8 @@ public class KMSMetricUtil {
 							List<String> keyList = new ArrayList<String>();
 							keyList.addAll(keyProvider.getKeys());
 							if (keyList != null) {								
-								for (int i = 0; i < keyList.size(); i++) {
-									String algorithmName = keyProvider.getMetadata(keyList.get(i)).getCipher();
+								for (String key : keyList) {
+									String algorithmName = keyProvider.getMetadata(key).getCipher();
 									if (encryptedKeyByAlgorithmCountMap.containsKey(algorithmName)) {
 										count = encryptedKeyByAlgorithmCountMap.get(algorithmName);
 										count += 1;

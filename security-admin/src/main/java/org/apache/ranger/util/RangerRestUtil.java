@@ -20,6 +20,7 @@
  package org.apache.ranger.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,11 +52,8 @@ public class RangerRestUtil {
 	void splitUserRoleList(Collection<String> collection) {
 		Collection<String> newCollection = new ArrayList<String>();
 		for (String role : collection) {
-			String roles[] = role.split(",");
-			for (int i = 0; i < roles.length; i++) {
-				String str = roles[i];
-				newCollection.add(str);
-			}
+			String[] roles = role.split(",");
+            newCollection.addAll(Arrays.asList(roles));
 		}
 		collection.clear();
 		collection.addAll(newCollection);

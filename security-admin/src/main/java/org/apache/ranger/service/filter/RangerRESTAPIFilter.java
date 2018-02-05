@@ -155,17 +155,17 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 					Annotation[] methodAnnotations = m.getAnnotations();
 					String httpMethod = null;
 					String servicePath = null;
-					for (int ma = 0; ma < methodAnnotations.length; ma++) {
-						if (methodAnnotations[ma] instanceof GET) {
+					for (Annotation methodAnnotation : methodAnnotations) {
+						if (methodAnnotation instanceof GET) {
 							httpMethod = "GET";
-						} else if (methodAnnotations[ma] instanceof PUT) {
+						} else if (methodAnnotation instanceof PUT) {
 							httpMethod = "PUT";
-						} else if (methodAnnotations[ma] instanceof POST) {
+						} else if (methodAnnotation instanceof POST) {
 							httpMethod = "POST";
-						} else if (methodAnnotations[ma] instanceof DELETE) {
+						} else if (methodAnnotation instanceof DELETE) {
 							httpMethod = "DELETE";
-						} else if (methodAnnotations[ma] instanceof Path) {
-							servicePath = ((Path) methodAnnotations[ma])
+						} else if (methodAnnotation instanceof Path) {
+							servicePath = ((Path) methodAnnotation)
 									.value();
 						}
 					}

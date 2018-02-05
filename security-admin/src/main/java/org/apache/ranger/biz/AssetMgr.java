@@ -1020,18 +1020,18 @@ public class AssetMgr extends AssetMgrBase {
 				if(vXTrxLog.getPreviousValue() != null && vXTrxLog.getPreviousValue().contains("password")) {
 					String tempPreviousStr = vXTrxLog.getPreviousValue();
 					String tempPreviousArr[] = vXTrxLog.getPreviousValue().split(",");
-					for(int i = 0; i < tempPreviousArr.length; i++) {
-						if(tempPreviousArr[i].contains("{\"password") && tempPreviousArr[i].contains("}")) {
-							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i],"{\"password\":\"*****\"}"));
+					for (String tempPrevious : tempPreviousArr) {
+						if(tempPrevious.contains("{\"password") && tempPrevious.contains("}")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPrevious,"{\"password\":\"*****\"}"));
 							break;
-						} else if(tempPreviousArr[i].contains("{\"password")) {
-							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "{\"password\":\"*****\""));
+						} else if(tempPrevious.contains("{\"password")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPrevious, "{\"password\":\"*****\""));
 							break;
-						} else if(tempPreviousArr[i].contains("\"password") && tempPreviousArr[i].contains("}")) {
-							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\"}"));
+						} else if(tempPrevious.contains("\"password") && tempPrevious.contains("}")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPrevious, "\"password\":\"******\"}"));
 							break;
-						} else if(tempPreviousArr[i].contains("\"password")) {
-							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPreviousArr[i], "\"password\":\"******\""));
+						} else if(tempPrevious.contains("\"password")) {
+							vXTrxLog.setPreviousValue(tempPreviousStr.replace(tempPrevious, "\"password\":\"******\""));
 							break;
 						}
 					}			
@@ -1039,18 +1039,18 @@ public class AssetMgr extends AssetMgrBase {
 				if(vXTrxLog.getNewValue() != null && vXTrxLog.getNewValue().contains("password")) {
 					String tempNewStr = vXTrxLog.getNewValue();
 					String tempNewArr[] = vXTrxLog.getNewValue().split(",");
-					for(int i = 0; i < tempNewArr.length; i++) {
-						if(tempNewArr[i].contains("{\"password") && tempNewArr[i].contains("}")) {
-							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\"}"));
+					for (String tempNew : tempNewArr) {
+						if(tempNew.contains("{\"password") && tempNew.contains("}")) {
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNew, "{\"password\":\"*****\"}"));
 							break;
-						} else if(tempNewArr[i].contains("{\"password")) {
-							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "{\"password\":\"*****\""));
+						} else if(tempNew.contains("{\"password")) {
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNew, "{\"password\":\"*****\""));
 							break;
-						} else if(tempNewArr[i].contains("\"password") && tempNewArr[i].contains("}")) {
-							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\"}"));
+						} else if(tempNew.contains("\"password") && tempNew.contains("}")) {
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNew, "\"password\":\"******\"}"));
 							break;
-						} else if(tempNewArr[i].contains("\"password")) {
-							vXTrxLog.setNewValue(tempNewStr.replace(tempNewArr[i], "\"password\":\"******\""));
+						} else if(tempNew.contains("\"password")) {
+							vXTrxLog.setNewValue(tempNewStr.replace(tempNew, "\"password\":\"******\""));
 							break;
 						}
 					}	

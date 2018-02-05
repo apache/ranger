@@ -212,8 +212,8 @@ public class RangerGeolocationData implements Comparable<RangerGeolocationData>,
 				.append(", to=")
 				.append(RangerGeolocationData.unsignedIntToIPAddress(toIPAddress))
 				.append(", location={");
-			for (int i = 0; i < locationData.length; i++) {
-				sb.append(locationData[i]).append(", ");
+			for (String data : locationData) {
+				sb.append(data).append(", ");
 			}
 				sb.append("}");
 		sb.append("}");

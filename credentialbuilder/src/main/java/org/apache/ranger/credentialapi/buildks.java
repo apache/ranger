@@ -399,8 +399,8 @@ public class buildks {
 		if (debugOption != null && "TRUE".equalsIgnoreCase(debugOption)) {
 			StringBuilder tempBuffer=new StringBuilder("");
 			if(args!=null && args.length>0){
-				for(int index=0;index<args.length;index++){
-					tempBuffer.append(args[index]+" ");
+				for (String arg : args) {
+					tempBuffer.append(arg).append(" ");
 				}
 				System.out.println("Command to execute:["+tempBuffer+"]");
 			}

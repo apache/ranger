@@ -1290,8 +1290,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		boolean ret = false;
 		String[] fsScheme = hivePlugin.getFSScheme();
 		if (fsScheme != null) {
-			for (int i = 0; i < fsScheme.length; i++) {
-				if (!uri.isEmpty() && uri.startsWith(fsScheme[i])) {
+			for (String scheme : fsScheme) {
+				if (!uri.isEmpty() && uri.startsWith(scheme)) {
 					ret = true;
 					break;
 				}

@@ -399,15 +399,14 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			}
 
 			// When multiple OUs are configured, go through each OU as the user search base to search for users.
-			for (int ou=0; ou<userSearchBase.length; ou++) {
+			for (String ou : userSearchBase) {
 				byte[] cookie = null;
 				int counter = 0;
 				try {
 					int paged = 0;
 					do {
 						userSearchResultEnum = ldapContext
-								.search(userSearchBase[ou], extendedUserSearchFilter,
-										userSearchControls);
+								.search(ou, extendedUserSearchFilter, userSearchControls);
 
 						while (userSearchResultEnum.hasMore()) {
 							// searchResults contains all the user entries
@@ -420,7 +419,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 								continue;
 							}
 
-							Attributes attributes =   userEntry.getAttributes();
+							Attributes attributes = userEntry.getAttributes();
 							if (attributes == null)  {
 								if (LOG.isInfoEnabled())  {
 									LOG.info("attributes  missing for entry " + userEntry.getNameInNamespace() +
@@ -556,10 +555,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 						// Examine the paged results control response
 						Control[] controls = ldapContext.getResponseControls();
 						if (controls != null) {
-							for (int i = 0; i < controls.length; i++) {
-								if (controls[i] instanceof PagedResultsResponseControl) {
+							for (Control control : controls) {
+								if (control instanceof PagedResultsResponseControl) {
 									PagedResultsResponseControl prrc =
-											(PagedResultsResponseControl)controls[i];
+											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
 										LOG.debug("END-OF-PAGE total : " + total);
@@ -610,7 +609,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 				ldapContext.setRequestControls(new Control[]{
 						new PagedResultsControl(pagedResultsSize, Control.NONCRITICAL) });
 			}
-			for (int ou=0; ou<groupSearchBase.length; ou++) {
+            for (String ou : groupSearchBase) {
 				byte[] cookie = null;
 				int counter = 0;
 				try {
@@ -628,13 +627,13 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 												userInfo.getUserName()));
 							}
 							groupSearchResultEnum = ldapContext
-									.search(groupSearchBase[ou], extendedGroupSearchFilter,
+									.search(ou, extendedGroupSearchFilter,
 											new Object[]{userInfo.getUserFullName(), userInfo.getUserName()},
 											groupSearchControls);
 						} else {
 							// If group based search is enabled, then first retrieve all the groups based on the group configuration.
 							groupSearchResultEnum = ldapContext
-									.search(groupSearchBase[ou], extendedAllGroupsSearchFilter,
+									.search(ou, extendedAllGroupsSearchFilter,
 											groupSearchControls);
 						}
 						while (groupSearchResultEnum.hasMore()) {
@@ -707,10 +706,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 						// Examine the paged results control response
 						Control[] controls = ldapContext.getResponseControls();
 						if (controls != null) {
-							for (int i = 0; i < controls.length; i++) {
-								if (controls[i] instanceof PagedResultsResponseControl) {
+							for (Control control : controls) {
+								if (control instanceof PagedResultsResponseControl) {
 									PagedResultsResponseControl prrc =
-											(PagedResultsResponseControl)controls[i];
+											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
 										LOG.debug("END-OF-PAGE total : " + total);
@@ -814,13 +813,13 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
             groupFilter += filter;
 
 			LOG.debug("extendedAllGroupsSearchFilter = " + groupFilter);
-			for (int ou=0; ou<groupSearchBase.length; ou++) {
+			for (String ou : groupSearchBase) {
 				byte[] cookie = null;
 				int counter = 0;
 				try {
 					do {
 						groupSearchResultEnum = ldapContext
-									.search(groupSearchBase[ou], groupFilter,
+									.search(ou, groupFilter,
 											groupSearchControls);
                         //System.out.println("goUpGroupHierarchyLdap(): Going through the sub groups");
 						while (groupSearchResultEnum.hasMore()) {
@@ -859,10 +858,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 						// Examine the paged results control response
 						Control[] controls = ldapContext.getResponseControls();
 						if (controls != null) {
-							for (int i = 0; i < controls.length; i++) {
-								if (controls[i] instanceof PagedResultsResponseControl) {
+							for (Control control : controls) {
+								if (control instanceof PagedResultsResponseControl) {
 									PagedResultsResponseControl prrc =
-											(PagedResultsResponseControl)controls[i];
+											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
 										LOG.debug("END-OF-PAGE total : " + total);

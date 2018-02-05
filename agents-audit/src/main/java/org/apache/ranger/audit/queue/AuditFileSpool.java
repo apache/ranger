@@ -269,8 +269,7 @@ public class AuditFileSpool implements Runnable {
 				}
 			}
 			printIndex();
-			for (int i = 0; i < indexRecords.size(); i++) {
-				AuditIndexRecord auditIndexRecord = indexRecords.get(i);
+			for (AuditIndexRecord auditIndexRecord : indexRecords) {
 				if (auditIndexRecord.status.equals(SPOOL_FILE_STATUS.pending)) {
 					File consumerFile = new File(auditIndexRecord.filePath);
 					if (!consumerFile.exists()) {

@@ -82,8 +82,8 @@ public class GeolocationMetadata {
 	private StringBuilder toStringDump(StringBuilder sb) {
 		sb.append("FROM_IP,TO_IP,");
 
-		for (int i = 0; i < locationDataItemNames.length; i++) {
-			sb.append(locationDataItemNames[i]).append(", ");
+		for (String locationDataItemName : locationDataItemNames) {
+			sb.append(locationDataItemName).append(", ");
 		}
 
 		return sb;

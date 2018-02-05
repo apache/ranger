@@ -198,8 +198,8 @@ public class StringUtil implements Serializable {
 			String[] splitValues = value.split(delimiter);
 			String[] returnValues = new String[splitValues.length];
 			int c = -1;
-			for (int i = 0; i < splitValues.length; i++) {
-				String str = splitValues[i].trim();
+			for (String splitValue : splitValues) {
+				String str = splitValue.trim();
 				if (str.length() > 0) {
 					c++;
 					returnValues[c] = str;
