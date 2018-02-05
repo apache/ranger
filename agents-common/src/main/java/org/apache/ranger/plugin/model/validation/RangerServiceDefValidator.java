@@ -44,6 +44,7 @@ import org.apache.ranger.plugin.store.ServiceStore;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 public class RangerServiceDefValidator extends RangerValidator {
 
@@ -58,8 +59,14 @@ public class RangerServiceDefValidator extends RangerValidator {
 			LOG.debug(String.format("==> RangerServiceDefValidator.validate(%s, %s)", serviceDef, action));
 		}
 
+		RangerServiceDef normalizedServiceDef = ServiceDefUtil.normalize(serviceDef);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("Normalized Service Definition being validated: (%s, %s)", serviceDef, action));
+		}
+
 		List<ValidationFailureDetails> failures = new ArrayList<>();
-		boolean valid = isValid(serviceDef, action, failures);
+		boolean valid = isValid(normalizedServiceDef, action, failures);
 		String message = "";
 		try {
 			if (!valid) {
@@ -68,7 +75,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			}
 		} finally {
 			if(LOG.isDebugEnabled()) {
-				LOG.debug(String.format("<== RangerServiceDefValidator.validate(%s, %s): %s, reason[%s]", serviceDef, action, valid, message));
+				LOG.debug(String.format("<== RangerServiceDefValidator.validate(%s, %s): %s, reason[%s]", normalizedServiceDef, action, valid, message));
 			}
 		}
 	}

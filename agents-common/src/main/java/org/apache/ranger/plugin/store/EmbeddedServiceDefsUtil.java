@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 /*
  * This utility class deals with service-defs embedded in ranger-plugins-common
@@ -219,7 +220,7 @@ public class EmbeddedServiceDefsUtil {
 		try {
 			ret = store.getServiceDefByName(serviceDefName);
 			if(ret == null && createEmbeddedServiceDefs && createServiceDef) {
-				ret = loadEmbeddedServiceDef(serviceDefName);
+				ret = ServiceDefUtil.normalize(loadEmbeddedServiceDef(serviceDefName));
 
 				LOG.info("creating embedded service-def " + serviceDefName);
 				if (ret.getId() != null) {
