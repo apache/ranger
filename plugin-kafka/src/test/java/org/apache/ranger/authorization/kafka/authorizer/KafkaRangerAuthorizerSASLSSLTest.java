@@ -65,6 +65,7 @@ import kafka.utils.ZkUtils;
  * 
  * Clients and services authenticate to Kafka using the SASL SSL protocol as part of this test.
  */
+@org.junit.Ignore("Causing JVM to abort on some platforms")
 public class KafkaRangerAuthorizerSASLSSLTest {
     
     private static KafkaServerStartable kafkaServer;
