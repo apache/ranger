@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.hadoop.gateway.deploy.DeploymentContext;
-import org.apache.hadoop.gateway.deploy.ProviderDeploymentContributorBase;
-import org.apache.hadoop.gateway.descriptor.FilterParamDescriptor;
-import org.apache.hadoop.gateway.descriptor.ResourceDescriptor;
-import org.apache.hadoop.gateway.topology.Provider;
-import org.apache.hadoop.gateway.topology.Service;
+import org.apache.knox.gateway.deploy.DeploymentContext;
+import org.apache.knox.gateway.deploy.ProviderDeploymentContributorBase;
+import org.apache.knox.gateway.descriptor.FilterParamDescriptor;
+import org.apache.knox.gateway.descriptor.ResourceDescriptor;
+import org.apache.knox.gateway.topology.Provider;
+import org.apache.knox.gateway.topology.Service;
 
 public class RangerPDPKnoxDeploymentContributor extends ProviderDeploymentContributorBase {
 

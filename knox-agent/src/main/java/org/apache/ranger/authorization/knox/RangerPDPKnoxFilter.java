@@ -35,10 +35,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.gateway.filter.AbstractGatewayFilter;
-import org.apache.hadoop.gateway.security.GroupPrincipal;
-import org.apache.hadoop.gateway.security.ImpersonatedPrincipal;
-import org.apache.hadoop.gateway.security.PrimaryPrincipal;
+import org.apache.knox.gateway.filter.AbstractGatewayFilter;
+import org.apache.knox.gateway.security.GroupPrincipal;
+import org.apache.knox.gateway.security.ImpersonatedPrincipal;
+import org.apache.knox.gateway.security.PrimaryPrincipal;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;

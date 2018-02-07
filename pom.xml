@@ -183,7 +183,7 @@
         <junit.version>4.12</junit.version>
         <kafka.version>0.10.0.0</kafka.version>
         <kerby.version>1.0.0</kerby.version>
-        <knox.gateway.version>0.13.0</knox.gateway.version>
+        <knox.gateway.version>1.0.0</knox.gateway.version>
         <libpam4j.version>1.8</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
