@@ -24,7 +24,8 @@
 # Short-Description: Start/Stop Ranger Admin
 ### END INIT INFO
 
-LINUX_USER=ranger
+. /etc/sysconfig/ranger-admin
+
 BIN_PATH=/usr/bin
 MOD_NAME=ranger-admin
 
