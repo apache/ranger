@@ -29,14 +29,17 @@ under the License.
 </skin>
 
 <bannerLeft>
-    <name>Ranger Logo</name>
+    <name>Apache Ranger</name>
     <src>/logo/rangerlogo.png</src>
     <height>200px</height>
     <width>400px</width>
-    <href></href>
+    <href>https://ranger.apache.org</href>
 </bannerLeft>
 
 <body>
+    <breadcrumbs>
+      <item name="Ranger"  href="http://ranger.apache.org/" />
+    </breadcrumbs>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
       <item name="News" href="https://cwiki.apache.org/confluence/display/RANGER/News" />
@@ -49,7 +52,7 @@ under the License.
       <item name="Ranger REST API Documentation" href="apidocs/index.html"/>
       <item name="Ranger KMS REST API Documentation" href="kms/apidocs/index.html"/>
       <!-- According to http://jira.codehaus.org/browse/MNGSITE-152 -->
-      <item name="License" href="https://www.apache.org/licenses/"/>
+      <item name="License"         href="https://www.apache.org/licenses" />
     </menu>
     <menu name="Project Information">
         <item name="Project Summary" href="project-summary.html"/>
@@ -58,21 +61,35 @@ under the License.
         <item name="Team" href="team-list.html"/>
 	    <item name="Security Advisories" href="https://cwiki.apache.org/confluence/display/RANGER/Vulnerabilities+found+in+Ranger" />
     </menu>
-	<menu name="Releases">
-		<item name="0.7.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.7.1+Release+-+Apache+Ranger" />
-		<item name="0.7.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.7.0+Release+-+Apache+Ranger" />
-		<item name="0.6.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.3+Release+-+Apache+Ranger" />
-		<item name="0.6.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.2+Release+-+Apache+Ranger" />
-		<item name="0.6.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.1+Release+-+Apache+Ranger" />
-		<item name="0.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.6+Release+-+Apache+Ranger" />
-		<item name="0.5.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.3+Release+-+Apache+Ranger" />
-		<item name="0.5.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.2+Release+-+Apache+Ranger" />
-		<item name="0.5.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.1+Release+-+Apache+Ranger" />
-		<item name="0.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.5+Release+-+Apache+Ranger" />
-		<item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.4+Release" />
-	</menu>
-    <footer><![CDATA[Apache Ranger, Ranger, Apache, the Apache feather logo are trademarks of The Apache Software Foundation.
-        All other marks mentioned may be trademarks or registered trademarks of their respective owners. ]]></footer>
+    <menu name="Releases">
+        <item name="0.7.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.7.1+Release+-+Apache+Ranger" />
+        <item name="0.7.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.7.0+Release+-+Apache+Ranger" />
+        <item name="0.6.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.3+Release+-+Apache+Ranger" />
+        <item name="0.6.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.2+Release+-+Apache+Ranger" />
+        <item name="0.6.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.6.1+Release+-+Apache+Ranger" />
+        <item name="0.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.6+Release+-+Apache+Ranger" />
+        <item name="0.5.3" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.3+Release+-+Apache+Ranger" />
+        <item name="0.5.2" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.2+Release+-+Apache+Ranger" />
+        <item name="0.5.1" href="https://cwiki.apache.org/confluence/display/RANGER/0.5.1+Release+-+Apache+Ranger" />
+        <item name="0.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.5+Release+-+Apache+Ranger" />
+        <item name="0.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/0.4+Release" />
+    </menu>
+
+    <menu name="Apache" title="Apache Software Foundation">
+        <item name="Home"            href="https://www.apache.org" />
+        <item name="Events"          href="https://www.apache.org/events/current-event" />
+        <item name="License"         href="https://www.apache.org/licenses/LICENSE-2.0" />
+        <item name="Sponsorship"     href="https://www.apache.org/foundation/sponsorship" />
+        <item name="Security"        href="https://www.apache.org/security" />
+        <item name="Thanks"          href="https://www.apache.org/foundation/thanks" />
+        <item name="Code of Conduct" href="https://www.apache.org/foundation/policies/conduct" />
+    </menu>
+
+    <footer><![CDATA[
+<p><a href="https://www.apache.org/foundation/contributing"><img src="https://www.apache.org/images/SupportApache-small.png" alt="Support the ASF" id="asf-logo" height="20" width="20" /></a>Copyright © 2011-2018 The Apache Software Foundation. Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.<br/>
+Apache Ranger, Ranger, Apache, the Apache feather logo are trademarks of the <a href="https://www.apache.org">Apache Software Foundation</a>.<br/>
+All other marks mentioned may be trademarks or registered trademarks of their respective owners.</p>
+]]></footer>
 
 </body>
 
