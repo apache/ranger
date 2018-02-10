@@ -52,7 +52,7 @@ under the License.
       <item name="Ranger REST API Documentation" href="apidocs/index.html"/>
       <item name="Ranger KMS REST API Documentation" href="kms/apidocs/index.html"/>
       <!-- According to http://jira.codehaus.org/browse/MNGSITE-152 -->
-      <item name="License"         href="https://www.apache.org/licenses" />
+      <item name="License"         href="https://www.apache.org/licenses/" />
     </menu>
     <menu name="Project Information">
         <item name="Project Summary" href="project-summary.html"/>
