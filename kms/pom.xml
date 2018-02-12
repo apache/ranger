@@ -131,13 +131,13 @@
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-core</artifactId>
-            <version>${sun-jersey-bundle.version}</version>
+            <version>${jersey-core.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
-            <version>${sun-jersey-bundle.version}</version>
+            <version>${jersey-server.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -185,7 +185,7 @@
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
-            <version>${sun-jersey-bundle.version}</version>
+            <version>${jersey-bundle.version}</version>
         </dependency>
         <dependency>
             <groupId>asm</groupId>
@@ -336,7 +336,7 @@
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-json</artifactId>
-            <version>${sun-jersey-bundle.version}</version>
+            <version>${jersey-bundle.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
