@@ -69,7 +69,6 @@
 					<include>org.apache.directory.api:api-util</include>
 					<include>org.apache.avro:avro</include>	
 					<include>commons-beanutils:commons-beanutils</include>
-					<include>commons-beanutils:commons-beanutils-core</include>
 					<include>commons-cli:commons-cli</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.apache.commons:commons-compress</include>
