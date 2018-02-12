@@ -19,6 +19,7 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
+import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 
@@ -27,12 +28,13 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasResourceMapperUtil {
 	private static final Log LOG = LogFactory.getLog(AtlasResourceMapperUtil.class);
 
 	private static Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<String, AtlasResourceMapper>();
+
+	private static final String MAPPER_NAME_DELIMITER = ",";
 
 	public static boolean isEntityTypeHandled(String entityTypeName) {
 		if (LOG.isDebugEnabled()) {
@@ -50,9 +52,9 @@ public class AtlasResourceMapperUtil {
 		return ret;
 	}
 
-	public static RangerServiceResource getRangerServiceResource(RangerAtlasEntity atlasEntity) {
+	public static RangerServiceResource getRangerServiceResource(IReferenceableInstance atlasEntity) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> getRangerServiceResource(" + atlasEntity.getGuid() +")");
+			LOG.debug("==> getRangerServiceResource(" + atlasEntity.getId()._getId() +")");
 		}
 
 		RangerServiceResource resource = null;
@@ -63,63 +65,59 @@ public class AtlasResourceMapperUtil {
 			try {
 				resource = mapper.buildResource(atlasEntity);
 			} catch (Exception exception) {
-				LOG.error("Could not get serviceResource for atlas entity:" + atlasEntity.getGuid() + ": ", exception);
+				LOG.error("Could not get serviceResource for atlas entity:" + atlasEntity.getId()._getId() + ": ", exception);
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== getRangerServiceResource(" + atlasEntity.getGuid() +"): resource=" + resource);
+			LOG.debug("<== getRangerServiceResource(" + atlasEntity.getId()._getId() +"): resource=" + resource);
 		}
 
 		return resource;
 	}
 
 	static public boolean initializeAtlasResourceMappers(Properties properties) {
-		final String MAPPER_NAME_DELIMITER = ",";
-
 		String customMapperNames = TagSyncConfig.getCustomAtlasResourceMappers(properties);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + customMapperNames + ")");
 		}
+
+		// Initialize the default mappers
+		initializeAtlasResourceMapper(new AtlasHiveResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasHdfsResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasHbaseResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasKafkaResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasStormResourceMapper(), properties);
+
+		// Initialize the custom mappers
 		boolean ret = true;
-
-		List<String> mapperNames = new ArrayList<String>();
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper");
-		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper");
-
 		if (StringUtils.isNotBlank(customMapperNames)) {
 			for (String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMITER)) {
-				mapperNames.add(customMapperName.trim());
-			}
-		}
+			    try {
+			        Class<?> clazz = Class.forName(customMapperName);
+			        AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
 
-		for (String mapperName : mapperNames) {
-			try {
-				Class<?> clazz = Class.forName(mapperName);
-				AtlasResourceMapper resourceMapper = (AtlasResourceMapper) clazz.newInstance();
-
-				resourceMapper.initialize(properties);
-
-				for (String entityTypeName : resourceMapper.getSupportedEntityTypes()) {
-					add(entityTypeName, resourceMapper);
-				}
-
-			} catch (Exception exception) {
-				LOG.error("Failed to create AtlasResourceMapper:" + mapperName + ": ", exception);
-				ret = false;
+			        initializeAtlasResourceMapper(resourceMapper, properties);
+			    } catch (Exception exception) {
+			        LOG.error("Failed to create AtlasResourceMapper:" + customMapperName + ": ", exception);
+			        ret = false;
+			    }
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + mapperNames + "): " + ret);
+			LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + customMapperNames + "): " + ret);
 		}
 		return ret;
 	}
 
-	private static void add(String entityType, AtlasResourceMapper mapper) {
-		atlasResourceMappers.put(entityType, mapper);
+	private static void initializeAtlasResourceMapper(AtlasResourceMapper resourceMapper, Properties properties) {
+	    resourceMapper.initialize(properties);
+
+        for (String entityTypeName : resourceMapper.getSupportedEntityTypes()) {
+            atlasResourceMappers.put(entityTypeName, resourceMapper);
+        }
 	}
+
 }

@@ -20,24 +20,24 @@
 package org.apache.ranger.tagsync.source.atlas;
 
 
+import org.apache.atlas.kafka.AtlasKafkaMessage;
 import org.apache.atlas.kafka.NotificationProvider;
-import org.apache.atlas.notification.NotificationConsumer;
-import org.apache.atlas.notification.NotificationInterface;
-import org.apache.atlas.v1.model.notification.EntityNotificationV1;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.tagsync.model.AbstractTagSource;
-import org.apache.atlas.kafka.AtlasKafkaMessage;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntityWithTags;
 
+import org.apache.atlas.notification.NotificationConsumer;
+import org.apache.atlas.notification.NotificationInterface;
+import org.apache.atlas.notification.entity.EntityNotification;
+
+import org.apache.kafka.common.TopicPartition;
+import org.apache.ranger.tagsync.model.AbstractTagSource;
+import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Properties;
+import java.util.List;
 
 public class AtlasTagSource extends AbstractTagSource {
 	private static final Log LOG = LogFactory.getLog(AtlasTagSource.class);
@@ -100,11 +100,10 @@ public class AtlasTagSource extends AbstractTagSource {
 		}
 
 		if (ret) {
-			NotificationInterface notification = NotificationProvider.get();
-			List<NotificationConsumer<EntityNotificationV1>> iterators = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
+            NotificationInterface notification = NotificationProvider.get();
+            List<NotificationConsumer<Object>> iterators = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
 
-			consumerTask = new ConsumerRunnable(iterators.get(0));
-
+            consumerTask = new ConsumerRunnable(iterators.get(0));
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -138,25 +137,23 @@ public class AtlasTagSource extends AbstractTagSource {
 		}
 	}
 
-	private static String getPrintableEntityNotification(EntityNotificationV1 notification) {
+	private static String getPrintableEntityNotification(EntityNotification notification) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{ Notification-Type: ").append(notification.getOperationType()).append(", ");
-        RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(notification);
-        sb.append(entityWithTags.toString());
-
+		AtlasEntityWithTraits entityWithTraits = new AtlasEntityWithTraits(notification.getEntity(), notification.getAllTraits());
+		sb.append(entityWithTraits.toString());
 		sb.append("}");
 		return sb.toString();
 	}
 
 	private class ConsumerRunnable implements Runnable {
 
-		private final NotificationConsumer<EntityNotificationV1> consumer;
+		private final NotificationConsumer<Object> consumer;
 
-		private ConsumerRunnable(NotificationConsumer<EntityNotificationV1> consumer) {
+		private ConsumerRunnable(NotificationConsumer<Object> consumer) {
 			this.consumer = consumer;
 		}
-
 
 		@Override
 		public void run() {
@@ -164,33 +161,39 @@ public class AtlasTagSource extends AbstractTagSource {
 				LOG.debug("==> ConsumerRunnable.run()");
 			}
 			while (true) {
-				try {
-					List<AtlasKafkaMessage<EntityNotificationV1>> messages = consumer.receive(1000L);
+                try {
+                    List<AtlasKafkaMessage<Object>> messages = consumer.receive(1000L);
+                    for (AtlasKafkaMessage<Object> message : messages) {
+                        Object kafkaMessage = message != null ? message.getMessage() : null;
 
-					for (AtlasKafkaMessage<EntityNotificationV1> message :  messages) {
-						EntityNotificationV1 notification = message != null ? message.getMessage() : null;
+                        if (kafkaMessage != null) {
+                            EntityNotification notification = null;
+                            if (kafkaMessage instanceof EntityNotification) {
+                                notification = (EntityNotification) kafkaMessage;
+                            } else {
+                                LOG.warn("Received Kafka notification of unexpected type:[" + kafkaMessage.getClass().toString() + "], Ignoring...");
+                            }
+                            if (notification != null) {
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Notification=" + getPrintableEntityNotification(notification));
+                                }
 
-						if (notification != null) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Notification=" + getPrintableEntityNotification(notification));
-							}
-
-							ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
-							if (serviceTags != null) {
-								updateSink(serviceTags);
-							}
-
-							TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
-							consumer.commit(partition, message.getOffset());
-						} else {
-							LOG.error("Null entityNotification received from Kafka!! Ignoring..");
-						}
-					}
-				} catch (Exception exception) {
-					LOG.error("Caught exception..: ", exception);
-					return;
-				}
-			}
+                                ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
+                                if (serviceTags != null) {
+                                    updateSink(serviceTags);
+                                }
+                            }
+                            TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
+                            consumer.commit(partition, message.getOffset());
+                        } else {
+                            LOG.error("Null message received from Kafka!! Ignoring..");
+                        }
+                    }
+                } catch (Exception exception) {
+                    LOG.error("Caught exception..: ", exception);
+                    return;
+                }
+            }
 		}
 	}
 }

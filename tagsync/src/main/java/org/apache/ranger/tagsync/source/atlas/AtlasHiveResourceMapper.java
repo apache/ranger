@@ -22,10 +22,10 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 	public static final String ENTITY_TYPE_HIVE_DB     = "hive_db";
@@ -36,6 +36,9 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 	public static final String RANGER_TYPE_HIVE_TABLE  = "table";
 	public static final String RANGER_TYPE_HIVE_COLUMN = "column";
 
+	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
+	public static final String QUALIFIED_NAME_DELIMITER        = "\\.";
+
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_HIVE_DB, ENTITY_TYPE_HIVE_TABLE, ENTITY_TYPE_HIVE_COLUMN };
 
 	public AtlasHiveResourceMapper() {
@@ -43,8 +46,8 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 	}
 
 	@Override
-	public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
-		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
+		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 		if (StringUtils.isEmpty(qualifiedName)) {
 			throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
 		}
@@ -60,7 +63,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
 		}
 
 		String   entityType  = entity.getTypeName();
-		String   entityGuid  = entity.getGuid();
+		String   entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String   serviceName = getRangerServiceName(clusterName);
 		String[] resources   = resourceStr.split(QUALIFIED_NAME_DELIMITER);
 		String   dbName      = resources.length > 0 ? resources[0] : null;

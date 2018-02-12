@@ -22,12 +22,12 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 	public static final String ENTITY_TYPE_HDFS_PATH = "hdfs_path";
@@ -35,6 +35,7 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 
 	public static final String ENTITY_ATTRIBUTE_PATH           = "path";
 	public static final String ENTITY_ATTRIBUTE_CLUSTER_NAME   = "clusterName";
+	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
 
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_HDFS_PATH };
 
@@ -55,10 +56,10 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 	}
 
 	@Override
-	public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
-		String path          = (String)entity.getAttributes().get(ENTITY_ATTRIBUTE_PATH);
-		String clusterName   = (String)entity.getAttributes().get(ENTITY_ATTRIBUTE_CLUSTER_NAME);
-		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+	public RangerServiceResource buildResource(final IReferenceableInstance entity) throws Exception {
+		String path          = getEntityAttribute(entity, ENTITY_ATTRIBUTE_PATH, String.class);
+		String clusterName   = getEntityAttribute(entity, ENTITY_ATTRIBUTE_CLUSTER_NAME, String.class);
+		String qualifiedName = getEntityAttribute(entity, ENTITY_ATTRIBUTE_QUALIFIED_NAME, String.class);
 
 		if(StringUtils.isEmpty(path)) {
 			path = getResourceNameFromQualifiedName(qualifiedName);
@@ -80,7 +81,7 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 			}
 		}
 
-		String  entityGuid  = entity.getGuid();
+		String  entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
 		String  serviceName = getRangerServiceName(clusterName);
 		Boolean isExcludes  = Boolean.FALSE;
 		Boolean isRecursive = Boolean.TRUE;

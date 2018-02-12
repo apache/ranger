@@ -107,7 +107,7 @@ public class TagSynchronizer {
 
 		if (ret) {
 			LOG.info("Initializing TAG source and sink");
-			ret = false;
+
 			tagSink = initializeTagSink(properties);
 
 			if (tagSink != null) {

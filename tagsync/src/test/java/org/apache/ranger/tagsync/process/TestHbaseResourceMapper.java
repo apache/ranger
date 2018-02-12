@@ -19,17 +19,15 @@
 
 package org.apache.ranger.tagsync.process;
 
+import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
 public class TestHbaseResourceMapper {
     private static final String TABLE_QUALIFIED_NAME          = "table@cl1";
@@ -53,9 +51,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseTable() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseTableEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, false);
@@ -65,9 +63,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseColumnFamily() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseColumnFamilyEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, false);
@@ -77,9 +75,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseColumn() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseColumnEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, false);
@@ -89,7 +87,7 @@ public class TestHbaseResourceMapper {
     public void testHbaseResourceFromMissingAttribs() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        RangerAtlasEntity entity = getHbaseTableEntity(entAttribs);
+        IReferenceableInstance entity = getHbaseTableEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -104,9 +102,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseResourceFromMissingColumnFamilyName() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity = getHbaseColumnFamilyEntity(entAttribs);
+        IReferenceableInstance entity = getHbaseColumnFamilyEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -121,9 +119,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseResourceFromMissingColumnName() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity = getHbaseColumnEntity(entAttribs);
+        IReferenceableInstance entity = getHbaseColumnEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -138,9 +136,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseDottedTable() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_TABLE_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseTableEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, true);
@@ -150,9 +148,9 @@ public class TestHbaseResourceMapper {
     public void testHbaseDottedColumnFamily() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_FAMILY_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseColumnFamilyEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, true);
@@ -162,37 +160,37 @@ public class TestHbaseResourceMapper {
     public void testHbaseDottedColumn() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_QUALIFIED_NAME);
+        entAttribs.put(AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
+        IReferenceableInstance entity   = getHbaseColumnEntity(entAttribs);
         RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, true);
     }
 
-    private RangerAtlasEntity getHbaseTableEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
+    private IReferenceableInstance getHbaseTableEntity(Map<String, Object> entAttribs) throws Exception {
+        IReferenceableInstance entity = Mockito.mock(IReferenceableInstance.class);
 
         Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_TABLE);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
+        Mockito.when(entity.getValuesMap()).thenReturn(entAttribs);
 
         return entity;
     }
 
-    private RangerAtlasEntity getHbaseColumnFamilyEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
+    private IReferenceableInstance getHbaseColumnFamilyEntity(Map<String, Object> entAttribs) throws Exception {
+        IReferenceableInstance entity = Mockito.mock(IReferenceableInstance.class);
 
         Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN_FAMILY);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
+        Mockito.when(entity.getValuesMap()).thenReturn(entAttribs);
 
         return entity;
     }
 
-    private RangerAtlasEntity getHbaseColumnEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
+    private IReferenceableInstance getHbaseColumnEntity(Map<String, Object> entAttribs) throws Exception {
+        IReferenceableInstance entity = Mockito.mock(IReferenceableInstance.class);
 
         Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
+        Mockito.when(entity.getValuesMap()).thenReturn(entAttribs);
 
         return entity;
     }

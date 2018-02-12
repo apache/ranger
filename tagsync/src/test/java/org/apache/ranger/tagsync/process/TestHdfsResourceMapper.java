@@ -23,10 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.atlas.typesystem.IReferenceableInstance;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper;
-import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -60,7 +60,7 @@ public class TestHdfsResourceMapper {
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_PATH, PATH);
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_CLUSTER_NAME, CLUSTER_NAME);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -73,7 +73,7 @@ public class TestHdfsResourceMapper {
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_PATH, PATH);
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -86,7 +86,7 @@ public class TestHdfsResourceMapper {
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_CLUSTER_NAME, CLUSTER_NAME);
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -100,7 +100,7 @@ public class TestHdfsResourceMapper {
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_CLUSTER_NAME, CLUSTER_NAME);
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapper.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -112,7 +112,7 @@ public class TestHdfsResourceMapper {
 
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, PATH);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapperWithDefaultClusterName.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -124,7 +124,7 @@ public class TestHdfsResourceMapper {
 
 		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_PATH, PATH);
 
-		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity   = getHdfsPathEntity(entAttribs);
 		RangerServiceResource  resource = resourceMapperWithDefaultClusterName.buildResource(entity);
 
 		assertServiceResource(resource);
@@ -134,7 +134,7 @@ public class TestHdfsResourceMapper {
 	public void testHdfsResourceFromMissingAttribs() throws Exception {
 		Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-		RangerAtlasEntity entity  = getHdfsPathEntity(entAttribs);
+		IReferenceableInstance entity  = getHdfsPathEntity(entAttribs);
 
 		try {
 			RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -145,13 +145,11 @@ public class TestHdfsResourceMapper {
 		}
 	}
 
-	private RangerAtlasEntity getHdfsPathEntity(Map<String, Object> entAttribs) throws Exception {
-		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
+	private IReferenceableInstance getHdfsPathEntity(Map<String, Object> entAttribs) throws Exception {
+		IReferenceableInstance entity = Mockito.mock(IReferenceableInstance.class);
 
 		Mockito.when(entity.getTypeName()).thenReturn(AtlasHdfsResourceMapper.ENTITY_TYPE_HDFS_PATH);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
+		Mockito.when(entity.getValuesMap()).thenReturn(entAttribs);
 
 		return entity;
 	}

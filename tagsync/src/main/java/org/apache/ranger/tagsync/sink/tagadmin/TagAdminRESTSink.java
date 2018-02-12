@@ -65,13 +65,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 	@Override
 	public boolean initialize(Properties properties) {
-		if (LOG.isDebugEnabled()) {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> TagAdminRESTSink.initialize()");
 		}
 
 		boolean ret = false;
 
-		String restUrl = TagSyncConfig.getTagAdminRESTUrl(properties);
+		String restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
 		String sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
 		String userName = TagSyncConfig.getTagAdminUserName(properties);
 		String password = TagSyncConfig.getTagAdminPassword(properties);
@@ -89,19 +89,16 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
 		if (StringUtils.isNotBlank(restUrl)) {
 			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
-			if (!isKerberized) {
+			if(!isKerberized) {
 				tagRESTClient.setBasicAuthInfo(userName, password);
 			}
-			// Build and cache REST client. This will catch any errors in building REST client up-front
-			tagRESTClient.getClient();
-
 			uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
 			ret = true;
 		} else {
 			LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
 		}
 
-		if (LOG.isDebugEnabled()) {
+		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== TagAdminRESTSink.initialize(), result=" + ret);
 		}
 
