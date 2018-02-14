@@ -215,7 +215,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"PII\", \"matchType\":1}]"
+          "TAGS": "[{\"type\":\"PII\", \"matchType\": \"SELF\"}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 101 }
@@ -371,7 +371,7 @@
         "userGroups": [ ],
         "requestData": "read /resource",
         "context": {
-          "TAGS": "[{\"type\":\"Unaudited-TAG\", \"matchType\":1}]"
+          "TAGS": "[{\"type\":\"Unaudited-TAG\", \"matchType\": \"SELF\"}]"
         }
       },
       "result": { "isAudited": true, "isAllowed": false, "policyId": 1 }

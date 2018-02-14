@@ -398,47 +398,33 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			if (columns == null || columns.isEmpty()) {
 				LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
 				session.column(null) // zap stale column from prior iteration of this loop, if any
-					.buildRequest()
-					.authorize();
+						.buildRequest()
+						.authorize();
 				AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for success
 				if (session.isAuthorized()) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("evaluateAccess: has family level access [" + family + "]");
-					}
-					// we need to do 3 things: housekeeping, decide about audit events, building the results cache for filter
 					somethingIsAccessible = true;
-					familesAccessAllowed.add(family);
-					if (auditEvent != null) {
-						LOG.debug("evaluateAccess: adding to family-level-access-granted-event-set");
-						familyLevelAccessEvents.add(auditEvent);
-					}
-				} else {
-					everythingIsAccessible = false;
-					if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
-						LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
-						deniedEvent = auditEvent;
-					}
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("evaluateAccess: no family level access [" + family + "].  Checking if has partial access (of any type)...");
+						LOG.debug("evaluateAccess: has family level access [" + family + "]. Checking if [" + family + "] descendants have access.");
 					}
-
 					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
 							.buildRequest()
 							.authorize();
 					auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
 					if (session.isAuthorized()) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
+							LOG.debug("evaluateAccess: [" + family + "] descendants have access");
 						}
-						// we need to do 3 things: housekeeping, decide about audit events, building the results cache for filter
-						somethingIsAccessible = true;
-						familesAccessIndeterminate.add(family);
+						familesAccessAllowed.add(family);
+						if (auditEvent != null) {
+							LOG.debug("evaluateAccess: adding to family-level-access-granted-event-set");
+							familyLevelAccessEvents.add(auditEvent);
+						}
 					} else {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("evaluateAccess: has no access of ["+ access + "] type in family [" + family + "]");
+							LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
 						}
-						familesAccessDenied.add(family);
-						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
+						everythingIsAccessible = false;
+						familesAccessIndeterminate.add(family);
 						if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
 							LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
 							deniedEvent = auditEvent;
@@ -446,6 +432,17 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 					}
 					// Restore the headMatch setting
 					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("evaluateAccess: has no access of [" + access + "] type in family [" + family + "]");
+					}
+					everythingIsAccessible = false;
+					familesAccessDenied.add(family);
+					denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
+					if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
+						LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
+						deniedEvent = auditEvent;
+					}
 				}
 			} else {
 				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");

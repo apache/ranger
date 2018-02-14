@@ -324,8 +324,9 @@ public class HBaseRangerAuthorizationTest {
                 // Read a row
                 try {
                     Get get = new Get(Bytes.toBytes("row1"));
-                    table.get(get);
-                    Assert.fail("Failure expected on an unauthorized user");
+                    Result result = table.get(get);
+                    byte[] valResult = result.getValue(Bytes.toBytes("colfam1"), Bytes.toBytes("col1"));
+                    Assert.assertNull("Failure expected on an unauthorized user", valResult);
                 } catch (IOException ex) {
                     // expected
                 }
@@ -533,8 +534,9 @@ public class HBaseRangerAuthorizationTest {
                 // Read a row
                 try {
                     Get get = new Get(Bytes.toBytes("row1"));
-                    table.get(get);
-                    Assert.fail("Failure expected on an unauthorized user");
+                    Result result = table.get(get);
+                    byte[] valResult = result.getValue(Bytes.toBytes("colfam2"), Bytes.toBytes("col1"));
+                    Assert.assertNull("Failure expected on an unauthorized user", valResult);
                 } catch (IOException ex) {
                     // expected
                 }
@@ -846,8 +848,9 @@ public class HBaseRangerAuthorizationTest {
 
                 Get get = new Get(Bytes.toBytes("row1"));
                 try {
-                    table.get(get);
-                    Assert.fail("Failure expected on an unauthorized user");
+                    Result result = table.get(get);
+                    byte[] valResult = result.getValue(Bytes.toBytes("colfam2"), Bytes.toBytes("col1"));
+                    Assert.assertNull("Failure expected on an unauthorized user", valResult);
                 } catch (IOException ex) {
                     // expected
                 }

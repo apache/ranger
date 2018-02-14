@@ -33,7 +33,7 @@ import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true, value="matchType")
+@JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 

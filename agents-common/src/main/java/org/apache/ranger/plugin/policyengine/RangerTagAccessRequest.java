@@ -52,6 +52,7 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		super.setRemoteIPAddress(request.getRemoteIPAddress());
 		super.setForwardedAddresses(request.getForwardedAddresses());
 		super.setSessionId(request.getSessionId());
+		super.setResourceMatchingScope(request.getResourceMatchingScope());
 	}
 	public RangerPolicyResourceMatcher.MatchType getMatchType() {
 		return matchType;
