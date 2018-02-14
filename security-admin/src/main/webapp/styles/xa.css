@@ -1763,12 +1763,6 @@ margin-bottom: 12px !important;
 .margin-bottom-5{
 margin-bottom: 5px;
 }
-
-.popover-content {
-	/*overflow-y: auto;
-	max-height: 250px;*/
-	padding-right: 25px;
-}
 .margin-bottom-57 {
 	margin-bottom:57px;
 }
@@ -2238,4 +2232,22 @@ textarea:read-only{
 }
 .label-margin{
     margin-left: 10px;
+}
+.resourceText{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 85%;
+}
+.closeBtn{
+	position: absolute;
+	top: 5px;
+	right: 4px;
+}
+.border-top-1 {
+	border-top: 1px solid #ddd;
+}
+.query-content {
+	font-style: italic;
+	max-height: 200px;
+	overflow-y: auto;
 }

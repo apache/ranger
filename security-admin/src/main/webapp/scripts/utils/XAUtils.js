@@ -762,6 +762,9 @@ define(function(require) {
 		var search = function(searchCollection, serverAttrName, searchOpt,
 				collection) {
 			var params = {};
+                        if($('.popover')){
+                                $('.popover').remove();
+                        }
 			searchCollection.each(function(m) {
 				var serverParamName = _.findWhere(serverAttrName, {
 					text : m.attributes.category

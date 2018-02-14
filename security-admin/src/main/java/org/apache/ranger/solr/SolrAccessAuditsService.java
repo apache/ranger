@@ -19,11 +19,13 @@
 
 package org.apache.ranger.solr;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
@@ -126,7 +128,7 @@ public class SolrAccessAuditsService {
 
 		// Make call to Solr
 		SolrClient solrClient = solrMgr.getSolrClient();
-
+                final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
 		if (solrClient == null) {
 			logger.warn("Solr client is null, so not running the query.");
 			throw restErrorUtil.createRESTException(
@@ -141,11 +143,22 @@ public class SolrAccessAuditsService {
 		SolrDocumentList docs = response.getResults();
 		for (int i = 0; i < docs.size(); i++) {
 			SolrDocument doc = docs.get(i);
-			
 			VXAccessAudit vXAccessAudit = populateViewBean(doc);
+                        if (vXAccessAudit != null) {
+                                if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
+                                        vXAccessAudit.setRequestData(null);
+                                }
+                                else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && "grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType())){
+                                        try {
+                                                vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
+                                        } catch (UnsupportedEncodingException e) {
+                                                logger.warn("Error while encoding request data");
+                                        }
+                                }
+                        }
 			xAccessAuditList.add(vXAccessAudit);
 		}
-		
+
 		VXAccessAuditList returnList = new VXAccessAuditList();
 		returnList.setPageSize(searchCriteria.getMaxRows());
 		returnList.setResultSize(docs.size());

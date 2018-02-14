@@ -31,6 +31,7 @@ define(function(require) {
 	var XATableLayout	= require('views/common/XATableLayout');
 	var localization	= require('utils/XALangSupport');
 	var SessionMgr 		= require('mgrs/SessionMgr');
+	var XAViewUtils		= require('utils/XAViewUtils');
 	
 	var VXAuthSession				= require('collections/VXAuthSessionList');
 	var VXTrxLogList   				= require('collections/VXTrxLogList');
@@ -88,7 +89,8 @@ define(function(require) {
             'iconSearchInfo' : '[data-id="searchInfo"]',
             btnShowMore : '[data-id="showMore"]',
                         btnShowLess : '[data-id="showLess"]',
-			
+            iconqueryInfo : '[data-name="queryInfo"]',
+            hidePopup : '[data-id="hide-popup"]'
 		},
 
 		/** ui events hash */
@@ -99,7 +101,10 @@ define(function(require) {
 			events['click '+this.ui.tab+' a']		   = 'onTabChange';
                         events['click ' + this.ui.btnShowMore]  = 'onShowMore';
                         events['click ' + this.ui.btnShowLess]  = 'onShowLess';
-			return events;
+            if(this.currentTab == '#bigData'){
+                events['click ' + this.ui.hidePopup]  = 'onClickOutSide';
+            }
+            return events;
 		},
 
 		/**
@@ -123,8 +128,14 @@ define(function(require) {
 
 		/** all events binding here */
 		bindEvents : function() {
-            this.listenTo(this.accessAuditList, "sync",this.showTagsAttributes, this);
+            this.listenTo(this.accessAuditList, "sync", this.showTagsAttributes, this);
 		},
+
+                onClickOutSide: function(){
+                        if($('.queryInfo') && this.currentTab == '#bigData'){
+                                $('.queryInfo').popover('hide');
+                        }
+                },
 
 		initializeServiceDefColl : function() {
 			this.serviceDefList	= new RangerServiceDefList();
@@ -146,7 +157,7 @@ define(function(require) {
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
 			}
-            this.showTagsAttributes();
+			this.showTagsAttributes();
 
 		},
 		modifyTableForSubcolumns : function(){
@@ -192,7 +203,7 @@ define(function(require) {
 					this.addSearchForBigDataTab();
                     this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
-                                        this.showTagsAttributes();
+                    this.showTagsAttributes();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -978,12 +989,7 @@ define(function(require) {
 						click: false,
 						formatter: _.extend({},Backgrid.CellFormatter.prototype,{
 							 fromRaw: function(rawValue,model) {
-								 var resourcePath = _.isUndefined(model.get('resourcePath')) ? undefined : model.get('resourcePath');
-								 var resourceType = _.isUndefined(model.get('resourceType')) ? undefined : model.get('resourceType');
-								 if(resourcePath) {
-								 return '<span title="'+resourcePath+'">'+resourcePath+'</span>\
-									<div title="'+resourceType+'" style="border-top: 1px solid #ddd;">'+resourceType+'</div>';
-								 }
+							     return XAViewUtils.resourceTypeFormatter(rawValue, model);
 							 }
 						}),
 						drag: false,
@@ -1580,6 +1586,7 @@ define(function(require) {
 
                                         });
                                 }
+                                XAViewUtils.showQueryPopup(model, that);
                         });
                 },
                 onShowMore : function(e){

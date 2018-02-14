@@ -280,6 +280,12 @@
         <name>ranger.kms.service.user.hive</name>
         <value>hive</value>
     </property>
+
+    <property>
+        <name>ranger.audit.hive.query.visibility</name>
+        <value>true</value>
+        <description></description>
+    </property>
     <property>
 		<name>ranger.service.https.attrib.keystore.credential.alias</name>
 		<value>keyStoreCredentialAlias</value>

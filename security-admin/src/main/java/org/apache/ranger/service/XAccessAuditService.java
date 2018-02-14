@@ -19,11 +19,13 @@
 
  package org.apache.ranger.service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit>{
+
 	public static final String NAME = "XAccessAudit";
 	protected final String distinctCountQueryStr;
 	protected final String distinctQueryStr;
@@ -159,7 +162,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 
         List<XXAccessAudit> resultList = (List<XXAccessAudit>) searchResources(searchCriteria,
                 searchFields, sortFields, returnList);
-
+        final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
         // Iterate over the result list and create the return list
         for (XXAccessAudit gjXAccessAudit : resultList) {
             VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
@@ -168,7 +171,16 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
                 if(StringUtils.equalsIgnoreCase(vXAccessAudit.getAclEnforcer(), RangerHadoopConstants.DEFAULT_XASECURE_MODULE_ACL_NAME)) {
                     vXAccessAudit.setAclEnforcer(RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
                 }
-
+                                if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
+                                        vXAccessAudit.setRequestData(null);
+                                }
+                                else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && ("grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType()))){
+                                        try {
+                                                vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
+                                        } catch (UnsupportedEncodingException e) {
+                                                logger.warn("Error while encoding request data");
+                                        }
+                                }
                 xAccessAuditList.add(vXAccessAudit);
             }
         }
