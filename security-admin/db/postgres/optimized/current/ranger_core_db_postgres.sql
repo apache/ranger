@@ -1169,6 +1169,42 @@ primary key (id),
 CONSTRAINT x_plugin_info_UK UNIQUE (service_name, host_name, app_type)
 );
 
+DROP TABLE IF EXISTS x_policy_label_map CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_label_map_seq;
+DROP TABLE IF EXISTS x_policy_label CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_label_seq;
+CREATE SEQUENCE x_policy_label_seq;
+CREATE TABLE x_policy_label (
+id BIGINT DEFAULT nextval('x_policy_label_seq'::regclass),
+guid VARCHAR(64) DEFAULT NULL NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+label_name VARCHAR(512) DEFAULT NULL,
+primary key (id),
+CONSTRAINT x_policy_label_UK_label_name UNIQUE (label_name),
+CONSTRAINT x_policy_label_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_policy_label_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+
+CREATE SEQUENCE x_policy_label_map_seq;
+CREATE TABLE  x_policy_label_map (
+id BIGINT DEFAULT nextval('x_policy_label_map_seq'::regclass),
+guid VARCHAR(64) DEFAULT NULL NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+policy_id BIGINT DEFAULT NULL,
+policy_label_id BIGINT DEFAULT NULL,
+primary key (id),
+CONSTRAINT x_policy_label_map_pid_plid UNIQUE (policy_id, policy_label_id),
+CONSTRAINT x_policy_label_map_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_policy_label_map_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_policy_label_map_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_policy_label_map_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES x_policy_label (id)
+);
 
 CREATE INDEX xa_access_audit_added_by_id ON xa_access_audit(added_by_id);
 CREATE INDEX xa_access_audit_upd_by_id ON xa_access_audit(upd_by_id);
@@ -1323,6 +1359,9 @@ CREATE INDEX x_policy_item_rowfilter_IDX_policy_item_id ON x_policy_item_rowfilt
 CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(service_id);
 CREATE INDEX x_plugin_info_IDX_service_name ON x_plugin_info(service_name);
 CREATE INDEX x_plugin_info_IDX_host_name ON x_plugin_info(host_name);
+CREATE INDEX x_policy_label_label_id ON x_policy_label(id);
+CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
+CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
 INSERT INTO x_portal_user(CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS)VALUES(current_timestamp,current_timestamp,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1);
 INSERT INTO x_portal_user_role(CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS)VALUES(current_timestamp,current_timestamp,1,'ROLE_SYS_ADMIN',1);
@@ -1363,6 +1402,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('027',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,current_timestamp,current_timestamp,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,current_timestamp,current_timestamp,1,1,1);

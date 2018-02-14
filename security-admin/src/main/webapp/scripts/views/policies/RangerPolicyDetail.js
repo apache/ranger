@@ -47,6 +47,7 @@ define(function(require) {
 			var policyId = this.model.get("policyType");
 			var policyType = localization.tt('h.access');
 			var conditionType = localization.tt('lbl.allow');
+                        var policyLabels = this.model.get("policyLabels");
 			if(XAUtil.isMaskingPolicy(policyId)) {
 				policyType = localization.tt('h.masking');
 				conditionType = localization.tt('h.mask');
@@ -60,7 +61,8 @@ define(function(require) {
 				conditionType: conditionType,
 				isMaskingPolicy: XAUtil.isMaskingPolicy(policyId),
 				isAccessPolicy: XAUtil.isAccessPolicy(policyId),
-				isRowFilterPolicy: XAUtil.isRowFilterPolicy(policyId)
+                                isRowFilterPolicy: XAUtil.isRowFilterPolicy(policyId),
+                                policyLabels : policyLabels,
 			};
 		},
 

@@ -92,6 +92,20 @@
           <span class="label label-info">{{PolicyDetails.isAuditEnabled}}</span>
         </td>
       </tr>
+          <tr>
+        <td>
+          {{tt 'lbl.policyLabels'}}
+        </td>
+        <td>
+        {{#ifCond PolicyDetails.policyLabels.length '==' "0"}}
+                --
+        {{else}}
+                        {{#each PolicyDetails.policyLabels}}
+                                <span class="label label-inverse ">{{this}}</span>
+                        {{/each}}
+        {{/ifCond}}
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>

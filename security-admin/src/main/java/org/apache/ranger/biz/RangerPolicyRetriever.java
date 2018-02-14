@@ -235,6 +235,7 @@ public class RangerPolicyRetriever {
 		final Map<Long, String> conditions      = new HashMap<Long, String>();
 		final Map<Long, String> resourceDefs    = new HashMap<Long, String>();
 		final Map<Long, String> dataMasks       = new HashMap<Long, String>();
+                final Map<Long, String> policyLabels    = new HashMap<Long, String>();
 
 		String getUserName(Long userId) {
 			String ret = null;
@@ -255,6 +256,26 @@ public class RangerPolicyRetriever {
 
 			return ret;
 		}
+
+                String getPolicyLabelName(Long policyLabelId) {
+                        String ret = null;
+
+                        if(policyLabelId != null) {
+                                ret = policyLabels.get(policyLabelId);
+
+                                if(ret == null) {
+                                        XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().getById(policyLabelId);
+
+                                        if(xxPolicyLabel != null) {
+                                                ret = xxPolicyLabel.getPolicyLabel();
+
+                                                policyLabels.put(policyLabelId,  ret);
+                                        }
+                                }
+                        }
+
+                        return ret;
+                }
 
 		String getUserScreenName(Long userId) {
 			String ret = null;
@@ -413,6 +434,7 @@ public class RangerPolicyRetriever {
 		final ListIterator<XXPolicyItemCondition> iterConditions;
 		final ListIterator<XXPolicyItemDataMaskInfo>  iterDataMaskInfos;
 		final ListIterator<XXPolicyItemRowFilterInfo> iterRowFilterInfos;
+        final ListIterator<XXPolicyLabelMap> iterPolicyLabels;
 
 		RetrieverContext(XXService xService) {
 			Long serviceId = xService == null ? null : xService.getId();
@@ -427,6 +449,7 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByServiceId(serviceId);
 			List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
 			List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByServiceId(serviceId);
+                        List<XXPolicyLabelMap> xxPolicyLabelMap = daoMgr.getXXPolicyLabelMap().findByServiceId(serviceId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -439,6 +462,7 @@ public class RangerPolicyRetriever {
 			this.iterConditions   = xConditions.listIterator();
 			this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
 			this.iterRowFilterInfos = xRowFilterInfos.listIterator();
+            this.iterPolicyLabels = xxPolicyLabelMap.listIterator();
 		}
 
 		RetrieverContext(XXPolicy xPolicy) {
@@ -458,6 +482,7 @@ public class RangerPolicyRetriever {
 			List<XXPolicyItemCondition> xConditions   = daoMgr.getXXPolicyItemCondition().findByPolicyId(policyId);
 			List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
 			List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByPolicyId(policyId);
+                        List<XXPolicyLabelMap> xPolicyLabelMap = daoMgr.getXXPolicyLabelMap().findByPolicyId(policyId);
 
 			this.service          = xService;
 			this.iterPolicy       = xPolicies.listIterator();
@@ -470,6 +495,7 @@ public class RangerPolicyRetriever {
 			this.iterConditions   = xConditions.listIterator();
 			this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
 			this.iterRowFilterInfos = xRowFilterInfos.listIterator();
+                        this.iterPolicyLabels = xPolicyLabelMap.listIterator();
 		}
 
 		RangerPolicy getNextPolicy() {
@@ -496,6 +522,7 @@ public class RangerPolicyRetriever {
 					ret.setResourceSignature(xPolicy.getResourceSignature());
 					ret.setIsAuditEnabled(xPolicy.getIsAuditEnabled());
 
+                                        getPolicyLabels(ret);
 					getResource(ret);
 					getPolicyItems(ret);
 				}
@@ -503,6 +530,25 @@ public class RangerPolicyRetriever {
 
 			return ret;
 		}
+
+                private void getPolicyLabels(RangerPolicy ret) {
+                        List<String> xPolicyLabels = new ArrayList<String>();
+                        while(iterPolicyLabels.hasNext()) {
+                                XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
+                                if(xPolicyLabel.getPolicyId().equals(ret.getId())) {
+                                        String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
+                                        if (policyLabel != null) {
+                                                xPolicyLabels.add(policyLabel);
+                                        }
+                                        ret.setPolicyLabels(xPolicyLabels);
+                                } else {
+                                        if(iterPolicyLabels.hasPrevious()) {
+                                                iterPolicyLabels.previous();
+                                        }
+                                        break;
+                                }
+                        }
+                }
 
 		List<RangerPolicy> getAllPolicies() {
 			List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
@@ -558,7 +604,8 @@ public class RangerPolicyRetriever {
 									|| iterAccesses.hasNext()
 									|| iterConditions.hasNext()
 									|| iterDataMaskInfos.hasNext()
-									|| iterRowFilterInfos.hasNext();
+                                                                        || iterRowFilterInfos.hasNext()
+                                                                        || iterPolicyLabels.hasNext();
 
 			return !moreToProcess;
 		}

@@ -839,6 +839,31 @@ CREATE TABLE dbo.x_plugin_info(
         CONSTRAINT x_plugin_info_PK_id PRIMARY KEY CLUSTERED(id),
         CONSTRAINT x_plugin_info_UK UNIQUE NONCLUSTERED (service_name, host_name, app_type)
 )
+GO
+CREATE TABLE dbo.x_policy_label (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(64) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        label_name varchar(512) DEFAULT NULL,
+        CONSTRAINT x_policy_label_PK_id PRIMARY KEY CLUSTERED(id),
+        CONSTRAINT x_policy_label_UK_label_name UNIQUE NONCLUSTERED (label_name)
+)
+GO
+CREATE TABLE dbo.x_policy_label_map (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(64) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        policy_label_id bigint NOT NULL,
+        CONSTRAINT x_policy_label_map_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user(id)
 GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
@@ -1132,6 +1157,20 @@ GO
 ALTER TABLE dbo.x_policy_item_rowfilter ADD CONSTRAINT x_policy_item_rowfilter_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_service_version_info ADD CONSTRAINT x_service_version_info_service_id FOREIGN KEY(service_id) REFERENCES dbo.x_service (id)
+GO
+ALTER TABLE dbo.x_policy_label ADD CONSTRAINT x_policy_label_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_label ADD CONSTRAINT x_policy_label_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES dbo.x_policy_label (id)
+GO
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT [x_policy_label_map$x_policy_label_map_pid_plid] UNIQUE (policy_id, policy_label_id)
 GO
 CREATE NONCLUSTERED INDEX x_asset_cr_time ON dbo.x_asset(create_time ASC)
 GO
@@ -1441,6 +1480,12 @@ CREATE NONCLUSTERED INDEX x_plugin_info_IDX_service_name ON dbo.x_plugin_info(se
 GO
 CREATE NONCLUSTERED INDEX x_plugin_info_IDX_host_name ON dbo.x_plugin_info(host_name ASC)
 GO
+CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_id ON dbo.x_policy_label(id ASC)
+GO
+CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_name ON dbo.x_policy_label(label_name ASC)
+GO
+CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_map_id ON dbo.x_policy_label_map(id ASC)
+GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),1,'ROLE_SYS_ADMIN',1)
@@ -1506,6 +1551,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

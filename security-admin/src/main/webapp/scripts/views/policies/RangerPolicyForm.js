@@ -122,8 +122,7 @@ define(function(require){
 		},
 		/** on render callback */
 		render: function(options) {
-			var that = this;
-			
+                    var that = this;
 			Backbone.Form.prototype.render.call(this, options);
 			//initialize path plugin for hdfs component : resourcePath
 			if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){ 
@@ -429,7 +428,11 @@ define(function(require){
 //					}
 				}
 			});
-			
+                        if(this.model.has('policyLabels')){
+                            var policyLabel =[];
+                            policyLabel= this.model.get('policyLabels').split(',');
+                            this.model.set('policyLabels', policyLabel);
+                        }
 			this.model.set('resources',resources);
 			this.model.unset('path');
 			
@@ -752,7 +755,7 @@ define(function(require){
 			return obj;
 		},
 		getPolicyBaseFieldNames : function(){
-			 var fields = ['isAuditEnabled','description'];
+                    var fields = ['isAuditEnabled','description','policyLabels'];
 			 return fields;
 		},
 		getResources : function(){

@@ -366,6 +366,9 @@ public abstract class RangerDaoManagerBase {
 		if ("XXPluginInfo".equals(className)) {
 			return getXXPluginInfo();
 		}
+                if ("XXPolicyLabel".equals(className)) {
+                        return getXXPolicyLabels();
+                }
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -460,6 +463,14 @@ public abstract class RangerDaoManagerBase {
 	public XXResourceDefDao getXXResourceDef() {
 		return new XXResourceDefDao(this);
 	}
+
+        public XXPolicyLabelDao getXXPolicyLabels() {
+                return new XXPolicyLabelDao(this);
+        }
+
+        public XXPolicyLabelMapDao getXXPolicyLabelMap() {
+                return new XXPolicyLabelMapDao(this);
+        }
 
 	public XXAccessTypeDefDao getXXAccessTypeDef() {
 		return new XXAccessTypeDefDao(this);

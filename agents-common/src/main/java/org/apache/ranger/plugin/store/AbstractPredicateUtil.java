@@ -96,6 +96,7 @@ public class AbstractPredicateUtil {
 		addPredicateForPartialPolicyName(filter.getParam(SearchFilter.POLICY_NAME_PARTIAL), predicates);
 		addPredicateForResourceSignature(filter.getParam(SearchFilter.RESOURCE_SIGNATURE), predicates);
 		addPredicateForPolicyType(filter.getParam(SearchFilter.POLICY_TYPE), predicates);
+                addPredicateForPartialPolicyLabels(filter.getParam(SearchFilter.POLICY_LABELS_PARTIAL), predicates);
 	}
 
 	public Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
@@ -817,6 +818,47 @@ public class AbstractPredicateUtil {
 
 		return ret;
 	}
+
+        private Predicate addPredicateForPartialPolicyLabels(final String policyLabels, List<Predicate> predicates) {
+                if (StringUtils.isEmpty(policyLabels)) {
+                        return null;
+                }
+
+                Predicate ret = new Predicate() {
+                        @Override
+                        public boolean evaluate(Object object) {
+                                if (object == null) {
+                                        return false;
+                                }
+                                boolean ret = false;
+
+                                if (object instanceof RangerPolicy) {
+                                        RangerPolicy policy = (RangerPolicy) object;
+                                        //	exact match
+                                        /*if (policy.getPolicyLabels().contains(policyLabels)) {
+                                                ret = true;
+                                        }*/
+                                        /*partial match*/
+                                        for (String label :policy.getPolicyLabels()){
+                                                ret = StringUtils.containsIgnoreCase(label, policyLabels);
+                                                if(ret){
+                                                        return ret;
+                                                }
+                                        }
+
+                                } else {
+                                        ret = true;
+                                }
+                                return ret;
+                        }
+                };
+                if (predicates != null) {
+                        predicates.add(ret);
+                }
+
+                return ret;
+        }
+
 
 	public Predicate createPredicateForResourceSignature(final String policySignature) {
 

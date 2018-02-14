@@ -110,6 +110,7 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
 import org.apache.ranger.service.RangerPluginInfoService;
+import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
@@ -118,6 +119,7 @@ import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXPolicyLabelList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -175,6 +177,9 @@ public class ServiceREST {
 	RangerPolicyService policyService;
 	
 	@Autowired
+        RangerPolicyLabelsService policyLabelsService;
+
+        @Autowired
 	RangerServiceService svcService;
 	
 	@Autowired
@@ -1657,6 +1662,40 @@ public class ServiceREST {
 	}
 
 	@GET
+	@Path("/policyLabels")
+	@Produces({ "application/json", "application/xml" })
+	public List<String> getPolicyLabels(@Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyLabels()");
+		}
+
+		List<String> ret = new ArrayList<String>();
+		RangerPerfTracer perf = null;
+
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicyLabels()");
+			}
+
+			SearchFilter filter = searchUtil.getSearchFilter(request, policyLabelsService.sortFields);
+			ret = svcStore.getPolicyLabels(filter);
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("getPolicyLabels() failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyLabels()");
+		}
+		return ret;
+	}
+
+        @GET
 	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
 	public RangerPolicyList getPolicies(@Context HttpServletRequest request) {

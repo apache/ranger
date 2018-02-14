@@ -209,6 +209,7 @@ public class TestServiceDBStore {
 		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
 		List<String> users = new ArrayList<String>();
 		List<String> groups = new ArrayList<String>();
+                List<String> policyLabels = new ArrayList<String>();
 		List<RangerPolicyItemCondition> conditions = new ArrayList<RangerPolicyItemCondition>();
 		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
 		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
@@ -239,6 +240,7 @@ public class TestServiceDBStore {
 		policy.setIsAuditEnabled(true);
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
+                policy.setPolicyLabels(policyLabels);
 
 		return policy;
 	}
@@ -1144,6 +1146,7 @@ public class TestServiceDBStore {
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 		XXPolicyItemDataMaskInfoDao xxPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
 		XXPolicyItemRowFilterInfoDao xxPolicyItemRowFilterInfoDao = Mockito.mock(XXPolicyItemRowFilterInfoDao.class);
+                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
 				.mock(XXPolicyItemConditionDao.class);
 		XXPolicyItemGroupPermDao xPolicyItemGroupPermDao = Mockito
@@ -1287,6 +1290,7 @@ public class TestServiceDBStore {
 		policyResourceMap.setValue("1L");
 		policyResourceMapList.add(policyResourceMap);
 
+                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);
@@ -1366,6 +1370,9 @@ public class TestServiceDBStore {
 		Mockito.when(
 				xServiceConfigMapDao.findByServiceId(rangerService.getId()))
 				.thenReturn(xConfMapList);
+
+                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+                /*Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(xxPolicyLabelMapList);*/
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
 		serviceDBStore.deleteService(Id);
@@ -1540,6 +1547,7 @@ public class TestServiceDBStore {
 		policyItemAccess.setType("1");
 		List<String> usersList = new ArrayList<String>();
 		List<String> groupsList = new ArrayList<String>();
+                List<String> policyLabels = new ArrayList<String>();
 		List<RangerPolicyItemCondition> conditionsList = new ArrayList<RangerPolicyItemCondition>();
 		RangerPolicyItemCondition policyItemCondition = new RangerPolicyItemCondition();
 		policyItemCondition.setType("1");
@@ -1629,6 +1637,7 @@ public class TestServiceDBStore {
 		rangerPolicy.setIsAuditEnabled(true);
 		rangerPolicy.setPolicyItems(policyItems);
 		rangerPolicy.setResources(policyResource);
+                rangerPolicy.setPolicyLabels(policyLabels);
 
 		XXPolicyResource xPolicyResource = new XXPolicyResource();
 		xPolicyResource.setAddedByUserId(Id);
@@ -1785,6 +1794,7 @@ public class TestServiceDBStore {
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXService xService = Mockito.mock(XXService.class);
 		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
@@ -1826,6 +1836,8 @@ public class TestServiceDBStore {
 		policyResourceMap.setUpdateTime(new Date());
 		policyResourceMap.setValue("1L");
 		policyResourceMapList.add(policyResourceMap);
+
+                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
 
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
@@ -1894,6 +1906,11 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
 
+                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(
+                                xPolicyLabelMapDao);
+                Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId()))
+                                .thenReturn(xxPolicyLabelMapList);
+
 		RangerPolicyResourceSignature signature = Mockito
 				.mock(RangerPolicyResourceSignature.class);
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
@@ -1928,7 +1945,7 @@ public class TestServiceDBStore {
 		XXService xService = Mockito.mock(XXService.class);
 		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
-
+                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 		XXPolicyItemDataMaskInfoDao xPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
 		XXPolicyItemRowFilterInfoDao xPolicyItemRowFilterInfoDao = Mockito.mock(XXPolicyItemRowFilterInfoDao.class);
@@ -2043,7 +2060,7 @@ public class TestServiceDBStore {
 		policyResourceMap.setUpdateTime(new Date());
 		policyResourceMap.setValue("1L");
 		policyResourceMapList.add(policyResourceMap);
-
+                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);
@@ -2111,6 +2128,11 @@ public class TestServiceDBStore {
 				xService);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
+
+                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(
+                                xPolicyLabelMapDao);
+                Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId()))
+                                .thenReturn(xxPolicyLabelMapList);
 
 		serviceDBStore.deletePolicy(Id);
 	}

@@ -69,6 +69,8 @@ CREATE SEQUENCE X_POLICY_ITEM_DATAMASK_SEQ START WITH 1 INCREMENT BY 1 NOCACHE N
 CREATE SEQUENCE X_POLICY_ITEM_ROWFILTER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SERVICE_VERSION_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_PLUGIN_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_LABEL_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_LABEL_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 --CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
 
@@ -1056,6 +1058,37 @@ info VARCHAR(1024) NOT NULL,
 PRIMARY KEY (id),
 CONSTRAINT x_plugin_info_UK UNIQUE (service_name, host_name, app_type)
 );
+
+CREATE TABLE x_policy_label (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+label_name VARCHAR(512) DEFAULT NULL,
+primary key (id),
+CONSTRAINT x_pl_UK_label_name UNIQUE (label_name),
+CONSTRAINT x_pl_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_pl_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+
+CREATE TABLE x_policy_label_map (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) DEFAULT NULL,
+policy_label_id NUMBER(20) DEFAULT NULL,
+primary key (id),
+CONSTRAINT x_plmap_uk_pid_plid UNIQUE (policy_id,policy_label_id),
+CONSTRAINT x_plmap_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_plmap_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_plmap_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_plmap_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES x_policy_label (id)
+);
 commit;
 
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
@@ -1257,6 +1290,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '027',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '028',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '029',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '030',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,3,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,1,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);

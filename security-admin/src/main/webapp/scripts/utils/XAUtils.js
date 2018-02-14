@@ -1355,6 +1355,26 @@ define(function(require) {
     			return obj.get('rowFilterDef').resources;
     		}
     	}
-    }
+    };
+    XAUtils.showMoreAndLessButton = function(rawValue, model){
+        var showMoreLess = false;
+        var newLabelArr = _.map(rawValue, function(name, i) {
+            if (i >= 4) {
+                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'" style="display:none;">'+ _.escape(name) + '</span>';
+            } else if (i == 3 && rawValue.length > 4) {
+                showMoreLess = true;
+                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
+            } else {
+                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
+            }
+        });
+        if (showMoreLess) {
+            newLabelArr.push('<span class="pull-left float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" policy-label-id ="'+ model.id +'"><code style=""> + More..</code></a></span>\
+                    <span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLess" style="display:none;" policy-label-id ="'+ model.id +'"><code> - Less..</code></a></span>');
+        }
+        newLabelArr.unshift('<div data-id="groupsDiv">');
+        newLabelArr.push('</div>');
+        return newLabelArr.length ? newLabelArr.join(' ') : '--';
+    };
 	return XAUtils;
 });

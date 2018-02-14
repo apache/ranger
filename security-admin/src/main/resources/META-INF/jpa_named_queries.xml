@@ -48,6 +48,51 @@
 		</query>
 	</named-query>
 
+        <!-- XXPolicyLabels -->
+        <named-query name="XXPolicyLabel.findByName">
+                <query>SELECT obj FROM XXPolicyLabel obj WHERE obj.policyLabel = :policyLabel
+                </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabel.findByPolicyLabelId">
+                <query>SELECT obj FROM XXPolicyLabel obj WHERE obj.id = :policyLabelId
+                </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabel.findByServiceId">
+                <query>SELECT obj FROM XXPolicyLabel obj WHERE obj.id in (select policyLabelMap.policyLabelId from XXPolicyLabelMap policyLabelMap where policyLabelMap.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)) order by obj.id
+                </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabel.findByPolicyId">
+                <query>SELECT obj FROM XXPolicyLabel as obj WHERE obj.id in (select policyLabelMap.policyLabelId from XXPolicyLabelMap as policyLabelMap where policyLabelMap.policyId in (select policy.id from XXPolicy policy where policy.id = :policyId)) order by obj.id
+                </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabel.getAllPolicyLabels">
+                <query>select obj from XXPolicyLabel obj where obj.id is NOT null
+                </query>
+        </named-query>
+
+        <!-- XXPolicyLabelMap -->
+
+        <named-query name="XXPolicyLabelMap.findByPolicyId">
+                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyId = :policyId
+                        </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabelMap.findByPolicyLabelId">
+                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.id = :policyLabelId
+                        </query>
+        </named-query>
+
+        <named-query name="XXPolicyLabelMap.findByServiceId">
+                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
+                order by obj.policyId, obj.id
+                        </query>
+        </named-query>
+
+
 	<!-- XXPortalUserRole -->
 	<named-query name="XXPortalUserRole.findByRoleUserId">
 		<query>SELECT obj FROM XXPortalUserRole obj WHERE obj.userId = :userId

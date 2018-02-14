@@ -65,6 +65,14 @@ define(function(require){
 					title		: 'Description',
 					validators	: []
 				},
+                                policyLabels : {
+                                    type	   : 'Select2Remote',
+                                    title	   : 'Policy Label',
+                                    pluginAttr : this.getPluginAttr(),
+                                    options    : function(callback, editor){
+                                        callback();
+                                    },
+                                },
 				isEnabled : {
 					type		: 'Switch',
 					title		: '',//localization.tt("lbl.policyStatus"),
@@ -128,8 +136,61 @@ define(function(require){
 		/** This models toString() */
 		toString : function(){
 			return this.get('name');
-		}
+                },
 
+        getPluginAttr : function(){
+            var tags = [];
+            _.each(this.get('policyLabels') , function(name){
+                tags.push( { 'id' : _.escape( name ), 'text' : _.escape( name ) } );
+            });
+            return{
+                multiple: true,
+                closeOnSelect : true,
+                placeholder : 'Policy Label',
+                width :'220px',
+                allowClear: true,
+                tokenSeparators: ["," , " "],
+                tags : true,
+                initSelection : function (element, callback) {
+                    callback(tags);
+                },
+                createSearchChoice: function(term, data) {
+                    term = _.escape(term);
+                    if ($(data).filter(function() {
+                        return this.text.localeCompare(term) === 0;
+                    }).length === 0) {
+                        if($.inArray(term, this.val()) >= 0){
+                            return null;
+                        }else{
+                            return {
+                                id : term,
+                                text: term
+                            };
+                        }
+                    }
+                },
+                ajax: {
+                    url: 'service/plugins/policyLabels',
+                    dataType: 'json',
+                    data: function (term, page) {
+                        return {policyLabel : term};
+                    },
+                    results: function (data, page) {
+                        var results = [] , selectedVals = [];
+                        if(data.resultSize != "0"){
+                            results = data.map(function(m){	return {id : _.escape(m), text: _.escape(m) };	});
+                        }
+                        return {results : results};
+                    },
+                },
+                formatResult : function(result){
+                    return result.text;
+                },
+                formatSelection : function(result){
+                    return result.text;
+                },
+            }
+        },
 	}, {
 		// static class members
 	});

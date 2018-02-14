@@ -72,6 +72,7 @@ import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
+import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
@@ -177,6 +178,9 @@ public class TestServiceREST {
 
 	@Mock
 	AssetMgr assetMgr;
+	
+	@Mock
+    RangerPolicyLabelsService policyLabelsService;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -875,7 +879,7 @@ public class TestServiceREST {
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyService.sortFields);
 	}
-
+	
 	@Test
 	public void test21countPolicies() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -1400,5 +1404,22 @@ public class TestServiceREST {
 		System.out.println("resultPolicy=" + resultPolicyStr);
 
 		assert(true);
+	}
+	
+	@Test
+	public void test44getPolicyLabels() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		SearchFilter filter = new SearchFilter();
+		Mockito.when(
+				searchUtil.getSearchFilter(request, policyLabelsService.sortFields))
+				.thenReturn(filter);
+		List<String> ret = new ArrayList<String>();
+		Mockito.when(
+				svcStore.getPolicyLabels(filter))
+				.thenReturn(ret);
+		ret = serviceREST.getPolicyLabels(request);
+		Assert.assertNotNull(ret);
+		Mockito.verify(searchUtil).getSearchFilter(request,
+				policyLabelsService.sortFields);
 	}
 }

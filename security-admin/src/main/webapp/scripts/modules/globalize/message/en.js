@@ -241,7 +241,8 @@ define(function(require) {
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
 		  		modules		                	: 'Modules',
-				clusterName                     : 'Cluster Name'
+                                clusterName                     : 'Cluster Name',
+                                policyLabels					: 'Policy Labels'
 			},
 			btn : {
 				add							: 'Add',
@@ -348,7 +349,8 @@ define(function(require) {
                 masking                     :'Masking',
                 custom                      :'CUSTOM',
                 mask                        :'Mask',
-                rowFilter                   :'Row Filter'
+                rowFilter                   : 'Row Filter',
+                policyLabelsinfo			: 'Label of policy'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
@@ -417,6 +419,7 @@ define(function(require) {
                 activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
+                policyLabelsinfo		: 'Enter label of policy'
  
 			},
 			plcHldr : {

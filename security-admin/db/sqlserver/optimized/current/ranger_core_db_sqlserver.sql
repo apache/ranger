@@ -597,6 +597,14 @@ IF (OBJECT_ID('x_service_config_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_service_config_def]
 END
+IF (OBJECT_ID('x_policy_label_map') IS NOT NULL)
+BEGIN
+        DROP TABLE [dbo].[x_policy_label_map]
+END
+IF (OBJECT_ID('x_policy_label') IS NOT NULL)
+BEGIN
+        DROP TABLE [dbo].[x_policy_label]
+END
 IF (OBJECT_ID('x_policy') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy]
@@ -1821,6 +1829,43 @@ CONSTRAINT [x_plugin_info$x_plugin_info_UK] UNIQUE NONCLUSTERED
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_policy_label] (
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [label_name] [varchar](512) DEFAULT NULL,
+        PRIMARY KEY CLUSTERED
+        (
+        [id] ASC
+        )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+        CONSTRAINT [x_policy_label$x_policy_label_UK_label_name] UNIQUE NONCLUSTERED
+        (
+        [label_name] ASC
+        )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+)
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
+CREATE TABLE dbo.x_policy_label_map (
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [guid] [varchar](64) DEFAULT NULL NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [policy_id] [bigint] DEFAULT NULL,
+        [policy_label_id] [bigint] DEFAULT NULL,
+        PRIMARY KEY CLUSTERED
+        (
+        [id] ASC
+        )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+)
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
 
 ALTER TABLE [dbo].[x_asset]  WITH CHECK ADD  CONSTRAINT [x_asset_FK_added_by_id] FOREIGN KEY([added_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])
@@ -2183,6 +2228,13 @@ ALTER TABLE [dbo].[x_policy_item_rowfilter] WITH CHECK ADD CONSTRAINT [x_policy_
 ALTER TABLE [dbo].[x_policy_item_rowfilter] WITH CHECK ADD CONSTRAINT [x_policy_item_rowfilter_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_policy_item_rowfilter] WITH CHECK ADD CONSTRAINT [x_policy_item_rowfilter_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_service_version_info] WITH CHECK ADD CONSTRAINT [x_service_version_info_service_id] FOREIGN KEY([service_id]) REFERENCES [dbo].[x_service] ([id])
+ALTER TABLE [dbo].[x_policy_label] WITH CHECK ADD CONSTRAINT [x_policy_label_FK_added_by_id] FOREIGN KEY ([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+ALTER TABLE [dbo].[x_policy_label] WITH CHECK ADD CONSTRAINT x_policy_label_FK_upd_by_id FOREIGN KEY ([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+ALTER TABLE [dbo].[x_policy_label_map] WITH CHECK ADD CONSTRAINT [x_policy_label_map_FK_added_by_id] FOREIGN KEY ([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+ALTER TABLE [dbo].[x_policy_label_map] WITH CHECK ADD CONSTRAINT [x_policy_label_map_FK_upd_by_id] FOREIGN KEY ([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+ALTER TABLE [dbo].[x_policy_label_map] WITH CHECK ADD CONSTRAINT [x_policy_label_map_FK_policy_id] FOREIGN KEY ([policy_id]) REFERENCES [dbo].[x_policy] ([id])
+ALTER TABLE [dbo].[x_policy_label_map] WITH CHECK ADD CONSTRAINT [x_policy_label_map_FK_policy_label_id] FOREIGN KEY ([policy_label_id]) REFERENCES [dbo].[x_policy_label] ([id])
+ALTER TABLE [dbo].[x_policy_label_map] WITH CHECK ADD CONSTRAINT [x_policy_label_map$x_policy_label_map_pid_plid] UNIQUE (policy_id, policy_label_id)
 CREATE NONCLUSTERED INDEX [x_asset_cr_time] ON [x_asset]
 (
    [create_time] ASC
@@ -2940,13 +2992,11 @@ CREATE NONCLUSTERED INDEX [x_policy_item_rowfilter_IDX_policy_item_id] ON [x_pol
    [policy_item_id] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-
 CREATE NONCLUSTERED INDEX [x_service_version_info_IDX_service_id] ON [x_service_version_info]
 (
    [service_id] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-
 CREATE NONCLUSTERED INDEX [x_plugin_info_IDX_service_name] ON [x_plugin_info]
 (
    [service_name] ASC
@@ -2957,6 +3007,20 @@ CREATE NONCLUSTERED INDEX [x_plugin_info_IDX_host_name] ON [x_plugin_info]
    [host_name] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_policy_label_IDX_label_id] ON [dbo].[x_policy_label]
+(
+[id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_name ON [dbo].[x_policy_label]
+(
+[label_name] ASC
+)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_map_id ON [dbo].[x_policy_label_map]
+(
+[id] ASC
+)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+
 insert into x_portal_user (CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1);
 insert into x_portal_user_role (CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,'ROLE_SYS_ADMIN',1);
 insert into x_user (CREATE_TIME,UPDATE_TIME,user_name,status,descr) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'admin',0,'Administrator');
@@ -2990,6 +3054,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('027',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);

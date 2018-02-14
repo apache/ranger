@@ -91,8 +91,7 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a PlugableServiceDiffDetail ItemView");
-			
-			_.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId'));
+                        _.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId','policyLabels'));
 			this.bindEvents();
 			this.initializeServiceDef();
 			this.getTemplateForView();
@@ -194,6 +193,17 @@ define(function(require){
 					tmp.set("newValue", policyStatus.get('newValue') ==  "true" ? 'enabled' : 'disabled')
 				}
 			}
+                        var policyLabels = this.collection.findWhere({'attributeName':'Policy Labels'});
+                        if(!_.isUndefined(policyLabels)){
+                            if(!_.isEmpty(policyLabels.get('previousValue'))){
+                                var resourcepreviousValue = JSON.parse(policyLabels.get('previousValue'));
+                                policyLabels.set('previousValue' , resourcepreviousValue.join(', '));
+                            }
+                            if(!_.isEmpty(policyLabels.get('newValue'))){
+                                var resourcenewValue = JSON.parse(policyLabels.get('newValue'));
+                                policyLabels.set('newValue' , resourcenewValue.join(', '));
+                            }
+                        }
 			var policyResource = this.collection.findWhere({'attributeName':'Policy Resources'})
 			if(!_.isUndefined(policyResource)){
 				this.getPolicyResources();

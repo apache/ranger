@@ -2233,7 +2233,11 @@ textarea:read-only{
 .label-margin{
     margin-left: 10px;
 }
-.resourceText{
+.shorten-label {
+    max-width: 180px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}.resourceText{
 	overflow: hidden;
 	text-overflow: ellipsis;
 	width: 85%;

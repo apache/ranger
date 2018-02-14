@@ -71,13 +71,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems;
 	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems;
   private String                            serviceType;
+  private List<String> policyLabels;
 
 
 	/**
 	 * @param
 	 */
 	public RangerPolicy() {
-		this(null, null, null, null, null, null, null);
+                this(null, null, null, null, null, null, null, null);
 	}
 
 	/**
@@ -89,7 +90,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems
 	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature) {
+        public RangerPolicy(String service, String name, Integer policyType, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, List<String> policyLables) {
 		super();
 
 		setService(service);
@@ -105,6 +106,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setDenyExceptions(null);
 		setDataMaskPolicyItems(null);
 		setRowFilterPolicyItems(null);
+                setPolicyLabels(policyLables);
 	}
 
 	/**
@@ -126,6 +128,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setDenyExceptions(other.getDenyExceptions());
 		setDataMaskPolicyItems(other.getDataMaskPolicyItems());
 		setRowFilterPolicyItems(other.getRowFilterPolicyItems());
+                setPolicyLabels(other.getPolicyLabels());
 	}
 
 	/**
@@ -218,6 +221,26 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
         public void setServiceType(String serviceType) {
                 this.serviceType = serviceType;
+        }
+
+        public List<String> getPolicyLabels() {
+                return policyLabels;
+        }
+
+        public void setPolicyLabels(List<String> policyLabels) {
+                if (this.policyLabels == null) {
+                        this.policyLabels = new ArrayList<>();
+                }
+
+                if (this.policyLabels == policyLabels) {
+                        return;
+                }
+
+                this.policyLabels.clear();
+
+                if (policyLabels != null) {
+                        this.policyLabels.addAll(policyLabels);
+                }
         }
 
 	/**
@@ -423,7 +446,15 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			}
 		}
 		sb.append("} ");
-
+                sb.append("policyLabels={");
+                if(policyLabels != null) {
+                        for(String policyLabel : policyLabels) {
+                                if(policyLabel != null) {
+                                        sb.append(policyLabel).append(" ");
+                                }
+                        }
+                }
+                sb.append("} ");
 		sb.append("policyItems={");
 		if(policyItems != null) {
 			for(RangerPolicyItem policyItem : policyItems) {

@@ -24,15 +24,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.entity.XXDataMaskTypeDef;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
@@ -68,6 +68,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	public static final String ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME="rowFilterPolicyItems";
 	public static final String IS_ENABLED_CLASS_FIELD_NAME="isEnabled";
 	public static final String IS_AUDIT_ENABLED_CLASS_FIELD_NAME="isAuditEnabled";
+        public static final String POLICY_LABELS_CLASS_FIELD_NAME="policyLabels";
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
@@ -86,6 +87,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		trxLogAttrs.put("dataMaskPolicyItems", new VTrxLogAttr("dataMaskPolicyItems", "Masked Policy Items", false));
 		trxLogAttrs.put("rowFilterPolicyItems", new VTrxLogAttr("rowFilterPolicyItems", "Row level filter Policy Items", false));
 		trxLogAttrs.put("isAuditEnabled", new VTrxLogAttr("isAuditEnabled", "Audit Status", false));
+                trxLogAttrs.put("policyLabels", new VTrxLogAttr("policyLabels", "Policy Labels", false));
 	}
 	
 	public RangerPolicyService() {
@@ -232,9 +234,9 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
 			} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
-			
-			}
-			else {
+                        } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+                                value = processPolicyLabelsClassFieldNameForTrxLog(field.get(vObj));
+                        } else {
 				value = "" + field.get(vObj);
 			}
 
@@ -324,6 +326,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = String.valueOf(processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled()));
 					}
+                                } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+                                        oldValue = processPolicyLabelsClassFieldNameForTrxLog(oldPolicy.getPolicyLabels());
 				}
 				if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
 					return null;
@@ -385,7 +389,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					    return null;
 					}
 				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					if(compareTwoPolicyName(value, oldValue)) {
+                                        if (compareTwoPolicyName(value, oldValue)) {
+                                                return null;
+                                        }
+                                } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+                                        if (compareTwoPolicyLabelList(value, oldValue)) {
 						return null;
 					}
 				}
@@ -409,6 +417,45 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 
 		return xTrxLog;
 	}
+
+        private boolean compareTwoPolicyLabelList(String value, String oldValue) {
+                if (value == null && oldValue == null) {
+                        return true;
+                }
+                if (value == "" && oldValue == "") {
+                        return true;
+                }
+                if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
+                        return false;
+                }
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                        List<String> obj = mapper.readValue(value, new TypeReference<List<String>>() {
+                        });
+                        List<String> oldObj = mapper.readValue(oldValue, new TypeReference<List<String>>() {
+                        });
+                        int oldListSize = oldObj.size();
+                        int listSize = obj.size();
+                        if (oldListSize != listSize) {
+                                return false;
+                        }
+                        for (String polItem : obj) {
+                                if (!oldObj.contains(polItem)) {
+                                        return false;
+                                }
+                        }
+                        return true;
+                } catch (JsonParseException e) {
+                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+                                        MessageEnums.INVALID_INPUT_DATA);
+                } catch (JsonMappingException e) {
+                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+                                        MessageEnums.INVALID_INPUT_DATA);
+                } catch (IOException e) {
+                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
+                                        MessageEnums.INVALID_INPUT_DATA);
+                }
+        }
 
 	private boolean compareTwoPolicyItemList(String value, String oldValue) {
 		if (value == null && oldValue == null) {
@@ -544,6 +591,16 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 
 	@SuppressWarnings("unchecked")
+        private String processPolicyLabelsClassFieldNameForTrxLog(Object value) {
+                if (value == null) {
+                        return "";
+                }
+                List<String> policyLabels = (List<String>) value;
+                String ret = jsonUtil.readListToString(policyLabels);
+                return ret;
+        }
+
+        @SuppressWarnings("unchecked")
 	private String processDataMaskPolicyItemsForTrxLog(Object value) {
 		if(value == null) {
 			return "";

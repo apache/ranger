@@ -216,7 +216,22 @@ define(function(require){
 					label	: localization.tt("lbl.policyName"),
 					editable: false,
 					sortable : false
-				},	
+                                },
+                                policyLabels: {
+                                    cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                    label : localization.tt("lbl.policyLabels"),
+                                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                        fromRaw: function (rawValue, model) {
+                                            if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                                return XAUtil.showMoreAndLessButton(rawValue, model)
+                                            }else{
+                                                return '--';
+                                            }
+                                        }
+                                    }),
+                                    editable : false,
+                                    sortable : false
+                },
 				isEnabled:{
 					label:localization.tt('lbl.status'),
 					cell :"html",
@@ -322,12 +337,8 @@ define(function(require){
 			});
 		},
 		onShowMore : function(e){
-			var attrName = 'policy-groups-id';
-			var id = $(e.currentTarget).attr(attrName);
-			if(_.isUndefined(id)){
-				id = $(e.currentTarget).attr('policy-users-id');
-				attrName = 'policy-users-id';
-			}   
+                    var attrName = this.attributName(e);
+                    var id = $(e.currentTarget).attr(attrName[0]);
 			var $td = $(e.currentTarget).parents('td');
 			$td.find('['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
@@ -335,18 +346,24 @@ define(function(require){
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
 		},
 		onShowLess : function(e){
-			var attrName = 'policy-groups-id';
-			var id = $(e.currentTarget).attr(attrName);
-			if(_.isUndefined(id)){
-				id = $(e.currentTarget).attr('policy-users-id');
-				attrName = 'policy-users-id';
-			}
+                    var attrName = this.attributName(e)
 			var $td = $(e.currentTarget).parents('td');
+                    var id = $(e.currentTarget).attr(attrName[0]);
 			$td.find('['+attrName+'="'+id+'"]').slice(4).hide();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').hide();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');
 		},
+                attributName :function(e){
+                    var attrName = ['policy-groups-id', 'policy-users-id', 'policy-label-id'], attributeName = "";
+                    attributeName =_.filter(attrName, function(name){
+                        if($(e.currentTarget).attr(name)){
+                            return name;
+                        }
+                    });
+                    return attributeName;
+                },
+
 		addVisualSearch : function(){
 
                         var that = this, resources = this.rangerServiceDefModel.get('resources');
@@ -365,12 +382,13 @@ define(function(require){
                         });
 			var PolicyStatusValue = _.map(XAEnums.ActiveStatus, function(status) { return { 'label': status.label, 'value': Boolean(status.value)}; });
 	
-			var searchOpt = ['Policy Name','Group Name','User Name','Status'];//,'Start Date','End Date','Today'];
+                        var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label'];//,'Start Date','End Date','Today'];
                         searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt){ return opt.label }))
                         var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg')},
                                                {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg')},
                                                {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue},
                                                {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg')},
+                                               {text : "Policy Label",   label :"policyLabelsPartial" ,  info :localization.tt('h.policyLabelsinfo')},
                                                ];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];

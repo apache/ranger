@@ -80,7 +80,8 @@ define(function(require) {'use strict';
 			policyType          : '[data-id="policyType"]',
 			btnShowMoreAccess 	: '[data-id="showMoreAccess"]',
                         btnShowLessAccess 	: '[data-id="showLessAccess"]',
-                        'iconSearchInfo' 	: '[data-id="searchInfo"]',
+                        iconSearchInfo      : '[data-id="searchInfo"]',
+                        policyLabels		: '[data-id="policyLabels"]'
 		},
 
 		/** ui events hash */
@@ -160,7 +161,8 @@ define(function(require) {'use strict';
 	                 {text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
 	                 {text :'Component'   , info :localization.tt('msg.componentMsg')},
 	                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
-	                 {text :'Resource'    , info :localization.tt('msg.resourceMsg')}]
+                         {text :'Resource'    , info :localization.tt('msg.resourceMsg')},
+                         {text :'Policy Label', info :localization.tt('msg.policyLabelsinfo')}]
          },
          getResourceLists: function(collName, serviceDefName , policyType){
 
@@ -387,6 +389,21 @@ define(function(require) {'use strict';
 					editable: false,
 					sortable : false
 				},
+                                policyLabels: {
+                                    cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                    label : localization.tt("lbl.policyLabels"),
+                                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                        fromRaw: function (rawValue, model) {
+                                            var labels ="";
+                                            if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                                return XAUtil.showMoreAndLessButton(rawValue, model)
+                                            }else{
+                                                return '--';
+                                            }
+                                        }
+                                    }),
+                                    editable : false,
+                                },
 				resources: {
 					label: 'Resources',
 					cell: 'Html',
@@ -557,6 +574,26 @@ define(function(require) {'use strict';
 				data: policyTypes
 	
 			});
+                        this.ui.policyLabels.select2({
+                            multiple: false,
+                            closeOnSelect: true,
+                            placeholder: 'Select Policy Label',
+                            allowClear: true,
+                            width: '220px',
+                            ajax :{
+                                url: "service/plugins/policyLabels",
+                                async : false,
+                                dataType : 'JSON',
+                                data: function (term, page) {
+                                    return {policyLabel : term};
+                                },
+                                results: function (data, page) {
+                                    var results = [];
+                                    results = data.map(function(m, i){return {id : _.escape(m), text: _.escape(m) };});
+                                    return {results : results};
+                                }
+                            }
+                        });
 		},
 		onDownload: function(e){
 			var that = this, url = '';
@@ -752,8 +789,9 @@ define(function(require) {'use strict';
 			//Get search values
 			var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
 			var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
-			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val();
-			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType};
+                        var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val(),
+                        policyLabel = this.ui.policyLabels.val()
+                        var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel };
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
             that.initializeRequiredData();
             _.each(this.policyCollList, function(obj,i){
@@ -808,7 +846,8 @@ define(function(require) {'use strict';
 				user : users,
 				polResource : rxName,
 				policyNamePartial : policyName,
-				policyType: policyType
+                                policyType: policyType,
+                                policyLabelsPartial:policyLabel
 			};
 
 			this.setDownloadReportUrl(this,component,params);
@@ -906,29 +945,30 @@ define(function(require) {'use strict';
 					},
 
 		onShowMore : function(e){
-			var attrName = 'policy-groups-id';
-			var id = $(e.currentTarget).attr(attrName);
-			if(_.isUndefined(id)){
-				id = $(e.currentTarget).attr('policy-users-id');
-				attrName = 'policy-users-id';
-			}   
+                    var attrName = this.attributName(e);
+                    var id = $(e.currentTarget).attr(attrName[0]);
 			var $td = $(e.currentTarget).parents('td');
 			$td.find('['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').show();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').hide();
 		},
 		onShowLess : function(e){
-			var attrName = 'policy-groups-id';
-			var id = $(e.currentTarget).attr(attrName);
-			if(_.isUndefined(id)){
-				id = $(e.currentTarget).attr('policy-users-id');
-				attrName = 'policy-users-id';
-			}
+                    var attrName = this.attributName(e);
+                    var id = $(e.currentTarget).attr(attrName[0]);
 			var $td = $(e.currentTarget).parents('td');
 			$td.find('['+attrName+'="'+id+'"]').slice(4).hide();
 			$td.find('[data-id="showLess"]['+attrName+'="'+id+'"]').hide();
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').show();
 		},
+                attributName :function(e){
+                    var attrName = ['policy-groups-id', 'policy-users-id', 'policy-label-id'], attributeName = "";
+                    attributeName =_.filter(attrName, function(name){
+                        if($(e.currentTarget).attr(name)){
+                            return name;
+                        }
+                    });
+                    return attributeName;
+                },
 		/** on close */
 		onClose : function() {
                         $('.popover').remove();

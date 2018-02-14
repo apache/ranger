@@ -44,6 +44,15 @@
 	{{/if}}
 	</label>
 	<label class="no-margin label-size13-weightbold" style="vertical-align:top;float:left;">{{tt 'lbl.description'}} : &nbsp;&nbsp;</label><textarea style="width: 400px;height: 80px;" readonly="readonly">{{description}}</textarea>
+        <label class="no-margin label-size13-weightbold">{{tt 'lbl.policyLabels'}} : &nbsp;
+        {{#ifCond policyLabels.length '==' "0"}}
+                        --
+                {{else}}
+                        {{#each policyLabels}}
+                                <label class="label label-ranger"> {{this}} </label>
+                {{/each}}
+        {{/ifCond}}
+        </label>
 </div>
 <div>
 	<div>

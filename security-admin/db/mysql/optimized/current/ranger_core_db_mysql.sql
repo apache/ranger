@@ -47,6 +47,8 @@ DROP TABLE IF EXISTS `x_access_type_def_grants`;
 DROP TABLE IF EXISTS `x_access_type_def`;
 DROP TABLE IF EXISTS `x_resource_def`;
 DROP TABLE IF EXISTS `x_service_config_def`;
+DROP TABLE IF EXISTS `x_policy_label_map`;
+DROP TABLE IF EXISTS `x_policy_label`;
 DROP TABLE IF EXISTS `x_policy`;
 DROP TABLE IF EXISTS `x_service`;
 DROP TABLE IF EXISTS `x_service_def`;
@@ -1200,6 +1202,45 @@ CREATE TABLE IF NOT EXISTS `x_plugin_info`(
  KEY `x_plugin_info_IDX_host_name`(`host_name`)
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE  `x_policy_label` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`label_name` varchar(512) DEFAULT NULL,
+primary key (`id`),
+UNIQUE KEY `x_policy_label_UK_label_name` (`label_name`),
+KEY `x_policy_label_added_by_id` (`added_by_id`),
+KEY `x_policy_label_upd_by_id` (`upd_by_id`),
+KEY `x_policy_label_cr_time` (`create_time`),
+KEY `x_policy_label_up_time` (`update_time`),
+KEY `x_policy_label_name` (`label_name`),
+CONSTRAINT `x_policy_label_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_policy_label_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE  `x_policy_label_map` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`policy_id` bigint(20) DEFAULT NULL,
+`policy_label_id` bigint(20) DEFAULT NULL,
+primary key (`id`),
+UNIQUE INDEX `x_policy_label_map_pid_plid` (`policy_id`, `policy_label_id`),
+KEY `x_policy_label_map_added_by_id` (`added_by_id`),
+KEY `x_policy_label_map_upd_by_id` (`upd_by_id`),
+KEY `x_policy_label_map_cr_time` (`create_time`),
+KEY `x_policy_label_map_up_time` (`update_time`),
+CONSTRAINT `x_policy_label_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_policy_label_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_policy_label_map_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES `x_policy` (`id`),
+CONSTRAINT `x_policy_label_map_FK_policy_label_id` FOREIGN KEY (`policy_label_id`) REFERENCES `x_policy_label` (`id`)
+)ROW_FORMAT=DYNAMIC;
 
 CREATE INDEX x_service_config_def_IDX_def_id ON x_service_config_def(def_id);
 CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
@@ -1228,6 +1269,9 @@ CREATE INDEX x_datamask_type_def_IDX_def_id ON x_datamask_type_def(def_id);
 CREATE INDEX x_policy_item_datamask_IDX_policy_item_id ON x_policy_item_datamask(policy_item_id);
 CREATE INDEX x_policy_item_rowfilter_IDX_policy_item_id ON x_policy_item_rowfilter(policy_item_id);
 CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(service_id);
+CREATE INDEX x_policy_label_label_id ON x_policy_label(id);
+CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
+CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 
@@ -1272,6 +1316,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('027',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);

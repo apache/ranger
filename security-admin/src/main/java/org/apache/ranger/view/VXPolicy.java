@@ -122,6 +122,8 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	protected String grantor;
 	protected boolean replacePerm;
 
+        protected String policyLabel;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -526,6 +528,14 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		this.replacePerm = replacePerm;
 	}	
 
+        public String getPolicyLabel() {
+                return policyLabel;
+        }
+
+        public void setPolicyLabel(String policyLabel) {
+                this.policyLabel = policyLabel;
+        }
+
 	@Override
 	public int getMyClassType() {
 		return AppConstants.CLASS_TYPE_XA_RESOURCE;
@@ -557,6 +567,7 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 		str += "isRecursive={" + isRecursive + "} ";
 		str += "isAuditEnabled={" + isAuditEnabled + "} ";
 		str += "version={" + version + "} ";
+                str += "policyLabel={" + policyLabel + "} ";
 		str += "}";
 		return str;
 	}

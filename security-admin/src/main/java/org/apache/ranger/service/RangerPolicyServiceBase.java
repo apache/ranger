@@ -63,6 +63,8 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
 				SEARCH_TYPE.PARTIAL, "XXPolicyResourceMap resMap, XXPolicyResource polRes",
 				"resMap.resourceId = polRes.id and polRes.policyId = obj.id"));
+                /*searchFields.add(new SearchField(SearchFilter.POLICY_LABELS_PARTIAL, "obj.label_name", DATA_TYPE.STRING,
+                                SEARCH_TYPE.PARTIAL));*/
 		searchFields.add(new SearchField(SearchFilter.POLICY_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING,
 				SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_TYPE, "obj.policyType", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
