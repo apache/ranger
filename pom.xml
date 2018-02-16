@@ -86,7 +86,8 @@
         <module>security-admin</module>
         <module>plugin-kafka</module>
         <module>plugin-solr</module>
-	    <module>plugin-nifi</module>
+	      <module>plugin-nifi</module>
+        <module>plugin-nifi-registry</module>
         <module>ugsync</module>
         <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
         <module>unixauthclient</module>
@@ -112,7 +113,7 @@
         <module>ranger-sqoop-plugin-shim</module>
         <module>plugin-kylin</module>
         <module>ranger-kylin-plugin-shim</module>
-  </modules>
+    </modules>
     <properties>
         <maven.version.required>3.3.3</maven.version.required>
         <java.version.required>1.8</java.version.required>
