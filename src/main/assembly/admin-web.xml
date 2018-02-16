@@ -320,6 +320,19 @@
       <moduleSet>
           <binaries>
               <includeDependencies>true</includeDependencies>
+              <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/nifi-registry</outputDirectory>
+              <unpack>false</unpack>
+              <directoryMode>755</directoryMode>
+              <fileMode>644</fileMode>
+          </binaries>
+          <includes>
+              <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
+          </includes>
+      </moduleSet>
+
+      <moduleSet>
+          <binaries>
+              <includeDependencies>true</includeDependencies>
               <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/atlas</outputDirectory>
               <unpack>false</unpack>
               <directoryMode>755</directoryMode>

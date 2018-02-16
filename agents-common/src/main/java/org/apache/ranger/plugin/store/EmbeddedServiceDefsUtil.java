@@ -48,7 +48,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,sqoop,kylin";
+	private static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -62,6 +62,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME = "kafka";
 	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
+	public static final String EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME  = "nifi-registry";
 	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
 	public static final String EMBEDDED_SERVICEDEF_WASB_NAME  = "wasb";
 	public static final String EMBEDDED_SERVICEDEF_SQOOP_NAME = "sqoop";
@@ -94,6 +95,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef kafkaServiceDef;
 	private RangerServiceDef solrServiceDef;
 	private RangerServiceDef nifiServiceDef;
+	private RangerServiceDef nifiRegistryServiceDef;
 	private RangerServiceDef atlasServiceDef;
 	private RangerServiceDef wasbServiceDef;
 	private RangerServiceDef sqoopServiceDef;
@@ -133,6 +135,7 @@ public class EmbeddedServiceDefsUtil {
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
+			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
@@ -189,7 +192,11 @@ public class EmbeddedServiceDefsUtil {
 		return getId(nifiServiceDef);
 	}
 
-    public long getAtlasServiceDefId() {
+	public long getNiFiRegistryServiceDefId() {
+		return getId(nifiRegistryServiceDef);
+	}
+
+	public long getAtlasServiceDefId() {
         return getId(atlasServiceDef);
     }
 
