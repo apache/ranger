@@ -157,6 +157,10 @@ killRangerKMSPid () {
 	fi
 }
 metric(){
+  if [ "$JAVA_HOME" == "" ]; then
+    echo "[E] JAVA_HOME environment variable not defined, aborting Apache Ranger KMS metric collection"
+    exit 1;
+  fi
 	java  ${JAVA_OPTS} org.apache.hadoop.crypto.key.kms.server.KMSMetricUtil ${arg2} ${arg3} 2>/dev/null
 }
 if [ "${action}" == "START" ]; then
