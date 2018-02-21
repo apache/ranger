@@ -128,7 +128,9 @@ public class KafkaRangerAuthorizerTest {
         props.put("ssl.truststore.password", "security");
         props.put("security.inter.broker.protocol", "SSL");
         props.put("ssl.client.auth", "required");
-        
+        props.put("offsets.topic.replication.factor", (short) 1);
+        props.put("offsets.topic.num.partitions", 1);
+
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
         

@@ -127,7 +127,10 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         props.put("security.inter.broker.protocol", "SASL_SSL");
         props.put("sasl.enabled.mechanisms", "PLAIN");
         props.put("sasl.mechanism.inter.broker.protocol", "PLAIN");
-        
+
+        props.put("offsets.topic.replication.factor", (short) 1);
+        props.put("offsets.topic.num.partitions", 1);
+
         props.put("ssl.keystore.location", serviceKeystorePath);
         props.put("ssl.keystore.password", "sspass");
         props.put("ssl.key.password", "skpass");

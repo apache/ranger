@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.10</artifactId>
+            <artifactId>kafka_${scala.binary.version}</artifactId>
             <version>${kafka.version}</version>
         </dependency>
         <dependency>
@@ -97,6 +97,7 @@
                 <directory>src/test/resources</directory>
                 <includes>
                     <include>**/*.xml</include>
+                    <include>log4j.properties</include>
                 </includes>
                 <filtering>true</filtering>
             </testResource>

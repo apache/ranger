@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
@@ -42,9 +43,12 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.PartitionInfo;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
@@ -68,6 +72,7 @@ import kafka.utils.ZkUtils;
  * Authentication is done via Kerberos/GSS.
  */
 public class KafkaRangerAuthorizerGSSTest {
+    private final static Logger LOG = LoggerFactory.getLogger(KafkaRangerAuthorizerGSSTest.class);
 
     private static KafkaServerStartable kafkaServer;
     private static TestingServer zkServer;
@@ -112,6 +117,9 @@ public class KafkaRangerAuthorizerGSSTest {
 
         tempDir = Files.createTempDirectory("kafka");
 
+        LOG.info("Port is {}", port);
+        LOG.info("Temporary directory is at {}", tempDir);
+
         final Properties props = new Properties();
         props.put("broker.id", 1);
         props.put("host.name", "localhost");
@@ -126,6 +134,8 @@ public class KafkaRangerAuthorizerGSSTest {
         props.put("sasl.enabled.mechanisms", "GSSAPI");
         props.put("sasl.mechanism.inter.broker.protocol", "GSSAPI");
         props.put("sasl.kerberos.service.name", "kafka");
+        props.put("offsets.topic.replication.factor", (short) 1);
+        props.put("offsets.topic.num.partitions", 1);
 
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
@@ -194,7 +204,7 @@ public class KafkaRangerAuthorizerGSSTest {
 
     // The "public" group can write to and read from "test"
     @Test
-    public void testAuthorizedRead() throws Exception {
+    public void testAuthorizedRead() {
         // Create the Producer
         Properties producerProps = new Properties();
         producerProps.put("bootstrap.servers", "localhost:" + port);
@@ -210,7 +220,7 @@ public class KafkaRangerAuthorizerGSSTest {
         // Create the Consumer
         Properties consumerProps = new Properties();
         consumerProps.put("bootstrap.servers", "localhost:" + port);
-        consumerProps.put("group.id", "test");
+        consumerProps.put("group.id", "consumerTestGroup");
         consumerProps.put("enable.auto.commit", "true");
         consumerProps.put("auto.offset.reset", "earliest");
         consumerProps.put("auto.commit.interval.ms", "1000");
@@ -222,22 +232,23 @@ public class KafkaRangerAuthorizerGSSTest {
         consumerProps.put("sasl.kerberos.service.name", "kafka");
 
         final KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
+        checkTopicExists(consumer);
+        LOG.info("Subscribing to 'test'");
         consumer.subscribe(Arrays.asList("test"));
 
-        // Send a message
-        producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
-        producer.flush();
+        sendMessage(producer);
 
         // Poll until we consume it
-
         ConsumerRecord<String, String> record = null;
         for (int i = 0; i < 1000; i++) {
+            LOG.info("Waiting for messages {}. try", i);
             ConsumerRecords<String, String> records = consumer.poll(100);
             if (records.count() > 0) {
+                LOG.info("Found {} messages", records.count());
                 record = records.iterator().next();
                 break;
             }
-            Thread.sleep(1000);
+            sleep();
         }
 
         Assert.assertNotNull(record);
@@ -245,6 +256,35 @@ public class KafkaRangerAuthorizerGSSTest {
 
         producer.close();
         consumer.close();
+    }
+
+    private void checkTopicExists(final KafkaConsumer<String, String> consumer) {
+        Map<String, List<PartitionInfo>> topics = consumer.listTopics();
+        while (!topics.containsKey("test")) {
+            LOG.warn("Required topic is not available, only {} present", topics.keySet());
+            sleep();
+            topics = consumer.listTopics();
+        }
+        LOG.warn("Available topics: {}", topics.keySet());
+    }
+
+    private void sendMessage(final Producer<String, String> producer) {
+        // Send a message
+        try {
+            LOG.info("Send a message to 'test'");
+            producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
+            producer.flush();
+        } catch (RuntimeException e) {
+            LOG.error("Unable to send message to topic 'test' ", e);
+        }
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            LOG.info("Interrupted sleep, nothing important");
+        }
     }
 
     // The "public" group can't write to "dev"
