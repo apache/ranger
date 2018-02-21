@@ -24,8 +24,11 @@ import java.util.Map;
 
 import javax.security.auth.Subject;
 
-import org.apache.kafka.common.network.LoginType;
+import org.apache.kafka.common.network.ListenerName;
+import org.apache.kafka.common.security.JaasContext;
+import org.apache.kafka.common.security.JaasContext.Type;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 import kafka.security.auth.*;
 import kafka.network.RequestChannel.Session;
@@ -81,7 +84,15 @@ public class RangerKafkaAuthorizer implements Authorizer {
 				me = rangerPlugin;
 				if (me == null) {
 					try {
-						LoginManager loginManager = LoginManager.acquireLoginManager(LoginType.SERVER, true, configs);
+						// Possible to override JAAS configuration which is used by Ranger, otherwise
+						// SASL_PLAINTEXT is used, which force Kafka to use 'sasl_plaintext.KafkaServer',
+						// if it's not defined, then it reverts to 'KafkaServer' configuration.
+						final Object jaasContext = configs.get("ranger.jaas.context");
+						final String listenerName = (jaasContext instanceof String
+								&& StringUtils.isNotEmpty((String) jaasContext)) ? (String) jaasContext
+										: SecurityProtocol.SASL_PLAINTEXT.name();
+						JaasContext context = JaasContext.load(Type.SERVER, new ListenerName(listenerName), configs);
+						LoginManager loginManager = LoginManager.acquireLoginManager(context, true, configs);
 						Subject subject = loginManager.subject();
 						UserGroupInformation ugi = MiscUtil
 								.createUGIFromSubject(subject);
