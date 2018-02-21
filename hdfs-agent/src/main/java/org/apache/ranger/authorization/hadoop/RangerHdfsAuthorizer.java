@@ -24,16 +24,15 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.WRITE_ACCCESS_TYPE;
 
 import java.net.InetAddress;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -699,15 +698,28 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 		RangerHdfsPlugin.fileNameExtensionSeparator = RangerConfiguration.getInstance().get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
 		RangerHdfsPlugin.optimizeSubAccessAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT);
 
-		// Build random string of random length
-		byte[] bytes = new byte[1];
-		new Random().nextBytes(bytes);
-		int count = bytes[0];
-		count = count < 56 ? 56 : count;
-		count = count > 112 ? 112 : count;
-
-		String random = RandomStringUtils.random(count, "^&#@!%()-_+=@:;'<>`~abcdefghijklmnopqrstuvwxyz01234567890");
+		String random = generateString("^&#@!%()-_+=@:;'<>`~abcdefghijklmnopqrstuvwxyz01234567890");
 		randomizedWildcardPathName = RangerPathResourceMatcher.WILDCARD_ASTERISK + random + RangerPathResourceMatcher.WILDCARD_ASTERISK;
+	}
+
+	// Build random string of length between 56 and 112 characters
+	private static String generateString(String source)
+	{
+		SecureRandom rng = new SecureRandom();
+
+		byte[] bytes = new byte[1];
+		rng.nextBytes(bytes);
+		int length = bytes[0];
+		length = length < 56 ? 56 : length;
+		length = length > 112 ? 112 : length;
+
+		char[] text = new char[length];
+
+		for (int i = 0; i < length; i++)
+		{
+			text[i] = source.charAt(rng.nextInt(source.length()));
+		}
+		return new String(text);
 	}
 
 	public static boolean isHadoopAuthEnabled() {
