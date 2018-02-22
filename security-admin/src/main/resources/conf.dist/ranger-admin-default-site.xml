@@ -507,6 +507,10 @@
 		<name>ranger.db.ssl.verifyServerCertificate</name>
 		<value>false</value>
 	</property>
+        <property>
+                <name>ranger.db.ssl.auth.type</name>
+                <value>2-way</value>
+        </property>
 	<property>
 		<name>ranger.keystore.file</name>
 		<value></value>
