@@ -32,7 +32,11 @@ define(function(require) {
 	if(!window.location.origin){
 		window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
 	}
-	
+    // Proxy URL for Ranger UI doesn't work without trailing slash so add slash
+    var pathName = /\/[\w-]+.(jsp|html)/;
+    if(!pathName.test(window.location.pathname) && window.location.pathname.slice(-1) !== "/"){
+        history.pushState({}, null, window.location.pathname + "/");
+    }
 	var baseUrl = window.location.origin + window.location.pathname.substr(0, window.location.pathname.lastIndexOf("/"));
 	
 	if(baseUrl.slice(-1) == "/") {
