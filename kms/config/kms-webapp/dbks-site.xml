@@ -167,4 +167,8 @@
 	<name>ranger.ks.db.ssl.verifyServerCertificate</name>
 	<value>false</value>
   </property>
+  <property>
+	<name>ranger.ks.db.ssl.auth.type</name>
+	<value>2-way</value>
+  </property>
 </configuration>

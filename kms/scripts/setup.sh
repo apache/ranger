@@ -59,6 +59,7 @@ db_password=$(get_prop 'db_password' $PROPFILE)
 db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
 db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
+db_ssl_auth_type=$(get_prop 'db_ssl_auth_type' $PROPFILE)
 KMS_MASTER_KEY_PASSWD=$(get_prop 'KMS_MASTER_KEY_PASSWD' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
@@ -239,11 +240,13 @@ init_variables(){
 		db_ssl_enabled="false"
 		db_ssl_required="false"
 		db_ssl_verifyServerCertificate="false"
+		db_ssl_auth_type="2-way"
 	fi
 	if [ "${db_ssl_enabled}" == "true" ]
 	then
 		db_ssl_required=`echo $db_ssl_required | tr '[:upper:]' '[:lower:]'`
 		db_ssl_verifyServerCertificate=`echo $db_ssl_verifyServerCertificate | tr '[:upper:]' '[:lower:]'`
+		db_ssl_auth_type=`echo $db_ssl_auth_type | tr '[:upper:]' '[:lower:]'`
 		if [ "${db_ssl_required}" != "true" ]
 		then
 			db_ssl_required="false"
@@ -251,6 +254,10 @@ init_variables(){
 		if [ "${db_ssl_verifyServerCertificate}" != "true" ]
 		then
 			db_ssl_verifyServerCertificate="false"
+		fi
+		if [ "${db_ssl_auth_type}" != "1-way" ]
+		then
+			db_ssl_auth_type="2-way"
 		fi
 	fi
 }
@@ -422,16 +429,20 @@ update_properties() {
 
 	if [ "${db_ssl_enabled}" != "" ]
 	then
-		propertyName=ranger.db.ssl.enabled
+		propertyName=ranger.ks.db.ssl.enabled
 		newPropertyValue="${db_ssl_enabled}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
-		propertyName=ranger.db.ssl.required
+		propertyName=ranger.ks.db.ssl.required
 		newPropertyValue="${db_ssl_required}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
-		propertyName=ranger.db.ssl.verifyServerCertificate
+		propertyName=ranger.ks.db.ssl.verifyServerCertificate
 		newPropertyValue="${db_ssl_verifyServerCertificate}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.ks.db.ssl.auth.type
+		newPropertyValue="${db_ssl_auth_type}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
@@ -894,7 +905,12 @@ setup_install_files(){
 
 	if [ "${db_ssl_verifyServerCertificate}" == "true" ]
 	then
-		DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+		if [ "${db_ssl_auth_type}" == "1-way" ]
+		then
+			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+		else
+			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+		fi
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
     else

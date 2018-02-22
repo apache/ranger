@@ -57,6 +57,7 @@ public class RangerKMSDB {
 	private static final String DB_SSL_ENABLED="db.ssl.enabled";
 	private static final String DB_SSL_REQUIRED="db.ssl.required";
 	private static final String DB_SSL_VerifyServerCertificate="db.ssl.verifyServerCertificate";
+	private static final String DB_SSL_AUTH_TYPE="db.ssl.auth.type";
 	private static final String DB_SSL_KEYSTORE="keystore.file";
 	private static final String DB_SSL_KEYSTORE_PASSWORD="keystore.password";
 	private static final String DB_SSL_TRUSTSTORE="truststore.file";
@@ -177,9 +178,11 @@ public class RangerKMSDB {
 			if("true".equalsIgnoreCase(db_ssl_enabled)){
 				final String db_ssl_required=normalize(conf.get(PROPERTY_PREFIX+DB_SSL_REQUIRED));
 				final String db_ssl_verifyServerCertificate=normalize(conf.get(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate));
+				final String db_ssl_auth_type=conf.get(PROPERTY_PREFIX+DB_SSL_AUTH_TYPE,"2-way");
 				conf.set(PROPERTY_PREFIX+DB_SSL_ENABLED, db_ssl_enabled);
 				conf.set(PROPERTY_PREFIX+DB_SSL_REQUIRED, db_ssl_required);
 				conf.set(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate, db_ssl_verifyServerCertificate);
+				conf.set(PROPERTY_PREFIX+DB_SSL_AUTH_TYPE, db_ssl_auth_type);
 				String ranger_jpa_jdbc_url=conf.get(PROPERTY_PREFIX+DB_URL);
 				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
 					String ranger_jpa_jdbc_url_ssl= ranger_jpa_jdbc_url + "?useSSL=" + db_ssl_enabled + 
@@ -190,19 +193,21 @@ public class RangerKMSDB {
 				}
 
 				if("true".equalsIgnoreCase(db_ssl_verifyServerCertificate)){
-					// update system key store path with custom key store.
-					String keystore=conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE);
-					if(!StringUtils.isEmpty(keystore)){
-						Path path = Paths.get(keystore);
-						if (Files.exists(path) && Files.isReadable(path)) {
-							System.setProperty("javax.net.ssl.keyStore", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE));
-							System.setProperty("javax.net.ssl.keyStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE_PASSWORD));
-							System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
+					if(!"1-way".equalsIgnoreCase((db_ssl_auth_type))){
+						// update system key store path with custom key store.
+						String keystore=conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE);
+						if(!StringUtils.isEmpty(keystore)){
+							Path path = Paths.get(keystore);
+							if (Files.exists(path) && Files.isReadable(path)) {
+								System.setProperty("javax.net.ssl.keyStore", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE));
+								System.setProperty("javax.net.ssl.keyStorePassword", conf.get(PROPERTY_PREFIX+DB_SSL_KEYSTORE_PASSWORD));
+								System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
+							}else{
+								logger.debug("Could not find or read keystore file '"+keystore+"'");
+							}
 						}else{
-							logger.debug("Could not find or read keystore file '"+keystore+"'");
+							logger.debug("keystore property '"+PROPERTY_PREFIX+DB_SSL_KEYSTORE+"' value not found!");
 						}
-					}else{
-						logger.debug("keystore property '"+PROPERTY_PREFIX+DB_SSL_KEYSTORE+"' value not found!");
 					}
 					// update system trust store path with custom trust store.
 					String truststore=conf.get(PROPERTY_PREFIX+DB_SSL_TRUSTSTORE);

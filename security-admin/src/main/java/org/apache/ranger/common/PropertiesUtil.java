@@ -268,12 +268,18 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 					db_ssl_verifyServerCertificate="false";
 				}
 				db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.toLowerCase();
+				String db_ssl_auth_type=propertiesMap.get("ranger.db.ssl.auth.type");
+				if(StringUtils.isEmpty(db_ssl_auth_type)|| !"1-way".equalsIgnoreCase(db_ssl_auth_type)){
+					db_ssl_auth_type="2-way";
+				}
 				propertiesMap.put("ranger.db.ssl.enabled", db_ssl_enabled);
 				props.put("ranger.db.ssl.enabled", db_ssl_enabled);
 				propertiesMap.put("ranger.db.ssl.required", db_ssl_required);
 				props.put("ranger.db.ssl.required", db_ssl_required);
 				propertiesMap.put("ranger.db.ssl.verifyServerCertificate", db_ssl_verifyServerCertificate);
 				props.put("ranger.db.ssl.verifyServerCertificate", db_ssl_verifyServerCertificate);
+				propertiesMap.put("ranger.db.ssl.auth.type", db_ssl_auth_type);
+				props.put("ranger.db.ssl.auth.type", db_ssl_auth_type);
 				String ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
 				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
 					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
