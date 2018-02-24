@@ -1896,38 +1896,36 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private boolean validatePolicyItems(List<? extends RangerPolicyItem> policyItems) {
 
-		boolean isPolicyItemValid = true;
-
 		if (CollectionUtils.isNotEmpty(policyItems)) {
 			for (RangerPolicyItem policyItem : policyItems) {
 				if (policyItem == null) {
-					isPolicyItemValid = false;
-					break;
+					return false;
 				}
 
 				if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
-					isPolicyItemValid = false;
-					break;
+					return false;
 				}
 
 				if (policyItem.getUsers() != null && (policyItem.getUsers().contains(null) || policyItem.getUsers().contains(""))) {
-					isPolicyItemValid = false;
-					break;
+					return false;
 				}
 
 				if (policyItem.getGroups() != null && (policyItem.getGroups().contains(null) || policyItem.getGroups().contains(""))) {
-					isPolicyItemValid = false;
-					break;
+					return false;
 				}
 
-				if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null) || policyItem.getAccesses().contains("")) {
-					isPolicyItemValid = false;
-					break;
+				if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null)) {
+					return false;
+				}
+				for (RangerPolicyItemAccess itemAccesses : policyItem.getAccesses()) {
+					if (itemAccesses.getType() == null || itemAccesses.getIsAllowed() == null) {
+						return false;
+					}
 				}
 			}
 		}
 
-		return isPolicyItemValid;
+		return true;
 	}
 
 	@Override

@@ -1161,11 +1161,11 @@ public class ServiceUtil {
 		VXPolicyList vXPolicyListObj = new VXPolicyList(new ArrayList<VXPolicy>());
 		if(CollectionUtils.isNotEmpty(rangerPolicyList)) {
 			int    totalCount = rangerPolicyList.size();
-			int    startIndex = filter == null ? 0 : filter.getStartIndex();
-			int    pageSize   = filter == null ? totalCount : filter.getMaxRows();
+			int    startIndex = filter.getStartIndex();
+			int    pageSize   = filter.getMaxRows();
 			int    toIndex    = Math.min(startIndex + pageSize, totalCount);
-			String sortType   = filter == null ? null : filter.getSortType();
-			String sortBy     = filter == null ? null : filter.getSortBy();
+			String sortType   = filter.getSortType();
+			String sortBy     = filter.getSortBy();
 			for(int i = startIndex; i < toIndex; i++) {
 				RangerPolicy policy =rangerPolicyList.get(i);
 				try {

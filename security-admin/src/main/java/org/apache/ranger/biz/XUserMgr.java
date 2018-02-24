@@ -446,12 +446,14 @@ public class XUserMgr extends XUserMgrBase {
 		// There is nothing to log anything in XXUser so far.
 		vXUser = xUserService.updateResource(vXUser);
 		vXUser.setUserRoleList(roleList);
-        if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP) {
-		vXUser.setPassword(password);
-        }
-        else if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
-            vXUser.setPassword(oldUserProfile.getPassword());
-        }
+		if (oldUserProfile != null) {
+			if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP) {
+				vXUser.setPassword(password);
+			}
+			else if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+				vXUser.setPassword(oldUserProfile.getPassword());
+			}
+		}
 
 		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
 				oldUserProfile, "update");
@@ -2199,11 +2201,11 @@ public class XUserMgr extends XUserMgrBase {
 			xXPortalUser=userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
 		}
 		VXUser createdXUser=null;
-		if(xxUser==null && vXUser!=null){
-			try{
+		if (xxUser == null && vXUser != null) {
+			try {
 				createdXUser = xUserService.createResource(vXUser);
-			}catch(Exception ex){
-				logger.error("Error creating user: "+createdXUser.getName(),ex);
+			} catch (Exception ex) {
+				logger.error("Error creating user: " + vXUser.getName(), ex);
 			}
 		}
 		if(createdXUser!=null){

@@ -74,7 +74,7 @@ public class XXServiceDef extends XXServiceDefBase implements java.io.Serializab
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		XXServiceDefWithAssignedId other = (XXServiceDefWithAssignedId) obj;
+		XXServiceDef other = (XXServiceDef) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;

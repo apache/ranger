@@ -93,10 +93,6 @@ public class HadoopConfigHolder  {
 		return ret;
 	}
 
-  public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties) {
-    return getInstance(aDatasourceName, connectionProperties, null);
-  }
-
 	public static HadoopConfigHolder getInstance(String aDatasourceName, Map<String,String> connectionProperties,
                                                String defaultConfigFile) {
 		HadoopConfigHolder ret = dataSource2HadoopConfigHolder.get(aDatasourceName);
@@ -178,36 +174,35 @@ public class HadoopConfigHolder  {
 		}
 	}
 
-	public static void initResourceMap() {
-		if (resourcemapProperties == null) {
-			resourcemapProperties = new Properties();
-			InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(RESOURCEMAP_PROP_FILE);
-			if (in != null) {
-				try {
-					resourcemapProperties.load(in);
-					for (Map.Entry<Object, Object> entry : resourcemapProperties
-							.entrySet()) {
+	private static void initResourceMap() {
+		Properties props = new Properties();
+		InputStream in = HadoopConfigHolder.class.getClassLoader().getResourceAsStream(RESOURCEMAP_PROP_FILE);
+		if (in != null) {
+			try {
+				props.load(in);
+				for (Map.Entry<Object, Object> entry : props
+						.entrySet()) {
+					String value = (String) entry.getValue();
+					if (RANGER_SECTION_NAME.equals(value)) {
 						String key = (String) entry.getKey();
-						String value = (String) entry.getValue();
-						if (RANGER_SECTION_NAME.equals(value)) {
-							rangerInternalPropertyKeys.add(key);
-						}
-					}
-				} catch (IOException e) {
-					throw new HadoopException("Unable to load resource map properties from [" + RESOURCEMAP_PROP_FILE + "]", e);
-				}
-				finally {
-					if (in != null) {
-						try {
-							in.close();
-						} catch (IOException ioe) {
-							// Ignore IOException during close of stream
-						}
+						rangerInternalPropertyKeys.add(key);
 					}
 				}
-			} else {
-				throw new HadoopException("Unable to locate resource map properties from [" + RESOURCEMAP_PROP_FILE + "] in the class path.");
+				resourcemapProperties = props;
+			} catch (IOException e) {
+				throw new HadoopException("Unable to load resource map properties from [" + RESOURCEMAP_PROP_FILE + "]", e);
 			}
+			finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException ioe) {
+						// Ignore IOException during close of stream
+					}
+				}
+			}
+		} else {
+			throw new HadoopException("Unable to locate resource map properties from [" + RESOURCEMAP_PROP_FILE + "] in the class path.");
 		}
 	}
 

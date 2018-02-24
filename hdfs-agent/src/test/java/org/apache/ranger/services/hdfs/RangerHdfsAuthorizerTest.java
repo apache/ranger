@@ -119,7 +119,7 @@ public class RangerHdfsAuthorizerTest {
             try {
                 checkAccess(access, userName, groups);
                 Assert.fail("Access should be blocked for " + path + " access=" + access + " for user=" + userName
-                        + " groups=" + groups);
+                        + " groups=" + Arrays.asList(groups));
             } catch (AccessControlException ace) {
                 Assert.assertNotNull(ace);
             }
