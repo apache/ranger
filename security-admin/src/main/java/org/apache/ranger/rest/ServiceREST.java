@@ -1719,20 +1719,16 @@ public class ServiceREST {
 				ret = toRangerPolicyList(policies);
 			} else {
 				// get all policies from the store; pick the page to return after applying filter
-				int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
-				int savedMaxRows    = filter == null ? Integer.MAX_VALUE : filter.getMaxRows();
+				final int savedStartIndex = filter.getStartIndex();
+				final int savedMaxRows    = filter.getMaxRows();
 
-				if(filter != null) {
-					filter.setStartIndex(0);
-					filter.setMaxRows(Integer.MAX_VALUE);
-				}
+				filter.setStartIndex(0);
+				filter.setMaxRows(Integer.MAX_VALUE);
 
 				List<RangerPolicy> policies = svcStore.getPolicies(filter);
 
-				if(filter != null) {
-					filter.setStartIndex(savedStartIndex);
-					filter.setMaxRows(savedMaxRows);
-				}
+				filter.setStartIndex(savedStartIndex);
+				filter.setMaxRows(savedMaxRows);
 
 				policies = applyAdminAccessFilter(policies);
 
@@ -3212,11 +3208,11 @@ public class ServiceREST {
 
 		if(CollectionUtils.isNotEmpty(policyList)) {
 			int    totalCount = policyList.size();
-			int    startIndex = filter == null ? 0 : filter.getStartIndex();
-			int    pageSize   = filter == null ? totalCount : filter.getMaxRows();
+			int    startIndex = filter.getStartIndex();
+			int    pageSize   = filter.getMaxRows();
 			int    toIndex    = Math.min(startIndex + pageSize, totalCount);
-			String sortType   = filter == null ? null : filter.getSortType();
-			String sortBy     = filter == null ? null : filter.getSortBy();
+			String sortType   = filter.getSortType();
+			String sortBy     = filter.getSortBy();
 
 			List<RangerPolicy> retList = new ArrayList<RangerPolicy>();
 			for(int i = startIndex; i < toIndex; i++) {
