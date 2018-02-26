@@ -146,7 +146,7 @@ stop(){
 
 metric(){
   if [ "$JAVA_HOME" == "" ]; then
-    echo "[E] JAVA_HOME environment variable not defined, aborting Apache Ranger Admin metric collection"
+    echo "[E] JAVA_HOME environment variable not defined, aborting Apache Ranger Admin metric collection" 1>&2;
     exit 1;
   fi
   java ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/META-INF:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/META-INF:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.patch.cliutil.MetricUtil ${arg2} ${arg3} 2>/dev/null
