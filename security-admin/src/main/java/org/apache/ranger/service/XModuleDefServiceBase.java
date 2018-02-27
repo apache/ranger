@@ -26,7 +26,8 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
-
+import java.util.Map;
+import java.util.HashMap;
 public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXModuleDef>
 		extends AbstractBaseResourceService<T, V> {
 
@@ -58,16 +59,21 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
 	public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
 		VXModuleDefList returnList = new VXModuleDefList();
 		List<VXModuleDef> vXModuleDefList = new ArrayList<VXModuleDef>();
-
+                searchCriteria.setMaxRows(Integer.MAX_VALUE);
 		List<T> resultList = searchResources(searchCriteria,
 				searchFields, sortFields, returnList);
+                Map<Long, T> matchModule = new HashMap<Long,T>();
+                for (T moduleDef : resultList) {
+                        matchModule.put(moduleDef.getId(),  moduleDef);
+                }
 
+                List <T> moduleDefList=new ArrayList<T>(matchModule.values());
 		// Iterate over the result list and create the return list
-		for (T gjXModuleDef : resultList) {
+                for (T gjXModuleDef : moduleDefList) {
 			VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef);
 			vXModuleDefList.add(vXModuleDef);
 		}
-
+                returnList.setTotalCount(vXModuleDefList.size());
 		returnList.setvXModuleDef(vXModuleDefList);
 		return returnList;
 	}
