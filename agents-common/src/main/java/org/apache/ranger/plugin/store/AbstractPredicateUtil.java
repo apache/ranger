@@ -462,10 +462,13 @@ public class AbstractPredicateUtil {
 						List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
 
 						for(RangerPolicyItem policyItem : policyItems) {
-							if(policyItem.getUsers().contains(userName)) {
-								ret = true;
-
-								break;
+                                                        if(! policyItem.getUsers().isEmpty()) {
+                                                                for(String user : policyItem.getUsers()) {
+                                                                        if(StringUtils.containsIgnoreCase(user, userName)) {
+                                                                                ret = true;
+                                                                                break;
+                                                                        }
+                                                                }
 							}
 						}
 						if (ret) {
@@ -517,10 +520,13 @@ public class AbstractPredicateUtil {
 						List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
 
 						for(RangerPolicyItem policyItem : policyItems) {
-							if(policyItem.getGroups().contains(groupName)) {
-								ret = true;
-
-								break;
+                                                        if(! policyItem.getGroups().isEmpty()) {
+                                                                for(String group : policyItem.getGroups()) {
+                                                                        if(StringUtils.containsIgnoreCase(group, groupName)) {
+                                                                                ret = true;
+                                                                                break;
+                                                                        }
+                                                                }
 							}
 						}
 						if (ret) {
