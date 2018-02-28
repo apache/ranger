@@ -36,10 +36,12 @@
 							<th>
 								<span class="policy-title">
                                                                 <!-- Remove alt attribut from img tag -->
-                                   <img src="images/folder-grey.png">
-									{{./this.attributes.name}} 
+                                   <span>
+                                                                                <img src="images/folder-grey.png">
+                                                                                {{./this.attributes.name}}
+                                                                        </span>
 									{{#if ../operation}} 
-									
+                                                                        <span>
                                                                           <a href="javascript:void(0)" title="Export" type="button" class="download  pull-right text-decoration" data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" >
                                           <i class="icon-external-link-sign"> </i>
 	                                   </a>
@@ -49,6 +51,7 @@
 									   </a>
 									   
                                                                            <a href="#!/service/{{./this.id}}/create"class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+                                    </span>
 									 
 									{{/if}}
 								</span>	
