@@ -506,7 +506,16 @@ def main():
 
 	if isfile(hadoop_conf_full_path) and not isfile(tagsync_conf_full_path):
 			os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
-
+        rangerTagsync_password = globalDict['rangerTagsync_password']
+        rangerTagsync_name ='rangerTagsync'
+        endPoint='RANGER'
+        cmd = 'python updatetagadminpassword.py %s %s %s'  %(endPoint, rangerTagsync_name, rangerTagsync_password)
+        if rangerTagsync_password != "" :
+                output = os.system(cmd)
+                if (output == 0):
+                        print "[I] Successfully updated password of " + rangerTagsync_name +" user"
+                else:
+                        print "[ERROR] Unable to change password of " + rangerTagsync_name +" user."
 	print "\nINFO: Completed ranger-tagsync installation.....\n"
 
 main()

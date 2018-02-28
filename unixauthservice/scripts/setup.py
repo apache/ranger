@@ -366,6 +366,7 @@ def main():
     hadoop_conf = globalDict['hadoop_conf']
     pid_dir_path = globalDict['USERSYNC_PID_DIR_PATH']
     unix_user = globalDict['unix_user']
+    rangerUsersync_password = globalDict['rangerUsersync_password']
 
     if globalDict['SYNC_SOURCE'].lower() == SYNC_SOURCE_LDAP and globalDict.has_key('ROLE_ASSIGNMENT_LIST_DELIMITER') \
      and globalDict.has_key('USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER') and globalDict.has_key('USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER'):
@@ -592,5 +593,14 @@ def main():
     if isfile(hadoop_conf_full_path) and not isfile(usersync_conf_full_path):
         os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
 
+    rangerUsersync_name ='rangerusersync'
+    cmd = 'python updatepolicymgrpassword.py %s %s'  %(rangerUsersync_name, rangerUsersync_password)
+
+    if rangerUsersync_password != "" :
+        output = os.system(cmd)
+        if (output == 0):
+          print "[I] Successfully updated password of " + rangerUsersync_name +" user"
+        else:
+          print "[ERROR] Unable to change password of " + rangerUsersync_name +" user."
 
 main()

@@ -82,7 +82,7 @@ def write_properties_to_xml(xml_path, property_name='', property_value=''):
 	else:
 		return -1
 
-def main():
+def main(argv):
 	global globalDict
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -118,7 +118,10 @@ def main():
 	PASSWORD=''
 	USERNAME_PROPERTY_NAME=''
 	FILENAME_PROPERTY_NAME=''
-
+        if len(argv) == 4:
+                ENDPOINT=argv[1]
+                USERNAME=argv[2]
+                PASSWORD=argv[3]
 	while ENDPOINT == "" or not (ENDPOINT == "ATLAS" or ENDPOINT == "RANGER"):
 		sys.stdout.write('Enter Destination NAME (Ranger/Atlas):')
 		sys.stdout.flush()
@@ -159,7 +162,6 @@ def main():
 			USERNAME = 'rangertagsync'
 		else:
 			USERNAME = 'admin'
-
 	while PASSWORD == "":
 		PASSWORD=getpass.getpass("Enter " + " password for " + ENDPOINT + " user " + USERNAME + ":")
 
@@ -183,4 +185,4 @@ def main():
 	else:
 		log("[E] Input Error","error")
 
-main()
+main(sys.argv)

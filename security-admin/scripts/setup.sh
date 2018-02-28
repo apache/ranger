@@ -63,6 +63,10 @@ db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
 db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 db_ssl_auth_type=$(get_prop 'db_ssl_auth_type' $PROPFILE)
+rangerAdmin_password=$(get_prop 'rangerAdmin_password' $PROPFILE)
+rangerTagsync_password=$(get_prop 'rangerTagsync_password' $PROPFILE)
+rangerUsersync_password=$(get_prop 'rangerUsersync_password' $PROPFILE)
+keyadmin_password=$(get_prop 'keyadmin_password' $PROPFILE)
 javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
 javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
 javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
@@ -1372,7 +1376,28 @@ setup_install_files(){
 		chmod ug+rx /usr/bin/ranger-admin	
 	fi
 }
+python_command_for_change_password(){
+ $PYTHON_COMMAND_INVOKER db_setup.py -changepassword  $1 $2 $3
+}
 
+change_default_users_password(){
+ if [ "${rangerAdmin_password}" != '' ] && [ "${rangerAdmin_password}" != "admin" ]
+        then
+   python_command_for_change_password 'admin' 'admin' "$rangerAdmin_password"
+        fi
+        if [ "${rangerTagsync_password}" != "" ] &&  [ "${rangerTagsync_password}" != "rangertagsync" ]
+        then
+   python_command_for_change_password 'rangertagsync' 'rangertagsync' "$rangerTagsync_password"
+        fi
+        if [ "${rangerUsersync_password}" != "" ] &&  [ "${rangerUsersync_password}" != "rangerusersync" ]
+        then
+   python_command_for_change_password 'rangerusersync' 'rangerusersync' "$rangerUsersync_password"
+        fi
+        if [ "${keyadmin_password}" != "" ] &&  [ "${keyadmin_password}" != "keyadmin" ]
+        then
+   python_command_for_change_password 'keyadmin' 'keyadmin' "$keyadmin_password"
+        fi
+}
 log " --------- Running Ranger PolicyManager Web Application Install Script --------- "
 log "[I] uname=`uname`"
 log "[I] hostname=`hostname`"
@@ -1407,6 +1432,10 @@ then
 	if [ "$?" == "0" ]
 	then
 		$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
+    if [ "$?" == "0" ]
+    then
+      change_default_users_password
+    fi
 	else
 		exit 1
 	fi
