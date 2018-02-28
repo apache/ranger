@@ -214,7 +214,7 @@ define(function(require){
 				_.each(this.model.get('resources'),function(obj,key){
 					var resourceDef = _.findWhere(resourceDefList,{'name':key}),
 					sameLevelResourceDef = [], parentResource ;
-					sameLevelResourceDef = _.where(resourceDefList, {'level': resourceDef.level});
+					sameLevelResourceDef = _.where(resourceDefList, {'level': resourceDef.level, 'parent' : resourceDef.parent});
 					//for parent leftnode status
                     if(resourceDef.parent){
                     	parentResource = _.findWhere(resourceDefList ,{'name':resourceDef.parent});
@@ -227,9 +227,15 @@ define(function(require){
                     }
 					if(sameLevelResourceDef.length > 1){
 						obj['resourceType'] = key;
-						this.model.set('sameLevel'+resourceDef.level, obj)
-						//parentShowHide
-						this.selectedResourceTypes['sameLevel'+resourceDef.level]=key;
+                                                if(_.isUndefined(resourceDef.parent)){
+                                                        this.model.set('sameLevel'+resourceDef.level, obj);
+                                                        //parentShowHide
+                                                        this.selectedResourceTypes['sameLevel'+resourceDef.level] = key;
+                                                }else{
+                                                        this.model.set('sameLevel'+resourceDef.level+resourceDef.parent, obj);
+                                                        this.selectedResourceTypes['sameLevel'+resourceDef.level+resourceDef.parent] = key;
+                                                }
+
 					}else{
 						//single value support
 						/*if(! XAUtil.isSinglevValueInput(resourceDef) ){
@@ -677,7 +683,12 @@ define(function(require){
 				var currentResource = _.findWhere(this.getResources(), {'name': name });
 				//same level type
 				if(_.isUndefined(this.fields[currentResource.name])){
-					var sameLevelName = 'sameLevel'+currentResource.level;
+                                        if(!_.isUndefined(currentResource.parent)){
+                                                var sameLevelName = 'sameLevel'+currentResource.level + currentResource.parent;
+                                        }else{
+                                                var sameLevelName = 'sameLevel'+currentResource.level;
+                                        }
+
 					name = this.fields[sameLevelName].editor.$resourceType.val()
 					val = this.fields[sameLevelName].getValue();
 					if(isCurrentSameLevelField){

@@ -89,7 +89,7 @@ define(function(require) {
 								}
 								break;
 							}
-							if($.inArray(v.level, samelevelFieldCreated) >= 0){
+                                                        if($.inArray(v.parent, samelevelFieldCreated) >= 0){
 								return;
 							}
 							
@@ -141,8 +141,12 @@ define(function(require) {
 								if(optionsAttrs.length > 1){
 									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
 									formObj['sameLevelOpts'] = optionsTitle;
-									samelevelFieldCreated.push(v.level);
-									fieldName = 'sameLevel'+v.level;
+                                                                        samelevelFieldCreated.push(v.parent);
+                                                                        if(!_.isUndefined(v.parent)){
+                                                                                fieldName = 'sameLevel'+v.level+''+v.parent;
+                                                                        }else{
+                                                                                fieldName = 'sameLevel'+v.level;
+                                                                        }
 									formObj['title'] = '';
 									formObj['resourcesAtSameLevel'] = true;
 									
@@ -182,6 +186,7 @@ define(function(require) {
 							formObj['recursiveSupport'] = v.recursiveSupported;
 							formObj['name'] = v.name;
 							formObj['editorAttrs'] = {'data-placeholder': v.label };
+                                                        formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
 							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
 								var options = {
 										'containerCssClass' : v.name,
@@ -196,6 +201,39 @@ define(function(require) {
 								form.initilializePathPlugin = true;
 							}
 							formObj['initilializePathPlugin'] = true;
+                                                        var optionsAttrs = [] ,parentResource;
+                                                                if(!_.isUndefined(v.level)){
+                                                                        optionsAttrs = _.filter(config,function(field){
+                                                                                if(field.level == v.level && field.parent == v.parent){
+                                                                                        return field;
+                                                                                }
+                                                                        });
+                                                                }
+                                                                var resourceDef = _.findWhere(optionsAttrs,{'name':v.name});
+                                                                //for parent leftnode status
+                                                                if(v.parent){
+                                                                        parentResource = _.findWhere(config ,{'name':v.parent});
+                                                                }
+                                                                //show only required resources in acccess policy in order to show their access types
+                                                                if(!_.isUndefined(v.parent) && !_.isEmpty(v.parent)
+                                                                                && parentResource.isValidLeaf){
+                                                                        optionsAttrs.unshift({'level':v.level, name:'none',label:'none'});
+                                                                }
+                                                                if(optionsAttrs.length > 1){
+                                                                        var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
+                                                                        formObj['sameLevelOpts'] = optionsTitle;
+                                                                        samelevelFieldCreated.push(v.parent);
+                                                                        if(!_.isUndefined(v.parent)){
+                                                                                fieldName = 'sameLevel'+v.level+''+v.parent;
+                                                                        }else{
+                                                                                fieldName = 'sameLevel'+v.level;
+                                                                        }
+                                                                        formObj['title'] = '';
+                                                                        formObj['resourcesAtSameLevel'] = true;
+
+                                                                        // formView is used to listen form events
+                                                                        formObj['formView'] = form;
+                                                                }
 							break;
 						case 'password':formObj.type = 'Password';break;
 						default:formObj.type = 'Text';
