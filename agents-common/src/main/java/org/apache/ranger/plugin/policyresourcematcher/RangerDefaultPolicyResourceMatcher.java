@@ -274,13 +274,21 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         if (keysMatch) {
             for (RangerResourceDef resourceDef : serviceDef.getResources()) {
                 String                resourceName  = resourceDef.getName();
-                String                resourceValue = resource.getValue(resourceName);
+                Object                resourceValue = resource.getValue(resourceName);
                 RangerResourceMatcher matcher       = getResourceMatcher(resourceName);
 
-                if (StringUtils.isEmpty(resourceValue)) {
-                    ret = matcher == null || matcher.isCompleteMatch(resourceValue, evalContext);
-                } else {
-                    ret = matcher != null && matcher.isCompleteMatch(resourceValue, evalContext);
+                if (resourceValue == null) {
+                    ret = matcher == null || matcher.isCompleteMatch(null, evalContext);
+                } else if (resourceValue instanceof String) {
+                    String strValue = (String) resourceValue;
+
+                    if (StringUtils.isEmpty(strValue)) {
+                        ret = matcher == null || matcher.isCompleteMatch(strValue, evalContext);
+                    } else {
+                        ret = matcher != null && matcher.isCompleteMatch(strValue, evalContext);
+                    }
+                } else { // return false for any other type of resourceValue
+                    ret = false;
                 }
 
                 if (!ret) {
@@ -447,12 +455,18 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
         for (RangerResourceDef resourceDef : serviceDef.getResources()) {
             String resourceName = resourceDef.getName();
-            String resourceValue = resource.getValue(resourceName);
-            if (resourceValue != null) {
+            Object resourceValue = resource.getValue(resourceName);
+            if (resourceValue instanceof String) {
+                String strValue = (String) resourceValue;
+
                 if (policyResources == null) {
                     policyResources = new HashMap<>();
                 }
-                policyResources.put(resourceName, new RangerPolicyResource(resourceValue));
+                policyResources.put(resourceName, new RangerPolicyResource(strValue));
+            } else if (resourceValue != null) { // return false for any other type of resourceValue
+                policyResources = null;
+
+                break;
             }
         }
         final boolean ret = MapUtils.isNotEmpty(policyResources) && isMatch(policyResources, evalContext);
@@ -572,7 +586,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                     for (RangerResourceDef resourceDef : hierarchy) {
 
                         RangerResourceMatcher matcher = getResourceMatcher(resourceDef.getName());
-                        String resourceValue = resource.getValue(resourceDef.getName());
+                        Object resourceValue = resource.getValue(resourceDef.getName());
 
                         if (matcher != null) {
                             if (resourceValue != null) {

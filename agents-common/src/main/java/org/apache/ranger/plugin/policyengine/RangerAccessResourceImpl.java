@@ -31,7 +31,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 
 public class RangerAccessResourceImpl implements RangerMutableResource {
 	private String              ownerUser;
-	private Map<String, String> elements;
+	private Map<String, Object> elements;
 	private String              stringifiedValue;
 	private String              stringifiedCacheKeyValue;
 	private String              leafName;
@@ -41,11 +41,11 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 		this(null, null);
 	}
 
-	public RangerAccessResourceImpl(Map<String, String> elements) {
+	public RangerAccessResourceImpl(Map<String, Object> elements) {
 		this(elements, null);
 	}
 
-	public RangerAccessResourceImpl(Map<String, String> elements, String ownerUser) {
+	public RangerAccessResourceImpl(Map<String, Object> elements, String ownerUser) {
 		this.elements  = elements;
 		this.ownerUser = ownerUser;
 	}
@@ -61,8 +61,8 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public String getValue(String name) {
-		String ret = null;
+	public Object getValue(String name) {
+		Object ret = null;
 
 		if(elements != null && elements.containsKey(name)) {
 			ret = elements.get(name);
@@ -88,7 +88,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public void setValue(String name, String value) {
+	public void setValue(String name, Object value) {
 		if(value == null) {
 			if(elements != null) {
 				elements.remove(name);
@@ -200,7 +200,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 	}
 
 	@Override
-	public Map<String, String> getAsMap() {
+	public Map<String, Object> getAsMap() {
 		return elements == null ? Collections.EMPTY_MAP : Collections.unmodifiableMap(elements);
 	}
 
@@ -251,7 +251,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 
 		sb.append("elements={");
 		if(elements != null) {
-			for(Map.Entry<String, String> e : elements.entrySet()) {
+			for(Map.Entry<String, Object> e : elements.entrySet()) {
 				sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
 			}
 		}

@@ -33,7 +33,7 @@ public interface RangerResourceMatcher {
 
 	boolean isMatchAny();
 
-	boolean isMatch(String resource, Map<String, Object> evalContext);
+	boolean isMatch(Object resource, Map<String, Object> evalContext);
 
 	boolean isCompleteMatch(String resource, Map<String, Object> evalContext);
 

@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final boolean  optWildcard;
     private final String   wildcardChars;
     private final TrieNode root;
+    private final Comparator<T> comparator;
 
     public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators) {
         this(resourceDef, evaluators, null);
@@ -77,6 +79,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optWildcard   = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
         this.root          = new TrieNode(Character.valueOf((char)0));
+        this.comparator    = comparator;
 
         for(T evaluator : evaluators) {
             Map<String, RangerPolicyResource> policyResources = evaluator.getPolicyResource();
@@ -120,40 +123,21 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return resourceName;
     }
 
-    public List<T> getEvaluatorsForResource(String resource) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerResourceTrie.getEvaluatorsForResource(" + resource + ")");
-        }
+    public List<T> getEvaluatorsForResource(Object resource) {
+        if (resource instanceof String) {
+            return getEvaluatorsForResource((String) resource);
+        } else if (resource instanceof Collection) {
+            if (CollectionUtils.isEmpty((Collection) resource)) {  // treat empty collection same as empty-string
+                return getEvaluatorsForResource("");
+            } else {
+                @SuppressWarnings("unchecked")
+                Collection<String> resources = (Collection<String>) resource;
 
-        List<T> ret = null;
-
-        TrieNode curr = root;
-
-        final int len = resource.length();
-        for(int i = 0; i < len; i++) {
-            Character ch    = getLookupChar(resource.charAt(i));
-            TrieNode  child = curr.getChild(ch);
-
-            if(child == null) {
-                ret = curr.getWildcardEvaluators();
-                curr = null; // so that curr.getEvaluators() will not be called below
-                break;
-            }
-
-            curr = child;
-        }
-
-        if(ret == null) {
-            if(curr != null) {
-                ret = curr.getEvaluators();
+                return getEvaluatorsForResources(resources);
             }
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerResourceTrie.getEvaluatorsForResource(" + resource + "): evaluatorCount=" + (ret == null ? 0 : ret.size()));
-        }
-
-        return ret;
+        return null;
     }
 
     public TrieData getTrieData() {
@@ -200,6 +184,92 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         } else {
             curr.addEvaluator(evaluator);
         }
+    }
+
+    private List<T> getEvaluatorsForResource(String resource) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerResourceTrie.getEvaluatorsForResource(" + resource + ")");
+        }
+
+        List<T>  ret  = null;
+        TrieNode curr = root;
+
+        final int len = resource.length();
+        for(int i = 0; i < len; i++) {
+            Character ch    = getLookupChar(resource.charAt(i));
+            TrieNode  child = curr.getChild(ch);
+
+            if(child == null) {
+                ret = curr.getWildcardEvaluators();
+                curr = null; // so that curr.getEvaluators() will not be called below
+                break;
+            }
+
+            curr = child;
+        }
+
+        if(ret == null) {
+            if(curr != null) {
+                ret = curr.getEvaluators();
+            }
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerResourceTrie.getEvaluatorsForResource(" + resource + "): evaluatorCount=" + (ret == null ? 0 : ret.size()));
+        }
+
+        return ret;
+    }
+
+    private List<T> getEvaluatorsForResources(Collection<String> resources) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerResourceTrie.getEvaluatorsForResources(" + resources + ")");
+        }
+
+        List<T>      ret           = null;
+        Map<Long, T> evaluatorsMap = null;
+
+        for (String resource : resources) {
+            List<T> resourceEvaluators = getEvaluatorsForResource(resource);
+
+            if (CollectionUtils.isEmpty(resourceEvaluators)) {
+                continue;
+            }
+
+            if (evaluatorsMap == null) {
+                if (ret == null) { // first resource: don't create map yet
+                    ret = resourceEvaluators;
+                } else if (ret != resourceEvaluators) { // if evaluator list is same as earlier resources, retain the list, else create a map
+                    evaluatorsMap = new HashMap();
+
+                    for (T evaluator : ret) {
+                        evaluatorsMap.put(evaluator.getId(), evaluator);
+                    }
+
+                    ret = null;
+                }
+            }
+
+            if (evaluatorsMap != null) {
+                for (T evaluator : resourceEvaluators) {
+                    evaluatorsMap.put(evaluator.getId(), evaluator);
+                }
+            }
+        }
+
+        if (ret == null && evaluatorsMap != null) {
+            ret = new ArrayList<>(evaluatorsMap.values());
+
+            if (comparator != null) {
+                Collections.sort(ret, comparator);
+            }
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerResourceTrie.getEvaluatorsForResources(" + resources + "): evaluatorCount=" + (ret == null ? 0 : ret.size()));
+        }
+
+        return ret;
     }
 
     @Override

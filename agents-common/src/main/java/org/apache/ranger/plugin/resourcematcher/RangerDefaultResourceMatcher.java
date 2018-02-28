@@ -23,6 +23,7 @@ package org.apache.ranger.plugin.resourcematcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -30,7 +31,7 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 	private static final Log LOG = LogFactory.getLog(RangerDefaultResourceMatcher.class);
 
 	@Override
-	public boolean isMatch(String resource, Map<String, Object> evalContext) {
+	public boolean isMatch(Object resource, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + ")");
 		}
@@ -41,10 +42,24 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 		if(allValuesRequested || isMatchAny) {
 			ret = isMatchAny;
 		} else {
-			for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-				ret = resourceMatcher.isMatch(resource, evalContext);
-				if (ret) {
-					break;
+			if (resource instanceof String) {
+				String strValue = (String) resource;
+
+				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+					ret = resourceMatcher.isMatch(strValue, evalContext);
+					if (ret) {
+						break;
+					}
+				}
+			} else if (resource instanceof Collection) {
+				@SuppressWarnings("unchecked")
+				Collection<String> collValue = (Collection<String>) resource;
+
+				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+					ret = resourceMatcher.isMatchAny(collValue, evalContext);
+					if (ret) {
+						break;
+					}
 				}
 			}
 

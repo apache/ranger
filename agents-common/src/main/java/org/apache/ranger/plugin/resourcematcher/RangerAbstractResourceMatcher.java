@@ -271,8 +271,17 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return sb;
 	}
 
-	boolean isAllValuesRequested(String resource) {
-		boolean result = StringUtils.isEmpty(resource) || WILDCARD_ASTERISK.equals(resource);
+	boolean isAllValuesRequested(Object resource) {
+		final boolean result;
+
+		if (resource == null) {
+			result = true;
+		} else if (resource instanceof String) {
+			result = StringUtils.isEmpty((String) resource) || WILDCARD_ASTERISK.equals(resource);
+		} else { // return false for any other type of resourceValue
+			result = false;
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("isAllValuesRequested(" + resource + "): " + result);
 		}

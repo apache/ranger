@@ -33,7 +33,7 @@ public interface RangerAccessResource {
 
 	boolean exists(String name);
 
-	String getValue(String name);
+	Object getValue(String name);
 
 	RangerServiceDef getServiceDef();
 
@@ -45,7 +45,7 @@ public interface RangerAccessResource {
 
 	String getCacheKey();
 
-	Map<String, String> getAsMap();
+	Map<String, Object> getAsMap();
 
 	RangerAccessResource getReadOnlyCopy();
 }

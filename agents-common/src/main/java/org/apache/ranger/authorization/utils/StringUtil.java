@@ -23,7 +23,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 public class StringUtil {
@@ -272,5 +274,19 @@ public class StringUtil {
 		utc.add(Calendar.MILLISECOND, -offset);
 
 		return utc.getTime();
+	}
+
+	public static Map<String, Object> toStringObjectMap(Map<String, String> map) {
+		Map<String, Object> ret = null;
+
+		if (map != null) {
+			ret = new HashMap<>(map.size());
+
+			for (Map.Entry<String, String> e : map.entrySet()) {
+				ret.put(e.getKey(), e.getValue());
+			}
+		}
+
+		return ret;
 	}
 }

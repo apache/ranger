@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -44,6 +45,18 @@ abstract class ResourceMatcher {
 
     boolean getNeedsDynamicEval() {
         return tokenReplacer != null;
+    }
+
+    public boolean isMatchAny(Collection<String> resourceValues, Map<String, Object> evalContext) {
+        if (resourceValues != null) {
+            for (String resourceValue : resourceValues) {
+                if (isMatch(resourceValue, evalContext)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override

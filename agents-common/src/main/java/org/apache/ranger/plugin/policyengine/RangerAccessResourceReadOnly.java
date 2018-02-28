@@ -29,7 +29,7 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
 	private final RangerAccessResource source;
 	private final Set<String> keys;
-	private final Map<String, String> map;
+	private final Map<String, Object> map;
 
 	public RangerAccessResourceReadOnly(final RangerAccessResource source) {
 		this.source = source;
@@ -42,7 +42,7 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 		}
 		this.keys = Collections.unmodifiableSet(sourceKeys);
 
-		Map<String, String> sourceMap = source.getAsMap();
+		Map<String, Object> sourceMap = source.getAsMap();
 
 		if (MapUtils.isEmpty(sourceMap)) {
 			sourceMap = new HashMap<>();
@@ -54,7 +54,7 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
 	public boolean exists(String name) { return source.exists(name); }
 
-	public String getValue(String name) { return source.getValue(name); }
+	public Object getValue(String name) { return source.getValue(name); }
 
 	public RangerServiceDef getServiceDef() { return source.getServiceDef(); }
 
@@ -66,7 +66,7 @@ public class RangerAccessResourceReadOnly implements RangerAccessResource {
 
 	public String getCacheKey() { return source.getCacheKey(); }
 
-	public Map<String, String> getAsMap() { return map; }
+	public Map<String, Object> getAsMap() { return map; }
 
 	public RangerAccessResource getReadOnlyCopy() { return this; }
 }

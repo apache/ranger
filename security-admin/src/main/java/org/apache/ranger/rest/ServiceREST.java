@@ -58,6 +58,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -506,7 +507,7 @@ public class ServiceREST {
 		List<RangerPolicy> ret = new ArrayList<>();
 
 		List<RangerService> services = new ArrayList<>();
-		Map<String, String> resource = new HashMap<>();
+		Map<String, Object> resource = new HashMap<>();
 
 		String validationMessage = validateResourcePoliciesRequest(serviceDefName, serviceName, request, services, resource);
 
@@ -542,7 +543,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private String validateResourcePoliciesRequest(String serviceDefName, String serviceName, HttpServletRequest request, List<RangerService> services, Map<String, String> resource) {
+	private String validateResourcePoliciesRequest(String serviceDefName, String serviceName, HttpServletRequest request, List<RangerService> services, Map<String, Object> resource) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.validatePoliciesForResourceRequest(service-type=" + serviceDefName + ", service-name=" + serviceName + ")");
 		}
@@ -1065,7 +1066,7 @@ public class ServiceREST {
 					validateGrantRevokeRequest(grantRequest);
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
 	
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
@@ -1098,7 +1099,7 @@ public class ServiceREST {
 			
 						if(! CollectionUtils.isEmpty(resourceNames)) {
 							for(String resourceName : resourceNames) {
-								RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+								RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
 								policyResource.setIsRecursive(grantRequest.getIsRecursive());
 		
 								policyResources.put(resourceName, policyResource);
@@ -1162,7 +1163,7 @@ public class ServiceREST {
 
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(grantRequest.getResource());
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
 					XXService xService = daoManager.getXXService().findByName(serviceName);
@@ -1210,7 +1211,7 @@ public class ServiceREST {
 
 							if(! CollectionUtils.isEmpty(resourceNames)) {
 								for(String resourceName : resourceNames) {
-									RangerPolicyResource policyResource = new RangerPolicyResource(resource.getValue(resourceName));
+									RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
 									policyResource.setIsRecursive(grantRequest.getIsRecursive());
 
 									policyResources.put(resourceName, policyResource);
@@ -1277,7 +1278,7 @@ public class ServiceREST {
 
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
 
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
@@ -1338,7 +1339,7 @@ public class ServiceREST {
 
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(revokeRequest.getResource());
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 					boolean isAllowed = false;
 					boolean isKeyAdmin = bizUtil.isKeyAdmin();

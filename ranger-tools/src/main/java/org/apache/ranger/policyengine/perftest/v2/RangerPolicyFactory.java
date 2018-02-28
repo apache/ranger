@@ -179,7 +179,7 @@ public class RangerPolicyFactory {
 		return accessRequest;
 	}
 
-	private static ImmutableMap<String, String> createResourceElements(boolean shouldEvaluateToTrue) {
+	private static ImmutableMap<String, Object> createResourceElements(boolean shouldEvaluateToTrue) {
 		String database = String.format("db_%s", System.nanoTime());
 		String table = String.format("table_%s", System.nanoTime());
 		String column = String.format("column_%s", System.nanoTime());

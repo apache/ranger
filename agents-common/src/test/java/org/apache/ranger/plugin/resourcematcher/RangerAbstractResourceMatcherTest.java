@@ -42,7 +42,7 @@ public class RangerAbstractResourceMatcherTest {
     static class AbstractMatcherWrapper extends RangerAbstractResourceMatcher {
 
         @Override
-        public boolean isMatch(String resource, Map<String, Object> evalContext) {
+        public boolean isMatch(Object resource, Map<String, Object> evalContext) {
             fail("This method is not expected to be used by test!");
             return false;
         }
