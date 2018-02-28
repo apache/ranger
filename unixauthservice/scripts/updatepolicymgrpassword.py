@@ -92,7 +92,7 @@ def populate_global_install_dict():
             value = value.strip()
             installglobalDict[key] = value
 
-def main():
+def main(argv):
 	global globalDict
 	populate_global_install_dict()
 	FORMAT = '%(asctime)-15s %(message)s'
@@ -128,6 +128,10 @@ def main():
 	unix_user = installglobalDict['unix_user']
 	unix_group = installglobalDict['unix_group']
 
+        if len(argv) == 3:
+                SYNC_POLICY_MGR_USERNAME=argv[1]
+                SYNC_POLICY_MGR_PASSWORD=argv[2]
+
 	while SYNC_POLICY_MGR_USERNAME == "":
 		print "Enter policymgr user name:"
 		SYNC_POLICY_MGR_USERNAME=raw_input()
@@ -156,4 +160,4 @@ def main():
 	else:
 		log("[E] Input Error","error")
 
-main()
+main(sys.argv)

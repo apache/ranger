@@ -124,7 +124,17 @@ def subprocessCallWithRetry(query):
 		if(returnCode!=0 and retryCount>=3):
 			break
 	return returnCode
-
+def dbversionBasedOnUserName(userName):
+    version = ""
+    if userName == "admin" :
+        version = 'DEFAULT_ADMIN_UPDATE'
+    if userName == "rangerusersync" :
+        version = 'DEFAULT_RANGER_USERSYNC_UPDATE'
+    if userName == "rangertagsync" :
+        version = 'DEFAULT_RANGER_TAGSYNC_UPDATE'
+    if userName == "keyadmin" :
+        version = 'DEFAULT_KEYADMIN_UPDATE'
+    return version
 class BaseDB(object):
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -180,7 +190,7 @@ class BaseDB(object):
 		log("[I] ----------------- Creating Synonym ------------", "info")
 
 	def change_admin_default_password(xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		log("[I] ----------------- Changing Ranger admin default password  ------------", "info")
+                log("[I] ----------------- Changing Ranger "+ userName +" default password  ------------", "info")
 
 	def import_core_db_schema(self, db_name, db_user, db_password, file_name,first_table,last_table):
 		log("[I] ---------- Importing Core DB Schema ----------", "info")
@@ -600,7 +610,7 @@ class MysqlConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
-		version = 'DEFAULT_ADMIN_UPDATE'
+                version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
@@ -614,7 +624,7 @@ class MysqlConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-					log("[I] Ranger admin default password has already been changed!!","info")
+                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -638,10 +648,10 @@ class MysqlConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-							log ("[I] Ranger admin default password change request is in process..","info")
+                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-							log("[E] Ranger admin default password change request failed", "error")
-							sys.exit(1)
+                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                    sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -661,9 +671,9 @@ class MysqlConf(BaseDB):
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0 and status == 0:
-								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
 							elif ret == 0 and status == 2:
-								log ("[I] Ranger admin default password change request process skipped!","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
 							else:
 								if is_unix:
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -673,7 +683,7 @@ class MysqlConf(BaseDB):
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 									jisql_log(query, db_password)
 									ret = subprocess.call(query)
-								log("[E] Ranger admin default password change request failed", "error")
+                                                                log("[E] Ranger "+ userName +" default password change request failed", "error")
 								sys.exit(1)
 						else:
 							if is_unix:
@@ -684,7 +694,7 @@ class MysqlConf(BaseDB):
 								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
@@ -1315,7 +1325,7 @@ class OracleConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
-		version = 'DEFAULT_ADMIN_UPDATE'
+                version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
@@ -1329,7 +1339,7 @@ class OracleConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-					log("[I] Ranger admin default password has already been changed!!","info")
+                                     log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -1353,9 +1363,9 @@ class OracleConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-							log ("[I] Ranger admin default password change request is in process..","info")
+                                                        log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
@@ -1376,9 +1386,9 @@ class OracleConf(BaseDB):
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0 and status == 0:
-								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
 							elif ret == 0 and status == 2:
-								log ("[I] Ranger admin default password change request process skipped!","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
 							else:
 								if is_unix:
 									query = get_cmd + " -c \; -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -1388,7 +1398,7 @@ class OracleConf(BaseDB):
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 									jisql_log(query, db_password)
 									ret = subprocess.call(query)
-								log("[E] Ranger admin default password change request failed", "error")
+                                                                log("[E] Ranger	"+ userName +" default password change request failed", "error")
 								sys.exit(1)
 						else:
 							if is_unix:
@@ -1399,7 +1409,7 @@ class OracleConf(BaseDB):
 								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
@@ -1985,7 +1995,7 @@ class PostgresConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
-		version = 'DEFAULT_ADMIN_UPDATE'
+                version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
@@ -1999,7 +2009,7 @@ class PostgresConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-					log("[I] Ranger admin default password has already been changed!!","info")
+                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -2023,9 +2033,9 @@ class PostgresConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-							log ("[I] Ranger admin default password change request is in process..","info")
+                                                        log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
@@ -2046,9 +2056,9 @@ class PostgresConf(BaseDB):
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0 and status == 0:
-								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
 							elif ret == 0 and status == 2:
-								log ("[I] Ranger admin default password change request process skipped!","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
 							else:
 								if is_unix:
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -2058,7 +2068,7 @@ class PostgresConf(BaseDB):
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 									jisql_log(query, db_password)
 									ret = subprocess.call(query)
-								log("[E] Ranger admin default password change request failed", "error")
+                                                                log("[E] Ranger "+ userName +" default password change request failed", "error")
 								sys.exit(1)
 						else:
 							if is_unix:
@@ -2069,7 +2079,7 @@ class PostgresConf(BaseDB):
 								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
@@ -2617,7 +2627,7 @@ class SqlServerConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
-		version = 'DEFAULT_ADMIN_UPDATE'
+                version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
@@ -2631,7 +2641,7 @@ class SqlServerConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-					log("[I] Ranger admin default password has already been changed!!","info")
+                                        log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c \;" %(version)
@@ -2655,10 +2665,10 @@ class SqlServerConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-							log ("[I] Ranger admin default password change request is in process..","info")
+                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-							log("[E] Ranger admin default password change request failed", "error")
-							sys.exit(1)
+                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                    sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -2678,9 +2688,9 @@ class SqlServerConf(BaseDB):
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0 and status == 0:
-								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
 							elif ret == 0 and status == 2:
-								log ("[I] Ranger admin default password change request process skipped!","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
 							else:
 								if is_unix:
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
@@ -2690,7 +2700,7 @@ class SqlServerConf(BaseDB):
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 									jisql_log(query, db_password)
 									ret = subprocess.call(query)
-								log("[E] Ranger admin default password change request failed", "error")
+                                                                log("[E] Ranger "+ userName +" default password change request failed", "error")
 								sys.exit(1)
 						else:
 							if is_unix:
@@ -2701,7 +2711,7 @@ class SqlServerConf(BaseDB):
 								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
@@ -3262,7 +3272,7 @@ class SqlAnywhereConf(BaseDB):
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
-		version = 'DEFAULT_ADMIN_UPDATE'
+                version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
 		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
@@ -3276,7 +3286,7 @@ class SqlAnywhereConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-					log("[I] Ranger admin default password has already been changed!!","info")
+                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c \;" %(version)
@@ -3286,7 +3296,7 @@ class SqlAnywhereConf(BaseDB):
 					output = check_output(query)
 					if output.strip(version + " |"):
 						while(output.strip(version + " |")):
-							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                        log("[I] Ranger "+ userName +" change utility is being executed by some other process" ,"info")
 							time.sleep(retryPatchAfterSeconds)
 							jisql_log(query, db_password)
 							output = check_output(query)
@@ -3300,10 +3310,10 @@ class SqlAnywhereConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-							log ("[I] Ranger admin default password change request is in process..","info")
+                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-							log("[E] Ranger admin default password change request failed", "error")
-							sys.exit(1)
+                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                    sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -3323,9 +3333,9 @@ class SqlAnywhereConf(BaseDB):
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							if ret == 0 and status == 0:
-								log ("[I] Ranger admin default password change request processed successfully..","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
 							elif ret == 0 and status == 2:
-								log ("[I] Ranger admin default password change request process skipped!","info")
+                                                                log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
 							else:
 								if is_unix:
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
@@ -3335,7 +3345,7 @@ class SqlAnywhereConf(BaseDB):
 									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 									jisql_log(query, db_password)
 									ret = subprocess.call(query)
-								log("[E] Ranger admin default password change request failed", "error")
+                                                                log("[E] Ranger "+ userName +" default password change request failed", "error")
 								sys.exit(1)
 						else:
 							if is_unix:
@@ -3346,7 +3356,7 @@ class SqlAnywhereConf(BaseDB):
 								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
-							log("[E] Ranger admin default password change request failed", "error")
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
