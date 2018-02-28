@@ -21,13 +21,9 @@ package org.apache.ranger.tagsync.source.atlasrest;
 import org.apache.atlas.type.AtlasClassificationType;
 import org.apache.atlas.type.AtlasStructType;
 import org.apache.atlas.type.AtlasTypeRegistry;
-import org.apache.atlas.v1.model.notification.EntityNotificationV1;
-import org.apache.atlas.v1.model.instance.Referenceable;
-import org.apache.atlas.v1.model.instance.Struct;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RangerAtlasEntityWithTags {
@@ -35,31 +31,12 @@ public class RangerAtlasEntityWithTags {
     private final Map<String, Map<String, String>> tags;
     private final AtlasTypeRegistry typeRegistry;
 
-    public RangerAtlasEntityWithTags(EntityNotificationV1 notification ) {
-        Referenceable atlasEntity = notification.getEntity();
+    public RangerAtlasEntityWithTags(EntityNotificationWrapper notification ) {
 
-        String guid = atlasEntity.getId()._getId();
-        String typeName = atlasEntity.getTypeName();
+        this.entity = notification.getRangerAtlasEntity();
 
-        this.entity = new RangerAtlasEntity(typeName, guid, atlasEntity.getValues());
+        this.tags = notification.getAllClassifications();
 
-        this.tags = new HashMap<>();
-
-        List<Struct> allTraits = notification.getAllTraits();
-        for (Struct trait : allTraits) {
-            String traitName = trait.getTypeName();
-
-            Map<String, Object> valuesMap = trait.getValuesMap();
-            Map<String, String> attributes = new HashMap<>();
-            if (valuesMap != null) {
-                for (Map.Entry<String, Object> value : valuesMap.entrySet()) {
-                    if (value.getValue() != null) {
-                        attributes.put(value.getKey(), value.getValue().toString());
-                    }
-                }
-            }
-            this.tags.put(traitName, attributes);
-        }
         this.typeRegistry = null;
     }
 

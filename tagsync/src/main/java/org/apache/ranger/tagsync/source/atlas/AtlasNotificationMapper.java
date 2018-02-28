@@ -19,9 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
-import org.apache.atlas.v1.model.notification.EntityNotificationV1;
-import org.apache.atlas.v1.model.instance.Id;
-import org.apache.atlas.v1.model.instance.Referenceable;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -46,13 +43,12 @@ public class AtlasNotificationMapper {
 
 	private static Map<String, Long> unhandledEventTypes = new HashMap<String, Long>();
 
-	private static void logUnhandledEntityNotification(EntityNotificationV1 entityNotification) {
+	private static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
 
 		final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
 
 		boolean loggingNeeded = false;
-		String entityTypeName = entityNotification != null && entityNotification.getEntity() != null ?
-				entityNotification.getEntity().getTypeName() : null;
+		String entityTypeName = entityNotification.getEntityTypeName();
 
 		if (entityTypeName != null) {
 			Long timeInMillis = unhandledEventTypes.get(entityTypeName);
@@ -76,7 +72,7 @@ public class AtlasNotificationMapper {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static ServiceTags processEntityNotification(EntityNotificationV1 entityNotification) {
+	public static ServiceTags processEntityNotification(EntityNotificationWrapper entityNotification) {
 
 		ServiceTags ret = null;
 
@@ -84,7 +80,7 @@ public class AtlasNotificationMapper {
 			try {
 				RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entityNotification);
 
-				if (entityNotification.getOperationType() == EntityNotificationV1.OperationType.ENTITY_DELETE) {
+				if (entityNotification.getIsEntityDeleteOp()) {
 					ret = buildServiceTagsForEntityDeleteNotification(entityWithTags);
 				} else {
 					ret = buildServiceTags(entityWithTags, null);
@@ -111,21 +107,21 @@ public class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private boolean isNotificationHandled(EntityNotificationV1 entityNotification) {
+	static private boolean isNotificationHandled(EntityNotificationWrapper entityNotification) {
 		boolean ret = false;
 
-		EntityNotificationV1.OperationType opType = entityNotification.getOperationType();
+		EntityNotificationWrapper.NotificationType opType = entityNotification.getEntityNotificationType();
 
 		if (opType != null) {
 			switch (opType) {
 				case ENTITY_CREATE:
-					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
+					ret = ! entityNotification.getIsEmptyClassifications();
 					break;
 				case ENTITY_UPDATE:
 				case ENTITY_DELETE:
-				case TRAIT_ADD:
-				case TRAIT_UPDATE:
-				case TRAIT_DELETE: {
+				case CLASSIFICATION_ADD:
+				case CLASSIFICATION_UPDATE:
+				case CLASSIFICATION_DELETE: {
 					ret = true;
 					break;
 				}
@@ -134,11 +130,7 @@ public class AtlasNotificationMapper {
 					break;
 			}
 			if (ret) {
-				final Referenceable entity = entityNotification.getEntity();
-
-				ret = entity != null
-						&& entity.getId().getState() == Id.EntityState.ACTIVE
-						&& AtlasResourceMapperUtil.isEntityTypeHandled(entity.getTypeName());
+				ret = entityNotification.getIsEntityTypeHandled();
 			}
 		}
 
