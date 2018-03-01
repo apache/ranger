@@ -161,15 +161,23 @@ define(function(require) {
 							return { name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value };
 						},
 						results: function (data, page) {
-							var results = [];
 							var results = [], selectedVals = [];
 							//Get selected values of groups/users dropdown
 							selectedVals = that.getSelectedValues(options);
 							if(data.resultSize != "0"){
 								if(!_.isUndefined(data.vXGroups)){
-                                                                        results = data.vXGroups.map(function(m, i){	return {id : m.id, text: _.escape(m.name) };	});
+                                                                    results = data.vXGroups.map(function(m, i){	return {id : m.id, text: _.escape(m.name) };	});
 								} else if(!_.isUndefined(data.vXUsers)){
-                                                                        results = data.vXUsers.map(function(m, i){	return {id : m.id, text: _.escape(m.name) };	});
+//								     tag base policy tab hide from KeyAdmin and KMSAuditor users
+                                                                    if(that.model.get('module') === XAEnums.MenuPermissions.XA_TAG_BASED_POLICIES.label){
+                                                                        _.map(data.vXUsers ,function(m, i){
+                                                                            if(XAEnums.UserRoles[m.userRoleList[0]].label != 'KeyAdmin' && XAEnums.UserRoles[m.userRoleList[0]].label != 'KMSAuditor'){
+                                                                                results.push({id : m.id, text: _.escape(m.name) });
+                                                                            }
+                                                                        });
+                                                                    }else{
+                                                                        results = data.vXUsers.map(function(m, i){  return {id : m.id, text: _.escape(m.name) };    });
+                                                                    }
                                                                 }
                                                                 if(!_.isEmpty(selectedVals)){
 										results = XAUtil.filterResultByText(results, selectedVals);

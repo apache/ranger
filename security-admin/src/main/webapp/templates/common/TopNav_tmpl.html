@@ -50,9 +50,9 @@
 				{{#hasAccessToTab  'Users/Groups'}}
 					<li><a href="#!/users/usertab"><i class="icon-group"></i>{{tt 'h.usersOrGroups'}}</a></li>
 				{{/hasAccessToTab}}	
-				{{#isSystemAdmin .}}
+                                {{#if showPermissionTab}}
 					<li><a href="#!/permissions"><i class="icon-file-alt"></i> {{tt 'h.permissions'}}</a></li>
-				{{/isSystemAdmin}}	
+                                {{/if}}
 			</ul>
 		</li>
 		

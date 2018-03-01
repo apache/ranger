@@ -510,10 +510,16 @@
 				serviceName = serv.get('name');
 				if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
 					serviceOperationDiv = '<div class="pull-right">\
-					<a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
-					<a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
-					<i class="icon-trash"></i></a>\
-					</div>'
+                                            <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
+                                            <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
+                                            <a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
+                                            <i class="icon-trash"></i></a>\
+                                           </div>'
+                                }
+                                if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+                                    serviceOperationDiv = '<div class="pull-right">\
+                                                <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
+                                           </div>'
 				}
 				tr += '<tr><td><div>\
 						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\

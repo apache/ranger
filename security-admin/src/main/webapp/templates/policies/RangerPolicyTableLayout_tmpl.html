@@ -36,18 +36,22 @@
 <h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{rangerService.attributes.name}} </h3>
 <div class="wrap non-collapsible m-height ">
 	<div>
-        <div>
-		<div class="span9">
-			<div class="visual_search"></div>
-		</div>
-
-                <i class="icon-info-sign searchInfo" title="Search Filter Hints" data-id="searchInfo"> </i>
-
-		<div class="clearfix">
-			<a data-js="addNewPolicy" href="#!/service/{{rangerService.id}}/policies/create/{{this.rangerPolicyType}}" class="btn btn-primary btn-right" type="button"> {{tt 'lbl.addNewPolicy'}} </a>
-		</div>
+        <div class="row-fluid margin-bottom-11">
+            <div class="span9">
+                <div class="visual_search"></div>
+            </div>
+            <div class="span1">
+                <i class="icon-info-sign searchInfo margin-left-min-30" title="Search Filter Hints" data-id="searchInfo"> </i>
+            </div>
+            <div class="span2">
+                <div class="clearfix btn-right">
+                    {{#if isNotAuditorAdminOrKmsAuditor}}
+                            <a data-js="addNewPolicy" href="#!/service/{{rangerService.id}}/policies/create/{{this.rangerPolicyType}}" class="btn btn-primary " type="button">{{tt 'lbl.addNewPolicy'}} </a>
+                    {{/if}}
                 </div>
-		<div data-id="r_table" class="clickable"></div>
+            </div>
+        </div>
+                <div data-id="r_table"></div>
 	</div>
 </div>
 

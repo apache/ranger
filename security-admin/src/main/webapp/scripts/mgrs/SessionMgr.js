@@ -134,5 +134,11 @@ define(function(require){
 	SessionMgr.isUser = function(){
 		return this.userInRole('ROLE_USER') ? true : false;
 	};
+    SessionMgr.isAuditor = function(){
+        return this.userInRole('ROLE_ADMIN_AUDITOR') ? true : false;
+    };
+    SessionMgr.isKMSAuditor = function(){
+        return this.userInRole('ROLE_KEY_ADMIN_AUDITOR') ? true : false;
+    };
 	return SessionMgr;
 });	

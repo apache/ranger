@@ -386,7 +386,6 @@ body {
 }
 /*  Seach Info btn*/
 .searchInfo{
-        margin-left:12px;
         color:#4c504b;
         font-size:larger;
 }
@@ -2233,7 +2232,9 @@ textarea:read-only{
 .label-margin{
     margin-left: 10px;
 }
-.shorten-label {
+.margin-left-min-30{
+        margin-left: -30px;
+}.shorten-label {
     max-width: 180px;
     text-overflow: ellipsis;
     overflow: hidden;

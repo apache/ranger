@@ -32,6 +32,7 @@ define(function(require){
 	var KmsKey				= require('models/VXKmsKey');
 	var XATableLayout		= require('views/common/XATableLayout');
 	var KmsTablelayoutTmpl 	= require('hbs!tmpl/kms/KmsTableLayout_tmpl');
+        var SessionMgr          = require('mgrs/SessionMgr');
 
 	var KmsTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends KmsTableLayout */
@@ -40,6 +41,9 @@ define(function(require){
 		
     	template: KmsTablelayoutTmpl,
     	templateHelpers : function(){
+	    return {
+	        isKeyadmin : SessionMgr.isKeyAdmin() ? true :false
+	    }
     	},
     	breadCrumbs :[XALinks.get('KmsManage')],
 		/** Layout sub regions */
@@ -231,6 +235,9 @@ define(function(require){
 				}
 				
 			};
+                        if(!SessionMgr.isKeyAdmin()){
+                            delete cols.operation;
+                        }
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		

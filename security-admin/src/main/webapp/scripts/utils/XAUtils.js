@@ -1148,7 +1148,7 @@ define(function(require) {
 			var denyControllerActions = [], denyModulesObj = [];
 			var userModuleNames = _.pluck(vXPortalUser.get('userPermList'),'moduleName');
 			//add by default permission module to admin user
-			if (SessionMgr.isSystemAdmin()){
+                        if (XAUtils.isAuditorOrSystemAdmin(SessionMgr)){
 				userModuleNames.push('Permissions')
 			}
 			var groupModuleNames = _.pluck(vXPortalUser.get('groupPermissions'), 'moduleName'),
@@ -1216,16 +1216,23 @@ define(function(require) {
 		var SessionMgr  = require('mgrs/SessionMgr');
 		var userRoleList = []
 		_.each(XAEnums.UserRoles,function(val, key){
-			if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_SYS_ADMIN.value != val.value){
+            if(SessionMgr.isKeyAdmin() && XAEnums.UserRoles.ROLE_SYS_ADMIN.value != val.value
+                && XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value != val.value){
 				userRoleList.push(key)
-			}else if(SessionMgr.isSystemAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value){
+            }else if(SessionMgr.isSystemAdmin() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value
+                && XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value != val.value){
 				userRoleList.push(key)
 			}else if(SessionMgr.isUser() && XAEnums.UserRoles.ROLE_USER.value == val.value){
 				userRoleList.push(key)
+            }else if(SessionMgr.isAuditor() && XAEnums.UserRoles.ROLE_KEY_ADMIN.value != val.value
+                && XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value != val.value){
+                userRoleList.push(key)
+            }else if(SessionMgr.isKMSAuditor() && XAEnums.UserRoles.ROLE_SYS_ADMIN.value != val.value
+                && XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value != val.value){
+                userRoleList.push(key)
 			}
 		})
-		return {'userRoleList' : userRoleList };
-	};
+		return {'userRoleList' : userRoleList };	};
 	XAUtils.showErrorMsg = function(respMsg){
 		var respArr = respMsg.split(/\([0-9]*\)/);
 		respArr = respArr.filter(function(str){ return str; });
@@ -1376,5 +1383,11 @@ define(function(require) {
         newLabelArr.push('</div>');
         return newLabelArr.length ? newLabelArr.join(' ') : '--';
     };
+    XAUtils.isAuditorOrSystemAdmin = function(SessionMgr){
+        return (SessionMgr.isAuditor() || SessionMgr.isSystemAdmin()) ? true : false ;
+    };
+    XAUtils.isAuditorOrKMSAuditor = function(SessionMgr){
+        return (SessionMgr.isAuditor() || SessionMgr.isKMSAuditor()) ? true : false ;
+    }
 	return XAUtils;
 });

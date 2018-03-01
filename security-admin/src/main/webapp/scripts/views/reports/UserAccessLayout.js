@@ -34,6 +34,7 @@ define(function(require) {'use strict';
 	var RangerServiceDefList= require('collections/RangerServiceDefList');
 	var RangerPolicyList	= require('collections/RangerPolicyList');
 	var UseraccesslayoutTmpl= require('hbs!tmpl/reports/UserAccessLayout_tmpl');
+        var SessionMgr  	= require('mgrs/SessionMgr');
 
 	var UserAccessLayout 	= Backbone.Marionette.Layout.extend(
 	/** @lends UserAccessLayout */
@@ -45,7 +46,8 @@ define(function(require) {'use strict';
 		templateHelpers :function(){
 			return {
 				groupList : this.groupList,
-				policyHeaderList : this.policyCollList
+                                policyHeaderList : this.policyCollList,
+                                showImportExportBtn : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
 			};
 		},
 
@@ -465,6 +467,9 @@ define(function(require) {'use strict';
 			};
 			var permissions = this.getPermissionColumns(this[collName],collName,serviceDefName,subcolumns);
 			_.extend(columns,permissions);
+                        if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+                            columns.id.cell = 'string';
+                        }
 			return coll.constructor.getTableCols(columns, coll);
 		},
 		getPermissionColumns: function (coll,collName,serviceDefName,subcolumns){

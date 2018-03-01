@@ -57,6 +57,8 @@ define(function(require) {
 		ROLE_SYS_ADMIN:{value:0, label:'Admin', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'},
 		ROLE_USER:{value:1, label:'User', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'},
 		ROLE_KEY_ADMIN:{value:2, label:'KeyAdmin', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'},
+        ROLE_ADMIN_AUDITOR:{value:3, label:'Auditor', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'},
+        ROLE_KEY_ADMIN_AUDITOR:{value:4, label:'KMSAuditor', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'}
 	});
 	
 	XAEnums.UserTypes = mergeParams(XAEnums.UserTypes, {
@@ -365,11 +367,12 @@ define(function(require) {
 	});
 	
 	XAEnums.MenuPermissions =  mergeParams(XAEnums.MenuPermissions, {
-		XA_RESOURCE_BASED_POLICIES:{value:0, label:'Resource Based Policies', rbkey:'xa.enum.MenuPermissions.XA_RESOURCE_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_PERM_FOR_UNKNOWN'},
-		XA_USER_GROUPS:{value:1, label:'Users/Groups', rbkey:'xa.enum.MenuPermissions.XA_USER_GROUP', tt: 'lbl.XAPermForType_XA_PERM_FOR_USER'},
-		XA_REPORTS:{value:2, label:'Reports', rbkey:'xa.enum.MenuPermissions.XA_REPORTS', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'},
-		XA_AUDITS:{value:3, label:'Audit', rbkey:'xa.enum.MenuPermissions.XA_AUDITS', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'},
-		XA_KEY_MANAGER:{value:4, label:'Key Manager', rbkey:'xa.enum.MenuPermissions.XA_KEY_MANAGER', tt: 'lbl.XAPermForType_XA_PERM_FOR_GROUP'}
+                XA_RESOURCE_BASED_POLICIES:{value:1, label:'Resource Based Policies', rbkey:'xa.enum.MenuPermissions.XA_RESOURCE_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_RESOURCE_BASED_POLICIES'},
+                XA_USER_GROUPS:{value:2, label:'Users/Groups', rbkey:'xa.enum.MenuPermissions.XA_USER_GROUP', tt: 'lbl.XAPermForType_XA_USER_GROUPS'},
+                XA_REPORTS:{value:3, label:'Reports', rbkey:'xa.enum.MenuPermissions.XA_REPORTS', tt: 'lbl.XAPermForType_XA_REPORTS'},
+                XA_AUDITS:{value:4, label:'Audit', rbkey:'xa.enum.MenuPermissions.XA_AUDITS', tt: 'lbl.XAPermForType_XA_AUDITS'},
+                XA_KEY_MANAGER:{value:5, label:'Key Manager', rbkey:'xa.enum.MenuPermissions.XA_KEY_MANAGER', tt: 'lbl.XAPermForType_XA_KEY_MANAGER'},
+                XA_TAG_BASED_POLICIES:{value:6, label:'Tag Based Policies', rbkey:'xa.enum.MenuPermissions.XA_TAG_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_TAG_BASED_POLICIES'}
 	});
 
 	return XAEnums;
