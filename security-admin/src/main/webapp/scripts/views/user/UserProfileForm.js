@@ -77,6 +77,10 @@ define(function(require){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
 						} else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN.value);
+                        } else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value){
+                            this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value);
+                        } else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value){
+                            this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value);
 						} else {
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
 						}
@@ -118,6 +122,10 @@ define(function(require){
 				this.model.set('userRoleList',["ROLE_USER"]);
 			} else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
+            } else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_KEY_ADMIN_AUDITOR"]);
+            } else if(this.model.get('userRoleList') == XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_ADMIN_AUDITOR"]);
 			}
 		},
 		/** all post render plugin initialization */

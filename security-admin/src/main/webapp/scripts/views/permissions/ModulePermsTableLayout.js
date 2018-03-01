@@ -124,7 +124,7 @@ define(function(require){
 					cell : "uri",
 					reName : 'module',
 					href: function(model){
-						return '#!/permissions/'+model.id+'/edit';
+                                            return '#!/permissions/'+model.id+'/edit';
 					},
 					label	: localization.tt("lbl.modules"),
 					editable: false,
@@ -162,6 +162,7 @@ define(function(require){
 					sortable : false
 				},
 			};
+                        if(SessionMgr.isSystemAdmin()){
 			cols['permissions'] = {
 				cell :  "html",
 				label : localization.tt("lbl.action"),
@@ -174,6 +175,10 @@ define(function(require){
 				sortable : false
 
 			};
+                        }
+                        if(SessionMgr.isAuditor()){
+                            cols.module.cell = "string";
+                        }
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		onShowMore : function(e){

@@ -107,6 +107,7 @@
 
 		</div>
 	</div>
+        {{#showImportExportBtn}}
 	<div class="row-fluid">
 	<span>
 		<div class="btn-group btn-right">
@@ -127,6 +128,7 @@
 	</span>
 		<a href="javascript:void(0)" data-id="downloadReport"></a>
 	</div>
+        {{/showImportExportBtn}}
 	<div class="row-fluid">
 		{{#each policyHeaderList}}
 		<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader" data-compHeader="{{this.serviceDefName}}">

@@ -113,13 +113,13 @@ define(function(require){
 					type : 'Select',
 					options : function(callback, editor){
 
-						var userTypes = _.filter(XAEnums.UserRoles,function(m){
-							if(!SessionMgr.isKeyAdmin()){
-								return m.label != 'Unknown'	&& m.label != 'KeyAdmin';
-							} else {
-								return m.label != 'Unknown' && m.label != 'Admin';
-							}
-						});
+                        var userTypes = _.filter(XAEnums.UserRoles,function(m){
+                            if(!SessionMgr.isKeyAdmin()){
+                                return m.label != 'Unknown'	&& m.label != 'KeyAdmin' && m.label != 'KMSAuditor';
+                            } else {
+                                return m.label != 'Unknown' && m.label != 'Admin' && m.label != 'Auditor';
+                            }
+                        });
 						var nvPairs = XAUtils.enumToSelectPairs(userTypes);
 						callback(nvPairs);
 						editor.$el.val("0");
@@ -144,6 +144,10 @@ define(function(require){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_USER.value);
 						} else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN.value);
+                        } else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value){
+                            this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value);
+                        } else if(XAEnums.UserRoles[roleList[0]].value == XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value){
+                            this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value);
 						} else {
 							this.fields.userRoleList.setValue(XAEnums.UserRoles.ROLE_SYS_ADMIN.value);
 						}
@@ -241,7 +245,11 @@ define(function(require){
 				this.model.set('userRoleList',["ROLE_USER"]);
 			}else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
-			}else{
+            } else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_KEY_ADMIN_AUDITOR"]);
+            } else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_ADMIN_AUDITOR"]);
+            } else{
 				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
 			}
 			return true;
@@ -253,7 +261,11 @@ define(function(require){
 				this.model.set('userRoleList',["ROLE_USER"]);
 			}else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN.value){
 				this.model.set('userRoleList',["ROLE_KEY_ADMIN"]);
-			}else{
+            } else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_KEY_ADMIN_AUDITOR"]);
+            } else if(this.fields.userRoleList.getValue() == XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.value){
+                this.model.set('userRoleList',["ROLE_ADMIN_AUDITOR"]);
+            } else{
 				this.model.set('userRoleList',["ROLE_SYS_ADMIN"]);
 			}
 		},

@@ -241,8 +241,11 @@ define(function(require) {
                 download                        : 'Download',
                 lastUpdate                      : 'Last Update',
 		  		modules		                	: 'Modules',
-                                clusterName                     : 'Cluster Name',
-                                policyLabels					: 'Policy Labels'
+                clusterName                     : 'Cluster Name',
+                policyLabels					: 'Policy Labels',
+                activeStatus                    : 'Active Status',
+                selectTagService                : 'Tag Service'
+
 			},
 			btn : {
 				add							: 'Add',
@@ -350,7 +353,9 @@ define(function(require) {
                 custom                      :'CUSTOM',
                 mask                        :'Mask',
                 rowFilter                   : 'Row Filter',
-                policyLabelsinfo			: 'Label of policy'
+                policyLabelsinfo			: 'Label of policy',
+                serviceDetails              :'Service Details',
+                configProperties            : 'Config Properties'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',

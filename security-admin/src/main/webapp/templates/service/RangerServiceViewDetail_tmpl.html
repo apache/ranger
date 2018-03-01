@@ -1,0 +1,120 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<div id="serviceDetails" class="row-fluid">
+    <p class="formHeader">
+        {{tt 'h.serviceDetails'}} :
+    </p>
+    <table class="table table-bordered table-condensed">
+        <tbody>
+            <tr>
+                <td>
+                    {{tt 'lbl.serviceName'}}
+                </td>
+                <td>
+                    {{serviceName}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{tt 'lbl.description'}}
+                </td>
+                {{#if description}}
+                    <td>
+                        {{description}}
+                    </td>
+                {{else}}
+                <td>
+                    --
+                </td>
+                {{/if}}
+            </tr>
+            <tr>
+                <td>
+                    {{tt 'lbl.activeStatus'}}
+                </td>
+                {{#if isEnabled}}
+                    <td>
+                        <span class="label label-info">Enabled</span>
+                    </td>
+                {{else}}
+                <td>
+                    <span class="label label-info">Disabled</span>
+                </td>
+                {{/if}}
+            </tr>
+            <tr>
+                <td>
+                    {{tt 'lbl.selectTagService'}}
+                </td>
+                <td>
+                    {{#compare tagService  "eq" ''}}
+                        <span>--</span>
+                    {{else}}
+                        <span class="label label-info">{{tagService}}</span>
+                    {{/compare}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div id="configProperties" class="row-fluid">
+    <p class="formHeader">
+        {{tt 'h.configProperties'}}  :
+    </p>
+    <table class="table table-bordered table-condensed">
+        <tbody>
+            {{#each configsList}}
+                <tr>
+                    <td>
+                        {{@key}}
+                    </td>
+                    <td>
+                        {{#if this}}
+                            {{this}}
+                        {{else}}
+                            --
+                        {{/if}}
+                    </td>
+                </tr>
+            {{/each}}
+            <tr>
+                <td colspan="2"><b>{{tt 'lbl.addNewConfig'}} :</b></td>
+            </tr>
+            {{#if customConfigs}}
+                {{#each customConfigs}}
+                    <tr>
+                        <td>
+                            {{@key}}
+                        </td>
+                        <td>
+                            {{this}}
+                        </td>
+                    </tr>
+                {{/each}}
+            {{else}}
+                <tr>
+                    <td>
+                        --
+                    </td>
+                    <td>
+                        --
+                    </td>
+                </tr>
+            {{/if}}
+        </tbody>
+    </table>
+</div>

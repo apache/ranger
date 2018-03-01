@@ -33,6 +33,7 @@
 			{{#isSystemAdmin .}}
 				<a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
 			{{/isSystemAdmin}}
+      {{#isSystemAdmin .}}
       <div class="btn-group btn-right">
         <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
           {{tt 'btn.setVisibility'}}
@@ -45,8 +46,9 @@
       </div>
       <a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
       <a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
+      {{/isSystemAdmin}}
 		</div>
-		<div data-id="r_tableList" class="clickable">
+                <div data-id="r_tableList">
           <b class="_prevNav"></b>
 		</div>
 	</div>
