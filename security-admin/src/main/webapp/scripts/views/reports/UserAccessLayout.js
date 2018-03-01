@@ -122,15 +122,20 @@ define(function(require) {'use strict';
 				var collName = serviceDefName +'PolicyList';
 				this[collName] = new RangerPolicyList();
 				this.defaultPageState = this[collName].state;
-				this.policyCollList.push({ 'collName' : collName, 'serviceDefName' : serviceDefName})
+				this.policyCollList.push({ 'collName' : collName, 'serviceDefName' : serviceDefName});
+				//set subgrid coll for policy item on pagination
+				this.listenTo(this[collName],'change',function(model){
+					this.setSubgridCollForPolicyItems(model);			
+				});
 			},this);
+			
 		},
 		initializeServiceDef : function() {
-			   this.serviceDefList = new RangerServiceDefList();
-			   this.serviceDefList.fetch({
-				   cache : false,
-				   async:false
-			   });
+		   this.serviceDefList = new RangerServiceDefList();
+		   this.serviceDefList.fetch({
+			   cache : false,
+			   async:false
+		   });
 		},	   
 
 		/** all events binding here */
@@ -185,21 +190,7 @@ define(function(require) {'use strict';
 				if(coll.length >= 1 && !that.allowDownload)
 					that.allowDownload = true;
 				_.each(that[collName].models,function(model,ind){
-					if (XAUtil.isMaskingPolicy(model.get('policyType'))) {
-						//'<name>Collection' must be same as subgrid custom column name
-                                                model.attributes.maskCollection = model.get('dataMaskPolicyItems');
-//						Add service type in masking condition
-                                                _.each(model.attributes.dataMaskPolicyItems , function(m){
-                                                        m.type = model.collection.queryParams.serviceType;
-                                                })
-					} else if (XAUtil.isRowFilterPolicy(model.get('policyType'))) {
-                                                model.attributes.rowlvlCollection = model.get('rowFilterPolicyItems');
-					} else {
-						model.attributes.allowCollection = model.get('policyItems');
-					}
-					model.attributes.denyCollection  = model.get('denyPolicyItems');
-					model.attributes.denyExcludeCollection    = model.get('denyExceptions');
-					model.attributes.allowExcludeCollection = model.get('allowExceptions');
+					that.setSubgridCollForPolicyItems(model);
 				});
 
 			});
@@ -927,6 +918,24 @@ define(function(require) {'use strict';
 					scrollTop : pos
 				}, 1100);
 			}
+		},
+		
+		setSubgridCollForPolicyItems: function(model){
+			if (XAUtil.isMaskingPolicy(model.get('policyType'))) {
+				//'<name>Collection' must be same as subgrid custom column name
+                model.attributes.maskCollection = model.get('dataMaskPolicyItems');
+                //Add service type in masking condition
+                _.each(model.attributes.dataMaskPolicyItems , function(m){
+                    m.type = model.collection.queryParams.serviceType;
+                })
+			} else if (XAUtil.isRowFilterPolicy(model.get('policyType'))) {
+                model.attributes.rowlvlCollection = model.get('rowFilterPolicyItems');
+			} else {
+				model.attributes.allowCollection = model.get('policyItems');
+			}
+			model.attributes.denyCollection  = model.get('denyPolicyItems');
+			model.attributes.denyExcludeCollection    = model.get('denyExceptions');
+			model.attributes.allowExcludeCollection = model.get('allowExceptions');
 		},
 		onShowMorePermissions: function(e){
 						var policyId = $(e.currentTarget).attr('policy-id');
