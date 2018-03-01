@@ -1836,6 +1836,9 @@ margin-top: -29px;
   font-weight: normal;
   text-shadow: none;
 }
+.tr-inactive td button.userViewicon i{
+  color: #BCBCBC;
+}
 td.select-row-cell {
   text-align: center;
 }
@@ -2255,4 +2258,29 @@ textarea:read-only{
 	font-style: italic;
 	max-height: 200px;
 	overflow-y: auto;
+}
+.userViewicon {
+    float: center;
+    line-height: 12px;
+}
+.users-list-search{
+    width : 500px;
+    padding : 10px;
+}
+.span-margin{
+    margin: 2px;
+}
+.loaderForModal{
+  background: url(../images/loading.gif) no-repeat center center rgba(0,0,0,0.3);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.pointer-event{
+    pointer-events: none;
+}
+.infoWidth{
+  width: 475px;
 }

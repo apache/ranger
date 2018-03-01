@@ -816,12 +816,13 @@ public class XUserMgr extends XUserMgrBase {
 		return ret;
 	}
 
-	public VXUserList getXGroupUsers(Long xGroupId) {
-		SearchCriteria searchCriteria = new SearchCriteria();
-		searchCriteria.addParam("xGroupId", xGroupId);
+        public VXUserList getXGroupUsers(SearchCriteria searchCriteria) {
+
+                VXUserList vXUserList = new VXUserList();
+
 		VXGroupUserList vXGroupUserList = xGroupUserService
 				.searchXGroupUsers(searchCriteria);
-		VXUserList vXUserList = new VXUserList();
+
 
 		List<VXUser> vXUsers = new ArrayList<VXUser>();
 		if (vXGroupUserList != null) {
@@ -836,8 +837,14 @@ public class XUserMgr extends XUserMgrBase {
 
 			}
 			vXUserList.setVXUsers(vXUsers);
+                        vXUserList.setStartIndex(searchCriteria.getStartIndex());
+                        vXUserList.setResultSize(vXGroupUserList.getList().size());
+                        vXUserList.setTotalCount(vXGroupUserList.getTotalCount());
+                        vXUserList.setPageSize(searchCriteria.getMaxRows());
+                        vXUserList.setSortBy(vXGroupUserList.getSortBy());
+                        vXUserList.setSortType(vXGroupUserList.getSortType());
 		} else {
-			logger.debug("No users found for group id : " + xGroupId);
+                        logger.debug("No users found for group id : " + searchCriteria.getParamValue("xGroupId"));
 		}
 		return vXUserList;
 	}

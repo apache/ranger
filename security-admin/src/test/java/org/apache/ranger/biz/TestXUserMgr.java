@@ -589,7 +589,9 @@ public class TestXUserMgr {
 
 	@Test
 	public void test23GetXGroupUsers() {
-		VXUserList dbVXUserList = xUserMgr.getXGroupUsers(userId);
+                SearchCriteria testSearchCriteria = createsearchCriteria();
+                testSearchCriteria.addParam("xGroupId", userId);
+                VXUserList dbVXUserList = xUserMgr.getXGroupUsers(testSearchCriteria);
 		VXGroup vXGroup = new VXGroup();
 		vXGroup.setId(userId);
 		vXGroup.setDescription("group test");
@@ -1659,4 +1661,18 @@ public class TestXUserMgr {
 				.getLoginId());
 		Assert.assertNotNull(vXStringList);
 	}
+
+        private SearchCriteria createsearchCriteria(){
+                SearchCriteria testsearchCriteria = new SearchCriteria();
+                testsearchCriteria.setStartIndex(0);
+                testsearchCriteria.setMaxRows(Integer.MAX_VALUE);
+                testsearchCriteria.setSortBy("id");
+                testsearchCriteria.setSortType("asc");
+                testsearchCriteria.setGetCount(true);
+                testsearchCriteria.setOwnerId(null);
+                testsearchCriteria.setGetChildren(false);
+                testsearchCriteria.setDistinct(false);
+
+                return testsearchCriteria;
+        }
 }

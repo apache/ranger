@@ -770,7 +770,10 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USERS + "\")")
 	public VXUserList getXGroupUsers(@Context HttpServletRequest request,
 			@PathParam("groupId") Long id){
-		return xUserMgr.getXGroupUsers(id);
+                SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+                                request, xGroupUserService.sortFields);
+                searchCriteria.addParam("xGroupId", id);
+                return xUserMgr.getXGroupUsers(searchCriteria);
 	}
 
 	@GET

@@ -64,7 +64,8 @@ define(function(require){
     		btnShowHide		: '[data-action="showHide"]',
 			visibilityDropdown		: '[data-id="visibilityDropdown"]',
 			addNewBtnDiv	: '[data-id="addNewBtnDiv"]',
-			deleteUser: '[data-id="deleteUserGroup"]'
+                        deleteUser: '[data-id="deleteUserGroup"]',
+                       showUserList:'[data-js="showUserList"]',
     	},
 
 		/** ui events hash */
@@ -76,7 +77,8 @@ define(function(require){
 			events['click ' + this.ui.btnSave]  = 'onSave';
 			events['click ' + this.ui.visibilityDropdown +' li a']  = 'onVisibilityChange';
 			events['click ' + this.ui.deleteUser] = 'onDeleteUser';
-			return events;
+            events['click ' + this.ui.showUserList] = 'showUserList';
+            return events;
 		},
 
     	/**
@@ -468,7 +470,20 @@ define(function(require){
 					}),
 					editable:false,
 					sortable:false
-				}
+                },
+                member	:{
+                    label : "Users",
+                    click : false,
+                    cell  : Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                    drag  : false,
+                    editable  : false,
+                    formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw : function (rawValue,model) {
+                            return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + model.get('name')
+                                + '" data-id="' + model.id + '"<font color="black"><i class="icon-group"> </i></font></button></div>');
+                        }
+                    }),
+                }
 			};
             if(!SessionMgr.isSystemAdmin()){
                 delete cols.select;
@@ -478,6 +493,100 @@ define(function(require){
             }
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
+
+        showUserList :function(e){
+            XAUtil.blockUI();
+            var that = this , name , msg = "", content = "" , totalRecords, infoMsg = "";
+            var anchor = $(e.currentTarget);
+            this.groupId = anchor.attr('data-id');
+            name = anchor.attr('data-name');
+            this.grpUserList = new VXUserList();
+            this.grpUserList.url  = "service/xusers/"+ this.groupId +"/users";
+            this.grpUserList.setPageSize(100);
+            this.grpUserList.fetch({
+                async : true,
+                cache : false,
+                reset : true,
+            }).then(function(){
+                XAUtil.blockUI('unblock');
+                totalRecords = this.state.totalRecords;
+                var title =  "<h4>User's List: " + name + "</h4>";
+                    _.each(that.grpUserList.models , function(model){
+                        msg +='<span class="label label-info userLists span-margin" >'+ model.get('name') + '</span>';
+                    });
+                    var html = '<div class="row-fluid">\
+                                    <div class="span12"><input type="text" data-id="userInput" placeholder="Search Users" class= "users-list-search"></div>\
+                                </div>';
+                    if(totalRecords > 100){
+                        var showAllUserbtn = '<button class="btn btn-mini showMore" data-id="'+ that.groupId +'" data-id="showMore" title="Show All Users">Show All Users</button>'
+                        infoMsg = '<div class="alert alert-warning infoWidth">'+localization.tt('msg.showInitialHundredUser')+showAllUserbtn+'</div>'
+                    }
+                    if(_.isEmpty(msg)){
+                            content = localization.tt("msg.noUserFoundText");
+                    }else{
+                            content = infoMsg + html + '<div class="usernames clearfix">' + msg +'</div>';
+                    }
+                    var modal = new Backbone.BootstrapModal({
+                        animate : true,
+                        content	: content,
+                        title   : title,
+                        okText  : localization.tt("lbl.ok"),
+                        allowCancel : true,
+                    }).open();
+                    modal.$el.find('.cancel').hide();
+                    that.showAllUser(modal, totalRecords, msg);
+            })
+        },
+
+        showAllUser : function(modal, totalRecords, msg){
+            var that = this;
+            var filterUserLists = _.clone(modal.$content.find('span'));
+            modal.$content.find('.showMore').on("click" ,function(){
+                modal.$el.find('.modal-body').scrollTop(0);
+                modal.$el.find('.modal-body').addClass('pointer-event');
+                modal.$el.find('.modal-body').append('<div class="loaderForModal"></div>');
+                this.grpUserList = new VXUserList();
+                this.grpUserList.url  = "service/xusers/"+ that.groupId +"/users";
+                this.grpUserList.setPageSize(totalRecords);
+                this.grpUserList.fetch({
+                    async : true,
+                    cache : false,
+                    reset : true,
+                }).then(function(){
+                    var tag ="";
+                    modal.$content.find('.showMore').attr('disabled',true);
+                    modal.$el.find('.modal-body').removeClass('pointer-event');
+                    modal.$el.find('.loaderForModal').remove();
+                    _.each(this.models, function(m){
+                        tag +='<span class="label label-info userLists span-margin" >'+ m.get('name') + '</span>';
+                    });
+                    modal.$el.find(".usernames").empty();
+                    modal.$el.find(".usernames").append(tag);
+                    filterUserLists = _.clone(modal.$content.find('span'));
+                    msg = tag;
+                })
+            });
+            modal.$el.find('[data-id="userInput"]').on("keyup" ,function(){
+                var input, users;
+                input = $('input[data-id="userInput"]');
+                users = msg;
+                if(!_.isEmpty(input.val())){
+                    users = _.filter(filterUserLists, function(v) {
+                        if(v.innerText.toLowerCase().indexOf(input.val().toLowerCase()) > -1){
+                            return v;
+                        }
+                    });
+                }
+                modal.$el.find(".usernames").empty();
+                if(_.isEmpty(users)){
+                    users = "No users found."
+                }
+                modal.$el.find(".usernames").append(users);
+                if(_.isEmpty(input.val())){
+                    that.showAllUser(modal, totalRecords, msg);
+                }
+            })
+        },
 
 		onUserGroupDeleteSuccess: function(jsonUsers,collection){
 			_.each(jsonUsers.vXStrings,function(ob){
@@ -696,6 +805,8 @@ define(function(require){
 		/** on close */
 		onClose: function(){
 			XAUtil.allowNavigation();
+			$('.fade.modal').hide();
+			$('.modal-backdrop').hide();
 		}
 
 	});
