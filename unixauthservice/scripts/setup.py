@@ -280,11 +280,14 @@ def convertInstallPropsToXML(props):
 
 
 def createUser(username, groupname):
-    cmd = "useradd -g %s %s -m" % (groupname, username)
-    ret = os.system(cmd)
-    if (ret != 0):
-        print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
-        sys.exit(1)
+    checkuser = "grep ^" + username + ": /etc/passwd | awk -F: '{print $1}'|head -1 "
+    (status, output) = commands.getstatusoutput(checkuser)
+    if len(output) < 1:
+        cmd = "useradd -g %s %s -m" % (groupname, username)
+        ret = os.system(cmd)
+        if (ret != 0):
+            print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+            sys.exit(1)
     try:
         ret = pwd.getpwnam(username).pw_uid
         return ret
@@ -294,11 +297,14 @@ def createUser(username, groupname):
 
 
 def createGroup(groupname):
-    cmd = "groupadd %s" % (groupname)
-    ret = os.system(cmd)
-    if (ret != 0):
-        print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
-        sys.exit(1)
+    checkgroup = "egrep ^" + groupname + ": /etc/group | awk -F: '{print $1}'|head -1 "
+    (status, output) = commands.getstatusoutput(checkgroup)
+    if len(output) < 1:
+        cmd = "groupadd %s" % (groupname)
+        ret = os.system(cmd)
+        if (ret != 0):
+            print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+            sys.exit(1)
     try:
         ret = grp.getgrnam(groupname).gr_gid
         return ret
