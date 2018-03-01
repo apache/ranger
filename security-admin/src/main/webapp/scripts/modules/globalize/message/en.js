@@ -424,7 +424,9 @@ define(function(require) {
                 activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
-                policyLabelsinfo		: 'Enter label of policy'
+                policyLabelsinfo		: 'Enter label of policy',
+                noUserFoundText			: 'No user associate with this group.',
+                showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on '
  
 			},
 			plcHldr : {

@@ -105,11 +105,13 @@ import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.db.XXAuditMapDao;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -1259,10 +1261,15 @@ public class TestXUserREST {
 		assertEquals(groupList.getResultSize(),retVxGroupList.getResultSize());
 		Mockito.verify(xUserMgr).getXUserGroups(id);
 	}
+        @SuppressWarnings("unchecked")
 	@Test
 	public void test73getXGroupUsers() {
 		
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+                SearchCriteria testSearchCriteria=createsearchCriteria();
+                testSearchCriteria.addParam("xGroupId", id);
+
+                Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
 		
 		VXUser testVXUser=createVXUser();
 		VXUserList testVXUserList= new VXUserList();
@@ -1271,13 +1278,13 @@ public class TestXUserREST {
 		testVXUserList.setVXUsers(testVXUsers);
 		testVXUserList.setStartIndex(1);
 		testVXUserList.setTotalCount(1);
-		Mockito.when(xUserMgr.getXGroupUsers(id)).thenReturn(testVXUserList);
+                Mockito.when(xUserMgr.getXGroupUsers(testSearchCriteria)).thenReturn(testVXUserList);
 		VXUserList retVxGroupList= xUserRest.getXGroupUsers(request,id);
 		
 		assertNotNull(retVxGroupList);
 		assertEquals(testVXUserList.getTotalCount(),retVxGroupList.getTotalCount());
 		assertEquals(testVXUserList.getStartIndex(),retVxGroupList.getStartIndex());
-		Mockito.verify(xUserMgr).getXGroupUsers(id);
+                Mockito.verify(xUserMgr).getXGroupUsers(testSearchCriteria);
 	}
 	@SuppressWarnings("unchecked")
 	@Test
