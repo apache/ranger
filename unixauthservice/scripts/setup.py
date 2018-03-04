@@ -18,15 +18,12 @@ import re
 import StringIO
 import xml.etree.ElementTree as ET
 import ConfigParser
-import os, errno, sys, getopt
-import sys
-from os import listdir
+import os, sys
 from os.path import isfile, join, dirname, basename
-from urlparse import urlparse
-from time import gmtime, strftime, localtime
-from xml import etree
+from time import strftime, localtime
 import shutil
 import pwd, grp
+import commands
 
 globalDict = {}
 
