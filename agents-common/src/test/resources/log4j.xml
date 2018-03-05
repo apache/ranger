@@ -83,7 +83,7 @@
     </logger>
 
     <root>
-        <level value="debug" />
+        <level value="warn" />
         <appender-ref ref="console" />
     </root>
 
