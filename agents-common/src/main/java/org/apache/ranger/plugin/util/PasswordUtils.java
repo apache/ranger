@@ -149,4 +149,19 @@ public class PasswordUtils {
         }
         return ret;
     }
+
+	public static String getDecryptPassword(String password) {
+		String decryptedPwd = null;
+		try {
+			decryptedPwd = decryptPassword(password);
+		} catch (Exception ex) {
+			LOG.warn("Password decryption failed, trying original password string.");
+			decryptedPwd = null;
+		} finally {
+			if (decryptedPwd == null) {
+				decryptedPwd = password;
+			}
+		}
+		return decryptedPwd;
+	}
 }

@@ -208,6 +208,8 @@ elif [ "${HCOMPONENT_NAME}" = "hadoop" ] ||
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/share/hadoop/hdfs/lib
 elif [ "${HCOMPONENT_NAME}" = "sqoop" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/server/lib
+elif [ "${HCOMPONENT_NAME}" = "kylin" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/tomcat/webapps/kylin/WEB-INF/lib
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -714,9 +716,6 @@ then
         updatePropertyToFile atlas.authorizer.impl $authName ${fn}
     fi
 fi
-#
-# Set notice to restart the ${HCOMPONENT_NAME}
-#
 
 if [ "${HCOMPONENT_NAME}" = "sqoop" ]
 then
@@ -740,6 +739,33 @@ then
 		addOrUpdatePropertyToFile org.apache.sqoop.security.authorization.validator $authName ${fn}
 	fi
 fi
+
+if [ "${HCOMPONENT_NAME}" = "kylin" ]
+then
+	if [ "${action}" = "enable" ]
+	then
+		authName="org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer"
+	else
+		authName=""
+	fi
+
+	dt=`date '+%Y%m%d%H%M%S'`
+	fn=`ls ${HCOMPONENT_CONF_DIR}/kylin.properties 2> /dev/null`
+	if [ -f "${fn}" ]
+	then
+		dn=`dirname ${fn}`
+		bn=`basename ${fn}`
+		bf=${dn}/.${bn}.${dt}
+		echo "backup of ${fn} to ${bf} ..."
+		cp ${fn} ${bf}
+		echo "Add or Update properties file: [${fn}] ... "
+		addOrUpdatePropertyToFile kylin.server.external-acl-provider $authName ${fn}
+	fi
+fi
+
+#
+# Set notice to restart the ${HCOMPONENT_NAME}
+#
 
 echo "Ranger Plugin for ${HCOMPONENT_NAME} has been ${action}d. Please restart ${HCOMPONENT_NAME} to ensure that changes are effective."
 
