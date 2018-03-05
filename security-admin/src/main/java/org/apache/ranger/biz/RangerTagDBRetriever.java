@@ -26,16 +26,18 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-
 
 public class RangerTagDBRetriever {
 	static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
@@ -537,6 +539,18 @@ public class RangerTagDBRetriever {
 					ret.setUpdateTime(xTag.getUpdateTime());
 					ret.setVersion(xTag.getVersion());
 
+					Map<String, String> mapOfOptions = JsonUtils.jsonToMapStringString(xTag.getOptions());
+
+					if (MapUtils.isNotEmpty(mapOfOptions)) {
+						String validityPeriodsStr = mapOfOptions.get(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+
+						if (StringUtils.isNotEmpty(validityPeriodsStr)) {
+							List<RangerValiditySchedule> validityPeriods = JsonUtils.jsonToRangerValiditySchedule(validityPeriodsStr);
+
+							ret.setValidityPeriods(validityPeriods);
+						}
+					}
+
 					Map<Long, RangerTagDef> tagDefs = getTagDefs();
 					if (tagDefs != null) {
 						RangerTagDef tagDef = tagDefs.get(xTag.getType());
@@ -559,7 +573,6 @@ public class RangerTagDBRetriever {
 				if (xTagAttribute.getTagId().equals(tag.getId())) {
 					String attributeName = xTagAttribute.getName();
 					String attributeValue = xTagAttribute.getValue();
-
 
 					tag.getAttributes().put(attributeName, attributeValue);
 				} else if (xTagAttribute.getTagId().compareTo(tag.getId()) > 0) {

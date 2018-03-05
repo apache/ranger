@@ -51,6 +51,7 @@ public class SearchFilter {
 	public static final String SORT_BY         = "sortBy";
 	public static final String RESOURCE_SIGNATURE = "resourceSignature:";     // search
 	public static final String POLICY_TYPE     = "policyType";    // search
+	public static final String POLICY_PRIORITY     = "policyPriority";    // search
     public static final String GUID		   = "guid"; //search
     public static final String POLICY_LABEL     = "policyLabel";    // search
     public static final String POLICY_LABELS_PARTIAL     = "policyLabelsPartial";    // search

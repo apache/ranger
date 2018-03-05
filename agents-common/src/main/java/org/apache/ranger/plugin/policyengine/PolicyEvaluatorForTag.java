@@ -26,33 +26,36 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 public class PolicyEvaluatorForTag {
-    private final RangerPolicyEvaluator evaluator;
-    private final RangerTagForEval      tag;
+	public static final Comparator<PolicyEvaluatorForTag> EVAL_ORDER_COMPARATOR = new PolicyEvalOrderComparator();
+	public static final Comparator<PolicyEvaluatorForTag> NAME_COMPARATOR       = new PolicyNameComparator();
 
-    PolicyEvaluatorForTag(RangerPolicyEvaluator evaluator, RangerTagForEval tag) {
-        this.evaluator = evaluator;
-        this.tag       = tag;
-    }
+	private final RangerPolicyEvaluator evaluator;
+	private final RangerTagForEval      tag;
 
-    RangerPolicyEvaluator getEvaluator() {
-        return evaluator;
-    }
+	PolicyEvaluatorForTag(RangerPolicyEvaluator evaluator, RangerTagForEval tag) {
+		this.evaluator = evaluator;
+		this.tag       = tag;
+	}
 
-    RangerTagForEval getTag() {
-        return tag;
-    }
+	RangerPolicyEvaluator getEvaluator() {
+		return evaluator;
+	}
 
-    public static class PolicyNameComparator implements Comparator<PolicyEvaluatorForTag>, Serializable {
-        @Override
-        public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
-            return me.getEvaluator().getPolicy().getName().compareTo(other.getEvaluator().getPolicy().getName());
-        }
-    }
+	RangerTagForEval getTag() {
+		return tag;
+	}
 
-    public static class PolicyEvalOrderComparator implements Comparator<PolicyEvaluatorForTag>, Serializable {
-        @Override
-        public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
-            return RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR.compare(me.getEvaluator(), other.getEvaluator());
-        }
-    }
+	static class PolicyNameComparator implements Comparator<PolicyEvaluatorForTag>, Serializable {
+		@Override
+		public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
+			return RangerPolicyEvaluator.NAME_COMPARATOR.compare(me.getEvaluator(), other.getEvaluator());
+		}
+	}
+
+	static class PolicyEvalOrderComparator implements Comparator<PolicyEvaluatorForTag>, Serializable {
+		@Override
+		public int compare(PolicyEvaluatorForTag me, PolicyEvaluatorForTag other) {
+			return RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR.compare(me.getEvaluator(), other.getEvaluator());
+		}
+	}
 }

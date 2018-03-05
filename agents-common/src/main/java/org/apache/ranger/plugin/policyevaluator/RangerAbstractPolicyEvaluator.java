@@ -74,6 +74,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public int getPolicyPriority() {
+		return policy != null && policy.getPolicyPriority() != null ? policy.getPolicyPriority() : RangerPolicy.POLICY_PRIORITY_NORMAL;
+	}
+
+	@Override
 	public RangerServiceDef getServiceDef() {
 		return serviceDef;
 	}

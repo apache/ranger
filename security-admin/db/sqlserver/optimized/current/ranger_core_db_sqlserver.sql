@@ -1151,6 +1151,8 @@ CREATE TABLE [dbo].[x_policy] (
         [resource_signature] [varchar](128) DEFAULT NULL NULL,
         [is_enabled] [tinyint] DEFAULT 0 NOT NULL,
         [is_audit_enabled] [tinyint] DEFAULT 0 NOT NULL,
+        [options] [varchar](4000) DEFAULT NULL NULL,
+        [policy_priority] [int] DEFAULT 0 NOT NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1613,6 +1615,7 @@ CREATE TABLE [dbo].[x_tag](
         [version] [bigint] DEFAULT NULL NULL,
         [type] [bigint] NOT NULL,
         [owned_by] [smallint] DEFAULT 0 NOT NULL,
+        [options] [varchar](4000) DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC

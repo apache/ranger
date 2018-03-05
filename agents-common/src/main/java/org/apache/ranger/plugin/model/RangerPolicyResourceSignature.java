@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -45,7 +46,7 @@ public class RangerPolicyResourceSignature {
 		_policy = policy;
 		PolicySerializer serializer = new PolicySerializer(_policy);
 		_string = serializer.toString();
-                _hash = DigestUtils.sha256Hex(_string);
+		_hash = DigestUtils.sha256Hex(_string);
 	}
 
 	/**
@@ -136,6 +137,13 @@ public class RangerPolicyResourceSignature {
 				resources.put(resourceName, resourceView);
 			}
 			String resource = resources.toString();
+			if (CollectionUtils.isNotEmpty(_policy.getValiditySchedules())) {
+				resource += _policy.getValiditySchedules().toString();
+			}
+			if (_policy.getPolicyPriority() != null && _policy.getPolicyPriority() != RangerPolicy.POLICY_PRIORITY_NORMAL) {
+				resource += _policy.getPolicyPriority();
+			}
+
 			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);
 			return result;
 		}

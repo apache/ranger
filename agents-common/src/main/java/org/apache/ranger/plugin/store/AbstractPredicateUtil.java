@@ -96,7 +96,8 @@ public class AbstractPredicateUtil {
 		addPredicateForPartialPolicyName(filter.getParam(SearchFilter.POLICY_NAME_PARTIAL), predicates);
 		addPredicateForResourceSignature(filter.getParam(SearchFilter.RESOURCE_SIGNATURE), predicates);
 		addPredicateForPolicyType(filter.getParam(SearchFilter.POLICY_TYPE), predicates);
-                addPredicateForPartialPolicyLabels(filter.getParam(SearchFilter.POLICY_LABELS_PARTIAL), predicates);
+		addPredicateForPolicyPriority(filter.getParam(SearchFilter.POLICY_PRIORITY), predicates);
+		addPredicateForPartialPolicyLabels(filter.getParam(SearchFilter.POLICY_LABELS_PARTIAL), predicates);
 	}
 
 	public Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
@@ -825,45 +826,86 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-        private Predicate addPredicateForPartialPolicyLabels(final String policyLabels, List<Predicate> predicates) {
-                if (StringUtils.isEmpty(policyLabels)) {
-                        return null;
-                }
+	private Predicate addPredicateForPartialPolicyLabels(final String policyLabels, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(policyLabels)) {
+			return null;
+		}
 
-                Predicate ret = new Predicate() {
-                        @Override
-                        public boolean evaluate(Object object) {
-                                if (object == null) {
-                                        return false;
-                                }
-                                boolean ret = false;
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if (object == null) {
+					return false;
+				}
+				boolean ret = false;
 
-                                if (object instanceof RangerPolicy) {
-                                        RangerPolicy policy = (RangerPolicy) object;
-                                        //	exact match
+				if (object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy) object;
+					//	exact match
                                         /*if (policy.getPolicyLabels().contains(policyLabels)) {
                                                 ret = true;
                                         }*/
-                                        /*partial match*/
-                                        for (String label :policy.getPolicyLabels()){
-                                                ret = StringUtils.containsIgnoreCase(label, policyLabels);
-                                                if(ret){
-                                                        return ret;
-                                                }
-                                        }
+					/*partial match*/
+					for (String label :policy.getPolicyLabels()){
+						ret = StringUtils.containsIgnoreCase(label, policyLabels);
+						if(ret){
+							return ret;
+						}
+					}
 
-                                } else {
-                                        ret = true;
-                                }
-                                return ret;
-                        }
-                };
-                if (predicates != null) {
-                        predicates.add(ret);
-                }
+				} else {
+					ret = true;
+				}
+				return ret;
+			}
+		};
+		if (predicates != null) {
+			predicates.add(ret);
+		}
 
-                return ret;
-        }
+		return ret;
+	}
+
+	private Predicate addPredicateForPolicyPriority(final String policyPriority, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(policyPriority)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if (object == null) {
+					return false;
+				}
+
+				boolean ret = true;
+
+				if (object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy) object;
+
+					Integer priority = policy.getPolicyPriority() != null ? policy.getPolicyPriority() : RangerPolicy.POLICY_PRIORITY_NORMAL;
+
+					if (priority == RangerPolicy.POLICY_PRIORITY_NORMAL) {
+						ret = StringUtils.equalsIgnoreCase(policyPriority, policy.POLICY_PRIORITY_NAME_NORMAL)
+								|| StringUtils.equalsIgnoreCase(policyPriority, priority.toString());
+					} else if (priority == RangerPolicy.POLICY_PRIORITY_OVERRIDE) {
+						ret = StringUtils.equalsIgnoreCase(policyPriority, policy.POLICY_PRIORITY_NAME_OVERRIDE)
+								|| StringUtils.equalsIgnoreCase(policyPriority, priority.toString());
+					} else {
+						ret = false;
+					}
+				}
+				return ret;
+			}
+
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
 
 
 	public Predicate createPredicateForResourceSignature(final String policySignature) {

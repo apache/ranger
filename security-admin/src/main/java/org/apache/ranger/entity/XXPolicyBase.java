@@ -75,6 +75,14 @@ public abstract class XXPolicyBase extends XXDBBase {
 	protected Integer policyType;
 
 	/**
+	 * policyPriority of the XXPolicy
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "policy_priority")
+	protected Integer policyPriority;
+	/**
 	 * description of the XXPolicy
 	 * <ul>
 	 * </ul>
@@ -110,6 +118,14 @@ public abstract class XXPolicyBase extends XXDBBase {
 	@Column(name = "is_audit_enabled")
 	protected boolean isAuditEnabled;
 
+    /**
+     * options of the XXPolicy
+     * <ul>
+     * </ul>
+     *
+     */
+    @Column(name = "options")
+    protected String options;
 	/**
 	 * @return the gUID
 	 */
@@ -233,7 +249,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * Returns the value for the member attribute <b>isEnabled</b>
 	 *
-	 * @return Date - value of member attribute <b>isEnabled</b> .
+	 * @return Value of member attribute <b>isEnabled</b> .
 	 */
 	public boolean getIsEnabled() {
 		return this.isEnabled;
@@ -253,7 +269,7 @@ public abstract class XXPolicyBase extends XXDBBase {
 	/**
 	 * Returns the value for the member attribute <b>isAuditEnabled</b>
 	 *
-	 * @return Date - value of member attribute <b>isAuditEnabled</b> .
+	 * @return Value of member attribute <b>isAuditEnabled</b> .
 	 */
 	public boolean getIsAuditEnabled() {
 		return this.isAuditEnabled;
@@ -266,6 +282,33 @@ public abstract class XXPolicyBase extends XXDBBase {
 	public void setPolicyType(Integer policyType) {
 		this.policyType = policyType;
 	}
+
+	public Integer getPolicyPriority() {
+		return policyPriority;
+	}
+
+	public void setPolicyPriority(Integer policyPriority) {
+		this.policyPriority = policyPriority;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b> options</b> .
+	 *
+	 * @param options
+	 *            Value to set member attribute <b> options</b>
+	 */
+	public void setOptions(String options) {
+        this.options = options;
+    }
+
+	/**
+	 * Returns the value for the member attribute <b>options</b>
+	 *
+	 * @return Value of member attribute <b>options</b> .
+	 */
+	public String getOptions() {
+        return this.options;
+    }
 
 	/*
 	 * (non-Javadoc)
@@ -342,6 +385,21 @@ public abstract class XXPolicyBase extends XXDBBase {
 		} else if (!policyType.equals(other.policyType)) {
 			return false;
 		}
+		if (policyPriority == null) {
+			if (other.policyPriority != null) {
+				return false;
+			}
+		} else if (!policyPriority.equals(other.policyPriority)) {
+			return false;
+		}
+		if (options == null) {
+			if (other.options != null) {
+				return false;
+			}
+		} else if (!options.equals(other.options)) {
+			return false;
+		}
+
 		return true;
 	}
 
@@ -355,8 +413,9 @@ public abstract class XXPolicyBase extends XXDBBase {
 		String str = "XXPolicyBase={";
 		str += super.toString();
 		str += " [guid=" + guid + ", version=" + version + ", service=" + service + ", name=" + name
-				+ ", policyType=" + policyType + ", description=" + description + ", resourceSignature="
-				+ resourceSignature + ", isEnabled=" + isEnabled + ", isAuditEnabled=" + isAuditEnabled + "]";
+				+ ", policyType=" + policyType + ", policyPriority=" + policyPriority + ", description=" + description + ", resourceSignature="
+				+ resourceSignature + ", isEnabled=" + isEnabled + ", isAuditEnabled=" + isAuditEnabled
+				+ ", options=" + options + "]";
 		str += "}";
 		return str;
 	}

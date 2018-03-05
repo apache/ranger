@@ -27,6 +27,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -35,7 +36,11 @@ import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -50,6 +55,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -62,7 +69,7 @@ public class TestPolicyEngine {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
 				.setPrettyPrinting()
 				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
 				.registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
@@ -301,6 +308,12 @@ public class TestPolicyEngine {
 
 		runTestsFromResourceFiles(resourceFiles);
 	}
+	@Test
+	public void testPolicyEngine_temporary() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_temporary.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
 
 	@Test
 	public void testPolicyEngine_atlas() {
@@ -505,8 +518,88 @@ public class TestPolicyEngine {
 			public List<RangerPolicy> tagPolicies;
 		}
 	}
-	
-	static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
+
+    static class ValiditySchedulerTestResult {
+        boolean isValid;
+        int validationFailureCount;
+        boolean isApplicable;
+    }
+
+    static class ValiditySchedulerTestCase {
+        String name;
+        List<RangerValiditySchedule> validitySchedules;
+        Date accessTime;
+        ValiditySchedulerTestResult result;
+    }
+
+    @Test
+    public void testValiditySchedularInvalid() {
+        String resourceName = "/policyengine/validityscheduler/test-validity-schedules-invalid.json";
+
+        runValiditySchedulerTests(resourceName);
+    }
+
+    @Test
+    public void testValiditySchedularValid() {
+        String resourceName = "/policyengine/validityscheduler/test-validity-schedules-valid.json";
+
+        runValiditySchedulerTests(resourceName);
+    }
+
+    @Test
+    public void testValiditySchedularApplicable() {
+        String resourceName = "/policyengine/validityscheduler/test-validity-schedules-valid-and-applicable.json";
+
+        runValiditySchedulerTests(resourceName);
+    }
+
+    private void runValiditySchedulerTests(String resourceName) {
+        List<ValiditySchedulerTestCase> testCases = null;
+        InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+        InputStreamReader reader   = new InputStreamReader(inStream);
+        try {
+            Type listType = new TypeToken<List<ValiditySchedulerTestCase>>() {}.getType();
+            testCases = gsonBuilder.fromJson(reader, listType);
+        } catch (Exception e) {
+	        assertFalse("Exception in reading validity-scheduler test cases.", true);
+        }
+
+        assertNotNull("TestCases are null!", testCases);
+
+
+        if (CollectionUtils.isNotEmpty(testCases)) {
+            for (ValiditySchedulerTestCase testCase : testCases) {
+                boolean isValid = true;
+                List<ValidationFailureDetails> validationFailures = new ArrayList<>();
+                boolean isApplicable = false;
+
+                List<RangerValiditySchedule> validatedSchedules = new ArrayList<>();
+
+                for (RangerValiditySchedule validitySchedule : testCase.validitySchedules) {
+                    RangerValidityScheduleValidator validator = new RangerValidityScheduleValidator(validitySchedule);
+                    RangerValiditySchedule validatedSchedule = validator.validate(validationFailures);
+                    isValid = isValid && validatedSchedule != null;
+                    if (isValid) {
+                        validatedSchedules.add(validatedSchedule);
+                    }
+                }
+                if (isValid) {
+                    for (RangerValiditySchedule validSchedule : validatedSchedules) {
+                        isApplicable = new RangerValidityScheduleEvaluator(validSchedule).isApplicable(testCase.accessTime.getTime());
+                        if (isApplicable) {
+                            break;
+                        }
+                    }
+                }
+
+                assertTrue(testCase.name, isValid == testCase.result.isValid);
+                assertTrue(testCase.name, isApplicable == testCase.result.isApplicable);
+                assertTrue(testCase.name + ", [" + validationFailures +"]", validationFailures.size() == testCase.result.validationFailureCount);
+            }
+        }
+    }
+
+    static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
 		@Override
 		public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
 				JsonDeserializationContext context) throws JsonParseException {

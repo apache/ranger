@@ -19,6 +19,7 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
+import org.apache.atlas.model.TimeBoundary;
 import org.apache.atlas.model.instance.AtlasClassification;
 import org.apache.atlas.model.instance.AtlasEntity;
 import org.apache.atlas.model.notification.EntityNotification;
@@ -30,9 +31,11 @@ import org.apache.atlas.v1.model.notification.EntityNotificationV2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,64 +43,199 @@ import java.util.Map;
 public class EntityNotificationWrapper {
 	private static final Log LOG = LogFactory.getLog(EntityNotificationWrapper.class);
 
-	public enum NotificationType { UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE}
+	public enum NotificationOpType { UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE}
 
-	private final EntityNotification notification;
-	private final EntityNotification.EntityNotificationType notificationType;
-	private final RangerAtlasEntity rangerAtlasEntity;
-	private final String entityTypeName;
-	private final boolean isEntityTypeHandled;
-	private final boolean isEntityDeleteOp;
-	private final boolean isEmptyClassifications;
+	public static class RangerAtlasClassification {
+		private final String                       name;
+		private final Map<String, String>          attributes;
+		private final List<RangerValiditySchedule> validityPeriods;
 
-	EntityNotificationWrapper(@Nonnull EntityNotification notification) {
-		this.notification = notification;
-		notificationType = this.notification.getType();
-
-		switch (notificationType) {
-			case ENTITY_NOTIFICATION_V2: {
-
-				EntityNotificationV2 v2Notification = (EntityNotificationV2) notification;
-				AtlasEntity atlasEntity = v2Notification.getEntity();
-				String guid = atlasEntity.getGuid();
-				String typeName = atlasEntity.getTypeName();
-
-				rangerAtlasEntity = new RangerAtlasEntity(typeName, guid, atlasEntity.getAttributes());
-				entityTypeName = atlasEntity.getTypeName();
-				isEntityTypeHandled = atlasEntity.getStatus() == AtlasEntity.Status.ACTIVE
-						&& AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
-				isEntityDeleteOp = EntityNotificationV2.OperationType.ENTITY_DELETE == v2Notification.getOperationType();
-				isEmptyClassifications = CollectionUtils.isNotEmpty(v2Notification.getClassifications());
-			}
-			break;
-			case ENTITY_NOTIFICATION_V1: {
-				EntityNotificationV1 v1Notification = (EntityNotificationV1) notification;
-
-				Referenceable atlasEntity = v1Notification.getEntity();
-				String guid = atlasEntity.getId()._getId();
-				String typeName = atlasEntity.getTypeName();
-
-				rangerAtlasEntity = new RangerAtlasEntity(typeName, guid, atlasEntity.getValues());
-				entityTypeName = atlasEntity.getTypeName();
-				isEntityTypeHandled = atlasEntity.getId().getState() == Id.EntityState.ACTIVE
-						&& AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
-				isEntityDeleteOp = EntityNotificationV1.OperationType.ENTITY_DELETE == v1Notification.getOperationType();
-				isEmptyClassifications = CollectionUtils.isNotEmpty(v1Notification.getAllTraits());
-			}
-			break;
-			default: {
-				LOG.error("Unknown notification type - [" + notificationType + "]");
-
-				rangerAtlasEntity = null;
-				entityTypeName = null;
-				isEntityTypeHandled = false;
-				isEntityDeleteOp = false;
-				isEmptyClassifications = true;
-			}
-
-			break;
+		public RangerAtlasClassification(String name, Map<String, String> attributes, List<RangerValiditySchedule> validityPeriods) {
+			this.name            = name;
+			this.attributes      = attributes;
+			this.validityPeriods = validityPeriods;
 		}
+		public String getName() {
+			return name;
+		}
+		public Map<String, String> getAttributes() {
+			return attributes;
+		}
+		public List<RangerValiditySchedule> getValidityPeriods() {
+			return validityPeriods;
+		}
+
 	}
+    private final RangerAtlasEntity                         rangerAtlasEntity;
+    private final String                                    entityTypeName;
+    private final boolean                                   isEntityActive;
+    private final boolean                                   isEntityTypeHandled;
+    private final boolean                                   isEntityDeleteOp;
+    private final boolean                                   isEntityCreateOp;
+    private final boolean                                   isEmptyClassifications;
+    private final List<RangerAtlasClassification>           classifications;
+    private final NotificationOpType                        opType;
+
+    EntityNotificationWrapper(@Nonnull EntityNotification notification) {
+        EntityNotification.EntityNotificationType notificationType = notification.getType();
+
+        switch (notificationType) {
+            case ENTITY_NOTIFICATION_V2: {
+                EntityNotificationV2 v2Notification = (EntityNotificationV2) notification;
+                AtlasEntity          atlasEntity    = v2Notification.getEntity();
+                String               guid           = atlasEntity.getGuid();
+                String               typeName       = atlasEntity.getTypeName();
+
+                rangerAtlasEntity      = new RangerAtlasEntity(typeName, guid, atlasEntity.getAttributes());
+                entityTypeName         = atlasEntity.getTypeName();
+                isEntityActive         = atlasEntity.getStatus() == AtlasEntity.Status.ACTIVE;
+                isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
+                isEntityDeleteOp       = EntityNotificationV2.OperationType.ENTITY_DELETE == v2Notification.getOperationType();
+                isEntityCreateOp       = EntityNotificationV2.OperationType.ENTITY_CREATE == v2Notification.getOperationType();
+                isEmptyClassifications = CollectionUtils.isNotEmpty(v2Notification.getClassifications());
+
+                List<AtlasClassification> allClassifications = v2Notification.getClassifications();
+
+                if (CollectionUtils.isNotEmpty(allClassifications)) {
+                    classifications                = new ArrayList<>();
+
+                    for (AtlasClassification classification : allClassifications) {
+                        String classificationName = classification.getTypeName();
+
+                        Map<String, Object> valuesMap  = classification.getAttributes();
+                        Map<String, String> attributes = new HashMap<>();
+
+                        if (valuesMap != null) {
+                            for (Map.Entry<String, Object> value : valuesMap.entrySet()) {
+                                if (value.getValue() != null) {
+                                    attributes.put(value.getKey(), value.getValue().toString());
+                                }
+                            }
+                        }
+
+                        List<RangerValiditySchedule> validitySchedules = null;
+                        List<TimeBoundary> validityPeriods = classification.getValidityPeriods();
+
+                        if (CollectionUtils.isNotEmpty(validityPeriods)) {
+                            validitySchedules = convertTimeSpecFromAtlasToRanger(validityPeriods);
+                        }
+                        classifications.add(new RangerAtlasClassification(classificationName, attributes, validitySchedules));
+                    }
+                } else {
+                    classifications                = null;
+                }
+
+                EntityNotificationV2.OperationType operationType = v2Notification.getOperationType();
+                switch (operationType) {
+                    case ENTITY_CREATE:
+                        opType = NotificationOpType.ENTITY_CREATE;
+                        break;
+                    case ENTITY_UPDATE:
+                        opType = NotificationOpType.ENTITY_UPDATE;
+                        break;
+                    case ENTITY_DELETE:
+                        opType = NotificationOpType.ENTITY_DELETE;
+                        break;
+                    case CLASSIFICATION_ADD:
+                        opType = NotificationOpType.CLASSIFICATION_ADD;
+                        break;
+                    case CLASSIFICATION_UPDATE:
+                        opType = NotificationOpType.CLASSIFICATION_UPDATE;
+                        break;
+                    case CLASSIFICATION_DELETE:
+                        opType = NotificationOpType.CLASSIFICATION_DELETE;
+                        break;
+                    default:
+                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        opType = NotificationOpType.UNKNOWN;
+                        break;
+                }
+            }
+            break;
+
+            case ENTITY_NOTIFICATION_V1: {
+                EntityNotificationV1 v1Notification = (EntityNotificationV1) notification;
+                Referenceable        atlasEntity    = v1Notification.getEntity();
+                String               guid           = atlasEntity.getId()._getId();
+                String               typeName       = atlasEntity.getTypeName();
+
+                rangerAtlasEntity      = new RangerAtlasEntity(typeName, guid, atlasEntity.getValues());
+                entityTypeName         = atlasEntity.getTypeName();
+                isEntityActive         = atlasEntity.getId().getState() == Id.EntityState.ACTIVE;
+                isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
+                isEntityDeleteOp       = EntityNotificationV1.OperationType.ENTITY_DELETE == v1Notification.getOperationType();
+                isEntityCreateOp       = EntityNotificationV1.OperationType.ENTITY_CREATE == v1Notification.getOperationType();
+                isEmptyClassifications = CollectionUtils.isNotEmpty(v1Notification.getAllTraits());
+
+                List<Struct> allTraits = ((EntityNotificationV1) notification).getAllTraits();
+
+                if (CollectionUtils.isNotEmpty(allTraits)) {
+                    classifications = new ArrayList<>();
+
+                    for (Struct trait : allTraits) {
+                        String              traitName  = trait.getTypeName();
+                        Map<String, Object> valuesMap  = trait.getValuesMap();
+                        Map<String, String> attributes = new HashMap<>();
+
+                        if (valuesMap != null) {
+                            for (Map.Entry<String, Object> value : valuesMap.entrySet()) {
+                                if (value.getValue() != null) {
+                                    attributes.put(value.getKey(), value.getValue().toString());
+                                }
+                            }
+                        }
+
+                        classifications.add(new RangerAtlasClassification(traitName, attributes, null));
+                    }
+                } else {
+                    classifications = null;
+                }
+
+                EntityNotificationV1.OperationType operationType = v1Notification.getOperationType();
+                switch (operationType) {
+                    case ENTITY_CREATE:
+                        opType = NotificationOpType.ENTITY_CREATE;
+                        break;
+                    case ENTITY_UPDATE:
+                        opType = NotificationOpType.ENTITY_UPDATE;
+                        break;
+                    case ENTITY_DELETE:
+                        opType = NotificationOpType.ENTITY_DELETE;
+                        break;
+                    case TRAIT_ADD:
+                        opType = NotificationOpType.CLASSIFICATION_ADD;
+                        break;
+                    case TRAIT_UPDATE:
+                        opType = NotificationOpType.CLASSIFICATION_UPDATE;
+                        break;
+                    case TRAIT_DELETE:
+                        opType = NotificationOpType.CLASSIFICATION_DELETE;
+                        break;
+                    default:
+                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        opType = NotificationOpType.UNKNOWN;
+                        break;
+                }
+            }
+            break;
+
+            default: {
+                LOG.error("Unknown notification type - [" + notificationType + "]");
+
+                rangerAtlasEntity              = null;
+                entityTypeName                 = null;
+                isEntityActive                 = false;
+                isEntityTypeHandled            = false;
+                isEntityDeleteOp               = false;
+                isEntityCreateOp               = false;
+                isEmptyClassifications         = true;
+                classifications                = null;
+                opType                         = NotificationOpType.UNKNOWN;
+            }
+
+            break;
+        }
+    }
 
 	public RangerAtlasEntity getRangerAtlasEntity() {
 		return rangerAtlasEntity;
@@ -115,128 +253,41 @@ public class EntityNotificationWrapper {
 		return isEntityDeleteOp;
 	}
 
+	public boolean getIsEntityCreateOp() {
+		return isEntityCreateOp;
+	}
+
 	public boolean getIsEmptyClassifications() {
 		return isEmptyClassifications;
 	}
 
-	public NotificationType getEntityNotificationType() {
-		NotificationType ret = NotificationType.UNKNOWN;
-
-		switch (notificationType) {
-			case ENTITY_NOTIFICATION_V2: {
-				EntityNotificationV2.OperationType opType = ((EntityNotificationV2) notification).getOperationType();
-				switch (opType) {
-					case ENTITY_CREATE:
-						ret = NotificationType.ENTITY_CREATE;
-						break;
-					case ENTITY_UPDATE:
-						ret = NotificationType.ENTITY_UPDATE;
-						break;
-					case ENTITY_DELETE:
-						ret = NotificationType.ENTITY_DELETE;
-						break;
-					case CLASSIFICATION_ADD:
-						ret = NotificationType.CLASSIFICATION_ADD;
-						break;
-					case CLASSIFICATION_UPDATE:
-						ret = NotificationType.CLASSIFICATION_UPDATE;
-						break;
-					case CLASSIFICATION_DELETE:
-						ret = NotificationType.CLASSIFICATION_DELETE;
-						break;
-					default:
-						LOG.error("Received OperationType [" + opType + "], converting to UNKNOWN");
-						break;
-				}
-				break;
-			}
-			case ENTITY_NOTIFICATION_V1: {
-				EntityNotificationV1.OperationType opType = ((EntityNotificationV1) notification).getOperationType();
-				switch (opType) {
-					case ENTITY_CREATE:
-						ret = NotificationType.ENTITY_CREATE;
-						break;
-					case ENTITY_UPDATE:
-						ret = NotificationType.ENTITY_UPDATE;
-						break;
-					case ENTITY_DELETE:
-						ret = NotificationType.ENTITY_DELETE;
-						break;
-					case TRAIT_ADD:
-						ret = NotificationType.CLASSIFICATION_ADD;
-						break;
-					case TRAIT_UPDATE:
-						ret = NotificationType.CLASSIFICATION_UPDATE;
-						break;
-					case TRAIT_DELETE:
-						ret = NotificationType.CLASSIFICATION_DELETE;
-						break;
-					default:
-						LOG.error("Received OperationType [" + opType + "], converting to UNKNOWN");
-						break;
-				}
-				break;
-			}
-			default: {
-				LOG.error("Unknown notification type - [" + notificationType + "]");
-			}
-			break;
-		}
-
-		return ret;
+	public List<RangerAtlasClassification> getClassifications() {
+		return classifications;
 	}
 
-	public Map<String, Map<String, String>> getAllClassifications() {
-		Map<String, Map<String, String>> ret = new HashMap<>();
+    public NotificationOpType getOpType() {
+        return opType;
+    }
 
-		switch (notificationType) {
-			case ENTITY_NOTIFICATION_V2: {
-				List<AtlasClassification> allClassifications = ((EntityNotificationV2) notification).getClassifications();
-				if (CollectionUtils.isNotEmpty(allClassifications)) {
-					for (AtlasClassification classification : allClassifications) {
-						String classificationName = classification.getTypeName();
+    public boolean getIsEntityActive() { return isEntityActive; }
 
-						Map<String, Object> valuesMap = classification.getAttributes();
-						Map<String, String> attributes = new HashMap<>();
-						if (valuesMap != null) {
-							for (Map.Entry<String, Object> value : valuesMap.entrySet()) {
-								if (value.getValue() != null) {
-									attributes.put(value.getKey(), value.getValue().toString());
-								}
-							}
-						}
-						ret.put(classificationName, attributes);
-					}
-				}
-			}
-			break;
-			case ENTITY_NOTIFICATION_V1: {
-				List<Struct> allTraits = ((EntityNotificationV1) notification).getAllTraits();
-				if (CollectionUtils.isNotEmpty(allTraits)) {
-					for (Struct trait : allTraits) {
-						String traitName = trait.getTypeName();
+    public static List<RangerValiditySchedule> convertTimeSpecFromAtlasToRanger(List<TimeBoundary> atlasTimeSpec) {
+        List<RangerValiditySchedule> rangerTimeSpec = null;
 
-						Map<String, Object> valuesMap = trait.getValuesMap();
-						Map<String, String> attributes = new HashMap<>();
-						if (valuesMap != null) {
-							for (Map.Entry<String, Object> value : valuesMap.entrySet()) {
-								if (value.getValue() != null) {
-									attributes.put(value.getKey(), value.getValue().toString());
-								}
-							}
-						}
-						ret.put(traitName, attributes);
-					}
-				}
-			}
-			break;
-			default: {
-				LOG.error("Unknown notification type - [" + notificationType + "]");
-			}
-			break;
-		}
+        if (CollectionUtils.isNotEmpty(atlasTimeSpec)) {
+            rangerTimeSpec = new ArrayList<>();
 
-		return ret;
-	}
+            for (TimeBoundary validityPeriod : atlasTimeSpec) {
+                RangerValiditySchedule validitySchedule = new RangerValiditySchedule();
 
+                validitySchedule.setStartTime(validityPeriod.getStartTime());
+                validitySchedule.setEndTime(validityPeriod.getEndTime());
+                validitySchedule.setTimeZone(validityPeriod.getTimeZone());
+
+                rangerTimeSpec.add(validitySchedule);
+            }
+        }
+
+        return rangerTimeSpec;
+    }
 }

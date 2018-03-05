@@ -335,10 +335,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 		}
 
-		if (LOG.isDebugEnabled()) {
-			if (CollectionUtils.isEmpty(ret)) {
+		if (CollectionUtils.isEmpty(ret)) {
+			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerTagEnricher.findMatchingTags(" + resource + ") - No tags Found ");
-			} else {
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerTagEnricher.findMatchingTags(" + resource + ") - " + ret.size() + " tags Found ");
 			}
 		}

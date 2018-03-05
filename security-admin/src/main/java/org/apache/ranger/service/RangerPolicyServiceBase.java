@@ -17,7 +17,9 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
@@ -28,15 +30,22 @@ import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends
 		RangerBaseModelService<T, V> {
 
-	@Autowired
+    public static final String OPTION_POLICY_VALIDITY_SCHEDULES = "POLICY_VALIDITY_SCHEDULES";
+
+    @Autowired
 	GUIDUtil guidUtil;
-	
+
 	public RangerPolicyServiceBase() {
 		super();
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
@@ -90,12 +99,28 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		xObj.setService(xService.getId());
 		xObj.setName(StringUtils.trim(vObj.getName()));
 		xObj.setPolicyType(vObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : vObj.getPolicyType());
+		xObj.setPolicyPriority(vObj.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : vObj.getPolicyPriority());
 		xObj.setDescription(vObj.getDescription());
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
 		xObj.setIsEnabled(vObj.getIsEnabled());
 
-		return xObj;
+		String              validitySchedules = JsonUtils.listToJson(vObj.getValiditySchedules());
+		Map<String, Object> options           = vObj.getOptions();
+
+		if (options == null) {
+			options = new HashMap<>();
+		}
+
+		if (StringUtils.isNotBlank(validitySchedules)) {
+			options.put(OPTION_POLICY_VALIDITY_SCHEDULES, validitySchedules);
+		} else {
+			options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
+		}
+
+        xObj.setOptions(JsonUtils.mapToJson(options));
+
+        return xObj;
 	}
 
 	@Override
@@ -106,10 +131,26 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setService(xService.getName());
 		vObj.setName(StringUtils.trim(xObj.getName()));
 		vObj.setPolicyType(xObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xObj.getPolicyType());
+		vObj.setPolicyPriority(xObj.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : xObj.getPolicyPriority());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setResourceSignature(xObj.getResourceSignature());
 		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
+
+		Map<String, Object> options = JsonUtils.jsonToObject(xObj.getOptions(), Map.class);
+
+		if (MapUtils.isNotEmpty(options)) {
+			String optionPolicyValiditySchedule = (String)options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
+
+			if (StringUtils.isNotBlank(optionPolicyValiditySchedule)) {
+				List<RangerValiditySchedule> validitySchedules = JsonUtils.jsonToRangerValiditySchedule(optionPolicyValiditySchedule);
+
+				vObj.setValiditySchedules(validitySchedules);
+			}
+		}
+
+		vObj.setOptions(options);
+
 		return vObj;
 	}
 }

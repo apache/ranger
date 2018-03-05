@@ -78,12 +78,12 @@
         -->
 
     <logger name="org.apache.ranger.perf.policyresourcematcher" additivity="false">
-        <level value="debug" />
+        <level value="warn" />
         <appender-ref ref="ranger_perf_appender" />
     </logger>
 
     <root>
-        <level value="warn" />
+        <level value="debug" />
         <appender-ref ref="console" />
     </root>
 

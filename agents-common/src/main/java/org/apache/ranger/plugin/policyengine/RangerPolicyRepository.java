@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -286,10 +287,10 @@ class RangerPolicyRepository {
     }
 
     List<RangerPolicyEvaluator> getRowFilterPolicyEvaluators() {
-        return rowFilterPolicyEvaluators;
+	    return rowFilterPolicyEvaluators;
     }
 
-    List<PolicyEvaluatorForTag> getLikelyMatchPolicyEvaluators(Set<RangerTagForEval> tags, int policyType) {
+    List<PolicyEvaluatorForTag> getLikelyMatchPolicyEvaluators(Set<RangerTagForEval> tags, int policyType, Date accessTime) {
         List<PolicyEvaluatorForTag> ret = Collections.EMPTY_LIST;
 
         if (CollectionUtils.isNotEmpty(tags) && getServiceDef() != null) {
@@ -297,26 +298,34 @@ class RangerPolicyRepository {
             ret = new ArrayList<PolicyEvaluatorForTag>();
 
             for (RangerTagForEval tag : tags) {
-                RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
-                List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
+            	if (tag.isApplicable(accessTime)) {
+		            RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
+		            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
 
-                if (CollectionUtils.isNotEmpty(evaluators)) {
-                    for (RangerPolicyEvaluator evaluator : evaluators) {
-                        ret.add(new PolicyEvaluatorForTag(evaluator, tag));
-                    }
-                }
+		            if (CollectionUtils.isNotEmpty(evaluators)) {
+			            for (RangerPolicyEvaluator evaluator : evaluators) {
+			                if (evaluator.isApplicable(accessTime)) {
+                                ret.add(new PolicyEvaluatorForTag(evaluator, tag));
+                            }
+			            }
+		            }
+	            } else {
+            		if (LOG.isDebugEnabled()) {
+            			LOG.debug("Tag:[" + tag.getType() + "] is not applicable at accessTime:[" + accessTime +"]");
+		            }
+	            }
             }
 
             if (CollectionUtils.isNotEmpty(ret)) {
                 switch(policyType) {
                     case RangerPolicy.POLICY_TYPE_ACCESS:
-                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyEvalOrderComparator());
+                        Collections.sort(ret, PolicyEvaluatorForTag.EVAL_ORDER_COMPARATOR);
                         break;
                     case RangerPolicy.POLICY_TYPE_DATAMASK:
-                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
+                        Collections.sort(ret, PolicyEvaluatorForTag.NAME_COMPARATOR);
                         break;
                     case RangerPolicy.POLICY_TYPE_ROWFILTER:
-                        Collections.sort(ret, new PolicyEvaluatorForTag.PolicyNameComparator());
+                        Collections.sort(ret, PolicyEvaluatorForTag.NAME_COMPARATOR);
                         break;
                     default:
                         LOG.warn("Unknown policy-type:[" + policyType + "]. Ignoring..");

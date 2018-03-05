@@ -60,6 +60,7 @@
 					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${atlas.jackson.version}</include>
 					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${atlas.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
+					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 					<include>org.scala-lang:scala-library:jar:${scala.version}</include>

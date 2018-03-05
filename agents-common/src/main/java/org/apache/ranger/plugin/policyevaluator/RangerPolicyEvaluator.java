@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvalua
 
 public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	Comparator<RangerPolicyEvaluator> EVAL_ORDER_COMPARATOR = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
+	Comparator<RangerPolicyEvaluator> NAME_COMPARATOR       = new RangerPolicyEvaluator.PolicyNameComparator();
 
 	String EVALUATOR_TYPE_AUTO   = "auto";
 	String EVALUATOR_TYPE_OPTIMIZED = "optimized";
@@ -52,6 +54,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	boolean hasAllow();
 
 	boolean hasDeny();
+
+	int getPolicyPriority();
+
+	boolean isApplicable(Date accessTime);
 
 	int getEvalOrder();
 
@@ -84,6 +90,12 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
 		@Override
 		public int compare(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
+			int result = Integer.compare(other.getPolicyPriority(), me.getPolicyPriority());
+
+			return result == 0 ? compareNormal(me, other) : result;
+		}
+
+		private int compareNormal(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
 			int result;
 
 			if (me.hasDeny() && !other.hasDeny()) {
@@ -96,6 +108,29 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 				if (result == 0) {
 					result = Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 				}
+			}
+
+			return result;
+		}
+	}
+
+	class PolicyNameComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
+		@Override
+		public int compare(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
+			int result = Integer.compare(other.getPolicyPriority(), me.getPolicyPriority());
+
+			return result == 0 ? compareNormal(me, other) : result;
+		}
+
+		private int compareNormal(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
+			final int result;
+
+			if (me.hasDeny() && !other.hasDeny()) {
+				result = -1;
+			} else if (!me.hasDeny() && other.hasDeny()) {
+				result = 1;
+			} else {
+				result = me.getPolicy().getName().compareTo(other.getPolicy().getName());
 			}
 
 			return result;

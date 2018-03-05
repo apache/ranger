@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyevaluator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -61,6 +63,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	private static final Log PERF_POLICY_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policy.request");
 
 	private RangerPolicyResourceMatcher     resourceMatcher;
+	private List<RangerValidityScheduleEvaluator> validityScheduleEvaluators;
 	private List<RangerPolicyItemEvaluator> allowEvaluators;
 	private List<RangerPolicyItemEvaluator> denyEvaluators;
 	private List<RangerPolicyItemEvaluator> allowExceptionEvaluators;
@@ -117,6 +120,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		resourceMatcher.init();
 
 		if(policy != null) {
+			validityScheduleEvaluators = createValidityScheduleEvaluators(policy);
 			allowEvaluators          = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
 			denyEvaluators           = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
 			allowExceptionEvaluators = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
@@ -124,6 +128,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			dataMaskEvaluators       = createDataMaskPolicyItemEvaluators(policy, serviceDef, options, policy.getDataMaskPolicyItems());
 			rowFilterEvaluators      = createRowFilterPolicyItemEvaluators(policy, serviceDef, options, policy.getRowFilterPolicyItems());
 		} else {
+			validityScheduleEvaluators = Collections.<RangerValidityScheduleEvaluator>emptyList();
 			allowEvaluators          = Collections.<RangerPolicyItemEvaluator>emptyList();
 			denyEvaluators           = Collections.<RangerPolicyItemEvaluator>emptyList();
 			allowExceptionEvaluators = Collections.<RangerPolicyItemEvaluator>emptyList();
@@ -149,6 +154,32 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("<== RangerDefaultPolicyEvaluator.init()");
 		}
 	}
+
+	@Override
+    public boolean isApplicable(Date accessTime) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerDefaultPolicyEvaluator.isApplicable(" + accessTime + ")");
+        }
+
+        boolean ret = false;
+
+        if (accessTime != null && CollectionUtils.isNotEmpty(validityScheduleEvaluators)) {
+			for (RangerValidityScheduleEvaluator evaluator : validityScheduleEvaluators) {
+				if (evaluator.isApplicable(accessTime.getTime())) {
+					ret = true;
+					break;
+				}
+			}
+        } else {
+        	ret = true;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerDefaultPolicyEvaluator.isApplicable(" + accessTime + ") : " + ret);
+        }
+
+        return ret;
+    }
 
     @Override
     public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
@@ -373,7 +404,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		RangerPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, result);
 
 		if(matchedPolicyItem != null) {
-			matchedPolicyItem.updateAccessResult(result, matchType, getPolicy().getId());
+			matchedPolicyItem.updateAccessResult(result, matchType, getPolicy());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -582,6 +613,22 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		return ret;
 	}
+
+    private List<RangerValidityScheduleEvaluator> createValidityScheduleEvaluators(RangerPolicy policy) {
+	    List<RangerValidityScheduleEvaluator> ret = null;
+
+	    if (CollectionUtils.isNotEmpty(policy.getValiditySchedules())) {
+	        ret = new ArrayList<>();
+
+	        for (RangerValiditySchedule schedule : policy.getValiditySchedules()) {
+	            ret.add(new RangerValidityScheduleEvaluator(schedule));
+            }
+        } else {
+            ret = Collections.<RangerValidityScheduleEvaluator>emptyList();
+        }
+
+        return ret;
+    }
 
 	private List<RangerPolicyItemEvaluator> createPolicyItemEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, int policyItemType) {
 		List<RangerPolicyItemEvaluator> ret         = null;

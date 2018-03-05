@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.plugin.policyevaluator;
 
-
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
@@ -43,7 +42,7 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 	}
 
 	@Override
-	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, RangerPolicy policy) {
 		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
 		if (rowFilterInfo != null) {
@@ -51,6 +50,7 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 			result.setIsAccessDetermined(true);
 
 			result.setFilterExpr(rowFilterInfo.getFilterExpr());
+			result.setPolicyPriority(policy.getPolicyPriority());
 			result.setPolicyId(policyId);
 		}
 	}

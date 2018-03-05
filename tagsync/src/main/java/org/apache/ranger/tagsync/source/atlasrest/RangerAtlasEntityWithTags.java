@@ -21,28 +21,28 @@ package org.apache.ranger.tagsync.source.atlasrest;
 import org.apache.atlas.type.AtlasClassificationType;
 import org.apache.atlas.type.AtlasStructType;
 import org.apache.atlas.type.AtlasTypeRegistry;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
 
+import java.util.List;
 import java.util.Map;
 
 public class RangerAtlasEntityWithTags {
-    private final RangerAtlasEntity entity;
-    private final Map<String, Map<String, String>> tags;
-    private final AtlasTypeRegistry typeRegistry;
+    private final RangerAtlasEntity                                         entity;
+    private final List<EntityNotificationWrapper.RangerAtlasClassification> tags;
+    private final AtlasTypeRegistry                                         typeRegistry;
 
     public RangerAtlasEntityWithTags(EntityNotificationWrapper notification ) {
-
-        this.entity = notification.getRangerAtlasEntity();
-
-        this.tags = notification.getAllClassifications();
-
+        this.entity       = notification.getRangerAtlasEntity();
+        this.tags         = notification.getClassifications();
         this.typeRegistry = null;
     }
 
-    public RangerAtlasEntityWithTags(RangerAtlasEntity entity, Map<String, Map<String, String>> tags, AtlasTypeRegistry typeRegistry) {
-        this.entity = entity;
-        this.tags = tags;
+    public RangerAtlasEntityWithTags(RangerAtlasEntity entity, List<EntityNotificationWrapper.RangerAtlasClassification> tags, AtlasTypeRegistry typeRegistry) {
+        this.entity       = entity;
+        this.tags         = tags;
         this.typeRegistry = typeRegistry;
     }
 
@@ -50,26 +50,26 @@ public class RangerAtlasEntityWithTags {
         return entity;
     }
 
-    public Map<String, Map<String, String>> getTags() {
+    public List<EntityNotificationWrapper.RangerAtlasClassification> getTags() {
         return tags;
     }
 
-	public String getTagAttributeType(String tagTypeName, String tagAttributeName) {
-		String ret = StringUtils.EMPTY;
+    public String getTagAttributeType(String tagTypeName, String tagAttributeName) {
+        String ret = StringUtils.EMPTY;
 
-		if (typeRegistry != null) {
-			AtlasClassificationType classificationType = typeRegistry.getClassificationTypeByName(tagTypeName);
-			if (classificationType != null) {
-				AtlasStructType.AtlasAttribute atlasAttribute = classificationType.getAttribute(tagAttributeName);
+        if (typeRegistry != null) {
+            AtlasClassificationType classificationType = typeRegistry.getClassificationTypeByName(tagTypeName);
+            if (classificationType != null) {
+                AtlasStructType.AtlasAttribute atlasAttribute = classificationType.getAttribute(tagAttributeName);
 
-				if (atlasAttribute != null) {
-					ret = atlasAttribute.getTypeName();
-				}
-			}
-		}
+                if (atlasAttribute != null) {
+                    ret = atlasAttribute.getTypeName();
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
     @Override
     public String toString() {
@@ -78,18 +78,31 @@ public class RangerAtlasEntityWithTags {
         if (entity != null) {
             sb.append("{entity=").append(entity).append(", ");
         }
-        sb.append("tags={");
-        for (Map.Entry<String, Map<String, String>> tag : tags.entrySet()) {
-            sb.append("{tagName=").append(tag.getKey());
-            sb.append(", attributes={");
-            for (Map.Entry<String, String> attribute : tag.getValue().entrySet()) {
-                sb.append("{attributeName=").append(attribute.getKey());
-                sb.append(",attributeValue=").append(attribute.getValue());
+        sb.append(", classifications={");
+
+        if (CollectionUtils.isNotEmpty(tags)) {
+            for (EntityNotificationWrapper.RangerAtlasClassification tag : tags) {
+                sb.append("classificationName=").append(tag.getName());
+                sb.append(", attributes={");
+                for (Map.Entry<String, String> attribute : tag.getAttributes().entrySet()) {
+                    sb.append("{attributeName=").append(attribute.getKey());
+                    sb.append(",attributeValue=").append(attribute.getValue());
+                    sb.append("}");
+                }
+                sb.append("}");
+                sb.append(", validityPeriods={");
+                if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
+                    for (RangerValiditySchedule period : tag.getValidityPeriods()) {
+                        sb.append("{").append(period).append("}");
+                    }
+                }
                 sb.append("}");
             }
-            sb.append("}");
-            sb.append("}");
         }
+
+        sb.append("}");
+        sb.append("}");
+
         return sb.toString();
     }
 }

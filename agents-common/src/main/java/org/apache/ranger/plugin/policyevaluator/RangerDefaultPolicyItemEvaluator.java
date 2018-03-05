@@ -350,16 +350,18 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	}
 
 	@Override
-	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, RangerPolicy policy) {
 		if(getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
 			if(matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
 				result.setIsAllowed(false);
+                result.setPolicyPriority(policy.getPolicyPriority());
 				result.setPolicyId(policyId);
 				result.setReason(getComments());
 			}
 		} else {
 			if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
 				result.setIsAllowed(true);
+                result.setPolicyPriority(policy.getPolicyPriority());
 				result.setPolicyId(policyId);
 				result.setReason(getComments());
 			}

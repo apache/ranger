@@ -45,6 +45,7 @@ public class RangerAccessResult {
 	private boolean  isAudited;
 	private long     auditPolicyId  = -1;
 	private long     policyId  = -1;
+	private int      policyPriority;
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
@@ -60,6 +61,7 @@ public class RangerAccessResult {
 		this.isAudited   = false;
 		this.auditPolicyId = -1;
 		this.policyId    = -1;
+		this.policyPriority = RangerPolicy.POLICY_PRIORITY_NORMAL;
 		this.evaluatedPoliciesCount = 0;
 		this.reason      = null;
 	}
@@ -68,6 +70,7 @@ public class RangerAccessResult {
 		this.isAccessDetermined = other.getIsAccessDetermined();
 		this.isAllowed   = other.getIsAllowed();
 		this.policyId    = other.getPolicyId();
+		this.policyPriority = other.getPolicyPriority();
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
@@ -123,6 +126,9 @@ public class RangerAccessResult {
 
 		this.isAllowed = isAllowed;
 	}
+	public int getPolicyPriority() { return policyPriority;}
+
+	public void setPolicyPriority(int policyPriority) { this.policyPriority = policyPriority; }
 
 	/**
 	 * @param reason the reason to set

@@ -19,9 +19,17 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -29,6 +37,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
@@ -41,26 +53,80 @@ import java.util.Map;
 // from JSON specification
 
 public class RangerTagForEval implements Serializable {
-    private String type;
-    private Map<String, String> attributes;
+    private static final Log LOG = LogFactory.getLog(RangerTagForEval.class);
+
+    private String                                type;
+    private Map<String, String>                   attributes;
+    private Map<String, Object>                   options;
     private RangerPolicyResourceMatcher.MatchType matchType = RangerPolicyResourceMatcher.MatchType.SELF;
+    @JsonIgnore
+    private List<RangerValiditySchedule>          validityPeriods;
+    @JsonIgnore
+    private List<RangerValidityScheduleEvaluator> validityPeriodEvaluators;
+
 
     private RangerTagForEval() {}
 
     public RangerTagForEval(RangerTag tag, RangerPolicyResourceMatcher.MatchType matchType) {
-        this.type = tag.getType();
-        this.attributes = tag.getAttributes();
-        this.matchType = matchType;
-    }
+        this.type            = tag.getType();
+        this.attributes      = tag.getAttributes();
+        this.options         = tag.getOptions();
+        this.matchType       = matchType;
+        this.validityPeriods = tag.getValidityPeriods();
 
-    public RangerPolicyResourceMatcher.MatchType getMatchType() {
-        return matchType;
+        this.validityPeriodEvaluators = createValidityPeriodEvaluators();
     }
 
     public String getType() { return type;}
 
-    public Map<String, String> getAttributes() {
-        return attributes;
+    public Map<String, String> getAttributes() { return attributes; }
+
+    public Map<String, Object> getOptions() { return options; }
+
+    public RangerPolicyResourceMatcher.MatchType getMatchType() { return matchType; }
+
+    public List<RangerValiditySchedule> getValidityPeriods() { return validityPeriods; }
+
+    public boolean isApplicable(Date accessTime) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerTagForEval.isApplicable(type=" + type + ", " + accessTime + ")");
+        }
+
+        boolean ret = false;
+
+        List<RangerValidityScheduleEvaluator> validityPeriodEvaluators = this.validityPeriodEvaluators;
+
+        // Specifically for unit-testing using TestPolicyEngine
+        if (MapUtils.isNotEmpty(options) && CollectionUtils.isEmpty(validityPeriodEvaluators)) {
+            Object value = getOption(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+
+            if (value != null && value instanceof String) {
+                this.validityPeriods = JsonUtils.jsonToRangerValiditySchedule((String) value);
+
+                validityPeriodEvaluators = createValidityPeriodEvaluators();
+            } else {
+                validityPeriodEvaluators = Collections.emptyList();
+            }
+
+            this.validityPeriodEvaluators = validityPeriodEvaluators;
+        }
+
+        if (accessTime != null && CollectionUtils.isNotEmpty(validityPeriodEvaluators)) {
+            for (RangerValidityScheduleEvaluator evaluator : validityPeriodEvaluators) {
+                if (evaluator.isApplicable(accessTime.getTime())) {
+                    ret = true;
+                    break;
+                }
+            }
+        } else {
+            ret = true;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerTagForEval.isApplicable(type=" + type + ", " + accessTime + ") : " + ret);
+        }
+
+        return ret;
     }
 
     @Override
@@ -83,6 +149,14 @@ public class RangerTagForEval implements Serializable {
         }
         sb.append(" }");
         sb.append(", matchType=").append(matchType);
+
+        if (options != null) {
+            sb.append(", options={").append(options).append("}");
+        }
+
+        if (validityPeriods != null) {
+            sb.append(", validityPeriods=").append(validityPeriods);
+        }
         sb.append(" }");
         return sb;
     }
@@ -97,6 +171,11 @@ public class RangerTagForEval implements Serializable {
                 + ((attributes == null) ? 0 : attributes.hashCode());
         result = prime * result
                 + ((matchType == null) ? 0 : matchType.hashCode());
+        result = prime * result
+                + ((validityPeriods == null) ? 0 : validityPeriods.hashCode());
+        result = prime * result
+                + ((options == null) ? 0 : options.hashCode());
+
         return result;
     }
 
@@ -124,7 +203,37 @@ public class RangerTagForEval implements Serializable {
                 return false;
         } else if (!matchType.equals(other.matchType))
             return false;
+        if (options == null) {
+            if (other.options != null)
+                return false;
+        } else if (!options.equals(other.options))
+            return false;
+        if (validityPeriods == null) {
+            if (other.validityPeriods != null)
+                return false;
+        } else if (!validityPeriods.equals(other.validityPeriods))
+            return false;
 
         return true;
+    }
+
+    private Object getOption(String name) {
+        return options != null ? options.get(name) : null;
+    }
+
+    private List<RangerValidityScheduleEvaluator> createValidityPeriodEvaluators() {
+        final List<RangerValidityScheduleEvaluator> ret;
+
+        if (CollectionUtils.isNotEmpty(validityPeriods)) {
+            ret = new ArrayList<>();
+
+            for (RangerValiditySchedule schedule : validityPeriods) {
+                ret.add(new RangerValidityScheduleEvaluator(schedule));
+            }
+        } else {
+            ret = Collections.emptyList();
+        }
+
+        return ret;
     }
 }

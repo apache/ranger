@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -33,6 +35,7 @@ import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +66,21 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 		xObj.setGuid(guid);
 		xObj.setType(xTagDef.getId());
 		xObj.setOwner(vObj.getOwner());
+
+		String              validityPeriods = JsonUtils.listToJson(vObj.getValidityPeriods());
+		Map<String, Object> options         = vObj.getOptions();
+
+		if (options == null) {
+			options = new HashMap<>();
+		}
+
+		if (StringUtils.isNotBlank(validityPeriods)) {
+			options.put(RangerTag.OPTION_TAG_VALIDITY_PERIODS, validityPeriods);
+		} else {
+			options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+		}
+
+		xObj.setOptions(JsonUtils.mapToJson(options));
 		return xObj;
 	}
 
@@ -78,6 +96,20 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 		vObj.setGuid(xObj.getGuid());
 		vObj.setType(xTagDef.getName());
 		vObj.setOwner(xObj.getOwner());
+
+		Map<String, Object> options = JsonUtils.jsonToObject(xObj.getOptions(), Map.class);
+
+		if (MapUtils.isNotEmpty(options)) {
+			String optionTagValidityPeriod = (String)options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+
+			if (StringUtils.isNotBlank(optionTagValidityPeriod)) {
+				List<RangerValiditySchedule> validityPeriods = JsonUtils.jsonToRangerValiditySchedule(optionTagValidityPeriod);
+
+				vObj.setValidityPeriods(validityPeriods);
+			}
+		}
+
+		vObj.setOptions(options);
 
 		Map<String, String> attributes = getAttributesForTag(xObj);
 		vObj.setAttributes(attributes);

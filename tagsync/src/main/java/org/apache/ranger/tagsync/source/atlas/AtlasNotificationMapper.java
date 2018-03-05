@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntityWithTags;
@@ -38,295 +39,315 @@ import java.util.List;
 import java.util.Map;
 
 public class AtlasNotificationMapper {
-	private static final Log LOG = LogFactory.getLog(AtlasNotificationMapper.class);
+    private static final    int                 REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
 
+    private static final    Log                 LOG                 = LogFactory.getLog(AtlasNotificationMapper.class);
+    private static          Map<String, Long>   unhandledEventTypes = new HashMap<>();
 
-	private static Map<String, Long> unhandledEventTypes = new HashMap<String, Long>();
+    private static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
 
-	private static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
+        boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications()
+                || ! entityNotification.getIsEntityActive();
 
-		final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
+        if (!skipLogging) {
+            boolean loggingNeeded = false;
 
-		boolean loggingNeeded = false;
-		String entityTypeName = entityNotification.getEntityTypeName();
+            String entityTypeName = entityNotification.getEntityTypeName();
 
-		if (entityTypeName != null) {
-			Long timeInMillis = unhandledEventTypes.get(entityTypeName);
-			long currentTimeInMillis = System.currentTimeMillis();
-			if (timeInMillis == null ||
-					(currentTimeInMillis - timeInMillis) >= REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS) {
-				unhandledEventTypes.put(entityTypeName, currentTimeInMillis);
-				loggingNeeded = true;
-			}
-		} else {
-			LOG.error("EntityNotification contains NULL entity or NULL entity-type");
-		}
+            if (entityTypeName != null) {
+                Long timeInMillis = unhandledEventTypes.get(entityTypeName);
+                long currentTimeInMillis = System.currentTimeMillis();
+                if (timeInMillis == null ||
+                        (currentTimeInMillis - timeInMillis) >= REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS) {
+                    unhandledEventTypes.put(entityTypeName, currentTimeInMillis);
+                    loggingNeeded = true;
+                }
+            } else {
+                LOG.error("EntityNotification contains NULL entity or NULL entity-type");
+            }
 
-		if (loggingNeeded) {
-			LOG.warn("Ignoring entity notification of type " + entityTypeName);
-		}
+            if (loggingNeeded) {
+                LOG.warn("Did not process entity notification for [" + entityTypeName + "]");
+            }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Ignoring entity notification of type " + entityTypeName);
-		}
-	}
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public static ServiceTags processEntityNotification(EntityNotificationWrapper entityNotification) {
+    @SuppressWarnings("unchecked")
+    public static ServiceTags processEntityNotification(EntityNotificationWrapper entityNotification) {
 
-		ServiceTags ret = null;
+        ServiceTags ret = null;
 
-		if (isNotificationHandled(entityNotification)) {
-			try {
-				RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entityNotification);
+        if (isNotificationHandled(entityNotification)) {
+            try {
+                RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entityNotification);
 
-				if (entityNotification.getIsEntityDeleteOp()) {
-					ret = buildServiceTagsForEntityDeleteNotification(entityWithTags);
-				} else {
-					ret = buildServiceTags(entityWithTags, null);
-				}
+                if (entityNotification.getIsEntityDeleteOp()) {
+                    ret = buildServiceTagsForEntityDeleteNotification(entityWithTags);
+                } else {
+                    ret = buildServiceTags(entityWithTags, null);
+                }
 
-			} catch (Exception exception) {
-				LOG.error("createServiceTags() failed!! ", exception);
-			}
-		} else {
-			logUnhandledEntityNotification(entityNotification);
-		}
-		return ret;
-	}
+            } catch (Exception exception) {
+                LOG.error("createServiceTags() failed!! ", exception);
+            }
+        } else {
+            logUnhandledEntityNotification(entityNotification);
+        }
+        return ret;
+    }
 
-	public static Map<String, ServiceTags> processAtlasEntities(List<RangerAtlasEntityWithTags> atlasEntities) {
-		Map<String, ServiceTags> ret = null;
+    public static Map<String, ServiceTags> processAtlasEntities(List<RangerAtlasEntityWithTags> atlasEntities) {
+        Map<String, ServiceTags> ret = null;
 
-		try {
-			ret = buildServiceTags(atlasEntities);
-		} catch (Exception exception) {
-			LOG.error("Failed to build serviceTags", exception);
-		}
+        try {
+            ret = buildServiceTags(atlasEntities);
+        } catch (Exception exception) {
+            LOG.error("Failed to build serviceTags", exception);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	static private boolean isNotificationHandled(EntityNotificationWrapper entityNotification) {
-		boolean ret = false;
+    static private boolean isNotificationHandled(EntityNotificationWrapper entityNotification) {
+        boolean ret = false;
 
-		EntityNotificationWrapper.NotificationType opType = entityNotification.getEntityNotificationType();
+        EntityNotificationWrapper.NotificationOpType opType = entityNotification.getOpType();
 
-		if (opType != null) {
-			switch (opType) {
-				case ENTITY_CREATE:
-					ret = ! entityNotification.getIsEmptyClassifications();
-					break;
-				case ENTITY_UPDATE:
-				case ENTITY_DELETE:
-				case CLASSIFICATION_ADD:
-				case CLASSIFICATION_UPDATE:
-				case CLASSIFICATION_DELETE: {
-					ret = true;
-					break;
-				}
-				default:
-					LOG.error(opType + ": unknown notification received - not handled");
-					break;
-			}
-			if (ret) {
-				ret = entityNotification.getIsEntityTypeHandled();
-			}
-		}
+        if (opType != null) {
+            switch (opType) {
+                case ENTITY_CREATE:
+                    ret = ! entityNotification.getIsEmptyClassifications();
+                    break;
+                case ENTITY_UPDATE:
+                case ENTITY_DELETE:
+                case CLASSIFICATION_ADD:
+                case CLASSIFICATION_UPDATE:
+                case CLASSIFICATION_DELETE: {
+                    ret = true;
+                    break;
+                }
+                default:
+                    LOG.error(opType + ": unknown notification received - not handled");
+                    break;
+            }
+            if (ret) {
+                ret = entityNotification.getIsEntityTypeHandled();
+            }
+            if (!ret) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Notification : [" + entityNotification + "] will NOT be processed.");
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	static private ServiceTags buildServiceTagsForEntityDeleteNotification(RangerAtlasEntityWithTags entityWithTags) throws Exception {
-		final ServiceTags ret;
+    @SuppressWarnings("unchecked")
+    static private ServiceTags buildServiceTagsForEntityDeleteNotification(RangerAtlasEntityWithTags entityWithTags) {
+        final ServiceTags ret;
 
-		RangerAtlasEntity entity = entityWithTags.getEntity();
+        RangerAtlasEntity   entity = entityWithTags.getEntity();
+        String              guid   = entity.getGuid();
 
-		String guid = entity.getGuid();
-		if (StringUtils.isNotBlank(guid)) {
-			ret = new ServiceTags();
-			RangerServiceResource serviceResource = new RangerServiceResource();
-			serviceResource.setGuid(guid);
-			ret.getServiceResources().add(serviceResource);
-		} else {
-			ret = buildServiceTags(entityWithTags, null);
-			if (ret != null) {
-				// tag-definitions should NOT be deleted as part of service-resource delete
-				ret.setTagDefinitions(MapUtils.EMPTY_MAP);
-				// Ranger deletes tags associated with deleted service-resource
-				ret.setTags(MapUtils.EMPTY_MAP);
-			}
-		}
+        if (StringUtils.isNotBlank(guid)) {
+            ret                                   = new ServiceTags();
+            RangerServiceResource serviceResource = new RangerServiceResource();
+            serviceResource.setGuid(guid);
+            ret.getServiceResources().add(serviceResource);
+        } else {
+            ret = buildServiceTags(entityWithTags, null);
+            if (ret != null) {
+                // tag-definitions should NOT be deleted as part of service-resource delete
+                ret.setTagDefinitions(MapUtils.EMPTY_MAP);
+                // Ranger deletes tags associated with deleted service-resource
+                ret.setTags(MapUtils.EMPTY_MAP);
+            }
+        }
 
-		if (ret != null) {
-			ret.setOp(ServiceTags.OP_DELETE);
-		}
+        if (ret != null) {
+            ret.setOp(ServiceTags.OP_DELETE);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	static private Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) throws Exception {
+    static private Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) {
 
-		Map<String, ServiceTags> ret = new HashMap<String, ServiceTags>();
+        Map<String, ServiceTags> ret = new HashMap<>();
 
-		for (RangerAtlasEntityWithTags element : entitiesWithTags) {
-			RangerAtlasEntity entity = element.getEntity();
-			if (entity != null) {
-				buildServiceTags(element, ret);
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Ignoring entity because its State is not ACTIVE: " + element);
-				}
-			}
-		}
+        for (RangerAtlasEntityWithTags element : entitiesWithTags) {
+            RangerAtlasEntity entity = element.getEntity();
+            if (entity != null) {
+                buildServiceTags(element, ret);
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Ignoring entity because its State is not ACTIVE: " + element);
+                }
+            }
+        }
 
-		// Remove duplicate tag definitions
-		if(CollectionUtils.isNotEmpty(ret.values())) {
-			for (ServiceTags serviceTag : ret.values()) {
-				if(MapUtils.isNotEmpty(serviceTag.getTagDefinitions())) {
-					Map<String, RangerTagDef> uniqueTagDefs = new HashMap<String, RangerTagDef>();
+        // Remove duplicate tag definitions
+        if(CollectionUtils.isNotEmpty(ret.values())) {
+            for (ServiceTags serviceTag : ret.values()) {
+                if(MapUtils.isNotEmpty(serviceTag.getTagDefinitions())) {
+                    Map<String, RangerTagDef> uniqueTagDefs = new HashMap<>();
 
-					for (RangerTagDef tagDef : serviceTag.getTagDefinitions().values()) {
-						RangerTagDef existingTagDef = uniqueTagDefs.get(tagDef.getName());
+                    for (RangerTagDef tagDef : serviceTag.getTagDefinitions().values()) {
+                        RangerTagDef existingTagDef = uniqueTagDefs.get(tagDef.getName());
 
-						if (existingTagDef == null) {
-							uniqueTagDefs.put(tagDef.getName(), tagDef);
-						} else {
-							if(CollectionUtils.isNotEmpty(tagDef.getAttributeDefs())) {
-								for(RangerTagAttributeDef tagAttrDef : tagDef.getAttributeDefs()) {
-									boolean attrDefExists = false;
+                        if (existingTagDef == null) {
+                            uniqueTagDefs.put(tagDef.getName(), tagDef);
+                        } else {
+                            if(CollectionUtils.isNotEmpty(tagDef.getAttributeDefs())) {
+                                for(RangerTagAttributeDef tagAttrDef : tagDef.getAttributeDefs()) {
+                                    boolean attrDefExists = false;
 
-									if(CollectionUtils.isNotEmpty(existingTagDef.getAttributeDefs())) {
-										for(RangerTagAttributeDef existingTagAttrDef : existingTagDef.getAttributeDefs()) {
-											if(StringUtils.equalsIgnoreCase(existingTagAttrDef.getName(), tagAttrDef.getName())) {
-												attrDefExists = true;
-												break;
-											}
-										}
-									}
+                                    if(CollectionUtils.isNotEmpty(existingTagDef.getAttributeDefs())) {
+                                        for(RangerTagAttributeDef existingTagAttrDef : existingTagDef.getAttributeDefs()) {
+                                            if(StringUtils.equalsIgnoreCase(existingTagAttrDef.getName(), tagAttrDef.getName())) {
+                                                attrDefExists = true;
+                                                break;
+                                            }
+                                        }
+                                    }
 
-									if(! attrDefExists) {
-										existingTagDef.getAttributeDefs().add(tagAttrDef);
-									}
-								}
-							}
-						}
-					}
+                                    if(! attrDefExists) {
+                                        existingTagDef.getAttributeDefs().add(tagAttrDef);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-					serviceTag.getTagDefinitions().clear();
-					for(RangerTagDef tagDef : uniqueTagDefs.values()) {
-						serviceTag.getTagDefinitions().put(tagDef.getId(), tagDef);
-					}
-				}
-			}
-		}
+                    serviceTag.getTagDefinitions().clear();
+                    for(RangerTagDef tagDef : uniqueTagDefs.values()) {
+                        serviceTag.getTagDefinitions().put(tagDef.getId(), tagDef);
+                    }
+                }
+            }
+        }
 
-		if (MapUtils.isNotEmpty(ret)) {
-			for (Map.Entry<String, ServiceTags> entry : ret.entrySet()) {
-				ServiceTags serviceTags = entry.getValue();
-				serviceTags.setOp(ServiceTags.OP_REPLACE);
-			}
-		}
-		return ret;
-	}
+        if (MapUtils.isNotEmpty(ret)) {
+            for (Map.Entry<String, ServiceTags> entry : ret.entrySet()) {
+                ServiceTags serviceTags = entry.getValue();
+                serviceTags.setOp(ServiceTags.OP_REPLACE);
+            }
+        }
+        return ret;
+    }
 
-	static private ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) throws Exception {
-		ServiceTags            ret             = null;
-		RangerAtlasEntity entity          = entityWithTags.getEntity();
-		RangerServiceResource  serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
+    static private ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) {
+        ServiceTags             ret             = null;
+        RangerAtlasEntity       entity          = entityWithTags.getEntity();
+        RangerServiceResource  serviceResource  = AtlasResourceMapperUtil.getRangerServiceResource(entity);
 
-		if (serviceResource != null) {
+        if (serviceResource != null) {
 
-			List<RangerTag>     tags        = getTags(entityWithTags);
-			List<RangerTagDef>  tagDefs     = getTagDefs(entityWithTags);
-			String              serviceName = serviceResource.getServiceName();
+            List<RangerTag>     tags        = getTags(entityWithTags);
+            List<RangerTagDef>  tagDefs     = getTagDefs(entityWithTags);
+            String              serviceName = serviceResource.getServiceName();
 
-			ret = createOrGetServiceTags(serviceTagsMap, serviceName);
+            ret = createOrGetServiceTags(serviceTagsMap, serviceName);
 
-			if (serviceTagsMap == null || CollectionUtils.isNotEmpty(tags)) {
+            if (serviceTagsMap == null || CollectionUtils.isNotEmpty(tags)) {
 
-				serviceResource.setId((long) ret.getServiceResources().size());
-				ret.getServiceResources().add(serviceResource);
+                serviceResource.setId((long) ret.getServiceResources().size());
+                ret.getServiceResources().add(serviceResource);
 
-				List<Long> tagIds = new ArrayList<Long>();
+                List<Long> tagIds = new ArrayList<>();
 
-				if (CollectionUtils.isNotEmpty(tags)) {
-					for (RangerTag tag : tags) {
-						tag.setId((long) ret.getTags().size());
-						ret.getTags().put(tag.getId(), tag);
+                if (CollectionUtils.isNotEmpty(tags)) {
+                    for (RangerTag tag : tags) {
+                        tag.setId((long) ret.getTags().size());
+                        ret.getTags().put(tag.getId(), tag);
 
-						tagIds.add(tag.getId());
-					}
-				}
-				ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
+                        tagIds.add(tag.getId());
+                    }
+                }
+                ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
 
-				if (CollectionUtils.isNotEmpty(tagDefs)) {
-					for (RangerTagDef tagDef : tagDefs) {
-						tagDef.setId((long) ret.getTagDefinitions().size());
-						ret.getTagDefinitions().put(tagDef.getId(), tagDef);
-					}
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it when full-sync is being done.");
-					LOG.debug("Will not add this entity to serviceTags, so that this entity, if exists,  will be removed from ranger");
-				}
-			}
-		} else {
-			LOG.error("Failed to build serviceResource for entity:" + entity.getGuid());
-		}
+                if (CollectionUtils.isNotEmpty(tagDefs)) {
+                    for (RangerTagDef tagDef : tagDefs) {
+                        tagDef.setId((long) ret.getTagDefinitions().size());
+                        ret.getTagDefinitions().put(tagDef.getId(), tagDef);
+                    }
+                }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it when full-sync is being done.");
+                    LOG.debug("Will not add this entity to serviceTags, so that this entity, if exists,  will be removed from ranger");
+                }
+            }
+        } else {
+            LOG.error("Failed to build serviceResource for entity:" + entity.getGuid());
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	static private ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
-		ServiceTags ret = serviceTagsMap == null ? null : serviceTagsMap.get(serviceName);
+    static private ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
+        ServiceTags ret = serviceTagsMap == null ? null : serviceTagsMap.get(serviceName);
 
-		if (ret == null) {
-			ret = new ServiceTags();
+        if (ret == null) {
+            ret = new ServiceTags();
 
-			if (serviceTagsMap != null) {
-				serviceTagsMap.put(serviceName, ret);
-			}
+            if (serviceTagsMap != null) {
+                serviceTagsMap.put(serviceName, ret);
+            }
 
-			ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
-			ret.setServiceName(serviceName);
-		}
+            ret.setOp(ServiceTags.OP_ADD_OR_UPDATE);
+            ret.setServiceName(serviceName);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	static private List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
-		List<RangerTag> ret = new ArrayList<RangerTag>();
+    static private List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
+        List<RangerTag> ret = new ArrayList<>();
 
-		if (entityWithTags != null && MapUtils.isNotEmpty(entityWithTags.getTags())) {
-			Map<String, Map<String, String>> tags = entityWithTags.getTags();
+        if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
+            List<EntityNotificationWrapper.RangerAtlasClassification> tags = entityWithTags.getTags();
 
-			for (Map.Entry<String, Map<String, String>> tag : tags.entrySet()) {
-				ret.add(new RangerTag(null, tag.getKey(), tag.getValue(), RangerTag.OWNER_SERVICERESOURCE));
-			}
-		}
+            for (EntityNotificationWrapper.RangerAtlasClassification tag : tags) {
+                RangerTag rangerTag = new RangerTag(null, tag.getName(), tag.getAttributes(), RangerTag.OWNER_SERVICERESOURCE);
 
-		return ret;
-	}
+                List<RangerValiditySchedule> validityPeriods = tag.getValidityPeriods();
 
-	static private List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
-		List<RangerTagDef> ret = new ArrayList<RangerTagDef>();
+                if (CollectionUtils.isNotEmpty(validityPeriods)) {
+                    rangerTag.setValidityPeriods(validityPeriods);
+                }
+                ret.add(rangerTag);
+            }
+        }
 
-		if (entityWithTags != null && MapUtils.isNotEmpty(entityWithTags.getTags())) {
-			Map<String, Map<String, String>> tags = entityWithTags.getTags();
+        return ret;
+    }
 
-			for (Map.Entry<String, Map<String, String>> tag : tags.entrySet()) {
-				RangerTagDef tagDef = new RangerTagDef(tag.getKey(), "Atlas");
-				if (MapUtils.isNotEmpty(tag.getValue())) {
-					for (String attributeName : tag.getValue().keySet()) {
-						tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getKey(), attributeName)));
-					}
-				}
-				ret.add(tagDef);
-			}
-		}
+    static private List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
+        List<RangerTagDef> ret = new ArrayList<>();
 
-		return ret;
-	}
+        if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
+
+            Map<String, String> tagNames = new HashMap<>();
+
+            for (EntityNotificationWrapper.RangerAtlasClassification tag : entityWithTags.getTags()) {
+
+                if (!tagNames.containsKey(tag.getName())) {
+                    tagNames.put(tag.getName(), tag.getName());
+
+                    RangerTagDef tagDef = new RangerTagDef(tag.getName(), "Atlas");
+                    if (MapUtils.isNotEmpty(tag.getAttributes())) {
+                        for (String attributeName : tag.getAttributes().keySet()) {
+                            tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getName(), attributeName)));
+                        }
+                    }
+                    ret.add(tagDef);
+                }
+            }
+        }
+
+        return ret;
+    }
 }

@@ -141,7 +141,7 @@ public class AtlasTagSource extends AbstractTagSource {
 	private static String getPrintableEntityNotification(EntityNotificationWrapper notification) {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("{ Notification-Type: ").append(notification.getEntityNotificationType()).append(", ");
+		sb.append("{ Notification-Type: ").append(notification.getOpType()).append(", ");
         RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(notification);
         sb.append(entityWithTags.toString());
 

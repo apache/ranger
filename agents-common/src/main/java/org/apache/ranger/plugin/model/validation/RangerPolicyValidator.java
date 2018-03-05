@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.store.ServiceStore;
 
 public class RangerPolicyValidator extends RangerValidator {
@@ -123,6 +124,19 @@ public class RangerPolicyValidator extends RangerValidator {
 				.build());
 			valid = false;
 		} else {
+			Integer priority = policy.getPolicyPriority();
+			if (priority != null) {
+				if (priority < RangerPolicy.POLICY_PRIORITY_NORMAL || priority > RangerPolicy.POLICY_PRIORITY_OVERRIDE) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_INVALID_PRIORITY;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policyPriority")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage("out of range"))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+			}
 			Long id = policy.getId();
 			RangerPolicy existingPolicy = null;
 
@@ -306,6 +320,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 
 			if (serviceNameValid) { // resource checks can't be done meaningfully otherwise
+				valid = isValidValiditySchedule(policy, failures, action) && valid;
 				valid = isValidResources(policy, failures, action, isAdmin, serviceDef) && valid;
 				valid = isValidAccessTypeDef(policy, failures, action, isAdmin, serviceDef) && valid;
 			}
@@ -413,7 +428,41 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
+	boolean isValidValiditySchedule(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action) {
+
+		boolean valid = true;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerPolicyValidator.isValidValiditySchedule(%s, %s, %s)", policy, failures, action));
+		}
+		List<RangerValiditySchedule> validitySchedules = policy.getValiditySchedules();
+		List<RangerValiditySchedule> normalizedValiditySchedules = null;
+
+		for (RangerValiditySchedule entry : validitySchedules) {
+			RangerValidityScheduleValidator validator = new RangerValidityScheduleValidator(entry);
+
+			RangerValiditySchedule normalizedValiditySchedule = validator.validate(failures);
+			if (normalizedValiditySchedule == null) {
+				valid = false;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Invalid Validity-Schedule:[" + entry +"]");
+				}
+			} else {
+				if (normalizedValiditySchedules == null) {
+					normalizedValiditySchedules = new ArrayList<>();
+				}
+				normalizedValiditySchedules.add(normalizedValiditySchedule);
+			}
+		}
+		if (valid && CollectionUtils.isNotEmpty(normalizedValiditySchedules)) {
+			policy.setValiditySchedules(normalizedValiditySchedules);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidValiditySchedule(%s, %s, %s): %s", policy, failures, action, valid));
+		}
+		return valid;
+	}
+
 	boolean isPolicyResourceUnique(RangerPolicy policy, final List<ValidationFailureDetails> failures, Action action) {
 		
 		if(LOG.isDebugEnabled()) {

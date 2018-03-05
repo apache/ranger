@@ -96,7 +96,7 @@ public abstract class RangerValidator {
 		return false;
 	}
 
-	String serializeFailures(List<ValidationFailureDetails> failures) {
+	public static String serializeFailures(List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getFailureMessage()");
 		}

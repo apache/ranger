@@ -20,6 +20,7 @@
 package org.apache.ranger.biz;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,8 @@ import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
+import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
@@ -298,6 +301,8 @@ public class TagDBStore extends AbstractTagStore {
 			LOG.debug("==> TagDBStore.createTag(" + tag + ")");
 		}
 
+		tag = validateTag(tag);
+
 		RangerTag ret = rangerTagService.create(tag);
 
 		createTagAttributes(ret.getId(), tag.getAttributes());
@@ -316,6 +321,8 @@ public class TagDBStore extends AbstractTagStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.updateTag(" + tag + ")");
 		}
+
+		tag = validateTag(tag);
 
 		RangerTag existing = rangerTagService.read(tag.getId());
 
@@ -1088,7 +1095,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 	}
 
-	private List<XXTagAttribute> createTagAttributes(Long tagId, Map<String, String> attributes) {
+	private List<XXTagAttribute> createTagAttributes(Long tagId, Map<String, String> attributes) throws Exception {
 		List<XXTagAttribute> ret = new ArrayList<XXTagAttribute>();
 
 		if(MapUtils.isNotEmpty(attributes)) {
@@ -1280,5 +1287,37 @@ public class TagDBStore extends AbstractTagStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.deleteAllTagObjectsForService(" + serviceName + ")");
 		}
+	}
+
+	private RangerTag validateTag(RangerTag tag) throws Exception {
+		List<RangerValiditySchedule> validityPeriods = tag.getValidityPeriods();
+
+		if (CollectionUtils.isNotEmpty(validityPeriods)) {
+			List<RangerValiditySchedule>   normalizedValidityPeriods = new ArrayList<>();
+			List<ValidationFailureDetails> failures                  = new ArrayList<>();
+
+			for (RangerValiditySchedule validityPeriod : validityPeriods) {
+				RangerValidityScheduleValidator validator                = new RangerValidityScheduleValidator(validityPeriod);
+				RangerValiditySchedule          normalizedValidityPeriod = validator.validate(failures);
+
+				if (normalizedValidityPeriod != null && CollectionUtils.isEmpty(failures)) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Normalized ValidityPeriod:[" + normalizedValidityPeriod + "]");
+					}
+
+					normalizedValidityPeriods.add(normalizedValidityPeriod);
+				} else {
+					String error = "Incorrect time-specification:[" + Arrays.asList(failures) + "]";
+
+					LOG.error(error);
+
+					throw new Exception(error);
+				}
+			}
+
+			tag.setValidityPeriods(normalizedValidityPeriods);
+		}
+
+		return tag;
 	}
 }
