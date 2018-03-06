@@ -594,10 +594,11 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int CLASS_TYPE_XA_SERVICE_VERSION_INFO = 1052;
 	public static final int CLASS_TYPE_XA_ACCESS_AUDIT_V4 = 1053;
 	public static final int CLASS_TYPE_XA_ACCESS_AUDIT_V5 = 1054;
+	public static final int CLASS_TYPE_UGYNC_AUDIT_INFO = 1055;
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1054;
+	public static final int ClassTypes_MAX = 1055;
 	
 	/***************************************************************
 	 * Enum values for Default SortOrder
@@ -967,6 +968,9 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if( elementValue == 1054 ) {
 			return "Access Audit V5"; //CLASS_TYPE_XA_ACCESS_AUDIT_V5
+		}
+		if( elementValue == 1055 ) {
+			return "Usersync Audit Info"; //CLASS_TYPE_UGYNC_AUDIT_INFO
 		}
 		return null;
 	}

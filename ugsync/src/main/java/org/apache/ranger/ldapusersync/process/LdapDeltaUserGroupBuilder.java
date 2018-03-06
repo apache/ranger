@@ -53,6 +53,8 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.LdapSyncSourceInfo;
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 
@@ -117,6 +119,10 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
   private Table<String, String, String> groupUserTable;
   private Map<String, String> userNameMap;
 	private BidiMap groupNameMap;
+	UgsyncAuditInfo ugsyncAuditInfo;
+	LdapSyncSourceInfo ldapSyncSourceInfo;
+	int noOfUsers;
+	int noOfGroups;
 
 	public static void main(String[] args) throws Throwable {
 		LdapDeltaUserGroupBuilder  ugBuilder = new LdapDeltaUserGroupBuilder();
@@ -157,6 +163,13 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
 		userNameMap = new HashMap<String, String>();
 		setConfig();
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		ldapSyncSourceInfo = new LdapSyncSourceInfo();
+		ldapSyncSourceInfo.setLdapUrl(ldapUrl);
+		ldapSyncSourceInfo.setIncrementalSycn("True");
+		ldapSyncSourceInfo.setGroupHierarchyLevel(Integer.toString(groupHierarchyLevels));
+		ugsyncAuditInfo.setSyncSource("LDAP/AD");
+		ugsyncAuditInfo.setLdapSyncSourceInfo(ldapSyncSourceInfo);
 	}
 
 	private void createLdapContext() throws Throwable {
@@ -303,9 +316,11 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		LOG.info("LdapDeltaUserGroupBuilder updateSink started");
-		//userGroupMap = new HashMap<String, UserInfo>();
 		groupUserTable = HashBasedTable.create();
         groupNameMap = new DualHashBidiMap();
+		noOfUsers = 0;
+		noOfGroups = 0;
+
         if (!groupSearchFirstEnabled) {
 			LOG.info("Performing user search first");
 			getUsers(sink);
@@ -324,6 +339,15 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		}
 		if (groupUserTable.isEmpty()) {
 			//System.out.println("groupUserTable is empty!!");
+			ugsyncAuditInfo.setNoOfUsers(Integer.toUnsignedLong(noOfUsers));
+			ugsyncAuditInfo.setNoOfGroups(Integer.toUnsignedLong(noOfGroups));
+			ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
+			ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+			try {
+				sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+			} catch (Throwable t) {
+				LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
+			}
 			return;
 		}
         
@@ -357,6 +381,18 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 				+ ", for group: " + transformGroupName
 				+ ", users: " + userList);
 			}
+		}
+		LOG.debug("postUserGroupAuditInfo(): noOfUsers = " + noOfUsers + " noOfGroups = " + noOfGroups);
+
+		ugsyncAuditInfo.setNoOfUsers(Integer.toUnsignedLong(noOfUsers));
+		ugsyncAuditInfo.setNoOfGroups(Integer.toUnsignedLong(noOfGroups));
+		ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
+		ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+
+		try {
+			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+		} catch (Throwable t) {
+			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
 		}
 	}
 
@@ -505,6 +541,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								+ ", for user: " + transformUserName + " and groups: " + groupList);
 							}
                             counter++;
+							noOfUsers++;
 						} else {
 							// If the user from the search result is present in the group user table,
 							// then addorupdate user to ranger admin.
@@ -526,6 +563,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									groupUserTable.put(entry.getKey(), userFullName, transformUserName);
 								}
                                 counter++;
+								noOfUsers++;
 							}
 						}
 
@@ -643,6 +681,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								continue;
 							}
 							counter++;
+							noOfGroups++;
 							Attribute groupNameAttr = groupEntry.getAttributes().get(groupNameAttribute);
 							if (groupNameAttr == null) {
 								if (LOG.isInfoEnabled())  {
@@ -705,6 +744,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 										+ ", for user: " + transformUserName);
 									}
 									userNameMap.put(originalUserFullName, transformUserName);
+									noOfUsers++;
 								}
 								//System.out.println("Adding " + userNameMap.get(originalUserFullName) + " and fullname = " + originalUserFullName + " to " + gName);
 								if (userNameMap.get(originalUserFullName) != null) {

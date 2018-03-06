@@ -55,26 +55,10 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
-import org.apache.ranger.service.RangerPluginActivityLogger;
-import org.apache.ranger.service.RangerPluginInfoService;
-import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XAuditMapService;
-import org.apache.ranger.service.XGroupService;
-import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
-import org.apache.ranger.service.XTrxLogService;
-import org.apache.ranger.service.XUserService;
+import org.apache.ranger.service.*;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
-import org.apache.ranger.view.VXAccessAuditList;
-import org.apache.ranger.view.VXAsset;
-import org.apache.ranger.view.VXAuditMap;
-import org.apache.ranger.view.VXPermMap;
-import org.apache.ranger.view.VXPolicyExportAuditList;
-import org.apache.ranger.view.VXResource;
-import org.apache.ranger.view.VXTrxLog;
-import org.apache.ranger.view.VXTrxLogList;
-import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,6 +114,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	RangerPluginInfoService pluginInfoService;
+
+	@Autowired
+	XUgsyncAuditInfoService xUgsyncAuditInfoService;
 
 	private static final Logger logger = Logger.getLogger(AssetMgr.class);
 
@@ -1098,4 +1085,46 @@ public class AssetMgr extends AssetMgrBase {
         }
         return xPolicyExportAuditService.searchXPolicyExportAudits(searchCriteria);
     }
+
+	public VXUgsyncAuditInfoList getUgsyncAudits(SearchCriteria searchCriteria) {
+
+		if (searchCriteria == null) {
+			searchCriteria = new SearchCriteria();
+		}
+		if (searchCriteria.getParamList() != null
+				&& !searchCriteria.getParamList().isEmpty()) {
+			int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+			Date temp = null;
+			DateUtil dateUtil = new DateUtil();
+			if (searchCriteria.getParamList().containsKey("startDate")) {
+				temp = (Date) searchCriteria.getParamList().get(
+						"startDate");
+				temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
+				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+				searchCriteria.getParamList().put("startDate", temp);
+			}
+			if (searchCriteria.getParamList().containsKey("endDate")) {
+				temp = (Date) searchCriteria.getParamList().get(
+						"endDate");
+				temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
+				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+				searchCriteria.getParamList().put("endDate", temp);
+			}
+
+		}
+		if (searchCriteria.getSortType() == null) {
+			searchCriteria.setSortType("desc");
+		} else if (!"asc".equalsIgnoreCase(searchCriteria.getSortType()) && !"desc".equalsIgnoreCase(searchCriteria.getSortType())) {
+			searchCriteria.setSortType("desc");
+		}
+		return xUgsyncAuditInfoService.searchXUgsyncAuditInfoList(searchCriteria);
+	}
+	
+	public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(String syncSource) {
+		if(syncSource!=null && !syncSource.trim().isEmpty()){
+			return xUgsyncAuditInfoService.searchXUgsyncAuditInfoBySyncSource(syncSource);
+		}else{
+			throw restErrorUtil.createRESTException("Please provide a valid syncSource", MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
 }

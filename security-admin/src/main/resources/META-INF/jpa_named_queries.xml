@@ -1229,4 +1229,17 @@
 		</query>
 	</named-query>
 
+	<!-- XXUgsyncAuditInfo -->
+	<named-query name="XXUgsyncAuditInfo.findBySessionId">
+		<query>
+			select obj from XXUgsyncAuditInfo obj where obj.sessionId = :sessionId
+		</query>
+	</named-query>
+
+	<named-query name="XXUgsyncAuditInfo.findBySyncSource">
+		<query>
+			select obj from XXUgsyncAuditInfo obj where obj.syncSource = :syncSource
+		</query>
+	</named-query>
+
 </entity-mappings>

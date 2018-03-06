@@ -71,6 +71,7 @@ CREATE SEQUENCE X_SERVICE_VERSION_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE N
 CREATE SEQUENCE X_PLUGIN_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_LABEL_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_LABEL_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_UGSYNC_AUDIT_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 --CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
 
@@ -1094,6 +1095,23 @@ CONSTRAINT x_plmap_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES x
 );
 commit;
 
+CREATE TABLE x_ugsync_audit_info(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+event_time DATE DEFAULT NULL NULL,
+user_name VARCHAR(255) NOT  NULL,
+sync_source VARCHAR(128) NOT NULL,
+no_of_users NUMBER(20) NOT NULL,
+no_of_groups NUMBER(20) NOT NULL,
+sync_source_info VARCHAR(4000) NOT NULL,
+session_id VARCHAR(255) DEFAULT NULL,
+ PRIMARY KEY (id)
+);
+commit;
+
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 commit;
 
@@ -1250,6 +1268,9 @@ CREATE INDEX x_plc_item_rf_IDX_plc_item_id ON x_policy_item_rowfilter(policy_ite
 CREATE INDEX x_svc_ver_info_IDX_service_id ON x_service_version_info(service_id);
 CREATE INDEX x_plugin_info_IDX_service_name ON x_plugin_info(service_name);
 CREATE INDEX x_plugin_info_IDX_host_name ON x_plugin_info(host_name);
+CREATE INDEX x_ugsync_audit_info_etime ON x_ugsync_audit_info(event_time);
+CREATE INDEX x_ugsync_audit_info_sync_src ON x_ugsync_audit_info(sync_source);
+CREATE INDEX x_ugsync_audit_info_uname ON x_ugsync_audit_info(user_name);
 commit;
 
 insert into x_portal_user (id,CREATE_TIME, UPDATE_TIME,FIRST_NAME, LAST_NAME, PUB_SCR_NAME, LOGIN_ID, PASSWORD, EMAIL, STATUS) values (X_PORTAL_USER_SEQ.NEXTVAL, SYSDATE, SYSDATE, 'Admin', '', 'Admin', 'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1);
@@ -1294,6 +1315,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '028',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '029',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '030',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '031',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,3,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,1,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);

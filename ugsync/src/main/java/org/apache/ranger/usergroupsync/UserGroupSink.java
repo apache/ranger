@@ -19,6 +19,8 @@
 
  package org.apache.ranger.usergroupsync;
 
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
+
 import java.util.List;
 
 public interface UserGroupSink {
@@ -31,4 +33,6 @@ public interface UserGroupSink {
 	void addOrUpdateGroup(String group) throws Throwable;
 	
 	void addOrUpdateGroup(String group, List<String> users) throws Throwable;
+
+	void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable;
 }

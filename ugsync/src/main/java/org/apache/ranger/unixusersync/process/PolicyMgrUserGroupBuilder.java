@@ -28,12 +28,7 @@ import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
@@ -61,14 +56,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
-import org.apache.ranger.unixusersync.model.GetXUserGroupListResponse;
-import org.apache.ranger.unixusersync.model.GetXUserListResponse;
-import org.apache.ranger.unixusersync.model.MUserInfo;
-import org.apache.ranger.unixusersync.model.XGroupInfo;
-import org.apache.ranger.unixusersync.model.XUserGroupInfo;
-import org.apache.ranger.unixusersync.model.XUserInfo;
-import org.apache.ranger.unixusersync.model.UserGroupInfo;
+import org.apache.ranger.unixusersync.model.*;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usersync.util.UserSyncUtil;
 
@@ -94,6 +82,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}"; // DELETE
 
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default";			// POST
+	private static final String PM_AUDIT_INFO_URI = "/service/xusers/ugsync/auditinfo/";				// POST
+
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 
 	private static String LOCAL_HOSTNAME = "unknown";
@@ -126,6 +116,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	String nameRules;
     Map<String, String> userMap = new LinkedHashMap<String, String>();
     Map<String, String> groupMap = new LinkedHashMap<String, String>();
+	private int noOfUsers;
+	private int noOfGroups;
+
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -145,6 +138,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
+		noOfUsers = 0;
+		noOfGroups = 0;
 
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
@@ -324,6 +319,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 
 		if (user == null) {    // Does not exists
+			noOfUsers++;
+			noOfGroups += groups.size();
 
 			LOG.debug("INFO: addPMAccount(" + userName + ")" );
 			if (! isMockRun) {
@@ -510,6 +507,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
                     }
                 }
             }
+		noOfGroups += addGroups.size()+updateGroups.size();
 		}
 	}
 
@@ -1130,6 +1128,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  					throw new Exception(msg);
  				}
  			}
+			noOfGroups++;
 		}
 	}
 
@@ -1202,6 +1201,79 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		// TODO Auto-generated method stub
 
 	}
+
+	
+	@Override
+	public void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable {
+		if (! isMockRun) {
+			addUserGroupAuditInfo(ugsyncAuditInfo);
+		}
+		noOfUsers = 0;
+		noOfGroups = 0;
+	}
+
+	private UgsyncAuditInfo addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
+		UgsyncAuditInfo ret = null;
+
+		if (auditInfo == null) {
+			LOG.error("Failed to generate user group audit info");
+			return ret;
+		}
+		auditInfo.setNoOfUsers(Integer.toUnsignedLong(noOfUsers));
+		auditInfo.setNoOfGroups(Integer.toUnsignedLong(noOfGroups));
+		//auditInfo.setUserName("rangerusersync");
+		auditInfo.setSessionId("");
+		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfUsers() + ", " + auditInfo.getNoOfGroups() + ", " + auditInfo.getSyncSource() + ")");
+
+		if (authenticationType != null
+				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
+				&& SecureClientLogin.isKerberosCredentialExists(principal,
+				keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final UgsyncAuditInfo auditInfoFinal = auditInfo;
+				ret = Subject.doAs(sub, new PrivilegedAction<UgsyncAuditInfo>() {
+					@Override
+					public UgsyncAuditInfo run() {
+						try {
+							return getUserGroupAuditInfo(auditInfoFinal);
+						} catch (Exception e) {
+							LOG.error("Failed to add User : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return ret;
+		} else {
+			return getUserGroupAuditInfo(auditInfo);
+		}
+	}
+
+
+	private UgsyncAuditInfo getUserGroupAuditInfo(UgsyncAuditInfo userInfo) {
+		Client c = getClient();
+
+		WebResource r = c.resource(getURL(PM_AUDIT_INFO_URI));
+
+		Gson gson = new GsonBuilder().create();
+
+		String jsonString = gson.toJson(userInfo);
+
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+
+		LOG.debug("RESPONSE[" + response + "]");
+
+		UgsyncAuditInfo ret = gson.fromJson(response, UgsyncAuditInfo.class);
+
+		LOG.debug("AuditInfo Creation successful ");
+
+		return ret;
+	}
+
 
     private void getRoleForUserGroups(String userGroupRolesData) {
 

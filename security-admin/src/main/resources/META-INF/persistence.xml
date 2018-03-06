@@ -78,6 +78,7 @@
 		<class>org.apache.ranger.entity.XXPolicyItemRowFilterInfo</class>
 		<class>org.apache.ranger.entity.XXServiceVersionInfo</class>
 		<class>org.apache.ranger.entity.XXPluginInfo</class>
+		<class>org.apache.ranger.entity.XXUgsyncAuditInfo</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 
 		<properties>

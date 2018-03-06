@@ -32,9 +32,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.FileSyncSourceInfo;
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.apache.ranger.usergroupsync.UserGroupSource;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -46,6 +47,8 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	private Map<String,List<String>> user2GroupListMap     = new HashMap<String,List<String>>();
 	private String                   userGroupFilename     = null;
 	private long                     usergroupFileModified = 0;
+	private UgsyncAuditInfo ugsyncAuditInfo;
+	private FileSyncSourceInfo				 fileSyncSourceInfo;
 
 	private boolean isUpdateSinkSucc = true;
 
@@ -78,7 +81,11 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 		if(userGroupFilename == null) {
 			userGroupFilename = config.getUserSyncFileSource();
 		}
-
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		fileSyncSourceInfo = new FileSyncSourceInfo();
+		ugsyncAuditInfo.setSyncSource("File");
+		ugsyncAuditInfo.setFileSyncSourceInfo(fileSyncSourceInfo);
+		fileSyncSourceInfo.setFileName(userGroupFilename);
 		buildUserGroupInfo();
 	}
 	
@@ -104,6 +111,9 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 		buildUserGroupInfo();
 		String user=null;
 		List<String> groups=null;
+		fileSyncSourceInfo.setLastModified(Long.toString(usergroupFileModified));
+		fileSyncSourceInfo.setSyncTime(Long.toString(System.currentTimeMillis()));
+
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
 		    user = entry.getKey();
 		    try{
@@ -125,6 +135,11 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 				+ ", groups: " + groups);
 				isUpdateSinkSucc = false;
 			}
+		}
+		try {
+			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+		} catch (Throwable t) {
+			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
 		}
 	}
 

@@ -80,6 +80,25 @@ CREATE TABLE `x_db_version_h`  (
         `active`          	ENUM('Y', 'N') DEFAULT 'Y'
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_ugsync_audit_info`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`event_time` datetime NULL DEFAULT NULL,
+`user_name` varchar(255) NOT  NULL,
+`sync_source` varchar(128) NOT NULL,
+`no_of_users` bigint(20) NOT NULL,
+`no_of_groups` bigint(20) NOT NULL,
+`sync_source_info` varchar(4000) NOT NULL,
+`session_id` varchar(255) DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ KEY `x_ugsync_audit_info_etime`(`event_time`),
+ KEY `x_ugsync_audit_info_sync_src`(`sync_source`),
+ KEY `x_ugsync_audit_info_uname`(`user_name`)
+)ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `x_portal_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `create_time` datetime DEFAULT NULL,
@@ -1320,6 +1339,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);

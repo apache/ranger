@@ -681,6 +681,10 @@ IF (OBJECT_ID('x_portal_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_portal_user]
 END
+IF (OBJECT_ID('x_ugsync_audit_info') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_ugsync_audit_info]
+END
 IF (OBJECT_ID('x_db_version_h') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_db_version_h]
@@ -1869,6 +1873,27 @@ CREATE TABLE dbo.x_policy_label_map (
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_ugsync_audit_info](
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [event_time] [datetime2] DEFAULT NULL NULL,
+        [user_name] [varchar](255) NOT  NULL,
+        [sync_source] [varchar](128) NOT NULL,
+        [no_of_users] [bigint] NOT NULL,
+        [no_of_groups] [bigint] NOT NULL,
+        [sync_source_info] [varchar](4000) NOT NULL,
+        [session_id] [varchar](255) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
+(
+        [id] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
 
 ALTER TABLE [dbo].[x_asset]  WITH CHECK ADD  CONSTRAINT [x_asset_FK_added_by_id] FOREIGN KEY([added_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])
@@ -3023,6 +3048,18 @@ CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_map_id ON [dbo].[x_policy_lab
 (
 [id] ASC
 )WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_ugsync_audit_info_etime] ON [x_ugsync_audit_info]
+(
+   [event_time] ASC
+)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_ugsync_audit_info_sync_src] ON [x_ugsync_audit_info]
+(
+   [sync_source] ASC
+)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_ugsync_audit_info_uname] ON [x_ugsync_audit_info]
+(
+   [user_name] ASC
+)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 
 insert into x_portal_user (CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1);
 insert into x_portal_user_role (CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,'ROLE_SYS_ADMIN',1);
@@ -3058,6 +3095,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);

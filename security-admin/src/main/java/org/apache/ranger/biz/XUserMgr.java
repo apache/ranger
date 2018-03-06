@@ -38,15 +38,8 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
-import org.apache.ranger.service.RangerPolicyService;
-import org.apache.ranger.service.XGroupPermissionService;
-import org.apache.ranger.service.XModuleDefService;
-import org.apache.ranger.service.XPortalUserService;
-import org.apache.ranger.service.XResourceService;
-import org.apache.ranger.service.XUserPermissionService;
-import org.apache.ranger.view.VXGroupPermission;
-import org.apache.ranger.view.VXModuleDef;
-import org.apache.ranger.view.VXUserPermission;
+import org.apache.ranger.service.*;
+import org.apache.ranger.view.*;
 import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.AppConstants;
@@ -81,23 +74,6 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.service.XGroupService;
-import org.apache.ranger.service.XUserService;
-import org.apache.ranger.view.VXAuditMap;
-import org.apache.ranger.view.VXAuditMapList;
-import org.apache.ranger.view.VXGroup;
-import org.apache.ranger.view.VXGroupGroup;
-import org.apache.ranger.view.VXGroupList;
-import org.apache.ranger.view.VXGroupUser;
-import org.apache.ranger.view.VXGroupUserInfo;
-import org.apache.ranger.view.VXGroupUserList;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXPermMap;
-import org.apache.ranger.view.VXPermMapList;
-import org.apache.ranger.view.VXPortalUser;
-import org.apache.ranger.view.VXUser;
-import org.apache.ranger.view.VXUserGroupInfo;
-import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -105,10 +81,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.view.VXString;
-import org.apache.ranger.view.VXStringList;
+
 @Component
 public class XUserMgr extends XUserMgrBase {
 
@@ -159,6 +133,9 @@ public class XUserMgr extends XUserMgrBase {
 
     @Autowired
     UserMgr userManager;
+
+	@Autowired
+	XUgsyncAuditInfoService xUgsyncAuditInfoService;
 
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
@@ -581,7 +558,7 @@ public class XUserMgr extends XUserMgrBase {
 		List<VXUser> vxu = new ArrayList<VXUser>();
         for (VXUser vXUser : vXGroupUserInfo.getXuserInfo()) {
             XXUser xUser = daoManager.getXXUser().findByUserName(
-                    vXUser.getName());
+					vXUser.getName());
             XXPortalUser xXPortalUser = daoManager.getXXPortalUser()
                     .findByLoginId(vXUser.getName());
             if (xUser != null) {
@@ -1678,7 +1655,7 @@ public class XUserMgr extends XUserMgrBase {
 			if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
 				searchCriteria.setSortBy("name");
 				vXGroupListSort = xGroupService.searchXGroups(searchCriteria);
-				vXGroupExactMatch = getGroupByGroupName((String)searchCriteria.getParamList().get("name"));
+				vXGroupExactMatch = getGroupByGroupName((String) searchCriteria.getParamList().get("name"));
 			}
 			int vXGroupExactMatchwithSearchCriteria = 0;
 			if(vXGroupExactMatch != null){
@@ -2258,4 +2235,14 @@ public class XUserMgr extends XUserMgrBase {
                 }
             }
 	}
+
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	public synchronized VXUgsyncAuditInfo postUserGroupAuditInfo(
+			VXUgsyncAuditInfo vxUgsyncAuditInfo) {
+		checkAdminAccess();
+		//logger.info("post usersync audit info");
+		vxUgsyncAuditInfo = xUgsyncAuditInfoService.createUgsyncAuditInfo(vxUgsyncAuditInfo);
+		return vxUgsyncAuditInfo;
+	}
+
 }

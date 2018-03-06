@@ -52,6 +52,8 @@ public class RangerAPIList {
 	public static final String GET_ACCESS_LOGS = "AssetREST.getAccessLogs";
 	public static final String GRANT_PERMISSION = "AssetREST.grantPermission";
 	public static final String REVOKE_PERMISSION = "AssetREST.revokePermission";
+	public static final String GET_UGSYNC_AUDITS = "AssetREST.getUgsyncAudits";
+	public static final String GET_UGSYNC_AUDITS_BY_SYNCSOURCE = "AssetREST.getUgsyncAuditsBySyncSource";
 
 	/**
 	 * List of APIs for ServiceREST

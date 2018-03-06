@@ -68,18 +68,7 @@ import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XTrxLogService;
-import org.apache.ranger.view.VXAccessAuditList;
-import org.apache.ranger.view.VXAsset;
-import org.apache.ranger.view.VXAssetList;
-import org.apache.ranger.view.VXCredentialStore;
-import org.apache.ranger.view.VXCredentialStoreList;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXPolicy;
-import org.apache.ranger.view.VXPolicyExportAuditList;
-import org.apache.ranger.view.VXResource;
-import org.apache.ranger.view.VXResourceList;
-import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXTrxLogList;
+import org.apache.ranger.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -331,7 +320,7 @@ public class AssetREST {
 		RangerService service = serviceREST.getService(vXResource.getAssetId());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
 
-		RangerPolicy createdPolicy = serviceREST.createPolicy(policy,null);
+		RangerPolicy createdPolicy = serviceREST.createPolicy(policy, null);
 
 		VXResource ret = serviceUtil.toVXResource(createdPolicy, service);
 
@@ -579,7 +568,7 @@ public class AssetREST {
 		searchUtil.extractInt(request, searchCriteria, "httpRetCode",
 				"HTTP response code for exported policy.");
 		searchUtil.extractDate(request, searchCriteria, "startDate",
-                                "Start Date", null);
+				"Start Date", null);
 		searchUtil.extractDate(request, searchCriteria, "endDate",
                                 "End Date", null);
 		searchUtil.extractString(request, searchCriteria, "cluster",
@@ -735,5 +724,42 @@ public class AssetREST {
 			logger.debug("<== AssetREST.revokePermission(" + ret + ")");
 		}
 		return vXPolicy;
+	}
+
+	@GET
+	@Path("/ugsyncAudits")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS + "\")")
+	public VXUgsyncAuditInfoList getUgsyncAudits(@Context HttpServletRequest request){
+
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xAccessAuditService.sortFields);
+		searchUtil.extractString(request, searchCriteria, "userName",
+				"User Name", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "sessionId",
+				"Session Id", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "syncSource",
+				"Sync Source", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "syncSourceInfo",
+				"Sync Source Info", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractLong(request, searchCriteria, "noOfUsers", "No of Users");
+		searchUtil.extractLong(request, searchCriteria, "noOfGroups", "No of Groups");
+
+		searchUtil.extractDate(request, searchCriteria, "startDate",
+				"Start Date", "MM/dd/yyyy");
+		searchUtil.extractDate(request, searchCriteria, "endDate", "End Date",
+				"MM/dd/yyyy");
+		return assetMgr.getUgsyncAudits(searchCriteria);
+	}
+
+	@GET
+	@Path("/ugsyncAudits/{syncSource}")
+	@Encoded
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS_BY_SYNCSOURCE + "\")")
+	public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(@PathParam("syncSource") String syncSource){
+		VXUgsyncAuditInfoList vxUgsyncAuditInfoList = new VXUgsyncAuditInfoList();
+		vxUgsyncAuditInfoList = assetMgr.getUgsyncAuditsBySyncSource(syncSource);
+		return vxUgsyncAuditInfoList;
 	}
 }

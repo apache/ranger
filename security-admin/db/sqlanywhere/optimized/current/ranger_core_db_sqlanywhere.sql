@@ -867,6 +867,23 @@ CREATE TABLE dbo.x_policy_label_map (
         CONSTRAINT x_policy_label_map_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
+CREATE TABLE dbo.x_ugsync_audit_info(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        event_time datetime DEFAULT NULL NULL,
+        user_name varchar(255) NOT  NULL,
+        sync_source varchar(128) NOT NULL,
+        no_of_users bigint NOT NULL,
+        no_of_groups bigint NOT NULL,
+        sync_source_info varchar(4000) NOT NULL,
+        session_id varchar(255) DEFAULT NULL NULL,
+        CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user(id)
 GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
@@ -1489,6 +1506,12 @@ CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_name ON dbo.x_policy_label(la
 GO
 CREATE NONCLUSTERED INDEX x_policy_label_IDX_label_map_id ON dbo.x_policy_label_map(id ASC)
 GO
+CREATE NONCLUSTERED INDEX x_ugsync_audit_info_etime ON dbo.x_ugsync_audit_info(event_time ASC)
+GO
+CREATE NONCLUSTERED INDEX x_ugsync_audit_info_sync_src ON dbo.x_ugsync_audit_info(sync_source ASC)
+GO
+CREATE NONCLUSTERED INDEX x_ugsync_audit_info_uname ON dbo.x_ugsync_audit_info(user_name ASC)
+GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),1,'ROLE_SYS_ADMIN',1)
@@ -1556,6 +1579,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

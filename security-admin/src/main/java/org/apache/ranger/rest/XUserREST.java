@@ -59,31 +59,7 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
-import org.apache.ranger.view.VXAuditMap;
-import org.apache.ranger.view.VXAuditMapList;
-import org.apache.ranger.view.VXAuthSession;
-import org.apache.ranger.view.VXAuthSessionList;
-import org.apache.ranger.view.VXGroup;
-import org.apache.ranger.view.VXGroupGroup;
-import org.apache.ranger.view.VXGroupGroupList;
-import org.apache.ranger.view.VXGroupList;
-import org.apache.ranger.view.VXGroupPermission;
-import org.apache.ranger.view.VXGroupPermissionList;
-import org.apache.ranger.view.VXGroupUser;
-import org.apache.ranger.view.VXGroupUserInfo;
-import org.apache.ranger.view.VXGroupUserList;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXModuleDef;
-import org.apache.ranger.view.VXModuleDefList;
-import org.apache.ranger.view.VXPermMap;
-import org.apache.ranger.view.VXPermMapList;
-import org.apache.ranger.view.VXString;
-import org.apache.ranger.view.VXStringList;
-import org.apache.ranger.view.VXUser;
-import org.apache.ranger.view.VXUserGroupInfo;
-import org.apache.ranger.view.VXUserList;
-import org.apache.ranger.view.VXUserPermission;
-import org.apache.ranger.view.VXUserPermissionList;
+import org.apache.ranger.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -1152,4 +1128,13 @@ public class XUserREST {
                         xUserMgr.deleteXGroup(groupId, forceDelete);
                 }
         }
+
+	@POST
+	@Path("/ugsync/auditinfo")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public VXUgsyncAuditInfo postUserGroupAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
+
+		return xUserMgr.postUserGroupAuditInfo(vxUgsyncAuditInfo);
+	}
 }

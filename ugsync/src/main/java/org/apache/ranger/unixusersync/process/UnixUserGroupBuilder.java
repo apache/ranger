@@ -33,6 +33,8 @@ import java.util.Arrays;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
+import org.apache.ranger.unixusersync.model.UnixSyncSourceInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
@@ -83,6 +85,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	private long passwordFileModifiedAt = 0;
 	private long groupFileModifiedAt = 0;
+	private UgsyncAuditInfo ugsyncAuditInfo;
+	private UnixSyncSourceInfo unixSyncSourceInfo;
 
 	public static void main(String[] args) throws Throwable {
 		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder();
@@ -95,6 +99,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		minimumGroupId = Integer.parseInt(config.getMinGroupId());
 		unixPasswordFile = config.getUnixPasswordFile();
 		unixGroupFile = config.getUnixGroupFile();
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		unixSyncSourceInfo = new UnixSyncSourceInfo();
+		ugsyncAuditInfo.setSyncSource("Unix");
+		ugsyncAuditInfo.setUnixSyncSourceInfo(unixSyncSourceInfo);
+		unixSyncSourceInfo.setFileName(unixPasswordFile);
+		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
+		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 
 		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
 
@@ -103,10 +114,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		if (!config.getUnixBackend().equalsIgnoreCase(BACKEND_PASSWD)) {
 			useNss = true;
+			unixSyncSourceInfo.setUnixBackend("nss");
 		} else {
 			LOG.warn("DEPRECATED: Unix backend is configured to use /etc/passwd and /etc/group files directly " +
 					"instead of standard system mechanisms.");
+			unixSyncSourceInfo.setUnixBackend(BACKEND_PASSWD);
 		}
+
 	}
 
 	@Override
@@ -144,6 +158,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		isUpdateSinkSucc = true;
 		buildUserGroupInfo();
+		unixSyncSourceInfo.setLastModified(Long.toString(passwordFileModifiedAt));
+		unixSyncSourceInfo.setSyncTime(Long.toString(System.currentTimeMillis()));
 
 		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
 		    String       user   = entry.getKey();
@@ -157,6 +173,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				+ ", groups: " + groups);
 				isUpdateSinkSucc = false;
 			}
+		}
+		try {
+			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+		} catch (Throwable t) {
+			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
 		}
 	}
 	

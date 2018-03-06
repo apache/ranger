@@ -50,12 +50,7 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.model.GroupUserInfo;
-import org.apache.ranger.unixusersync.model.MUserInfo;
-import org.apache.ranger.unixusersync.model.UserGroupInfo;
-import org.apache.ranger.unixusersync.model.XGroupInfo;
-import org.apache.ranger.unixusersync.model.XUserGroupInfo;
-import org.apache.ranger.unixusersync.model.XUserInfo;
+import org.apache.ranger.unixusersync.model.*;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usersync.util.UserSyncUtil;
 
@@ -95,6 +90,9 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	public static final String PM_GET_GROUP_USER_MAP_LIST_URI = "/service/xusers/groupusers/groupName/${groupName}";		// GET
 	
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default";			// POST
+
+	private static final String PM_AUDIT_INFO_URI = "/service/xusers/ugsync/auditinfo/";				// POST
+
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 	private static String LOCAL_HOSTNAME = "unknown";
 	private boolean isMockRun = false;
@@ -192,7 +190,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
 		
-		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" );
+		LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
 		if (! isMockRun) {
 			group = addXGroupInfo(groupName);
 		}
@@ -297,7 +295,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	 	}
 		UserGroupInfo ret = null;
 		XUserInfo user = null;
-		LOG.debug("INFO: addPMXAUser(" + userName + ")" );
+		LOG.debug("INFO: addPMXAUser(" + userName + ")");
 		
 		if (! isMockRun) {
 			user = addXUserInfo(userName);
@@ -469,7 +467,66 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			}
 		}
 	}
-	
+
+	@Override
+	public void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable {
+		if (! isMockRun) {
+			addUserGroupAuditInfo(ugsyncAuditInfo);
+		}
+
+	}
+
+	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
+		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfUsers() + ", " + auditInfo.getNoOfGroups() +
+				", " + auditInfo.getSyncSource() + ")" );
+
+		if (authenticationType != null
+				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
+				&& SecureClientLogin.isKerberosCredentialExists(principal,
+				keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final UgsyncAuditInfo auditInfoFinal = auditInfo;
+				Subject.doAs(sub, new PrivilegedAction<Void>() {
+					@Override
+					public Void run() {
+						try {
+							getUserGroupAuditInfo(auditInfoFinal);
+						} catch (Exception e) {
+							LOG.error("Failed to add User : ", e);
+						}
+						return null;
+					}
+				});
+				return;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return;
+		} else {
+			getUserGroupAuditInfo(auditInfo);
+		}
+	}
+
+
+	private void getUserGroupAuditInfo(UgsyncAuditInfo userInfo) {
+		Client c = getClient();
+
+		WebResource r = c.resource(getURL(PM_AUDIT_INFO_URI));
+
+		Gson gson = new GsonBuilder().create();
+
+		String jsonString = gson.toJson(userInfo);
+
+		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+
+		LOG.debug("RESPONSE[" + response + "]");
+
+		gson.fromJson(response, UgsyncAuditInfo.class);
+
+		LOG.debug("AuditInfo Creation successful ");
+	}
+
 	private void delXGroupUserInfo(final String groupName, List<String> userList) {
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.delXGroupUserInfo " + groupName + " and " + userList);

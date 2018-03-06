@@ -47,6 +47,8 @@ import javax.naming.ldap.StartTlsResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.LdapSyncSourceInfo;
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 
@@ -102,6 +104,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	private Map<String, UserInfo> userGroupMap;
     //private Set<String> firstGroupDNs;
 
+	UgsyncAuditInfo ugsyncAuditInfo;
+	LdapSyncSourceInfo ldapSyncSourceInfo;
+
 	public static void main(String[] args) throws Throwable {
 		LdapUserGroupBuilder  ugBuilder = new LdapUserGroupBuilder();
 		ugBuilder.init();
@@ -135,6 +140,13 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	@Override
 	public void init() throws Throwable{
 		setConfig();
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		ldapSyncSourceInfo = new LdapSyncSourceInfo();
+		ldapSyncSourceInfo.setLdapUrl(ldapUrl);
+		ldapSyncSourceInfo.setIncrementalSycn("False");
+		ldapSyncSourceInfo.setGroupHierarchyLevel(Integer.toString(groupHierarchyLevels));
+		ugsyncAuditInfo.setSyncSource("LDAP/AD");
+		ugsyncAuditInfo.setLdapSyncSourceInfo(ldapSyncSourceInfo);
 	}
 
 	private void createLdapContext() throws Throwable {
@@ -299,6 +311,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		LOG.info("LDAPUserGroupBuilder updateSink started");
 		userGroupMap = new HashMap<String, UserInfo>();
+		Set<String> allGroups = new HashSet<String>();
 
 		if (!groupSearchFirstEnabled) {
 			LOG.info("Performing user search first");
@@ -322,6 +335,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
                     LOG.debug("Completed group hierarchy computation");
                 }
 				List<String> groupList = userInfo.getGroups();
+				allGroups.addAll(groupList);
                 LOG.debug("updateSink(): group list for " + userName + " = " + groupList);
 				if (userNameCaseConversionFlag) {
 					if (userNameLowerCaseFlag) {
@@ -343,11 +357,18 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 					+ ", groups: " + groupList);
 				}
 			}
+			ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
+			ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+			try {
+				sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+			} catch (Throwable t) {
+				LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
+			}
 
 		} else {
 			LOG.info("Performing Group search first");
 			getGroups(sink, null);
-            // Go through the userInfo map and update ranger admin.
+			 // Go through the userInfo map and update ranger admin.
             for (UserInfo userInfo : userGroupMap.values()) {
                 String userName = getShortUserName(userInfo.getUserFullName());
                 if (groupHierarchyLevels > 0) {
@@ -355,12 +376,14 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
                     goUpGroupHierarchyLdap(userInfo.getGroupDNs(), groupHierarchyLevels - 1, userInfo);
                     //System.out.println("Completed group hierarchy computation");
                 }
+				List<String> groupList = userInfo.getGroups();
+				allGroups.addAll(groupList);
                 if (userSearchEnabled) {
                     LOG.info("User search is enabled and hence computing user membership.");
                     getUsers(sink);
                 } else {
                     LOG.info("User search is disabled and hence using the group member attribute for username" + userName);
-                    List<String> groupList = userInfo.getGroups();
+					allGroups.addAll(groupList);
                     if (userNameCaseConversionFlag) {
                         if (userNameLowerCaseFlag) {
                             userName = userName.toLowerCase();
@@ -382,6 +405,13 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
                     }
                 }
             }
+			ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
+			ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+			try {
+				sink.postUserGroupAuditInfo(ugsyncAuditInfo);
+			} catch (Throwable t) {
+				LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
+			}
 		}
 	}
 
