@@ -960,6 +960,33 @@ public class UserGroupSyncConfig  {
 		return deltaSyncEnabled;
 	}
 
+	public String escapeSearchFilter(String searchFilter) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < searchFilter.length(); i++) {
+			char ch = searchFilter.charAt(i);
+			switch (ch) {
+				case '\\':
+					sb.append("\\5c");
+					break;
+				case '*':
+					sb.append("\\2a");
+					break;
+				case '(':
+					sb.append("\\28");
+					break;
+				case ')':
+					sb.append("\\29");
+					break;
+				case '\u0000':
+					sb.append("\\00");
+					break;
+				default:
+					sb.append(ch);
+			}
+		}
+		return sb.toString();
+	}
+
 	/* Used only for unit testing */
 	public void setUserSearchFilter(String filter) {
 		prop.setProperty(LGSYNC_USER_SEARCH_FILTER, filter);

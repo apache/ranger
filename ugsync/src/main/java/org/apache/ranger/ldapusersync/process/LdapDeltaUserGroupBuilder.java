@@ -941,7 +941,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 						.append(groupDN).append(")");
 			}
 			filter.append("))");
-			groupFilter += filter;
+			groupFilter += config.escapeSearchFilter(filter.toString());
 
 			LOG.info("extendedAllGroupsSearchFilter = " + groupFilter);
 			for (int ou=0; ou<groupSearchBase.length; ou++) {
