@@ -277,7 +277,6 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 					+ ",  ldapReferral: " + ldapReferral
 					);
 		}
-
 	}
 
 	private void closeLdapContext() throws Throwable {
@@ -810,7 +809,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 						.append(groupDN).append(")");
 			}
 			filter.append("))");
-            groupFilter += filter;
+            groupFilter += config.escapeSearchFilter(filter.toString());
 
 			LOG.debug("extendedAllGroupsSearchFilter = " + groupFilter);
 			for (String ou : groupSearchBase) {
