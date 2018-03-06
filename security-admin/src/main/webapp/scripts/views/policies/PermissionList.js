@@ -651,7 +651,7 @@ define(function(require) {
 					emptytext : 'Add Conditions',
 					value : this.conditions,
 					display: function(value) {
-						var continue_ = false, i = 0;
+						var continue_ = false, i = 0, cond = [];
 						if(!value) {
 							$(this).empty();
 							return; 
@@ -666,19 +666,18 @@ define(function(require) {
 									return ''; 
 								}
 								//Add label for policy condition
-								var pcond = _.findWhere(that.multiLinecond, { 'name': name})
+								var pcond = _.findWhere(that.multiLinecond, { 'name': name});
 								if(!_.isUndefined(pcond) && !_.isUndefined(pcond['evaluatorOptions']) 
 										&& ! _.isUndefined(pcond['evaluatorOptions']["ui.isMultiline"]) 
 										&& ! _.isUndefined(pcond['evaluatorOptions']['engineName'])){
-									val = 	pcond['evaluatorOptions']['engineName'] + ' Condition'
+									cond.push({ 'type' : name, 'values' : !_.isArray(val) ? [val] : val });
+									val = 	pcond['evaluatorOptions']['engineName'] + ' Condition';
+								} else {
+									cond.push({ 'type' : name, 'values' : !_.isArray(val) ?  val.split(',') : val });
 								}
 								i++;
-                                                                return '<span class="'+label+' white-space-normal" >'+name+' : '+ _.escape(val) + '</span>';
+                                return '<span class="'+label+' white-space-normal" >'+name+' : '+ _.escape(val) + '</span>';
 							});
-							var cond = _.map(value, function(val, name) {
-                                                                return {'type' : name, 'values' : !_.isArray(val) ?  val.split(',') : val};
-							});
-							
 							that.model.set('conditions', cond);
 							$(this).html(html);
 							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
