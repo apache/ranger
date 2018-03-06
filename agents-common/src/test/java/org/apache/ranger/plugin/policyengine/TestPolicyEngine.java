@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 
 import static org.junit.Assert.*;
 
@@ -312,7 +313,12 @@ public class TestPolicyEngine {
 	public void testPolicyEngine_temporary() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_temporary.json"};
 
+		TimeZone defaultTZ = TimeZone.getDefault();
+		TimeZone.setDefault(TimeZone.getTimeZone("PST"));
+
 		runTestsFromResourceFiles(resourceFiles);
+
+		TimeZone.setDefault(defaultTZ);
 	}
 
 	@Test
@@ -533,35 +539,39 @@ public class TestPolicyEngine {
     }
 
     @Test
-    public void testValiditySchedularInvalid() {
+    public void testValiditySchedulerInvalid() {
         String resourceName = "/policyengine/validityscheduler/test-validity-schedules-invalid.json";
 
         runValiditySchedulerTests(resourceName);
     }
 
     @Test
-    public void testValiditySchedularValid() {
+    public void testValiditySchedulerValid() {
         String resourceName = "/policyengine/validityscheduler/test-validity-schedules-valid.json";
 
         runValiditySchedulerTests(resourceName);
     }
 
     @Test
-    public void testValiditySchedularApplicable() {
+    public void testValiditySchedulerApplicable() {
         String resourceName = "/policyengine/validityscheduler/test-validity-schedules-valid-and-applicable.json";
 
         runValiditySchedulerTests(resourceName);
     }
 
     private void runValiditySchedulerTests(String resourceName) {
+        TimeZone defaultTZ = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("PST"));
+
         List<ValiditySchedulerTestCase> testCases = null;
+
         InputStream inStream = this.getClass().getResourceAsStream(resourceName);
         InputStreamReader reader   = new InputStreamReader(inStream);
         try {
             Type listType = new TypeToken<List<ValiditySchedulerTestCase>>() {}.getType();
             testCases = gsonBuilder.fromJson(reader, listType);
         } catch (Exception e) {
-	        assertFalse("Exception in reading validity-scheduler test cases.", true);
+            assertFalse("Exception in reading validity-scheduler test cases.", true);
         }
 
         assertNotNull("TestCases are null!", testCases);
@@ -597,6 +607,7 @@ public class TestPolicyEngine {
                 assertTrue(testCase.name + ", [" + validationFailures +"]", validationFailures.size() == testCase.result.validationFailureCount);
             }
         }
+        TimeZone.setDefault(defaultTZ);
     }
 
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
