@@ -141,7 +141,7 @@ public class RangerValidityScheduleValidator {
         for (RangerValidityRecurrence recurrence : validitySchedule.getRecurrences()) {
             ret = validateValidityInterval(recurrence, validationFailures) && ret;
 
-            if (RangerValidityRecurrence.ValidityInterval.getValidityIntervalInMinutes(recurrence.getInterval()) > 0) {
+            if (ret) {
                 ret = validateFieldSpec(recurrence, RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.minute, validationFailures) && ret;
                 ret = validateFieldSpec(recurrence, RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.hour, validationFailures) && ret;
                 ret = validateFieldSpec(recurrence, RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfMonth, validationFailures) && ret;
@@ -156,7 +156,6 @@ public class RangerValidityScheduleValidator {
                             getNormalizedValue(recurrence, RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month), getNormalizedValue(recurrence, RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.year));
                     RangerValidityRecurrence normalizedRecurrence = new RangerValidityRecurrence(schedule, recurrence.getInterval());
                     normalizedValiditySchedule.getRecurrences().add(normalizedRecurrence);
-
                 }
             }
         }
@@ -174,22 +173,24 @@ public class RangerValidityScheduleValidator {
     }
 
     private boolean validateValidityInterval(RangerValidityRecurrence recurrence, List<ValidationFailureDetails> validationFailures) {
-        boolean ret = true;
-        RangerValidityRecurrence.ValidityInterval validityInterval = recurrence.getInterval();
-        if (validityInterval != null) {
+        boolean ret = recurrence.getInterval() != null && recurrence.getSchedule() != null;
+
+        if (ret) {
+            RangerValidityRecurrence.ValidityInterval validityInterval = recurrence.getInterval();
+
             if (validityInterval.getDays() < 0
-                    || (validityInterval.getHours() < 0 || validityInterval.getHours() > 23)
-                    || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)) {
+                        || (validityInterval.getHours() < 0 || validityInterval.getHours() > 23)
+                        || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)) {
                 validationFailures.add(new ValidationFailureDetails(0, "interval", "", false, true, false, "invalid interval"));
                 ret = false;
             }
-        }
-        int validityIntervalInMinutes = RangerValidityRecurrence.ValidityInterval.getValidityIntervalInMinutes(validityInterval);
-        if (validityIntervalInMinutes > 0) {
+
             if (StringUtils.isBlank(recurrence.getSchedule().getDayOfMonth()) && StringUtils.isBlank(recurrence.getSchedule().getDayOfWeek())) {
                 validationFailures.add(new ValidationFailureDetails(0, "validitySchedule", "", false, true, false, "empty dayOfMonth and dayOfWeek"));
                 ret = false;
             }
+        } else {
+	        validationFailures.add(new ValidationFailureDetails(0, "recurrence", "schedule/interval", true, true, false, "empty schedule/interval in recurrence spec"));
         }
         return ret;
     }

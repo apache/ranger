@@ -8,7 +8,7 @@
         "recurrences": [
           {
             "schedule": {
-              "minute": "60",
+              "minute": "30",
               "hour": "*",
               "dayOfMonth": "*",
               "dayOfWeek": "5, 7",
@@ -16,7 +16,7 @@
               "year": "2018"
             },
             "interval": {
-              "minutes": 0
+              "minutes": 10
             }
           }
         ]
@@ -45,7 +45,7 @@
               "month": "*",
               "year": "2018"
             },
-            "inteval": {
+            "interval": {
               "minutes": 9
             }
           }
