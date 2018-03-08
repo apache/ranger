@@ -450,13 +450,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	/*
-	* This API is used by ranger-admin
-	*/
+	 * This API is used by ranger-admin
+	 */
 
 	@Override
-	public boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType) {
+	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
 		boolean ret = false;
@@ -468,7 +468,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-			ret = evaluator.isAccessAllowed(resources, user, userGroups, accessType);
+			ret = evaluator.isAccessAllowed(policy, user, userGroups, accessType);
 
 			if (ret) {
 				break;
@@ -478,12 +478,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerPerfTracer.log(perf);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
 		}
 
 		return ret;
 	}
-
 	/*
 	* This API is used by ranger-admin
 	*/
@@ -640,6 +639,41 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.getResourceAccessInfo(" + request + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	/*
+	 * This API is used by test-code
+	 */
+
+	@Override
+	public boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
+		}
+
+		boolean ret = false;
+
+		RangerPerfTracer perf = null;
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + "," + userGroups + ",accessType=" + accessType + ")");
+		}
+
+		for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+			ret = evaluator.isAccessAllowed(resources, user, userGroups, accessType);
+
+			if (ret) {
+				break;
+			}
+		}
+
+		RangerPerfTracer.log(perf);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
 		}
 
 		return ret;

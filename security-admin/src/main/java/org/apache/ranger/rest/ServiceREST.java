@@ -1476,7 +1476,7 @@ public class ServiceREST {
 				RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 				validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
-				ensureAdminAccess(policy.getService(), policy.getResources());
+				ensureAdminAccess(policy);
 
 				ret = svcStore.createPolicy(policy);
 			}
@@ -1564,7 +1564,7 @@ public class ServiceREST {
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 
-			ensureAdminAccess(policy.getService(), policy.getResources());
+			ensureAdminAccess(policy);
 
 			ret = svcStore.updatePolicy(policy);
 		} catch(WebApplicationException excp) {
@@ -1603,7 +1603,7 @@ public class ServiceREST {
 
 			RangerPolicy policy = svcStore.getPolicy(id);
 
-			ensureAdminAccess(policy.getService(), policy.getResources());
+			ensureAdminAccess(policy);
 
 			svcStore.deletePolicy(id);
 		} catch(WebApplicationException excp) {
@@ -1639,7 +1639,7 @@ public class ServiceREST {
 			ret = svcStore.getPolicy(id);
 
 			if(ret != null) {
-				ensureAdminAccess(ret.getService(), ret.getResources());
+				ensureAdminAccess(ret);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -2299,7 +2299,7 @@ public class ServiceREST {
 								if (rangerPolicy != null) {
 									try {
 										validator.validate(rangerPolicy.getId(), Action.DELETE);
-										ensureAdminAccess(rangerPolicy.getService(), rangerPolicy.getResources());
+										ensureAdminAccess(rangerPolicy);
 										svcStore.deletePolicy(rangerPolicy);
 										totalDeletedPilicies = totalDeletedPilicies + 1;
 										if (LOG.isDebugEnabled()) {
@@ -2848,7 +2848,7 @@ public class ServiceREST {
 		try {
 			policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
 			if(policy != null) {
-				ensureAdminAccess(policy.getService(), policy.getResources());
+				ensureAdminAccess(policy);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -3035,7 +3035,7 @@ public class ServiceREST {
 						}
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyEngine.isAccessAllowed(policy.getResources(), userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS)) {
+							if (policyEngine.isAccessAllowed(policy, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS)) {
 								ret.add(policy);
 							}
 						}
@@ -3050,7 +3050,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-	void ensureAdminAccess(String serviceName, Map<String, RangerPolicyResource> resources) {
+	void ensureAdminAccess(RangerPolicy policy) {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		String userName = bizUtil.getCurrentUserLoginId();
@@ -3058,12 +3058,12 @@ public class ServiceREST {
 		if(!isAdmin && !isKeyAdmin) {
 			boolean isAllowed = false;
 
-			RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+			RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
 
 			if (policyEngine != null) {
 				Set<String> userGroups = userMgr.getGroupsForUser(userName);
 
-				isAllowed = hasAdminAccess(serviceName, userName, userGroups, resources);
+				isAllowed = hasAdminAccess(policy, userName, userGroups);
 			}
 
 			if (!isAllowed) {
@@ -3072,7 +3072,7 @@ public class ServiceREST {
 			}
 		} else {
 
-			XXService xService = daoManager.getXXService().findByName(serviceName);
+			XXService xService = daoManager.getXXService().findByName(policy.getService());
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 
 			if (isAdmin) {
@@ -3119,18 +3119,17 @@ public class ServiceREST {
 		return opts;
 	}
 
-	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, Map<String, RangerPolicyResource> resources) {
+	private boolean hasAdminAccess(RangerPolicy policy, String userName, Set<String> userGroups) {
 		boolean isAllowed = false;
 
-		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
 
 		if(policyEngine != null) {
-			isAllowed = policyEngine.isAccessAllowed(resources, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
+			isAllowed = policyEngine.isAccessAllowed(policy, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
 		}
 
 		return isAllowed;
 	}
-
 	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, RangerAccessResource resource) {
 		boolean isAllowed = false;
 

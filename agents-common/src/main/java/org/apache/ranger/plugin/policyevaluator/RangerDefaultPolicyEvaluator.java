@@ -315,6 +315,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
+	/*
+	 * This is used only by test code
+	 */
+
 	@Override
 	public boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType) {
 		if(LOG.isDebugEnabled()) {
@@ -325,9 +329,27 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
 		boolean ret = isAccessAllowed(user, userGroups, accessType) && isMatch(resources, evalContext);
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + ")");
+		}
+
+		Map<String, Object> evalContext = new HashMap<>();
+		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+
+		boolean ret = isAccessAllowed(user, userGroups, accessType) && isMatch(policy, evalContext);
+		
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
 		}
 
 		return ret;
@@ -458,6 +480,20 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.getResourceAccessInfo(" + request + ", " + policyItems + ", " + users + ", " + groups + ")");
 		}
+	}
+
+	protected boolean isMatch(RangerPolicy policy, Map<String, Object> evalContext) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + policy.getId() + ", " + evalContext + ")");
+		}
+
+		boolean ret = policy.getId() == getId() || isMatch(policy.getResources(), evalContext);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isMatch(" + policy.getId() + ", " + evalContext + "): " + ret);
+		}
+
+		return ret;
 	}
 
 	protected boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {

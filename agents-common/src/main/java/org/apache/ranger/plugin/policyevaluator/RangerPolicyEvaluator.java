@@ -85,6 +85,8 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
+	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType);
+
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
