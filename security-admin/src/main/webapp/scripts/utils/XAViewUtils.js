@@ -25,6 +25,7 @@ define(function(require) {
     var XAEnums = require('utils/XAEnums');
     var localization = require('utils/XALangSupport');
     var XAViewUtil = {};
+    require('Backbone.BootstrapModal');
 
     XAViewUtil.resourceTypeFormatter = function(rawValue, model){
         var resourcePath = _.isUndefined(model.get('resourcePath')) ? undefined : model.get('resourcePath');
@@ -90,6 +91,35 @@ define(function(require) {
                 }
             });
         }
+    };
+
+    XAViewUtil.syncSourceDetail = function(e , that){
+        if($(e.target).is('.icon-edit,.icon-trash,a,code'))
+            return;
+        var SyncSourceView = Backbone.Marionette.ItemView.extend({
+            template : require('hbs!tmpl/reports/UserSyncInfo_tmpl'),
+            templateHelpers:function(){
+                var syncSourceInfo = _.filter(that.userSyncAuditList.models , function(m){
+                    return m.id == e.currentTarget.getAttribute('id');
+                });
+                syncSourceInfo = _.map(syncSourceInfo[0].get('syncSourceInfo'), function(value, key){
+                    return {'label': 'lbl.'+key, 'value': value };
+                });
+                return {'syncSourceInfo' : syncSourceInfo };
+            },
+            initialize: function(){
+            },
+            onRender: function(){}
+        });
+        var modal = new Backbone.BootstrapModal({
+            animate : true,
+            content     : new SyncSourceView({model : this.model}),
+            title: localization.tt("h.syncDetails"),
+            okText :localization.tt("lbl.ok"),
+            allowCancel : true,
+            escape : true
+        }).open();
+        modal.$el.find('.cancel').hide();
     };
 	
 	return XAViewUtil;

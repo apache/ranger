@@ -375,5 +375,11 @@ define(function(require) {
                 XA_TAG_BASED_POLICIES:{value:6, label:'Tag Based Policies', rbkey:'xa.enum.MenuPermissions.XA_TAG_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_TAG_BASED_POLICIES'}
 	});
 
+        XAEnums.UserSyncSource = mergeParams(XAEnums.UserSyncSource, {
+                USER_SYNC_UNIX:{value:0, label:'Unix', rbkey:'xa.enum.UserSyncSource.USER_SYNC_UNIX', tt: 'lbl.USER_SYNC_UNIX'},
+                USER_SYNC_LDAPAD:{value:1, label:'LDAP/AD', rbkey:'xa.enum.UserSyncSource.USER_SYNC_LDAPAD', tt: 'lbl.USER_SYNC_LDAPAD'},
+                USER_SYNC_FILE:{value:2, label:'File', rbkey:'xa.enum.UserSyncSource.USER_SYNC_FILE', tt: 'lbl.USER_SYNC_FILE'}
+        });
+
 	return XAEnums;
 });
