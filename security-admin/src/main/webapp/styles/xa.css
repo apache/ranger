@@ -2244,7 +2244,7 @@ textarea:read-only{
 }.resourceText{
 	overflow: hidden;
 	text-overflow: ellipsis;
-	width: 85%;
+  max-width: 85%;
 }
 .closeBtn{
 	position: absolute;
@@ -2283,4 +2283,11 @@ textarea:read-only{
 }
 .infoWidth{
   width: 475px;
+}
+.query-icon{
+  padding: 0 4px;
+  float: right;
+  margin-top: -3px;
+  cursor: pointer;
+  margin-left: 4px;
 }

@@ -35,7 +35,9 @@ define(function(require) {
                 return '<div class="clearfix">\
                             <div class="pull-left resourceText" title="'+ resourcePath+'">'+resourcePath+'</div>\
                             <div class="pull-right">\
-                                <i class="icon-table queryInfo" title="Query Info" data-id ="'+model.get('id')+'"data-name = "queryInfo"></i>\
+                                <div class="queryInfo btn btn-mini link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
+                                    <i class="icon-table" ></i>\
+                                </div>\
                             </div>\
                         </div>\
                         <div title="'+resourceType+'" class="border-top-1">'+resourceType+'</div>';
@@ -43,7 +45,9 @@ define(function(require) {
                 return '<div class="clearfix">\
                             <div class="pull-left">--</div>\
                             <div class="pull-right">\
-                                <i class="icon-table queryInfo" title="Query Info" data-id ="'+model.get('id')+'"data-name = "queryInfo"></i>\
+                                <div class="queryInfo btn btn-mini link-tag query-icon" title="Query Info" data-id ="'+model.get('id')+'"data-name = "queryInfo"">\
+                                    <i class="icon-table"></i>\
+                                </div>\
                             </div>\
                         </div>';
             }
@@ -60,11 +64,11 @@ define(function(require) {
     XAViewUtil.showQueryPopup = function(model, that){
         if(model.get('serviceType') == XAEnums.ServiceType.Service_HIVE.label && model.get('aclEnforcer') == "ranger-acl"
             && model.get('requestData') && !_.isEmpty(model.get('requestData'))){
-            var msg = '<div class="query-content">'+model.get('requestData')+'</div>';
+            var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-mini" title="Copy Query"><i class="icon-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
             var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
             $elements.popover({
                 html: true,
-                title:'<b> Query </b>'+
+                title:'<b> Hive Query </b>'+
                 '<button type="button"  id="queryInfoClose" class="close closeBtn" onclick="$(&quot;.queryInfo&quot;).popover(&quot;hide&quot;);">&times;</button>',
                 content: msg,
                 selector : true,
@@ -74,6 +78,15 @@ define(function(require) {
                 e.stopPropagation();
                 if($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0){
                     $('.queryInfo').not(this).popover('hide');
+                    $('.copyQuery').on("click", function(e){
+                        var input = document.createElement('input');
+                        input.setAttribute('value', model.get('requestData'));
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        e.currentTarget.title="Copied!";
+                    })
                 }
             });
         }
