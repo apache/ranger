@@ -39,7 +39,7 @@ public class UserGroupSyncConfig  {
 	public static final String CONFIG_FILE = "ranger-ugsync-site.xml";
 	private static final Logger LOG = Logger.getLogger(UserGroupSyncConfig.class);
 
-	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default-site.xml";
+	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default.xml";
 
 	private static final String CORE_SITE_CONFIG_FILE = "core-site.xml";
 
