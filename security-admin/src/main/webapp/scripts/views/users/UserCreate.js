@@ -32,7 +32,6 @@ define(function(require){
 	var UserTableLayout	= require('views/users/UserTableLayout');
 	var VXUserList		= require('collections/VXUserList');
 	var UserCreateTmpl  = require('hbs!tmpl/users/UserCreate_tmpl');
-        var SessionMgr		= require('mgrs/SessionMgr');
 
 	var UserCreate = Backbone.Marionette.Layout.extend(
 	/** @lends UserCreate */
@@ -101,10 +100,7 @@ define(function(require){
 			this.renderForm();
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavUserForm'),this.rForm.$el);
-                if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                    this.ui.btnSave.attr("disabled", true);
-                }
-                },
+			},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},

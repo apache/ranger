@@ -32,7 +32,6 @@ define(function(require){
 	var VXGroupList		= require('collections/VXGroupList');
 	var GroupForm		= require('views/users/GroupForm');
 	var GroupcreateTmpl = require('hbs!tmpl/users/GroupCreate_tmpl');
-        var SessionMgr      = require('mgrs/SessionMgr');
 
 	var GroupCreate = Backbone.Marionette.Layout.extend(
 	/** @lends GroupCreate */
@@ -94,8 +93,7 @@ define(function(require){
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
 			XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavGroupForm'),this.rForm.$el);
-                        if((!_.isUndefined(this.model.get('groupSource')) && this.model.get('groupSource') == XAEnums.GroupSource.XA_GROUP.value)
-                                || XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+			if(!_.isUndefined(this.model.get('groupSource')) && this.model.get('groupSource') == XAEnums.GroupSource.XA_GROUP.value){
                                 this.ui.btnSave.prop( "disabled", true );
 			}
 		},

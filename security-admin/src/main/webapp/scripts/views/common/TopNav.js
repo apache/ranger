@@ -23,9 +23,7 @@ define(function(require){
 
 	var Backbone		= require('backbone');
 
-        var TopNav_tmpl = require('hbs!tmpl/common/TopNav_tmpl');
-        var SessionMgr  = require('mgrs/SessionMgr');
-        var XAUtil = require('utils/XAUtils');
+	var TopNav_tmpl = require('hbs!tmpl/common/TopNav_tmpl'); 
 	require('jquery.cookie');
 	var TopNav = Backbone.Marionette.ItemView.extend(
 	/** @lends TopNav */
@@ -34,9 +32,7 @@ define(function(require){
 		
     	template: TopNav_tmpl,
     	templateHelpers : function(){
-        return{
-                showPermissionTab : XAUtil.isAuditorOrSystemAdmin(SessionMgr)
-		}
+    		
     	},
         
     	/** ui selector cache */

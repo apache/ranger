@@ -32,7 +32,6 @@ define(function(require){
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
 	var vUploadServicePolicy		= require('views/UploadServicePolicy');
 	var vDownloadServicePolicy		= require('views/DownloadServicePolicy');
-        var RangerServiceViewDetail = require('views/service/RangerServiceViewDetail');
 	require('Backbone.BootstrapModal');
 	return Backbone.Marionette.Layout.extend(
 	/** @lends Servicemanagerlayout */
@@ -46,7 +45,7 @@ define(function(require){
 				operation 	: SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
 				serviceDefs : this.collection.models,
 				services 	: this.services.groupBy("type"),
-                                showImportExportBtn : (SessionMgr.isUser() || XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
+				showImportExportBtn : SessionMgr.isUser() ? false : true
 			};
 			
 		},
@@ -66,8 +65,7 @@ define(function(require){
     		'downloadReport'      : '[data-id="downloadBtnOnService"]',
     		'uploadServiceReport' :'[data-id="uploadBtnOnServices"]',
     		'exportReport'      : '[data-id="exportBtn"]',
-                'importServiceReport' :'[data-id="importBtn"]',
-                'viewServices' : '[data-name="viewService"]'
+        	'importServiceReport' :'[data-id="importBtn"]'
     	},
 
 		/** ui events hash */
@@ -78,7 +76,6 @@ define(function(require){
 			events['click ' + this.ui.uploadServiceReport]	= 'uploadServiceReport';
 			events['click ' + this.ui.exportReport]	= 'downloadReport';
 			events['click ' + this.ui.importServiceReport]	= 'uploadServiceReport';
-                        events['click ' + this.ui.viewServices]   = 'viewServices';
 			return events;
 		},
     	/**
@@ -243,26 +240,6 @@ define(function(require){
 				});
 			}
 		},
-        viewServices : function(e){
-            var that =this;
-            var serviceId =  $(e.currentTarget).data('id');
-            var rangerService = that.services.find(function(m){return m.id == serviceId});
-            var serviceDef = that.collection.find(function(m){return m.get('name') == rangerService.get('type')});
-            var view = new RangerServiceViewDetail({
-                serviceDef : serviceDef,
-                rangerService : rangerService,
-
-            });
-            var modal = new Backbone.BootstrapModal({
-                animate : true,
-                content     : view,
-                title: localization.tt("h.serviceDetails"),
-                okText :localization.tt("lbl.ok"),
-                allowCancel : true,
-                escape : true
-            }).open();
-            modal.$el.find('.cancel').hide();
-        },
 		/** on close */
 		onClose: function(){
 		}

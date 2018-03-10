@@ -292,7 +292,7 @@ define(function(require){
 				name : {
 					label	: localization.tt("lbl.userName"),
 					href: function(model){
-                                            return '#!/user/'+ model.id;
+						return '#!/user/'+ model.id;
 					},
 					editable:false,
 					sortable:false,
@@ -374,12 +374,6 @@ define(function(require){
 					sortable:false
 				}
 			};
-                        if(!SessionMgr.isSystemAdmin()){
-                            delete cols.select;
-                        }
-            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                cols.name.cell = 'string';
-            }
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		
@@ -424,7 +418,7 @@ define(function(require){
 				name : {
 					label	: localization.tt("lbl.groupName"),
 					href: function(model){
-                                            return '#!/group/'+ model.id;
+						return '#!/group/'+ model.id;
 					},
 					editable:false,
 					sortable:false,
@@ -485,12 +479,6 @@ define(function(require){
                     }),
                 }
 			};
-            if(!SessionMgr.isSystemAdmin()){
-                delete cols.select;
-            }
-            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                cols.name.cell = 'string';
-            }
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 
@@ -735,12 +723,10 @@ define(function(require){
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Role':
-                                        var userRoles ={};
-                                        _.map(XAUtil.getUserDataParams().userRoleList, function(obj){
-                                                userRoles[obj] = XAEnums.UserRoles[obj];
-                                        })
-                                        var roles = XAUtil.hackForVSLabelValuePairs(userRoles);
-                                        callback(roles);
+										var roles = XAUtil.hackForVSLabelValuePairs(XAEnums.UserRoles);
+										var label  = SessionMgr.isSystemAdmin() || SessionMgr.isUser() ? XAEnums.UserRoles.ROLE_KEY_ADMIN.label
+													: XAEnums.UserRoles.ROLE_SYS_ADMIN.label;
+										callback(_.filter(roles, function(o) { return o.label !== label; }));
 										break;
 									case 'User Source':
 										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.UserTypes));

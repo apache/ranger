@@ -102,7 +102,7 @@ define(function(require) {
 		   var view				= require('views/user/UserProfile');
 		   
 		   App.rContent.show(new view({
-                           model : App.userProfile.clone()
+			   model : App.userProfile
 		   }));
 
 	   },
