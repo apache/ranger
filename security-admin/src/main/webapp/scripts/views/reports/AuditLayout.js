@@ -40,7 +40,6 @@ define(function(require) {
 	var RangerServiceDefList 		= require('collections/RangerServiceDefList');
 	var RangerService				= require('models/RangerService');
 	var RangerServiceList			= require('collections/RangerServiceList');
-        var VXUserList 				= require('collections/VXUserList');
 	var AuditlayoutTmpl 			= require('hbs!tmpl/reports/AuditLayout_tmpl');
 	var vOperationDiffDetail		= require('views/reports/OperationDiffDetail');
 	var RangerPolicy 				= require('models/RangerPolicy');
@@ -91,8 +90,7 @@ define(function(require) {
             btnShowMore : '[data-id="showMore"]',
                         btnShowLess : '[data-id="showLess"]',
             iconqueryInfo : '[data-name="queryInfo"]',
-            hidePopup : '[data-id="hide-popup"]',
-            syncDetailes : '[data-id="syncDetailes"]'
+            hidePopup : '[data-id="hide-popup"]'
 		},
 
 		/** ui events hash */
@@ -106,7 +104,6 @@ define(function(require) {
             if(this.currentTab == '#bigData'){
                 events['click ' + this.ui.hidePopup]  = 'onClickOutSide';
             }
-            events['click '+this.ui.syncDetailes] = 'onSyncDetailes';
             return events;
 		},
 
@@ -125,7 +122,7 @@ define(function(require) {
 			this.initializeServiceDefColl();
             if(_.isUndefined(App.vsHistory)){
 	            var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
-                    App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[], 'userSync': []};
+	            App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[]};
             }
 		},
 
@@ -260,39 +257,27 @@ define(function(require) {
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
-                     App.vsHistory.pluginStatus = XAUtils.removeEmptySearchValue(App.vsHistory.pluginStatus);
+                                         App.vsHistory.pluginStatus = XAUtils.removeEmptySearchValue(App.vsHistory.pluginStatus);
 					 this.ui.visualSearch.show();
 					 this.pluginInfoList = new VXPolicyExportAuditList();
-                     this.renderPluginInfoTable();
+                                         this.renderPluginInfoTable();
 					 this.modifyPluginStatusTableSubcolumns();
 					 //To use existing collection
 					 this.pluginInfoList.url = 'service/plugins/plugins/info';
 					 this.pluginInfoList.modelAttrName = 'pluginInfoList';
-                     if(_.isEmpty(App.vsHistory.pluginStatus)){
-                         this.pluginInfoList.fetch({cache : false});
-                     }
+                                         if(_.isEmpty(App.vsHistory.pluginStatus)){
+                                                 this.pluginInfoList.fetch({cache : false});
+                                         }
 					 this.addSearchForPluginStatusTab();
 					 this.ui.iconSearchInfo.hide();
                      $('.popover').remove();
 					 break;
-                case "#userSync":
-                     this.currentTab = '#userSync';
-                     this.ui.visualSearch.show();
-                     this.userSyncAuditList = new VXUserList();
-                     this.renderUserSyncTable();
-                     //To use existing collection
-                     this.userSyncAuditList.url = 'service/assets/ugsyncAudits';
-                     this.userSyncAuditList.modelAttrName = 'vxUgsyncAuditInfoList';
-                     this.userSyncAuditList.setSorting('id',1);
-                     this.addSearchForUserSyncTab();
-                     this.ui.iconSearchInfo.hide();
-                     break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
 			that.ui.lastUpdateTimeLabel.html(lastUpdateTime);
 		},
 		addSearchForBigDataTab :function(){
-            var that = this , query = '';
+                        var that = this , query = '';
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
@@ -616,51 +601,6 @@ define(function(require) {
                                 })
                         });
 		},
-        addSearchForUserSyncTab : function(){
-            var that = this , query = '';
-            var searchOpt = [localization.tt("lbl.userName"), localization.tt("lbl.syncSource"), localization.tt("lbl.startDate"), localization.tt("lbl.endDate")];
-            var serverAttrName  = [{text : localization.tt("lbl.userName"), label :"userName"},{text : localization.tt("lbl.syncSource"), label :"syncSource"},
-                                   {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'}];
-            if(_.isEmpty(App.vsHistory.userSync)){
-                query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
-                App.vsHistory.userSync.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
-            }else{
-                _.map(App.vsHistory.userSync, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
-            }
-            var pluginAttr = {
-                placeholder    : localization.tt('msg.searchForUserSync'),
-                container         : this.ui.visualSearch,
-                query             : query,
-                type		   : 'userSync',
-                callbacks :  {
-                    valueMatches :function(facet, searchTerm, callback) {
-                        switch (facet) {
-                            case 'Sync Source':
-                                    callback( _.map(XAEnums.UserSyncSource, function(obj){ return obj.label; }) );
-                                    break;
-                            case 'Start Date' :
-                                    var endDate, models = that.visualSearch.searchQuery.where({category:"End Date"});
-                                    if(models.length > 0){
-                                        var tmpmodel = models[0];
-                                        endDate = tmpmodel.attributes.value;
-                                    }
-                                    XAUtils.displayDatepicker(that.ui.visualSearch, facet, endDate, callback);
-                                    break;
-                            case 'End Date' :
-                                    var startDate, models = that.visualSearch.searchQuery.where({category:"Start Date"});
-                                    if(models.length > 0){
-                                        var tmpmodel = models[0];
-                                        startDate = tmpmodel.attributes.value;
-                                    }
-                                    XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
-                                    break;
-                        }
-                    }
-                }
-            }
-            this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.userSyncAuditList, pluginAttr);
-            this.setEventsToFacets(this.visualSearch, App.vsHistory.userSync);
-        },
 		renderAdminTable : function(){
 			var that = this , self = this;
 			
@@ -1359,7 +1299,7 @@ define(function(require) {
 			};
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},
-        renderPluginInfoTable : function(){
+                renderPluginInfoTable : function(){
 			this.ui.tableList.removeClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getPluginInfoColums(),
@@ -1532,87 +1472,9 @@ define(function(require) {
 			return this.pluginInfoList.constructor.getTableCols(cols, this.pluginInfoList);
 	
 		},
-        renderUserSyncTable : function(){
-            this.$el.addClass("user-sync-table");
-            this.ui.tableList.removeClass("clickable");
-            this.rTableList.show(new XATableLayout({
-                columns: this.getUserSyncColums(),
-                collection: this.userSyncAuditList,
-                includeFilter : false,
-                gridOpts : {
-                    row : Backgrid.Row.extend({}),
-                    header : XABackgrid,
-                    emptyText : 'No plugin found!'
-                }
-            }));
-        },
-        getUserSyncColums : function(){
-            var cols ={
-                userName : {
-                    cell 	: 'string',
-                    label	: localization.tt("lbl.userName"),
-                    editable:false,
-                    sortable:false,
-                },
-                syncSource : {
-                    cell 	: 'html',
-                    label	: localization.tt("lbl.syncSource"),
-                    editable:false,
-                    sortable:false,
-                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                        fromRaw: function (rawValue, model) {
-                            var label = rawValue == "Unix" ? 'success' : (rawValue == "File" ? 'info' : 'yellow');
-                            return '<center><label class="label label-'+label+'">'+_.escape(rawValue)+'</label></center>';
-                        }
-                    }),
-                },
-                noOfUsers : {
-                    cell 	: 'string',
-                    label	: localization.tt("lbl.noOfUsers"),
-                    editable:false,
-                    sortable:false,
-                },
-                noOfGroups : {
-                    cell 	: 'string',
-                    label	: localization.tt("lbl.noOfGroups"),
-                    editable:false,
-                    sortable:false,
-                },
-                eventTime : {
-                    label : 'Event Time',
-                    cell: "String",
-                    click : false,
-                    drag : false,
-                    editable:false,
-                    sortType: 'toggle',
-                    direction: 'descending',
-                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                        fromRaw: function (rawValue, model) {
-                            return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
-                        }
-                    })
-                },
-                syncSourceDetail : {
-                    cell    : 'html',
-                    label : localization.tt("h.syncDetails"),
-                    editable:false,
-                    sortable:false,
-                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                        fromRaw: function (rawValue, model) {
-                            return('<button data-id="syncDetailes" title="Sync Details" id="'+ model.get('id') +'" ><i class="icon-eye-open"> </i></button>');
-                        }
-                    }),
-                }
-            }
-            return this.userSyncAuditList.constructor.getTableCols(cols, this.userSyncAuditList);
-
-        },
-        onSyncDetailes : function(e){
-            XAViewUtils.syncSourceDetail(e , this);
-        },
-        isDateDifferenceMoreThanHr : function(date1, date2){
-                var diff = Math.abs(date1 - date2) / 36e5;
-                return parseInt(diff) >= 1 ? true : false;
+                isDateDifferenceMoreThanHr : function(date1, date2){
+                        var diff = Math.abs(date1 - date2) / 36e5;
+                        return parseInt(diff) >= 1 ? true : false;
 		},
 		onRefresh : function(){
 			var that =this, coll,params = {};
@@ -1636,9 +1498,6 @@ define(function(require) {
 			case "#pluginStatus":
 				coll = this.pluginInfoList;
 				break;
-                        case "#userSync":
-                                coll = this.userSyncAuditList;
-                                break;
 			}
 			coll.fetch({
 				reset : true,
@@ -1685,9 +1544,6 @@ define(function(require) {
 				case "#pluginStatus":
 					this.collection = this.pluginInfoList;
 					break;
-                                case "#userSync":
-                                        this.collection = this.userSyncAuditList;
-                                        break;
 			}
 		},
 		clearVisualSearch : function(collection, serverAttrNameList) {

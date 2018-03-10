@@ -2291,9 +2291,3 @@ textarea:read-only{
   cursor: pointer;
   margin-left: 4px;
 }
-.user-sync-table td{
-  text-align: center !important;
-}
-.white-space-normal{
-  white-space: normal !important;
-}

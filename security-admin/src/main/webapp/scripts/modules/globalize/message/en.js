@@ -244,24 +244,7 @@ define(function(require) {
                 clusterName                     : 'Cluster Name',
                 policyLabels					: 'Policy Labels',
                 activeStatus                    : 'Active Status',
-                selectTagService                : 'Tag Service',
-                syncSource                      : 'Sync Source',
-                noOfUsers                       : 'No. of users',
-                noOfGroups                      : 'No. of groups',
-                unixBackend                     : 'Unix',
-                fileName                        : 'File Name',
-                syncTime                        : 'Sync time',
-                lastModified                    : 'Last modified time',
-                ldapUrl                         : 'Ldap url',
-                isIncrementalSync               : 'Incremental sync',
-                groupHierarchyLevel             : 'Group hierarchy level',
-                minUserId                       : "Minimum user id",
-                minGroupId                      : "Minimum group id",
-                userSearchFilter                : 'User search filter',
-                groupSearchFilter               : 'Group search filter',
-                startDate                       : 'Start Date',
-                endDate                         : 'End Date'
-
+                selectTagService                : 'Tag Service'
 
 			},
 			btn : {
@@ -372,10 +355,7 @@ define(function(require) {
                 rowFilter                   : 'Row Filter',
                 policyLabelsinfo			: 'Label of policy',
                 serviceDetails              :'Service Details',
-                configProperties            : 'Config Properties',
-                userSync                    :'User Sync',
-                syncSourceInfo              :'Sync Source',
-                syncDetails                  :'Sync Details'
+                configProperties            : 'Config Properties'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
@@ -446,8 +426,7 @@ define(function(require) {
                 addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',
                 noUserFoundText			: 'No user associate with this group.',
-                showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
-                searchForUserSync       :"Search for your user sync audits..."
+                showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on '
  
 			},
 			plcHldr : {
