@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Component;
@@ -42,7 +41,9 @@ public class RangerSearchUtil extends SearchUtil {
 	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
 	
 	public SearchFilter getSearchFilter(HttpServletRequest request, List<SortField> sortFields) {
-		Validate.notNull(request, "request");
+		if (request == null) {
+			return null;
+		}
 		SearchFilter ret = new SearchFilter();
 
 		if (MapUtils.isEmpty(request.getParameterMap())) {
@@ -64,8 +65,8 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.POL_RESOURCE, request.getParameter(SearchFilter.POL_RESOURCE));
 		ret.setParam(SearchFilter.RESOURCE_SIGNATURE, request.getParameter(SearchFilter.RESOURCE_SIGNATURE));
 		ret.setParam(SearchFilter.POLICY_TYPE, request.getParameter(SearchFilter.POLICY_TYPE));
-                ret.setParam(SearchFilter.POLICY_LABEL, request.getParameter(SearchFilter.POLICY_LABEL));
-                ret.setParam(SearchFilter.POLICY_LABELS_PARTIAL, request.getParameter(SearchFilter.POLICY_LABELS_PARTIAL));
+		ret.setParam(SearchFilter.POLICY_LABEL, request.getParameter(SearchFilter.POLICY_LABEL));
+		ret.setParam(SearchFilter.POLICY_LABELS_PARTIAL, request.getParameter(SearchFilter.POLICY_LABELS_PARTIAL));
 		ret.setParam(SearchFilter.PLUGIN_HOST_NAME, request.getParameter(SearchFilter.PLUGIN_HOST_NAME));
 		ret.setParam(SearchFilter.PLUGIN_APP_TYPE, request.getParameter(SearchFilter.PLUGIN_APP_TYPE));
 		ret.setParam(SearchFilter.PLUGIN_ENTITY_TYPE, request.getParameter(SearchFilter.PLUGIN_ENTITY_TYPE));
@@ -112,7 +113,9 @@ public class RangerSearchUtil extends SearchUtil {
 
 
 	public SearchFilter getSearchFilterFromLegacyRequest(HttpServletRequest request, List<SortField> sortFields) {
-		Validate.notNull(request, "request");
+		if (request == null) {
+			return null;
+		}
 		SearchFilter ret = new SearchFilter();
 
 		if (MapUtils.isEmpty(request.getParameterMap())) {
