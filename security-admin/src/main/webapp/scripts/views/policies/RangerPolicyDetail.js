@@ -118,7 +118,7 @@ define(function(require) {
 						resource.exBool = true;
 						resource.exLabel = localization.tt('h.recursive')
 					}else{
-						resource.exBool = fasle;
+						resource.exBool = false;
 						resource.exLabel = localization.tt('h.nonRecursive')
 					}
 				}
