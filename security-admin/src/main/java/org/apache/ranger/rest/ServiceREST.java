@@ -2089,7 +2089,7 @@ public class ServiceREST {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file...");
 						}
 						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)) {
-							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices, null);
+							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices);
 						}
 					}
 
@@ -2303,16 +2303,14 @@ public class ServiceREST {
 	}
 	
 	private void deletePoliciesProvidedInServiceMap(
-			List<String> sourceServices, List<String> destinationServices,
-			HttpServletRequest request) {
+			List<String> sourceServices, List<String> destinationServices) {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			for (int i = 0; i < sourceServices.size(); i++) {
 				if (!destinationServices.get(i).isEmpty()) {
-					RangerPolicyList servicePolicies = null;
-					servicePolicies = getServicePoliciesByName(destinationServices.get(i), request);
+					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i), new SearchFilter());
 					if (servicePolicies != null) {
 						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
@@ -2535,11 +2533,20 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getServicePolicies(" + serviceName + ")");
 		}
 
-		RangerPolicyList ret  = new RangerPolicyList();
-		RangerPerfTracer perf = null;
-
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
+		RangerPolicyList ret = getServicePolicies(serviceName, filter);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
+					+ (ret == null ? 0 : ret.getListSize()));
+		}
+
+		return ret;
+	}
+
+	private RangerPolicyList getServicePolicies(String serviceName, SearchFilter filter) {
+		RangerPerfTracer perf = null;
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceName=" + serviceName + ")");
@@ -2548,7 +2555,7 @@ public class ServiceREST {
 			if(isAdminUserWithNoFilterParams(filter)) {
 				PList<RangerPolicy> policies = svcStore.getPaginatedServicePolicies(serviceName, filter);
 
-				ret = toRangerPolicyList(policies);
+				return toRangerPolicyList(policies);
 			} else {
 				// get all policies from the store; pick the page to return after applying filter
 				int savedStartIndex = filter == null ? 0 : filter.getStartIndex();
@@ -2568,7 +2575,7 @@ public class ServiceREST {
 
 				servicePolicies = applyAdminAccessFilter(servicePolicies);
 
-				ret = toRangerPolicyList(servicePolicies, filter);
+				return toRangerPolicyList(servicePolicies, filter);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -2579,13 +2586,6 @@ public class ServiceREST {
 		} finally {
 			RangerPerfTracer.log(perf);
 		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
-					+ (ret == null ? 0 : ret.getListSize()));
-		}
-
-		return ret;
 	}
 
 	@GET

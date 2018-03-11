@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Component;
@@ -42,7 +43,7 @@ public class RangerSearchUtil extends SearchUtil {
 	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
 	
 	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
-
+		Validate.notNull(request, "request");
 		SearchFilter ret = new SearchFilter();
 
 		if (MapUtils.isEmpty(request.getParameterMap())) {
@@ -112,9 +113,7 @@ public class RangerSearchUtil extends SearchUtil {
 
 
 	public SearchFilter getSearchFilterFromLegacyRequest(HttpServletRequest request, List<SortField> sortFields) {
-		if (request == null) {
-			return null;
-		}
+		Validate.notNull(request, "request");
 		SearchFilter ret = new SearchFilter();
 
 		if (MapUtils.isEmpty(request.getParameterMap())) {
