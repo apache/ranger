@@ -281,6 +281,7 @@ public class XUserREST {
 	@Path("/users")
 	@Produces({ "application/xml", "application/json" })
 	public VXUser updateXUser(VXUser vXUser) {
+                bizUtil.checkUserAccessible(vXUser);
 		return xUserMgr.updateXUser(vXUser);
 	}
 	
@@ -790,6 +791,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.createXModuleDefPermission(vXModuleDef);
 	}
 
@@ -807,6 +809,7 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.updateXModuleDefPermission(vXModuleDef);
 	}
 
@@ -817,6 +820,7 @@ public class XUserREST {
 			@Context HttpServletRequest request) {
 		boolean force = true;
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		xUserMgr.deleteXModuleDefPermission(id, force);
 	}
 
@@ -859,6 +863,7 @@ public class XUserREST {
 	public VXUserPermission createXUserPermission(
 			VXUserPermission vXUserPermission) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.createXUserPermission(vXUserPermission);
 	}
 
@@ -877,6 +882,7 @@ public class XUserREST {
 	public VXUserPermission updateXUserPermission(
 			VXUserPermission vXUserPermission) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.updateXUserPermission(vXUserPermission);
 	}
 
@@ -924,6 +930,7 @@ public class XUserREST {
 	public VXGroupPermission createXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.createXGroupPermission(vXGroupPermission);
 	}
 
@@ -942,6 +949,7 @@ public class XUserREST {
 	public VXGroupPermission updateXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		return xUserMgr.updateXGroupPermission(vXGroupPermission);
 	}
 
@@ -952,6 +960,7 @@ public class XUserREST {
 			@Context HttpServletRequest request) {
 		boolean force = true;
 		xUserMgr.checkAdminAccess();
+                bizUtil.blockAuditorRoleUser();
 		xUserMgr.deleteXGroupPermission(id, force);
 	}
 

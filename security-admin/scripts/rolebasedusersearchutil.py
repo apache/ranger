@@ -36,7 +36,7 @@ os_name = os_name.upper()
 
 msgPrompt = "Enter the below options"
 msgCommand = "Usage : python rolebasedusersearchutil.py -u <userName> -p <password> -r <role>"
-msgRoleList = " <role> can be ROLE_USER/ROLE_SYS_ADMIN/ROLE_KEY_ADMIN"
+msgRoleList = " <role> can be ROLE_USER/ROLE_SYS_ADMIN/ROLE_KEY_ADMIN/ROLE_ADMIN_AUDITOR/ROLE_KEY_ADMIN_AUDITOR"
 
 
 

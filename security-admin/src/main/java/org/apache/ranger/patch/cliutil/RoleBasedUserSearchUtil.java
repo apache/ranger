@@ -44,8 +44,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RoleBasedUserSearchUtil extends BaseLoader {
 
-        private static final Logger logger = Logger
-                        .getLogger(RoleBasedUserSearchUtil.class);
+        private static final Logger logger = Logger.getLogger(RoleBasedUserSearchUtil.class);
         @Autowired
         XUserService xUserService;
 
@@ -77,7 +76,9 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 	                    roles.add(RangerConstants.ROLE_USER);
 	                    roles.add(RangerConstants.ROLE_SYS_ADMIN);
 	                    roles.add(RangerConstants.ROLE_KEY_ADMIN);
-	                    if (!StringUtils.isBlank(userRole)) {
+                        roles.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+                        roles.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+                        if (!StringUtils.isBlank(userRole)) {
 	                        userRole = userRole.toUpperCase();
 	                        if (!roles.contains(userRole)) {
 	                            System.out.println("Invalid UserRole. Exiting!!!");
@@ -134,7 +135,9 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
         	try {
         		if (!CollectionUtils.isEmpty(userRoleList) && userRoleList != null) {
 	                Map<String, String> roleSysAdminMap = new HashMap<String, String>();
+                        Map<String, String> roleAdminAuditorMap = new HashMap<String, String>();
 	                Map<String, String> roleKeyAdminMap = new HashMap<String, String>();
+                        Map<String, String> roleKeyAdminAuditorMap = new HashMap<String, String>();
 	                Map<String, String> roleUserMap = new HashMap<String, String>();
 	                for (String userRole : userRoleList) {
 	                    List<XXPortalUser> listXXPortalUser = daoMgr.getXXPortalUser().findByRole(userRole);
@@ -143,9 +146,17 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 	                            for (XXPortalUser xXPortalUser : listXXPortalUser) {
 	                                    roleSysAdminMap.put(xXPortalUser.getLoginId(),userRole);
 	                            }
+                                } else  if (userRole.equalsIgnoreCase(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                                for (XXPortalUser xXPortalUser : listXXPortalUser) {
+                                    roleAdminAuditorMap.put(xXPortalUser.getLoginId(),userRole);
+                                }
 	                        } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN)) {
                                 for (XXPortalUser xXPortalUser : listXXPortalUser) {
                                         roleKeyAdminMap.put(xXPortalUser.getLoginId(),userRole);
+                                }
+                                } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                                for (XXPortalUser xXPortalUser : listXXPortalUser) {
+                                        roleKeyAdminAuditorMap.put(xXPortalUser.getLoginId(),userRole);
                                 }
 	                        } else if (userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
                                 for (XXPortalUser xXPortalUser : listXXPortalUser) {
@@ -154,7 +165,7 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 	                        }
 	                    }
 	                }
-                    if (MapUtils.isEmpty( roleSysAdminMap) && MapUtils.isEmpty(roleKeyAdminMap) && MapUtils.isEmpty(roleUserMap)) {
+                    if (MapUtils.isEmpty(roleSysAdminMap) && MapUtils.isEmpty(roleKeyAdminMap) && MapUtils.isEmpty(roleUserMap) && MapUtils.isEmpty(roleAdminAuditorMap) && MapUtils.isEmpty(roleKeyAdminAuditorMap)) {
                         System.out.println("users with given user role are not there");
                         logger.error("users with given user role are not there");
                         System.exit(1);
@@ -174,6 +185,16 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
                               System.out.println(entry.getValue() + " : " + entry.getKey());
                             }
                         }
+                        if (!MapUtils.isEmpty(roleAdminAuditorMap)) {
+                                for(Entry<String, String> entry : roleAdminAuditorMap.entrySet()){
+                                        System.out.println(entry.getValue() + " : " + entry.getKey());
+                                }
+                        }
+                        if (!MapUtils.isEmpty(roleKeyAdminAuditorMap)) {
+                                for(Entry<String, String> entry : roleKeyAdminAuditorMap.entrySet()){
+                                        System.out.println(entry.getValue() + " : " + entry.getKey());
+                                }
+                        }
                         if (userRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
                         	System.out.println("ROLE_SYS_ADMIN Total Count : " + roleSysAdminMap.size());
                         }
@@ -183,7 +204,14 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
                         if (userRoleList.contains(RangerConstants.ROLE_USER)) {
                         	System.out.println("ROLE_USER Total Count : " + roleUserMap.size());
                         }
-                        int total = roleSysAdminMap.size() + roleKeyAdminMap.size() + roleUserMap.size();
+                        if (userRoleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                                System.out.println("ROLE_ADMIN_AUDITOR Total Count : " + roleAdminAuditorMap.size());
+                        }
+                        if (userRoleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                                System.out.println("ROLE_KEY_ADMIN_AUDITOR Total Count : " + roleKeyAdminAuditorMap.size());
+                        }
+
+                        int total = roleSysAdminMap.size() + roleKeyAdminMap.size() + roleUserMap.size() + roleAdminAuditorMap.size() + roleKeyAdminAuditorMap.size();
                         System.out.println("Total Count : " + total);
                     }
         		}
@@ -218,23 +246,25 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 	                                } else {
 	                                	isUserAuthorized = true;
 	                                }
-                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
+                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN) || existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_ADMIN_AUDITOR)) {
                                 	if (checkRole) {
-	                                    userRoleList.add(RangerConstants.ROLE_SYS_ADMIN);
+                                                userRoleList.add(RangerConstants.ROLE_SYS_ADMIN);
+                                                userRoleList.add(RangerConstants.ROLE_ADMIN_AUDITOR);
 	                                    userRoleList.add(RangerConstants.ROLE_USER);
 	                                    getUsersBasedOnRole(userRoleList);
-                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER) || userRole.equalsIgnoreCase(RangerConstants.ROLE_ADMIN_AUDITOR) || userRole.equalsIgnoreCase(RangerConstants.ROLE_SYS_ADMIN)) {
                                         userRoleList.add(userRole);
                                         getUsersBasedOnRole(userRoleList);
-                                    } else {
+                                    }else {
                                     	isUserAuthorized = true;
                                     }
-                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                } else if (existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN) || existingRole.get(0).equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
                                     if (checkRole) {
-	                                    userRoleList.add(RangerConstants.ROLE_KEY_ADMIN);
+                                        userRoleList.add(RangerConstants.ROLE_KEY_ADMIN);
+                                            userRoleList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
 	                                    userRoleList.add(RangerConstants.ROLE_USER);
 	                                    getUsersBasedOnRole(userRoleList);
-                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER)) {
+                                    } else if (existingRole.get(0).equalsIgnoreCase(userRole) || userRole.equalsIgnoreCase(RangerConstants.ROLE_USER) || userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN) || userRole.equalsIgnoreCase(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
                                         userRoleList.add(userRole);
                                         getUsersBasedOnRole(userRoleList);
                                     } else {

@@ -74,6 +74,9 @@ public class RangerPreAuthSecurityHandler {
 		if (CollectionUtils.isEmpty(associatedTabs)) {
 			return true;
 		}
+                if(associatedTabs.contains(RangerAPIMapping.TAB_PERMISSIONS) && userSession.isAuditUserAdmin()){
+                        return true;
+                }
 		return isAPIAccessible(associatedTabs);
 	}
 

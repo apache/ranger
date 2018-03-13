@@ -50,16 +50,19 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		return super.createXTrxLog(vXTrxLog);
 	}
 
 	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		return super.updateXTrxLog(vXTrxLog);
 	}
 
 	public void deleteXTrxLog(Long id, boolean force) {
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		super.deleteXTrxLog(id, force);
 	}
 
@@ -92,7 +95,9 @@ public class XAuditMgr extends XAuditMgrBase {
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session != null) {
 			if (!session.isUserAdmin()) {
-				throw restErrorUtil.create403RESTException("Operation" + " denied. LoggedInUser=" + (session != null ? session.getXXPortalUser().getId() : "Not Logged In")
+                                throw restErrorUtil.create403RESTException("Operation"
+                                                + " denied. LoggedInUser="
+                                                + session.getXXPortalUser().getId()
 						+ " ,isn't permitted to perform the action.");
 			}
 		} else {

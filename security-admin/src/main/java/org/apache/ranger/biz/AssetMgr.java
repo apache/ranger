@@ -884,7 +884,7 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	public VXTrxLogList getReportLogs(SearchCriteria searchCriteria) {
-                if (xaBizUtil.isAdmin() || xaBizUtil.isKeyAdmin()) {
+                if (xaBizUtil.isAdmin() || xaBizUtil.isKeyAdmin() || xaBizUtil.isAuditAdmin() || xaBizUtil.isAuditKeyAdmin()) {
                         if (searchCriteria == null) {
                                 searchCriteria = new SearchCriteria();
 			}

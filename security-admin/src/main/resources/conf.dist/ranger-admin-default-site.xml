@@ -80,7 +80,7 @@
 <!-- #Role list -->
 	<property>
 		<name>ranger.users.roles.list</name>
-		<value>ROLE_SYS_ADMIN, ROLE_USER, ROLE_OTHER, ROLE_ANON, ROLE_KEY_ADMIN</value>
+                <value>ROLE_SYS_ADMIN, ROLE_USER, ROLE_OTHER, ROLE_ANON, ROLE_KEY_ADMIN, ROLE_ADMIN_AUDITOR, ROLE_KEY_ADMIN_AUDITOR</value>
 	</property>
 <!-- #Mail listing -->
 	<property>

@@ -34,6 +34,8 @@ public class UserSessionBase implements Serializable {
 	XXPortalUser xXPortalUser;
 	XXAuthSession xXAuthSession;
 	private boolean userAdmin;
+    private boolean userAuditAdmin = false;
+    private boolean auditKeyAdmin = false;
 	private boolean keyAdmin = false;
 	private int authProvider = RangerConstants.USER_APP;
 	private List<String> userRoleList = new ArrayList<String>();
@@ -67,6 +69,14 @@ public class UserSessionBase implements Serializable {
 		return userAdmin;
 	}
 	
+    public boolean isAuditUserAdmin() {
+        return userAuditAdmin;
+    }
+
+    public void setAuditUserAdmin(boolean userAuditAdmin) {
+        this.userAuditAdmin = userAuditAdmin;
+    }
+
 	public void setUserAdmin(boolean userAdmin) {
 		this.userAdmin = userAdmin;
 	}
@@ -114,6 +124,13 @@ public class UserSessionBase implements Serializable {
 		this.keyAdmin = keyAdmin;
 	}
 
+    public boolean isAuditKeyAdmin() {
+        return auditKeyAdmin;
+    }
+
+    public void setAuditKeyAdmin(boolean auditKeyAdmin) {
+        this.auditKeyAdmin = auditKeyAdmin;
+    }
 	/**
 	 * @return the rangerUserPermission
 	 */

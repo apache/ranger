@@ -246,7 +246,7 @@ public class ServiceREST {
 
 			bizUtil.hasAdminPermissions("Service-Def");
 			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
-
+                        bizUtil.blockAuditorRoleUser();
 			ret = svcStore.createServiceDef(serviceDef);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -286,7 +286,7 @@ public class ServiceREST {
 
 			bizUtil.hasAdminPermissions("Service-Def");
 			bizUtil.hasKMSPermissions("Service-Def", serviceDef.getImplClass());
-
+                        bizUtil.blockAuditorRoleUser();
 			ret = svcStore.updateServiceDef(serviceDef);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -655,6 +655,7 @@ public class ServiceREST {
 							MessageEnums.OPER_NO_PERMISSION);
 				}
 			}
+                         bizUtil.blockAuditorRoleUser();
 			ret = svcStore.createService(service);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -700,7 +701,7 @@ public class ServiceREST {
 
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
-
+                        bizUtil.blockAuditorRoleUser();
 			Map<String, Object> options = getOptions(request);
 
             ret = svcStore.updateService(service, options);
@@ -765,7 +766,7 @@ public class ServiceREST {
 			}
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
 			bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
-
+                        bizUtil.blockAuditorRoleUser();
 			tagStore.deleteAllTagObjectsForService(service.getName());
 
 			svcStore.deleteService(id);
@@ -1069,7 +1070,7 @@ public class ServiceREST {
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
 	
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-
+                                        bizUtil.blockAuditorRoleUser();
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 					}
@@ -1184,7 +1185,7 @@ public class ServiceREST {
 							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 						}
 					}
-
+                                        bizUtil.blockAuditorRoleUser();
 					if (isAllowed) {
 						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
@@ -1281,7 +1282,7 @@ public class ServiceREST {
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
 
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-
+                                        bizUtil.blockAuditorRoleUser();
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 					}
@@ -1362,7 +1363,7 @@ public class ServiceREST {
 							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 						}
 					}
-
+                                        bizUtil.blockAuditorRoleUser();
 					if (isAllowed) {
 						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
@@ -1477,7 +1478,7 @@ public class ServiceREST {
 				validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
 
 				ensureAdminAccess(policy);
-
+                                bizUtil.blockAuditorRoleUser();
 				ret = svcStore.createPolicy(policy);
 			}
 		} catch(WebApplicationException excp) {
@@ -1565,7 +1566,7 @@ public class ServiceREST {
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
 
 			ensureAdminAccess(policy);
-
+                        bizUtil.blockAuditorRoleUser();
 			ret = svcStore.updatePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1604,7 +1605,7 @@ public class ServiceREST {
 			RangerPolicy policy = svcStore.getPolicy(id);
 
 			ensureAdminAccess(policy);
-
+                        bizUtil.blockAuditorRoleUser();
 			svcStore.deletePolicy(id);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1639,7 +1640,7 @@ public class ServiceREST {
 			ret = svcStore.getPolicy(id);
 
 			if(ret != null) {
-				ensureAdminAccess(ret);
+                                ensureAdminAndAuditAccess(ret);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1772,6 +1773,12 @@ public class ServiceREST {
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 			if (CollectionUtils.isNotEmpty(policyLists)){
+                                for (RangerPolicy rangerPolicy : policyLists) {
+                                        if (rangerPolicy != null) {
+                                                ensureAdminAndAuditAccess(rangerPolicy);
+                                        }
+                                }
+                 bizUtil.blockAuditorRoleUser();
 				svcStore.getPoliciesInExcel(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -1819,6 +1826,12 @@ public class ServiceREST {
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 			if (CollectionUtils.isNotEmpty(policyLists)){
+                                for (RangerPolicy rangerPolicy : policyLists) {
+                                        if (rangerPolicy != null) {
+                                                ensureAdminAndAuditAccess(rangerPolicy);
+                                        }
+                                }
+                                bizUtil.blockAuditorRoleUser();
 				svcStore.getPoliciesInCSV(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -1855,6 +1868,7 @@ public class ServiceREST {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPoliciesInJson()");
 		}
+		
 		RangerPerfTracer perf = null;
 		SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
 
@@ -1870,12 +1884,19 @@ public class ServiceREST {
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 			if (CollectionUtils.isNotEmpty(policyLists)) {
+				for (RangerPolicy rangerPolicy : policyLists) {
+					if (rangerPolicy != null) {
+						ensureAdminAndAuditAccess(rangerPolicy);
+					}
+				}
+				bizUtil.blockAuditorRoleUser();
 				svcStore.getPoliciesInJson(policyLists, response);
 			} else {
 				checkPoliciesExists = true;
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 				LOG.error("There is no Policy to Export!!");
 			}
+                        
 			if(!checkPoliciesExists){
 				RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 				svcStore.putMetaDataInfo(rangerExportPolicyList);
@@ -2300,6 +2321,7 @@ public class ServiceREST {
 									try {
 										validator.validate(rangerPolicy.getId(), Action.DELETE);
 										ensureAdminAccess(rangerPolicy);
+                                                                                bizUtil.blockAuditorRoleUser();
 										svcStore.deletePolicy(rangerPolicy);
 										totalDeletedPilicies = totalDeletedPilicies + 1;
 										if (LOG.isDebugEnabled()) {
@@ -2848,7 +2870,7 @@ public class ServiceREST {
 		try {
 			policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
 			if(policy != null) {
-				ensureAdminAccess(policy);
+                                ensureAdminAndAuditAccess(policy);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -2986,6 +3008,8 @@ public class ServiceREST {
 			boolean     isAdmin    = bizUtil.isAdmin();
 			boolean     isKeyAdmin = bizUtil.isKeyAdmin();
 			String      userName   = bizUtil.getCurrentUserLoginId();
+                        boolean	    isAuditAdmin = bizUtil.isAuditAdmin();
+                        boolean     isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
 			Set<String> userGroups = null;
 
 			Map<String, List<RangerPolicy>> servicePoliciesMap = new HashMap<String, List<RangerPolicy>>();
@@ -3009,7 +3033,7 @@ public class ServiceREST {
 				List<RangerPolicy> listToFilter = entry.getValue();
 
 				if (CollectionUtils.isNotEmpty(listToFilter)) {
-					if (isAdmin || isKeyAdmin) {
+                                        if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin) {
 						XXService xService     = daoManager.getXXService().findByName(serviceName);
 						Long      serviceDefId = xService.getType();
 						boolean   isKmsService = serviceDefId.equals(EmbeddedServiceDefsUtil.instance().getKmsServiceDefId());
@@ -3018,6 +3042,14 @@ public class ServiceREST {
 							if (!isKmsService) {
 								ret.addAll(listToFilter);
 							}
+                                                } else if (isAuditAdmin) {
+                                                        if (!isKmsService) {
+                                                                ret.addAll(listToFilter);
+                                                        }
+                                                } else if (isAuditKeyAdmin) {
+                                                        if (isKmsService) {
+                                                                ret.addAll(listToFilter);
+                                                        }
 						} else { // isKeyAdmin
 							if (isKmsService) {
 								ret.addAll(listToFilter);
@@ -3342,4 +3374,46 @@ public class ServiceREST {
         }
         return ret;
     }
+
+        void ensureAdminAndAuditAccess(RangerPolicy policy) {
+                boolean isAdmin = bizUtil.isAdmin();
+                boolean isKeyAdmin = bizUtil.isKeyAdmin();
+                String userName = bizUtil.getCurrentUserLoginId();
+                boolean isAuditAdmin = bizUtil.isAuditAdmin();
+                boolean isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
+                if (!isAdmin && !isKeyAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
+                        boolean isAllowed = false;
+
+                        RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy
+                                        .getService());
+
+                        if (policyEngine != null) {
+                                Set<String> userGroups = userMgr.getGroupsForUser(userName);
+
+                                isAllowed = hasAdminAccess(policy, userName, userGroups);
+                        }
+
+                        if (!isAllowed) {
+                                throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,"User '"
+                                                                                + userName+ "' does not have delegated-admin privilege on given resources",true);
+                        }
+                } else {
+
+                        XXService xService = daoManager.getXXService().findByName(policy.getService());
+                        XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+
+                        if (isAdmin || isAuditAdmin) {
+                                if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+                                        throw restErrorUtil.createRESTException(
+                                                        "KMS Policies/Services/Service-Defs are not accessible for user '"
+                                                                        + userName + "'.",MessageEnums.OPER_NO_PERMISSION);
+                                }
+                        } else if (isKeyAdmin || isAuditKeyAdmin) {
+                                if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+                                        throw restErrorUtil.createRESTException("Only KMS Policies/Services/Service-Defs are accessible for user '"
+                                                                        + userName + "'.",MessageEnums.OPER_NO_PERMISSION);
+                                }
+                        }
+                }
+        }
 }

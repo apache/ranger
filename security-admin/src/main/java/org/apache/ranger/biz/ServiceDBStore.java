@@ -1161,7 +1161,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
 		}
-
+                bizUtil.blockAuditorRoleUser();
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session == null) {
 			throw restErrorUtil.createRESTException(
@@ -3246,7 +3246,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(serviceDef == null) {
 			return;
 		}
-
 		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
@@ -4315,21 +4314,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 		xUserService.createXUserWithOutLogin(genericUser);
 	}
 
-        public List<String> getPolicyLabels(SearchFilter searchFilter) {
-                if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> ServiceDBStore.getPolicyLabels()");
-                }
-                VXPolicyLabelList vxPolicyLabelList = new VXPolicyLabelList();
-                List<XXPolicyLabel> xPolList = (List<XXPolicyLabel>) policyLabelsService.searchResources(searchFilter,
-                                policyLabelsService.searchFields, policyLabelsService.sortFields, vxPolicyLabelList);
-                List<String> result = new ArrayList<String>();
-                for (XXPolicyLabel xPolicyLabel : xPolList) {
-                        result.add(xPolicyLabel.getPolicyLabel());
-                }
-                if (LOG.isDebugEnabled()) {
-                        LOG.debug("<== ServiceDBStore.getPolicyLabels()");
-                }
-                return result;
+    public List<String> getPolicyLabels(SearchFilter searchFilter) {
+        if (LOG.isDebugEnabled()) {
+                LOG.debug("==> ServiceDBStore.getPolicyLabels()");
         }
-
+        VXPolicyLabelList vxPolicyLabelList = new VXPolicyLabelList();
+        List<XXPolicyLabel> xPolList = (List<XXPolicyLabel>) policyLabelsService.searchResources(searchFilter,
+                        policyLabelsService.searchFields, policyLabelsService.sortFields, vxPolicyLabelList);
+        List<String> result = new ArrayList<String>();
+        for (XXPolicyLabel xPolicyLabel : xPolList) {
+                result.add(xPolicyLabel.getPolicyLabel());
+        }
+        if (LOG.isDebugEnabled()) {
+                LOG.debug("<== ServiceDBStore.getPolicyLabels()");
+        }
+        return result;
+    }
 }

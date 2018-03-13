@@ -107,6 +107,9 @@ public class KmsKeyMgr {
 	@Autowired
 	RangerDaoManagerBase rangerDaoManagerBase;
 	
+        @Autowired
+        RangerBizUtil rangerBizUtil;
+
 	@SuppressWarnings("unchecked")
 	public VXKmsKeyList searchKeys(HttpServletRequest request, String repoName) throws Exception{
 		String providers[] = null;
@@ -217,6 +220,7 @@ public class KmsKeyMgr {
 
 	public VXKmsKey rolloverKey(String provider, VXKmsKey vXKey) throws Exception{
 		String providers[] = null;
+                rangerBizUtil.blockAuditorRoleUser();
 		try {
 			providers = getKMSURL(provider);
 		} catch (Exception e) {
@@ -272,6 +276,7 @@ public class KmsKeyMgr {
 	
 	public void deleteKey(String provider, String name) throws Exception{
 		String providers[] = null;
+                rangerBizUtil.blockAuditorRoleUser();
 		try {
 			providers = getKMSURL(provider);
 		} catch (Exception e) {
@@ -322,6 +327,7 @@ public class KmsKeyMgr {
 
 	public VXKmsKey createKey(String provider, VXKmsKey vXKey) throws Exception{
 		String providers[] = null;
+                rangerBizUtil.blockAuditorRoleUser();
 		try {
 			providers = getKMSURL(provider);
 		} catch (Exception e) {

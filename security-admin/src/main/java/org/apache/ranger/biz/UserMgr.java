@@ -87,7 +87,7 @@ public class UserMgr {
 	SearchUtil searchUtil;
 
 	@Autowired
-	RangerBizUtil msBizUtil;
+        RangerBizUtil rangerBizUtil;
 
 	@Autowired
 	SessionMgr sessionMgr;
@@ -130,6 +130,8 @@ public class UserMgr {
 		VALID_ROLE_LIST.add(RangerConstants.ROLE_SYS_ADMIN);
 		VALID_ROLE_LIST.add(RangerConstants.ROLE_USER);
 		VALID_ROLE_LIST.add(RangerConstants.ROLE_KEY_ADMIN);
+        VALID_ROLE_LIST.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+        VALID_ROLE_LIST.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
 	}
 
 	public UserMgr() {
@@ -142,6 +144,7 @@ public class UserMgr {
 			Collection<String> userRoleList) {
 		XXPortalUser user = mapVXPortalUserToXXPortalUser(userProfile);
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
                 List<String> userRolesList = new ArrayList<String>(userRoleList);
         xUserMgr.checkAccessRoles(userRolesList);
 		user = createUser(user, userStatus, userRoleList);
@@ -205,7 +208,7 @@ public class UserMgr {
 		}
 
 		checkAccess(gjUser);
-
+                rangerBizUtil.blockAuditorRoleUser();
 		boolean updateUser = false;
 		// Selectively update fields
 
@@ -313,7 +316,7 @@ public class UserMgr {
 			sessionMgr.resetUserSessionForProfiles(ContextUtil
 					.getCurrentUserSession());
 
-			msBizUtil.createTrxLog(trxLogList);
+                        rangerBizUtil.createTrxLog(trxLogList);
 		}
 
 		return gjUser;
@@ -332,6 +335,7 @@ public class UserMgr {
 			stringRolesList.add(userRole);
 		}
 		xUserMgr.checkAccessRoles(stringRolesList);
+                rangerBizUtil.blockAuditorRoleUser();
 		// Let's first delete old roles
 		List<XXPortalUserRole> gjUserRoles = daoManager.getXXPortalUserRole()
 				.findByUserId(userId);
@@ -379,18 +383,20 @@ public class UserMgr {
 			stringRolesList.add(vXString.getValue());
 		}
 		xUserMgr.checkAccessRoles(stringRolesList);
+                rangerBizUtil.blockAuditorRoleUser();
 		VXPortalUser oldUserProfile=getUserProfile(userId);
 		xUserMgr.updateUserRolesPermissions(oldUserProfile, stringRolesList);
 	}
 
 	/**
 	 * @param pwdChange
-	 * @return
-	 */
-	public VXResponse changePassword(VXPasswordChange pwdChange) {
-		VXResponse ret = new VXResponse();
+         * @return
+         */
+        public VXResponse changePassword(VXPasswordChange pwdChange) {
 
-		// First let's get the XXPortalUser for the current logged in user
+                VXResponse ret = new VXResponse();
+
+                // First let's get the XXPortalUser for the current logged in user
 		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
 		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser().findByLoginId(currentUserLoginId);
 		checkAccessForUpdate(gjUserCurrent);
@@ -434,7 +440,7 @@ public class UserMgr {
 			xTrxLog.setObjectId(pwdChange.getId());
 			xTrxLog.setObjectName(pwdChange.getLoginId());
 			trxLogList.add(xTrxLog);
-			msBizUtil.createTrxLog(trxLogList);
+                        rangerBizUtil.createTrxLog(trxLogList);
 			gjUser.setPassword(encryptedNewPwd);
 			gjUser = daoManager.getXXPortalUser().update(gjUser);
 			ret.setMsgDesc("Password successfully updated");
@@ -455,6 +461,7 @@ public class UserMgr {
 	public VXPortalUser changeEmailAddress(XXPortalUser gjUser,
 			VXPasswordChange changeEmail) {
 		checkAccessForUpdate(gjUser);
+                rangerBizUtil.blockAuditorRoleUser();
 		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
 			changeEmail.setEmailAddress(null);
 		}
@@ -502,6 +509,7 @@ public class UserMgr {
 	 */
 	public VXPortalUser deactivateUser(XXPortalUser gjUser) {
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		if (gjUser != null
 				&& gjUser.getStatus() != RangerConstants.ACT_STATUS_DEACTIVATED) {
 			logger.info("Marking user " + gjUser.getLoginId() + " as deleted");
@@ -950,6 +958,7 @@ public class UserMgr {
 		 * if (RangerConstants.ROLE_USER.equals(gjUserRole.getUserRole())) {
 		 * return false; }
 		 */
+                rangerBizUtil.blockAuditorRoleUser();
 		boolean publicRole = false;
 		for (String publicRoleStr : publicRoles) {
 			if (publicRoleStr.equalsIgnoreCase(gjUserRole.getUserRole())) {
@@ -969,6 +978,7 @@ public class UserMgr {
 	}
 
 	public XXPortalUserRole addUserRole(Long userId, String userRole) {
+                rangerBizUtil.blockAuditorRoleUser();
 		List<XXPortalUserRole> roleList = daoManager.getXXPortalUserRole()
 				.findByUserId(userId);
 		boolean publicRole = false;
@@ -1102,6 +1112,7 @@ public class UserMgr {
 
 	public VXPortalUser createUser(VXPortalUser userProfile) {
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		XXPortalUser xXPortalUser = this.createUser(userProfile,
 				RangerCommonEnums.STATUS_ENABLED);
 		return mapXXPortalUserVXPortalUser(xXPortalUser);
@@ -1114,6 +1125,7 @@ public class UserMgr {
 		}
 		// access control
 		checkAdminAccess();
+                rangerBizUtil.blockAuditorRoleUser();
 		logger.info("create:" + userProfile.getLoginId());
 		XXPortalUser xXPortalUser = null;
                 Collection<String> existingRoleList = null;
@@ -1175,6 +1187,7 @@ public class UserMgr {
     protected VXPortalUser updateRoleForExternalUsers(
             Collection<String> reqRoleList,
             Collection<String> existingRoleList, VXPortalUser userProfileRes) {
+        rangerBizUtil.blockAuditorRoleUser();
         UserSessionBase session = ContextUtil.getCurrentUserSession();
         if (session != null && session.getXXPortalUser() != null && session.getXXPortalUser().getLoginId() != null &&  "rangerusersync".equals(session.getXXPortalUser().getLoginId())
                 && reqRoleList != null && !reqRoleList.isEmpty()
@@ -1320,7 +1333,7 @@ public class UserMgr {
                                 xTrxLog.setAddedByUserId(xXPortalUser.getId());
                                 xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
                                 trxLogList.add(xTrxLog);
-                                msBizUtil.createTrxLog(trxLogList);
+                                rangerBizUtil.createTrxLog(trxLogList);
                         }
                 }
 
@@ -1399,7 +1412,7 @@ public class UserMgr {
                 xTrxLog.setAddedByUserId(xXPortalUser.getId());
                 xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
                 trxLogList.add(xTrxLog);
-                msBizUtil.createTrxLog(trxLogList);
+                rangerBizUtil.createTrxLog(trxLogList);
                 return xXPortalUser;
         }
 }

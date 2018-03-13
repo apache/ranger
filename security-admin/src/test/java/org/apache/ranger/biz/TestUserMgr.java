@@ -94,7 +94,7 @@ public class TestUserMgr {
 	SearchUtil searchUtil;
 
 	@Mock
-	RangerBizUtil msBizUtil;
+        RangerBizUtil rangerBizUtil;
 
 	@Mock
 	XUserPermissionService xUserPermissionService;
@@ -188,7 +188,7 @@ public class TestUserMgr {
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1,
 				userRoleList);
 		Assert.assertNotNull(dbxxPortalUser);
@@ -241,7 +241,7 @@ public class TestUserMgr {
 				.thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1);
 		userId = dbxxPortalUser.getId();
 
@@ -288,7 +288,6 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(
 				stringUtil.validatePassword(Mockito.anyString(), Mockito.any(String[].class))).thenReturn(true);
-
 		VXResponse dbVXResponse = userMgr.changePassword(pwdChange);
 		Assert.assertNotNull(dbVXResponse);
 		Assert.assertEquals(userProfile.getStatus(),
@@ -449,7 +448,7 @@ public class TestUserMgr {
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
 		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong())).thenReturn(xModuleDef);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr.changeEmailAddress(user,
 				changeEmail);
 		Assert.assertNotNull(dbVXPortalUser);
@@ -550,7 +549,7 @@ public class TestUserMgr {
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
 		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong())).thenReturn(xModuleDef);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr.changeEmailAddress(userKeyAdmin,changeEmail);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(userId, dbVXPortalUser.getId());
@@ -648,7 +647,7 @@ public class TestUserMgr {
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
 		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong())).thenReturn(xModuleDef);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr.changeEmailAddress(user,changeEmail);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(userId, dbVXPortalUser.getId());
@@ -710,6 +709,7 @@ public class TestUserMgr {
 
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(
 				xGroupPermissionDao);
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr.createUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(user.getId(), dbVXPortalUser.getId());
@@ -745,6 +745,7 @@ public class TestUserMgr {
 		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(
 				user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr
 				.createDefaultAccountUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
@@ -799,7 +800,7 @@ public class TestUserMgr {
 						MessageEnums.INVALID_INPUT_DATA)).thenThrow(
 				new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		XXPortalUser dbXXPortalUser = userMgr.updateUserWithPass(userProfile);
 		Assert.assertNotNull(dbXXPortalUser);
 		Assert.assertEquals(userId, dbXXPortalUser.getId());
@@ -908,7 +909,7 @@ public class TestUserMgr {
 
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		boolean deleteValue = userMgr.deleteUserRole(userId, userRole);
 		Assert.assertTrue(deleteValue);
 	}
@@ -1002,7 +1003,7 @@ public class TestUserMgr {
 		Mockito.when(
 				xUserPermissionService.populateViewBean(xUserPermissionObj))
 				.thenReturn(vXUserPermission);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		VXPortalUser dbVXPortalUser = userMgr.deactivateUser(user);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(user.getId(), dbVXPortalUser.getId());
@@ -1218,7 +1219,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xModuleDefDao);
 		Mockito.when(xModuleDefDao.findByModuleId(Mockito.anyLong()))
 				.thenReturn(xModuleDef);
-
+                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
 		userMgr.checkAccess(userId);
 		userMgr.setUserRoles(userId, vStringRolesList);
 

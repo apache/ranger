@@ -23,6 +23,7 @@ import java.io.File;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
@@ -542,6 +544,19 @@ public class RangerBizUtil {
 		}
 		return false;
 	}
+
+    public boolean isAuditAdmin() {
+        UserSessionBase currentUserSession = ContextUtil
+                            .getCurrentUserSession();
+            if (currentUserSession == null) {
+                logger.debug("Unable to find session.");
+            return false;
+            }
+            if (currentUserSession.isAuditUserAdmin()) {
+                return true;
+            }
+            return false;
+    }
 
 	/**
 	 * return username of currently logged in user
@@ -1421,6 +1436,17 @@ public class RangerBizUtil {
 		}
 		return false;
 	}
+    public boolean isAuditKeyAdmin() {
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        if (currentUserSession == null) {
+                logger.debug("Unable to find session.");
+                return false;
+        }
+        if (currentUserSession.isAuditKeyAdmin()) {
+                return true;
+        }
+        return false;
+    }
 
 	/**
 	 * @param xxDbBase
@@ -1438,10 +1464,12 @@ public class RangerBizUtil {
 
 		boolean isKeyAdmin = session.isKeyAdmin();
 		boolean isSysAdmin = session.isUserAdmin();
+                boolean isAuditor =  session.isAuditUserAdmin();
+                boolean isAduitorKeyAdmin = session.isAuditKeyAdmin();
 		boolean isUser = false;
 
 		List<String> roleList = session.getUserRoleList();
-		if (roleList.contains(RangerConstants.ROLE_USER)) {
+                if (roleList.contains(RangerConstants.ROLE_USER) ) {
 			isUser = true;
 		}
 
@@ -1454,7 +1482,9 @@ public class RangerBizUtil {
 
 			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
-			} else if ((isSysAdmin || isUser) && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+            } else if (isAduitorKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+                    return true;
+            } else if ((isSysAdmin || isUser || isAuditor) && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
 			}
 		}
@@ -1463,7 +1493,7 @@ public class RangerBizUtil {
 
 			// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
 			// services including KMS
-			if (isSysAdmin) {
+                        if (isSysAdmin || isAuditor) {
 				return true;
 			}
 
@@ -1476,6 +1506,8 @@ public class RangerBizUtil {
 
 			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
+                        } else if (isAduitorKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+                                return true;
 			} else if (isUser && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
 				return true;
 			}
@@ -1520,17 +1552,31 @@ public class RangerBizUtil {
 	}
 
 	public boolean checkUserAccessible(VXUser vXUser) {
-		if(isKeyAdmin() && vXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN)) {
-			throw restErrorUtil.createRESTException("Logged in user is not allowd to create/update user",
+                boolean isAccessible = true;
+                Collection<String> roleList = userMgr.getRolesByLoginId(vXUser
+                                .getName());
+                if (isKeyAdmin()) {
+                        if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN)
+                                        || vXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)
+                                        || roleList.contains(RangerConstants.ROLE_SYS_ADMIN)
+                                        || roleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                                isAccessible = false;
+                        }
+                }
+                if (isAdmin()) {
+                        if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN)
+                                        || vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)
+                                        || roleList.contains(RangerConstants.ROLE_KEY_ADMIN)
+                                        || roleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                                isAccessible = false;
+                        }
+                }
+                if (!isAccessible) {
+                        throw restErrorUtil.createRESTException(
+                                        "Logged in user is not allowd to create/update user",
 					MessageEnums.OPER_NO_PERMISSION);
 		}
-
-		if(isAdmin() && vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN)) {
-			throw restErrorUtil.createRESTException("Logged in user is not allowd to create/update user",
-					MessageEnums.OPER_NO_PERMISSION);
-		}
-
-		return true;
+                return isAccessible;
 	}
 	
 	public boolean isSSOEnabled() {
@@ -1582,5 +1628,25 @@ public class RangerBizUtil {
 		}
 		return false;
 	}	
+
+        public void blockAuditorRoleUser() {
+                UserSessionBase session = ContextUtil.getCurrentUserSession();
+                if (session != null) {
+                        if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
+                                VXResponse vXResponse = new VXResponse();
+                                vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                                vXResponse.setMsgDesc("Operation"
+                                                + " denied. LoggedInUser="
+                                                +  session.getXXPortalUser().getId()
+                                                + " ,isn't permitted to perform the action.");
+                                throw restErrorUtil.generateRESTException(vXResponse);
+                        }
+                } else {
+                        VXResponse vXResponse = new VXResponse();
+                        vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                        vXResponse.setMsgDesc("Bad Credentials");
+                        throw restErrorUtil.generateRESTException(vXResponse);
+                }
+        }
 
 }

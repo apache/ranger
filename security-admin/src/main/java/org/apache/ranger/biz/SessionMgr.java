@@ -264,12 +264,28 @@ public class SessionMgr {
 		if (strRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
 			userSession.setUserAdmin(true);
 			userSession.setKeyAdmin(false);
+            userSession.setAuditUserAdmin(false);
+            userSession.setAuditKeyAdmin(false);
 		} else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
 			userSession.setKeyAdmin(true);
 			userSession.setUserAdmin(false);
+            userSession.setAuditUserAdmin(false);
+            userSession.setAuditKeyAdmin(false);
 		} else if (strRoleList.size() == 1 && RangerConstants.ROLE_USER.equals(strRoleList.get(0))) {
 			userSession.setKeyAdmin(false);
 			userSession.setUserAdmin(false);
+                        userSession.setAuditUserAdmin(false);
+                        userSession.setAuditKeyAdmin(false);
+                } else if (strRoleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                        userSession.setAuditUserAdmin(true);
+                        userSession.setAuditKeyAdmin(false);
+                        userSession.setKeyAdmin(false);
+                        userSession.setUserAdmin(false);
+                } else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                        userSession.setAuditKeyAdmin(true);
+                        userSession.setAuditUserAdmin(false);
+                        userSession.setKeyAdmin(false);
+                        userSession.setUserAdmin(false);
 		}
 
 		userSession.setUserRoleList(strRoleList);

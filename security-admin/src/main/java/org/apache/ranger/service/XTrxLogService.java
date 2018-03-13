@@ -111,6 +111,9 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		if (session != null && session.isKeyAdmin()) {
 			resultList = em.createQuery(selectCQ).setFirstResult(minRowSize).setMaxResults(maxRowSize).getResultList();
 		}
+                if (session != null && session.isAuditKeyAdmin()) {
+                        resultList = em.createQuery(selectCQ).setFirstResult(minRowSize).setMaxResults(maxRowSize).getResultList();
+                }
 
 		List<VXTrxLog> trxLogList = new ArrayList<VXTrxLog>();
 		for (VXXTrxLog xTrxLog : resultList) {
@@ -127,7 +130,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		}
 
 		List<VXTrxLog> keyAdminTrxLogList = new ArrayList<VXTrxLog>();
-                if (session != null && session.isKeyAdmin() && xxServiceDef != null) {
+                if (session != null && xxServiceDef != null && (session.isKeyAdmin()|| session.isAuditKeyAdmin())) {
 			List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
 			for (VXTrxLog xTrxLog : trxLogList) {
 				int parentObjectClassType = xTrxLog.getParentObjectClassType();
@@ -157,7 +160,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 						List<XXPortalUserRole> xxPortalUserRole = daoManager.getXXPortalUserRole()
 								.findByUserId(xxPortalUser.getId());
 						if (xxPortalUserRole != null
-								&& xxPortalUserRole.get(0).getUserRole().equalsIgnoreCase("ROLE_KEY_ADMIN")) {
+                                                                && (xxPortalUserRole.get(0).getUserRole().equalsIgnoreCase("ROLE_KEY_ADMIN") || xxPortalUserRole.get(0).getUserRole().equalsIgnoreCase("ROLE_KEY_ADMIN_AUDITOR"))) {
 							vXTrxLogs.add(xTrxLog);
 						}
 					}
@@ -176,7 +179,7 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		VXTrxLogList vxTrxLogList = new VXTrxLogList();
 		vxTrxLogList.setStartIndex(startIndex);
 		vxTrxLogList.setPageSize(pageSize);
-		if (session != null && session.isKeyAdmin()) {
+                if (session != null && (session.isKeyAdmin() || session.isAuditKeyAdmin()) ) {
 			vxTrxLogList.setVXTrxLogs(keyAdminTrxLogList);
 		} else {
 			vxTrxLogList.setVXTrxLogs(trxLogList);
@@ -205,6 +208,9 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		if (session != null && session.isKeyAdmin()) {
 			count = keyadminCount;
 		}
+                if (session != null && session.isAuditKeyAdmin()) {
+                        count = keyadminCount;
+                }
 		return count;
 	}
 

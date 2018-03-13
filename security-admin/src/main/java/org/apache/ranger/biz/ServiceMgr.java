@@ -78,9 +78,12 @@ public class ServiceMgr {
 	@Autowired
 	TimedExecutor timedExecutor;
 
+        @Autowired
+        RangerBizUtil rangerBizUtil;
+
 	public List<String> lookupResource(String serviceName, ResourceLookupContext context, ServiceStore svcStore) throws Exception {
 		List<String> 	  ret = null;
-		
+                rangerBizUtil.blockAuditorRoleUser();
 		RangerService service = svcDBStore.getServiceByName(serviceName);
 		
 		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE);
@@ -135,7 +138,7 @@ public class ServiceMgr {
 	
 	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		VXResponse        ret = new VXResponse();
-		
+                rangerBizUtil.blockAuditorRoleUser();
 		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE);
 		String lookupPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(LOOKUP_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String lookupKeytab = PropertiesUtil.getProperty(LOOKUP_KEYTAB);

@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.security.context.RangerAPIMapping;
 import org.apache.ranger.service.*;
 import org.apache.ranger.view.*;
 import org.apache.log4j.Logger;
@@ -161,6 +162,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXUser createXUser(VXUser vXUser) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
                 validatePassword(vXUser);
 		String userName = vXUser.getName();
 		if (userName == null || "null".equalsIgnoreCase(userName)
@@ -255,6 +257,17 @@ public class XUserMgr extends XUserMgrBase {
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+                                        } else if (role.equals(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_REPORTS),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),isCreate);
+                                        } else if (role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_REPORTS),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_AUDIT),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES),isCreate);
+                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerAPIMapping.TAB_PERMISSIONS),isCreate);
 					}
 
 				}
@@ -328,6 +341,7 @@ public class XUserMgr extends XUserMgrBase {
 					+ "username.", MessageEnums.INVALID_INPUT_DATA);
 		}
 		checkAccess(vXUser.getName());
+                xaBizUtil.blockAuditorRoleUser();
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser
 				.getName());
 		VXPortalUser vXPortalUser = new VXPortalUser();
@@ -509,6 +523,7 @@ public class XUserMgr extends XUserMgrBase {
 
         public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		VXUserGroupInfo vxUGInfo = new VXUserGroupInfo();
         VXUser vXUser = vXUserGroupInfo.getXuserInfo();
         VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(vXUser
@@ -546,6 +561,7 @@ public class XUserMgr extends XUserMgrBase {
 	public VXGroupUserInfo createXGroupUserFromMap(
 			VXGroupUserInfo vXGroupUserInfo) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		VXGroupUserInfo vxGUInfo = new VXGroupUserInfo();
 
 		VXGroup vXGroup = vXGroupUserInfo.getXgroupInfo();
@@ -645,12 +661,14 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXUser createXUserWithOutLogin(VXUser vXUser) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
                 validatePassword(vXUser);
 		return xUserService.createXUserWithOutLogin(vXUser);
 	}
 
 	public VXGroup createXGroup(VXGroup vXGroup) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		if (vXGroup.getDescription() == null) {
 			vXGroup.setDescription(vXGroup.getName());
 		}
@@ -664,11 +682,13 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXGroup createXGroupWithoutLogin(VXGroup vXGroup) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		return xGroupService.createXGroupWithOutLogin(vXGroup);
 	}
 
 	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		vXGroupUser = xGroupUserService
 				.createXGroupUserWithOutLogin(vXGroupUser);
 		return vXGroupUser;
@@ -724,6 +744,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void deleteXGroupAndXUser(String groupName, String userName) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName);
 		VXUser vxUser = xUserService.getXUserByUserName(userName);
 		SearchCriteria searchCriteria = new SearchCriteria();
@@ -834,6 +855,7 @@ public class XUserMgr extends XUserMgrBase {
 	@Override
 	public VXGroup updateXGroup(VXGroup vXGroup) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		XXGroup xGroup = daoManager.getXXGroup().getById(vXGroup.getId());
 		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
 				xGroup, "update");
@@ -859,30 +881,36 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		return super.updateXGroupUser(vXGroupUser);
 	}
 
 	public void deleteXGroupUser(Long id, boolean force) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		super.deleteXGroupUser(id, force);
 	}
 
 	public VXGroupGroup createXGroupGroup(VXGroupGroup vXGroupGroup){
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		return super.createXGroupGroup(vXGroupGroup);
 	}
 
 	public VXGroupGroup updateXGroupGroup(VXGroupGroup vXGroupGroup) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		return super.updateXGroupGroup(vXGroupGroup);
 	}
 
 	public void deleteXGroupGroup(Long id, boolean force) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		super.deleteXGroupGroup(id, force);
 	}
 
 	public void deleteXPermMap(Long id, boolean force) {
+                xaBizUtil.blockAuditorRoleUser();
 		if (force) {
 			XXPermMap xPermMap = daoManager.getXXPermMap().getById(id);
 			if (xPermMap != null) {
@@ -905,6 +933,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public void deleteXAuditMap(Long id, boolean force) {
+                xaBizUtil.blockAuditorRoleUser();
 		if (force) {
 			XXAuditMap xAuditMap = daoManager.getXXAuditMap().getById(id);
 			if (xAuditMap != null) {
@@ -928,6 +957,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void modifyUserVisibility(HashMap<Long, Integer> visibilityMap) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		Set<Map.Entry<Long, Integer>> entries = visibilityMap.entrySet();
 		for (Map.Entry<Long, Integer> entry : entries) {
 			XXUser xUser = daoManager.getXXUser().getById(entry.getKey());
@@ -939,6 +969,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		Set<Map.Entry<Long, Integer>> entries = groupVisibilityMap.entrySet();
 		for (Map.Entry<Long, Integer> entry : entries) {
 			XXGroup xGroup = daoManager.getXXGroup().getById(entry.getKey());
@@ -1366,6 +1397,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXStringList setUserRolesByExternalID(Long userId, List<VXString> vStringRolesList) {
+                xaBizUtil.blockAuditorRoleUser();
 		List<String> roleListNewProfile = new ArrayList<String>();
 		if(vStringRolesList!=null){
 			for (VXString vXString : vStringRolesList) {
@@ -1391,6 +1423,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXStringList setUserRolesByName(String userName, List<VXString> vStringRolesList) {
+                xaBizUtil.blockAuditorRoleUser();
 		List<String> roleListNewProfile = new ArrayList<String>();
 		if(vStringRolesList!=null){
 			for (VXString vXString : vStringRolesList) {
@@ -1758,6 +1791,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void deleteXGroup(Long id, boolean force) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		XXGroupDao xXGroupDao = daoManager.getXXGroup();
 		XXGroup xXGroup = xXGroupDao.getById(id);
 		VXGroup vXGroup = xGroupService.populateViewBean(xXGroup);
@@ -1926,6 +1960,7 @@ public class XUserMgr extends XUserMgrBase {
 
         public synchronized void deleteXUser(Long id, boolean force) {
 		checkAdminAccess();
+                xaBizUtil.blockAuditorRoleUser();
 		XXUserDao xXUserDao = daoManager.getXXUser();
 		XXUser xXUser =	xXUserDao.getById(id);
 		VXUser vXUser =	xUserService.populateViewBean(xXUser);
@@ -2154,6 +2189,7 @@ public class XUserMgr extends XUserMgrBase {
 			logger.error("User Name: "+userName);
 			throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);
 		}
+
 		VXUser vXUser = null;
 		VXPortalUser vXPortalUser=null;
 		XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
