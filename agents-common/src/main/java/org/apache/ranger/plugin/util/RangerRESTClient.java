@@ -221,6 +221,10 @@ public class RangerRESTClient {
 		return client;
 	}
 
+	public void resetClient(){
+		client = null;
+	}
+
 	private void init() {
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").setPrettyPrinting().create();
