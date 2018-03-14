@@ -93,5 +93,8 @@
 		<name>ranger.tagsync.source.atlasrest.keystore.filename</name>
 		<value>/etc/ranger/tagsync/conf/atlasuser.jceks</value>
 	</property>
-
+	<property>
+		<name>ranger.tagsync.cookie.enabled</name>
+		<value>true</value>
+	</property>
 </configuration>
