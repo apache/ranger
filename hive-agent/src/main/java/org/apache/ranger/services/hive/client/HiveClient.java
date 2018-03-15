@@ -705,23 +705,23 @@ public class HiveClient extends BaseClient implements Closeable {
 				}
 			}
 
-			String decryptedPwd = null;
-			try {
-				decryptedPwd = PasswordUtils.decryptPassword(password);
-			} catch (Exception ex) {
-				LOG.info("Password decryption failed; trying Hive connection with received password string");
-				decryptedPwd = null;
-			} finally {
-				if (decryptedPwd == null) {
-					decryptedPwd = password;
-				}
-			}
 
 			try {
 
 				if (userName == null && password == null) {
 					con = DriverManager.getConnection(url);
 				} else {
+					String decryptedPwd = null;
+					try {
+						decryptedPwd = PasswordUtils.decryptPassword(password);
+					} catch (Exception ex) {
+						LOG.info("Password decryption failed; trying Hive connection with received password string");
+						decryptedPwd = null;
+					} finally {
+						if (decryptedPwd == null) {
+							decryptedPwd = password;
+						}
+					}
 					con = DriverManager.getConnection(url, userName, decryptedPwd);
 				}
 			} catch (SQLException e) {
