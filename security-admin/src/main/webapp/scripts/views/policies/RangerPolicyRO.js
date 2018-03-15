@@ -26,6 +26,7 @@ define(function(require) {
 	var XAGlobals = require('utils/XAGlobals');
 	var XAUtils = require('utils/XAUtils');
 	var localization = require('utils/XALangSupport');
+        var XAUtil = require('utils/XAUtils');
 
 	var RangerPolicyROTmpl = require('hbs!tmpl/policies/RangerPolicyRO_tmpl');
 	var RangerService = require('models/RangerService');
@@ -36,6 +37,7 @@ define(function(require) {
 		template: RangerPolicyROTmpl,
 		templateHelpers: function() {
             var isDelegatAdminChk;
+            var policyType = XAUtil.enumElementByValue(XAEnums.RangerPolicyType, this.policy.get('policyType'));
             if(this.policyDetails.serviceType !== XAEnums.ServiceType.SERVICE_TAG.label
                 && !XAUtils.isMaskingPolicy(this.policy.get('policyType'))
                 && !XAUtils.isRowFilterPolicy(this.policy.get('policyType'))) {
@@ -45,7 +47,8 @@ define(function(require) {
             }
 			return {
 				PolicyDetails: this.policyDetails,
-                isDelegatAdmin: isDelegatAdminChk
+                isDelegatAdmin: isDelegatAdminChk,
+                policyType: policyType.label
 			};
 		},
 		breadCrumbs: [],
@@ -80,28 +83,35 @@ define(function(require) {
 			var data = {
 				eventTime : this.eventTime,
 			};
-			this.policy.fetchByEventTime({
-				async: false,
-				cache: false,
-                                data : data,
-                                error : function(error , response){
-                                        if (response && response.status === 419 ) {
-                                                XAUtils.defaultErrorHandler(error , response);
-                                        } else {
-                                                XAUtils.showErrorMsg(response.responseJSON.msgDesc);
-                                        }
-                                }
-			});
+            if(!_.isEmpty(this.eventTime)){
+                this.policy.fetchByEventTime({
+                    async: false,
+                    cache: false,
+                    data : data,
+                    error : function(error , response){
+                            if (response && response.status === 419 ) {
+                                    XAUtils.defaultErrorHandler(error , response);
+                            } else {
+                                    XAUtils.showErrorMsg(response.responseJSON.msgDesc);
+                            }
+                    }
+                });
+            }else{
+                this.policy = this.model;
+                this.serviceDef = this.rangerService;
+            }
 		},
 
 		initializePolicyDetailsObj : function(){
-            // In this.policy service type is undefined then we take repotype.
-            if(_.isUndefined(this.policy.get('serviceType'))){
-                    this.serviceDef = this.serviceDefList.findWhere({'id' : this.repoType})
-            }else{
-                    this.serviceDef = this.serviceDefList.findWhere({'name':this.policy.get('serviceType')});
+            if(!_.isUndefined(this.eventTime)){
+                // In this.policy service type is undefined then we take repotype.
+                if(_.isUndefined(this.policy.get('serviceType'))){
+                        this.serviceDef = this.serviceDefList.findWhere({'id' : this.repoType})
+                }else{
+                        this.serviceDef = this.serviceDefList.findWhere({'name':this.policy.get('serviceType')});
+                }
             }
-			var self = this;
+			var self = this , resourceDef;
 			var details = this.policyDetails = {};
 			details.id = this.policy.get('id');
 			details.name = this.policy.get('name');
@@ -112,7 +122,16 @@ define(function(require) {
 			details.service = this.policy.get('service');
 			details.serviceType = this.serviceDef.get('name');
 			details.isRecursive = undefined;
-			_.each(this.serviceDef.get('resources'), function(def, i){
+            if(XAUtils.isAccessPolicy(this.policy.get('policyType'))){
+                resourceDef = this.serviceDef.get('resources');
+            }else{
+                if(XAUtils.isMaskingPolicy(this.policy.get('policyType'))){
+                    resourceDef = this.serviceDef.get('dataMaskDef').resources;
+                }else{
+                    resourceDef = this.serviceDef.get('rowFilterDef').resources;
+                }
+            }
+            _.each(resourceDef, function(def, i){
 				if(!_.isUndefined(this.policy.get('resources')[def.name])){
 					var resource = {},
 						policyResources = this.policy.get('resources')[def.name];
@@ -154,16 +173,24 @@ define(function(require) {
 		},
 		createPolicyItems : function(){
 			this.policyDetails['policyItemsCond'] = [];
-			var headers = this.getPermHeaders();
+			var headers = this.getPermHeaders(), items = [];
 			this.policyDetails['policyCondition'] = headers.policyCondition;
-			var items = [{'itemName': 'policyItems',title : 'Allow Condition'},
-			             {'itemName': 'allowExceptions',title : 'Exclude from Allow Conditions'},
-			             {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
-                         {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'},
-                         {'itemName': 'dataMaskPolicyItems',title : 'Masking Conditions'},
-                         {'itemName': 'rowFilterPolicyItems',title : 'Row Level Conditions'}]
+            if(XAUtils.isAccessPolicy(this.policy.get('policyType'))){
+                items = [{'itemName': 'policyItems',title : 'Allow Condition'}];
+            }
+            if(XAUtils.isRowFilterPolicy(this.policy.get('policyType'))){
+                items.push({'itemName': 'rowFilterPolicyItems',title : 'Row Level Conditions'});
+            }
+            if(XAUtils.isMaskingPolicy(this.policy.get('policyType'))){
+                items.push({'itemName': 'dataMaskPolicyItems',title : 'Masking Conditions'});
+            }
+            if(JSON.parse(this.serviceDef.get('options').enableDenyAndExceptionsInPolicies) && XAUtils.isAccessPolicy(this.policy.get('policyType'))){
+                items.push({'itemName': 'allowExceptions',title : 'Exclude from Allow Conditions'},
+                          {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
+                          {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'});
+            }
 			_.each(items, function(item){
-				if(!_.isUndefined(this.policy.get(item.itemName)) && !_.isEmpty(this.policy.get(item.itemName))){
+                if(!_.isUndefined(this.policy.get(item.itemName))){
 					this.policyDetails['policyItemsCond'].push({ title : item.title, headers : headers.header, policyItems : this.policy.get(item.itemName)})
 				}
 			}, this)

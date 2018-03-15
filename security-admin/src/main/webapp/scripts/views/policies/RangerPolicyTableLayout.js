@@ -36,7 +36,7 @@ define(function(require){
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var RangerPolicy 		= require('models/RangerPolicy');
 	var RangerPolicyTableLayoutTmpl = require('hbs!tmpl/policies/RangerPolicyTableLayout_tmpl');
-	var RangerPolicyDetail			= require('views/policies/RangerPolicyDetail');
+        var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
 
 	require('backgrid-filter');
 	require('backgrid-paginator');
@@ -183,9 +183,9 @@ define(function(require){
 			rangerPolicy.fetch({
 				cache : false,
 			}).done(function(){
-				var view = new RangerPolicyDetail({
+                                var view = new RangerPolicyRO({
 					model : rangerPolicy,
-					rangerService: that.rangerService
+                                        rangerService: that.rangerServiceDefModel
 				});
 				var modal = new Backbone.BootstrapModal({
 					animate : true,
@@ -195,7 +195,6 @@ define(function(require){
 					allowCancel : true,
 					escape 	: true
 				}).open();
-				modal.$el.addClass('modal-diff').attr('tabindex',-1);
 				modal.$el.find('.cancel').hide();
 			});
 		},

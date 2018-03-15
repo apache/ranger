@@ -667,6 +667,7 @@ table.backgrid thead tr:hover {
 }
 .updateInfo{
   margin-top: 10px;
+  border-top: 1px solid #ccc;
 }
 .updateInfo p {
   margin-bottom: 0px;
