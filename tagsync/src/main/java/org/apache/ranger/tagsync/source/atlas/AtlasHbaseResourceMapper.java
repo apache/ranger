@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
 public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
+	public static final String ENTITY_TYPE_HBASE_NAMESPACE      = "hbase_namespace";
 	public static final String ENTITY_TYPE_HBASE_TABLE          = "hbase_table";
 	public static final String ENTITY_TYPE_HBASE_COLUMN_FAMILY  = "hbase_column_family";
 	public static final String ENTITY_TYPE_HBASE_COLUMN         = "hbase_column";
@@ -35,6 +36,8 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 	public static final String RANGER_TYPE_HBASE_TABLE          = "table";
 	public static final String RANGER_TYPE_HBASE_COLUMN_FAMILY  = "column-family";
 	public static final String RANGER_TYPE_HBASE_COLUMN         = "column";
+
+	public static final String RANGER_NAMESPACE_TABLE_DELIMITER = ":";
 
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_HBASE_TABLE, ENTITY_TYPE_HBASE_COLUMN_FAMILY, ENTITY_TYPE_HBASE_COLUMN };
 
@@ -65,10 +68,16 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 
 		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();
 
-		if (StringUtils.equals(entityType, ENTITY_TYPE_HBASE_TABLE)) {
-			String tblName = resourceStr;
-			if (StringUtils.isNotEmpty(tblName)) {
-				elements.put(RANGER_TYPE_HBASE_TABLE, new RangerPolicyResource(tblName));
+		if (StringUtils.equals(entityType, ENTITY_TYPE_HBASE_NAMESPACE)) {
+			if (StringUtils.isNotEmpty(resourceStr)) {
+				String namespaceName = StringUtils.strip(resourceStr);
+				if (StringUtils.isNotEmpty(namespaceName)) {
+					elements.put(RANGER_TYPE_HBASE_TABLE, new RangerPolicyResource(namespaceName + RANGER_NAMESPACE_TABLE_DELIMITER + "*"));
+				}
+			}
+		} else if (StringUtils.equals(entityType, ENTITY_TYPE_HBASE_TABLE)) {
+			if (StringUtils.isNotEmpty(resourceStr)) {
+				elements.put(RANGER_TYPE_HBASE_TABLE, new RangerPolicyResource(resourceStr));
 			}
 		} else if (StringUtils.equals(entityType, ENTITY_TYPE_HBASE_COLUMN_FAMILY)) {
 			String[] resources  = resourceStr.split(QUALIFIED_NAME_DELIMITER);
@@ -79,7 +88,7 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 				tblName    = resources[0];
 				familyName = resources[1];
 			} else if (resources.length > 2) {
-				StringBuffer tblNameBuf = new StringBuffer(resources[0]);
+				StringBuilder tblNameBuf = new StringBuilder(resources[0]);
 
 				for (int i = 1; i < resources.length - 1; i++) {
 					tblNameBuf.append(QUALIFIED_NAME_DELIMITER_CHAR).append(resources[i]);
@@ -104,7 +113,7 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 				familyName = resources[1];
 				colName    = resources[2];
 			} else if (resources.length > 3) {
-				StringBuffer tblNameBuf = new StringBuffer(resources[0]);
+				StringBuilder tblNameBuf = new StringBuilder(resources[0]);
 
 				for (int i = 1; i < resources.length - 2; i++) {
 					tblNameBuf.append(QUALIFIED_NAME_DELIMITER_CHAR).append(resources[i]);
@@ -128,8 +137,7 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
 			throwExceptionWithMessage("invalid qualifiedName for entity-type '" + entityType + "': " + qualifiedName);
 		}
 
-		RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
+		return new RangerServiceResource(entityGuid, serviceName, elements);
 
-		return ret;
 	}
 }
