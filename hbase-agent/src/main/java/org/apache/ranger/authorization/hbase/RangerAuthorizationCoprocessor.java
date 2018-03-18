@@ -1315,6 +1315,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		User   activeUser = getActiveUser();
 		String grantor    = activeUser != null ? activeUser.getShortName() : null;
+		String[] groups   = activeUser != null ? activeUser.getGroupNames() : null;
+
+		Set<String> grantorGroups = null;
+
+		if (groups != null && groups.length > 0) {
+			grantorGroups = new HashSet<>(Arrays.asList(groups));
+		}
 
 		Map<String, String> mapResource = new HashMap<String, String>();
 		mapResource.put("table", tableName);
@@ -1324,6 +1331,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 
 		ret.setGrantor(grantor);
+		ret.setGrantorGroups(grantorGroups);
 		ret.setDelegateAdmin(Boolean.FALSE);
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
@@ -1412,6 +1420,13 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		User   activeUser = getActiveUser();
 		String grantor    = activeUser != null ? activeUser.getShortName() : null;
+		String[] groups   = activeUser != null ? activeUser.getGroupNames() : null;
+
+		Set<String> grantorGroups = null;
+
+		if (groups != null && groups.length > 0) {
+			grantorGroups = new HashSet<>(Arrays.asList(groups));
+		}
 
 		Map<String, String> mapResource = new HashMap<String, String>();
 		mapResource.put("table", tableName);
@@ -1421,6 +1436,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 
 		ret.setGrantor(grantor);
+		ret.setGrantorGroups(grantorGroups);
 		ret.setDelegateAdmin(Boolean.TRUE); // remove delegateAdmin privilege as well
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.TRUE);

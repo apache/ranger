@@ -44,6 +44,7 @@ public class GrantRevokeRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String              grantor;
+	private Set<String>         grantorGroups;
 	private Map<String, String> resource;
 	private Set<String>         users;
 	private Set<String>         groups;
@@ -59,11 +60,12 @@ public class GrantRevokeRequest implements Serializable {
 	private String              clusterName;
 
 	public GrantRevokeRequest() {
-		this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 	}
 
-	public GrantRevokeRequest(String grantor, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress, String clientType, String requestData, String sessionId, String clusterName) {
+	public GrantRevokeRequest(String grantor, Set<String> grantorGroups, Map<String, String> resource, Set<String> users, Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit, Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress, String clientType, String requestData, String sessionId, String clusterName) {
 		setGrantor(grantor);
+		setGrantorGroups(grantorGroups);
 		setResource(resource);
 		setUsers(users);
 		setGroups(groups);
@@ -93,6 +95,19 @@ public class GrantRevokeRequest implements Serializable {
 		this.grantor = grantor;
 	}
 
+	/**
+	 * @return the grantorGroups
+	 */
+	public Set<String> getGrantorGroups() {
+		return grantorGroups;
+	}
+
+	/**
+	 * @param grantorGroups the grantorGroups to set
+	 */
+	public void setGrantorGroups(Set<String> grantorGroups) {
+		this.grantorGroups = grantorGroups == null ? new HashSet<String>() : grantorGroups;
+	}
 	/**
 	 * @return the resource
 	 */
@@ -288,6 +303,14 @@ public class GrantRevokeRequest implements Serializable {
 		sb.append("GrantRevokeRequest={");
 
 		sb.append("grantor={").append(grantor).append("} ");
+
+		sb.append("grantorGroups={");
+		if(grantorGroups != null) {
+			for(String grantorGroup : grantorGroups) {
+				sb.append(grantorGroup).append(" ");
+			}
+		}
+		sb.append("} ");
 
 		sb.append("resource={");
 		if(resource != null) {

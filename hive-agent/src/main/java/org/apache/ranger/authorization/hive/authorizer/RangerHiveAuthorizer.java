@@ -20,8 +20,10 @@
 package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1363,6 +1365,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return grantor;
 	}
 
+	private Set<String> getGrantorGroupNames(HivePrincipal grantorPrincipal) {
+		Set<String> ret = null;
+
+		String grantor = grantorPrincipal != null ? grantorPrincipal.getName() : null;
+
+		UserGroupInformation ugi = StringUtil.isEmpty(grantor) ? this.getCurrentUserGroupInfo() : UserGroupInformation.createRemoteUser(grantor);
+
+		String[] groups = ugi != null ? ugi.getGroupNames() : null;
+
+		if (groups != null && groups.length > 0) {
+			ret = new HashSet<>(Arrays.asList(groups));
+		}
+
+		return ret;
+	}
+
 	private GrantRevokeRequest createGrantRevokeData(RangerHiveResource  resource,
 													 List<HivePrincipal> hivePrincipals,
 													 List<HivePrivilege> hivePrivileges,
@@ -1382,6 +1400,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 
 		ret.setGrantor(getGrantorUsername(grantorPrincipal));
+		ret.setGrantorGroups(getGrantorGroupNames(grantorPrincipal));
 		ret.setDelegateAdmin(grantOption ? Boolean.TRUE : Boolean.FALSE);
 		ret.setEnableAudit(Boolean.TRUE);
 		ret.setReplaceExistingPermissions(Boolean.FALSE);

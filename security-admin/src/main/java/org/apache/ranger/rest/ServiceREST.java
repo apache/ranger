@@ -1066,7 +1066,7 @@ public class ServiceREST {
 
 					validateGrantRevokeRequest(grantRequest);
 					String               userName   = grantRequest.getGrantor();
-					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
 	
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
@@ -1163,7 +1163,7 @@ public class ServiceREST {
 					validateGrantRevokeRequest(grantRequest);
 
 					String               userName   = grantRequest.getGrantor();
-					Set<String>          userGroups = userMgr.getGroupsForUser(userName);
+					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
@@ -1278,7 +1278,7 @@ public class ServiceREST {
 					validateGrantRevokeRequest(revokeRequest);
 
 					String               userName   = revokeRequest.getGrantor();
-					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
 
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
@@ -1339,7 +1339,7 @@ public class ServiceREST {
 					validateGrantRevokeRequest(revokeRequest);
 
 					String               userName   = revokeRequest.getGrantor();
-					Set<String>          userGroups =  userMgr.getGroupsForUser(userName);
+					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 					boolean isAllowed = false;
