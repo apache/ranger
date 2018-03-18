@@ -182,15 +182,15 @@ public class AuthorizationSession {
 		// session can be reused so reset its state
 		zapAuthorizationState();
 		// TODO get this via a factory instead
-		RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
+		RangerAccessResourceImpl resource = new RangerHBaseResource();
 		// policy engine should deal sensibly with null/empty values, if any
 		if (isNameSpaceOperation() && StringUtils.isNotBlank(_otherInformation)) {
-				resource.setValue("table", _otherInformation + ":");
+				resource.setValue(RangerHBaseResource.KEY_TABLE, _otherInformation + RangerHBaseResource.NAMESPACE_SEPARATOR);
 		} else {
-			resource.setValue("table", _table);
+			resource.setValue(RangerHBaseResource.KEY_TABLE, _table);
 		}
-		resource.setValue("column-family", _columnFamily);
-		resource.setValue("column", _column);
+		resource.setValue(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily);
+		resource.setValue(RangerHBaseResource.KEY_COLUMN, _column);
 		
 		String user = _userUtils.getUserAsString(_user);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups);
@@ -338,9 +338,9 @@ public class AuthorizationSession {
 			.add("user", _user == null ? null : _user.getName())
 			.add("groups", _groups)
 			.add("auditHandler", _auditHandler == null ? null : _auditHandler.getClass().getSimpleName())
-			.add("table", _table)
-			.add("column", _column)
-			.add("column-family", _columnFamily)
+			.add(RangerHBaseResource.KEY_TABLE, _table)
+			.add(RangerHBaseResource.KEY_COLUMN, _column)
+			.add(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily)
 			.add("resource-matching-scope", _resourceMatchingScope)
 			.toString();
 	}

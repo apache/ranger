@@ -114,10 +114,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	private static final Log PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
-		
-	private static final String WILDCARD = "*";
-	private static final String NAMESPACE_SEPARATOR = ":";
-	
+
     private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 	
@@ -1287,7 +1284,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		switch(perm.getType()) {
 			case Global:
-				tableName = colFamily = qualifier = WILDCARD;
+				tableName = colFamily = qualifier = RangerHBaseResource.WILDCARD;
 			break;
 
 			case Table:
@@ -1305,12 +1302,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			throw new Exception("grant(): namespace/table/columnFamily/columnQualifier not specified");
 		}
 
-		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
-		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
-		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
+		tableName = StringUtil.isEmpty(tableName) ? RangerHBaseResource.WILDCARD : tableName;
+		colFamily = StringUtil.isEmpty(colFamily) ? RangerHBaseResource.WILDCARD : colFamily;
+		qualifier = StringUtil.isEmpty(qualifier) ? RangerHBaseResource.WILDCARD : qualifier;
 
 		if(! StringUtil.isEmpty(nameSpace)) {
-			tableName = nameSpace + NAMESPACE_SEPARATOR + tableName;
+			tableName = nameSpace + RangerHBaseResource.NAMESPACE_SEPARATOR + tableName;
 		}
 
 		User   activeUser = getActiveUser();
@@ -1324,9 +1321,9 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 
 		Map<String, String> mapResource = new HashMap<String, String>();
-		mapResource.put("table", tableName);
-		mapResource.put("column-family", colFamily);
-		mapResource.put("column", qualifier);
+		mapResource.put(RangerHBaseResource.KEY_TABLE, tableName);
+		mapResource.put(RangerHBaseResource.KEY_COLUMN_FAMILY, colFamily);
+		mapResource.put(RangerHBaseResource.KEY_COLUMN, qualifier);
 
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 
@@ -1392,7 +1389,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 
 		switch(perm.getType()) {
 			case Global :
-				tableName = colFamily = qualifier = WILDCARD;
+				tableName = colFamily = qualifier = RangerHBaseResource.WILDCARD;
 			break;
 
 			case Table :
@@ -1410,12 +1407,12 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			throw new Exception("revoke(): table/columnFamily/columnQualifier not specified");
 		}
 
-		tableName = StringUtil.isEmpty(tableName) ? WILDCARD : tableName;
-		colFamily = StringUtil.isEmpty(colFamily) ? WILDCARD : colFamily;
-		qualifier = StringUtil.isEmpty(qualifier) ? WILDCARD : qualifier;
+		tableName = StringUtil.isEmpty(tableName) ? RangerHBaseResource.WILDCARD : tableName;
+		colFamily = StringUtil.isEmpty(colFamily) ? RangerHBaseResource.WILDCARD : colFamily;
+		qualifier = StringUtil.isEmpty(qualifier) ? RangerHBaseResource.WILDCARD : qualifier;
 
 		if(! StringUtil.isEmpty(nameSpace)) {
-			tableName = nameSpace + NAMESPACE_SEPARATOR + tableName;
+			tableName = nameSpace + RangerHBaseResource.NAMESPACE_SEPARATOR + tableName;
 		}
 
 		User   activeUser = getActiveUser();
@@ -1429,9 +1426,9 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 		}
 
 		Map<String, String> mapResource = new HashMap<String, String>();
-		mapResource.put("table", tableName);
-		mapResource.put("column-family", colFamily);
-		mapResource.put("column", qualifier);
+		mapResource.put(RangerHBaseResource.KEY_TABLE, tableName);
+		mapResource.put(RangerHBaseResource.KEY_COLUMN_FAMILY, colFamily);
+		mapResource.put(RangerHBaseResource.KEY_COLUMN, qualifier);
 
 		GrantRevokeRequest ret = new GrantRevokeRequest();
 

@@ -62,7 +62,7 @@
       "resourceElements": {
         "table": {
           "values": [
-            "temp3"
+            "default:temp3"
           ],
           "isExcludes": false,
           "isRecursive": false
