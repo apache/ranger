@@ -39,11 +39,14 @@ public class TestHdfsResourceMapper {
 	private static final String PATH           = "hdfs://localhost:8020/user/testuser/finance";
 	private static final String QUALIFIED_NAME = "hdfs://localhost:8020/user/testuser/finance@cl1";
 
-	private static final String SERVICE_NAME = "cl1_hadoop";
-	private static final String RANGER_PATH  = "/user/testuser/finance";
+	private static final String SERVICE_NAME   = "cl1_hadoop";
+	private static final String RANGER_PATH    = "/user/testuser/finance";
+	private static final String NAMESERVICE_ID = "name-service-1";
+
 
 	AtlasHdfsResourceMapper resourceMapper = new AtlasHdfsResourceMapper();
 	AtlasHdfsResourceMapper resourceMapperWithDefaultClusterName = new AtlasHdfsResourceMapper();
+	AtlasHdfsResourceMapper resourceMapperWithFederatedService = new AtlasHdfsResourceMapper();
 
 	{
 		Properties properties = new Properties();
@@ -51,6 +54,15 @@ public class TestHdfsResourceMapper {
 		properties.setProperty(AtlasResourceMapper.TAGSYNC_DEFAULT_CLUSTER_NAME, CLUSTER_NAME);
 
 		resourceMapperWithDefaultClusterName.initialize(properties);
+
+		String propName = AtlasHdfsResourceMapper.TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX + "hdfs"
+				+ AtlasHdfsResourceMapper.TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + CLUSTER_NAME
+				+ AtlasHdfsResourceMapper.TAGSYNC_ATLAS_NAME_SERVICE_IDENTIFIER + NAMESERVICE_ID
+				+ AtlasHdfsResourceMapper.TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX;
+
+		properties.setProperty(propName, SERVICE_NAME);
+
+		resourceMapperWithFederatedService.initialize(properties);
 	}
 
 	@Test
@@ -145,6 +157,32 @@ public class TestHdfsResourceMapper {
 		}
 	}
 
+	@Test
+	public void testHdfsResourceFromQualifiedNameAndNameServiceId() throws Exception {
+		Map<String, Object> entAttribs = new HashMap<String, Object>();
+
+		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
+		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_NAME_SERVICE_ID, NAMESERVICE_ID);
+
+		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		RangerServiceResource  resource = resourceMapper.buildResource(entity);
+
+		assertFederatedServiceResource(resource);
+	}
+
+	@Test
+	public void testHdfsResourceFromQualifiedNameAndNameServiceIdFromProperty() throws Exception {
+		Map<String, Object> entAttribs = new HashMap<String, Object>();
+
+		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
+		entAttribs.put(AtlasHdfsResourceMapper.ENTITY_ATTRIBUTE_NAME_SERVICE_ID, NAMESERVICE_ID);
+
+		RangerAtlasEntity entity   = getHdfsPathEntity(entAttribs);
+		RangerServiceResource  resource = resourceMapperWithFederatedService.buildResource(entity);
+
+		assertServiceResource(resource);
+	}
+
 	private RangerAtlasEntity getHdfsPathEntity(Map<String, Object> entAttribs) throws Exception {
 		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
 
@@ -159,6 +197,18 @@ public class TestHdfsResourceMapper {
 	private void assertServiceResource(RangerServiceResource resource) {
 		Assert.assertNotNull(resource);
 		Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+		Assert.assertNotNull(resource.getResourceElements());
+		Assert.assertEquals(1, resource.getResourceElements().size());
+		Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHdfsResourceMapper.RANGER_TYPE_HDFS_PATH));
+		Assert.assertNotNull(resource.getResourceElements().get(AtlasHdfsResourceMapper.RANGER_TYPE_HDFS_PATH).getValues());
+		Assert.assertEquals(1, resource.getResourceElements().get(AtlasHdfsResourceMapper.RANGER_TYPE_HDFS_PATH).getValues().size());
+		Assert.assertEquals(RANGER_PATH, resource.getResourceElements().get(AtlasHdfsResourceMapper.RANGER_TYPE_HDFS_PATH).getValues().get(0));
+	}
+
+	private void assertFederatedServiceResource(RangerServiceResource resource) {
+		String serviceName = SERVICE_NAME + AtlasHdfsResourceMapper.ENTITY_TYPE_HDFS_CLUSTER_AND_NAME_SERVICE_SEPARATOR + NAMESERVICE_ID;
+		Assert.assertNotNull(resource);
+		Assert.assertEquals(serviceName, resource.getServiceName());
 		Assert.assertNotNull(resource.getResourceElements());
 		Assert.assertEquals(1, resource.getResourceElements().size());
 		Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHdfsResourceMapper.RANGER_TYPE_HDFS_PATH));

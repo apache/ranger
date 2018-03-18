@@ -35,11 +35,11 @@ public abstract class AtlasResourceMapper {
 	public static final String QUALIFIED_NAME_DELIMITER        = "\\.";
 	public static final Character QUALIFIED_NAME_DELIMITER_CHAR    = '.';
 
-	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX                  = "ranger.tagsync.atlas.";
-	protected static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX                  = ".ranger.service";
-	protected static final String TAGSYNC_ATLAS_CLUSTER_IDENTIFIER                        = ".instance.";
-	protected static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
-	protected static final String CLUSTER_DELIMITER                                       = "@";
+	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_PREFIX                  = "ranger.tagsync.atlas.";
+	public static final String TAGSYNC_SERVICENAME_MAPPER_PROP_SUFFIX                  = ".ranger.service";
+	public static final String TAGSYNC_ATLAS_CLUSTER_IDENTIFIER                        = ".instance.";
+	public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
+	public static final String CLUSTER_DELIMITER                                       = "@";
 
 	protected final String   componentName;
 	protected final String[] supportedEntityTypes;
