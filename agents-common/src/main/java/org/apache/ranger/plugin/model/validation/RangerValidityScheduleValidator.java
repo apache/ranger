@@ -316,7 +316,7 @@ public class RangerValidityScheduleValidator {
                 this.upper = upper;
             }
         }
-        class RangeComparator implements Comparator<Range>, Serializable {
+        class RangeComparator implements Comparator<Range> {
             @Override
             public int compare(Range me, Range other) {
                 int result;

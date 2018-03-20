@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
@@ -40,10 +41,8 @@ import org.springframework.stereotype.Component;
 public class RangerSearchUtil extends SearchUtil {
 	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
 	
-	public SearchFilter getSearchFilter(HttpServletRequest request, List<SortField> sortFields) {
-		if (request == null) {
-			return null;
-		}
+	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
+
 		SearchFilter ret = new SearchFilter();
 
 		if (MapUtils.isEmpty(request.getParameterMap())) {

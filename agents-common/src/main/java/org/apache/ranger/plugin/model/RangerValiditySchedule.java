@@ -31,11 +31,10 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
@@ -43,7 +42,7 @@ import java.util.TimeZone;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 
-public class RangerValiditySchedule {
+public class RangerValiditySchedule implements Serializable {
 
     private static final Log LOG = LogFactory.getLog(RangerValiditySchedule.class);
 

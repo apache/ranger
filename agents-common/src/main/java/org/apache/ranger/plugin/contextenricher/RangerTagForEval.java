@@ -62,7 +62,7 @@ public class RangerTagForEval implements Serializable {
     @JsonIgnore
     private List<RangerValiditySchedule>          validityPeriods;
     @JsonIgnore
-    private List<RangerValidityScheduleEvaluator> validityPeriodEvaluators;
+    private transient List<RangerValidityScheduleEvaluator> validityPeriodEvaluators;
 
 
     private RangerTagForEval() {}

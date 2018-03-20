@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.resourcematcher.ScheduledTimeRangeMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -298,7 +299,7 @@ public class RangerValidityScheduleEvaluator {
                     - For dayOfMonth calculation, consider that months have different number of days
     */
 
-        private class ValueWithBorrow {
+        private static class ValueWithBorrow {
             int value;
             boolean borrow;
 

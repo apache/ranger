@@ -26,6 +26,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
@@ -33,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 
-public class RangerValidityRecurrence {
+public class RangerValidityRecurrence implements Serializable {
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
