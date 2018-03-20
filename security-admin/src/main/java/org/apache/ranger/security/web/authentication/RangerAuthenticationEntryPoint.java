@@ -60,8 +60,8 @@ public class RangerAuthenticationEntryPoint extends
 	@Autowired
 	SessionMgr sessionMgr;
 
-	public RangerAuthenticationEntryPoint() {
-		super();
+	public RangerAuthenticationEntryPoint(String loginFormUrl) {
+		super(loginFormUrl);
 		if (logger.isDebugEnabled()) {
 			logger.debug("AjaxAwareAuthenticationEntryPoint(): constructor");
 		}

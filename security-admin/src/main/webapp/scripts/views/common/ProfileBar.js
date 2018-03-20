@@ -53,7 +53,7 @@ define(function(require){
 			return events;
 		},
 		onLogout : function(checksso){
-			var url = 'security-admin-web/logout.html',
+			var url = 'logout',
 			that = this;
 			$.ajax({
 				url : url,

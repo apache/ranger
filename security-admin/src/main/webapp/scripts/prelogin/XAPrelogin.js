@@ -64,12 +64,12 @@ function doLogin() {
 			baseUrl = '/';
 		}
 	}
-	var url = baseUrl + 'j_spring_security_check';
+	var url = baseUrl + 'login';
 
 	$.ajax({
 		data : {
-			j_username : $('#username').val(),
-			j_password : $('#password').val()
+			username : $('#username').val(),
+			password : $('#password').val()
 		},
 		url : url,
 		type : 'POST',

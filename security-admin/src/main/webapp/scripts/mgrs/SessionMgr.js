@@ -114,11 +114,11 @@ define(function(require){
 		MSCacheMgr.resetAll();
 		if (reDirectUser) {
 			// This will ask the browser to redirect
-			window.location.replace("logout.html");
+			window.location.replace("logout");
 		} else {
 			// We will do an implicit logout
 			$.ajax({
-				url : 'logout.html',
+				url : 'logout',
 				type : 'GET',
 				async : false
 			});

@@ -32,8 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 
 /**
@@ -42,6 +44,10 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
  */
 @SuppressWarnings("deprecation")
 public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
+
+    public MyRememberMeFilter(AuthenticationManager authenticationManager, RememberMeServices rememberMeServices) {
+		super(authenticationManager, rememberMeServices);
+	}
 
     private static final Logger logger = Logger.getLogger(MyRememberMeFilter.class);
 
