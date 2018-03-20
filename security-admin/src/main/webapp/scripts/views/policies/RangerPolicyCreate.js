@@ -44,7 +44,7 @@ define(function(require){
 		
     	template : RangerPolicycreateTmpl,
     	templateHelpers : function(){
-		var infoMsg = '', displayClass = 'hide';
+                var infoMsg = '', displayClass = 'hide', policyTimeStatus = '', expiredClass = 'hide';
 		if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
 			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
 				infoMsg = localization.tt('msg.maskingPolicyInfoMsgForTagBased'), displayClass = 'show';	
@@ -54,10 +54,19 @@ define(function(require){
 		}else if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
 			infoMsg = localization.tt('msg.rowFilterPolicyInfoMsg'), displayClass = 'show';
 		}
+        if(this.editPolicy && !_.isEmpty(this.model.get('validitySchedules'))){
+            if(XAUtil.policyExpierd(this.model)){
+                expiredClass = 'hide';
+            }else{
+                policyTimeStatus = localization.tt('msg.policyExpired'), expiredClass = 'show';
+            }
+                }
     		return {
 			editPolicy : this.editPolicy,
 			infoMsg : infoMsg,
-			displayClass : displayClass
+                        displayClass : displayClass,
+                        policyTimeStatus : policyTimeStatus,
+                        expiredClass : expiredClass
     		};
     	},
     	breadCrumbs :function(){

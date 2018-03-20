@@ -88,11 +88,11 @@
        'visualsearch': {
             deps: [ 'jquery', 'jquery-ui','backbone','underscore']
        },
-       'select2' : { 
-    	   deps: ['jquery', 'bootstrap'] 
+       'select2' : {
+           deps: ['jquery', 'bootstrap']
        },
        'bootbox' : {
-         deps: ['jquery'] 
+         deps: ['jquery']
        },
        'esprima': {
     	   'exports' : 'esprima'
@@ -131,9 +131,10 @@
 		'Backbone.BootstrapModal'	: '../libs/bower/backbone.bootstrap-modal/js/backbone.bootstrap-modal',
 		'bootstrap-editable'		: '../libs/bower/x-editable/js/bootstrap-editable',
 		'bootstrap-datepicker'		: '../libs/other/datepicker/js/bootstrap-datepicker',
+                'bootstrap-datetimepicker'		: '../libs/other/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min',
 		'bootstrap-notify'			: '../libs/bower/bootstrap-notify/js/bootstrap-notify',
-		
-		
+
+
 		'jquery.cookie'				: '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles'			: '../libs/bower/jquery-toggles/js/toggles.min',
         'tag-it'					: '../libs/bower/tag-it/js/tag-it',

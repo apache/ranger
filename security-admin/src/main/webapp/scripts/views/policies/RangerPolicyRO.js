@@ -116,6 +116,7 @@ define(function(require) {
 			details.id = this.policy.get('id');
 			details.name = this.policy.get('name');
 			details.isEnabled = this.policy.get('isEnabled') ? localization.tt('lbl.ActiveStatus_STATUS_ENABLED') : localization.tt('lbl.ActiveStatus_STATUS_DISABLED');
+                        details.policyPriority = this.policy.get('policyPriority') == 1 ? localization.tt('lbl.override') : localization.tt('lbl.normal');
 			details.description = this.policy.get('description');
 			details.isAuditEnabled = this.policy.get('isAuditEnabled') ? XAEnums.AuditStatus.AUDIT_ENABLED.label : XAEnums.AuditStatus.AUDIT_DISABLED.label;
 			details.resources = [];
@@ -167,6 +168,9 @@ define(function(require) {
 			details.createTime = Globalize.format(new Date(this.policy.get('createTime')),  "MM/dd/yyyy hh:mm tt");
 			details.updatedBy = this.policy.get('updatedBy');
 			details.updateTime = Globalize.format(new Date(this.policy.get('updateTime')),  "MM/dd/yyyy hh:mm tt");
+                        if(this.policy.has('validitySchedules')){
+                                details.validitySchedules = this.policy.get('validitySchedules');
+                        }
 			//get policyItems
 			this.createPolicyItems();
 			

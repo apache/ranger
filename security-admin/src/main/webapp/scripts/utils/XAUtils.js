@@ -1247,7 +1247,7 @@ define(function(require) {
 				}
 			var reason = str.lastIndexOf("reason") != -1 ? (str.substring(str.lastIndexOf("reason")+7, str.indexOf("field[")-3 ))
 					: str;
-			erroCodeMsg = erroCodeMsg != "" ? erroCodeMsg +"<br/>" : ""; 
+                        erroCodeMsg = erroCodeMsg != "" ? erroCodeMsg +"   " : "";
 			var erroMsg = erroCodeMsg +""+ XAUtils.capitaliseFirstLetter(reason);
 			return XAUtils.notifyError('Error', erroMsg);
 		});
@@ -1388,6 +1388,12 @@ define(function(require) {
     };
     XAUtils.isAuditorOrKMSAuditor = function(SessionMgr){
         return (SessionMgr.isAuditor() || SessionMgr.isKMSAuditor()) ? true : false ;
-    }
+    };
+    XAUtils.policyExpierd = function(model){
+        return _.some(model.get('validitySchedules') , function(m){
+                return new Date().valueOf() > new Date(m.endTime).valueOf() ? false : true;
+
+        });
+    };
 	return XAUtils;
 });

@@ -260,7 +260,9 @@ define(function(require) {
                 userSearchFilter                : 'User search filter',
                 groupSearchFilter               : 'Group search filter',
                 startDate                       : 'Start Date',
-                endDate                         : 'End Date'
+                endDate                         : 'End Date',
+                                addValidityPeriod				: 'Add Validity Period',
+                                editValidityPeriod				: 'Edit Validity Period',
 
 
 			},
@@ -429,8 +431,9 @@ define(function(require) {
                 policyLabelsinfo		: 'Enter label of policy',
                 noUserFoundText			: 'No user associate with this group.',
                 showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
-                searchForUserSync       :"Search for your user sync audits..."
- 
+                searchForUserSync       :"Search for your user sync audits...",
+                policyExpired           :'Policy Expired'
+
 			},
 			plcHldr : {
 				search 						:'Search',
@@ -458,9 +461,10 @@ define(function(require) {
 				groupNameValidationMsg :'1. Group name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
                 lastNameValidationMsg  :'1. Last name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
+                setTimeZoneErrorMsg    :'Please select Start/End date for Time zone'
 			},
 			serverMsg : {
-				
+
 				// UserMgr
 				userMgrPassword        : 'The password you\'ve provided is incorrect. Please try again with correct password',
 				userMgrInvalidUser     : 'Invalid user provided',

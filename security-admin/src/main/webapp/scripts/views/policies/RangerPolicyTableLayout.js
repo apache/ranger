@@ -203,11 +203,22 @@ define(function(require){
 			var that = this;
 			var cols = {
 				id : {
-					cell : "uri",
-					href: function(model){
-                                            return '#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit';
-					},
+                                        cell : 'html',
 					label	: localization.tt("lbl.policyId"),
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if(!_.isEmpty(model.attributes.validitySchedules) && !XAUtil.policyExpierd(model)){
+                                return '<div class="" style="position: relative; text-align: center;">\
+                                            <!--<i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>-->\
+                                            <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
+                                         </div>';
+                            }else{
+                                return '<div class="" style="position: relative; text-align: center;">\
+                                            <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
+                                        </div>';
+                            }
+                        }
+                    }),
 					editable: false,
 					sortable : false
 				},

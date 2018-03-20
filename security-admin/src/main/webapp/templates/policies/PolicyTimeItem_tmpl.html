@@ -1,0 +1,38 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<td>
+        <div class="input-append date form_datetime"  data-date-format="yyyy/mm/dd hh:ii:ss" data-js="startTime">
+          <input class="date-input-width-127" size="16" type="text" value="{{this.startTime}}" readonly data-js="startTimeInput"/>
+          <span class="add-on"><i class="icon-remove"></i></span>
+          <span class="add-on"><i class="icon-th"></i></span>
+        </div>
+</td>
+<td>
+  <div class="input-append date form_datetime"  data-date-format="yyyy/mm/dd hh:ii:ss" data-js="endTime">
+        <input class="date-input-width-127" size="16" type="text" value="{{this.endTime}}" readonly data-js="endTimeInput"/>
+        <span class="add-on"><i class="icon-remove"></i></span>
+        <span class="add-on"><i class="icon-th"></i></span>
+        </div>
+</td>
+<td>
+        <input type="text" data-js="timezone" value="{{this.timeZone}}" placeholder="Select timezone" class="date-input-width-127" />
+</td>
+<td>
+        <button type="button" class="btn btn-small btn-danger" data-action="delete">
+                <i class="icon-remove"></i>
+        </button>
+</td>

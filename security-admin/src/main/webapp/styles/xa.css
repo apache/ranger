@@ -1755,10 +1755,18 @@ td.html-cell.renderable:last-child {
 }
 .policy-form .field-isEnabled{
 margin-left: 413px;
-margin-bottom: 12px !important;
+margin-bottom: 0px !important;
 }
 .policy-form .field-isEnabled .controls{
 	margin-left:30px;
+}
+.policy-form .field-policyPriority{
+  margin-left: 413px;
+  margin-bottom: 0px !important;
+}
+.policy-form .field-policyPriority .controls{
+  margin-top: -45px;
+  margin-left: 127px;
 }
 .margin-bottom-5{
 margin-bottom: 5px;
@@ -1824,6 +1832,7 @@ margin-top: -29px;
 }
 .margin-left-5{
 	margin-left:5px;
+  line-height:15px;
 }
 .tr-inactive {
   background-color: #F5F5F5;
@@ -2297,4 +2306,30 @@ textarea:read-only{
 }
 .white-space-normal{
   white-space: normal !important;
+}
+.date-input-width-127{
+  width: 148px;
+}
+.modal-policy-time {
+  width: 720px;
+  margin-left: -333px;
+}
+.modal-policy-time .modal-header {
+  background-color: #eff3f8;
+  border-radius: 6px 6px 0px 0px;
+}
+.add-on .icon-th,.icon-remove{
+  line-height: 1.5;
+}
+.timeClock{
+    margin-left: 12px;
+    color: #4c504b;
+    font-size: large;
+    margin-top: 10px
+}
+.backgrigModelId{
+  position: absolute;
+  left: 0;
+  top: 3px;
+  color:#bd362f;
 }

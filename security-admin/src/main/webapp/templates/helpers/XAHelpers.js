@@ -563,6 +563,9 @@
 				&& ( !_.isUndefined(rowFilterDef.resources) ) && rowFilterDef.resources.length > 0 )
 				? options.fn(this) : options.inverse(this); 
 	});
+        Handlebars.registerHelper('blankCheck', function(context, options) {
+                return _.isUndefined(context) || _.isEmpty(context) ? '--' : context;
+        });
 
 	return HHelpers;
 });

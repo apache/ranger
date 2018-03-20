@@ -81,6 +81,14 @@ define(function(require){
 					width		: '80',
 					switchOn	: true
 				},
+                                policyPriority : {
+                                        type            : 'Switch',
+                                        title           : '',//localization.tt("lbl.policyStatus"),
+                                        onText          : 'override',
+                                        offText         : 'normal',
+                                width           : '80',
+                                switchOn        : false
+                                },
 				isAuditEnabled : {
 					type		: 'Switch',
 					title		: localization.tt("lbl.auditLogging"),

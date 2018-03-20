@@ -117,6 +117,35 @@
     </tbody>
   </table>
 </div>
+{{#if PolicyDetails.validitySchedules}}
+<div id="policyItems" class="row-fluid">
+        <p class="formHeader">Validity Period :<i class="icon-time icon-large pull-right"></i></p>
+
+        <table class="table-permission table-condensed table-read-only"
+                style="width: 100%">
+                <thead>
+                        <tr>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Time zone</th>
+                        </tr>
+                </thead>
+                <tbody>
+                        {{#each PolicyDetails.validitySchedules}}
+                                <tr>
+                        <th>{{blankCheck this.startTime}}</th>
+                                        <th>{{blankCheck this.endTime}}</th>
+                                        <th>{{#if this.timeZone}}
+                                                        <span class="label label-info">{{this.timeZone}}</span>
+                                                {{else}} --
+                                                {{/if}}
+                                                </th>
+                                </tr>
+            {{/each}}
+                </tbody>
+        </table>
+</div>
+{{/if}}
 
 {{#each PolicyDetails.policyItemsCond}}
 	<div id="policyItems" class="row-fluid">

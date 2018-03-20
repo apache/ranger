@@ -33,6 +33,7 @@ define(function(require){
 	var VXAuditMapList	= require('collections/VXAuditMapList');
 	var VXUserList		= require('collections/VXUserList');
 	var PermissionList 	= require('views/policies/PermissionList');
+  var vPolicyTimeList 	= require('views/policies/PolicyTimeList');
 	var RangerPolicyResource		= require('models/RangerPolicyResource');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
 
@@ -63,7 +64,9 @@ define(function(require){
 			}
 			return { 'id' : this.model.id,
 					'policyType' : policyType.label,
-					'conditionType' : conditionType
+                                        'conditionType' : conditionType,
+          'policyTimeBtnLabel': (this.model.has('validitySchedules') && this.model.get('validitySchedules').length > 0) ? localization.tt('lbl.editValidityPeriod')
+                  : localization.tt('lbl.addValidityPeriod')
 				};
 		},
 		initialize: function(options) {
@@ -101,6 +104,7 @@ define(function(require){
 		ui : {
 			'denyConditionItems' : '[data-js="denyConditionItems"]',
 			'allowExcludePerm' : '[data-js="allowExcludePerm"]',
+      'policyTimeBtn'      : '[data-js="policyTimeBtn"]'
 		},
 		/** fields for the form
 		*/
@@ -110,22 +114,22 @@ define(function(require){
 		},
 		getSchema : function(){
 			var attrs = {},that = this;
-			var basicSchema = ['name','isEnabled'];
+                        var basicSchema = ['name','isEnabled','policyPriority','policyLabels'];
 			var schemaNames = this.getPolicyBaseFieldNames();
-			
+
 			var formDataType = new BackboneFormDataType();
 			attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'),this.rangerServiceDefModel.get('enums'), attrs, this, true);
-			
+
 			var attr1 = _.pick(_.result(this.model,'schemaBase'),basicSchema);
 			var attr2 = _.pick(_.result(this.model,'schemaBase'),schemaNames);
 			return _.extend(attr1,_.extend(attrs,attr2));
 		},
 		/** on render callback */
 		render: function(options) {
-                    var that = this;
+            var that = this;
 			Backbone.Form.prototype.render.call(this, options);
 			//initialize path plugin for hdfs component : resourcePath
-			if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){ 
+                        if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){
 				this.initializePathPlugins(this.pathPluginOpts);
 			}
 			this.renderCustomFields();
@@ -134,12 +138,44 @@ define(function(require){
 			}
 			//checkParent
 			this.renderParentChildHideShow();
-			
+
 			//to show error msg on below the field(only for policy name)
 			this.fields.isEnabled.$el.find('.control-label').removeClass();
 			this.fields.name.$el.find('.help-inline').removeClass('help-inline').addClass('help-block margin-left-5')
 			this.initializePlugins();
+                        this.setPolicyValidityTime();
+
 		},
+            setPolicyValidityTime : function(){
+              var that = this;
+              this.$el.find(this.ui.policyTimeBtn).on('click', function(e){
+                var view = new vPolicyTimeList({
+                 collection: that.model.has('validitySchedules') ? new Backbone.Collection(that.model.get('validitySchedules')) : new Backbone.Collection(),
+                 model : that.model
+                });
+                var modal = new Backbone.BootstrapModal({
+                  content	: view,
+                  title	: 'Policy Validity Period',
+                  okText  :"Save",
+                  animate : true,focusOk:false,
+                  escape:false,
+                  // allowCancel:false,
+                  modalOptions:{
+                    backdrop: 'static',
+                    keyboard: false
+                  },
+                }).open();
+
+                modal.$el.addClass('modal-policy-time');
+                //To prevent modal being close by click out of modal
+                modal.$el.find('.cancel, .close, .ok').on('click', function(e){
+                  modal._preventClose = false;
+                });
+                modal.on('shown', function(a){
+                  this.preventClose();
+                });
+              });
+            },
 		initializePlugins : function() {
 			var that = this;
 			this.$(".wrap-header").each(function(i, ele) {
@@ -246,13 +282,16 @@ define(function(require){
 						}*/
 						this.model.set(resourceDef.name, obj)
 					}
-				},this)
+                                },this);
 			}
 		},
 		setUpSwitches :function(){
 			var that = this;
 			this.fields.isAuditEnabled.editor.setValue(this.model.get('isAuditEnabled'));
 			this.fields.isEnabled.editor.setValue(this.model.get('isEnabled'));
+                    if(this.model.has('policyPriority')){
+                        this.fields.policyPriority.editor.setValue(this.model.get('policyPriority') == 1 ? true : false);
+                    }
 		},
 		/** all custom field rendering */
 		renderCustomFields: function(){
@@ -456,6 +495,9 @@ define(function(require){
 			}
 			this.model.set('service',this.rangerService.get('name'));
                         this.model.set('name', _.escape(this.model.get('name')));
+                        if(this.model.has('policyPriority')){
+                                this.model.set('policyPriority', this.model.get('policyPriority') ? 1 : 0);
+                        }
 		},
 		setPermissionsToColl : function(list, policyItemList) {
 			list.each(function(m){
@@ -766,8 +808,7 @@ define(function(require){
 			return obj;
 		},
 		getPolicyBaseFieldNames : function(){
-                    var fields = ['isAuditEnabled','description','policyLabels'];
-			 return fields;
+                        return ['description','isAuditEnabled'];
 		},
 		getResources : function(){
 			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
@@ -784,6 +825,5 @@ define(function(require){
 			return this.rangerServiceDefModel.get('resources');
 		},
 	});
-
 	return RangerPolicyForm;
 });
