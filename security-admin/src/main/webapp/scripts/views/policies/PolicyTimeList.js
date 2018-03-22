@@ -58,9 +58,14 @@ define(function(require) {
 
                 onRender : function() {
               var that = this;
-              var startTime = this.$el.find(this.ui.startTime).datetimepicker({autoclose:true}),
-              endTime = this.$el.find(this.ui.endTime).datetimepicker({autoclose:true});;
-
+              var startTime = this.$el.find(this.ui.startTime).datetimepicker({
+                  autoclose: true,
+                  minuteStep: 1,
+              }),
+              endTime = this.$el.find(this.ui.endTime).datetimepicker({
+                  autoclose: true,
+                  minuteStep: 1
+              });
               startTime.on('changeDate', function(ev){
                   that.$el.find(that.ui.endTime).datetimepicker('setStartDate', ev.date);
               });
@@ -99,6 +104,7 @@ define(function(require) {
                 evDelete : function(){
                         var that = this;
                         this.collection.remove(this.model);
+                        $('[data-js="policyTimeBtn"]').addClass('dirtyField');
                 },
         });
 
@@ -134,6 +140,7 @@ define(function(require) {
                         this.bind("ok", this.onSave);
                 },
                 onRender : function(){
+                    XAUtil.preventNavigation(localization.tt('dialogMsg.preventNavPolicyForm'),this.$el);
                 },
                 addNew : function(){
                         var that =this;
@@ -141,7 +148,7 @@ define(function(require) {
                         this.collection.add(new Backbone.Model());
                 },
                 onSave: function (modal) {
-                    var self = this
+                    var self = this;
                     if(! _.isUndefined(this.collection.models)){
                        var error = _.some(this.collection.models, function(m){
                             var startTime = new Date(m.get('startTime')), endTime = new Date(m.get('endTime'));

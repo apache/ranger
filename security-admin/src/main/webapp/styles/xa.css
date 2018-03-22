@@ -2333,3 +2333,14 @@ textarea:read-only{
   top: 3px;
   color:#bd362f;
 }
+.hideBodyScroll{
+    overflow : hidden;
+}
+.datetimepicker-minutes{
+    overflow-y: scroll !important;
+    height: 210px !important;
+}
+.expiredIconPosition{
+    position: relative;
+    text-align: center;
+}

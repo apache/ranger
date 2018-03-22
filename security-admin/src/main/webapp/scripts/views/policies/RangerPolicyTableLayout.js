@@ -101,10 +101,7 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyTableLayout Layout");
-
 			_.extend(this, _.pick(options,'rangerService'));
-			
-			
 			this.bindEvents();
 			this.initializeServiceDef();
 		},
@@ -203,19 +200,32 @@ define(function(require){
 			var that = this;
 			var cols = {
 				id : {
-                                        cell : 'html',
+                    cell : 'html',
 					label	: localization.tt("lbl.policyId"),
-                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
-                            if(!_.isEmpty(model.attributes.validitySchedules) && !XAUtil.policyExpierd(model)){
-                                return '<div class="" style="position: relative; text-align: center;">\
-                                            <!--<i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>-->\
-                                            <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
-                                         </div>';
+                            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+                                if(!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)){
+                                    return '<div class="expiredIconPosition">\
+                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                '+model.id+'\
+                                             </div>';
+                                }else{
+                                    return '<div class="expiredIconPosition">\
+                                                '+model.id+'\
+                                            </div>';
+                                }
                             }else{
-                                return '<div class="" style="position: relative; text-align: center;">\
-                                            <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
-                                        </div>';
+                                if(!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)){
+                                    return '<div class="expiredIconPosition">\
+                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
+                                             </div>';
+                                }else{
+                                    return '<div class="expiredIconPosition">\
+                                                <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
+                                            </div>';
+                                }
                             }
                         }
                     }),
@@ -317,9 +327,6 @@ define(function(require){
 				sortable : false
 
 			};
-                        if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                            cols.id.cell = 'string';
-                        }
 			return this.collection.constructor.getTableCols(cols, this.collection);
 		},
 		onDelete :function(e){

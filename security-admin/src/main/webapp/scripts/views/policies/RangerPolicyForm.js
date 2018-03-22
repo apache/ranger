@@ -149,9 +149,13 @@ define(function(require){
             setPolicyValidityTime : function(){
               var that = this;
               this.$el.find(this.ui.policyTimeBtn).on('click', function(e){
-                var view = new vPolicyTimeList({
-                 collection: that.model.has('validitySchedules') ? new Backbone.Collection(that.model.get('validitySchedules')) : new Backbone.Collection(),
-                 model : that.model
+                  var policyDirtyField = that.model.has('validitySchedules') ? new Backbone.Collection(that.model.get('validitySchedules')) : new Backbone.Collection();
+                  policyDirtyField.on('change',function(){
+                      that.$el.find('[data-js="policyTimeBtn"]').addClass('dirtyField');
+                  });
+                  var view = new vPolicyTimeList({
+                      collection: policyDirtyField,
+                      model : that.model
                 });
                 var modal = new Backbone.BootstrapModal({
                   content	: view,
@@ -167,9 +171,17 @@ define(function(require){
                 }).open();
 
                 modal.$el.addClass('modal-policy-time');
+                $('body').addClass('hideBodyScroll')
                 //To prevent modal being close by click out of modal
-                modal.$el.find('.cancel, .close, .ok').on('click', function(e){
+                modal.$el.find('.cancel, .close').on('click', function(e){
                   modal._preventClose = false;
+                  $('body').removeClass('hideBodyScroll');
+                  $('[data-js="policyTimeBtn"]').addClass('dirtyField');
+                  $(".datetimepicker").remove();
+                });
+                modal.$el.find('.ok').on('click', function(e){
+                    modal._preventClose = false;
+                    $('body').removeClass('hideBodyScroll');
                 });
                 modal.on('shown', function(a){
                   this.preventClose();

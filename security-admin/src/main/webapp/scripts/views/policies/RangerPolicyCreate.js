@@ -55,10 +55,10 @@ define(function(require){
 			infoMsg = localization.tt('msg.rowFilterPolicyInfoMsg'), displayClass = 'show';
 		}
         if(this.editPolicy && !_.isEmpty(this.model.get('validitySchedules'))){
-            if(XAUtil.policyExpierd(this.model)){
-                expiredClass = 'hide';
-            }else{
+            if(XAUtil.isPolicyExpierd(this.model)){
                 policyTimeStatus = localization.tt('msg.policyExpired'), expiredClass = 'show';
+            }else{
+                expiredClass = 'hide';
             }
                 }
     		return {

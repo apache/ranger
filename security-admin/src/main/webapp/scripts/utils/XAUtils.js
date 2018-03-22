@@ -1389,10 +1389,16 @@ define(function(require) {
     XAUtils.isAuditorOrKMSAuditor = function(SessionMgr){
         return (SessionMgr.isAuditor() || SessionMgr.isKMSAuditor()) ? true : false ;
     };
-    XAUtils.policyExpierd = function(model){
-        return _.some(model.get('validitySchedules') , function(m){
+    XAUtils.isPolicyExpierd = function(model){
+        return !_.some(model.get('validitySchedules') , function(m){
+            if(!m.endTime){
+                return true;
+            } else if(_.isEmpty(m.timeZone)){
                 return new Date().valueOf() > new Date(m.endTime).valueOf() ? false : true;
-
+            }else{
+                return new Date(new Date().toLocaleString('en-US', { timeZone: m.timeZone }).valueOf()).valueOf() >
+                new Date(m.endTime.toLocaleString('en-US', { timeZone: m.timeZone }).valueOf()).valueOf() ? false : true;
+            }
         });
     };
 	return XAUtils;
