@@ -13,16 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname = 'options') THEN
-		ALTER TABLE dbo.x_policy ADD options varchar(4000) DEFAULT NULL NULL;
+IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname = 'policy_options') THEN
+		ALTER TABLE dbo.x_policy ADD policy_options varchar(4000) DEFAULT NULL NULL;
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname = 'policy_priority') THEN
 		ALTER TABLE dbo.x_policy ADD policy_priority int DEFAULT 0 NOT NULL;
 END IF;
 GO
-IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_tag' and cname = 'options') THEN
-		ALTER TABLE dbo.x_tag ADD options varchar(4000) DEFAULT NULL NULL;
+IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_tag' and cname = 'policy_options') THEN
+		ALTER TABLE dbo.x_tag ADD policy_options varchar(4000) DEFAULT NULL NULL;
 END IF;
 GO
 

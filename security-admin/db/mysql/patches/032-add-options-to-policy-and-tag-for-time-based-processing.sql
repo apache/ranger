@@ -17,8 +17,8 @@ drop procedure if exists add_x_policy_columns_for_time_based_classification;
 delimiter ;;
 
 create procedure add_x_policy_columns_for_time_based_classification() begin
-if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name='options') then
-        ALTER TABLE x_policy ADD options varchar(4000) NULL DEFAULT NULL;
+if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name='policy_options') then
+        ALTER TABLE x_policy ADD policy_options varchar(4000) NULL DEFAULT NULL;
 end if;
 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name='policy_priority') then
         ALTER TABLE x_policy ADD policy_priority int NOT NULL DEFAULT '0';
@@ -33,8 +33,8 @@ drop procedure if exists add_x_policy_columns_for_time_based_classification;
 delimiter ;;
 
 create procedure add_x_tag_columns_for_time_based_classification() begin
-if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_tag' and column_name='options') then
-        ALTER TABLE x_tag ADD options varchar(4000) NULL DEFAULT NULL;
+if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_tag' and column_name='policy_options') then
+        ALTER TABLE x_tag ADD policy_options varchar(4000) NULL DEFAULT NULL;
 end if;
 end;;
 delimiter ;

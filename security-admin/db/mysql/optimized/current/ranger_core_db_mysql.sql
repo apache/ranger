@@ -401,7 +401,6 @@ CREATE TABLE `x_resource` (
   `policy_name` VARCHAR( 500 ) NULL DEFAULT NULL,
   `res_topologies` TEXT NULL DEFAULT NULL,
   `res_services` TEXT NULL DEFAULT NULL,
-  `ip_address` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_resource_UK_policy_name` (`policy_name`),
   KEY `x_resource_FK_added_by_id` (`added_by_id`),
@@ -460,6 +459,7 @@ CREATE TABLE `x_perm_map` (
   `is_recursive` int(11) NOT NULL DEFAULT '0',
   `is_wild_card` tinyint(1) NOT NULL DEFAULT '1',
   `grant_revoke` tinyint(1) NOT NULL DEFAULT '1',
+  `ip_address` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `x_perm_map_FK_added_by_id` (`added_by_id`),
   KEY `x_perm_map_FK_upd_by_id` (`upd_by_id`),
@@ -570,7 +570,7 @@ CREATE TABLE  `x_policy` (
 `resource_signature` varchar(128) DEFAULT NULL,
 `is_enabled` tinyint(1) NOT NULL DEFAULT '0',
 `is_audit_enabled` tinyint(1) NOT NULL DEFAULT '0',
-`options` varchar(4000) NULL DEFAULT NULL,
+`policy_options` varchar(4000) NULL DEFAULT NULL,
 `policy_priority` int NOT NULL DEFAULT '0',
 primary key (`id`),
 KEY `x_policy_added_by_id` (`added_by_id`),
@@ -1004,7 +1004,7 @@ CREATE TABLE IF NOT EXISTS `x_tag` (
 `version` BIGINT(20) NULL DEFAULT NULL,
 `type` BIGINT(20) NOT NULL,
 `owned_by` SMALLINT DEFAULT 0 NOT NULL,
-`options` varchar(4000) NULL DEFAULT NULL,
+`policy_options` varchar(4000) NULL DEFAULT NULL,
 PRIMARY KEY (`id`),
 UNIQUE KEY `x_tag_UK_guid` (`guid`),
 KEY `x_tag_IDX_type` (`type`),
@@ -1340,6 +1340,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
@@ -1371,4 +1372,5 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10010',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10011',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10012',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10013',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

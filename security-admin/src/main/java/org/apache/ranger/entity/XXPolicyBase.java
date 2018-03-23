@@ -124,7 +124,7 @@ public abstract class XXPolicyBase extends XXDBBase {
      * </ul>
      *
      */
-    @Column(name = "options")
+    @Column(name = "policy_options")
     protected String options;
 	/**
 	 * @return the gUID

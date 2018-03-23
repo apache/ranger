@@ -16,9 +16,9 @@
 DECLARE
         v_count number:=0;
 BEGIN   
-        select count(*) into v_count from user_tab_cols where table_name='X_POLICY' and column_name='OPTIONS';
+        select count(*) into v_count from user_tab_cols where table_name='X_POLICY' and column_name='POLICY_OPTIONS';
         if (v_count = 0) then 
-                execute immediate 'ALTER TABLE x_policy ADD options varchar(4000) DEFAULT NULL NULL';
+                execute immediate 'ALTER TABLE x_policy ADD policy_options varchar(4000) DEFAULT NULL NULL';
         end if; 
 
         select count(*) into v_count from user_tab_cols where table_name='X_POLICY' and column_name='POLICY_PRIORITY';
@@ -26,9 +26,9 @@ BEGIN
                 execute immediate 'ALTER TABLE x_policy ADD policy_priority NUMBER(11) DEFAULT 0 NOT NULL';
         end if; 
 
-        select count(*) into v_count from user_tab_cols where table_name='X_TAG' and column_name='OPTIONS';
+        select count(*) into v_count from user_tab_cols where table_name='X_TAG' and column_name='POLICY_OPTIONS';
         if (v_count = 0) then 
-                execute immediate 'ALTER TABLE x_tag ADD options varchar(4000) DEFAULT NULL NULL';
+                execute immediate 'ALTER TABLE x_tag ADD policy_options varchar(4000) DEFAULT NULL NULL';
         end if; 
         commit; 
 END;/

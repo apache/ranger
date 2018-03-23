@@ -14,9 +14,9 @@
 -- limitations under the License.
 
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name = 'options')
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name = 'policy_options')
 BEGIN
-	ALTER TABLE [dbo].[x_policy] ADD [options] [varchar](4000) DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_policy] ADD [policy_options] [varchar](4000) DEFAULT NULL NULL;
 END
 GO
 GO
@@ -26,9 +26,9 @@ BEGIN
 END
 GO
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_tag' and column_name = 'options')
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_tag' and column_name = 'policy_options')
 BEGIN
-	ALTER TABLE [dbo].[x_tag] ADD [options] [varchar](4000) DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_tag] ADD [policy_options] [varchar](4000) DEFAULT NULL NULL;
 END
 GO
 

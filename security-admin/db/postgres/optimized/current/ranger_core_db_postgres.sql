@@ -463,7 +463,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 resource_signature VARCHAR(128) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '0' NOT NULL,
 is_audit_enabled BOOLEAN DEFAULT '0' NOT NULL,
-options VARCHAR(4000) DEFAULT NULL NULL,
+policy_options VARCHAR(4000) DEFAULT NULL NULL,
 policy_priority INT DEFAULT 0 NOT NULL,
 primary key(id),
 CONSTRAINT x_policy_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -821,7 +821,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 user_id BIGINT DEFAULT NULL NULL,
-sort_order INT,
+sort_order SMALLINT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_itm_usr_perm_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_itm_usr_perm_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id),
@@ -842,7 +842,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 group_id BIGINT DEFAULT NULL NULL,
-sort_order INT,
+sort_order SMALLINT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_itm_grp_perm_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_itm_grp_perm_FK_group_id FOREIGN KEY(group_id) REFERENCES x_group(id),
@@ -953,7 +953,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 type BIGINT NOT NULL,
 owned_by SMALLINT DEFAULT 0 NOT NULL,
-options VARCHAR(4000) DEFAULT NULL NULL,
+policy_options VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_tag_UK_guid UNIQUE (guid),
 CONSTRAINT x_tag_FK_type FOREIGN KEY (type) REFERENCES x_tag_def (id),
@@ -1221,11 +1221,11 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 event_time TIMESTAMP DEFAULT NULL NULL,
 user_name varchar(255) NOT  NULL,
 sync_source varchar(128) NOT NULL,
-no_of_users bigint(20) NOT NULL,
-no_of_groups bigint(20) NOT NULL,
+no_of_users BIGINT NOT NULL,
+no_of_groups BIGINT NOT NULL,
 sync_source_info varchar(4000) NOT NULL,
 session_id varchar(255) DEFAULT NULL,
-primary key (id),
+primary key (id)
 );
 
 CREATE INDEX xa_access_audit_added_by_id ON xa_access_audit(added_by_id);
@@ -1429,6 +1429,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,current_timestamp,current_timestamp,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,current_timestamp,current_timestamp,1,1,1);
@@ -1460,6 +1461,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10010',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10011',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10012',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10013',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 DROP VIEW IF EXISTS vx_trx_log;

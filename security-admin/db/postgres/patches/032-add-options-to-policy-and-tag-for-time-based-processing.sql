@@ -20,9 +20,9 @@ RETURNS void AS $$
 DECLARE
  v_column_exists integer := 0;
 BEGIN
- select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname='options';
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname='policy_options';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_policy ADD COLUMN options VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_policy ADD COLUMN policy_options VARCHAR(4000) DEFAULT NULL NULL;
  END IF;
   select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname='policy_priority';
  IF v_column_exists = 0 THEN
@@ -41,9 +41,9 @@ RETURNS void AS $$
 DECLARE
  v_column_exists integer := 0;
 BEGIN
- select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_tag') and attname='options';
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_tag') and attname='policy_options';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_tag ADD COLUMN options VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_tag ADD COLUMN policy_options VARCHAR(4000) DEFAULT NULL NULL;
  END IF;
 END;
 $$ LANGUAGE plpgsql;

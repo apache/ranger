@@ -1155,7 +1155,7 @@ CREATE TABLE [dbo].[x_policy] (
         [resource_signature] [varchar](128) DEFAULT NULL NULL,
         [is_enabled] [tinyint] DEFAULT 0 NOT NULL,
         [is_audit_enabled] [tinyint] DEFAULT 0 NOT NULL,
-        [options] [varchar](4000) DEFAULT NULL NULL,
+        [policy_options] [varchar](4000) DEFAULT NULL NULL,
         [policy_priority] [int] DEFAULT 0 NOT NULL,
 PRIMARY KEY CLUSTERED
 (
@@ -1619,7 +1619,7 @@ CREATE TABLE [dbo].[x_tag](
         [version] [bigint] DEFAULT NULL NULL,
         [type] [bigint] NOT NULL,
         [owned_by] [smallint] DEFAULT 0 NOT NULL,
-        [options] [varchar](4000) DEFAULT NULL NULL,
+        [policy_options] [varchar](4000) DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -3096,6 +3096,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
@@ -3127,6 +3128,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10010',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10011',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10012',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10013',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 CREATE VIEW [dbo].[vx_trx_log] AS
