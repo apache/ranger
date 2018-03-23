@@ -1464,28 +1464,24 @@ public class RangerBizUtil {
 
 		boolean isKeyAdmin = session.isKeyAdmin();
 		boolean isSysAdmin = session.isUserAdmin();
-                boolean isAuditor =  session.isAuditUserAdmin();
-                boolean isAduitorKeyAdmin = session.isAuditKeyAdmin();
+		boolean isAuditor =  session.isAuditUserAdmin();
+		boolean isAuditorKeyAdmin = session.isAuditKeyAdmin();
 		boolean isUser = false;
 
 		List<String> roleList = session.getUserRoleList();
-                if (roleList.contains(RangerConstants.ROLE_USER) ) {
+		if (roleList.contains(RangerConstants.ROLE_USER) ) {
 			isUser = true;
 		}
 
 		if (xxDbBase != null && xxDbBase instanceof XXServiceDef) {
 			XXServiceDef xServiceDef = (XXServiceDef) xxDbBase;
-			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
-			}
-
-			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-            } else if (isAduitorKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-                    return true;
-            } else if ((isSysAdmin || isUser || isAuditor) && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
+			final String implClass = xServiceDef.getImplclassname();
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin || isAuditorKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isSysAdmin || isUser || isAuditor;
 			}
 		}
 
@@ -1493,27 +1489,20 @@ public class RangerBizUtil {
 
 			// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
 			// services including KMS
-                        if (isSysAdmin || isAuditor) {
+			if (isSysAdmin || isAuditor) {
 				return true;
 			}
 
 			XXService xService = (XXService) xxDbBase;
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin || isAuditorKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isUser;
 			}
-
-			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-                        } else if (isAduitorKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-                                return true;
-			} else if (isUser && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-			}
-			// else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-			// return true;
-			// }
 		}
 		return false;
 	}
