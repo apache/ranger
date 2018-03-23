@@ -1447,15 +1447,13 @@ public class RangerBizUtil {
 
 		if (xxDbBase != null && xxDbBase instanceof XXServiceDef) {
 			XXServiceDef xServiceDef = (XXServiceDef) xxDbBase;
-			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
-			}
-
-			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-			} else if ((isSysAdmin || isUser) && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
+			final String implClass = xServiceDef.getImplclassname();
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isSysAdmin || isUser;
 			}
 		}
 
@@ -1470,18 +1468,13 @@ public class RangerBizUtil {
 			XXService xService = (XXService) xxDbBase;
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isUser;
 			}
-
-			if (isKeyAdmin && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-			} else if (isUser && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				return true;
-			}
-			// else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-			// return true;
-			// }
 		}
 		return false;
 	}
