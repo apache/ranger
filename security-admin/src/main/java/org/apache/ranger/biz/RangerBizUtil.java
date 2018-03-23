@@ -1452,14 +1452,12 @@ public class RangerBizUtil {
 		if (xxDbBase != null && xxDbBase instanceof XXServiceDef) {
 			XXServiceDef xServiceDef = (XXServiceDef) xxDbBase;
 			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
-			}
-
-			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				return true;
-			} else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				return true;
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isSysAdmin || isUser;
 			}
 		}
 
@@ -1474,18 +1472,13 @@ public class RangerBizUtil {
 			XXService xService = (XXService) xxDbBase;
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 			String implClass = xServiceDef.getImplclassname();
-			if (implClass == null) {
-				return false;
+			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+				// KMS case
+				return isKeyAdmin;
+			} else {
+				// Other cases - implClass can be null!
+				return isUser;
 			}
-
-			if (isKeyAdmin && implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				return true;
-			} else if (isUser && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-				return true;
-			}
-			// else if ((isSysAdmin || isUser) && !implClass.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-			// return true;
-			// }
 		}
 		return false;
 	}
@@ -1517,7 +1510,7 @@ public class RangerBizUtil {
 		// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
 		// services including KMS
 
-		if (objType.equalsIgnoreCase("Service-Def") && session.isUserAdmin() && implClassName.equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+		if (objType.equalsIgnoreCase("Service-Def") && session.isUserAdmin() && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
 			throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
 					MessageEnums.OPER_NO_PERMISSION);
 		}

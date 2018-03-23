@@ -319,7 +319,9 @@ public class ServiceREST {
 
 			bizUtil.hasAdminPermissions("Service-Def");
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
-			bizUtil.hasKMSPermissions("Service-Def", xServiceDef.getImplclassname());
+			if (xServiceDef != null) {
+				bizUtil.hasKMSPermissions("Service-Def", xServiceDef.getImplclassname());
+			}
 
 			String forceDeleteStr = request.getParameter("forceDelete");
 			boolean forceDelete = false;
@@ -3053,13 +3055,13 @@ public class ServiceREST {
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 
 			if (isAdmin) {
-				if (xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException(
 							"KMS Policies/Services/Service-Defs are not accessible for user '" + userName + "'.",
 							MessageEnums.OPER_NO_PERMISSION);
 				}
 			} else if (isKeyAdmin) {
-				if (!xServiceDef.getImplclassname().equals(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException(
 							"Only KMS Policies/Services/Service-Defs are accessible for user '" + userName + "'.",
 							MessageEnums.OPER_NO_PERMISSION);
