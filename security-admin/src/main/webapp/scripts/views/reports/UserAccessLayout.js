@@ -47,7 +47,7 @@ define(function(require) {'use strict';
 			return {
 				groupList : this.groupList,
                                 policyHeaderList : this.policyCollList,
-                                showImportExportBtn : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
+                                showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
 			};
 		},
 

@@ -107,7 +107,6 @@
 
 		</div>
 	</div>
-        {{#showImportExportBtn}}
 	<div class="row-fluid">
 	<span>
 		<div class="btn-group btn-right">
@@ -121,14 +120,15 @@
 				<li><a data-id="xlsFormat" class="downloadFormat" href="javascript:void(0)">Excel file</a></li>
 				<li role="separator" class="divider"></li>
 				<li><a data-id="csvFormat" class="downloadFormat" href="javascript:void(0)">CSV file</a></li>
-				<li role="separator" class="divider"></li>
-				<li><a data-id="jsonFormat" class="downloadFormat" href="javascript:void(0)">JSON file</a></li>
+                {{#showExportJson}}
+                    <li role="separator" class="divider"></li>
+                    <li><a data-id="jsonFormat" class="downloadFormat" href="javascript:void(0)">JSON file</a></li>
+                {{/showExportJson}}
 			</ul>
 		</div>
 	</span>
 		<a href="javascript:void(0)" data-id="downloadReport"></a>
 	</div>
-        {{/showImportExportBtn}}
 	<div class="row-fluid">
 		{{#each policyHeaderList}}
 		<h3 class="wrap-header bold reportSearchHeader" data-js="hdfsHeader" data-compHeader="{{this.serviceDefName}}">

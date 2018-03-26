@@ -1801,7 +1801,6 @@ public class ServiceREST {
                                                 ensureAdminAndAuditAccess(rangerPolicy);
                                         }
                                 }
-                 bizUtil.blockAuditorRoleUser();
 				svcStore.getPoliciesInExcel(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -1854,7 +1853,7 @@ public class ServiceREST {
                                                 ensureAdminAndAuditAccess(rangerPolicy);
                                         }
                                 }
-                                bizUtil.blockAuditorRoleUser();
+
 				svcStore.getPoliciesInCSV(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
