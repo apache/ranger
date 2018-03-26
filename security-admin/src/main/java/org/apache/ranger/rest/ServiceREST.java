@@ -72,6 +72,7 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
@@ -115,6 +116,7 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
@@ -123,6 +125,7 @@ import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXPolicyLabelList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUser;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -162,6 +165,8 @@ public class ServiceREST {
 	@Autowired
 	ServiceMgr serviceMgr;
 
+        @Autowired
+        XUserService xUserService;
 	@Autowired
 	AssetMgr assetMgr;
 
@@ -1068,9 +1073,18 @@ public class ServiceREST {
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
-	
+                                        VXUser vxUser = xUserService.getXUserByUserName(userName);
+                                        if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
+                                                 VXResponse vXResponse = new VXResponse();
+                         vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                         vXResponse.setMsgDesc("Operation"
+                                         + " denied. LoggedInUser="
+                                         +  vxUser.getId()
+                                         + " ,isn't permitted to perform the action.");
+                         throw restErrorUtil.generateRESTException(vXResponse);
+                                        }
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-                                        bizUtil.blockAuditorRoleUser();
+
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 					}
@@ -1153,6 +1167,7 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 		boolean isAllowed = false;
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+                bizUtil.blockAuditorRoleUser();
 		if(grantRequest!=null){
 			if (serviceUtil.isValidService(serviceName, request)) {
 				try {
@@ -1185,7 +1200,6 @@ public class ServiceREST {
 							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 						}
 					}
-                                        bizUtil.blockAuditorRoleUser();
 					if (isAllowed) {
 						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
@@ -1280,9 +1294,18 @@ public class ServiceREST {
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
-
+                                        VXUser vxUser = xUserService.getXUserByUserName(userName);
+                                        if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
+                                                 VXResponse vXResponse = new VXResponse();
+                         vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                         vXResponse.setMsgDesc("Operation"
+                                         + " denied. LoggedInUser="
+                                         +  vxUser.getId()
+                                         + " ,isn't permitted to perform the action.");
+                         throw restErrorUtil.generateRESTException(vXResponse);
+                                        }
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-                                        bizUtil.blockAuditorRoleUser();
+
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 					}
@@ -1344,7 +1367,7 @@ public class ServiceREST {
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 					boolean isAllowed = false;
 					boolean isKeyAdmin = bizUtil.isKeyAdmin();
-
+                                        bizUtil.blockAuditorRoleUser();
 					XXService xService = daoManager.getXXService().findByName(serviceName);
 					XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
@@ -1363,7 +1386,7 @@ public class ServiceREST {
 							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
 						}
 					}
-                                        bizUtil.blockAuditorRoleUser();
+
 					if (isAllowed) {
 						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
