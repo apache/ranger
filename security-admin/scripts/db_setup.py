@@ -42,6 +42,7 @@ if is_unix:
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 	if RANGER_ADMIN_HOME is None:
 		RANGER_ADMIN_HOME = os.getcwd()
+	RANGER_MYSQL_PORT = os.getenv("RANGER_MYSQL_PORT")
 elif os_name == "WINDOWS":
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 
@@ -197,6 +198,9 @@ class MysqlConf(BaseDB):
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		path = RANGER_ADMIN_HOME
+		mysql_port = ''
+		if RANGER_MYSQL_PORT is not None:
+			mysql_port = ':%s' % (RANGER_MYSQL_PORT)
 		db_ssl_param=''
 		db_ssl_cert_param=''
 		if self.db_ssl_enabled == 'true':
@@ -205,7 +209,7 @@ class MysqlConf(BaseDB):
 				db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
+			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param, self.SQL_CONNECTOR_JAR, path, self.host, mysql_port, db_name, db_ssl_param, user, password)
 		elif os_name == "WINDOWS":
 			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
 		return jisql_cmd
