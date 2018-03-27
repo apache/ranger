@@ -13,15 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
 import StringIO
 import xml.etree.ElementTree as ET
 import ConfigParser
-import os,errno,sys,getopt
+import os,sys,getopt
 from os import listdir
 from os.path import isfile, join, dirname, basename
-from urlparse import urlparse
-from time import gmtime, strftime, localtime
+from time import strftime, localtime
 import shutil
 
 debugLevel = 1
@@ -236,7 +234,7 @@ def main():
 			tempLibFile=join(tempLibFolder,mysqlConnectorJarFileName[0])
 			shutil.copy(join(libFolder,mysqlConnectorJarFileName[0]), tempLibFile)
 			installProps['SQL_CONNECTOR_JAR'] = tempLibFile
-	elif (token[3] == 'odbc'):
+	elif (tokens[3] == 'odbc'):
 		installProps['DB_FLAVOR'] = 'ORACLE'
 		installProps['SQL_COMMAND_INVOKER'] = 'sqlplus'
 		installProps['db_host'] = dbTokens[0]
@@ -325,11 +323,9 @@ def writeToFile(keyList, defValMap, props, outFileName):
 
 	for key in keyList:
 		if (key in props):
-			print >> outf, "%s=%s" % (key,props[key]) 
-			val = props[key]
+			print >> outf, "%s=%s" % (key,props[key])
 		else:
-			print >> outf,  "# Default value for [%s] is used\n%s=%s\n#---" % (key, key,defValMap[key]) 
-			val = defValMap[key]
+			print >> outf,  "# Default value for [%s] is used\n%s=%s\n#---" % (key, key,defValMap[key])
 			
 	outf.flush()
 	outf.close()
