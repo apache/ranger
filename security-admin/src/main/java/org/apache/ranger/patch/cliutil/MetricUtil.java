@@ -144,25 +144,35 @@ public class MetricUtil extends BaseLoader  {
 						VXGroupList vxGroupList = xUserMgr.searchXGroups(searchCriteria);
 	
 						long groupCount = vxGroupList.getTotalCount();
-	
-						ArrayList<String> userKeyAdminRoleCount = new ArrayList<String>();
-						userKeyAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
-						long userSysAdminCount = getUserCountBasedOnUserRole(userKeyAdminRoleCount);
-	
+
+                        ArrayList<String> userAdminRoleCount = new ArrayList<String>();
+                        userAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
+                        long userSysAdminCount = getUserCountBasedOnUserRole(userAdminRoleCount);
+
+                        ArrayList<String> userAdminAuditorRoleCount = new ArrayList<String>();
+                        userAdminAuditorRoleCount.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+                        long userSysAdminAuditorCount = getUserCountBasedOnUserRole(userAdminAuditorRoleCount);
+
 						ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<String>();
 						userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
 						long userKeyAdminCount = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
-	
+
+                        ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<String>();
+                        userRoleListKeyadminAduitorRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+                        long userKeyadminAuditorCount = getUserCountBasedOnUserRole(userRoleListKeyadminAduitorRole);
+
 						ArrayList<String> userRoleListUser = new ArrayList<String>();
 						userRoleListUser.add(RangerConstants.ROLE_USER);
 						long userRoleCount = getUserCountBasedOnUserRole(userRoleListUser);
 	
-						long userTotalCount = userSysAdminCount + userKeyAdminCount + userRoleCount;
+                                                long userTotalCount = userSysAdminCount + userKeyAdminCount + userRoleCount + userKeyadminAuditorCount + userSysAdminAuditorCount;
 	
 						VXMetricUserGroupCount metricUserGroupCount = new VXMetricUserGroupCount();
 						metricUserGroupCount.setUserCountOfUserRole(userRoleCount);
 						metricUserGroupCount.setUserCountOfKeyAdminRole(userKeyAdminCount);
 						metricUserGroupCount.setUserCountOfSysAdminRole(userSysAdminCount);
+                                                metricUserGroupCount.setUserCountOfKeyadminAuditorRole(userKeyadminAuditorCount);
+                                                metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
 						metricUserGroupCount.setUserTotalCount(userTotalCount);
 						metricUserGroupCount.setGroupCount(groupCount);
 						Gson gson = new GsonBuilder().create();
