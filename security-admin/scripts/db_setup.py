@@ -15,18 +15,12 @@
 import os
 import re
 import sys
-import errno
 import shlex
 import platform
 import logging
 import subprocess
-import fileinput
 from os.path import basename
-from subprocess import Popen,PIPE
-from datetime import date
 import time
-import datetime
-from time import gmtime, strftime
 import socket
 globalDict = {}
 
@@ -80,7 +74,7 @@ def populate_global_dict():
 		read_config_file = open(os.path.join(RANGER_ADMIN_CONF,'install.properties'))
 	elif os_name == "WINDOWS":
 		read_config_file = open(os.path.join(RANGER_ADMIN_CONF,'install_config.properties'))
-		library_path = os.path.join(RANGER_ADMIN_HOME,"cred","lib","*")
+		#library_path = os.path.join(RANGER_ADMIN_HOME,"cred","lib","*")
 	for each_line in read_config_file.read().split('\n') :
 		each_line = each_line.strip();
 		if len(each_line) == 0:
@@ -91,7 +85,7 @@ def populate_global_dict():
 			key , value = each_line.split("=",1)
 			key = key.strip()
 			if 'PASSWORD' in key:
-				jceks_file_path = os.path.join(RANGER_ADMIN_HOME, 'jceks','ranger_db.jceks')
+				#jceks_file_path = os.path.join(RANGER_ADMIN_HOME, 'jceks','ranger_db.jceks')
 				#statuscode,value = call_keystore(library_path,key,'',jceks_file_path,'get')
 				#if statuscode == 1:
 				value = ''
@@ -607,7 +601,6 @@ class MysqlConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
                 version = dbversionBasedOnUserName(userName)
@@ -1322,7 +1315,6 @@ class OracleConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
                 version = dbversionBasedOnUserName(userName)
@@ -1992,7 +1984,6 @@ class PostgresConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
                 version = dbversionBasedOnUserName(userName)
@@ -2624,7 +2615,6 @@ class SqlServerConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
                 version = dbversionBasedOnUserName(userName)
@@ -3102,22 +3092,22 @@ class SqlAnywhereConf(BaseDB):
 							log("[I] Patch version updated", "info")
 						else:
 							if is_unix:
-								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+								query = get_cmd1 + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(shlex.split(query))
 							elif os_name == "WINDOWS":
-								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								query = get_cmd1 + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 								jisql_log(query, db_password)
 								ret = subprocess.call(query)
 							log("[E] Updating patch version failed", "error")
 							sys.exit(1)
 					else:
 						if is_unix:
-							query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+							query = get_cmd1 + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(shlex.split(query))
 						elif os_name == "WINDOWS":
-							query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+							query = get_cmd1 + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						log("[E] "+name + " import failed!","error")
@@ -3269,7 +3259,6 @@ class SqlAnywhereConf(BaseDB):
 		ret = subprocessCallWithRetry(shlex.split(query))
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
-		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
                 version = dbversionBasedOnUserName(userName)
