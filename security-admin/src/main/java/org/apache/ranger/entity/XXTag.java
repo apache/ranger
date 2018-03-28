@@ -60,7 +60,7 @@ public class XXTag extends XXDBBase implements Serializable {
 	@Column(name = "owned_by")
 	protected Short owner;
 
-	@Column(name = "options")
+	@Column(name = "policy_options")
 	protected String options;
 
 	@Override
