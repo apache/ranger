@@ -109,14 +109,11 @@ public class UserGroupSync implements Runnable {
 
 		try{
 			if (config.isUserSyncEnabled()) {
-				if (forceSync || ugSource.isChanged()) {
+				//if (forceSync) {
 					LOG.info("Begin: update user/group from source==>sink");
 					ugSource.updateSink(ugSink);
 					LOG.info("End: update user/group from source==>sink");
-				}
-				else {
-					LOG.debug("UserGroupSource: no change found for synchronization.");
-				}
+				//}
 			}
 		}catch(Throwable t){
 			LOG.error("Failed to sync user/group : ", t);

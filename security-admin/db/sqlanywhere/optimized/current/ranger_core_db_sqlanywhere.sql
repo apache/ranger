@@ -876,8 +876,10 @@ CREATE TABLE dbo.x_ugsync_audit_info(
         event_time datetime DEFAULT NULL NULL,
         user_name varchar(255) NOT  NULL,
         sync_source varchar(128) NOT NULL,
-        no_of_users bigint NOT NULL,
-        no_of_groups bigint NOT NULL,
+        no_of_new_users bigint NOT NULL,
+        no_of_new_groups bigint NOT NULL,
+        no_of_modified_users bigint NOT NULL,
+        no_of_modified_groups bigint NOT NULL,
         sync_source_info varchar(4000) NOT NULL,
         session_id varchar(255) DEFAULT NULL NULL,
         CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)

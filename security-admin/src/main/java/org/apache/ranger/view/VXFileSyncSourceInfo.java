@@ -42,6 +42,8 @@ public class VXFileSyncSourceInfo implements java.io.Serializable  {
 	private String fileName;
 	private String syncTime;
 	private String lastModified;
+	private long totalUsersSynced;
+	private long totalGroupsSynced;
 
 	public VXFileSyncSourceInfo() {
 	}
@@ -70,6 +72,22 @@ public class VXFileSyncSourceInfo implements java.io.Serializable  {
 		this.lastModified = lastModified;
 	}
 
+	public long getTotalUsersSynced() {
+		return totalUsersSynced;
+	}
+
+	public void setTotalUsersSynced(long totalUsersSynced) {
+		this.totalUsersSynced = totalUsersSynced;
+	}
+
+	public long getTotalGroupsSynced() {
+		return totalGroupsSynced;
+	}
+
+	public void setTotalGroupsSynced(long totalGroupsSynced) {
+		this.totalGroupsSynced = totalGroupsSynced;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -81,6 +99,8 @@ public class VXFileSyncSourceInfo implements java.io.Serializable  {
 		sb.append("{\"fileName\":\"").append(fileName);
 		sb.append("\", \"syncTime\":\"").append(syncTime);
 		sb.append("\", \"lastModified\":\"").append(lastModified);
+		sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
+		sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
 		sb.append("\"}");
 		return sb;
 	}

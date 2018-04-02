@@ -22,9 +22,15 @@
 public class LdapSyncSourceInfo {
 	private String ldapUrl;
 	private String incrementalSycn;
+	private String groupSearchFirstEnabled;
+	private String groupSearchEnabled;
+	private String userSearchEnabled;
 	private String userSearchFilter;
 	private String groupSearchFilter;
 	private String groupHierarchyLevel;
+
+	private long totalUsersSynced;
+	private long totalGroupsSynced;
 
 	public String getLdapUrl() {
 		return ldapUrl;
@@ -66,6 +72,46 @@ public class LdapSyncSourceInfo {
 		this.groupHierarchyLevel = groupHierarchyLevel;
 	}
 
+	public long getTotalUsersSynced() {
+		return totalUsersSynced;
+	}
+
+	public void setTotalUsersSynced(long totalUsersSynced) {
+		this.totalUsersSynced = totalUsersSynced;
+	}
+
+	public long getTotalGroupsSynced() {
+		return totalGroupsSynced;
+	}
+
+	public void setTotalGroupsSynced(long totalGroupsSynced) {
+		this.totalGroupsSynced = totalGroupsSynced;
+	}
+
+	public String getGroupSearchFirstEnabled() {
+		return groupSearchFirstEnabled;
+	}
+
+	public void setGroupSearchFirstEnabled(String groupSearchFirstEnabled) {
+		this.groupSearchFirstEnabled = groupSearchFirstEnabled;
+	}
+
+	public String getGroupSearchEnabled() {
+		return groupSearchEnabled;
+	}
+
+	public void setGroupSearchEnabled(String groupSearchEnabled) {
+		this.groupSearchEnabled = groupSearchEnabled;
+	}
+
+	public String getUserSearchEnabled() {
+		return userSearchEnabled;
+	}
+
+	public void setUserSearchEnabled(String userSearchEnabled) {
+		this.userSearchEnabled = userSearchEnabled;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -76,9 +122,14 @@ public class LdapSyncSourceInfo {
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("LdapSycnSourceInfo [ldapUrl= ").append(ldapUrl);
 		sb.append(", isIncrementalSync= ").append(incrementalSycn);
+		sb.append(", userSearchEnabled= ").append(userSearchEnabled);
+		sb.append(", groupSearchEnabled= ").append(groupSearchEnabled);
+		sb.append(", groupSearchFirstEnabled= ").append(groupSearchFirstEnabled);
 		sb.append(", userSearchFilter= ").append(userSearchFilter);
 		sb.append(", groupSearchFilter= ").append(groupSearchFilter);
 		sb.append(", groupHierarchyLevel= ").append(groupHierarchyLevel);
+		sb.append(", totalUsersSynced= ").append(totalUsersSynced);
+		sb.append(", totalGroupsSynced= ").append(totalGroupsSynced);
 		sb.append("]");
 		return sb;
 	}

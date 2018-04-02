@@ -47,6 +47,11 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 allGroups.add(group);
         }
 
+        @Override
+        public void addOrUpdateGroup(String group, List<String> users) {
+                addOrUpdateGroup(group);
+        }
+
         public int getTotalUsers() {
                 return allUsers.size();
         }

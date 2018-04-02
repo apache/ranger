@@ -54,9 +54,13 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 				DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("syncSource", "obj.syncSource",
 				DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("noOfUsers", "obj.noOfUsers",
+		searchFields.add(new SearchField("noOfNewUsers", "obj.noOfNewUsers",
 				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("noOfGroups", "obj.noOfGroups",
+		searchFields.add(new SearchField("noOfNewGroups", "obj.noOfNewGroups",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("noOfModifiedUsers", "obj.noOfModifiedUsers",
+				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("noOfModifiedGroups", "obj.noOfModifiedGroups",
 				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("syncSourceInfo", "obj.syncSourceInfo", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("startDate", "obj.eventTime",
@@ -70,8 +74,10 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 		mObj.setEventTime(vObj.getEventTime());
 		mObj.setUserName(vObj.getUserName());
 		mObj.setSyncSource(vObj.getSyncSource());
-		mObj.setNoOfUsers(vObj.getNoOfUsers());
-		mObj.setNoOfGroups(vObj.getNoOfGroups());
+		mObj.setNoOfNewUsers(vObj.getNoOfNewUsers());
+		mObj.setNoOfNewGroups(vObj.getNoOfNewGroups());
+		mObj.setNoOfModifiedUsers(vObj.getNoOfModifiedUsers());
+		mObj.setNoOfModifiedGroups(vObj.getNoOfModifiedGroups());
 		mObj.setSyncSourceInfo(jsonUtil.readMapToString(vObj.getSyncSourceInfo()));
 		mObj.setSessionId(vObj.getSessionId());
 		return mObj;
@@ -82,8 +88,10 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 		vObj.setEventTime(mObj.getEventTime());
 		vObj.setUserName(mObj.getUserName());
 		vObj.setSyncSource(mObj.getSyncSource());
-		vObj.setNoOfUsers(mObj.getNoOfUsers());
-		vObj.setNoOfGroups(mObj.getNoOfGroups());
+		vObj.setNoOfNewUsers(mObj.getNoOfNewUsers());
+		vObj.setNoOfNewGroups(mObj.getNoOfNewGroups());
+		vObj.setNoOfModifiedUsers(mObj.getNoOfModifiedUsers());
+		vObj.setNoOfModifiedGroups(mObj.getNoOfModifiedGroups());
 		String jsonString = mObj.getSyncSourceInfo();
 		vObj.setSyncSourceInfo(jsonUtil.jsonToMap(jsonString));
 		vObj.setSessionId( mObj.getSessionId());

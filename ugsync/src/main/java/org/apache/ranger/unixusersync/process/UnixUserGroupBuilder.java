@@ -24,11 +24,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.log4j.Logger;
@@ -87,6 +85,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private long groupFileModifiedAt = 0;
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private UnixSyncSourceInfo unixSyncSourceInfo;
+	private boolean isStartupFlag = false;
 
 	public static void main(String[] args) throws Throwable {
 		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder();
@@ -95,6 +94,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	}
 	
 	public UnixUserGroupBuilder() {
+		isStartupFlag = true;
 		minimumUserId = Integer.parseInt(config.getMinUserId());
 		minimumGroupId = Integer.parseInt(config.getMinGroupId());
 		unixPasswordFile = config.getUnixPasswordFile();
@@ -156,29 +156,37 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
+		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date lastModifiedTime = new Date(passwordFileModifiedAt);
+		Date syncTime = new Date(System.currentTimeMillis());
+		unixSyncSourceInfo.setLastModified(formatter.format(lastModifiedTime));
+		unixSyncSourceInfo.setSyncTime(formatter.format(syncTime));
 		isUpdateSinkSucc = true;
-		buildUserGroupInfo();
-		unixSyncSourceInfo.setLastModified(Long.toString(passwordFileModifiedAt));
-		unixSyncSourceInfo.setSyncTime(Long.toString(System.currentTimeMillis()));
+		if (isChanged() || isStartupFlag) {
+			buildUserGroupInfo();
 
-		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-		    String       user   = entry.getKey();
-		    List<String> groups = entry.getValue();
-		
-			try{
-				sink.addOrUpdateUser(user, groups);
-			}catch (Throwable t) {
-				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
-				+ ", for user: " + user
-				+ ", groups: " + groups);
-				isUpdateSinkSucc = false;
+			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
+				String user = entry.getKey();
+				List<String> groups = entry.getValue();
+
+				try {
+					sink.addOrUpdateUser(user, groups);
+				} catch (Throwable t) {
+					LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
+							+ ", for user: " + user
+							+ ", groups: " + groups);
+					isUpdateSinkSucc = false;
+				}
 			}
 		}
 		try {
+			unixSyncSourceInfo.setTotalUsersSynced(user2GroupListMap.size());
+			unixSyncSourceInfo.setTotalGroupsSynced(groupId2groupNameMap.size());
 			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 		} catch (Throwable t) {
-			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
+			LOG.error("sink.postUserGroupAuditInfo failed with exception: ", t);
 		}
+		isStartupFlag = false;
 	}
 	
 	

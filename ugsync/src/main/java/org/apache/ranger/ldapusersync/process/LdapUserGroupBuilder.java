@@ -103,6 +103,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 
 	private Map<String, UserInfo> userGroupMap;
     //private Set<String> firstGroupDNs;
+	private Set<String> allUsers;
 
 	UgsyncAuditInfo ugsyncAuditInfo;
 	LdapSyncSourceInfo ldapSyncSourceInfo;
@@ -144,6 +145,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		ldapSyncSourceInfo = new LdapSyncSourceInfo();
 		ldapSyncSourceInfo.setLdapUrl(ldapUrl);
 		ldapSyncSourceInfo.setIncrementalSycn("False");
+		ldapSyncSourceInfo.setUserSearchEnabled(Boolean.toString(userSearchEnabled));
+		ldapSyncSourceInfo.setGroupSearchEnabled(Boolean.toString(groupSearchEnabled));
+		ldapSyncSourceInfo.setGroupSearchFirstEnabled(Boolean.toString(groupSearchFirstEnabled));
 		ldapSyncSourceInfo.setGroupHierarchyLevel(Integer.toString(groupHierarchyLevels));
 		ugsyncAuditInfo.setSyncSource("LDAP/AD");
 		ugsyncAuditInfo.setLdapSyncSourceInfo(ldapSyncSourceInfo);
@@ -312,6 +316,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		LOG.info("LDAPUserGroupBuilder updateSink started");
 		userGroupMap = new HashMap<String, UserInfo>();
 		Set<String> allGroups = new HashSet<String>();
+		allUsers = new HashSet<String>();
 
 		if (!groupSearchFirstEnabled) {
 			LOG.info("Performing user search first");
@@ -359,6 +364,8 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			}
 			ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
 			ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+			ldapSyncSourceInfo.setTotalUsersSynced(allUsers.size());
+			ldapSyncSourceInfo.setTotalGroupsSynced(allGroups.size());
 			try {
 				sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 			} catch (Throwable t) {
@@ -370,6 +377,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			getGroups(sink, null);
 			 // Go through the userInfo map and update ranger admin.
             for (UserInfo userInfo : userGroupMap.values()) {
+				LOG.debug("userName from map = " + userInfo.getUserFullName());
                 String userName = getShortUserName(userInfo.getUserFullName());
                 if (groupHierarchyLevels > 0) {
                     //System.out.println("Going through group hierarchy for nested group evaluation");
@@ -384,6 +392,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
                 } else {
                     LOG.info("User search is disabled and hence using the group member attribute for username" + userName);
 					allGroups.addAll(groupList);
+					allUsers.add(userName); // Note:- in this case the usernames may contain groups as part of nested groups
                     if (userNameCaseConversionFlag) {
                         if (userNameLowerCaseFlag) {
                             userName = userName.toLowerCase();
@@ -407,6 +416,8 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
             }
 			ldapSyncSourceInfo.setUserSearchFilter(extendedUserSearchFilter);
 			ldapSyncSourceInfo.setGroupSearchFilter(extendedAllGroupsSearchFilter);
+			ldapSyncSourceInfo.setTotalUsersSynced(allUsers.size());
+			ldapSyncSourceInfo.setTotalGroupsSynced(allGroups.size());
 			try {
 				sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 			} catch (Throwable t) {
@@ -517,6 +528,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 									LOG.warn("user object with username " + userName + " already exists and is replaced with the latest user object." );
 								}
 								userGroupMap.put(userName, userInfo);
+								allUsers.add(userName);
 
 								//List<String> groupList = new ArrayList<String>(groups);
 								List<String> groupList = userInfo.getGroups();
@@ -556,6 +568,7 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 									counter++;
 									LOG.info("Updating username for " + userFullName + " with " + userName);
 									userInfo.updateUserName(userName);
+									allUsers.add(userName);
                                     List<String> groupList = userInfo.getGroups();
                                     if (userNameCaseConversionFlag) {
                                         if (userNameLowerCaseFlag) {
@@ -705,12 +718,13 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 									// check for group members and populate userInfo object with user's full name and group mapping
 									Attribute groupMemberAttr = groupEntry.getAttributes().get(groupMemberAttributeName);
 									LOG.debug("Update Ranger admin with " + gName);
-									sink.addOrUpdateGroup(gName);
 									int userCount = 0;
 									if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
 										LOG.info("No members available for " + gName);
+										sink.addOrUpdateGroup(gName, null);
 										continue;
 									}
+									sink.addOrUpdateGroup(gName);
 									NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
 									while (userEnum.hasMore()) {
 										String originalUserFullName = (String) userEnum.next();

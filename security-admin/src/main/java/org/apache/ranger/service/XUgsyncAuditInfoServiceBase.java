@@ -39,8 +39,10 @@ public abstract class XUgsyncAuditInfoServiceBase<T extends XXUgsyncAuditInfo, V
 		mObj.setEventTime(vObj.getEventTime());
 		mObj.setUserName(vObj.getUserName());
 		mObj.setSyncSource(vObj.getSyncSource());
-		mObj.setNoOfGroups(vObj.getNoOfGroups());
-		mObj.setNoOfUsers(vObj.getNoOfUsers());
+		mObj.setNoOfNewGroups(vObj.getNoOfNewGroups());
+		mObj.setNoOfNewUsers(vObj.getNoOfNewUsers());
+		mObj.setNoOfModifiedGroups(vObj.getNoOfModifiedGroups());
+		mObj.setNoOfModifiedUsers(vObj.getNoOfModifiedUsers());
 		return mObj;
 	}
 
@@ -49,8 +51,10 @@ public abstract class XUgsyncAuditInfoServiceBase<T extends XXUgsyncAuditInfo, V
 		vObj.setEventTime( mObj.getEventTime());
 		vObj.setUserName( mObj.getUserName());
 		vObj.setSyncSource( mObj.getSyncSource());
-		vObj.setNoOfUsers( mObj.getNoOfUsers());
-		vObj.setNoOfGroups( mObj.getNoOfGroups());
+		vObj.setNoOfNewGroups(mObj.getNoOfNewGroups());
+		vObj.setNoOfNewUsers(mObj.getNoOfNewUsers());
+		vObj.setNoOfModifiedGroups(mObj.getNoOfModifiedGroups());
+		vObj.setNoOfModifiedUsers(mObj.getNoOfModifiedUsers());
 		return vObj;
 	}
 

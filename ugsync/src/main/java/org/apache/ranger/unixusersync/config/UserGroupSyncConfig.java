@@ -168,7 +168,7 @@ public class UserGroupSyncConfig  {
 	 * from the additional user search based on the user attribute configuration
 	 */
 	private static final String LGSYNC_USER_SEARCH_ENABLED = "ranger.usersync.user.searchenabled";
-	private static final boolean DEFAULT_LGSYNC_USER_SEARCH_ENABLED = false;
+	private static final boolean DEFAULT_LGSYNC_USER_SEARCH_ENABLED = true;
 
 	private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ranger.usersync.group.usermapsyncenabled";
 	private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;

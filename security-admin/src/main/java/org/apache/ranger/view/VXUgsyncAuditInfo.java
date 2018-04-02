@@ -47,8 +47,10 @@ public class VXUgsyncAuditInfo extends VXDataObject implements java.io.Serializa
 	private Date eventTime;
 
 	private String userName;
-	private Long noOfUsers;
-	private Long noOfGroups;
+	private Long noOfNewUsers;
+	private Long noOfNewGroups;
+	private Long noOfModifiedUsers;
+	private Long noOfModifiedGroups;
 	private String syncSource;
 	private String sessionId;
 	private Map<String, String> syncSourceInfo;
@@ -75,20 +77,36 @@ public class VXUgsyncAuditInfo extends VXDataObject implements java.io.Serializa
 		this.userName = userName;
 	}
 
-	public Long getNoOfUsers() {
-		return noOfUsers;
+	public Long getNoOfNewUsers() {
+		return noOfNewUsers;
 	}
 
-	public void setNoOfUsers(Long noOfUsers) {
-		this.noOfUsers = noOfUsers;
+	public void setNoOfNewUsers(Long noOfUsers) {
+		this.noOfNewUsers = noOfUsers;
 	}
 
-	public Long getNoOfGroups() {
-		return noOfGroups;
+	public Long getNoOfModifiedUsers() {
+		return noOfModifiedUsers;
 	}
 
-	public void setNoOfGroups(Long noOfGroups) {
-		this.noOfGroups = noOfGroups;
+	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+		this.noOfModifiedUsers = noOfModifiedUsers;
+	}
+
+	public Long getNoOfNewGroups() {
+		return noOfNewGroups;
+	}
+
+	public void setNoOfNewGroups(Long noOfNewGroups) {
+		this.noOfNewGroups = noOfNewGroups;
+	}
+
+	public Long getNoOfModifiedGroups() {
+		return noOfModifiedGroups;
+	}
+
+	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+		this.noOfModifiedGroups = noOfModifiedGroups;
 	}
 
 	public String getSyncSource() {

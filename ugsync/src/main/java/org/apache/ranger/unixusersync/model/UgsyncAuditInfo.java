@@ -22,28 +22,46 @@
 public class UgsyncAuditInfo {
 
 	private String userName;
-	private Long noOfUsers;
-	private Long noOfGroups;
+	private Long noOfNewUsers;
+	private Long noOfNewGroups;
+	private Long noOfModifiedUsers;
+	private Long noOfModifiedGroups;
 	private String 	syncSource;
 	private String sessionId;
 	private LdapSyncSourceInfo ldapSyncSourceInfo;
 	private UnixSyncSourceInfo unixSyncSourceInfo;
 	private FileSyncSourceInfo fileSyncSourceInfo;
 
-	public Long getNoOfUsers() {
-		return noOfUsers;
+	public Long getNoOfNewUsers() {
+		return noOfNewUsers;
 	}
 
-	public void setNoOfUsers(Long noOfUsers) {
-		this.noOfUsers = noOfUsers;
+	public void setNoOfNewUsers(Long noOfUsers) {
+		this.noOfNewUsers = noOfUsers;
 	}
 
-	public Long getNoOfGroups() {
-		return noOfGroups;
+	public Long getNoOfModifiedUsers() {
+		return noOfModifiedUsers;
 	}
 
-	public void setNoOfGroups(Long noOfGroups) {
-		this.noOfGroups = noOfGroups;
+	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+		this.noOfModifiedUsers = noOfModifiedUsers;
+	}
+
+	public Long getNoOfNewGroups() {
+		return noOfNewGroups;
+	}
+
+	public void setNoOfNewGroups(Long noOfNewGroups) {
+		this.noOfNewGroups = noOfNewGroups;
+	}
+
+	public Long getNoOfModifiedGroups() {
+		return noOfModifiedGroups;
+	}
+
+	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+		this.noOfModifiedGroups = noOfModifiedGroups;
 	}
 
 	public String getSyncSource() {
@@ -102,8 +120,10 @@ public class UgsyncAuditInfo {
 	}
 
 	public StringBuilder toString(StringBuilder sb) {
-		sb.append("UgsyncAuditInfo [No. of users= ").append(noOfUsers);
-		sb.append(", No. of groups= ").append(noOfGroups);
+		sb.append("UgsyncAuditInfo [No. of New users= ").append(noOfNewUsers);
+		sb.append(", No. of New groups= ").append(noOfNewGroups);
+		sb.append(", No. of Modified users= ").append(noOfModifiedUsers);
+		sb.append(", No. of Modified groups= ").append(noOfModifiedGroups);
 		sb.append(", syncSource= ").append(syncSource);
 		sb.append(", ldapSyncSourceInfo= ").append(ldapSyncSourceInfo);
 		sb.append(", unixSyncSourceInfo= ").append(unixSyncSourceInfo);

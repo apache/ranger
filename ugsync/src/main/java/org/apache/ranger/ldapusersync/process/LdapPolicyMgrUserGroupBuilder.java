@@ -477,7 +477,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	}
 
 	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
-		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfUsers() + ", " + auditInfo.getNoOfGroups() +
+		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups() +
+				", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups() +
 				", " + auditInfo.getSyncSource() + ")" );
 
 		if (authenticationType != null

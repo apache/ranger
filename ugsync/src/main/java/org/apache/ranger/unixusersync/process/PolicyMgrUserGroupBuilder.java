@@ -116,8 +116,15 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	String nameRules;
     Map<String, String> userMap = new LinkedHashMap<String, String>();
     Map<String, String> groupMap = new LinkedHashMap<String, String>();
-	private int noOfUsers;
-	private int noOfGroups;
+	private int noOfNewUsers;
+	private int noOfNewGroups;
+	private int noOfModifiedUsers;
+	private int noOfModifiedGroups;
+	private HashSet<String> newUserList = new HashSet<String>();
+	private HashSet<String> modifiedUserList = new HashSet<String>();
+	private HashSet<String> newGroupList = new HashSet<String>();
+	private HashSet<String> modifiedGroupList = new HashSet<String>();
+	boolean isStartupFlag = false;
 
 	static {
 		try {
@@ -138,8 +145,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
-		noOfUsers = 0;
-		noOfGroups = 0;
+		noOfNewUsers = 0;
+		noOfModifiedUsers = 0;
+		noOfNewGroups = 0;
+		noOfModifiedGroups = 0;
+		isStartupFlag = true;
 
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
@@ -319,9 +329,16 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 
 		if (user == null) {    // Does not exists
-			noOfUsers++;
-			noOfGroups += groups.size();
-
+			//noOfNewUsers++;
+			newUserList.add(userName);
+			for (String group : groups) {
+				if (groupName2XGroupInfoMap.containsKey(group) && !newGroupList.contains(group)) {
+					modifiedGroupList.add(group);
+				} else {
+					//LOG.info("Adding new group " + group + " for user = " + userName);
+					newGroupList.add(group);
+				}
+			}
 			LOG.debug("INFO: addPMAccount(" + userName + ")" );
 			if (! isMockRun) {
 				if (addMUser(userName) == null) {
@@ -352,6 +369,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			for(String group : groups) {
 				if (! oldGroups.contains(group)) {
 					addGroups.add(group);
+					if (!groupName2XGroupInfoMap.containsKey(group)) {
+						newGroupList.add(group);
+					} else {
+						modifiedGroupList.add(group);
+					}
 				}else{
 					tempXGroupInfo=groupName2XGroupInfoMap.get(group);
 					if(tempXGroupInfo!=null && ! GROUP_SOURCE_EXTERNAL.equals(tempXGroupInfo.getGroupSource())){
@@ -403,10 +425,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
                             throw new Exception(msg);
                         }
                     } catch (Throwable t) {
-                        LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed with exception: "
-                                + t.getMessage()
-                                + ", for user-group entry: "
-                                + ugInfo);
+                        LOG.error("PolicyMgrUserGroupBuilder.addUserGroupInfo failed for user-group entry: "
+								+ ugInfo.toString() + " with exception: ", t);
                     }
                 }
                 addXUserGroupInfo(user, addGroups);
@@ -507,7 +527,19 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
                     }
                 }
             }
-		noOfGroups += addGroups.size()+updateGroups.size();
+			//LOG.info("Adding new groups " + addGroups + " for user = " + userName);
+			if (isStartupFlag) {
+				modifiedGroupList.addAll(oldGroups);
+				LOG.debug("Adding user to modified user list: " + userName + ": " + oldGroups);
+				modifiedUserList.add(userName);
+
+			} else {
+				if (!addGroups.isEmpty() || !delGroups.isEmpty() || !updateGroups.isEmpty()) {
+					modifiedUserList.add(userName);
+				}
+				modifiedGroupList.addAll(updateGroups);
+				modifiedGroupList.addAll(delGroups);
+			}
 		}
 	}
 
@@ -558,8 +590,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	    while (retrievedCount < totalCount) {
 
 		    WebResource r = c.resource(getURL(PM_USER_LIST_URI))
-		    					.queryParam("pageSize", recordsToPullPerCall)
-		    					.queryParam("startIndex", String.valueOf(retrievedCount));
+					.queryParam("pageSize", recordsToPullPerCall)
+					.queryParam("startIndex", String.valueOf(retrievedCount));
 
 		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
@@ -594,8 +626,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	    while (retrievedCount < totalCount) {
 
 		    WebResource r = c.resource(getURL(PM_USER_GROUP_MAP_LIST_URI))
-		    					.queryParam("pageSize", recordsToPullPerCall)
-		    					.queryParam("startIndex", String.valueOf(retrievedCount));
+					.queryParam("pageSize", recordsToPullPerCall)
+					.queryParam("startIndex", String.valueOf(retrievedCount));
 
 		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
@@ -972,7 +1004,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	    ret = gson.fromJson(response, MUserInfo.class);
 
-	    LOG.debug("MUser Creation successful " + ret);
+		LOG.debug("MUser Creation successful " + ret);
 
 		return ret;
 	}
@@ -1119,7 +1151,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 			//* Build the group info object and do the rest call
  			if ( ! isMockRun ) {
- 				group = addGroupInfo(groupName);
+				group = addGroupInfo(groupName);
  				if ( group != null) {
  					addGroupToList(group);
  				} else {
@@ -1128,7 +1160,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
  					throw new Exception(msg);
  				}
  			}
-			noOfGroups++;
 		}
 	}
 
@@ -1197,8 +1228,15 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	@Override
-	public void addOrUpdateGroup(String group, List<String> users) throws Throwable {
-		// TODO Auto-generated method stub
+	public void addOrUpdateGroup(String groupName, List<String> users) throws Throwable {
+		if (users == null || users.isEmpty()) {
+			if (groupName2XGroupInfoMap.containsKey(groupName)) {
+				modifiedGroupList.add(groupName);
+			} else {
+				newGroupList.add(groupName);
+			}
+		}
+		addOrUpdateGroup(groupName);
 
 	}
 
@@ -1208,8 +1246,15 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (! isMockRun) {
 			addUserGroupAuditInfo(ugsyncAuditInfo);
 		}
-		noOfUsers = 0;
-		noOfGroups = 0;
+		noOfNewUsers = 0;
+		noOfNewGroups = 0;
+		noOfModifiedUsers = 0;
+		noOfModifiedGroups = 0;
+		isStartupFlag = false;
+		newUserList.clear();
+		modifiedUserList.clear();
+		newGroupList.clear();
+		modifiedGroupList.clear();
 	}
 
 	private UgsyncAuditInfo addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
@@ -1219,11 +1264,19 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			LOG.error("Failed to generate user group audit info");
 			return ret;
 		}
-		auditInfo.setNoOfUsers(Integer.toUnsignedLong(noOfUsers));
-		auditInfo.setNoOfGroups(Integer.toUnsignedLong(noOfGroups));
-		//auditInfo.setUserName("rangerusersync");
+		noOfNewUsers = newUserList.size();
+		noOfModifiedUsers = modifiedUserList.size();
+		noOfNewGroups = newGroupList.size();
+		noOfModifiedGroups = modifiedGroupList.size();
+
+		auditInfo.setNoOfNewUsers(Integer.toUnsignedLong(noOfNewUsers));
+		auditInfo.setNoOfNewGroups(Integer.toUnsignedLong(noOfNewGroups));
+		auditInfo.setNoOfModifiedUsers(Integer.toUnsignedLong(noOfModifiedUsers));
+		auditInfo.setNoOfModifiedGroups(Integer.toUnsignedLong(noOfModifiedGroups));
 		auditInfo.setSessionId("");
-		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfUsers() + ", " + auditInfo.getNoOfGroups() + ", " + auditInfo.getSyncSource() + ")");
+		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups()
+				+ ", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups()
+				+ ", " + auditInfo.getSyncSource() + ")");
 
 		if (authenticationType != null
 				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)

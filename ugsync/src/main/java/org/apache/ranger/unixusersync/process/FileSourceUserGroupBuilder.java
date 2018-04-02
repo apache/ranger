@@ -22,10 +22,9 @@ package org.apache.ranger.unixusersync.process;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -49,6 +48,8 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	private long                     usergroupFileModified = 0;
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private FileSyncSourceInfo				 fileSyncSourceInfo;
+	private Set<String>				groupNames;
+	private boolean isStartupFlag = false;
 
 	private boolean isUpdateSinkSucc = true;
 
@@ -78,6 +79,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	
 	@Override
 	public void init() throws Throwable {
+		isStartupFlag = true;
 		if(userGroupFilename == null) {
 			userGroupFilename = config.getUserSyncFileSource();
 		}
@@ -108,39 +110,49 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		isUpdateSinkSucc = true;
-		buildUserGroupInfo();
 		String user=null;
 		List<String> groups=null;
-		fileSyncSourceInfo.setLastModified(Long.toString(usergroupFileModified));
-		fileSyncSourceInfo.setSyncTime(Long.toString(System.currentTimeMillis()));
+		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date lastModifiedTime = new Date(usergroupFileModified);
+		Date syncTime = new Date(System.currentTimeMillis());
+		fileSyncSourceInfo.setLastModified(formatter.format(lastModifiedTime));
+		fileSyncSourceInfo.setSyncTime(formatter.format(syncTime));
 
-		for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-		    user = entry.getKey();
-		    try{
-				if (userNameRegExInst != null) {
-					user = userNameRegExInst.transform(user);
-				}
-			    groups = entry.getValue();
-				if (groupNameRegExInst != null) {
-					List<String> mappedGroups = new ArrayList<>();
-					for (String group : groups) {
-						mappedGroups.add(groupNameRegExInst.transform(group));
+		if (isChanged() || isStartupFlag) {
+			buildUserGroupInfo();
+
+			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
+				user = entry.getKey();
+				try {
+					if (userNameRegExInst != null) {
+						user = userNameRegExInst.transform(user);
 					}
-					groups = mappedGroups;
+					groups = entry.getValue();
+					if (groupNameRegExInst != null) {
+						List<String> mappedGroups = new ArrayList<>();
+						for (String group : groups) {
+							mappedGroups.add(groupNameRegExInst.transform(group));
+						}
+						groups = mappedGroups;
+					}
+					groupNames.addAll(groups);
+					sink.addOrUpdateUser(user, groups);
+				} catch (Throwable t) {
+					LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
+							+ ", for user: " + user
+							+ ", groups: " + groups);
+					isUpdateSinkSucc = false;
 				}
-			    sink.addOrUpdateUser(user, groups);
-			}catch (Throwable t) {
-				LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
-				+ ", for user: " + user
-				+ ", groups: " + groups);
-				isUpdateSinkSucc = false;
 			}
 		}
 		try {
+			fileSyncSourceInfo.setTotalUsersSynced(user2GroupListMap.size());
+			fileSyncSourceInfo.setTotalGroupsSynced(groupNames.size());
 			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 		} catch (Throwable t) {
 			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
 		}
+		isStartupFlag = false;
 	}
 
 	private void setUserGroupFilename(String filename) {
@@ -160,6 +172,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	}
 
 	public void buildUserGroupInfo() throws Throwable {
+		groupNames = new HashSet<>();
 		buildUserGroupList();
 		if ( LOG.isDebugEnabled()) {
 			print();

@@ -45,6 +45,8 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable  {
 	private String lastModified;
 	private String minUserId;
 	private String minGroupId;
+	private long totalUsersSynced;
+	private long totalGroupsSynced;
 
 	public VXUnixSyncSourceInfo() {
 	}
@@ -97,6 +99,22 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable  {
 		this.minGroupId = minGroupId;
 	}
 
+	public long getTotalUsersSynced() {
+		return totalUsersSynced;
+	}
+
+	public void setTotalUsersSynced(long totalUsersSynced) {
+		this.totalUsersSynced = totalUsersSynced;
+	}
+
+	public long getTotalGroupsSynced() {
+		return totalGroupsSynced;
+	}
+
+	public void setTotalGroupsSynced(long totalGroupsSynced) {
+		this.totalGroupsSynced = totalGroupsSynced;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -111,6 +129,8 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable  {
 		sb.append("\", \"lastModified\":\"").append(lastModified);
 		sb.append("\", \"minUserId\":\"").append(minUserId);
 		sb.append("\", \"minGroupId\":\"").append(minGroupId);
+		sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
+		sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
 		sb.append("\"}");
 		return sb;
 	}

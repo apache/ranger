@@ -48,11 +48,17 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
 	@Column(name = "sync_source")
 	protected String syncSource;
 
-	@Column(name = "no_of_users")
-	protected Long noOfUsers;
+	@Column(name = "no_of_new_users")
+	protected Long noOfNewUsers;
 
-	@Column(name = "no_of_groups")
-	protected Long noOfGroups;
+	@Column(name = "no_of_new_groups")
+	protected Long noOfNewGroups;
+
+	@Column(name = "no_of_modified_users")
+	protected Long noOfModifiedUsers;
+
+	@Column(name = "no_of_modified_groups")
+	protected Long noOfModifiedGroups;
 
 	@Column(name = "sync_source_info")
 	protected String syncSourceInfo;
@@ -106,20 +112,37 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
 		this.syncSource = syncSource;
 	}
 
-	public Long getNoOfUsers() {
-		return noOfUsers;
+
+	public Long getNoOfNewUsers() {
+		return noOfNewUsers;
 	}
 
-	public void setNoOfUsers(Long noOfUsers) {
-		this.noOfUsers = noOfUsers;
+	public void setNoOfNewUsers(Long noOfUsers) {
+		this.noOfNewUsers = noOfUsers;
 	}
 
-	public Long getNoOfGroups() {
-		return noOfGroups;
+	public Long getNoOfModifiedUsers() {
+		return noOfModifiedUsers;
 	}
 
-	public void setNoOfGroups(Long noOfGroups) {
-		this.noOfGroups = noOfGroups;
+	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+		this.noOfModifiedUsers = noOfModifiedUsers;
+	}
+
+	public Long getNoOfNewGroups() {
+		return noOfNewGroups;
+	}
+
+	public void setNoOfNewGroups(Long noOfNewGroups) {
+		this.noOfNewGroups = noOfNewGroups;
+	}
+
+	public Long getNoOfModifiedGroups() {
+		return noOfModifiedGroups;
+	}
+
+	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+		this.noOfModifiedGroups = noOfModifiedGroups;
 	}
 
 	public String getSyncSourceInfo() {
@@ -149,8 +172,10 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
 		str += "eventTime={" + eventTime + "} ";
 		str += "userName={" + userName + "} ";
 		str += "syncSource={" + syncSource + "} ";
-		str += "noOfUsers={" + noOfUsers + "} ";
-		str += "noOfGroups={" + noOfGroups + "} ";
+		str += "noOfNewUsers={" + noOfNewUsers + "} ";
+		str += "noOfNewGroups={" + noOfNewGroups + "} ";
+		str += "noOfModifiedUsers={" + noOfModifiedUsers + "} ";
+		str += "noOfModifiedGroups={" + noOfModifiedGroups + "} ";
 		str += "syncSourceInfo={" + syncSourceInfo + "} ";
 		str += "sessionId={" + sessionId + "} ";
 		str += "}";
@@ -182,10 +207,16 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
 		if ((this.syncSource == null && other.syncSource != null) || (this.syncSource != null && !this.syncSource.equals(other.syncSource))) {
 			return false;
 		}
-		if ((this.noOfUsers == null && other.noOfUsers != null) || (this.noOfUsers != null && !this.noOfUsers.equals(other.noOfUsers))) {
+		if ((this.noOfNewUsers == null && other.noOfNewUsers != null) || (this.noOfNewUsers != null && !this.noOfNewUsers.equals(other.noOfNewUsers))) {
 			return false;
 		}
-		if ((this.noOfGroups == null && other.noOfGroups != null) || (this.noOfGroups != null && !this.noOfGroups.equals(other.noOfGroups))) {
+		if ((this.noOfNewGroups == null && other.noOfNewGroups != null) || (this.noOfNewGroups != null && !this.noOfNewGroups.equals(other.noOfNewGroups))) {
+			return false;
+		}
+		if ((this.noOfModifiedUsers == null && other.noOfModifiedUsers != null) || (this.noOfModifiedUsers != null && !this.noOfModifiedUsers.equals(other.noOfModifiedUsers))) {
+			return false;
+		}
+		if ((this.noOfModifiedGroups == null && other.noOfModifiedGroups != null) || (this.noOfModifiedGroups != null && !this.noOfModifiedGroups.equals(other.noOfModifiedGroups))) {
 			return false;
 		}
 		if ((this.syncSourceInfo == null && other.syncSourceInfo != null) || (this.syncSourceInfo != null && !this.syncSourceInfo.equals(other.syncSourceInfo))) {
