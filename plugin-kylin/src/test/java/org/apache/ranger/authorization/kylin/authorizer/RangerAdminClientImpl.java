@@ -18,6 +18,7 @@
 package org.apache.ranger.authorization.kylin.authorizer;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
@@ -65,7 +66,7 @@ public class RangerAdminClientImpl implements RangerAdminClient {
 				.getPath(basedir, "/src/test/resources/" + cacheFilename);
 		byte[] cacheBytes = Files.readAllBytes(cachePath);
 
-		return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
+		return gson.fromJson(new String(cacheBytes, Charset.defaultCharset()), ServicePolicies.class);
 	}
 
 	@Override
