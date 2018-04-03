@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.PropertiesUtil;
+import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -187,6 +188,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					"ranger.ldap.group.roleattribute", "");
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty(
 					"ranger.ldap.default.role", "ROLE_USER");
+			boolean rangerIsStartTlsEnabled = Boolean.valueOf(PropertiesUtil.getProperty(
+					"ranger.ldap.starttls", "false"));
 
 			// taking the user-name and password from the authentication
 			// object.
@@ -199,6 +202,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			// populating LDAP context source with LDAP URL and user-DN-pattern
 			LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(
 					rangerLdapURL);
+			if (rangerIsStartTlsEnabled) {
+				ldapContextSource.setPooled(false);
+				ldapContextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
+			}
 
 			ldapContextSource.setCacheEnvironmentProperties(false);
 			ldapContextSource.setAnonymousReadOnly(true);
@@ -440,6 +447,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
 			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.ad.referral", "follow");
 			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty("ranger.ldap.ad.user.searchfilter", "(sAMAccountName={0})");
+			boolean rangerIsStartTlsEnabled = Boolean.valueOf(PropertiesUtil.getProperty(
+					"ranger.ldap.starttls", "false"));
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -453,6 +462,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			ldapContextSource.setCacheEnvironmentProperties(true);
 			ldapContextSource.setAnonymousReadOnly(false);
 			ldapContextSource.setPooled(true);
+			if (rangerIsStartTlsEnabled) {
+				ldapContextSource.setPooled(false);
+				ldapContextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
+			}
 			ldapContextSource.afterPropertiesSet();
 
 			//String searchFilter="(sAMAccountName={0})";
@@ -499,6 +512,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			String rangerLdapBindPassword = PropertiesUtil.getProperty("ranger.ldap.bind.password", "");
 			String rangerLdapReferral = PropertiesUtil.getProperty("ranger.ldap.referral", "follow");
 			String rangerLdapUserSearchFilter = PropertiesUtil.getProperty("ranger.ldap.user.searchfilter", "(uid={0})");
+			boolean rangerIsStartTlsEnabled = Boolean.valueOf(PropertiesUtil.getProperty(
+					"ranger.ldap.starttls", "false"));
 			String userName = authentication.getName();
 			String userPassword = "";
 			if (authentication.getCredentials() != null) {
@@ -512,6 +527,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			ldapContextSource.setCacheEnvironmentProperties(false);
 			ldapContextSource.setAnonymousReadOnly(false);
 			ldapContextSource.setPooled(true);
+			if (rangerIsStartTlsEnabled) {
+				ldapContextSource.setPooled(false);
+				ldapContextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
+			}
 			ldapContextSource.afterPropertiesSet();
 
 			DefaultLdapAuthoritiesPopulator defaultLdapAuthoritiesPopulator = new DefaultLdapAuthoritiesPopulator(ldapContextSource, rangerLdapGroupSearchBase);
