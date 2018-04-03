@@ -73,8 +73,6 @@ public class UserGroupSync implements Runnable {
 				}
 			}
 
-			boolean forceSync = false;
-
 			while (! shutdownFlag ) {
 				try {
 					LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
@@ -84,14 +82,10 @@ public class UserGroupSync implements Runnable {
 				}
 
 				try {
-					syncUserGroup(forceSync);
-
-					forceSync = false;
+					syncUserGroup();
 				}
 				catch(Throwable t) {
 					LOG.error("Failed to synchronize UserGroup information. Error details: ", t);
-
-					forceSync = true;  // force sync to the destination in the next attempt
 				}
 			}
 		
@@ -104,16 +98,14 @@ public class UserGroupSync implements Runnable {
 		}
 	}
 	
-	private void syncUserGroup(boolean forceSync) throws Throwable {
+	private void syncUserGroup() throws Throwable {
 		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
 		try{
 			if (config.isUserSyncEnabled()) {
-				//if (forceSync) {
-					LOG.info("Begin: update user/group from source==>sink");
-					ugSource.updateSink(ugSink);
-					LOG.info("End: update user/group from source==>sink");
-				//}
+				LOG.info("Begin: update user/group from source==>sink");
+				ugSource.updateSink(ugSink);
+				LOG.info("End: update user/group from source==>sink");
 			}
 		}catch(Throwable t){
 			LOG.error("Failed to sync user/group : ", t);
