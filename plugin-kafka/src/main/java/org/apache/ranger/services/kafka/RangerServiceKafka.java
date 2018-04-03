@@ -114,8 +114,10 @@ public class RangerServiceKafka extends RangerBaseService {
 				LOG.debug("Auth type is " + authType);
 			}
 			for (RangerPolicy defaultPolicy : ret) {
-				for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-					defaultPolicyItem.getGroups().add(GROUP_PUBLIC);
+				if(defaultPolicy.getName().contains("all")){
+					for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+						defaultPolicyItem.getGroups().add(GROUP_PUBLIC);
+					}
 				}
 			}
 		}
