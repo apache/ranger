@@ -19,7 +19,6 @@
 
 package org.apache.ranger.authentication.unix.jaas;
 
-import org.apache.commons.lang.StringUtils;
 import org.jvnet.libpam.PAM;
 import org.jvnet.libpam.PAMException;
 import org.jvnet.libpam.UnixUser;
@@ -31,6 +30,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +45,7 @@ public class PamLoginModule implements LoginModule
     private Map<String, ?> _options;
 
     private String _username;
-    private String _password;
+    private char[] _passwordchar;
 
     private boolean _authSucceeded;
     private PamPrincipal _principal;
@@ -139,7 +139,7 @@ public class PamLoginModule implements LoginModule
     {
         char[] password = passwordCallback.getPassword();
         if (password != null) {
-        	_password = new String(password);
+            _passwordchar = Arrays.copyOf(password, password.length);
         }
         passwordCallback.clearPassword();
     }
@@ -148,8 +148,8 @@ public class PamLoginModule implements LoginModule
     {
         try
         {
-		if (StringUtils.isNotEmpty(_password)) {
-                                UnixUser user = _pam.authenticate(_username, _password);
+		if (_passwordchar != null) {
+                                UnixUser user = _pam.authenticate(_username, String.valueOf(_passwordchar));
                                 _principal = new PamPrincipal(user);
                                 _authSucceeded = true;
                                 return true;
@@ -219,7 +219,7 @@ public class PamLoginModule implements LoginModule
     {
         _authSucceeded = false;
         _username = null;
-        _password = null;
+        Arrays.fill(_passwordchar, ' ');
         _principal = null;
         _pam.dispose();
     }

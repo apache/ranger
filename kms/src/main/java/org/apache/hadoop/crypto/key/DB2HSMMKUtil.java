@@ -16,6 +16,8 @@
  */
 package org.apache.hadoop.crypto.key;
 
+import java.util.Arrays;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
 
@@ -65,12 +67,13 @@ public class DB2HSMMKUtil {
 	}
 	
 	private boolean doExportMKToHSM(String hsmType, String partitionName) {
+		char[] partitionPassword=null;
 		try {
-			String partitionPassword = ConsoleUtil.getStringPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ");
+			partitionPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the Partition "+partitionName+" : ");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			conf.set(HSM_TYPE, hsmType);
 			conf.set(PARTITION_NAME, partitionName);
-			conf.set(PARTITION_PASSWORD, partitionPassword);
+			conf.set(PARTITION_PASSWORD, String.valueOf(partitionPassword));
 			
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
@@ -88,6 +91,9 @@ public class DB2HSMMKUtil {
 		}
 		catch(Throwable t) {
 			throw new RuntimeException("Unable to import Master key from Ranger DB to HSM ", t);
+		}
+		finally{
+			Arrays.fill(partitionPassword, ' ');
 		}
 	}
 }

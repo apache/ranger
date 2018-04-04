@@ -20,7 +20,6 @@ package org.apache.hadoop.crypto.key;
 import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 /**
  * Utility class for reading passwords from the console.
@@ -33,17 +32,9 @@ class ConsoleUtil {
      * @param prompt the question which is prompted
      * @return the password.
      */
-    static char[] getPasswordFromConsole(String prompt) throws IOException {
-        return getStringPasswordFromConsole(prompt).toCharArray();
-    }
 
-    /**
-     * Ask a password from console, and return as a String.
-     * @param prompt the question which is prompted
-     * @return the password.
-     */
-    static String getStringPasswordFromConsole(String prompt) throws IOException {
-        String ret = null;
+    static char[] getPasswordFromConsole(String prompt) throws IOException {
+        char pwd[]=null;
         Console c = System.console();
         if (c == null) {
             System.out.print(prompt + " ");
@@ -52,23 +43,21 @@ class ConsoleUtil {
             byte[] b = new byte[max];
             int l = in.read(b);
             l--; // last character is \n
+            pwd=new char[l];
             if (l > 0) {
                 byte[] e = new byte[l];
                 System.arraycopy(b, 0, e, 0, l);
-                ret = new String(e, Charset.defaultCharset());
+                for (int i = 0; i < l; i++) {
+                    pwd[i] = (char) e[i];
+                }
             }
         } else {
-            char[] pwd = c.readPassword(prompt + " ");
+            pwd = c.readPassword(prompt + " ");
             if (pwd == null) {
-                ret = null;
-            } else {
-                ret = new String(pwd);
+                pwd = new char[0];
             }
         }
-        if (ret == null) {
-            ret = "";
-        }
-        return ret;
+        return pwd;
     }
 
 }

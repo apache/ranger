@@ -32,6 +32,7 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -235,15 +236,17 @@ public class RemoteUnixLoginModule implements LoginModule {
 			log("userName:" + userName);
 			log("modified UserName:" + modifiedUserName);
 
-			String modifiedPassword;
+			char modifiedPasschar[];
 			if (password != null) {
-				modifiedPassword = new String(password);
+				modifiedPasschar = Arrays.copyOf(password,password.length);
 			} else {
-				modifiedPassword = new String(new char[0]);
+				modifiedPasschar = new char[0];
 			}
 
-			doLogin(modifiedUserName, modifiedPassword);
+			doLogin(modifiedUserName, modifiedPasschar);
 
+			Arrays.fill(password, ' ');
+			Arrays.fill(modifiedPasschar, ' ');
 			loginSuccessful = true;
 		}
 
@@ -258,14 +261,14 @@ public class RemoteUnixLoginModule implements LoginModule {
 		return true;
 	}
 
-	public void doLogin(String aUserName, String  aPassword) throws LoginException {
+	public void doLogin(String aUserName, char[]  modifiedPasschar) throws LoginException {
 
 		// POSSIBLE values
 		// null
 		// OK: group1, group2, group3
 		// FAILED: Invalid Password
 
-		String ret = getLoginReplyFromAuthService(aUserName, aPassword);
+		String ret = getLoginReplyFromAuthService(aUserName, modifiedPasschar);
 
 		if (ret == null) {
 			throw new LoginException("FAILED: unable to authenticate to AuthenticationService: " + remoteHostName + ":" + remoteHostAuthServicePort);
@@ -282,13 +285,17 @@ public class RemoteUnixLoginModule implements LoginModule {
 		}
 	}
 
-	private String getLoginReplyFromAuthService(String aUserName, String aPassword) throws LoginException {
+	private String getLoginReplyFromAuthService(String aUserName, char[] modifiedPasschar) throws LoginException {
 		String ret = null;
 
 		Socket sslsocket = null;
 
-		String loginString = "LOGIN:" + aUserName + " " + new String(aPassword) + "\n";
-
+		char prefix[]=new String("LOGIN:"+aUserName+" ").toCharArray();
+		char tail[]=new String("\n").toCharArray();
+		char loginData[]=new char[prefix.length+modifiedPasschar.length+tail.length];
+		System.arraycopy(prefix, 0, loginData, 0, prefix.length);
+		System.arraycopy(modifiedPasschar, 0, loginData, prefix.length,modifiedPasschar.length);
+		System.arraycopy(tail, 0, loginData, prefix.length+modifiedPasschar.length, tail.length);
 		try {
 			try {
 				if (SSLEnabled) {
@@ -380,7 +387,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 
 				OutputStreamWriter writer = new OutputStreamWriter(sslsocket.getOutputStream());
 
-				writer.write(loginString);
+				writer.write(loginData);
 
 				writer.flush();
 
@@ -401,6 +408,8 @@ public class RemoteUnixLoginModule implements LoginModule {
 			throw new LoginException("FAILED: unable to authenticate to AuthenticationService: " + remoteHostName + ":" + remoteHostAuthServicePort + ", Exception: [" + t + "]");
 		} finally {
 			log("Login of user String: {" + aUserName + "}, return from AuthServer: {" + ret + "}");
+			Arrays.fill(loginData,' ');
+			Arrays.fill(modifiedPasschar,' ');
 		}
 
 		return ret;

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -72,9 +73,11 @@ public class Ranger2JKSUtil {
 	}
 	
 	private void doExportKeysFromJKS(String keyStoreFileName, String keyStoreType) {
+		char[] keyStorePassword = null;
+		char[] keyPassword = null;
 		try {
-			char[] keyStorePassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the keystore FILE :");
-			char[] keyPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
+			keyStorePassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the keystore FILE :");
+			keyPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
 			Configuration conf = RangerKeyStoreProvider.getDBKSConf();
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
@@ -99,6 +102,10 @@ public class Ranger2JKSUtil {
 		}
 		catch(Throwable t) {
 			throw new RuntimeException("Unable to export keys to [" + keyStoreFileName + "] due to exception.", t);
+		}
+		finally{
+			Arrays.fill(keyStorePassword, ' ');
+			Arrays.fill(keyPassword, ' ');
 		}
 	}
 	
