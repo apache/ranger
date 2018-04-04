@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto.key;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,33 +33,79 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerMasterKeyDao;
+import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.entity.XXRangerMasterKey;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class RangerMasterKey implements RangerKMSMKI{
 	
 	private static final Logger logger = Logger.getLogger(RangerMasterKey.class);
-	
-	private static final String MK_CIPHER = "AES";
-	private static final int MK_KeySize = 256;
-	private static final int SALT_SIZE = 8;
-	private static final String PBE_ALGO = "PBEWithMD5AndTripleDES";
-	private static final String MD_ALGO = "MD5";
-	
+
+        private static final String DEFAULT_MK_CIPHER = "AES";
+        private static final int DEFAULT_MK_KeySize = 256;
+        private static final int DEFAULT_SALT_SIZE = 8;
+        private static final String DEFAULT_SALT = "abcdefghijklmnopqrstuvwxyz01234567890";
+        private static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndTripleDES";
+        private static final String DEFAULT_MD_ALGO = "MD5";
+        private static final int DEFAULT_ITERATION_COUNT = 1000;
+        private static String password = null;
+
+        public static final String DBKS_SITE_XML = "dbks-site.xml";
+        private static Properties serverConfigProperties = new Properties();
+
+        public static String MK_CIPHER;
+        public static Integer MK_KeySize = 0;
+        public static Integer SALT_SIZE = 0;
+        public static String SALT;
+        public static String PBE_ALGO;
+        public static String MD_ALGO;
+        public static Integer ITERATION_COUNT = 0;
+        public static String paddingString;
+
 	private DaoManager daoManager;
-	
-	public RangerMasterKey() {		
+
+        public RangerMasterKey() {
 	}
 	
 	public RangerMasterKey(DaoManager daoManager) {
 		this.daoManager = daoManager;
 	}
 	
+        protected static String getConfig(String key, String defaultValue) {
+                String value = serverConfigProperties.getProperty(key);
+                if (value == null || value.trim().isEmpty()) {
+                        // Value not found in properties file, let's try to get from
+                        // System's property
+                        value = System.getProperty(key);
+                }
+                if (value == null || value.trim().isEmpty()) {
+                        value = defaultValue;
+                }
+                return value;
+        }
+
+        protected static int getIntConfig(String key, int defaultValue) {
+                int ret = defaultValue;
+                String retStr = serverConfigProperties.getProperty(key);
+                try {
+                        if (retStr != null) {
+                                ret = Integer.parseInt(retStr);
+                        }
+                } catch (Exception err) {
+                        logger.warn(retStr + " can't be parsed to int. Reason: " + err.toString());
+                }
+                return ret;
+        }
 	/**
 	 * To get Master Key
 	 * @param password password to be used for decryption
@@ -66,24 +113,40 @@ public class RangerMasterKey implements RangerKMSMKI{
 	 * @throws Throwable
 	 */
 	@Override
-	public String getMasterKey(String password) throws Throwable{		
+        public String getMasterKey(String password) throws Throwable {
 		logger.info("Getting Master Key");
-		byte masterKeyByte[] = getEncryptedMK();
-		if(masterKeyByte != null && masterKeyByte.length > 0){
-			return decryptMasterKey(masterKeyByte, password);		
-		}else{
+                List result = getEncryptedMK();
+                String encryptedPassString = null;
+                byte masterKeyByte[] = null;
+                if (CollectionUtils.isNotEmpty(result) && result.size() == 2) {
+                        masterKeyByte = (byte[]) result.get(0);
+                        encryptedPassString = (String) result.get(1);
+                } else if (CollectionUtils.isNotEmpty(result)) {
+                        masterKeyByte = (byte[]) result.get(0);
+                }
+                if (masterKeyByte != null && masterKeyByte.length > 0) {
+                        return decryptMasterKey(masterKeyByte, password, encryptedPassString);
+                } else {
 			throw new Exception("No Master Key Found");
-		}			
+                }
 	}
 	
-	public SecretKey getMasterSecretKey(String password) throws Throwable{		
+        public SecretKey getMasterSecretKey(String password) throws Throwable {
 		logger.info("Getting Master Key");
-		byte masterKeyByte[] = getEncryptedMK();
-		if(masterKeyByte != null && masterKeyByte.length > 0){
-			return decryptMasterKeySK(masterKeyByte, password);		
-		}else{
+                List result = getEncryptedMK();
+                String encryptedPassString = null;
+                byte masterKeyByte[] = null;
+                if (CollectionUtils.isNotEmpty(result) && result.size() == 2) {
+                        masterKeyByte = (byte[]) result.get(0);
+                        encryptedPassString = (String) result.get(1);
+                } else if (CollectionUtils.isNotEmpty(result)) {
+                        masterKeyByte = (byte[]) result.get(0);
+                }
+                if (masterKeyByte != null && masterKeyByte.length > 0) {
+                        return decryptMasterKeySK(masterKeyByte, password, encryptedPassString);
+                } else {
 			throw new Exception("No Master Key Found");
-		}			
+                }
 	}
 	
 	/**
@@ -93,13 +156,29 @@ public class RangerMasterKey implements RangerKMSMKI{
 	 * 		   false if master key generation was unsuccessful or the master key already exists
 	 * @throws Throwable
 	 */
+
+        public void init() {
+                XMLUtils.loadConfig(DBKS_SITE_XML, serverConfigProperties);
+                MK_CIPHER = getConfig("ranger.kms.service.masterkey.password.cipher", DEFAULT_MK_CIPHER);
+                MK_KeySize = getIntConfig("ranger.kms.service.masterkey.password.size", DEFAULT_MK_KeySize);
+                SALT_SIZE = getIntConfig("ranger.kms.service.masterkey.password.salt.size", DEFAULT_SALT_SIZE);
+                SALT = getConfig("ranger.kms.service.masterkey.password.salt", DEFAULT_SALT);
+                PBE_ALGO = getConfig("ranger.kms.service.masterkey.password.encryption.algorithm", DEFAULT_CRYPT_ALGO);
+                MD_ALGO = getConfig("ranger.kms.service.masterkey.password.md.algorithm", DEFAULT_MD_ALGO);
+                ITERATION_COUNT = getIntConfig("ranger.kms.service.masterkey.password.iteration.count",
+                                DEFAULT_ITERATION_COUNT);
+                paddingString = Joiner.on(",").skipNulls().join(MK_CIPHER, MK_KeySize, SALT_SIZE, PBE_ALGO, MD_ALGO,
+                                ITERATION_COUNT, SALT);
+        }
+
 	@Override
-	public boolean generateMasterKey(String password) throws Throwable{
+        public boolean generateMasterKey(String password) throws Throwable {
 		logger.info("Generating Master Key");
-		String encryptedMasterKey = encryptMasterKey(password);		
-		String savedKey = saveEncryptedMK(encryptedMasterKey, daoManager);
-		if(savedKey != null && !savedKey.trim().equals("")){
-			logger.debug("Master Key Created with id = "+savedKey);
+                init();
+                String encryptedMasterKey = encryptMasterKey(password);
+                String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
+                if (savedKey != null && !savedKey.trim().equals("")) {
+                        logger.debug("Master Key Created with id = " + savedKey);
 			return true;
 		}
 		return false;
@@ -107,8 +186,9 @@ public class RangerMasterKey implements RangerKMSMKI{
 	
 	public boolean generateMKFromHSMMK(String password, byte[] key) throws Throwable{
 		logger.info("Generating Master Key");
+                init();
 		String encryptedMasterKey = encryptMasterKey(password, key);		
-		String savedKey = saveEncryptedMK(encryptedMasterKey, daoManager);
+                String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
 		if(savedKey != null && !savedKey.trim().equals("")){
 			logger.debug("Master Key Created with id = "+savedKey);
 			return true;
@@ -116,41 +196,90 @@ public class RangerMasterKey implements RangerKMSMKI{
 		return false;
 	}
 
-	private String decryptMasterKey(byte masterKey[], String password) throws Throwable {
+        private String decryptMasterKey(byte masterKey[], String password, String encryptedPassString) throws Throwable {
 		logger.debug("Decrypting Master Key");
+                if (encryptedPassString == null) {
+                        getPasswordParam(password);
+                }
 		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password);
 		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec);
 		SecretKey masterKeyFromDB = getMasterKeyFromBytes(masterKeyFromDBDecrypted);
 		return Base64.encode(masterKeyFromDB.getEncoded());
 	}
-	
-	private SecretKey decryptMasterKeySK(byte masterKey[], String password) throws Throwable {
+
+        public static void getPasswordParam(String paddedEncryptedPwd) {
+                String[] encryptedPwd = null;
+                if (paddedEncryptedPwd != null && paddedEncryptedPwd.contains(",")) {
+                        encryptedPwd = Lists.newArrayList(Splitter.on(",").split(paddedEncryptedPwd)).toArray(new String[0]);
+                }
+                if (encryptedPwd != null && encryptedPwd.length >= 7) {
+                        int index = 0;
+                        MK_CIPHER = encryptedPwd[index];
+                        MK_KeySize = Integer.parseInt(encryptedPwd[++index]);
+                        SALT_SIZE = Integer.parseInt(encryptedPwd[++index]);
+                        PBE_ALGO = encryptedPwd[++index];
+                        MD_ALGO = encryptedPwd[++index];
+                        ITERATION_COUNT = Integer.parseInt(encryptedPwd[++index]);
+                        SALT = encryptedPwd[++index];
+                        password = encryptedPwd[++index];
+
+                        if (index > 7) {
+                                for (int i = 8; i <= encryptedPwd.length; i++) {
+                                        password = password + "," + encryptedPwd[i];
+                                }
+                        }
+                } else {
+                        MK_CIPHER = DEFAULT_MK_CIPHER;
+                        MK_KeySize = DEFAULT_MK_KeySize;
+                        SALT_SIZE = DEFAULT_SALT_SIZE;
+                        PBE_ALGO = DEFAULT_CRYPT_ALGO;
+                        MD_ALGO = DEFAULT_MD_ALGO;
+                        password = paddedEncryptedPwd;
+                        SALT = password;
+                        ITERATION_COUNT = password.toCharArray().length + 1;
+                }
+        }
+
+        private SecretKey decryptMasterKeySK(byte masterKey[], String password, String encryptedPassString)
+                        throws Throwable {
 		logger.debug("Decrypting Master Key");
+                if (encryptedPassString == null) {
+                        getPasswordParam(password);
+                }
 		PBEKeySpec pbeKeyspec = getPBEParameterSpec(password);
 		byte[] masterKeyFromDBDecrypted = decryptKey(masterKey, pbeKeyspec);
-		return getMasterKeyFromBytes(masterKeyFromDBDecrypted);		
+                return getMasterKeyFromBytes(masterKeyFromDBDecrypted);
 	}
 
-	private byte[] getEncryptedMK() throws Base64DecodingException {
+        private List getEncryptedMK() throws Base64DecodingException {
 		logger.debug("Retrieving Encrypted Master Key from database");
-		try{
-			  if(daoManager != null){
-				  RangerMasterKeyDao rangerKMSDao = new RangerMasterKeyDao(daoManager);
-				  List<XXRangerMasterKey> lstRangerMasterKey = rangerKMSDao.getAll();
-				  if(lstRangerMasterKey.size() < 1){
-					  throw new Exception("No Master Key exists");
-				  }else if(lstRangerMasterKey.size() > 1){
-					  throw new Exception("More than one Master Key exists");
-				  }else {
-					  XXRangerMasterKey rangerMasterKey = rangerKMSDao.getById(lstRangerMasterKey.get(0).getId());
-					  String masterKeyStr = rangerMasterKey.getMasterKey();
-					  return Base64.decode(masterKeyStr);
-				  }
-			  }			
-		  }catch(Exception e){
-			  e.printStackTrace();
-		  }
-		  return null;
+                try {
+                        if (daoManager != null) {
+                                ArrayList ret = new ArrayList<>();
+                                RangerMasterKeyDao rangerKMSDao = new RangerMasterKeyDao(daoManager);
+                                List<XXRangerMasterKey> lstRangerMasterKey = rangerKMSDao.getAll();
+                                if (lstRangerMasterKey.size() < 1) {
+                                        throw new Exception("No Master Key exists");
+                                } else if (lstRangerMasterKey.size() > 1) {
+                                        throw new Exception("More than one Master Key exists");
+                                } else {
+                                        XXRangerMasterKey rangerMasterKey = rangerKMSDao.getById(lstRangerMasterKey.get(0).getId());
+                                        String masterKeyStr = rangerMasterKey.getMasterKey();
+                                        if (masterKeyStr.contains(",")) {
+                                                getPasswordParam(masterKeyStr);
+                                                ret.add(Base64.decode(password));
+                                                ret.add(masterKeyStr);
+                                                return ret;
+                                        } else {
+                                                ret.add(Base64.decode(masterKeyStr));
+                                                return ret;
+                                        }
+                                }
+                        }
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+                return null;
 	}
 
 	private String saveEncryptedMK(String encryptedMasterKey, DaoManager daoManager) {
@@ -197,12 +326,12 @@ public class RangerMasterKey implements RangerKMSMKI{
 	
 	private PBEKeySpec getPBEParameterSpec(String password) throws Throwable {
 		MessageDigest md = MessageDigest.getInstance(MD_ALGO);
-		byte[] saltGen = md.digest(password.getBytes());		
-		byte[] salt = new byte[SALT_SIZE];		
-		System.arraycopy(saltGen, 0, salt, 0, SALT_SIZE);		
-		int iteration = password.toCharArray().length + 1;
-		return new PBEKeySpec(password.toCharArray(), salt, iteration);		
+                byte[] saltGen = md.digest(SALT.getBytes());
+                byte[] salt = new byte[SALT_SIZE];
+                System.arraycopy(saltGen, 0, salt, 0, SALT_SIZE);
+                return new PBEKeySpec(password.toCharArray(), salt, ITERATION_COUNT);
 	}
+
 	private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {
 		SecretKey key = getPasswordKey(keyspec);
 		if(keyspec.getSalt() != null) {

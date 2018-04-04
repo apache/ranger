@@ -29,17 +29,74 @@
     </description>
   </property>
 
-  <!-- Encryption key Password -->
-  
-  <property>
-	<name>ranger.db.encrypt.key.password</name>
-    <value>Str0ngPassw0rd</value>
-    <description>
-    	Password used for encrypting Master Key
-    </description>
-  </property>
-  
-   <!-- db Details -->
+        <!-- Encryption key Password -->
+
+        <property>
+                <name>ranger.db.encrypt.key.password</name>
+                <value>Str0ngPassw0rd</value>
+                <description>
+                        Password used for encrypting Master Key
+                </description>
+        </property>
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.cipher</name>
+                <value>AES</value>
+                <description>
+                        Cipher used for encrypting Master Key
+                </description>
+        </property>
+
+        <property>
+               <name>ranger.kms.service.masterkey.password.size</name>
+               <value>256</value>
+                <description>
+                        Size of masterkey
+                </description>
+       </property>
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.salt.size</name>
+                <value>8</value>
+                <description>
+                        Salt size to encrypt Master Key
+                </description>
+        </property>
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.salt</name>
+                <value>abcdefghijklmnopqrstuvwxyz01234567890</value>
+                <description>
+                        Salt to encrypt Master Key
+                </description>
+        </property>
+
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.iteration.count</name>
+                <value>1000</value>
+                <description>
+                        Iteration count to encrypt Master Key
+                </description>
+        </property>
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.encryption.algorithm</name>
+                <value>PBEWithMD5AndDES</value>
+                <description>
+                        Algorithm to encrypt Master Key
+                </description>
+        </property>
+
+        <property>
+                <name>ranger.kms.service.masterkey.password.md.algorithm</name>
+                <value>SHA</value>
+                <description>
+                        Message Digest algorithn to encrypt Master Key
+                </description>
+        </property>
+
+        <!-- db Details -->
   
   <property>
     <name>ranger.ks.jpa.jdbc.url</name>
