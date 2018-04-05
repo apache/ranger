@@ -1,4 +1,5 @@
 /*
+
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,16 +17,24 @@
  */
 package org.apache.ranger.rest;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
+
+
+
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -77,6 +86,7 @@ import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
@@ -94,12 +104,15 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import com.sun.jersey.core.header.FormDataContentDisposition;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestServiceREST {
 
 	private static Long Id = 8L;
+
+        String importPoliceTestFilePath = "./src/test/java/org/apache/ranger/rest/importPolicy/import_policy_test_file.json";
 
 	@InjectMocks
 	ServiceREST serviceREST = new ServiceREST();
@@ -121,6 +134,9 @@ public class TestServiceREST {
 
 	@Mock
 	RangerDataHistService dataHistService;
+
+        @Mock
+        RangerExportPolicyList rangerExportPolicyList;
 
 	@Mock
 	RangerServiceDefService serviceDefService;
@@ -1422,4 +1438,233 @@ public class TestServiceREST {
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyLabelsService.sortFields);
 	}
+
+        @Test
+        public void test45exportPoliciesInJSON() throws Exception {
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
+
+                RangerPolicy rangerPolicy = rangerPolicy();
+                rangerPolicyList.add(rangerPolicy);
+                XXService xService = xService();
+
+                XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXServiceDef xServiceDef = serviceDef();
+                XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+                SearchFilter filter = new SearchFilter();
+
+                Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+                Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+                Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+                Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
+                Mockito.when(bizUtil.isAuditAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.isAuditKeyAdmin()).thenReturn(false);
+                Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+                Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+
+
+                Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
+                Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+                serviceREST.getPoliciesInJson(request, response, false);
+
+                Mockito.verify(svcStore).getPoliciesInJson(rangerPolicyList, response);
+        }
+
+        @Test
+        public void test46exportPoliciesInCSV() throws Exception {
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
+
+                RangerPolicy rangerPolicy = rangerPolicy();
+                rangerPolicyList.add(rangerPolicy);
+                XXService xService = xService();
+
+                XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXServiceDef xServiceDef = serviceDef();
+                XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+                SearchFilter filter = new SearchFilter();
+
+                Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+                Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+                Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+                Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
+                Mockito.when(bizUtil.isAuditAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.isAuditKeyAdmin()).thenReturn(false);
+                Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+                Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+
+
+                Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
+                Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+                serviceREST.getPoliciesInCsv(request, response);
+
+                Mockito.verify(svcStore).getPoliciesInCSV(rangerPolicyList, response);
+        }
+
+        @Test
+        public void test47WhenPolicyListIsEmpty() throws Exception {
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+                SearchFilter filter = new SearchFilter();
+
+                Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+                Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+
+                Mockito.when(response.getStatus()).thenReturn(204);
+                serviceREST.getPoliciesInCsv(request, response);
+
+                Assert.assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+                }
+
+        @Test
+        public void test48exportPoliciesInExcel() throws Exception {
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
+
+                RangerPolicy rangerPolicy = rangerPolicy();
+                rangerPolicyList.add(rangerPolicy);
+                XXService xService = xService();
+
+                XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXServiceDef xServiceDef = serviceDef();
+                XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+                SearchFilter filter = new SearchFilter();
+
+                Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+                Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+                Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+                Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
+                Mockito.when(bizUtil.isAuditAdmin()).thenReturn(false);
+                Mockito.when(bizUtil.isAuditKeyAdmin()).thenReturn(false);
+                Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+                Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+
+
+                Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
+                Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+                serviceREST.getPoliciesInExcel(request, response);
+                Mockito.verify(svcStore).getPoliciesInExcel(rangerPolicyList, response);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        public void test49importPoliciesFromFileAllowingOverride() throws Exception{
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
+
+                RangerPolicy rangerPolicy = rangerPolicy();
+
+                XXService xService = xService();
+                policiesMap.put("Name", rangerPolicy);
+                XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXServiceDef xServiceDef = serviceDef();
+                XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+                String PARAM_SERVICE_TYPE = "serviceType";
+                String serviceTypeList = "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop";
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                SearchFilter filter = new SearchFilter();
+                filter.setParam("serviceType", "value");
+                Mockito.when(
+                                searchUtil.getSearchFilter(request, policyService.sortFields))
+                                .thenReturn(filter);
+
+                Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
+                File jsonPolicyFile = new File(importPoliceTestFilePath);
+                InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
+                FormDataContentDisposition fileDetail = FormDataContentDisposition
+                                                                                                .name("file")
+                                                                                                .fileName(jsonPolicyFile.getName())
+                                                                                                .size(uploadedInputStream.toString().length())
+                                                                                                .build();
+                boolean isOverride = true;
+
+                Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class), Mockito.any(RangerPolicy.class), Mockito.any(Map.class))).thenReturn(policiesMap);
+                Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
+                Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+                Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+                Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+
+                Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
+                Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+
+                serviceREST.importPoliciesFromFile(request, null, uploadedInputStream, fileDetail, isOverride);
+                Mockito.verify(svcStore).createPolicy(rangerPolicy);
+
+
+        }
+
+
+        @SuppressWarnings("unchecked")
+        @Test
+        public void test50importPoliciesFromFileNotAllowingOverride() throws Exception{
+                HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+                Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
+
+                RangerPolicy rangerPolicy = rangerPolicy();
+
+                XXService xService = xService();
+                policiesMap.put("Name", rangerPolicy);
+                XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+                XXServiceDef xServiceDef = serviceDef();
+                XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+                String PARAM_SERVICE_TYPE = "serviceType";
+                String serviceTypeList = "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop";
+                request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
+                SearchFilter filter = new SearchFilter();
+                filter.setParam("serviceType", "value");
+                Mockito.when(
+                                searchUtil.getSearchFilter(request, policyService.sortFields))
+                                .thenReturn(filter);
+
+                Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
+                File jsonPolicyFile = new File(importPoliceTestFilePath);
+                InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
+                FormDataContentDisposition fileDetail = FormDataContentDisposition
+                                                                                                .name("file")
+                                                                                                .fileName(jsonPolicyFile.getName())
+                                                                                                .size(uploadedInputStream.toString().length())
+                                                                                                .build();
+                boolean isOverride = false;
+
+                Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class), Mockito.any(RangerPolicy.class), Mockito.any(Map.class))).thenReturn(policiesMap);
+                Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
+                Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+                Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+                Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+
+                Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
+                Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+
+                serviceREST.importPoliciesFromFile(request, null, uploadedInputStream, fileDetail, isOverride);
+                Mockito.verify(svcStore).createPolicy(rangerPolicy);
+
+
+        }
 }

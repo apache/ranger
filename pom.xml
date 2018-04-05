@@ -601,6 +601,7 @@
                         <exclude>**/*.jaas</exclude>
                         <exclude>**/target/apidocs/**</exclude>
                         <exclude>**/target/kms/apidocs/**</exclude>
+                        <exclude>**/importPolicy/*.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
