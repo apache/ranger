@@ -1377,17 +1377,17 @@ setup_install_files(){
 	fi
 }
 python_command_for_change_password(){
- $PYTHON_COMMAND_INVOKER db_setup.py -changepassword  $1 $2 $3
+        $PYTHON_COMMAND_INVOKER db_setup.py -changepassword  "${1}" "${2}" "${3}"
 }
 
 change_default_users_password(){
- if [ "${rangerAdmin_password}" != '' ] && [ "${rangerAdmin_password}" != "admin" ]
+        if [ "${rangerAdmin_password}" != '' ] && [ "${rangerAdmin_password}" != "admin" ]
         then
-   python_command_for_change_password 'admin' 'admin' "$rangerAdmin_password"
+                python_command_for_change_password  'admin' 'admin' "$rangerAdmin_password"
         fi
         if [ "${rangerTagsync_password}" != "" ] &&  [ "${rangerTagsync_password}" != "rangertagsync" ]
         then
-   python_command_for_change_password 'rangertagsync' 'rangertagsync' "$rangerTagsync_password"
+                python_command_for_change_password 'rangertagsync' 'rangertagsync' "$rangerTagsync_password"
         fi
         if [ "${rangerUsersync_password}" != "" ] &&  [ "${rangerUsersync_password}" != "rangerusersync" ]
         then

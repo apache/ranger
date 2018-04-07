@@ -20,6 +20,8 @@ package org.apache.ranger.patch.cliutil;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.patch.BaseLoader;
@@ -38,6 +40,9 @@ public class ChangePasswordUtil extends BaseLoader {
 	@Autowired
 	UserMgr userMgr;
 	
+        @Autowired
+        RESTErrorUtil restErrorUtil;
+
 	public static String userLoginId;
 	public static String currentPassword;
 	public static String newPassword;
@@ -49,6 +54,7 @@ public class ChangePasswordUtil extends BaseLoader {
 			ChangePasswordUtil loader = (ChangePasswordUtil) CLIUtil.getBean(ChangePasswordUtil.class);
 			loader.init();
                         if (args.length == 3 || args.length == 4) {
+
 				userLoginId = args[0];
 				currentPassword = args[1];
 				newPassword = args[2];
@@ -109,9 +115,12 @@ public class ChangePasswordUtil extends BaseLoader {
 		if (xPortalUser!=null){
 			String dbPassword=xPortalUser.getPassword();
 			String currentEncryptedPassword=null;
+
 			try {
+
 				currentEncryptedPassword=userMgr.encrypt(userLoginId, currentPassword);
 				if (currentEncryptedPassword.equals(dbPassword)){
+                                        validatePassword(newPassword);
                                         userMgr.updatePasswordInSHA256(userLoginId,newPassword,true);
 					logger.info("User '"+userLoginId+"' Password updated sucessfully.");
                                 }else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest){
@@ -135,4 +144,21 @@ public class ChangePasswordUtil extends BaseLoader {
 			System.exit(1);
 		}
 	}
+        private void validatePassword(String newPassword) {
+                boolean checkPassword = false;
+                if (newPassword != null ) {
+                        String pattern = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}";
+                        checkPassword = newPassword.trim().matches(pattern);
+                        if (!checkPassword) {
+                                logger.error("validatePassword(). Password should be minimum 8 characters with minimum one alphabet and one numeric.");
+                                System.out.println("validatePassword(). Password should be minimum 8 characters with minimum one alphabet and one numeric.");
+                                throw restErrorUtil.createRESTException("serverMsg.changePasswordValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters with minimum one alphabet and one numeric", null);
+                        }
+                } else {
+                        logger.error("validatePassword(). Password cannot be blank/null.");
+                        System.out.println("validatePassword(). Password cannot be blank/null.");
+                        throw restErrorUtil.createRESTException("serverMsg.changePasswordValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
+                }
+        }
+
 }
