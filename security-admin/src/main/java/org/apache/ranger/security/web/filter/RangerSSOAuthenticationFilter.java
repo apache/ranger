@@ -252,6 +252,12 @@ public class RangerSSOAuthenticationFilter implements Filter {
                                 }
                         }
                 }
+                if (xForwardedHost.contains(",")) {
+                    if(LOG.isDebugEnabled()) {
+                        LOG.debug("xForwardedHost value is " + xForwardedHost + " it contains multiple hosts, selecting the first host.");
+                    }
+                    xForwardedHost = xForwardedHost.split(",")[0].trim();
+                }
                 String xForwardedURL = "";
                 if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
                         xForwardedURL = xForwardedProto + "://" + xForwardedHost
