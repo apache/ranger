@@ -57,6 +57,8 @@ public interface RangerPolicyEngine {
 
 	Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor);
 
+	RangerResourceACLs getResourceACLs(RangerAccessRequest request);
+
 	boolean preCleanup();
 
 	void cleanup();
@@ -74,6 +76,8 @@ public interface RangerPolicyEngine {
 	List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
 	List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource);
+
+	List<RangerPolicy> getMatchingPolicies(RangerAccessRequest request);
 
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 

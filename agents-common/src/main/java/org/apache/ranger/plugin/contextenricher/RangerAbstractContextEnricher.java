@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
@@ -68,6 +69,11 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
+	}
+
+	@Override
+	public void enrich(RangerAccessRequest request, Object dataStore) {
+		enrich(request);
 	}
 
 	@Override

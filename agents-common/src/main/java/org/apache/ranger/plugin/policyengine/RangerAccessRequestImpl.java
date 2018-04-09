@@ -174,7 +174,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	public void setAccessTime(Date accessTime) {
-		this.accessTime = (accessTime == null) ? new Date() : accessTime;
+		this.accessTime = accessTime;
 	}
 
 	public void setClientIPAddress(String ipAddress) {

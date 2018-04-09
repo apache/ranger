@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -55,6 +56,8 @@ public class RangerBasePlugin {
 
 	public static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
 
+	private static Map<String, RangerBasePlugin> servicePluginMap = new ConcurrentHashMap<>();
+
 	private String                    serviceType;
 	private String                    appId;
 	private String                    serviceName;
@@ -62,16 +65,24 @@ public class RangerBasePlugin {
 	private PolicyRefresher           refresher;
 	private RangerPolicyEngine        policyEngine;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+	private RangerAuthContext         currentAuthContext;
+	private RangerAuthContext         readOnlyAuthContext;
 	private RangerAccessResultProcessor resultProcessor;
 	private boolean                   useForwardedIPAddress;
 	private String[]                  trustedProxyAddresses;
 	private Timer                     policyEngineRefreshTimer;
+	private RangerAuthContextListener authContextListener;
+
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
 	int logInterval = 30000; // 30 seconds
 
+	public static Map<String, RangerBasePlugin> getServicePluginMap() {
+		return servicePluginMap;
+	}
 
 	public RangerBasePlugin(String serviceType, String appId) {
+
 		this.serviceType = serviceType;
 		this.appId       = appId;
 	}
@@ -83,6 +94,12 @@ public class RangerBasePlugin {
 	public String getClusterName() {
 		return clusterName;
 	}
+
+	public RangerAuthContext createRangerAuthContext() {
+		return new RangerAuthContext(readOnlyAuthContext);
+	}
+
+	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
@@ -144,6 +161,8 @@ public class RangerBasePlugin {
 
 		LOG.info(policyEngineOptions);
 
+		servicePluginMap.put(serviceName, this);
+
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
@@ -187,19 +206,31 @@ public class RangerBasePlugin {
 			}
 			if (policies == null) {
 				this.policyEngine = null;
+				readOnlyAuthContext = null;
 			} else {
+				currentAuthContext = new RangerAuthContext();
 				RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
 				policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 				policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
-
 				this.policyEngine = policyEngine;
+				currentAuthContext.setPolicyEngine(this.policyEngine);
+				readOnlyAuthContext = new RangerAuthContext(currentAuthContext);
 			}
+			contextChanged();
 
 			if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
 				LOG.error("preCleanup() failed on the previous policy engine instance !!");
 			}
 		} catch (Exception e) {
 			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is. Exception : ", e);
+		}
+	}
+
+	public void contextChanged() {
+		RangerAuthContextListener authContextListener = this.authContextListener;
+
+		if (authContextListener != null) {
+			authContextListener.contextChanged();
 		}
 	}
 
@@ -356,6 +387,13 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerBasePlugin.revokeAccess(" + request + ")");
 		}
+	}
+
+	public void registerAuthContextEventListener(RangerAuthContextListener authContextListener) {
+		this.authContextListener = authContextListener;
+	}
+	public void unregisterAuthContextEventListener(RangerAuthContextListener authContextListener) {
+		this.authContextListener = null;
 	}
 
 	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix) {

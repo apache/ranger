@@ -36,6 +36,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.service.RangerAuthContext;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerResourceTrie;
@@ -142,15 +144,38 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerTagEnricher.enrich(" + request + ")");
 		}
 
-		final Set<RangerTagForEval> matchedTags = enrichedServiceTags == null ? null : findMatchingTags(request);
+		enrich(request, null);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerTagEnricher.enrich(" + request + ")");
+		}
+	}
+
+	@Override
+	public void enrich(RangerAccessRequest request, Object dataStore) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerTagEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]");
+		}
+		final EnrichedServiceTags enrichedServiceTags;
+
+		if (dataStore instanceof EnrichedServiceTags) {
+			enrichedServiceTags = (EnrichedServiceTags) dataStore;
+		} else {
+			enrichedServiceTags = this.enrichedServiceTags;
+
+			if (dataStore != null) {
+				LOG.warn("Incorrect type of dataStore :[" + dataStore.getClass().getName() + "], falling back to original enrich");
+			}
+		}
+
+		final Set<RangerTagForEval> matchedTags = enrichedServiceTags == null ? null : findMatchingTags(request, enrichedServiceTags);
 
 		RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagEnricher.enrich(" + request + "): tags count=" + (matchedTags == null ? 0 : matchedTags.size()));
+			LOG.debug("<== RangerTagEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]): tags count=" + (matchedTags == null ? 0 : matchedTags.size()));
 		}
 	}
-
 	/*
 	 * This class implements a cache of result of look-up of keyset of policy-resources for each of the collections of hierarchies
 	 * for policy types: access, datamask and rowfilter. If a keyset is examined for validity in a hierarchy of a policy-type,
@@ -266,6 +291,16 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 
 			enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
+
+			Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
+			RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
+			if (plugin != null) {
+				RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
+				if (currentAuthContext != null) {
+					currentAuthContext.addOrReplaceRequestContextEnricher(this, enrichedServiceTags);
+					plugin.contextChanged();
+				}
+			}
 		}
 	}
 
@@ -292,13 +327,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private Set<RangerTagForEval> findMatchingTags(final RangerAccessRequest request) {
+	private Set<RangerTagForEval> findMatchingTags(final RangerAccessRequest request, EnrichedServiceTags dataStore) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagEnricher.findMatchingTags(" + request + ")");
 		}
 
 		// To minimize chance for race condition between Tag-Refresher thread and access-evaluation thread
-		final EnrichedServiceTags enrichedServiceTags = this.enrichedServiceTags;
+		final EnrichedServiceTags enrichedServiceTags = dataStore != null ? dataStore : this.enrichedServiceTags;
 
 		Set<RangerTagForEval> ret = null;
 

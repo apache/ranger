@@ -32,6 +32,7 @@ public class RangerPolicyEngineOptions {
 	public boolean cacheAuditResults = true;
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
+	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
 
 	private RangerServiceDefHelper serviceDefHelper;
 
@@ -48,6 +49,7 @@ public class RangerPolicyEngineOptions {
 		}
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
+		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 	}
 
 	public void configureDefaultRangerAdmin(Configuration conf, String propertyPrefix) {
@@ -59,6 +61,7 @@ public class RangerPolicyEngineOptions {
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
+		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 	}
 
 	public void configureDelegateAdmin(Configuration conf, String propertyPrefix) {

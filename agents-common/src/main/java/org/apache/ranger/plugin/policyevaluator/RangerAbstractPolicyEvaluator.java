@@ -135,6 +135,9 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public PolicyACLSummary getPolicyACLSummary() { return null; }
+
+	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
 

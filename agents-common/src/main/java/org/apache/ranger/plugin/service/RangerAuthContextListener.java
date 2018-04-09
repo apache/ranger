@@ -17,32 +17,9 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.contextenricher;
+package org.apache.ranger.plugin.service;
 
 
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-
-public interface RangerContextEnricher {
-	void setEnricherDef(RangerContextEnricherDef enricherDef);
-
-	void setServiceName(String serviceName);
-
-	void setServiceDef(RangerServiceDef serviceDef);
-
-	void setAppId(String appId);
-
-	void init();
-
-	void enrich(RangerAccessRequest request);
-
-	void enrich(RangerAccessRequest request, Object dataStore);
-
-	boolean preCleanup();
-
-	void cleanup();
-
-	String getName();
-
+public interface RangerAuthContextListener {
+    void contextChanged();
 }

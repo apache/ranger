@@ -366,6 +366,7 @@ public class TestPolicyEngine {
 		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
 		policyEngineOptions.disableTagPolicyEvaluation = false;
+		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
 
 		boolean useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = RangerConfiguration.getInstance().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
@@ -376,8 +377,16 @@ public class TestPolicyEngine {
 			}
 		}
 		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
+
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+
+		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
+		RangerPolicyEngine policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
+
+		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
+		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);
+
 		long requestCount = 0L;
 
 		RangerAccessRequest request = null;
@@ -489,8 +498,9 @@ public class TestPolicyEngine {
 			}
 
 			if(test.resourceAccessInfo != null) {
+
 				RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
-				RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
+				RangerResourceAccessInfo result   = policyEngineForResourceAccessInfo.getResourceAccessInfo(test.request);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
@@ -617,6 +627,9 @@ public class TestPolicyEngine {
 			RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
 			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+			if (ret.getAccessTime() == null) {
+				ret.setAccessTime(new Date());
+			}
 
 			return ret;
 		}

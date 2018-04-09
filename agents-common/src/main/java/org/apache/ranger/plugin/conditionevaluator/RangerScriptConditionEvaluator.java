@@ -117,7 +117,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 					}
 
 				} catch (NullPointerException nullp) {
-					LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)");
+					LOG.error("RangerScriptConditionEvaluator.isMatched(): eval called with NULL argument(s)", nullp);
 
 				} catch (ScriptException exception) {
 					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
