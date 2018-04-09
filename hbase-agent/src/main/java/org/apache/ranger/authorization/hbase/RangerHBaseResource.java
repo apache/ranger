@@ -39,40 +39,53 @@ public class RangerHBaseResource extends RangerAccessResourceImpl {
     public RangerHBaseResource() {
     }
 
-	public RangerHBaseResource(Map<String, Object> elements) {
-		super(elements);
-		setValue(KEY_TABLE, getValue(KEY_TABLE));
-	}
+    public RangerHBaseResource(Map<String, Object> elements) {
+        super(elements);
+        setValue(KEY_TABLE, getValue(KEY_TABLE));
+    }
 
-	public RangerHBaseResource(Map<String, Object> elements, String ownerUser) {
-		super(elements, ownerUser);
-		setValue(KEY_TABLE, getValue(KEY_TABLE));
-	}
+    public RangerHBaseResource(Map<String, Object> elements, String ownerUser) {
+        super(elements, ownerUser);
+        setValue(KEY_TABLE, getValue(KEY_TABLE));
+    }
 
     @Override
     public void setValue(String key, Object value) {
-	    // special handling for tables in 'default' namespace
-	    if (StringUtils.equals(key, KEY_TABLE)) {
-		    if (value != null && value instanceof String) {
-			    String tableName = (String) value;
+        // special handling for tables in 'default' namespace
+        if (StringUtils.equals(key, KEY_TABLE)) {
+            if (value instanceof String) {
+                String tableName = (String) value;
 
-			    if (!tableName.contains(NAMESPACE_SEPARATOR)) {
-				    List<String> tableNames = new ArrayList<>(2);
+                if (!tableName.contains(NAMESPACE_SEPARATOR)) {
+                    List<String> tableNames = new ArrayList<>(2);
 
-				    tableNames.add(tableName);
-				    tableNames.add(DEFAULT_NAMESPACE + tableName);
+                    tableNames.add(tableName);
+                    tableNames.add(DEFAULT_NAMESPACE + tableName);
 
-				    value = tableNames;
-			    } else if (StringUtils.startsWith(tableName, DEFAULT_NAMESPACE)) {
-				    List<String> tableNames = new ArrayList<>(2);
+                    value = tableNames;
+                } else if (StringUtils.startsWith(tableName, DEFAULT_NAMESPACE)) {
+                    List<String> tableNames = new ArrayList<>(2);
 
-				    tableNames.add(tableName.substring(DEFAULT_NAMESPACE.length()));
-				    tableNames.add(tableName);
+                    tableNames.add(tableName);
+                    tableNames.add(tableName.substring(DEFAULT_NAMESPACE.length()));
 
-				    value = tableNames;
-			    }
-		    }
-	    }
-	    super.setValue(key, value);
+                    value = tableNames;
+                }
+            }
+        }
+        super.setValue(key, value);
+    }
+
+    void resetValue(String key) {
+        // Undo special handling for tables in 'default' namespace
+        if (StringUtils.equals(key, KEY_TABLE)) {
+            Object value = getValue(key);
+            if (value instanceof List) {
+                List tableNames = (List) value;
+                if (!tableNames.isEmpty()) {
+                    super.setValue(key, tableNames.get(0));
+                }
+            }
+        }
     }
 }

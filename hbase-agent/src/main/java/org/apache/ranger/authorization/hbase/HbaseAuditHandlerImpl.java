@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
 public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements HbaseAuditHandler {
@@ -42,6 +43,7 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 			LOG.debug("==> HbaseAuditHandlerImpl.getAuthzEvents(" + result + ")");
 		}
 
+		resetResourceForAudit(result.getAccessRequest());
 		AuthzAuditEvent event = super.getAuthzEvents(result);
 		// first accumulate last set of events and then capture these as the most recent ones
 		if (_mostRecentEvent != null) {
@@ -145,6 +147,19 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
+		}
+	}
+
+	private void resetResourceForAudit(RangerAccessRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> HbaseAuditHandlerImpl.resetResourceForAudit(" + request + ")");
+		}
+		if (request != null && request.getResource() instanceof RangerHBaseResource) {
+			RangerHBaseResource hbaseResource = (RangerHBaseResource) request.getResource();
+			hbaseResource.resetValue(RangerHBaseResource.KEY_TABLE);
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== HbaseAuditHandlerImpl.resetResourceForAudit(" + request + ")");
 		}
 	}
 }
