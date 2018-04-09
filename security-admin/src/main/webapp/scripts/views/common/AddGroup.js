@@ -82,7 +82,6 @@ define(function(require){
 				var labelStr1 = this.$el.find('label').html().replace('*','');
 				this.$el.find('label').html(labelStr1);
 			}
-
 			this.$('.tags').editable({
 			    placement: 'right',
 			    emptytext : 'Please select',

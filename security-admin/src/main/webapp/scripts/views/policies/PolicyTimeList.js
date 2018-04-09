@@ -75,9 +75,8 @@ define(function(require) {
                         closeOnSelect: true,
                         placeholder: 'Select Timezone',
                         maximumSelectionSize : 1,
-                        width: '220px',
                         allowClear: true,
-                width:180
+                        width:'180px'
               });
                 },
                 onInputStartTimeChange : function(e) {

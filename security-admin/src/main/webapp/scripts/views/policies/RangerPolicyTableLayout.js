@@ -419,12 +419,14 @@ define(function(require){
                         var info = { collection : localization.tt('h.collection')    , column   :localization.tt('lbl.columnName'),
                                          'column-family':localization.tt('msg.columnfamily') , database :localization.tt('h.database'),
                                           entity        :localization.tt('h.entity') , keyname  :localization.tt('lbl.keyName'),
-                                          operation:localization.tt('h.operation')   , path:localization.tt('h.path') ,
-                                          queue:localization.tt('h.queue')        , service:localization.tt('h.serviceNameMsg'),
-                                          table:localization.tt('lbl.tableName')   , tag : localization.tt('h.tagsMsg'),
-                                          taxonomy:localization.tt('h.taxonomy')  ,term: localization.tt('h.term') ,
+                                          path:localization.tt('h.path'), queue: localization.tt('h.queue'), service:localization.tt('h.serviceNameMsg'),
+                                          table:localization.tt('lbl.tableName'), tag : localization.tt('h.tagsMsg'),
                                           topic:localization.tt('h.topic')    ,topology:localization.tt('lbl.topologyName'),
-                                          type:localization.tt('h.type')    ,udf:localization.tt('h.udf') , url:localization.tt('h.url')
+                                          type:localization.tt('h.type')    ,udf:localization.tt('h.udf') , url:localization.tt('h.url'),
+                                          'type-category': localization.tt('h.typeCategory'), 'entity-type': localization.tt('h.entityType'),
+                                          'entity-classification': localization.tt('h.entityClassification'), 'atlas-service': localization.tt('h.atlasService'),
+                                          connector: localization.tt('h.connector'), link: localization.tt('h.link'), job: localization.tt('h.job'),
+                                          project: localization.tt('h.project'), 'nifi-resource': localization.tt('h.nifiResource')
                                                  };
 			var serverRsrcAttrName = _.map(resourceSearchOpt,function(opt){ 
                                         return {

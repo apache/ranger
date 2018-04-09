@@ -51,7 +51,6 @@ define(function(require) {
                 policyType: policyType.label
 			};
 		},
-		breadCrumbs: [],
 
 		/** Layout sub regions */
 		regions: {

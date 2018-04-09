@@ -46,7 +46,6 @@ define(function(require) {
                tagService  : (this.options.rangerService.get('tagService')) ? this.options.rangerService.get('tagService') : false,
            }
                 },
-                breadCrumbs: [],
 
                 /**
                  * intialize a new RangerServiceDiffDetaile Layout

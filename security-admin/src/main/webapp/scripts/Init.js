@@ -101,8 +101,8 @@
 
     paths: {
     	
-        jquery						: '../libs/bower/jquery/js/jquery.min',
-        'jquery-ui'					: '../libs/other/jquery-ui/js/jquery-ui-1.10.3.custom',
+        jquery						: '../libs/bower/jquery/js/jquery-3.3.1.min',
+        'jquery-ui'					: '../libs/other/jquery-ui/js/jquery-ui.min',
         backbone					: '../libs/bower/backbone-amd/js/backbone',
         underscore					: '../libs/bower/underscore-amd/js/underscore',
 
@@ -137,7 +137,7 @@
 
 		'jquery.cookie'				: '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles'			: '../libs/bower/jquery-toggles/js/toggles.min',
-        'tag-it'					: '../libs/bower/tag-it/js/tag-it',
+        'tag-it'					: '../libs/bower/tag-it/js/tag-it.min',
         'select2'					: '../libs/bower/select2/select2',
         'bootbox'					: '../libs/bower/bootbox/js/bootbox',
         'moment'					: '../libs/bower/moment/js/moment-with-langs.min',

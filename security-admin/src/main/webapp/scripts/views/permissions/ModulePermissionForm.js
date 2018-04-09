@@ -186,7 +186,7 @@ define(function(require) {
 							return { results : results};
 						},
 						transport: function (options) {
-                                                        $.ajax(options).error(function(respones) {
+                                                        $.ajax(options).fail(function(respones) {
 								console.log("ajax failed");
                                                                 XAUtil.defaultErrorHandler('error',respones);
 								this.success({

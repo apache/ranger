@@ -22,19 +22,19 @@
 </td>
 {{#if policyConditions}}
 <td>	
-	<a href="#" id="policyConditions" data-type="policyConditions" data-original-title="Policy Conditions" title="add/edit conditions"></a>
+        <a href="javascript:;" id="policyConditions" data-type="policyConditions" data-original-title="Policy Conditions" title="add/edit conditions"></a>
 	<button type="button" class="btn btn-mini add-conditions" title="Add" style="display: inline-block;"><i class="icon-plus"></i>
 	</button>
 </td>
 {{/if}}
 <td>	
-	<a href="#" data-js="permissions" data-type="checklist" data-title="Select permissions" title="add/edit permissions" ></a>
+        <a href="javascript:;" data-js="permissions" data-type="checklist" data-title="Select permissions" title="add/edit permissions" ></a>
 	<button type="button" class="btn btn-mini add-permissions" title="Add" style="display: inline-block;"><i class="icon-plus"></i>
 	</button>
 </td>
 {{#if isMaskingPolicy}}
 <td>	
-	<a href="#" data-js="maskingType" data-type="radiolist" data-title="Select Masking Option" title="Select Masking Option" >Add Mask Type</a>
+        <a href="javascript:;" data-js="maskingType" data-type="radiolist" data-title="Select Masking Option" title="Select Masking Option" >Add Mask Type</a>
 	<button type="button" class="btn btn-mini add-masking-type" title="Add" style="display: inline-block;"><i class="icon-plus"></i>
 	</button>
 	<input type="text" data-id="maskTypeCustom" value="{{dataMaskInfo.valueExpr}}" placeholder="enter masked value or expression" style="display:none;" width="40%"/>
@@ -42,7 +42,7 @@
 {{/if}}
 {{#if isRowFilterPolicy}}
 <td>	
-	<a href="#" data-js="rowLeveFilter" data-type="text" data-title="Enter row filter expression" title="Enter filter expression" ></a>
+        <a href="javascript:;" data-js="rowLeveFilter" data-type="text" data-title="Enter row filter expression" title="Enter filter expression" ></a>
 	<button type="button" class="btn btn-mini add-row-filter" title="Add" style="display: inline-block;"><i class="icon-plus"></i>
 	</button>
 </td>	

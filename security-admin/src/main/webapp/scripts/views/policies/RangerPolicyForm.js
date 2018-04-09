@@ -586,7 +586,7 @@ define(function(require){
 								response();
 							}
 
-						}).error(function(){
+                                                }).fail(function(){
 							response();
 
 						});
@@ -701,7 +701,7 @@ define(function(require){
 							};
 						},
 						transport: function (options) {
-							$.ajax(options).error(function() { 
+                                                        $.ajax(options).fail(function() {
 								console.log("ajax failed");
 								this.success({
 									resultSize : 0

@@ -131,13 +131,13 @@ define(function(require) {
 				}
 				_.each(this.model.get('accesses'), function(p){
 					if(p.isAllowed){
-						this.$el.find('input[data-name="' + p.type + '"]').attr('checked', 'checked');
+                                                this.$el.find('input[data-name="' + p.type + '"]').prop('checked', true);
 						_.each(this.accessItems,function(obj){ if(obj.type == p.type) obj.isAllowed=true;})
 					}
 				},this);
 				
 				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
-					this.ui.delegatedAdmin.attr('checked', 'checked');
+                                        this.ui.delegatedAdmin.prop('checked', true);
 				}
 				if(!_.isUndefined(this.model.get('rowFilterInfo')) && !_.isUndefined(this.model.get('rowFilterInfo').filterExpr)){
 					this.rowFilterExprVal = this.model.get('rowFilterInfo').filterExpr
@@ -228,7 +228,7 @@ define(function(require) {
 						return {results : results};
 					},
                     transport: function (options) {
-                    	$.ajax(options).error(function(respones) {
+			$.ajax(options).fail(function(respones) {
                     		XAUtil.defaultErrorHandler('error',respones);
                     		this.success({
                     			resultSize : 0
@@ -265,7 +265,9 @@ define(function(require) {
 			}
 			//if policy items not present. its skip that items and move forward
 			if(_.isObject(this.ui.addPerms)){
-				this.ui.addPerms.editable("destroy");
+                                if(changeType){
+                                    this.ui.addPerms.editable("destroy");
+                                }
 				//create x-editable for permissions
 				this.ui.addPerms.editable({
 					emptytext : 'Add Permissions',
@@ -304,10 +306,8 @@ define(function(require) {
                         that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
                         that.ui.addPermissionsSpan.attr('title','edit');
 					},
-				}).on('click', function(e) {
-					e.stopPropagation();
-                    e.preventDefault();
-                    that.clickOnPermissions(that);
+                                }).on('shown', function(e, editable) {
+                                    that.clickOnPermissions(that);
 				});
 				that.ui.addPermissionsSpan.click(function(e) {
 				e.stopImmediatePropagation();
@@ -487,8 +487,8 @@ define(function(require) {
 					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
 			}).on('click', function(e) {
 				e.stopPropagation();
-				e.preventDefault();
-				that.clickOnPermissions(that);
+//				e.preventDefault();
+//				that.clickOnPermissions(that);
 				 //Sticky popup
 				var pop = $(this).parent('td').find('.popover')
 				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
@@ -511,7 +511,7 @@ define(function(require) {
 			var that = this, perms = [];
 			this.ui.addPerms.attr('data-type','radiolist')
 			this.ui.addPerms.attr('title','Components Permissions')
-			this.ui.delegatedAdmin.parent('td').hide();
+//			this.ui.delegatedAdmin.parent('td').hide();
 			
 			var maskingTypes = this.rangerServiceDefModel.get('dataMaskDef').maskTypes;
 			//get selected components masking types
@@ -528,14 +528,15 @@ define(function(require) {
 					maskTypeVal = $.inArray(maskTypeVal.substr(0,maskTypeVal.indexOf(":")), accessTypeSelectedComp) >= 0 ? maskTypeVal : [];
 				}
 			}
-			//Reset Add Masking Options
-			this.ui.maskingType.editable("setValue",null);
-			this.ui.maskingType.editable("destroy");
-			that.ui.addMaskingTypeSpan.unbind( "click" );
+                        if(accessTypeSelectedComp || _.isEmpty(accessTypeSelectedComp)){
+                            this.ui.maskingType.editable("destroy");
+                        }
+                        that.ui.addMaskingTypeSpan.unbind( "click" );
 			this.$el.find('input[data-id="maskTypeCustom"]').unbind( "change" );
 			that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
 			that.ui.addMaskingTypeSpan.attr('title','add');
-			this.$el.find('input[data-id="maskTypeCustom"]').css("display","none");
+                        this.$el.find('input[data-id="maskTypeCustom"]').css("display","none");
+
 			//create x-editable for permissions
 			this.ui.maskingType.editable({
 			    emptytext : 'Add Mask Type',
@@ -547,7 +548,6 @@ define(function(require) {
 				display: function(value,srcData) {
 					if(_.isNull(value) || _.isUndefined(value) || _.isEmpty(value)){
 						$(this).empty();
-//						that.model.unset('accesses');
 						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
 						return;
@@ -571,12 +571,13 @@ define(function(require) {
 				},
 			}).on('hide',function(e){
 					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
-			}).on('click', function(e) {
-				e.stopPropagation();
-				e.preventDefault();
-			});
+                        }).on('click', function(e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        });
 			that.ui.addMaskingTypeSpan.click(function(e) {
 				e.stopPropagation();
+                                 e.preventDefault();
 				if(!that.accessPermSetForTagMasking){
 					XAUtil.alertPopup({ msg :localization.tt('msg.pleaseSelectAccessTypeForTagMasking') });
 					return;
@@ -595,19 +596,20 @@ define(function(require) {
 		clickOnPermissions : function(that) {
 			var selectAll = true;
 			var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
-			
-			_.each(checklist,function(checkbox){ if($(checkbox).val() != -1 && !$(checkbox).is(':checked')) selectAll = false;})
+            _.each(checklist,function(checkbox){
+                if($(checkbox).val() != -1 && !$(checkbox).is(':checked'))
+                    selectAll = false;
+            })
 			if(selectAll){
 				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
 			} else {
 				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
 			}
 			//for selectAll functionality
-			that.$('input[type="checkbox"][value="-1"]').click(function(e){
-				var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
-				$(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false); 
-				
-			});
+                        that.$('input[type="checkbox"][value="-1"]').click(function(e){
+                var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
+                $(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false);
+            });
 			that.$('.editable-checklist input[type="checkbox"]').click(function(e){
 				if(this.value!="-1"){
 					var selectAll = true;
@@ -739,9 +741,7 @@ define(function(require) {
 			var $el = $(e.currentTarget);
 			XAUtil.checkDirtyFieldForToggle($el);
 			//Set Delegated Admin value 
-			if(!_.isUndefined($el.find('input').data('js'))){
-				this.model.set('delegateAdmin',$el.is(':checked'));
-			}
+                        this.model.set('delegateAdmin',$el.is(':checked'));
 			//select/deselect all functionality
 			if(this.checkAll($el.find('input[type="checkbox"][value!="-1"]'))){
 				$el.find('input[type="checkbox"][value="-1"]').prop('checked', true)

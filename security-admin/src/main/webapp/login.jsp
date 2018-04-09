@@ -32,7 +32,7 @@
 		<link href="styles/bootstrap.min.css" media="all" rel="stylesheet" type="text/css" id="bootstrap-css">
 		<link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
 
-		<script src="libs/bower/jquery/js/jquery.js" ></script>
+                <script src="libs/bower/jquery/js/jquery-3.3.1.js" ></script>
 		
 		<script src="scripts/prelogin/XAPrelogin.js" ></script>
 

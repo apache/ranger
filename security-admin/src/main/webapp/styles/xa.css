@@ -964,6 +964,13 @@ ul.tagit li.tagit-choice .tagit-close {
   background: #3ea211 !important;
 }
 
+.ui-state-active {
+  border: 0 !important;
+  color: #fff !important;
+  background: #3ea211 !important;
+  margin: 0 !important;
+}
+
 .ui-menu .ui-menu-item a {
   border-radius: 0 !important;
 }
@@ -2053,10 +2060,13 @@ td.subgrid-custom-cell{
 .margin-right-5{
 	margin-right: 5px !important;	
 }
-.VS-search .search_facet {
-	margin-top: 5px;
+.VS-search .VS-search-box {
+        min-height: 32px;
 }
-.VS-search .VS-cancel-search-box {
+.VS-search .VS-icon-search {
+        margin-top: 3px;
+}
+/*.VS-search .VS-cancel-search-box {
 	margin-top: 3px;
 }
 .VS-search .VS-icon-search {
@@ -2064,6 +2074,9 @@ td.subgrid-custom-cell{
 }
 .VS-search .search_facet_input_container{
 	margin-top: 1px;
+} */
+.VS-search .VS-placeholder{
+        top: 7px;
 }
 .padding-right-10{
         padding-right: 10px;
