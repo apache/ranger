@@ -832,7 +832,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			String resourcePath = resource != null ? resource.getAsString() : null;
 
 			// Overwrite fields in original auditEvent
-			auditEvent.setEventTime(request.getAccessTime());
+			auditEvent.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
 			auditEvent.setAccessType(request.getAction());
 			auditEvent.setResourcePath(this.pathToBeValidated);
 			auditEvent.setResultReason(resourcePath);

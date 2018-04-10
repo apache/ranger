@@ -19,6 +19,7 @@
 package org.apache.ranger.authorization.hbase;
 
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -199,6 +200,7 @@ public class AuthorizationSession {
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
 		request.setClusterName(_clusterName);
+		request.setAccessTime(new Date());
 		
 		_request = request;
 		if (LOG.isDebugEnabled()) {
