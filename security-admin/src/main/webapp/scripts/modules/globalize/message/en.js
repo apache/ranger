@@ -246,8 +246,6 @@ define(function(require) {
                 activeStatus                    : 'Active Status',
                 selectTagService                : 'Tag Service',
                 syncSource                      : 'Sync Source',
-                noOfUsers                       : 'No. of users',
-                noOfGroups                      : 'No. of groups',
                 unixBackend                     : 'Unix',
                 fileName                        : 'File Name',
                 syncTime                        : 'Sync time',
@@ -263,7 +261,8 @@ define(function(require) {
                 endDate                         : 'End Date',
                                 addValidityPeriod				: 'Add Validity Period',
                                 editValidityPeriod				: 'Edit Validity Period',
-
+                totalUsersSynced                : 'Total number of users synced',
+                totalGroupsSynced               : 'Total number of groups synced',
 
 			},
 			btn : {

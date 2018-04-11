@@ -189,6 +189,16 @@ define(function(require) {
                     <th class="renderable cip" colspan="3">Tag ( Time )</th>\
 			 	</tr>');
 		},
+        modifyUserSyncTableSubcolumns : function(){
+            this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
+                    <th class="renderable ruser"></th>\
+                    <th class="renderable ruser"></th>\
+                    <th class="renderable cip" colspan="2">Number Of New</th>\
+                    <th class="renderable cip" colspan="2">Number Of Modified</th>\
+                    <th class="renderable ruser"></th>\
+                    <th class="renderable ruser"></th>\
+            </tr>');
+        },
 
 		onTabChange : function(e){
 			var that = this, tab;
@@ -280,6 +290,7 @@ define(function(require) {
                      this.ui.visualSearch.show();
                      this.userSyncAuditList = new VXUserList();
                      this.renderUserSyncTable();
+                     this.modifyUserSyncTableSubcolumns();
                      //To use existing collection
                      this.userSyncAuditList.url = 'service/assets/ugsyncAudits';
                      this.userSyncAuditList.modelAttrName = 'vxUgsyncAuditInfoList';
@@ -1566,15 +1577,27 @@ define(function(require) {
                         }
                     }),
                 },
-                noOfUsers : {
+                noOfNewUsers : {
                     cell 	: 'string',
-                    label	: localization.tt("lbl.noOfUsers"),
+                    label	: localization.tt("h.users"),
                     editable:false,
                     sortable:false,
                 },
-                noOfGroups : {
+                noOfNewGroups : {
                     cell 	: 'string',
-                    label	: localization.tt("lbl.noOfGroups"),
+                    label	: localization.tt("h.groups"),
+                    editable:false,
+                    sortable:false,
+                },
+                noOfModifiedUsers : {
+                    cell    : 'string',
+                    label   : localization.tt("h.users"),
+                    editable:false,
+                    sortable:false,
+                },
+                noOfModifiedGroups : {
+                    cell    : 'string',
+                    label   : localization.tt("h.groups"),
                     editable:false,
                     sortable:false,
                 },

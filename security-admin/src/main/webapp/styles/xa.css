@@ -1594,7 +1594,8 @@ background-color: #dc6343;
   display: inline-block;
   margin-right: 3px;
 }
-table.table.backgrid thead th.repoName, .policyActive, .policyDownloaded, .lastPolicyUpdateTime, .tagActive, .tagDownloaded, .lastTagUpdateTime {
+table.table.backgrid thead th.repoName, .policyActive, .policyDownloaded, .lastPolicyUpdateTime, .tagActive, .tagDownloaded,
+ .lastTagUpdateTime, .noOfNewUsers, .noOfNewGroups, .noOfModifiedUsers, .noOfModifiedGroups {
  border-top: 1px solid #ddd !important;
 }
 table.table.backgrid thead th.resourceType {

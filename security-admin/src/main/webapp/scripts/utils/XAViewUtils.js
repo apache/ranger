@@ -103,7 +103,11 @@ define(function(require) {
                     return m.id == e.currentTarget.getAttribute('id');
                 });
                 syncSourceInfo = _.map(syncSourceInfo[0].get('syncSourceInfo'), function(value, key){
-                    return {'label': 'lbl.'+key, 'value': value };
+                    if(key == 'lastModified' || key == 'syncTime' ){
+                        return {'label': 'lbl.'+key, 'value': Globalize.format(new Date(value),  "MM/dd/yyyy hh:mm:ss tt") }
+                    }else{
+                        return {'label': 'lbl.'+key, 'value': value };
+                    }
                 });
                 return {'syncSourceInfo' : syncSourceInfo };
             },
