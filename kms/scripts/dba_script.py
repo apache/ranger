@@ -577,19 +577,38 @@ class OracleConf(BaseDB):
 
 class PostgresConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
-		self.host = host
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
+		self.host = host.lower()
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
+		self.db_ssl_enabled=db_ssl_enabled.lower()
+		self.db_ssl_required=db_ssl_required.lower()
+		self.db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.lower()
+		self.db_ssl_auth_type=db_ssl_auth_type.lower()
+		self.javax_net_ssl_keyStore=javax_net_ssl_keyStore
+		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
+		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
+		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
+		db_ssl_param=''
+		db_ssl_cert_param=''
+		if self.db_ssl_enabled == 'true':
+			db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
+			if self.db_ssl_verifyServerCertificate == 'true' or self.db_ssl_required == 'true':
+				if self.db_ssl_auth_type == '1-way':
+					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+				else:
+					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+			else:
+				db_ssl_param="?ssl=%s&sslfactory=org.postgresql.ssl.NonValidatingFactory" %(self.db_ssl_enabled)
 		if is_unix:
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,self.host, db_name, user, password)
+			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.host, db_name, user, password)
+			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
 		return jisql_cmd
 
 	def verify_user(self, root_user, db_root_password, db_user,dryMode):
@@ -1374,7 +1393,7 @@ def main(argv):
 	javax_net_ssl_keyStorePassword=''
 	javax_net_ssl_trustStore=''
 	javax_net_ssl_trustStorePassword=''
-	if XA_DB_FLAVOR == "MYSQL":
+	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "POSTGRES":
 		if 'db_ssl_enabled' in globalDict:
 			db_ssl_enabled=globalDict['db_ssl_enabled'].lower()
 			if db_ssl_enabled == 'true':
@@ -1407,7 +1426,7 @@ def main(argv):
 						log("[E] Invalid ssl keystore password!","error")
 						sys.exit(1)
 
-
+	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,mysql_core_file)
@@ -1424,7 +1443,7 @@ def main(argv):
 		db_user=db_user.lower()
 		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
-		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,postgres_core_file)
 
 	elif XA_DB_FLAVOR == "MSSQL":

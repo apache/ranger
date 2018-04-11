@@ -250,7 +250,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 		propertiesMap.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
 		props.put("ranger.sha256Password.update.disable", sha256PasswordUpdateDisable);
 	}
-	if(RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL){
+	if(RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL || RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_POSTGRES){
 		if(propertiesMap!=null && propertiesMap.containsKey("ranger.db.ssl.enabled")){
 			String db_ssl_enabled=propertiesMap.get("ranger.db.ssl.enabled");
 			if(StringUtils.isEmpty(db_ssl_enabled)|| !"true".equalsIgnoreCase(db_ssl_enabled)){
@@ -282,8 +282,19 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				props.put("ranger.db.ssl.auth.type", db_ssl_auth_type);
 				String ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
 				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
+					if(ranger_jpa_jdbc_url.contains("?")) {
+						ranger_jpa_jdbc_url=ranger_jpa_jdbc_url.substring(0,ranger_jpa_jdbc_url.indexOf("?"));
+					}
 					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
-					ranger_jpa_jdbc_url_ssl.append("?useSSL="+db_ssl_enabled+"&requireSSL="+db_ssl_required+"&verifyServerCertificate="+db_ssl_verifyServerCertificate);
+					if (RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL) {
+						ranger_jpa_jdbc_url_ssl.append("?useSSL="+db_ssl_enabled+"&requireSSL="+db_ssl_required+"&verifyServerCertificate="+db_ssl_verifyServerCertificate);
+					}else if(RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_POSTGRES) {
+						if("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)){
+							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled);
+						}else{
+							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled+"&sslfactory=org.postgresql.ssl.NonValidatingFactory");
+						}
+					}
 					propertiesMap.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url_ssl.toString());
 					props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url_ssl.toString());
 					logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url_ssl.toString());
