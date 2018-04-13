@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS;
@@ -106,6 +107,8 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType);
+
+	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason);
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 

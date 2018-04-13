@@ -393,13 +393,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				RangerPolicyResourceMatcher.MatchType matchType = tagMatchTypeMap != null ? tagMatchTypeMap.get(evaluator.getId()) : null;
 
 				if (matchType == null) {
-					// This evaluator is not tag evaluator
 					matchType = evaluator.getPolicyResourceMatcher().getMatchType(request.getResource(), request.getContext());
-					if (matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
-						// Need to skip this evaluator, if access-type were not ANY, in RangerDefaultPolicyEvaluator this will cause
-						// the evaluation to be skipped
-						continue;
-					}
+				}
+
+				final boolean isMatched;
+
+				if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+				}
+
+				if (!isMatched) {
+					continue;
 				}
 
 				PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
