@@ -34,6 +34,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 
 public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
@@ -78,6 +79,8 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
+
+	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason);
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
 

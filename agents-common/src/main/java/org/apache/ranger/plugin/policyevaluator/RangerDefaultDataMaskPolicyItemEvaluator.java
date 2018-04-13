@@ -44,17 +44,14 @@ public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolic
 	}
 
 	@Override
-	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
 		RangerPolicyItemDataMaskInfo dataMaskInfo = getDataMaskInfo();
 
 		if (dataMaskInfo != null) {
-			result.setIsAllowed(true);
-			result.setIsAccessDetermined(true);
-
 			result.setMaskType(dataMaskInfo.getDataMaskType());
 			result.setMaskCondition(dataMaskInfo.getConditionExpr());
 			result.setMaskedValue(dataMaskInfo.getValueExpr());
-			result.setPolicyId(policyId);
+			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
 	}
 

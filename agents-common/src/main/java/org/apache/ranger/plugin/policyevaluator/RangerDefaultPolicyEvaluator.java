@@ -167,28 +167,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
 				RangerPolicyResourceMatcher.MatchType matchType;
-				final boolean isMatched;
 
 				if (RangerTagAccessRequest.class.isInstance(request)) {
 					matchType = ((RangerTagAccessRequest) request).getMatchType();
-					if (matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT
-							&& !request.isAccessTypeAny()
-							&& request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Setting matchType from DESCENDANT to SELF, so that any DENY policy-items will take effect.");
-						}
-						matchType = RangerPolicyResourceMatcher.MatchType.SELF;
-					}
-					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 				} else {
 					matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
-					if (request.isAccessTypeAny()) {
-						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-					} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-					} else {
-						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
-					}
+				}
+
+				final boolean isMatched;
+
+				if (request.isAccessTypeAny()) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+				} else {
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 				}
 
 				if (isMatched) {
@@ -370,15 +363,36 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
+	@Override
+	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason) {
+
+		if (!isAllowed) {
+			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT || !result.getAccessRequest().isAccessTypeAny()) {
+				result.setIsAllowed(false);
+				result.setPolicyId(getId());
+				result.setReason(reason);
+			}
+		} else {
+			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT || result.getAccessRequest().isAccessTypeAny()) {
+				if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
+					result.setIsAllowed(true);
+					result.setPolicyId(getId());
+					result.setReason(reason);
+				}
+			}
+		}
+	}
+
 	protected void evaluatePolicyItems(RangerAccessRequest request, RangerPolicyResourceMatcher.MatchType matchType, RangerAccessResult result) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + matchType + ")");
 		}
-
 		RangerPolicyItemEvaluator matchedPolicyItem = getMatchingPolicyItem(request, result);
 
 		if(matchedPolicyItem != null) {
-			matchedPolicyItem.updateAccessResult(result, matchType, getPolicy().getId());
+			if (matchedPolicyItem != null) {
+				matchedPolicyItem.updateAccessResult(this, result, matchType);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

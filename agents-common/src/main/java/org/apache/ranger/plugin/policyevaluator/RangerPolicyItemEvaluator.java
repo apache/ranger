@@ -65,6 +65,5 @@ public interface RangerPolicyItemEvaluator {
 			return Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 		}
 	}
-	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId);
-
+	void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType);
 }

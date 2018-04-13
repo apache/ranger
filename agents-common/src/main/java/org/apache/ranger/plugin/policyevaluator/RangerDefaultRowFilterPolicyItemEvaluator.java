@@ -43,15 +43,12 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 	}
 
 	@Override
-	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, Long policyId) {
+	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
 		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
 		if (rowFilterInfo != null) {
-			result.setIsAllowed(true);
-			result.setIsAccessDetermined(true);
-
 			result.setFilterExpr(rowFilterInfo.getFilterExpr());
-			result.setPolicyId(policyId);
+			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
 	}
 }

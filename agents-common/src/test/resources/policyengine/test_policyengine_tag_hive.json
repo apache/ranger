@@ -39,7 +39,10 @@
      "resources":{"database":{"values":["*"]},"table":{"values":["*"]},"column":{"values":["*"]}},
      "policyItems":[
        {"accesses":[{"type":"all","isAllowed":true}],"users":["hive", "user1", "user2"],"groups":["public"],"delegateAdmin":false}
-     ]
+     ],
+      "allowExceptions":[
+        {"accesses":[{"type":"all","isAllowed":true}],"users":["testuser"],"groups":[],"delegateAdmin":false}
+      ]
     },
     {"id":102,"name":"db=*, udf=*: audit-all-access","isEnabled":true,"isAuditEnabled":true,
       "resources":{"database":{"values":["*"]},"udf":{"values":["*"]}},
@@ -219,6 +222,15 @@
   },
 
   "tests":[
+    {"name":"DENY 'select ssn from employee.personal;' for testuser using EXPIRES_ON tag with DESCENDANT match",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
+        "accessType":"select","user":"testuser","userGroups":[],"requestData":"select ssn from employee.personal;' for testuser",
+
+        "context": {"TAGS":"[{\"type\":\"EXPIRES_ON\", \"attributes\":{\"expiry_date\":\"2026-06-15T15:05:15.000Z\"}, \"matchType\":\"DESCENDANT\"}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
