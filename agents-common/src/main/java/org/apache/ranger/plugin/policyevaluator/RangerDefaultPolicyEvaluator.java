@@ -169,21 +169,25 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         if (request != null && result != null) {
 
 			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
-				RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
+				RangerPolicyResourceMatcher.MatchType matchType;
+
+				if (RangerTagAccessRequest.class.isInstance(request)) {
+					matchType = ((RangerTagAccessRequest) request).getMatchType();
+				} else {
+					matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
+				}
 
 				final boolean isMatched;
+
 				if (request.isAccessTypeAny()) {
 					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 				} else {
 					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 				}
 
 				if (isMatched) {
-					if (RangerTagAccessRequest.class.isInstance(request)) {
-						matchType = ((RangerTagAccessRequest) request).getMatchType();
-					}
 					if (!result.getIsAuditedDetermined()) {
 						if (isAuditEnabled()) {
 							result.setIsAudited(true);
@@ -410,16 +414,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceAccessInfo(" + request + ", " + result + ")");
 		}
-		RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
-
-		final boolean isMatched;
-		if (request.isAccessTypeAny()) {
-				isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-			} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-				isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
-			} else {
-			isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+		RangerPolicyResourceMatcher.MatchType matchType;
+		if (RangerTagAccessRequest.class.isInstance(request)) {
+			matchType = ((RangerTagAccessRequest) request).getMatchType();
+		} else {
+			matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 		}
+
+		final boolean isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 
 		if (isMatched) {
 
@@ -470,7 +472,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-
 	protected void evaluatePolicyItems(RangerAccessRequest request, RangerAccessResult result, boolean isResourceMatch) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems(" + request + ", " + result + ", " + isResourceMatch + ")");
@@ -486,16 +487,18 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			RangerPolicy policy = getPolicy();
 
 			if(matchedPolicyItem.getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
-				if(isResourceMatch) {
+				if(isResourceMatch || !request.isAccessTypeAny()) {
 					result.setIsAllowed(false);
 					result.setPolicyId(policy.getId());
 					result.setReason(matchedPolicyItem.getComments());
 				}
 			} else {
-				if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
-					result.setIsAllowed(true);
-					result.setPolicyId(policy.getId());
-					result.setReason(matchedPolicyItem.getComments());
+				if(isResourceMatch || request.isAccessTypeAny()) {
+					if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
+						result.setIsAllowed(true);
+						result.setPolicyId(policy.getId());
+						result.setReason(matchedPolicyItem.getComments());
+					}
 				}
 			}
 		}

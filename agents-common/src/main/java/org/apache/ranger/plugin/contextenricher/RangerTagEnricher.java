@@ -324,10 +324,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					if (request.isAccessTypeAny()) {
 						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 					} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 					} else {
 						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 					}
+
 					if (isMatched) {
 						if (ret == null) {
 							ret = new HashSet<RangerTagForEval>();
