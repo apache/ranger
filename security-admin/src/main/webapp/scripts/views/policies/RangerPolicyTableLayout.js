@@ -180,9 +180,11 @@ define(function(require){
 			rangerPolicy.fetch({
 				cache : false,
 			}).done(function(){
-                                var view = new RangerPolicyRO({
+				var policyVersionList = rangerPolicy.fetchVersions();
+				var view = new RangerPolicyRO({
 					model : rangerPolicy,
-                                        rangerService: that.rangerServiceDefModel
+					policyVersionList : policyVersionList,
+					rangerService: that.rangerServiceDefModel
 				});
 				var modal = new Backbone.BootstrapModal({
 					animate : true,
@@ -192,6 +194,14 @@ define(function(require){
 					allowCancel : true,
 					escape 	: true
 				}).open();
+				var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
+				policyVerEl.append('<i id="preVer" class="icon-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
+					view.previousVer(e);
+				});
+				var policyVerIndexAt = policyVersionList.indexOf(rangerPolicy.get('version').toString());
+				policyVerEl.append('<i id="nextVer" class="icon-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
+					view.nextVer(e);
+				});
 				modal.$el.find('.cancel').hide();
 			});
 		},
