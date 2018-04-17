@@ -24,12 +24,6 @@ define(function(require){
 	var Backbone						= require('backbone');
 	var XAEnums					 		= require('utils/XAEnums');
 	var XALinks							= require('modules/XALinks');
-	var PolicyOperationDiff_tmpl 		= require('hbs!tmpl/reports/PolicyOperationDiff_tmpl');
-	var PolicyUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PolicyUpdateOperationDiff_tmpl');
-	var PolicyDeleteUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PolicyDeleteOperationDiff_tmpl');
-	var KnoxPolicyOperationDiff_tmpl 			= require('hbs!tmpl/reports/KnoxPolicyOperationDiff_tmpl');
-	var KnoxPolicyUpdateOperationDiff_tmpl 		= require('hbs!tmpl/reports/KnoxPolicyUpdateOperationDiff_tmpl');
-	var KnoxPolicyDeleteUpdateOperationDiff_tmpl= require('hbs!tmpl/reports/KnoxPolicyDeleteOperationDiff_tmpl');
 	var AssetOperationDiff_tmpl 		= require('hbs!tmpl/reports/AssetOperationDiff_tmpl');
 	var AssetUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/AssetUpdateOperationDiff_tmpl');
 	var UserOperationDiff_tmpl 			= require('hbs!tmpl/reports/UserOperationDiff_tmpl');
@@ -42,7 +36,6 @@ define(function(require){
 	{
 		_viewName : 'OperationDiffDetail',
 		
-    	template: PolicyOperationDiff_tmpl,
         templateHelpers :function(){
         	var obj = {
         			collection : this.collection.models,
@@ -146,17 +139,6 @@ define(function(require){
 				}
 				this.assetDiffOperation();
 			}
-			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value){
-				this.templateType=XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value;
-				if(this.action == 'create'){
-					this.template = PolicyOperationDiff_tmpl;
-				} else if(this.action == 'update'){
-					this.template = PolicyUpdateOperationDiff_tmpl;
-				} else{
-					this.template = PolicyDeleteUpdateOperationDiff_tmpl;
-				}
-				this.resourceDiffOperation();
-			} 
 			if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value
 					|| this.classType == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value
 					|| this.classType == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value){
@@ -216,137 +198,7 @@ define(function(require){
 			}
 			
 		},
-		resourceDiffOperation : function(){
-			var that = this, modelColl = [];
-			this.newGroupPermList = [],this.previousGroupPermList = [], this.newUserPermList = [],this.previousUserPermList = [], this.isGroupPerm = false, this.isUserPerm = false;
-			this.userList = [],this.groupList = [];
-			this.collection.each(function(m){
-				var attrName = m.get('attributeName'), type = 'permType';
-				if(attrName == "IP Address")	type = 'ipAddress';
-				if(m.get('attributeName') == 'Permission Type' || m.get('attributeName') == "IP Address"){
-					if(m.get('parentObjectClassType') == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value){
-						if(m.get('action') != 'delete'){
-							if(m.get('action') == 'create'){
-								var obj = {groupName : m.get('parentObjectName')};
-								obj[type] = ""; 
-								that.previousGroupPermList.push(obj);
-							}
-							obj = {groupName : m.get('parentObjectName')};
-							obj[type] = m.get('newValue');
-							that.newGroupPermList.push(obj);
-						}
-						if(m.get('action') == 'delete' || m.get('action') == 'update'){
-							obj = {groupName : m.get('parentObjectName')};
-							obj[type] = m.get('previousValue');
-							that.previousGroupPermList.push(obj);
-						}
-						if($.inArray(m.get('parentObjectName'),that.groupList) < 0)
-							that.groupList.push(m.get('parentObjectName'));
-					} else {
-						if(m.get('action') != 'delete'){
-							if(m.get('action') == 'create'){
-								var obj = {userName : m.get('parentObjectName')};
-								obj[type] = ""; 
-								that.previousUserPermList.push(obj);
-							}
-							obj = {userName : m.get('parentObjectName')};
-							obj[type] = m.get('newValue');
-							that.newUserPermList.push(obj);
-						}
-						if(m.get('action') == 'delete' || m.get('action') == 'update'){
-							obj = {userName : m.get('parentObjectName')};
-							obj[type] = m.get('previousValue');
-							that.previousUserPermList.push(obj);
-						}
-						
-						
-						if($.inArray(m.get('parentObjectName'),that.userList) < 0)
-							that.userList.push(m.get('parentObjectName'));
-					}
-					modelColl.push(m);
-					
-				} else if(m.get('attributeName') == 'Repository Type'){
-					if(m.get('action') != 'delete'){
-						that.repositoryType = m.get('newValue');
-					} else {
-						that.repositoryType = m.get('previousValue');
-					}
-					modelColl.push(m);
-					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "create")//XAEnums.AssetType.ASSET_KNOX.value)
-						that.template = KnoxPolicyOperationDiff_tmpl;
-					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "update")
-						that.template = KnoxPolicyUpdateOperationDiff_tmpl;
-					if(that.repositoryType == XAEnums.AssetType.ASSET_KNOX.label && m.get('action') == "delete")
-						that.template = KnoxPolicyDeleteUpdateOperationDiff_tmpl;
-				} else if(m.get('attributeName') == 'Policy Name'){
-					if(m.get('action') != 'delete'){
-						that.policyName = m.get('newValue');
-					} else {
-						that.policyName = m.get('previousValue');
-					}
-					if(m.get('newValue') == m.get('previousValue'))
-						modelColl.push(m);
-				}
-			
-				if(_.isUndefined(m.get('attributeName')))
-					modelColl.push(m);
-			});
-			
-			this.newGroupPermList 		= _.groupBy(this.newGroupPermList, 'groupName');
-			this.previousGroupPermList 	= _.groupBy(this.previousGroupPermList, 'groupName');
-			this.newUserPermList 			= _.groupBy(this.newUserPermList, 'userName');
-			this.previousUserPermList 			= _.groupBy(this.previousUserPermList, 'userName');
-			
-			this.removeUnwantedElement();
-			this.createEqualLengthArr();
-			
-			if(!_.isEmpty(this.newGroupPermList) || !_.isEmpty(this.previousGroupPermList))
-				this.isGroupPerm = true;
-			if(!_.isEmpty(this.newUserPermList) || !_.isEmpty(this.previousUserPermList))
-				this.isUserPerm = true;
-			
-			that.collection.remove(modelColl);
-		},
-		removeUnwantedElement : function(){
-			var that = this;
-			_.each(this.newGroupPermList,function(val,key){
-				console.log(val);
-				that.newGroupPermList[key]	= _.uniq(val,false,function(m){return m.permType;});
-			});
-			_.each(this.previousGroupPermList,function(val,key){
-				console.log(val);
-				that.previousGroupPermList[key]	= _.uniq(val,false,function(m){return m.permType;});
-			});
-			_.each(this.newUserPermList,function(val,key){
-				console.log(val);
-				that.newUserPermList[key]	= _.uniq(val,false,function(m){return m.permType;});
-			});
-			_.each(this.previousUserPermList,function(val,key){
-				console.log(val);
-				that.previousUserPermList[key]	= _.uniq(val,false,function(m){return m.permType;});
-			});
-			
-		},
-		createEqualLengthArr : function(){
-			if(this.objectSize(this.previousGroupPermList) > this.objectSize(this.newGroupPermList)){
-				var addlength = this.objectSize(this.previousGroupPermList) - this.objectSize(this.newGroupPermList);
-				for(var i=0; i < addlength; i++)
-					this.newGroupPermList['temp'+i] = [];
-			}else{
-				var addlength = this.objectSize(this.newGroupPermList) - this.objectSize(this.previousGroupPermList);
-				for(var i=0; i < addlength; i++)
-					this.previousGroupPermList['temp'+i] = [];
-			}
-			if(this.objectSize(this.previousUserPermList) > this.objectSize(this.newUserPermList)){
-				var addlength = this.objectSize(this.previousUserPermList) - this.objectSize(this.newUserPermList);
-				for(var i=0; i < addlength; i++)
-					this.newUserPermList['temp'+i] = [];
-			}else{
-				var addlength = this.objectSize(this.newUserPermList) - this.objectSize(this.previousUserPermList);
-				for(var i=0; i < addlength; i++)
-					this.previousUserPermList['temp'+i] = [];
-			}
-		},
+
 		userDiffOperation : function(){
 			var that = this, modelArr = [];
 			this.groupList = [], this.newGroupList = [], this.previousGroupList =[],this.isGroup = false;

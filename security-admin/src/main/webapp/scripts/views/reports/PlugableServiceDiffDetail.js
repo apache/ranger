@@ -32,7 +32,6 @@ define(function(require){
 	var PolicyOperationDiff_tmpl 		= require('hbs!tmpl/reports/PlugableServicePolicyDiff_tmpl');
 	var PolicyUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PlugableServicePolicyUpdateDiff_tmpl');
 	var PolicyDeleteOperationDiff_tmpl 	= require('hbs!tmpl/reports/PlugableServicePolicyDeleteDiff_tmpl');
-	var PolicyDeleteUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/PolicyDeleteOperationDiff_tmpl');
 	
 	var PlugableServiceDiffDetail = Backbone.Marionette.ItemView.extend(
 	/** @lends PlugableServiceDiffDetail */
@@ -64,6 +63,8 @@ define(function(require){
 					oldMaskPolicyItems: this.oldMaskPolicyItems,
 					oldRowFilterPolicyItems: this.oldRowFilterPolicyItems,
 					userName   : this.userName,
+					newPolicyValidityPeriod: this.newValidityPeriod,
+					oldPolicyValidityPeriod: this.oldValidityPeriod
 
         		};
         },
@@ -119,8 +120,8 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
-			this.removeLastCommaFromSpans(this.$el.find('.policyDetail').find('ol li'))
-			this.removeLastCommaFromSpans(this.ui.diff.find('ol li'))
+			this.removeLastCommaFromSpans(this.$el.find('.policyDetail').find('ol li'));
+			this.removeLastCommaFromSpans(this.ui.diff.find('ol li'));
 			
 			_.each(this.ui.policyDiff.find('ol li'),function(m){
 				if(_.isEmpty($(m).text().trim()))
@@ -129,18 +130,26 @@ define(function(require){
 			//Remove last br from ol
 			this.$el.find('.diff-perms').find('.diff-right').find('ol:last').next().remove()
 			this.$el.find('.diff-perms').find('.diff-left').find('ol:last').next().remove()
+			this.$el.find('.validityPeriod').find('.diff-right').find('ol:last').next().remove()
+            this.$el.find('.validityPeriod').find('.diff-left').find('ol:last').next().remove()
 			
 			var newOl = this.$el.find('.diff-perms').find('.diff-right').find('ol');
 			var oldOl = this.$el.find('.diff-perms').find('.diff-left').find('ol');
+            var newTimeOl = this.$el.find('.validityPeriod').find('.diff-right').find('ol');
+            var oldTimeOl = this.$el.find('.validityPeriod').find('.diff-left').find('ol');
 			
 			_.each(oldOl, function(ol, i) {
-				console.log()
 				this.highLightElement($(ol).find('.username'), $(newOl[i]).find('.username'));
 				this.highLightElement($(ol).find('.groupname'), $(newOl[i]).find('.groupname'));
 				this.highLightElement($(ol).find('.perm'), $(newOl[i]).find('.perm'));
 				this.highLightElement($(ol).find('.condition'), $(newOl[i]).find('.condition'));
 				this.highLightElement($(ol).find('.maskingAndRow'), $(newOl[i]).find('.maskingAndRow'));
-				
+			},this);
+
+            _.each(oldTimeOl, function(ol, i){
+                this.highLightElement($(ol).find('.startTime'), $(newTimeOl[i]).find('.startTime'));
+                this.highLightElement($(ol).find('.endTime'), $(newTimeOl[i]).find('.endTime'));
+                this.highLightElement($(ol).find('.timeZone'), $(newTimeOl[i]).find('.timeZone'));
 			},this);
 		},
 		removeLastCommaFromSpans : function($el) {
@@ -208,6 +217,14 @@ define(function(require){
 			if(!_.isUndefined(policyResource)){
 				this.getPolicyResources();
 			}
+            var policyValiditySchedules = this.collection.findWhere({'attributeName':'Validity Schedules'});
+            if(!_.isUndefined(policyValiditySchedules)){
+                var validityPeriod = this.getPolicyValiditySchedules('Validity Schedules');
+                if(!_.isEmpty(validityPeriod)){
+                    this.newValidityPeriod = validityPeriod.newPerms;
+                    this.oldValidityPeriod = validityPeriod.oldPerms;
+                }
+            }
 			var policyItems = this.collection.findWhere({'attributeName':'Policy Items'});
 			if(!_.isUndefined(policyItems)){
 				var perms = this.getPolicyItems('Policy Items');
@@ -275,7 +292,7 @@ define(function(require){
 				var oldResources = {} ;
 				var resourceNewValues = JSON.parse(policyResources.get('previousValue'));
 				////for resource  old value
-				_.each(resourceNewValues,function(val,key){ 
+				_.each(resourceNewValues,function(val,key){
 					oldResources[key] = val.values.toString();
 					oldResources[key +' exclude'] = val.isExcludes.toString();
 					oldResources[key +' recursive'] = val.isRecursive.toString();
@@ -284,14 +301,14 @@ define(function(require){
 			if(this.action == "update"){
 				//**Show diffview data for resource change at same level.
 				var done = false;
-				_.each(resources,function(val, key){
+				_.each(resources, function(val, key){
 					if(_.isUndefined(oldResources[key] && !done)){
 						_.each(resources,function(val,key){
 							if(!oldResources.hasOwnProperty(key)){
 								oldResources[key] = "";
 							}
 						});
-						_.each(oldResources,function(val,key){
+						_.each(oldResources, function(val,key){
 							if(!resources.hasOwnProperty(key)){
 								resources[key] = "";
 							}
@@ -299,16 +316,34 @@ define(function(require){
 						done = true;
 					}
 				});
-				_.each(resources,function(val, key){ 
-					if(val != oldResources[key])
-						this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"}); 
-				}, this)
+			_.each(resources, function(val, key){
+				if(val != oldResources[key])
+					this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"});
+			}, this);
 			} else if(this.action == "create"){
-				_.each(resources,function(val, key){ this.collection.add({'attributeName':key, 'newValue':val.toString()}); }, this)
+				_.each(resources,function(val, key){ this.collection.add({'attributeName':key, 'newValue':val.toString()}); }, this);
 			} else{
-				_.each(oldResources,function(val, key){ this.collection.add({'attributeName':key, 'previousValue':val.toString()}); }, this)
+				_.each(oldResources,function(val, key){ this.collection.add({'attributeName':key, 'previousValue':val.toString()}); }, this);
 			}
 		},
+        getPolicyValiditySchedules : function(){
+            var validityPeriod = {},that = this;
+            var validityTime=[], oldValidityTime =[];
+            var validitySchedules = this.collection.findWhere({'attributeName':'Validity Schedules'});
+            this.collection.remove(validitySchedules);
+            if(!_.isUndefined(validitySchedules.get('newValue')) && !_.isEmpty(validitySchedules.get('newValue'))){
+                var validityTimeNewValues = JSON.parse(validitySchedules.get('newValue'));
+            }
+            if(!_.isUndefined(validitySchedules.get('previousValue')) && !_.isEmpty(validitySchedules.get('previousValue'))){
+                var oldvalidityTime = {} ;
+                var validityTimePreviousValue = JSON.parse(validitySchedules.get('previousValue'));
+            }
+            if(this.action == "update"){
+                return this.setOldNewPermDiff(validityTimeNewValues, validityTimePreviousValue);
+            } else {
+                return {'oldPerms' : validityTimePreviousValue, 'newPerms' : validityTimeNewValues};
+            }
+        },
 		getPolicyItems : function(itemType) {
 			var items = {},that = this;
 			var newPolicyItems=[], oldPolicyItems =[];
@@ -357,15 +392,10 @@ define(function(require){
 					}
 			}
 
-//			this.oldPermList =[], this.newPermList =[]
 			if(this.action == "update"){
-				//return this.setOldeNewPermList(newPolicyItems, oldPolicyItems);
 				return this.setOldNewPermDiff(newPolicyItems, oldPolicyItems);
 			} else {
-				
 				return {'oldPerms' : oldPolicyItems, 'newPerms' : newPolicyItems};
-//				this.oldPermList = this.oldPolicyItems;
-//				this.newPermList = this.newPolicyItems; 
 			}
 		},
 		setOldNewPermDiff: function(newPolicyItems, oldPolicyItems){
@@ -378,47 +408,6 @@ define(function(require){
 				}
 			}
 			return {'newPerms': newPerms, 'oldPerms': oldPerms};
-		},
-		setOldeNewPermList : function(newPolicyItems, oldPolicyItems) {
-			var found = false, oldPerms = [], newPerms = [];
-			for(var i=0; i< newPolicyItems.length ;i++){
-				found = false;
-				for(var j=0; j< oldPolicyItems.length ;j++){
-					if(!found)
-						if(_.intersection(oldPolicyItems[j].users,newPolicyItems[i].users).length > 0
-								|| _.intersection(oldPolicyItems[j].groups,newPolicyItems[i].groups).length > 0){
-							if(JSON.stringify(newPolicyItems[i]) != JSON.stringify(oldPolicyItems[j])){
-								oldPerms.push(oldPolicyItems[j]);
-								newPerms.push(newPolicyItems[i]);
-							}
-							found = true;
-						}
-				}
-				if(!found){
-					oldPerms.push({});
-					newPerms.push(newPolicyItems[i]);
-				}
-			}
-			for(var i=0; i< oldPolicyItems.length ;i++){
-				found = false;
-				for(var j=0; j < newPolicyItems.length;j++){
-					if(!found && _.intersection(oldPolicyItems[i].users,newPolicyItems[j].users).length > 0
-							|| _.intersection(oldPolicyItems[i].groups,newPolicyItems[j].groups).length > 0){
-						if(JSON.stringify(oldPolicyItems[i]) != JSON.stringify(newPolicyItems[j])){
-							if($.inArray(oldPolicyItems[i], oldPerms) < 0){
-								oldPerms.push(oldPolicyItems[i]);
-								newPerms.push(newPolicyItems[j]);
-							}
-						}
-						found = true;
-					}
-				}
-				if(!found){
-					oldPerms.push(oldPolicyItems[i]);
-					newPerms.push({});
-				}
-			}
-			return {'newPerms' : newPerms, 'oldPerms' : oldPerms };
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
