@@ -61,4 +61,8 @@
 		<name>ranger.usersync.logdir</name>
 		<value>./log</value>
 	</property>
+	<property>
+		<name>ranger.usersync.cookie.enabled</name>
+		<value>true</value>
+	</property>
 </configuration>
