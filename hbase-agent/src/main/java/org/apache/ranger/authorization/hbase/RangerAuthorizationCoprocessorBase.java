@@ -39,6 +39,7 @@ import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Admin.MasterSwitchType;
 import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
 import org.apache.hadoop.hbase.coprocessor.BulkLoadObserver;
 import org.apache.hadoop.hbase.coprocessor.MasterCoprocessorEnvironment;
@@ -489,4 +490,31 @@ public abstract class RangerAuthorizationCoprocessorBase extends BaseRegionObser
     public void postBalanceRSGroup(final ObserverContext<MasterCoprocessorEnvironment> ctx, String groupName, boolean balancerRan) throws IOException {}
     public void preAddRSGroup(ObserverContext<MasterCoprocessorEnvironment> ctx, String name) throws IOException {}
     public void postAddRSGroup(ObserverContext<MasterCoprocessorEnvironment> ctx, String name) throws IOException {}
+
+    public void postDispatchMerge(ObserverContext<MasterCoprocessorEnvironment> arg0, HRegionInfo arg1,
+                                  HRegionInfo arg2)
+        throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void postSetSplitOrMergeEnabled(ObserverContext<MasterCoprocessorEnvironment> arg0, boolean arg1,
+                                           MasterSwitchType arg2)
+        throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+    public void preDispatchMerge(ObserverContext<MasterCoprocessorEnvironment> arg0, HRegionInfo arg1,
+                                 HRegionInfo arg2)
+        throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public boolean preSetSplitOrMergeEnabled(ObserverContext<MasterCoprocessorEnvironment> arg0, boolean arg1,
+                                             MasterSwitchType arg2)
+        throws IOException {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }
