@@ -48,6 +48,7 @@ public class CommandLineOptions {
         options.addOption("r", "retrieve", true, "{all|users|groups}");
         options.addOption("a", "noAuthentication", false, "Ignore authentication properties");
         options.addOption("p", true, "Ldap Bind Password");
+        options.addOption("u", true, "Sample Authentication User Password");
     }
 
     public void parse() {
@@ -62,6 +63,13 @@ public class CommandLineOptions {
             	if (bindPassword.trim().isEmpty()) {
             		System.out.println("Ldap Bind Password cannot be empty!");
             	}
+            }
+
+            if (cmd.hasOption("u")) {
+                authPass = cmd.getOptionValue("u");
+                if (authPass.trim().isEmpty()) {
+                    System.out.println("Sample Authentication User Password cannot be empty!");
+                }
             }
 
             if (cmd.hasOption("o")) {

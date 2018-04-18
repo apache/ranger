@@ -420,7 +420,7 @@ public class LdapConfig {
             config.setProperty(LGSYNC_USER_SEARCH_BASE, userSearchBase);
             config.setProperty(LGSYNC_USER_SEARCH_FILTER, userSearchFilter);
             config.setProperty(AUTH_USERNAME, authUser);
-            config.setProperty(AUTH_PASSWORD, authPass);
+            //config.setProperty(AUTH_PASSWORD, authPass);
             config.save();
         } catch (ConfigurationException e) {
             System.out.println("Failed to update " + CONFIG_FILE + ": " + e);

@@ -85,7 +85,6 @@ public class TagSyncConfig extends Configuration {
 
 	public static final String TAGSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.tagsync.cookie.enabled";
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
-	private static final String DEFAULT_TAGADMIN_PASSWORD = "rangertagsync";
 	private static final String DEFAULT_ATLASREST_USERNAME = "admin";
 	private static final String DEFAULT_ATLASREST_PASSWORD = "admin";
 
@@ -279,9 +278,6 @@ public class TagSyncConfig extends Configuration {
 					}
 				}
 			}
-		}
-		if(StringUtils.isBlank(password)){
-			return DEFAULT_TAGADMIN_PASSWORD;
 		}
 		return null;
 	}

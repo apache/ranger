@@ -43,6 +43,11 @@
             <artifactId>commons-lang</artifactId>
             <version>${commons.lang.version}</version>
         </dependency>
+	 <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons.logging.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
@@ -136,6 +141,16 @@
                             <groupId>commons-lang</groupId>
                             <artifactId>commons-lang</artifactId>
                             <version>${commons.lang.version}</version>
+                            <type>jar</type>
+                            <overWrite>false</overWrite>
+                            <outputDirectory>
+                                ${project.build.directory}/generated-tool-dependencies/lib
+                            </outputDirectory>
+                        </artifactItem>
+			<artifactItem>
+                            <groupId>commons-logging</groupId>
+                            <artifactId>commons-logging</artifactId>
+                            <version>${commons.logging.version}</version>
                             <type>jar</type>
                             <overWrite>false</overWrite>
                             <outputDirectory>
