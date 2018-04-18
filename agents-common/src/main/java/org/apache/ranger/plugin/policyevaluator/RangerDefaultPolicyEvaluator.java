@@ -493,12 +493,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					result.setReason(matchedPolicyItem.getComments());
 				}
 			} else {
-				if(isResourceMatch || request.isAccessTypeAny()) {
-					if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
-						result.setIsAllowed(true);
-						result.setPolicyId(policy.getId());
-						result.setReason(matchedPolicyItem.getComments());
-					}
+				if(! result.getIsAllowed()) { // if access is not yet allowed by another policy
+					result.setIsAllowed(true);
+					result.setPolicyId(policy.getId());
+					result.setReason(matchedPolicyItem.getComments());
 				}
 			}
 		}
