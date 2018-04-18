@@ -92,7 +92,7 @@ if [ "${action}" == "START" ]; then
 	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*"
 
 	cd ${cdir}
-	umask 0077
+	
 	if [ -z "${logdir}" ]; then 
 	    logdir=${cdir}/logs
 	fi
