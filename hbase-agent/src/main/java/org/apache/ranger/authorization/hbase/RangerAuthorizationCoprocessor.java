@@ -397,53 +397,75 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 			Set<String> columns = anEntry.getValue();
 			if (columns == null || columns.isEmpty()) {
 				LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
+
 				session.column(null) // zap stale column from prior iteration of this loop, if any
 						.buildRequest()
 						.authorize();
 				AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for success
-				if (session.isAuthorized()) {
-					somethingIsAccessible = true;
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("evaluateAccess: has family level access [" + family + "]. Checking if [" + family + "] descendants have access.");
-					}
-					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
-							.buildRequest()
-							.authorize();
-					auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
-					if (session.isAuthorized()) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("evaluateAccess: [" + family + "] descendants have access");
+
+				final boolean isColumnFamilyAuthorized = session.isAuthorized();
+
+				if (auditEvent != null) {
+					if (isColumnFamilyAuthorized) {
+						familyLevelAccessEvents.add(auditEvent);
+					} else {
+						if (deniedEvent == null) { // we need to capture just one denial event
+							LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
+							deniedEvent = auditEvent;
 						}
+					}
+				}
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("evaluateAccess: family level access for [" + family + "] is evaluated to " + isColumnFamilyAuthorized + ". Checking if [" + family + "] descendants have access.");
+				}
+				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
+						.buildRequest()
+						.authorize();
+				auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
+				if (session.isAuthorized()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("evaluateAccess: [" + family + "] descendants have access");
+					}
+					somethingIsAccessible = true;
+					if (isColumnFamilyAuthorized) {
 						familesAccessAllowed.add(family);
 						if (auditEvent != null) {
 							LOG.debug("evaluateAccess: adding to family-level-access-granted-event-set");
 							familyLevelAccessEvents.add(auditEvent);
 						}
 					} else {
+						familesAccessIndeterminate.add(family);
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
 						}
 						everythingIsAccessible = false;
-						familesAccessIndeterminate.add(family);
 						if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
 							LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
 							deniedEvent = auditEvent;
 						}
 					}
-					// Restore the headMatch setting
-					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
 				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("evaluateAccess: has no access of [" + access + "] type in family [" + family + "]");
-					}
 					everythingIsAccessible = false;
-					familesAccessDenied.add(family);
-					denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
-					if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
-						LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
-						deniedEvent = auditEvent;
+					if (isColumnFamilyAuthorized) {
+						somethingIsAccessible = true;
+						familesAccessIndeterminate.add(family);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
+						}
+						if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
+							LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
+							deniedEvent = auditEvent;
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("evaluateAccess: has no access of [" + access + "] type in family [" + family + "]");
+						}
+						familesAccessDenied.add(family);
+						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
 					}
 				}
+				// Restore the headMatch setting
+				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
 			} else {
 				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");
 				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
@@ -470,6 +492,7 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("evaluateAccess: no column level access [" + family + ", " + column + "]");
 						}
+						somethingIsAccessible = false;
  						everythingIsAccessible = false;
  						denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, column: %s", user.getName(), operation, table, family, column);
 						if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
