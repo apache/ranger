@@ -28,7 +28,13 @@ import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
@@ -39,11 +45,26 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
+import org.apache.ranger.unixusersync.model.GetXUserGroupListResponse;
+import org.apache.ranger.unixusersync.model.GetXUserListResponse;
+import org.apache.ranger.unixusersync.model.MUserInfo;
+import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
+import org.apache.ranger.unixusersync.model.UserGroupInfo;
+import org.apache.ranger.unixusersync.model.XGroupInfo;
+import org.apache.ranger.unixusersync.model.XUserGroupInfo;
+import org.apache.ranger.unixusersync.model.XUserInfo;
+import org.apache.ranger.usergroupsync.UserGroupSink;
+import org.apache.ranger.usersync.util.UserSyncUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -54,11 +75,6 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-
-import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.model.*;
-import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.apache.ranger.usersync.util.UserSyncUtil;
 
 public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
@@ -86,10 +102,15 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 
+	private static final String RANGER_ADMIN_COOKIE_NAME = "RANGERADMINSESSIONID";
 	private static String LOCAL_HOSTNAME = "unknown";
 	private String recordsToPullPerCall = "1000";
 	private boolean isMockRun = false;
 	private String policyMgrBaseUrl;
+
+	private Cookie sessionId=null;
+	private boolean isValidRangerCookie=false;
+	List<NewCookie> cookieList=new ArrayList<>();
 
 	private UserGroupSyncConfig  config = UserGroupSyncConfig.getInstance();
 
@@ -124,6 +145,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private HashSet<String> modifiedUserList = new HashSet<String>();
 	private HashSet<String> newGroupList = new HashSet<String>();
 	private HashSet<String> modifiedGroupList = new HashSet<String>();
+	private boolean isRangerCookieEnabled;
 	boolean isStartupFlag = false;
 
 	static {
@@ -150,11 +172,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		noOfNewGroups = 0;
 		noOfModifiedGroups = 0;
 		isStartupFlag = true;
-
+		isRangerCookieEnabled = config.isUserSyncRangerCookieEnabled();
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
 		}
-
+		sessionId=null;
 		keyStoreFile =  config.getSSLKeyStorePath();
 		keyStoreFilepwd = config.getSSLKeyStorePathPassword();
 		trustStoreFile = config.getSSLTrustStorePath();
@@ -327,7 +349,6 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (groups == null) {
 			groups = new ArrayList<String>();
 		}
-
 		if (user == null) {    // Does not exists
 			//noOfNewUsers++;
 			newUserList.add(userName);
@@ -545,109 +566,118 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	private void buildGroupList() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList");
+			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList()");
 		}
 		Client c = getClient();
-
 		int totalCount = 100;
 		int retrievedCount = 0;
-
 		while (retrievedCount < totalCount) {
-			WebResource r = c.resource(getURL(PM_GROUP_LIST_URI))
-					.queryParam("pageSize", recordsToPullPerCall)
-					.queryParam("startIndex", String.valueOf(retrievedCount));
+			String response = null;
+			Gson gson = new GsonBuilder().create();
+			if (isRangerCookieEnabled) {
+				response = cookieBasedGetEntity(PM_GROUP_LIST_URI, retrievedCount);
+			} else {
+				WebResource r = c.resource(getURL(PM_GROUP_LIST_URI)).queryParam("pageSize", recordsToPullPerCall)
+						.queryParam("startIndex", String.valueOf(retrievedCount));
 
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+			}
+			LOG.debug("RESPONSE: [" + response + "]");
 
-		LOG.debug("RESPONSE: [" + response + "]");
+			GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class);
 
-		Gson gson = new GsonBuilder().create();
-
-		GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class);
-
-		totalCount = groupList.getTotalCount();
+			totalCount = groupList.getTotalCount();
 
 			if (groupList.getXgroupInfoList() != null) {
 				xgroupList.addAll(groupList.getXgroupInfoList());
 				retrievedCount = xgroupList.size();
 
 				for (XGroupInfo g : groupList.getXgroupInfoList()) {
-					LOG.debug("GROUP:  Id:" + g.getId() + ", Name: "+ g.getName() + ", Description: "+ g.getDescription());
+					LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: "
+							+ g.getDescription());
 				}
 			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.buildGroupList()");
 		}
 	}
 
 	private void buildUserList() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserList");
+			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserList()");
 		}
 		Client c = getClient();
+		int totalCount = 100;
+		int retrievedCount = 0;
+		while (retrievedCount < totalCount) {
+			String response = null;
+			Gson gson = new GsonBuilder().create();
+			if (isRangerCookieEnabled) {
+				response = cookieBasedGetEntity(PM_USER_LIST_URI, retrievedCount);
+			} else {
+				WebResource r = c.resource(getURL(PM_USER_LIST_URI)).queryParam("pageSize", recordsToPullPerCall)
+						.queryParam("startIndex", String.valueOf(retrievedCount));
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+			}
+			LOG.debug("RESPONSE: [" + response + "]");
+			GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class);
 
-	    int totalCount = 100;
-	    int retrievedCount = 0;
+			totalCount = userList.getTotalCount();
 
-	    while (retrievedCount < totalCount) {
+			if (userList.getXuserInfoList() != null) {
+				xuserList.addAll(userList.getXuserInfoList());
+				retrievedCount = xuserList.size();
 
-		    WebResource r = c.resource(getURL(PM_USER_LIST_URI))
-					.queryParam("pageSize", recordsToPullPerCall)
-					.queryParam("startIndex", String.valueOf(retrievedCount));
-
-		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-
-		    Gson gson = new GsonBuilder().create();
-
-		    LOG.debug("RESPONSE: [" + response + "]");
-
-		    GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class);
-
-		    totalCount = userList.getTotalCount();
-
-		    if (userList.getXuserInfoList() != null) {
-		    	xuserList.addAll(userList.getXuserInfoList());
-		    	retrievedCount = xuserList.size();
-
-		    	for(XUserInfo u : userList.getXuserInfoList()) {
-			    	LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: " + u.getDescription());
-			    }
-		    }
-	    }
+				for (XUserInfo u : userList.getXuserInfoList()) {
+					LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: "
+							+ u.getDescription());
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.buildUserList()");
+		}
 	}
 
 	private void buildUserGroupLinkList() {
-		if(LOG.isDebugEnabled()) {
-	 		LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserGroupLinkList");
-	 	}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserGroupLinkList()");
+		}
 		Client c = getClient();
+		int totalCount = 100;
+		int retrievedCount = 0;
 
-	    int totalCount = 100;
-	    int retrievedCount = 0;
+		while (retrievedCount < totalCount) {
+			String response = null;
+			Gson gson = new GsonBuilder().create();
+			if (isRangerCookieEnabled) {
+				response = cookieBasedGetEntity(PM_USER_GROUP_MAP_LIST_URI, retrievedCount);
+			} else {
+				WebResource r = c.resource(getURL(PM_USER_GROUP_MAP_LIST_URI))
+						.queryParam("pageSize", recordsToPullPerCall)
+						.queryParam("startIndex", String.valueOf(retrievedCount));
 
-	    while (retrievedCount < totalCount) {
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+			}
+			LOG.debug("RESPONSE: [" + response + "]");
 
-		    WebResource r = c.resource(getURL(PM_USER_GROUP_MAP_LIST_URI))
-					.queryParam("pageSize", recordsToPullPerCall)
-					.queryParam("startIndex", String.valueOf(retrievedCount));
+			GetXUserGroupListResponse usergroupList = gson.fromJson(response, GetXUserGroupListResponse.class);
 
-		    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+			totalCount = usergroupList.getTotalCount();
 
-		    LOG.debug("RESPONSE: [" + response + "]");
+			if (usergroupList.getXusergroupInfoList() != null) {
+				xusergroupList.addAll(usergroupList.getXusergroupInfoList());
+				retrievedCount = xusergroupList.size();
 
-		    Gson gson = new GsonBuilder().create();
-
-		    GetXUserGroupListResponse usergroupList = gson.fromJson(response, GetXUserGroupListResponse.class);
-
-		    totalCount = usergroupList.getTotalCount();
-
-		    if (usergroupList.getXusergroupInfoList() != null) {
-		    	xusergroupList.addAll(usergroupList.getXusergroupInfoList());
-		    	retrievedCount = xusergroupList.size();
-
-		    	for(XUserGroupInfo ug : usergroupList.getXusergroupInfoList()) {
-			    	LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName());
-			    }
-		    }
-	    }
+				for (XUserGroupInfo ug : usergroupList.getXusergroupInfoList()) {
+					LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName());
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.buildUserGroupLinkList()");
+		}
 	}
 
 	private UserGroupInfo addUserGroupInfo(String userName, List<String> groups){
@@ -711,20 +741,31 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	private UserGroupInfo getUsergroupInfo(UserGroupInfo ret) {
-		Client c = getClient();
-
-		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
-
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret)");
+		}
+		String response = null;
 		Gson gson = new GsonBuilder().create();
-
 		String jsonString = gson.toJson(usergroupInfo);
-
-		LOG.debug("USER GROUP MAPPING" + jsonString);
-
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-
-		LOG.debug("RESPONSE: [" + response + "]");
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("USER GROUP MAPPING" + jsonString);
+		}
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(jsonString,PM_ADD_USER_GROUP_INFO_URI);
+		}
+		else{
+			Client c = getClient();
+			WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
+			try{
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			}
+			catch(Throwable t){
+				LOG.error("Failed to communicate Ranger Admin : ", t);
+			}
+		}
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("RESPONSE: [" + response + "]");
+		}
 		ret = gson.fromJson(response, UserGroupInfo.class);
 
 		if ( ret != null) {
@@ -738,32 +779,38 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			}
 		}
 
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getUsergroupInfo (UserGroupInfo ret)");
+		}
 		return ret;
 	}
 
 	private void getUserGroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo) {
-		Client c = getClient();
-
-		WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
-
-		Gson gson = new GsonBuilder().create();
-
-		String jsonString = gson.toJson(usergroupInfo);
-		if ( LOG.isDebugEnabled() ) {
-		   LOG.debug("USER GROUP MAPPING" + jsonString);
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo)");
 		}
-
 		String response = null;
-		try{
-			response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-		}catch(Throwable t){
-			LOG.error("Failed to communicate Ranger Admin : ", t);
+		Gson gson = new GsonBuilder().create();
+		String jsonString = gson.toJson(usergroupInfo);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("USER GROUP MAPPING" + jsonString);
 		}
-		if ( LOG.isDebugEnabled() ) {
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(jsonString,PM_ADD_USER_GROUP_INFO_URI);
+		}
+		else{
+			Client c = getClient();
+			WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
+			try{
+				response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			}catch(Throwable t){
+				LOG.error("Failed to communicate Ranger Admin : ", t);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("RESPONSE: [" + response + "]");
 		}
 		ret = gson.fromJson(response, UserGroupInfo.class);
-
 		if ( ret != null) {
 
 			XUserInfo xUserInfo = ret.getXuserInfo();
@@ -774,7 +821,108 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
                 addUserGroupInfoToList(xUserInfo, xGroupInfo);
             }
 		}
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo)");
+		}
 	}
+
+
+	private String tryUploadEntityWithCookie(String jsonString, String apiURL) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.tryUploadEntityWithCookie()");
+		}
+		String response = null;
+		ClientResponse clientResp = null;
+		WebResource webResource = createWebResourceForCookieAuth(apiURL);
+		WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+		try{
+			clientResp=br.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, jsonString);
+		}
+		catch(Throwable t){
+			LOG.error("Failed to communicate Ranger Admin : ", t);
+		}
+		if (clientResp != null) {
+			if (!(clientResp.toString().contains(apiURL))) {
+				clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				sessionId = null;
+				isValidRangerCookie = false;
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
+				cookieList = clientResp.getCookies();
+				for (NewCookie cookie : cookieList) {
+					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+						sessionId = cookie.toCookie();
+						isValidRangerCookie = true;
+						break;
+					}
+				}
+			}
+
+			if (clientResp.getStatus() != HttpServletResponse.SC_OK	&& clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
+					&& clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			}
+			clientResp.bufferEntity();
+			response = clientResp.getEntity(String.class);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.tryUploadEntityWithCookie()");
+		}
+		return response;
+	}
+
+
+	private String tryUploadEntityWithCred(String jsonString,String apiURL){
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.tryUploadEntityInfoWithCred()");
+		}
+		String response = null;
+		ClientResponse clientResp = null;
+		Client c = getClient();
+		WebResource r = c.resource(getURL(apiURL));
+		if ( LOG.isDebugEnabled() ) {
+		   LOG.debug("USER GROUP MAPPING" + jsonString);
+		}
+		try{
+			clientResp=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, jsonString);
+		}
+		catch(Throwable t){
+			LOG.error("Failed to communicate Ranger Admin : ", t);
+		}
+		if (clientResp != null) {
+			if (!(clientResp.toString().contains(apiURL))) {
+				clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				LOG.warn("Credentials response from ranger is 401.");
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+				cookieList = clientResp.getCookies();
+				for (NewCookie cookie : cookieList) {
+					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+						sessionId = cookie.toCookie();
+						isValidRangerCookie = true;
+						LOG.info("valid cookie saved ");
+						break;
+					}
+				}
+			}
+			if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
+					&& clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			}
+			clientResp.bufferEntity();
+			response = clientResp.getEntity(String.class);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.tryUploadEntityInfoWithCred()");
+		}
+		return response;
+	}
+
 
 	private UserGroupInfo addUserGroupInfo(UserGroupInfo usergroupInfo){
 		if(LOG.isDebugEnabled()) {
@@ -807,6 +955,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			} catch (Throwable t) {
 				LOG.error("Failed to add User Group Info : ", t);
 			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.addUserGroupInfo");
 		}
 		return ret;
 	}
@@ -920,21 +1071,84 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	private void delXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.delXUserGroupInfo()");
+		}
+
 		String groupName = aGroupInfo.getName();
 
 		String userName  = aUserInfo.getName();
 
 		try {
-
-			Client c = getClient();
-
+			ClientResponse response = null;
 			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
 					   UserSyncUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), UserSyncUtil.encodeURIParam(userName));
+			if (isRangerCookieEnabled) {
+				if (sessionId != null && isValidRangerCookie) {
+					WebResource webResource = createWebResourceForCookieAuth(uri);
+					WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+					response = br.delete(ClientResponse.class);
+					if (response != null) {
+						if (!(response.toString().contains(uri))) {
+							response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+							sessionId = null;
+							isValidRangerCookie = false;
+						} else if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+							LOG.warn("response from ranger is 401 unauthorized");
+							sessionId = null;
+							isValidRangerCookie = false;
+						} else if (response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+								|| response.getStatus() == HttpServletResponse.SC_OK) {
+							cookieList = response.getCookies();
+							for (NewCookie cookie : cookieList) {
+								if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+									sessionId = cookie.toCookie();
+									isValidRangerCookie = true;
+									break;
+								}
+							}
+						}
 
+						if (response.getStatus() != HttpServletResponse.SC_OK && response.getStatus() != HttpServletResponse.SC_NO_CONTENT
+								&& response.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+							sessionId = null;
+							isValidRangerCookie = false;
+						}
+					}
+				} else {
+					Client c = getClient();
+					WebResource r = c.resource(getURL(uri));
+					response = r.delete(ClientResponse.class);
+					if (response != null) {
+						if (!(response.toString().contains(uri))) {
+							response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+						} else if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+							LOG.warn("Credentials response from ranger is 401.");
+						} else if (response.getStatus() == HttpServletResponse.SC_OK
+								|| response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+							cookieList = response.getCookies();
+							for (NewCookie cookie : cookieList) {
+								if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+									sessionId = cookie.toCookie();
+									isValidRangerCookie = true;
+									LOG.info("valid cookie saved ");
+									break;
+								}
+							}
+						}
+						if (response.getStatus() != HttpServletResponse.SC_OK && response.getStatus() != HttpServletResponse.SC_NO_CONTENT
+								&& response.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+							sessionId = null;
+							isValidRangerCookie = false;
+						}
+					}
+				}
+			} else {
+			Client c = getClient();
 			WebResource r = c.resource(getURL(uri));
 
-		    ClientResponse response = r.delete(ClientResponse.class);
-
+		    response = r.delete(ClientResponse.class);
+			}
 		    if ( LOG.isDebugEnabled() ) {
 		    	LOG.debug("RESPONSE: [" + response.toString() + "]");
 		    }
@@ -946,6 +1160,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		} catch (Exception e) {
 
 			LOG.warn( "ERROR: Unable to delete GROUP: " + groupName  + " from USER:" + userName , e);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.delXUserGroupInfo()");
 		}
 
 	}
@@ -990,31 +1207,166 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	private MUserInfo getMUser(MUserInfo userInfo, MUserInfo ret) {
-		Client c = getClient();
-
-	    WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI));
-
-	    Gson gson = new GsonBuilder().create();
-
-	    String jsonString = gson.toJson(userInfo);
-
-	    String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-
-	    LOG.debug("RESPONSE[" + response + "]");
-
-	    ret = gson.fromJson(response, MUserInfo.class);
-
-		LOG.debug("MUser Creation successful " + ret);
-
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getMUser()");
+		}
+		String response = null;
+		Gson gson = new GsonBuilder().create();
+		String jsonString = gson.toJson(userInfo);
+		if (isRangerCookieEnabled) {
+			response = cookieBasedUploadEntity(jsonString, PM_ADD_LOGIN_USER_URI);
+		} else {
+			Client c = getClient();
+			WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI));
+			response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE)
+					.post(String.class, jsonString);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RESPONSE[" + response + "]");
+		}
+		ret = gson.fromJson(response, MUserInfo.class);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("MUser Creation successful " + ret);
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getMUser()");
+		}
 		return ret;
 	}
+
+	private String cookieBasedUploadEntity(String jsonString, String apiURL ) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.cookieBasedUploadEntity()");
+		}
+		String response = null;
+		if (sessionId != null && isValidRangerCookie) {
+			response = tryUploadEntityWithCookie(jsonString,apiURL);
+		}
+		else{
+			response = tryUploadEntityWithCred(jsonString,apiURL);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.cookieBasedUploadEntity()");
+		}
+		return response;
+	}
+
+	private String cookieBasedGetEntity(String apiURL ,int retrievedCount) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.cookieBasedGetEntity()");
+		}
+		String response = null;
+		if (sessionId != null && isValidRangerCookie) {
+			response = tryGetEntityWithCookie(apiURL,retrievedCount);
+		}
+		else{
+			response = tryGetEntityWithCred(apiURL,retrievedCount);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.cookieBasedGetEntity()");
+		}
+		return response;
+	}
+
+	private String tryGetEntityWithCred(String apiURL, int retrievedCount) {
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.tryGetEntityWithCred()");
+		}
+		String response = null;
+		ClientResponse clientResp = null;
+		Client c = getClient();
+		WebResource r = c.resource(getURL(apiURL))
+				.queryParam("pageSize", recordsToPullPerCall)
+				.queryParam("startIndex", String.valueOf(retrievedCount));
+
+		try{
+			clientResp=r.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+		}
+		catch(Throwable t){
+			LOG.error("Failed to communicate Ranger Admin : ", t);
+		}
+		if (clientResp != null) {
+			if (!(clientResp.toString().contains(apiURL))) {
+				clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				LOG.warn("Credentials response from ranger is 401.");
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+				cookieList = clientResp.getCookies();
+				for (NewCookie cookie : cookieList) {
+					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+						sessionId = cookie.toCookie();
+						isValidRangerCookie = true;
+						LOG.info("valid cookie saved ");
+						break;
+					}
+				}
+			}
+			if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
+					&& clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			}
+			clientResp.bufferEntity();
+			response = clientResp.getEntity(String.class);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.tryGetEntityWithCred()");
+		}
+		return response;
+	}
+
+
+	private String tryGetEntityWithCookie(String apiURL, int retrievedCount) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.tryGetEntityWithCookie()");
+		}
+		String response = null;
+		ClientResponse clientResp = null;
+		WebResource webResource = createWebResourceForCookieAuth(apiURL).queryParam("pageSize", recordsToPullPerCall).queryParam("startIndex", String.valueOf(retrievedCount));
+		WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+		try{
+			clientResp=br.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+		}
+		catch(Throwable t){
+			LOG.error("Failed to communicate Ranger Admin : ", t);
+		}
+		if (clientResp != null) {
+			if (!(clientResp.toString().contains(apiURL))) {
+				clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				sessionId = null;
+				isValidRangerCookie = false;
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
+				cookieList = clientResp.getCookies();
+				for (NewCookie cookie : cookieList) {
+					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+						sessionId = cookie.toCookie();
+						isValidRangerCookie = true;
+						break;
+					}
+				}
+			}
+
+			if (clientResp.getStatus() != HttpServletResponse.SC_OK	&& clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
+					&& clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				sessionId = null;
+				isValidRangerCookie = false;
+			}
+			clientResp.bufferEntity();
+			response = clientResp.getEntity(String.class);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.tryGetEntityWithCookie()");
+		}
+		return response;
+	}
+
 
 	private synchronized Client getClient() {
 
 		Client ret = null;
-
 		if (policyMgrBaseUrl.startsWith("https://")) {
-
 			ClientConfig config = new DefaultClientConfig();
 
 			if (sslContext == null) {
@@ -1108,6 +1460,13 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return ret;
 	}
 
+	private WebResource createWebResourceForCookieAuth(String url) {
+		Client cookieClient = getClient();
+		cookieClient.removeAllFilters();
+		WebResource ret = cookieClient.resource(getURL(url));
+		return ret;
+	}
+
 	private InputStream getFileInputStream(String path) throws FileNotFoundException {
 
 		InputStream ret = null;
@@ -1195,20 +1554,29 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 	private XGroupInfo getAddedGroupInfo(XGroupInfo group){
 		XGroupInfo ret = null;
-
-		Client c = getClient();
-
-		WebResource r = c.resource(getURL(PM_ADD_GROUP_URI));
-
+		String response = null;
 		Gson gson = new GsonBuilder().create();
-
 		String jsonString = gson.toJson(group);
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(jsonString,PM_ADD_GROUP_URI);
+		}
+		else{
+			Client c = getClient();
+			WebResource r = c.resource(getURL(PM_ADD_GROUP_URI));
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Group" + jsonString);
+			}
+			try{
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			}
+			catch(Throwable t){
+				LOG.error("Failed to communicate Ranger Admin : ", t);
+			}
+		}
 
-		LOG.debug("Group" + jsonString);
-
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-
-		LOG.debug("RESPONSE: [" + response + "]");
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("RESPONSE: [" + response + "]");
+		}
 
 		ret = gson.fromJson(response, XGroupInfo.class);
 
@@ -1304,21 +1672,37 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	private UgsyncAuditInfo getUserGroupAuditInfo(UgsyncAuditInfo userInfo) {
-		Client c = getClient();
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
+		}
 
-		WebResource r = c.resource(getURL(PM_AUDIT_INFO_URI));
+		String response = null;
 
 		Gson gson = new GsonBuilder().create();
-
 		String jsonString = gson.toJson(userInfo);
-
-		String response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
-
-		LOG.debug("RESPONSE[" + response + "]");
-
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(jsonString, PM_AUDIT_INFO_URI);
+		}
+		else{
+			Client c = getClient();
+			WebResource r = c.resource(getURL(PM_AUDIT_INFO_URI));
+			try{
+				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			}
+			catch(Throwable t){
+				LOG.error("Failed to communicate Ranger Admin : ", t);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RESPONSE[" + response + "]");
+		}
 		UgsyncAuditInfo ret = gson.fromJson(response, UgsyncAuditInfo.class);
 
 		LOG.debug("AuditInfo Creation successful ");
+
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
+		}
 
 		return ret;
 	}

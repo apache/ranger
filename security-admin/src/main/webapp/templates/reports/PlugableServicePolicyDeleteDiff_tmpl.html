@@ -42,6 +42,40 @@
 	</div>
 {{/if}}	
 
+{{#if oldPolicyValidityPeriod}}
+    <h5>Validity Period :</h5>
+    <div class="diff validityPeriod" >
+        <div class="diff-right diff-list" data-id="diff">
+            <h3>Old Value</h3>
+            {{#each oldPolicyValidityPeriod}}
+                <ol class="unstyled data">
+                    <li class="change-row"><i>Start Date</i>:
+                        {{#if this.startTime}}
+                            <span class="startTime">{{this.startTime}}</span><span>,</span>
+                        {{else}}
+                            --
+                        {{/if}}
+                    </li>
+                    <li class="change-row"><i>End Date</i>:
+                        {{#if this.endTime}}
+                            <span class="endTime">{{this.endTime}}</span><span>,</span>
+                        {{else}}
+                            --
+                        {{/if}}
+                    </li>
+                    <li class="change-row"><i>Time Zone</i>:
+                        {{#if this.timeZone}}
+                            <span class="timeZone">{{this.timeZone}}</span><span>,</span>
+                        {{else}}
+                            --
+                        {{/if}}
+                    </li>
+                </ol><br/>
+            {{/each}}
+        </div>
+    </div>
+{{/if}}
+
 {{#if oldPolicyItems}}
 	<h5>Allow PolicyItems :</h5>
 	<div class="diff diff-perms">

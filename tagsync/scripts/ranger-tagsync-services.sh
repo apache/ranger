@@ -88,7 +88,7 @@ if [ "${action}" == "START" ]; then
 	fi
 
 	cd ${cdir}
-	umask 0077
+
 	SLEEP_TIME_AFTER_START=5
 	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dlog4j.configuration=file:/etc/ranger/tagsync/conf/log4j.properties -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${RANGER_TAGSYNC_LOG_DIR}/tagsync.out 2>&1 &
 	VALUE_OF_PID=$!
