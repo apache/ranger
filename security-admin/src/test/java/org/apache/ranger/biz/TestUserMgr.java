@@ -909,7 +909,7 @@ public class TestUserMgr {
 
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
-                Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
+                
 		boolean deleteValue = userMgr.deleteUserRole(userId, userRole);
 		Assert.assertTrue(deleteValue);
 	}

@@ -958,7 +958,6 @@ public class UserMgr {
 		 * if (RangerConstants.ROLE_USER.equals(gjUserRole.getUserRole())) {
 		 * return false; }
 		 */
-                rangerBizUtil.blockAuditorRoleUser();
 		boolean publicRole = false;
 		for (String publicRoleStr : publicRoles) {
 			if (publicRoleStr.equalsIgnoreCase(gjUserRole.getUserRole())) {
@@ -978,7 +977,6 @@ public class UserMgr {
 	}
 
 	public XXPortalUserRole addUserRole(Long userId, String userRole) {
-                rangerBizUtil.blockAuditorRoleUser();
 		List<XXPortalUserRole> roleList = daoManager.getXXPortalUserRole()
 				.findByUserId(userId);
 		boolean publicRole = false;
@@ -1001,6 +999,7 @@ public class UserMgr {
 								+ sess.toString(), new Throwable());
 				return null;
 			}
+                        rangerBizUtil.blockAuditorRoleUser();
 		}
 
 		for (XXPortalUserRole gjUserRole : roleList) {
@@ -1187,7 +1186,6 @@ public class UserMgr {
     protected VXPortalUser updateRoleForExternalUsers(
             Collection<String> reqRoleList,
             Collection<String> existingRoleList, VXPortalUser userProfileRes) {
-        rangerBizUtil.blockAuditorRoleUser();
         UserSessionBase session = ContextUtil.getCurrentUserSession();
         if (session != null && session.getXXPortalUser() != null && session.getXXPortalUser().getLoginId() != null &&  "rangerusersync".equals(session.getXXPortalUser().getLoginId())
                 && reqRoleList != null && !reqRoleList.isEmpty()
