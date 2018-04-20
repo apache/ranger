@@ -111,7 +111,7 @@ stop(){
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
 			echo "Apache Ranger Admin Service is not running"
-			exit
+			return
 		fi
 	fi
 
