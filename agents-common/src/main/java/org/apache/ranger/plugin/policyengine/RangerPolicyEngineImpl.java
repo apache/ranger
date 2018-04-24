@@ -200,6 +200,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public boolean getUseForwardedIPAddress() {
+		return useForwardedIPAddress;
+	}
+
+	@Override
+	public String[] getTrustedProxyAddresses() {
+		return trustedProxyAddresses;
+	}
+
+	@Override
 	public RangerServiceDef getServiceDef() {
 		return policyRepository.getServiceDef();
 	}

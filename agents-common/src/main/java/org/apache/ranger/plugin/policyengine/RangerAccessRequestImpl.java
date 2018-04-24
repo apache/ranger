@@ -219,7 +219,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.context = (context == null) ? new HashMap<String, Object>() : context;
 	}
 
-	protected void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
+	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
 		String ip = getRemoteIPAddress();
 		if (ip == null) {
 			ip = getClientIPAddress();

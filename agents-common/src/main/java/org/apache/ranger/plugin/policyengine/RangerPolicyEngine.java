@@ -45,6 +45,10 @@ public interface RangerPolicyEngine {
 
 	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
 
+	boolean getUseForwardedIPAddress();
+
+	String[] getTrustedProxyAddresses();
+
     RangerServiceDef getServiceDef();
 
     long getPolicyVersion();

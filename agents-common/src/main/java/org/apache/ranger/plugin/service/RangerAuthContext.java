@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -90,6 +91,16 @@ public class RangerAuthContext implements RangerPolicyEngine {
         policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
     }
 
+	@Override
+	public boolean getUseForwardedIPAddress() {
+		return policyEngine.getUseForwardedIPAddress();
+	}
+
+	@Override
+	public String[] getTrustedProxyAddresses() {
+		return policyEngine.getTrustedProxyAddresses();
+	}
+
     @Override
     public RangerServiceDef getServiceDef() {
         return policyEngine.getServiceDef();
@@ -130,7 +141,11 @@ public class RangerAuthContext implements RangerPolicyEngine {
 		        mutable.setServiceDef(getServiceDef());
 	        }
         }
+	    if (request instanceof RangerAccessRequestImpl) {
+		    ((RangerAccessRequestImpl) request).extractAndSetClientIPAddress(getUseForwardedIPAddress(), getTrustedProxyAddresses());
+	    }
 
+	    RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 	    if (MapUtils.isNotEmpty(requestContextEnrichers)) {
             for (Map.Entry<RangerContextEnricher, Object> entry : requestContextEnrichers.entrySet()) {
                 entry.getKey().enrich(request);
