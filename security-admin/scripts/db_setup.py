@@ -189,6 +189,9 @@ class BaseDB(object):
 	def import_core_db_schema(self, db_name, db_user, db_password, file_name,first_table,last_table):
 		log("[I] ---------- Importing Core DB Schema ----------", "info")
 
+        def is_new_install(xa_db_host, db_user, db_password, db_name):
+                log("[I] ----------------- Checking Ranger Version ------------", "info")
+
 class MysqlConf(BaseDB):
 	# Constructor
 	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
@@ -837,6 +840,25 @@ class MysqlConf(BaseDB):
 				sys.exit(1)
 			else:
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+
+        def is_new_install(self, xa_db_host, db_user, db_password, db_name):
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                if is_unix:
+                        query = get_cmd + " -query \"SELECT version();\""
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"SELECT version();\" -c ;"
+                output = check_output(query)
+                if not output.strip('Production  |'):
+                        sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                version="J10001"
+                if is_unix:
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                output = check_output(query)
+                if not output.strip(version + " |"):
+                         sys.exit(0)
 
 class OracleConf(BaseDB):
 	# Constructor
@@ -1552,6 +1574,25 @@ class OracleConf(BaseDB):
 			else:
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
+        def is_new_install(self, xa_db_host, db_user, db_password, db_name):
+            get_cmd = self.get_jisql_cmd(db_user, db_password)
+            if is_unix:
+              query = get_cmd + " -c \; -query \"select * from v$version;\""
+            elif os_name == "WINDOWS":
+              query = get_cmd + " -query \"select * from v$version;\" -c ;"
+            output = check_output(query)
+            if not output.strip('Production  |'):
+              sys.exit(0)
+            get_cmd = self.get_jisql_cmd(db_user, db_password)
+            version="J10001"
+            if is_unix:
+              query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+            elif os_name == "WINDOWS":
+              query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+            output = check_output(query)
+            if not output.strip(version + " |"):
+              sys.exit(0)
+
 class PostgresConf(BaseDB):
 	# Constructor
 	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
@@ -2241,6 +2282,25 @@ class PostgresConf(BaseDB):
 			else:
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
+        def is_new_install(self, xa_db_host, db_user, db_password, db_name):
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                if is_unix:
+                        query = get_cmd + " -query \"SELECT 1;\""
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"SELECT 1;\" -c ;"
+                output = check_output(query)
+                if not output.strip('1 |'):
+                         sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                version="J10001"
+                if is_unix:
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                output = check_output(query)
+                if not output.strip(version + " |"):
+                         sys.exit(0)
+
 class SqlServerConf(BaseDB):
 	# Constructor
 	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
@@ -2871,6 +2931,25 @@ class SqlServerConf(BaseDB):
 				sys.exit(1)
 			else:
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
+
+        def is_new_install(self, xa_db_host, db_user, db_password, db_name):
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                if is_unix:
+                        query = get_cmd + " -c \; -query \"SELECT 1;\""
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"SELECT 1;\" -c ;"
+                output = check_output(query)
+                if not output.strip('1 |'):
+                         sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                version="J10001"
+                if is_unix:
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c \;" %(version)
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                output = check_output(query)
+                if not output.strip(version + " |"):
+                         sys.exit(0)
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
@@ -3516,6 +3595,25 @@ class SqlAnywhereConf(BaseDB):
 			else:
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
+        def is_new_install(self, xa_db_host, db_user, db_password, db_name):
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                if is_unix:
+                        query = get_cmd + " -c \; -query \"SELECT 1;\""
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"SELECT 1;\" -c ;"
+                output = check_output(query)
+                if not output.strip('1 |'):
+                         sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+                version="J10001"
+                if is_unix:
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c \;" %(version)
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                output = check_output(query)
+                if not output.strip(version + " |"):
+                         sys.exit(0)
+
 def main(argv):
 	populate_global_dict()
 
@@ -3797,6 +3895,9 @@ def main(argv):
 					xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
 				else:
 					log("[I] JAVA_PATCHES have already been applied","info")
+
+                        if str(argv[i]) == "-checkupgrade":
+                                xa_sqlObj.is_new_install(xa_db_host, db_user, db_password, db_name)
 
 			if str(argv[i]) == "-changepassword":
 				if len(argv)==5:

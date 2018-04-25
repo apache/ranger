@@ -287,6 +287,9 @@ run_dba_steps(){
                 python dba_script.py -q
         fi
 }
+check_ranger_version(){
+        $PYTHON_COMMAND_INVOKER db_setup.py -checkupgrade
+}
 check_db_connector() {
 	log "[I] Checking ${DB_FLAVOR} CONNECTOR FILE : ${SQL_CONNECTOR_JAR}"
 	if test -f "$SQL_CONNECTOR_JAR"; then
@@ -1379,23 +1382,34 @@ setup_install_files(){
 python_command_for_change_password(){
         $PYTHON_COMMAND_INVOKER db_setup.py -changepassword  "${1}" "${2}" "${3}"
 }
+validateDefaultUsersPassword(){
+        if [ "${2}" == "" ]
+        then
+          log "[E] validatePassword(). Password for ${1} user cannot be blank"
+          exit 1
+        elif ! [[ ${#2} -ge 8 && "$2" =~ [A-Za-z] && "$2" =~ [0-9] ]] || [[ "${2}" =~ [\"\`\\"'"] ]]
+        then
+           log "[E] validatePassword(). ${1} password change failed. Password should be minimum 8 characters with minimum one alphabet and one numeric. Unsupported special characters are \\\`'\""
+           exit 1
+        fi
+}
 
 change_default_users_password(){
-        if [ "${rangerAdmin_password}" != '' ] && [ "${rangerAdmin_password}" != "admin" ]
+        if [ "${rangerAdmin_password}" != "admin" ]
         then
-                python_command_for_change_password  'admin' 'admin' "$rangerAdmin_password"
+          python_command_for_change_password  'admin' 'admin' "${rangerAdmin_password}"
         fi
-        if [ "${rangerTagsync_password}" != "" ] &&  [ "${rangerTagsync_password}" != "rangertagsync" ]
+        if [ "${rangerTagsync_password}" != "rangertagsync" ]
         then
-                python_command_for_change_password 'rangertagsync' 'rangertagsync' "$rangerTagsync_password"
+          python_command_for_change_password 'rangertagsync' 'rangertagsync' "${rangerTagsync_password}"
         fi
-        if [ "${rangerUsersync_password}" != "" ] &&  [ "${rangerUsersync_password}" != "rangerusersync" ]
+        if [ "${rangerUsersync_password}" != "rangerusersync" ]
         then
-   python_command_for_change_password 'rangerusersync' 'rangerusersync' "$rangerUsersync_password"
+          python_command_for_change_password 'rangerusersync' 'rangerusersync' "${rangerUsersync_password}"
         fi
-        if [ "${keyadmin_password}" != "" ] &&  [ "${keyadmin_password}" != "keyadmin" ]
+        if [ "${keyadmin_password}" != "keyadmin" ]
         then
-   python_command_for_change_password 'keyadmin' 'keyadmin' "$keyadmin_password"
+          python_command_for_change_password 'keyadmin' 'keyadmin' "${keyadmin_password}"
         fi
 }
 log " --------- Running Ranger PolicyManager Web Application Install Script --------- "
@@ -1410,6 +1424,14 @@ setup_install_files
 sanity_check_files
 copy_db_connector
 check_python_command
+check_ranger_version
+if [ "$?" != "0" ]
+then
+        validateDefaultUsersPassword 'admin' "${rangerAdmin_password}"
+        validateDefaultUsersPassword 'rangertagsync' "${rangerTagsync_password}"
+        validateDefaultUsersPassword 'rangerusersync' "${rangerUsersync_password}"
+        validateDefaultUsersPassword 'keyadmin' "${keyadmin_password}"
+fi
 run_dba_steps
 if [ "$?" == "0" ]
 then

@@ -124,11 +124,6 @@ def password_validation(password, userType):
 			log("[E] Blank password is not allowed,please enter valid password.","error")
 			sys.exit(1)
 
-def validateDefaultUsersPassword(password, userName):
-                if not re.search(r'(?=.*[0-9])(?=.*[a-zA-Z])', password) or len(password)<8  or re.search("[\\\`'\"]",password):
-                                log("[E] validatePassword()."+userName+ " password change failed. Password should be minimum 8 characters with minimum one alphabet and one numeric. Unsupported special characters are  \" ' \ `","error")
-                                sys.exit(1)
-
 def jisql_log(query, db_root_password):
 	if jisql_debug == True:
 		if os_name == "WINDOWS":
@@ -1465,18 +1460,7 @@ def main(argv):
 					else:
 						log("[E] Invalid file Name! Unable to find file:"+dba_sql_file,"error")
 						sys.exit(1)
-        rangerAdmin_password = globalDict['rangerAdmin_password']
-        if ( rangerAdmin_password != '' ) and (rangerAdmin_password != "admin" ):
-                validateDefaultUsersPassword(rangerAdmin_password,"admin");
-        rangerTagsync_password = globalDict['rangerTagsync_password']
-        if ( rangerTagsync_password != '' ) and (rangerTagsync_password != "rangertagsync" ):
-                validateDefaultUsersPassword(rangerTagsync_password,"rangertagsync");
-        rangerUsersync_password = globalDict['rangerUsersync_password']
-        if ( rangerUsersync_password != '' ) and (rangerUsersync_password != "rangerusersync" ):
-                validateDefaultUsersPassword(rangerUsersync_password,"rangerusersync");
-        keyadmin_password = globalDict['keyadmin_password']
-        if ( keyadmin_password != '' ) and (keyadmin_password != "keyadmin" ):
-                validateDefaultUsersPassword(keyadmin_password,"keyadmin");
+
 	log("[I] Running DBA setup script. QuiteMode:" + str(quiteMode),"info")
 	if (quiteMode):
 		if (not 'JAVA_HOME' in os.environ) or (os.environ['JAVA_HOME'] == ""):
