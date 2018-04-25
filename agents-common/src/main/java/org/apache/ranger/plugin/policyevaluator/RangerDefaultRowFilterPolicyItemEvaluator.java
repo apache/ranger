@@ -45,7 +45,7 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
 		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
-		if (rowFilterInfo != null) {
+		if (result.getFilterExpr() == null && rowFilterInfo != null) {
 			result.setFilterExpr(rowFilterInfo.getFilterExpr());
 			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
