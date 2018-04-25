@@ -365,7 +365,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 	@Override
 	public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason) {
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultPolicyEvaluator.updateAccessResult(" + result + ", " + matchType +", " + isAllowed + ", " + reason + ", " + getId() + ")");
+		}
 		if (!isAllowed) {
 			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT || !result.getAccessRequest().isAccessTypeAny()) {
 				result.setIsAllowed(false);
@@ -378,6 +380,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				result.setPolicyId(getId());
 				result.setReason(reason);
 			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultPolicyEvaluator.updateAccessResult(" + result + ", " + matchType +", " + isAllowed + ", " + reason + ", " + getId() + ")");
 		}
 	}
 
