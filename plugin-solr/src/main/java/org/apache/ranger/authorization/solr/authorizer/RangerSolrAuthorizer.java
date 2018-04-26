@@ -31,7 +31,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerMultiResourceAuditHandler;
@@ -146,7 +145,9 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			 * are not always invoked and the audit store are not flushed. So
 			 * we are forcing a cleanup here.
 			 */
-			AuditProviderFactory.getInstance().shutdown();
+			if (solrPlugin.getAuditProviderFactory() != null) {
+				solrPlugin.getAuditProviderFactory().shutdown();
+			}
 		} catch (Throwable t) {
 			logger.error("Error cleaning up Ranger plugin. Ignoring error", t);
 		}

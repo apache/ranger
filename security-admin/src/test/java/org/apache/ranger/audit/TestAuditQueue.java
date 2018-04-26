@@ -192,9 +192,9 @@ public class TestAuditQueue {
 		props.put(propPrefix + "." + BaseAuditHandler.PROP_CLASS_NAME,
 				TestConsumer.class.getName());
 
-		AuditProviderFactory factory = AuditProviderFactory.getInstance();
+		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(props, "test");
-		AuditQueue queue = (AuditQueue) factory.getProvider();
+		AuditQueue queue = (AuditQueue) factory.getAuditProvider();
 		BaseAuditHandler consumer = (BaseAuditHandler) queue.getConsumer();
 		while (consumer != null && consumer instanceof AuditQueue) {
 			AuditQueue cQueue = (AuditQueue) consumer;
@@ -626,7 +626,7 @@ public class TestAuditQueue {
 				+ AuditFileSpool.PROP_FILE_SPOOL_DEST_RETRY_MS, ""
 				+ destRetryMS);
 
-		AuditProviderFactory factory = AuditProviderFactory.getInstance();
+		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(props, "test");
 
 		// FileAuditDestination fileDest = new FileAuditDestination();
@@ -636,7 +636,7 @@ public class TestAuditQueue {
 		// queue.init(props, batchPropPrefix);
 		// queue.start();
 
-		AuditHandler queue = factory.getProvider();
+		AuditHandler queue = factory.getAuditProvider();
 
 		for (int i = 0; i < messageToSend; i++) {
 			queue.log(createEvent());

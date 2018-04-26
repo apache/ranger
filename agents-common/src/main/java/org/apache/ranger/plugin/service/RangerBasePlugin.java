@@ -32,6 +32,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
+import org.apache.ranger.audit.provider.AuditHandler;
+import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -72,6 +75,7 @@ public class RangerBasePlugin {
 	private String[]                  trustedProxyAddresses;
 	private Timer                     policyEngineRefreshTimer;
 	private RangerAuthContextListener authContextListener;
+	private AuditProviderFactory      auditProviderFactory;
 
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
@@ -81,8 +85,46 @@ public class RangerBasePlugin {
 		return servicePluginMap;
 	}
 
-	public RangerBasePlugin(String serviceType, String appId) {
+	public static AuditHandler getAuditProvider(String serviceName) {
+		AuditHandler ret = null;
 
+		boolean useStandaloneAuditProvider = false;
+
+		if (StringUtils.isNotEmpty(serviceName)) {
+			RangerBasePlugin plugin = RangerBasePlugin.getServicePluginMap().get(serviceName);
+			if (plugin != null) {
+				if (plugin.getAuditProviderFactory() != null) {
+					ret = plugin.getAuditProviderFactory().getAuditProvider();
+				} else {
+					LOG.error("NULL AuditProviderFactory for serviceName:[" + serviceName + "]");
+				}
+			} else {
+				useStandaloneAuditProvider = true;
+			}
+		} else {
+			useStandaloneAuditProvider = true;
+		}
+
+		if (useStandaloneAuditProvider) {
+			StandAloneAuditProviderFactory factory = StandAloneAuditProviderFactory.getInstance();
+			if (factory.isInitDone()) {
+				ret = factory.getAuditProvider();
+			} else {
+				RangerConfiguration conf = RangerConfiguration.getInstance();
+				String auditCfg = "ranger-standalone-audit.xml";
+				if (conf.addResourceIfReadable(auditCfg)) {
+					factory.init(conf.getProperties(), "StandAlone");
+					ret = factory.getAuditProvider();
+				} else {
+					LOG.error("StandAlone audit handler configuration not readable:[" + auditCfg + "]");
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public RangerBasePlugin(String serviceType, String appId) {
 		this.serviceType = serviceType;
 		this.appId       = appId;
 	}
@@ -125,12 +167,13 @@ public class RangerBasePlugin {
 		return serviceName;
 	}
 
+	public AuditProviderFactory getAuditProviderFactory() { return auditProviderFactory; }
+
 	public void init() {
 		cleanup();
 
 		RangerConfiguration configuration = RangerConfiguration.getInstance();
 		configuration.addResourcesForServiceType(serviceType);
-		configuration.initAudit(appId);
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
 		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
@@ -155,6 +198,15 @@ public class RangerBasePlugin {
 			LOG.warn("Property " + propertyPrefix + ".use.x-forwarded-for.ipaddress" + " is set to true, and Property "
 					+ propertyPrefix + ".trusted.proxy.ipaddresses" + " is not set");
 			LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
+		}
+
+		if (configuration.getProperties() != null) {
+			auditProviderFactory = new AuditProviderFactory();
+			auditProviderFactory.init(configuration.getProperties(), appId);
+		} else {
+			LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
+			LOG.error("No authorization audits will be generated. ");
+			auditProviderFactory = null;
 		}
 
 		policyEngineOptions.configureForPlugin(configuration, propertyPrefix);
@@ -242,6 +294,8 @@ public class RangerBasePlugin {
 
 		Timer policyEngineRefreshTimer = this.policyEngineRefreshTimer;
 
+		String serviceName = this.serviceName;
+
 		this.serviceName  = null;
 		this.policyEngine = null;
 		this.refresher    = null;
@@ -259,6 +313,9 @@ public class RangerBasePlugin {
 			policyEngine.cleanup();
 		}
 
+		if (serviceName != null) {
+			servicePluginMap.remove(serviceName);
+		}
 	}
 
 	public void setResultProcessor(RangerAccessResultProcessor resultProcessor) {

@@ -25,7 +25,7 @@ import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
+
 
 public class RangerConfiguration extends Configuration {
 	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
@@ -77,7 +77,7 @@ public class RangerConfiguration extends Configuration {
 		return ret;
 	}
 
-	private boolean addResourceIfReadable(String aResourceName) {
+	public boolean addResourceIfReadable(String aResourceName) {
 		
 		boolean ret = false;
 		if(LOG.isDebugEnabled()) {
@@ -123,31 +123,10 @@ public class RangerConfiguration extends Configuration {
 		return result;
 	}
 
-	public void initAudit(String appType) {
-		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
-
-		if(auditFactory == null) {
-			LOG.error("Unable to find the AuditProviderFactory. (null) found");
-			return;
-		}
-
-		Properties props = getProps();
-
-		if(props == null) {
-			return;
-		}
-
-		if(! auditFactory.isInitDone()) {
-			auditFactory.init(props, appType);
-		}
+	public Properties getProperties() {
+		return getProps();
 	}
 
-	public boolean isAuditInitDone() {
-		AuditProviderFactory auditFactory = AuditProviderFactory.getInstance();
-
-		return auditFactory != null && auditFactory.isInitDone();
-	}
-	
 	private URL getFileLocation(String fileName) {
 		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
 		
@@ -184,9 +163,8 @@ public class RangerConfiguration extends Configuration {
 			LOG.debug("==> addAuditResource(Service Type: " + serviceType );
 		}
 
-		URL url = null;
 		try {
-			url = RangerLegacyConfigBuilder.getAuditConfig(serviceType);
+			URL url = RangerLegacyConfigBuilder.getAuditConfig(serviceType);
 
 			if( url != null) {
 				addResource(url);

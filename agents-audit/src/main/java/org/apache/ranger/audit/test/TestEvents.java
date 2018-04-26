@@ -72,9 +72,10 @@ public class TestEvents {
                 auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
             }
 
-            AuditProviderFactory.getInstance().init(auditProperties, "hdfs");
+            AuditProviderFactory factory = new AuditProviderFactory();
+            factory.init(auditProperties, "hdfs");
 
-            AuditHandler provider = AuditProviderFactory.getAuditProvider();
+            AuditHandler provider = factory.getAuditProvider();
 
             LOG.info("provider=" + provider.toString());
 

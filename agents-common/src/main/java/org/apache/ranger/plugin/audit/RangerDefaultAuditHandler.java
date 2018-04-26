@@ -28,12 +28,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -170,7 +171,9 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 		if(auditEvent != null) {
 			populateDefaults(auditEvent);
-                        if(!AuditProviderFactory.getAuditProvider().log(auditEvent)) {
+
+			AuditHandler auditProvider = RangerBasePlugin.getAuditProvider(auditEvent.getRepositoryName());
+			if (auditProvider == null || !auditProvider.log(auditEvent)) {
 				MiscUtil.logErrorMessageByInterval(LOG, "fail to log audit event " + auditEvent);
 			}
 		}

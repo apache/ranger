@@ -107,9 +107,10 @@ public class TestPolicyEngine {
 			auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
 		}
 
-		AuditProviderFactory.getInstance().init(auditProperties, "hdfs"); // second parameter does not matter for v2
+		AuditProviderFactory factory = new AuditProviderFactory();
+		factory.init(auditProperties, "hdfs"); // second parameter does not matter for v2
 
-		AuditHandler provider = AuditProviderFactory.getAuditProvider();
+		AuditHandler provider = factory.getAuditProvider();
 
 		System.out.println("provider=" + provider.toString());
 
