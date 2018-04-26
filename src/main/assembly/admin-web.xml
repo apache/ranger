@@ -324,6 +324,13 @@
               <unpack>false</unpack>
               <directoryMode>755</directoryMode>
               <fileMode>644</fileMode>
+          <dependencySets>
+              <dependencySet>
+                  <includes>
+                      <include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
+                  </includes>
+              </dependencySet>
+          </dependencySets>
           </binaries>
           <includes>
               <include>org.apache.ranger:ranger-atlas-plugin</include>

@@ -29,6 +29,8 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.apache.atlas.model.instance.AtlasEntityHeader;
+import org.apache.atlas.model.discovery.AtlasSearchResult;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
@@ -42,7 +44,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.PasswordUtils;
-
 import javax.security.auth.Subject;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
@@ -68,6 +69,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 	private static final String URL_LOGIN                = "/j_spring_security_check";
 	private static final String URL_GET_TYPESDEF_HEADERS = "/api/atlas/v2/types/typedefs/headers";
+	private static final String URl_ENTITY_SEARCH = "v2/search/attribute?attrName=qualifiedName";
 
 	private static final String WEB_RESOURCE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 	private static final String CONNECTION_ERROR_MSG      =   " You can still save the repository and start creating"
@@ -169,6 +171,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 			final String       userInput     = lookupContext.getUserInput();
 			final List<String> currentValues = lookupContext.getResources().get(lookupContext.getResourceName());
 
+
+
 			switch(lookupContext.getResourceName()) {
 				case RESOURCE_TYPE_CATEGORY: {
 					for (String typeCategory : TYPE_CATEGORIES) {
@@ -215,6 +219,14 @@ public class RangerServiceAtlas extends RangerBaseService {
 					refreshTypesDefs();
 
 					addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_CLASSIFICATION), userInput, currentValues);
+				}
+                break;
+
+				case RESOURCE_ENTITY_ID: {
+					List<String> searchTypes = lookupContext.getResources().get("entity-type");
+					List<String> values = searchEntities(userInput , searchTypes);
+					addIfStartsWithAndNotExcluded(ret, values, userInput, currentValues);
+
 				}
 				break;
 
@@ -366,6 +378,85 @@ public class RangerServiceAtlas extends RangerBaseService {
 			}
 
 			return ret;
+		}
+
+		private List<String> searchEntities(String userInput, List<String> types) {
+
+			if( LOG.isDebugEnabled()) {
+				LOG.info(" RangerServiceAtlas.searchEntities ==>> userInput" + userInput +" types "+ types);
+			}
+			List<String> list = null;
+
+			Subject subj = getLoginSubject();
+
+			if (subj == null) {
+				return null;
+			}
+
+			list = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+				@Override
+				public List<String> run() {
+					List<String> ret = null;
+					String entityType = "";
+					if (types != null && types.size() == 1) {
+						entityType = types.get(0);
+					} else {
+						return null;
+					}
+					for (String atlasUrl : getAtlasUrls()) {
+						Client client = null;
+
+						try {
+							client = Client.create();
+
+							ClientResponse loginResponse = loginToAtlas(client);
+							String entitySearcApiUrl = atlasUrl + "/api/atlas/" + URl_ENTITY_SEARCH;
+							StringBuilder searchUrl = new StringBuilder();
+
+							searchUrl.append(entitySearcApiUrl)
+									.append("&typeName=")
+									.append(entityType)
+									.append("&attrValuePrefix=" + userInput + "&limit=25");
+
+
+							WebResource webResource = client.resource(searchUrl.toString());
+							WebResource.Builder builder = webResource.getRequestBuilder();
+
+							for (NewCookie cook : loginResponse.getCookies()) {
+								builder = builder.cookie(cook);
+							}
+
+							ClientResponse response = builder.get(ClientResponse.class);
+
+							if (response != null) {
+								String jsonString = response.getEntity(String.class);
+								Gson gson = new Gson();
+								AtlasSearchResult searchResult = gson.fromJson(jsonString, AtlasSearchResult.class);
+
+								ret = new ArrayList<>();
+
+								if (searchResult != null) {
+									List<AtlasEntityHeader> entityHeaderList = searchResult.getEntities();
+									for (AtlasEntityHeader entity : entityHeaderList) {
+										ret.add((String) entity.getAttribute("qualifiedName"));
+									}
+								}
+							}
+						} catch (Throwable t) {
+							String msgDesc = "Exception while getting Atlas Entity Resource List.";
+							LOG.error(msgDesc, t);
+						} finally {
+							if (client != null) {
+								client.destroy();
+							}
+						}
+					}
+
+					return ret;
+				}
+			});
+
+			return list;
 		}
 
 		String[] getAtlasUrls() {
