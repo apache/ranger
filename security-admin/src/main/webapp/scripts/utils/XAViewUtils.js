@@ -24,6 +24,7 @@ define(function(require) {
 	
     var XAEnums = require('utils/XAEnums');
     var localization = require('utils/XALangSupport');
+    var XAUtils = require('utils/XAUtils');
     var XAViewUtil = {};
     require('Backbone.BootstrapModal');
 
@@ -80,13 +81,7 @@ define(function(require) {
                 if($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0){
                     $('.queryInfo').not(this).popover('hide');
                     $('.copyQuery').on("click", function(e){
-                        var input = document.createElement('input');
-                        input.setAttribute('value', model.get('requestData'));
-                        document.body.appendChild(input);
-                        input.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(input);
-                        e.currentTarget.title="Copied!";
+                        XAUtils.copyToClipboard(e , model.get('requestData'));
                     })
                 }
             });

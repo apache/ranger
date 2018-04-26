@@ -2288,11 +2288,20 @@ textarea:read-only{
     line-height: 12px;
 }
 .users-list-search{
-    width : 500px;
+    width : 90%;
     padding : 10px;
 }
 .span-margin{
     margin: 2px;
+    border: 1px solid #bbbbbb;
+    background-color: white;
+}
+.span-margin a{
+    color:#444444;
+}
+.span-margin:hover a{
+    text-decoration:none;
+    color:#4e7b86;
 }
 .loaderForModal{
   background: url(../images/loading.gif) no-repeat center center rgba(0,0,0,0.3);
@@ -2308,7 +2317,7 @@ textarea:read-only{
 .infoWidth{
   width: 475px;
 }
-.query-icon{
+.query-icon, .copyUsers{
   padding: 0 4px;
   float: right;
   margin-top: -3px;
@@ -2357,4 +2366,11 @@ textarea:read-only{
 .expiredIconPosition{
     position: relative;
     text-align: center;
+}
+.setEllipsis {
+    max-width: 180px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
 }

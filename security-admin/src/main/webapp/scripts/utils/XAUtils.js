@@ -1401,5 +1401,14 @@ define(function(require) {
             }
         });
     };
+    XAUtils.copyToClipboard = function(e , copyText ){
+        var input = document.createElement('input');
+        input.setAttribute('value', copyText.join(' | '));
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        e.currentTarget.title="Copied!";
+    };
 	return XAUtils;
 });

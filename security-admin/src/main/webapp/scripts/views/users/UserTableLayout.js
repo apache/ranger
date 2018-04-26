@@ -496,7 +496,7 @@ define(function(require){
 
         showUserList :function(e){
             XAUtil.blockUI();
-            var that = this , name , msg = "", content = "" , totalRecords, infoMsg = "";
+            var that = this , name , msg = "", content = "" , totalRecords, infoMsg = ""; this.copyUserLists = [];
             var anchor = $(e.currentTarget);
             this.groupId = anchor.attr('data-id');
             name = anchor.attr('data-name');
@@ -512,10 +512,14 @@ define(function(require){
                 totalRecords = this.state.totalRecords;
                 var title =  "<h4>User's List: " + name + "</h4>";
                     _.each(that.grpUserList.models , function(model){
-                        msg +='<span class="label label-info userLists span-margin" >'+ model.get('name') + '</span>';
+                        msg +='<span class="link-tag userLists span-margin setEllipsis" title="'+ model.get('name') +'"><a href="#!/user/'+ model.id+'">'+ model.get('name') + '</a></span>';
+                        that.copyUserLists.push(model.get('name'));
                     });
                     var html = '<div class="row-fluid">\
-                                    <div class="span12"><input type="text" data-id="userInput" placeholder="Search Users" class= "users-list-search"></div>\
+                                    <div class="span12">\
+                                        <input type="text" data-id="userInput" placeholder="Search Users" class= "users-list-search">\
+                                        <div class="pull-right link-tag copyUsers btn btn-mini" title="Copy All Users Name"><i class="icon-copy"></i></div>\
+                                    </div>\
                                 </div>';
                     if(totalRecords > 100){
                         var showAllUserbtn = '<button class="btn btn-mini showMore" data-id="'+ that.groupId +'" data-id="showMore" title="Show All Users">Show All Users</button>'
@@ -534,13 +538,19 @@ define(function(require){
                         allowCancel : true,
                     }).open();
                     modal.$el.find('.cancel').hide();
+                    modal.$el.find('.copyUsers').on("click", function(e){
+                        XAUtil.copyToClipboard(e , that.copyUserLists);
+                    })
                     that.showAllUser(modal, totalRecords, msg);
             })
         },
 
         showAllUser : function(modal, totalRecords, msg){
-            var that = this;
+            var that = this; that.copyUserLists = [];
             var filterUserLists = _.clone(modal.$content.find('span'));
+            _.each(filterUserLists , function(model){
+                that.copyUserLists.push(model.innerText);
+            });
             modal.$content.find('.showMore').on("click" ,function(){
                 modal.$el.find('.modal-body').scrollTop(0);
                 modal.$el.find('.modal-body').addClass('pointer-event');
@@ -553,12 +563,13 @@ define(function(require){
                     cache : false,
                     reset : true,
                 }).then(function(){
-                    var tag ="";
+                    var tag =""; that.copyUserLists = [];
                     modal.$content.find('.showMore').attr('disabled',true);
                     modal.$el.find('.modal-body').removeClass('pointer-event');
                     modal.$el.find('.loaderForModal').remove();
                     _.each(this.models, function(m){
-                        tag +='<span class="label label-info userLists span-margin" >'+ m.get('name') + '</span>';
+                        tag +='<span class="link-tag userLists span-margin setEllipsis" title="'+ m.get('name') +'" ><a href="#!/user/'+ m.get('id')+'" >'+ m.get('name') + '</a></span>';
+                        that.copyUserLists.push(m.get('name'));
                     });
                     modal.$el.find(".usernames").empty();
                     modal.$el.find(".usernames").append(tag);
@@ -566,23 +577,27 @@ define(function(require){
                     msg = tag;
                 })
             });
-            modal.$el.find('[data-id="userInput"]').on("keyup" ,function(){
-                var input, users;
-                input = $('input[data-id="userInput"]');
+            modal.$el.find('[data-id="userInput"]').on("keyup" ,function(e){
+                var input, users= [];
+                modal.$el.find('.copyUsers').show()
+                var value = e.currentTarget.value;
                 users = msg;
-                if(!_.isEmpty(input.val())){
+                if(!_.isEmpty(value)){
+                    that.copyUserLists=[];
                     users = _.filter(filterUserLists, function(v) {
-                        if(v.innerText.toLowerCase().indexOf(input.val().toLowerCase()) > -1){
-                            return v;
+                       if(v.innerText.toLowerCase().indexOf(value.toLowerCase()) > -1){
+                           that.copyUserLists.push(v.innerText);
+                           return v;
                         }
                     });
                 }
                 modal.$el.find(".usernames").empty();
                 if(_.isEmpty(users)){
-                    users = "No users found."
+                    users = "No users found.";
+                    modal.$el.find('.copyUsers').hide()
                 }
                 modal.$el.find(".usernames").append(users);
-                if(_.isEmpty(input.val())){
+                if(_.isEmpty(value)){
                     that.showAllUser(modal, totalRecords, msg);
                 }
             })
