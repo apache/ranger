@@ -199,7 +199,7 @@
         <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
-        <scala.version>2.11.8</scala.version>
+        <scala.version>2.11.12</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.xml.version>1.0.4</scala.xml.version>
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
