@@ -81,7 +81,7 @@ public class RangerValidityScheduleValidator {
             validationFailures.add(new ValidationFailureDetails(0, "startTime,endTime,recurrences", "", true, true, false, "empty values"));
         } else {
 
-            if (validitySchedule.getStartTime() != null) {
+            if (StringUtils.isNotEmpty(validitySchedule.getStartTime())) {
                 try {
                     startTime = DATE_FORMATTER.get().parse(validitySchedule.getStartTime());
                 } catch (ParseException exception) {
@@ -92,7 +92,7 @@ public class RangerValidityScheduleValidator {
                 startTime = new Date();
             }
 
-            if (validitySchedule.getEndTime() != null) {
+            if (StringUtils.isNotEmpty(validitySchedule.getEndTime())) {
                 try {
                     endTime = DATE_FORMATTER.get().parse(validitySchedule.getEndTime());
                 } catch (ParseException exception) {

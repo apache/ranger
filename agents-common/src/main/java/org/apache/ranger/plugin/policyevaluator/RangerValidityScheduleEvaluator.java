@@ -70,7 +70,7 @@ public class RangerValidityScheduleEvaluator {
         Date startTime = null;
         Date endTime   = null;
 
-        if (startTimeStr != null) {
+        if (StringUtils.isNotEmpty(startTimeStr)) {
             try {
                 startTime = DATE_FORMATTER.get().parse(startTimeStr);
             } catch (ParseException exception) {
@@ -78,7 +78,7 @@ public class RangerValidityScheduleEvaluator {
             }
         }
 
-        if (endTimeStr != null) {
+        if (StringUtils.isNotEmpty(endTimeStr)) {
             try {
                 endTime = DATE_FORMATTER.get().parse(endTimeStr);
             } catch (ParseException exception) {

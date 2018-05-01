@@ -30,6 +30,36 @@
     }
   },
   {
+    "name": "Empty end-time",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:30:00",
+        "endTime": ""
+      }
+    ],
+    "accessTime": "20180112-14:32:27.000-0800",
+    "result": {
+      "isValid": true,
+      "isApplicable": true,
+      "validationFailureCount": 0
+    }
+  },
+  {
+    "name": "Empty start-time",
+    "validitySchedules": [
+      {
+        "startTime": "",
+        "endTime": "2020/01/12 14:30:00"
+      }
+    ],
+    "accessTime": "20180112-14:32:27.000-0800",
+    "result": {
+      "isValid": true,
+      "isApplicable": true,
+      "validationFailureCount": 0
+    }
+  },
+  {
     "name": "Applicable for 9 minutes in a 10 minute interval",
     "validitySchedules": [
       {
