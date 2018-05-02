@@ -851,7 +851,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
             // Incrementing highestdeltaSyncGroupTime (for AD) in order to avoid search record repetition for next sync cycle.
             deltaSyncGroupTime = highestdeltaSyncGroupTime+1;
             // Incrementing the highest timestamp value (for OpenLdap) with 1min in order to avoid search record repetition for next sync cycle.
-            deltaSyncGroupTimeStamp = dateFormat.format(new Date(highestdeltaSyncGroupTime + 60000l));
+            deltaSyncGroupTimeStamp = dateFormat.format(new Date(highestdeltaSyncGroupTime + 60l));
         }
 	}
 
