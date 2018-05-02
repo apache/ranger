@@ -73,8 +73,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	public static final int OPERATION_CREATE_CONTEXT = 1;
 	public static final int OPERATION_UPDATE_CONTEXT = 2;
 
-	static HashMap<Integer, AbstractBaseResourceService<?, ?>> serviceList = new HashMap<Integer, AbstractBaseResourceService<?, ?>>();
-	static List<AbstractBaseResourceService<?, ?>> preServiceList = new ArrayList<AbstractBaseResourceService<?, ?>>();
 	protected Class<T> tEntityClass;
 	protected Class<V> tViewClass;
 
@@ -125,30 +123,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			int OPERATION_CONTEXT);
 
 	protected abstract V mapEntityToViewBean(V viewBean, T t);
-
-	public static void registerService(
-			AbstractBaseResourceService<?, ?> baseService) {
-		preServiceList.add(baseService);
-	}
-
-	static public AbstractBaseResourceService<?, ?> getService(int classType) {
-		AbstractBaseResourceService<?, ?> service = serviceList.get(classType);
-		if (service == null) {
-			for (AbstractBaseResourceService<?, ?> myService : preServiceList) {
-				if (myService.getClassType() == classType) {
-					serviceList.put(myService.getClassType(), myService);
-					service = myService;
-					break;
-				}
-			}
-		}
-
-		if (service == null) {
-			logger.error("Service not found for classType=" + classType,
-					new Throwable());
-		}
-		return service;
-	}
 
 	protected String getResourceName() {
 
@@ -239,7 +213,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 				+ className + " obj ";
 		distinctQueryStr = "SELECT distinct obj FROM " + className + " obj ";
 		sortFields.add(new SortField("id", "obj.id",true,SORT_ORDER.ASC));
-		registerService(this);
 	}
 
 	// ----------------------------------------------------------------------------------

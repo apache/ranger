@@ -46,7 +46,6 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
@@ -61,8 +60,6 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.service.AbstractBaseResourceService;
-import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -297,49 +294,6 @@ public class RangerBizUtil {
 		return null;
 	}
 
-	public XXDBBase getMObject(int objClassType, Long objId) {
-		XXDBBase obj = null;
-
-		if (objId != null) {
-			BaseDao<?> dao = daoManager.getDaoForClassType(objClassType);
-
-			if (dao != null) {
-				obj = (XXDBBase) dao.getById(objId);
-			}
-		}
-
-		return obj;
-	}
-
-	public XXDBBase getMObject(VXDataObject vXDataObject) {
-		if (vXDataObject != null) {
-			return getMObject(vXDataObject.getMyClassType(),
-					vXDataObject.getId());
-		}
-		return null;
-	}
-
-	public VXDataObject getVObject(int objClassType, Long objId) {
-		if (objId == null) {
-			return null;
-		}
-		if (objClassType == RangerConstants.CLASS_TYPE_USER_PROFILE) {
-			return userMgr.mapXXPortalUserVXPortalUser(daoManager
-					.getXXPortalUser().getById(objId));
-		}
-		try {
-			AbstractBaseResourceService<?, ?> myService = AbstractBaseResourceService
-					.getService(objClassType);
-			if (myService != null) {
-				return myService.readResource(objId);
-			}
-		} catch (Throwable t) {
-			logger.error("Error reading resource. objectClassType="
-					+ objClassType + ", objectId=" + objId, t);
-		}
-		return null;
-	}
-
 	public void deleteReferencedObjects(XXDBBase obj) {
 
 		if (obj == null) {
@@ -349,23 +303,6 @@ public class RangerBizUtil {
 			return;
 		}
 
-	}
-
-	/**
-	 * @param obj
-	 */
-	void deleteObjects(List<XXDBBase> objs) {
-
-	}
-
-	void deleteObject(XXDBBase obj) {
-		AbstractBaseResourceService<?, ?> myService = AbstractBaseResourceService
-				.getService(obj.getMyClassType());
-		if (myService != null) {
-			myService.deleteResource(obj.getId());
-		} else {
-			logger.error("Service not found for obj=" + obj, new Throwable());
-		}
 	}
 
 	public <T extends XXDBBase> Class<? extends XXDBBase> getContextObject(

@@ -28,25 +28,20 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAssetDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXResourceDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXAsset;
-import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.apache.ranger.view.VXAsset;
-import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -447,49 +442,9 @@ public class TestRangerBizUtil {
 	@Test
 	public void testGetMimeTypeInt_ForPNG(){
 		int mimeTypeChk = rangerBizUtil.getMimeTypeInt("png");
-		Assert.assertEquals(RangerConstants.MIME_PNG, mimeTypeChk);
-	}
-	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
-	public void testGetMObject(){
-		BaseDao baseDao = Mockito.mock(BaseDao.class);
-		Mockito.when(daoManager.getDaoForClassType(RangerCommonEnums.CLASS_TYPE_USER_PROFILE)).thenReturn(baseDao);
-		Mockito.when(baseDao.getById(id)).thenReturn(new XXAsset());
-		XXDBBase mObjChk = rangerBizUtil.getMObject(RangerCommonEnums.CLASS_TYPE_USER_PROFILE,id);
-		Assert.assertNotNull(mObjChk);
-	}
-	
-	@Test
-	public void testGetMObject_NoObjId(){
-		XXDBBase mObjChk = rangerBizUtil.getMObject(RangerCommonEnums.CLASS_TYPE_USER_PROFILE,null);
-		Assert.assertNull(mObjChk);
-	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void testGetMObject_VXDataObject(){
-		VXAsset vXDataObject = new VXAsset();
-		vXDataObject.setId(id);
-		BaseDao baseDao = Mockito.mock(BaseDao.class);
-		Mockito.when(daoManager.getDaoForClassType(vXDataObject.getMyClassType())).thenReturn(baseDao);
-		Mockito.when(baseDao.getById(vXDataObject.getId())).thenReturn(new XXAsset());
-		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(vXDataObject);
-		Assert.assertNotNull(xXDBaseChk);
-	}
-	
-	@Test
-	public void testGetMObject_NOVXDataObject(){
-		XXDBBase xXDBaseChk = rangerBizUtil.getMObject(null);
-		Assert.assertNull(xXDBaseChk);
-	}
-	
-	@Test
-	public void testGetVObject_NOObjId(){
-		VXDataObject objchk = rangerBizUtil.getVObject(RangerConstants.CLASS_TYPE_USER_PROFILE, null);
-		Assert.assertNull(objchk);
-	}
-	
+		Assert.assertEquals(RangerConstants.MIME_PNG, mimeTypeChk);		
+	}	
+
 	@Test
 	public void testMatchHdfsPolicy_NoResourceName(){
 		boolean bnlChk = rangerBizUtil.matchHbasePolicy(null, null, null, id, AppConstants.XA_PERM_TYPE_UNKNOWN);
