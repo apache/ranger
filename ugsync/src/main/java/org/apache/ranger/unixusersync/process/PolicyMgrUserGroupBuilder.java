@@ -459,6 +459,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
  			if (! isMockRun ) {
  				delXUserGroupInfo(user, delGroups);
+				//Remove groups from user mapping
+				userName2XUserInfoMap.get(userName).deleteGroups(delGroups);
+				LOG.debug(userName2XUserInfoMap.get(userName).getGroups());
  			}
 			if (! isMockRun) {
                 if (!updateGroups.isEmpty()) {
@@ -785,7 +788,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return ret;
 	}
 
-	private void getUserGroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo) {
+	private UserGroupInfo getUserGroupInfo(UserGroupInfo usergroupInfo) {
+		UserGroupInfo ret = null;
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo)");
 		}
@@ -824,6 +828,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if(LOG.isDebugEnabled()){
 			LOG.debug("<== PolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret, UserGroupInfo usergroupInfo)");
 		}
+		return ret;
 	}
 
 
@@ -932,26 +937,25 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				final UserGroupInfo result = ret;
 				final UserGroupInfo ugInfo = usergroupInfo;
-				Subject.doAs(sub, new PrivilegedAction<Void>() {
+				ret = Subject.doAs(sub, new PrivilegedAction<UserGroupInfo>() {
 					@Override
-					public Void run() {
+					public UserGroupInfo run() {
 						try {
-							getUserGroupInfo(result, ugInfo);
+							return getUserGroupInfo(ugInfo);
 						} catch (Exception e) {
 							LOG.error("Failed to add User Group Info : ", e);
 						}
 						return null;
 					}
 				});
-				ret = result;
+				return ret;
 			} catch (Exception e) {
 				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
 			}
 		} else {
 			try {
-				getUserGroupInfo(ret, usergroupInfo);
+				ret = getUserGroupInfo(usergroupInfo);
 			} catch (Throwable t) {
 				LOG.error("Failed to add User Group Info : ", t);
 			}
@@ -1046,7 +1050,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			if (group != null) {
 				if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 					try {
-						LOG.info("Using principal = " + principal + " and keytab = " + keytab);
+						LOG.debug("Using principal = " + principal + " and keytab = " + keytab);
 						Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 						Subject.doAs(sub, new PrivilegedAction<Void>() {
 							@Override

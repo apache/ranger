@@ -257,9 +257,9 @@ public class UserGroupSyncConfig  {
 	}
 
 	private void init() {
+		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
-		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 	}
 
 	public String getUserSyncFileSource(){

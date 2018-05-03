@@ -56,6 +56,12 @@ public class XUserInfo {
 		return groupNameList;
 	}
 
+	public void deleteGroups(List<String> delGroups) {
+		for (String delGroup : delGroups) {
+			groupNameList.remove(delGroup);
+		}
+	}
+
 	public List<String> getGroups() {
 		return groupNameList;
 	}
