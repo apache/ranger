@@ -86,8 +86,6 @@ public class RangerAuthenticationEntryPoint extends
 				.getRequestURL().toString() : "";
 		String servletPath = PropertiesUtil.getProperty(
 				"ranger.servlet.mapping.url.pattern", "service");
-		String reqServletPath = configUtil.getWebAppRootURL() + "/"
-				+ servletPath;
 
 		if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
 			try {
@@ -127,7 +125,7 @@ public class RangerAuthenticationEntryPoint extends
 						+ ajaxReturnCode + ". URL=" + request.getRequestURI());
 			}
 			response.sendError(ajaxReturnCode, "");
-		} else if (!(requestURL.startsWith(reqServletPath))) {
+		} else if (!(requestURL.contains(servletPath))) {
 			if(requestURL.contains(RangerSSOAuthenticationFilter.LOCAL_LOGIN_URL)){
 				if (request.getSession() != null){
 					request.getSession().setAttribute("locallogin","true");
