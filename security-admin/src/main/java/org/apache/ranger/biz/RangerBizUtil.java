@@ -1562,7 +1562,7 @@ public class RangerBizUtil {
                 }
                 if (!isAccessible) {
                         throw restErrorUtil.createRESTException(
-                                        "Logged in user is not allowd to create/update user",
+                                        "Logged in user is not allowed to create/update user",
 					MessageEnums.OPER_NO_PERMISSION);
 		}
                 return isAccessible;
