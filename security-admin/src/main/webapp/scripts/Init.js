@@ -78,7 +78,10 @@
        'bootstrap-notify' :	{
     	   deps: ['jquery','bootstrap'],
        },
-       moment  :	{ deps: ['jquery'], exports: 'moment' },
+       'moment'  :	{ deps: ['jquery'], exports: 'moment' },
+
+       'momentTz'  :    { deps: ['jquery']},
+
        'localstorage' :{
             deps : ['backbone','underscore','jquery']
        },
@@ -140,7 +143,8 @@
         'tag-it'					: '../libs/bower/tag-it/js/tag-it.min',
         'select2'					: '../libs/bower/select2/select2',
         'bootbox'					: '../libs/bower/bootbox/js/bootbox',
-        'moment'					: '../libs/bower/moment/js/moment-with-langs.min',
+        'moment'					: '../libs/bower/moment/js/moment-with-locales.min',
+        'momentTz'                    : '../libs/bower/moment/js/moment-timezone-with-data.min',
         'visualsearch'				: '../libs/other/visualsearch/js/visualsearch',
         'globalize'               	: '../libs/bower/globalize/lib/globalize',
         /* handlebars from the require handlerbars plugin below */

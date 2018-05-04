@@ -47,7 +47,7 @@ define(function(require) {
 	var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
 	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
 
-	require('moment');
+	var moment = require('moment');
 	require('bootstrap-datepicker');
 	require('Backbone.BootstrapModal');
 	require('visualsearch');

@@ -41,7 +41,6 @@ define(function(require){
 			this.bind("ok", this.okClicked);
 		},
 		ui:{
-			'downloadReport'  	: '[data-id="downloadReport"]',
 			'servicesName'		: '[data-id="servicesName"]',
 			'componentTypeSelected'		: '[data-id="componentTypeSelected"]'
 		},
@@ -73,7 +72,11 @@ define(function(require){
 		        success:function(data,status,response){
 		        	XAUtil.blockUI('unblock');
 		        	if(response.status == 200 || response.statusText == "ok"){
-		        		that.ui.downloadReport.attr("href", urlString + urls+ '?serviceName='+serviceName+'&checkPoliciesExists=false')[0].click();
+				    var downloadUrl = urlString + urls+'?serviceName='+serviceName+'&checkPoliciesExists=false';
+				    var downloadReport = $('<a href ="'+downloadUrl+'"></a>');
+				    downloadReport.appendTo('body');
+				    downloadReport[0].click();
+				    downloadReport.remove();
 		        	}else{
 		        		XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
 		        	}

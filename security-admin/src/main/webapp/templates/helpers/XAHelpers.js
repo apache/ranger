@@ -23,7 +23,7 @@
 	var XAUtil	   		= require('utils/XAUtils');
     var localization 	= require('utils/XALangSupport');
     var SessionMgr   	= require('mgrs/SessionMgr');
-	require('moment');
+    var moment = require('moment');
 	/*
 	 * General guidelines while writing helpers:
 	 * 

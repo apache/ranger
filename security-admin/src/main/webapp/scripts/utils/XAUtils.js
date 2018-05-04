@@ -1390,14 +1390,16 @@ define(function(require) {
         return (SessionMgr.isAuditor() || SessionMgr.isKMSAuditor()) ? true : false ;
     };
     XAUtils.isPolicyExpierd = function(model){
+        var moment = require('moment');
+        var momontTz = require('momentTz');
         return !_.some(model.get('validitySchedules') , function(m){
             if(!m.endTime){
                 return true;
             } else if(_.isEmpty(m.timeZone)){
                 return new Date().valueOf() > new Date(m.endTime).valueOf() ? false : true;
             }else{
-                return new Date(new Date().toLocaleString('en-US', { timeZone: m.timeZone }).valueOf()).valueOf() >
-                new Date(m.endTime.toLocaleString('en-US', { timeZone: m.timeZone }).valueOf()).valueOf() ? false : true;
+                return new Date(moment.tz(m.timeZone).format('MM/DD/YYYY HH:mm:ss')).valueOf() >
+                new Date(m.endTime).valueOf() ? false : true;
             }
         });
     };

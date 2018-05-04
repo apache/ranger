@@ -139,6 +139,9 @@ define(function(require) {
 				if(!_.isUndefined(this.model.get('delegateAdmin')) && this.model.get('delegateAdmin')){
                                         this.ui.delegatedAdmin.prop('checked', true);
 				}
+				if(this.model.has('delegateAdmin') && !this.model.get('delegateAdmin')){
+				    this.model.unset('delegateAdmin');
+				}
 				if(!_.isUndefined(this.model.get('rowFilterInfo')) && !_.isUndefined(this.model.get('rowFilterInfo').filterExpr)){
 					this.rowFilterExprVal = this.model.get('rowFilterInfo').filterExpr
 				}
@@ -166,8 +169,12 @@ define(function(require) {
 			var that = this;
 			$select.on('change',function(e){
 				var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group': 'user';
+				var otherName = (name == 'user') ? 'group': 'user';
 				that.checkDirtyFieldForDropDown(e);
 				
+				if(_.isNull(that.model.get(otherName+'Name'))){
+                    that.model.unset(otherName+'Name')
+                }
 				if(e.removed != undefined){
 					var gNameArr = [];
 					if(that.model.get(name+'Name') != undefined)
@@ -721,6 +728,8 @@ define(function(require) {
 					that.$('#policyConditions').editable('toggle');
 				});
 				
+			}else{
+			    that.model.unset('conditions');
 			}
 		},
 		getSelectedValues : function($select, typeGroup){
@@ -741,7 +750,11 @@ define(function(require) {
 			var $el = $(e.currentTarget);
 			XAUtil.checkDirtyFieldForToggle($el);
 			//Set Delegated Admin value 
-                        this.model.set('delegateAdmin',$el.is(':checked'));
+			if($el.is(':checked')){
+			    this.model.set('delegateAdmin',$el.is(':checked'));
+			}else{
+			    this.model.unset('delegateAdmin');
+			}
 			//select/deselect all functionality
 			if(this.checkAll($el.find('input[type="checkbox"][value!="-1"]'))){
 				$el.find('input[type="checkbox"][value="-1"]').prop('checked', true)
