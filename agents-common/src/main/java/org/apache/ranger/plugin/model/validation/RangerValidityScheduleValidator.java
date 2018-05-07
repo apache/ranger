@@ -164,12 +164,16 @@ public class RangerValidityScheduleValidator {
     }
 
     private boolean validateTimeZone(String timeZone, List<ValidationFailureDetails> validationFailures) {
-        boolean ret = !StringUtils.isNotBlank(timeZone) || validTimeZoneIds.contains(timeZone);
-
-        if (!ret) {
-            validationFailures.add(new ValidationFailureDetails(0, "timeZone", "", false, true, false, "invalid timeZone"));
-        }
-        return ret;
+		validTimeZoneIds.removeAll(Arrays.asList("JST", "IST", "BET", "ACT", "AET", "AGT", "VST", "SystemV/AST4", "CNT",
+				"NET", "SystemV/MST7", "PLT", "CST", "SST", "SystemV/CST6", "CTT", "PNT", "BST", "SystemV/YST9", "MIT",
+				"ART", "AST", "PRT", "SystemV/HST10", "PST", "SystemV/EST5", "IET", "SystemV/PST8", "SystemV/CST6CDT",
+				"NST", "EAT", "ECT", "SystemV/MST7MDT", "SystemV/YST9YDT", "CAT", "SystemV/PST8PDT", "SystemV/AST4ADT",
+				"SystemV/EST5EDT"));
+		boolean ret = !StringUtils.isNotBlank(timeZone) || validTimeZoneIds.contains(timeZone);
+		if (!ret) {
+			validationFailures.add(new ValidationFailureDetails(0, "timeZone", "", false, true, false, "invalid timeZone"));
+		}
+		return ret;
     }
 
     private boolean validateValidityInterval(RangerValidityRecurrence recurrence, List<ValidationFailureDetails> validationFailures) {
