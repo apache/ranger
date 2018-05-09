@@ -361,9 +361,15 @@ define(function(require) {
 								serviceList.setPageSize(100);
 								serviceList.fetch().done(function(){
 								serviceList.each(function(m){
-									if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
-										serviceNameVal.push(m.get('name'));
-									};
+                                                                        if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
+                                                                                if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
+                                                                                        serviceNameVal.push(m.get('name'));
+                                                                                }
+                                                                        }else{
+                                                                                if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label && m.get('type') !== XAEnums.ServiceType.Service_KMS.label){
+                                                                                        serviceNameVal.push(m.get('name'));
+                                                                                }
+                                                                        }
 								});
 								callback(serviceNameVal);
 								});
@@ -371,8 +377,14 @@ define(function(require) {
 							case 'Service Type':
 								var serviveDefs = [];
 								that.serviceDefList.each(function(m){
-									if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase()){
-										serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
+                                                                        if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
+                                                                                if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase()){
+                                                                                        serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
+                                                                                }
+                                                                        }else{
+                                                                                if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase() && m.get('name') !== XAEnums.ServiceType.Service_KMS.label){
+                                                                                        serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
+                                                                                }
 									}
 								});
 								callback(serviveDefs);

@@ -655,7 +655,9 @@ public class AssetREST {
                 if(isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null){
 			searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
 		}
-		
+                else if (xxServiceDef != null) {
+                        searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
+                }
 		return assetMgr.getAccessLogs(searchCriteria);
 	}
 	

@@ -103,7 +103,8 @@ public class SolrAccessAuditsService {
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("repoType", "repoType",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-
+                searchFields.add(new SearchField("-repoType", "-repoType",
+                                SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("resourceType", "resType",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("reason", "reason",
