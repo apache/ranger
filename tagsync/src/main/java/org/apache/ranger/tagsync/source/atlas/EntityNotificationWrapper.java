@@ -22,12 +22,13 @@ package org.apache.ranger.tagsync.source.atlas;
 import org.apache.atlas.model.TimeBoundary;
 import org.apache.atlas.model.instance.AtlasClassification;
 import org.apache.atlas.model.instance.AtlasEntity;
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.model.notification.EntityNotification;
+import org.apache.atlas.model.notification.EntityNotification.EntityNotificationV2;
 import org.apache.atlas.v1.model.instance.Id;
 import org.apache.atlas.v1.model.instance.Referenceable;
 import org.apache.atlas.v1.model.instance.Struct;
 import org.apache.atlas.v1.model.notification.EntityNotificationV1;
-import org.apache.atlas.v1.model.notification.EntityNotificationV2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,7 +83,7 @@ public class EntityNotificationWrapper {
         switch (notificationType) {
             case ENTITY_NOTIFICATION_V2: {
                 EntityNotificationV2 v2Notification = (EntityNotificationV2) notification;
-                AtlasEntity          atlasEntity    = v2Notification.getEntity();
+                AtlasEntityHeader    atlasEntity    = v2Notification.getEntity();
                 String               guid           = atlasEntity.getGuid();
                 String               typeName       = atlasEntity.getTypeName();
 
@@ -92,9 +93,9 @@ public class EntityNotificationWrapper {
                 isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
                 isEntityDeleteOp       = EntityNotificationV2.OperationType.ENTITY_DELETE == v2Notification.getOperationType();
                 isEntityCreateOp       = EntityNotificationV2.OperationType.ENTITY_CREATE == v2Notification.getOperationType();
-                isEmptyClassifications = CollectionUtils.isNotEmpty(v2Notification.getClassifications());
+                isEmptyClassifications = CollectionUtils.isNotEmpty(atlasEntity.getClassifications());
 
-                List<AtlasClassification> allClassifications = v2Notification.getClassifications();
+                List<AtlasClassification> allClassifications = atlasEntity.getClassifications();
 
                 if (CollectionUtils.isNotEmpty(allClassifications)) {
                     classifications                = new ArrayList<>();
