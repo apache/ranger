@@ -57,21 +57,13 @@ function doLogin() {
 		}
 	}	
 	var baseUrl = getBaseUrl();
-	if (baseUrl.lastIndexOf('/') != (baseUrl.length - 1)) {
-		if (baseUrl) {
-			baseUrl = baseUrl + '/';
-		} else {
-			baseUrl = '/';
-		}
-	}
-	var url = baseUrl + 'login';
 
 	$.ajax({
 		data : {
 			username : $('#username').val(),
 			password : $('#password').val()
 		},
-		url : url,
+		url : baseUrl,
 		type : 'POST',
 		headers : {
 			"cache-control" : "no-cache"
@@ -104,9 +96,7 @@ function getBaseUrl(){
 	if(!window.location.origin){
 		window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
 	}
-	return window.location.origin
-	+ window.location.pathname.substring(window.location.pathname
-			.indexOf('/', 2) + 1, 0);
+	return window.location.origin + window.location.pathname.substring(window.location.pathname.lastIndexOf('.'),0);
 }
 $(function() {
   	// register handlers
