@@ -69,7 +69,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 	private static final String URL_LOGIN                = "/j_spring_security_check";
 	private static final String URL_GET_TYPESDEF_HEADERS = "/api/atlas/v2/types/typedefs/headers";
-	private static final String URl_ENTITY_SEARCH = "v2/search/attribute?attrName=qualifiedName";
+	private static final String URl_ENTITY_SEARCH        = "v2/search/attribute?attrName=qualifiedName";
 
 	private static final String WEB_RESOURCE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 	private static final String CONNECTION_ERROR_MSG      =   " You can still save the repository and start creating"
@@ -91,12 +91,11 @@ public class RangerServiceAtlas extends RangerBaseService {
 			LOG.debug("==> RangerServiceAtlas.validateConfig()");
 		}
 
-		AtlasServiceClient client = new AtlasServiceClient(getServiceName(), configs);
-
-		Map<String, Object> ret = client.validateConfig();
+		AtlasServiceClient  client = new AtlasServiceClient(getServiceName(), configs);
+		Map<String, Object> ret    = client.validateConfig();
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceAtlas.validateConfig(): "+ ret );
+			LOG.debug("<== RangerServiceAtlas.validateConfig(): " + ret );
 		}
 
 		return ret;
@@ -105,12 +104,11 @@ public class RangerServiceAtlas extends RangerBaseService {
 	@Override
 	public List<String> lookupResource(ResourceLookupContext context)throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceAtlas.lookupResource("+ context + ")");
+			LOG.debug("==> RangerServiceAtlas.lookupResource(" + context + ")");
 		}
 
 		AtlasServiceClient client = new AtlasServiceClient(getServiceName(), configs);
-
-		List<String> ret = client.lookupResource(context);
+		List<String>       ret    = client.lookupResource(context);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceAtlas.lookupResource("+ context + "): " + ret);
@@ -122,28 +120,29 @@ public class RangerServiceAtlas extends RangerBaseService {
     @Override
     public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceAtlas.getDefaultRangerPolicies() ");
+            LOG.debug("==> RangerServiceAtlas.getDefaultRangerPolicies()");
         }
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
         for (RangerPolicy defaultPolicy : ret) {
             for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-                List<String> users = defaultPolicyItem.getUsers();
+                List<String> users     = defaultPolicyItem.getUsers();
+                String       adminUser = service.getConfigs().get("atlas.admin.user");
 
-                String atlasAdminUser = service.getConfigs().get("atlas.admin.user");
-                if (StringUtils.isBlank(atlasAdminUser)) {
-                    atlasAdminUser = "admin";
+                if (StringUtils.isBlank(adminUser)) {
+                    adminUser = "admin";
                 }
 
-                users.add(atlasAdminUser);
+                users.add(adminUser);
                 defaultPolicyItem.setUsers(users);
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceAtlas.getDefaultRangerPolicies() ");
+            LOG.debug("<== RangerServiceAtlas.getDefaultRangerPolicies()");
         }
+
         return ret;
     }
 
@@ -170,8 +169,6 @@ public class RangerServiceAtlas extends RangerBaseService {
 			final List<String> ret           = new ArrayList<>();
 			final String       userInput     = lookupContext.getUserInput();
 			final List<String> currentValues = lookupContext.getResources().get(lookupContext.getResourceName());
-
-
 
 			switch(lookupContext.getResourceName()) {
 				case RESOURCE_TYPE_CATEGORY: {
@@ -224,9 +221,12 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 				case RESOURCE_ENTITY_ID: {
 					List<String> searchTypes = lookupContext.getResources().get("entity-type");
-					List<String> values = searchEntities(userInput , searchTypes);
-					addIfStartsWithAndNotExcluded(ret, values, userInput, currentValues);
 
+					if (searchTypes != null && searchTypes.size() == 1) {
+						List<String> values = searchEntities(userInput, searchTypes.get(0));
+
+						addIfStartsWithAndNotExcluded(ret, values, userInput, currentValues);
+					}
 				}
 				break;
 
@@ -279,6 +279,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 					LOG.error(msgDesc, t);
 
 					excp = new HadoopException(msgDesc, t);
+
 					excp.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + CONNECTION_ERROR_MSG, null, null);
 				}
 			}
@@ -288,6 +289,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 					String msgDesc = "Exception while login to Atlas at : " + loginUrl;
 
 					excp = new HadoopException(msgDesc);
+
 					excp.generateResponseDataMap(false, "", msgDesc + CONNECTION_ERROR_MSG, null, null);
 				}
 
@@ -298,8 +300,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 		}
 
 		private boolean refreshTypesDefs() {
-			boolean ret = false;
-
+			boolean ret  = false;
 			Subject subj = getLoginSubject();
 
 			if (subj == null) {
@@ -336,8 +337,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 								for (Object type : types) {
 									if (type instanceof Map) {
-										Map typeDef = (Map) type;
-
+										Map    typeDef  = (Map) type;
 										Object name     = typeDef.get("name");
 										Object category = typeDef.get("category");
 
@@ -360,6 +360,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 							}
 						} catch (Throwable t) {
 							String msgDesc = "Exception while getting Atlas Resource List.";
+
 							LOG.error(msgDesc, t);
 						} finally {
 							if (client != null) {
@@ -374,18 +375,17 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 			if (typesDef != null) {
 				this.typesDef = typesDef;
+
 				ret = true;
 			}
 
 			return ret;
 		}
 
-		private List<String> searchEntities(String userInput, List<String> types) {
-
+		private List<String> searchEntities(String userInput, String entityType) {
 			if( LOG.isDebugEnabled()) {
-				LOG.info(" RangerServiceAtlas.searchEntities ==>> userInput" + userInput +" types "+ types);
+				LOG.debug("==> RangerServiceAtlas.searchEntities(userInput=" + userInput + ", entityType=" + entityType + ")");
 			}
-			List<String> list = null;
 
 			Subject subj = getLoginSubject();
 
@@ -393,34 +393,29 @@ public class RangerServiceAtlas extends RangerBaseService {
 				return null;
 			}
 
-			list = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+			List<String> list = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
 				@Override
 				public List<String> run() {
 					List<String> ret = null;
-					String entityType = "";
-					if (types != null && types.size() == 1) {
-						entityType = types.get(0);
-					} else {
-						return null;
-					}
+
 					for (String atlasUrl : getAtlasUrls()) {
 						Client client = null;
 
 						try {
 							client = Client.create();
 
-							ClientResponse loginResponse = loginToAtlas(client);
-							String entitySearcApiUrl = atlasUrl + "/api/atlas/" + URl_ENTITY_SEARCH;
-							StringBuilder searchUrl = new StringBuilder();
+							ClientResponse loginResponse     = loginToAtlas(client);
+							String         entitySearcApiUrl = atlasUrl + "/api/atlas/" + URl_ENTITY_SEARCH;
+							StringBuilder  searchUrl         = new StringBuilder();
 
 							searchUrl.append(entitySearcApiUrl)
-									.append("&typeName=")
-									.append(entityType)
-									.append("&attrValuePrefix=" + userInput + "&limit=25");
+									 .append("&typeName=")
+									 .append(entityType)
+									 .append("&attrValuePrefix=" + userInput + "&limit=25");
 
 
-							WebResource webResource = client.resource(searchUrl.toString());
-							WebResource.Builder builder = webResource.getRequestBuilder();
+							WebResource         webResource = client.resource(searchUrl.toString());
+							WebResource.Builder builder     = webResource.getRequestBuilder();
 
 							for (NewCookie cook : loginResponse.getCookies()) {
 								builder = builder.cookie(cook);
@@ -429,14 +424,15 @@ public class RangerServiceAtlas extends RangerBaseService {
 							ClientResponse response = builder.get(ClientResponse.class);
 
 							if (response != null) {
-								String jsonString = response.getEntity(String.class);
-								Gson gson = new Gson();
+								String            jsonString   = response.getEntity(String.class);
+								Gson              gson         = new Gson();
 								AtlasSearchResult searchResult = gson.fromJson(jsonString, AtlasSearchResult.class);
 
 								ret = new ArrayList<>();
 
 								if (searchResult != null) {
 									List<AtlasEntityHeader> entityHeaderList = searchResult.getEntities();
+
 									for (AtlasEntityHeader entity : entityHeaderList) {
 										ret.add((String) entity.getAttribute("qualifiedName"));
 									}
@@ -444,6 +440,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 							}
 						} catch (Throwable t) {
 							String msgDesc = "Exception while getting Atlas Entity Resource List.";
+
 							LOG.error(msgDesc, t);
 						} finally {
 							if (client != null) {
@@ -456,13 +453,16 @@ public class RangerServiceAtlas extends RangerBaseService {
 				}
 			});
 
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerServiceAtlas.searchEntities(userInput=" + userInput + ", entityType=" + entityType + "): " + list);
+			}
+
 			return list;
 		}
 
 		String[] getAtlasUrls() {
-			String urlString = connectionProperties.get(CONFIG_REST_ADDRESS);
-
-			String[] ret = urlString == null ? new String[0] : urlString.split(",");
+			String   urlString = connectionProperties.get(CONFIG_REST_ADDRESS);
+			String[] ret       = urlString == null ? new String[0] : urlString.split(",");
 
 			// remove separator at the end
 			for (int i = 0; i < ret.length; i++) {
