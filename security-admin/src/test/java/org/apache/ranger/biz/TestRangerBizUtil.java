@@ -708,7 +708,6 @@ public class TestRangerBizUtil {
         public void testCheckUserAccessibleSuccessForAdmin(){
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_SYS_ADMIN);
-                roleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR);
                 Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);

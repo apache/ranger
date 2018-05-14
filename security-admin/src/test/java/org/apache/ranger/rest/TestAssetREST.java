@@ -943,11 +943,10 @@ public class TestAssetREST {
         @Test
         public void testGetReportLogsForAuditAdmin() {
                 SearchCriteria searchCriteria = new SearchCriteria();
-                List<SortField> sortFields = null;
                 List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
                 VXTrxLogList vXTrxLogList = new VXTrxLogList();
                 vXTrxLogList.setVXTrxLogs(vXTrxLogs);
-                Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
+                Mockito.when(searchUtil.extractCommonCriterias(request, xTrxLogService.sortFields)).thenReturn(searchCriteria);
                 Mockito.when(searchUtil.extractString((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                                 .thenReturn("test");
@@ -967,18 +966,17 @@ public class TestAssetREST {
                 Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
                 Mockito.verify(assetMgr).getReportLogs(searchCriteria);
-                Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
+                Mockito.verify(searchUtil).extractCommonCriterias(request, xTrxLogService.sortFields);
         }
 
 
         @Test
         public void testGetReportLogsForAuditKeyAdmin() {
                 SearchCriteria searchCriteria = new SearchCriteria();
-                List<SortField> sortFields = null;
                 List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
                 VXTrxLogList vXTrxLogList = new VXTrxLogList();
                 vXTrxLogList.setVXTrxLogs(vXTrxLogs);
-                Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
+                Mockito.when(searchUtil.extractCommonCriterias(request, xTrxLogService.sortFields)).thenReturn(searchCriteria);
                 Mockito.when(searchUtil.extractString((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                                 .thenReturn("test");
@@ -998,7 +996,7 @@ public class TestAssetREST {
                 Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
                 Mockito.verify(assetMgr).getReportLogs(searchCriteria);
-                Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
+                Mockito.verify(searchUtil).extractCommonCriterias(request, xTrxLogService.sortFields);
         }
 
 	public Map<String, String> getSampleConfig() {
