@@ -24,12 +24,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
+import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -47,6 +53,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 //import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -57,11 +64,18 @@ import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerServiceWithAssignedIdService;
+import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXAccessAuditList;
+import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXGroupList;
+import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -73,6 +87,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -124,6 +141,18 @@ public class TestServiceDBStore {
 	@Mock
 	ServicePredicateUtil predicateUtil;
 
+	@Mock
+	XGroupService xGroupService;
+	
+	
+	@Mock
+	RESTErrorUtil restErrorUtil;
+	
+	@Mock
+	AssetMgr assetMgr;
+	
+	
+	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -2353,4 +2382,79 @@ public class TestServiceDBStore {
 		Assert.assertNotNull(policyList);
 		Mockito.verify(daoManager).getXXPolicy();
 	}
+
+    @Test
+    public void test41getMetricByTypeusergroup() throws Exception{
+    	VXGroupList vxGroupList = new VXGroupList();
+    	vxGroupList.setTotalCount(4l);
+    	vxGroupList.setPageSize(1);
+    	String type = "usergroup";
+    	VXUserList vXUserList = new VXUserList();
+    	vXUserList.setTotalCount(4l);
+    	Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class) )).thenReturn(vxGroupList);
+    	Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
+    	serviceDBStore.getMetricByType(type);
+    	
+
+    }
+    @Test
+    public void test42getMetricByTypeaudits() throws Exception{
+    	String type = "audits";
+    	
+    	Date date = new Date();
+    	date.setYear(2018);
+    
+    	Mockito.when(restErrorUtil.parseDate(Mockito.anyString(),Mockito.anyString(),
+                                         Mockito.any(), Mockito.any(), Mockito.anyString(),  Mockito.anyString())).thenReturn(date);
+    	RangerServiceDefList svcDefList = new RangerServiceDefList();
+    	svcDefList.setTotalCount(10l);
+    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    	
+    	
+		serviceDBStore.getMetricByType(type);
+		
+		
+    }
+    @Test
+    public void test43getMetricByTypeServices() throws Exception{
+    	String type = "services";
+    	RangerServiceList svcList = new RangerServiceList();
+    	svcList.setTotalCount(10l);
+    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    	serviceDBStore.getMetricByType(type);
+    }
+    
+    @Test
+    public void test44getMetricByTypePolicies() throws Exception{
+    	String type = "policies";
+    	RangerServiceList svcList = new RangerServiceList();
+    	svcList.setTotalCount(10l);
+    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    	serviceDBStore.getMetricByType(type);
+    }
+    
+    @Test
+    public void test45getMetricByTypeDatabase() throws Exception{
+    	String type = "database";
+    	Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
+    	serviceDBStore.getMetricByType(type);
+    }
+    
+    @Test
+    public void test46getMetricByTypeContextenrichers() throws Exception{
+    	String type = "contextenrichers";
+    	RangerServiceDefList svcDefList = new RangerServiceDefList();
+    	svcDefList.setTotalCount(10l);
+    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    	serviceDBStore.getMetricByType(type);
+    }
+    
+    @Test
+    public void test47getMetricByTypeDenyconditions() throws Exception{
+    	String type = "denyconditions";
+    	RangerServiceDefList svcDefList = new RangerServiceDefList();
+    	svcDefList.setTotalCount(10l);
+    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    	serviceDBStore.getMetricByType(type);
+    }
 }

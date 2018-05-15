@@ -88,7 +88,7 @@ public class RangerAPIList {
 	public static final String GET_POLICY_VERSION_LIST = "ServiceREST.getPolicyVersionList";
 	public static final String GET_POLICY_FOR_VERSION_NO = "ServiceREST.getPolicyForVersionNumber";
 	public static final String GET_PLUGINS_INFO = "ServiceREST.getPluginsInfo";
-
+        public static final String GET_METRICS_BY_TYPE = "ServiceREST.getMetricByType";
 
 
 	/**
