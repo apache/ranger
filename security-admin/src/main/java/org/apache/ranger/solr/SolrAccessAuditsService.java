@@ -149,7 +149,7 @@ public class SolrAccessAuditsService {
                                 if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
                                         vXAccessAudit.setRequestData(null);
                                 }
-                                else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && "grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType())){
+                                else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && ("grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType()))){
                                         try {
                                                 vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
                                         } catch (UnsupportedEncodingException e) {

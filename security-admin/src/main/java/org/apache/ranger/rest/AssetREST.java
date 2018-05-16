@@ -650,14 +650,14 @@ public class AssetREST {
 		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
 		
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
-                boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
+		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
 		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
-                if(isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null){
+		if(isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null){
 			searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
 		}
-                else if (xxServiceDef != null) {
-                        searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
-                }
+		else if (xxServiceDef != null) {
+			searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
+		}
 		return assetMgr.getAccessLogs(searchCriteria);
 	}
 	
