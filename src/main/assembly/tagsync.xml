@@ -50,6 +50,7 @@
 					<include>org.apache.atlas:atlas-client-v2:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
 					<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
+					<include>org.apache.commons:commons-compress:jar:${atlas.commons.compress.version}</include>
 					<include>org.apache.hadoop:hadoop-auth</include>
 					<include>org.apache.hadoop:hadoop-common</include>
 					<include>org.apache.kafka:kafka_${scala.binary.version}:jar:${kafka.version}</include>

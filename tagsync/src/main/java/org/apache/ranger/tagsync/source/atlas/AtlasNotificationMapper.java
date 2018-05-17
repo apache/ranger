@@ -51,7 +51,6 @@ import java.util.*;
 public class AtlasNotificationMapper {
 	private static final Log LOG = LogFactory.getLog(AtlasNotificationMapper.class);
 
-
 	private static Map<String, Long> unhandledEventTypes = new HashMap<String, Long>();
 
 	private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
@@ -140,8 +139,20 @@ public class AtlasNotificationMapper {
 			switch (opType) {
 				case ENTITY_CREATE:
 					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
+					if (!ret) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+						}
+					}
 					break;
 				case ENTITY_UPDATE:
+					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
+					if (!ret) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
+						}
+					}
+					break;
 				case ENTITY_DELETE:
 				case TRAIT_ADD:
 				case TRAIT_UPDATE:
@@ -278,9 +289,8 @@ public class AtlasNotificationMapper {
 		List<RangerTag>        ret    = new ArrayList<RangerTag>();
 		IReferenceableInstance entity = entityWithTraits != null ? entityWithTraits.getEntity() : null;
 
-		if(entity != null && CollectionUtils.isNotEmpty(entity.getTraits())) {
-			for (String traitName : entity.getTraits()) {
-				IStruct             trait    = entity.getTrait(traitName);
+		if(entity != null && CollectionUtils.isNotEmpty(entityWithTraits.getAllTraits())) {
+			for (IStruct trait : entityWithTraits.getAllTraits()) {
 				Map<String, String> tagAttrs = new HashMap<String, String>();
 
 				try {
@@ -310,9 +320,8 @@ public class AtlasNotificationMapper {
 		List<RangerTagDef>     ret    = new ArrayList<RangerTagDef>();
 		IReferenceableInstance entity = entityWithTraits != null ? entityWithTraits.getEntity() : null;
 
-		if(entity != null && CollectionUtils.isNotEmpty(entity.getTraits())) {
-			for (String traitName : entity.getTraits()) {
-				IStruct       trait = entity.getTrait(traitName);
+		if(entity != null && CollectionUtils.isNotEmpty(entityWithTraits.getAllTraits())) {
+			for (IStruct trait : entityWithTraits.getAllTraits()) {
 				RangerTagDef tagDef = new RangerTagDef(trait.getTypeName(), "Atlas");
 
 				try {
@@ -415,7 +424,7 @@ public class AtlasNotificationMapper {
 
 		if (serviceResource != null) {
 			List<RangerTag>     tags        = getTags(entity, typeRegistry);
-			List<RangerTagDef>  tagDefs     = getTagDefs(entity);
+			List<RangerTagDef>  tagDefs     = getTagDefs(entity, typeRegistry);
 			String              serviceName = serviceResource.getServiceName();
 
 			ret = createOrGetServiceTags(serviceTagsMap, serviceName);
@@ -477,26 +486,36 @@ public class AtlasNotificationMapper {
 		return ret;
 	}
 
-	static private List<RangerTagDef> getTagDefs(AtlasEntityHeader entity) {
+	static private List<RangerTagDef> getTagDefs(AtlasEntityHeader entity, AtlasTypeRegistry typeRegistry) {
 		List<RangerTagDef> ret = new ArrayList<>();
 
 		if(entity != null && CollectionUtils.isNotEmpty(entity.getClassificationNames())) {
-			List<AtlasClassification> traits = entity.getClassifications();
+			List<AtlasClassification> classifications = entity.getClassifications();
 
-			for (AtlasClassification trait : traits) {
-				RangerTagDef tagDef = new RangerTagDef(trait.getTypeName(), "Atlas");
+			for (AtlasClassification classification : classifications) {
+				ret.add(getTagDef(classification));
 
-				if(MapUtils.isNotEmpty(trait.getAttributes())) {
-					for (String attrName : trait.getAttributes().keySet()) {
-						tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attrName, "string"));
+				List<AtlasClassification> superClassifications = getSuperClassifications(classification, typeRegistry);
+
+				if (CollectionUtils.isNotEmpty(superClassifications)) {
+					for (AtlasClassification superClassification : superClassifications) {
+						ret.add(getTagDef(superClassification));
 					}
 				}
-
-				ret.add(tagDef);
 			}
 		}
 
 		return ret;
+	}
+
+	static private RangerTagDef getTagDef(AtlasClassification classification) {
+		RangerTagDef tagDef = new RangerTagDef(classification.getTypeName(), "Atlas");
+		if(MapUtils.isNotEmpty(classification.getAttributes())) {
+			for (String attrName : classification.getAttributes().keySet()) {
+				tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attrName, "string"));
+			}
+		}
+		return tagDef;
 	}
 
 	static private List<AtlasClassification> getSuperClassifications(AtlasClassification classification, AtlasTypeRegistry typeRegistry) {
