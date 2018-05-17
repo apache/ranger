@@ -160,40 +160,96 @@ public class AtlasTagSource extends AbstractTagSource {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ConsumerRunnable.run()");
 			}
+
+			boolean seenCommitException = false;
+			long offsetOfLastMessageDeliveredToRanger = -1L;
+
 			while (true) {
-                try {
-                    List<AtlasKafkaMessage<Object>> messages = consumer.receive(1000L);
-                    for (AtlasKafkaMessage<Object> message : messages) {
-                        Object kafkaMessage = message != null ? message.getMessage() : null;
+				try {
+					List<AtlasKafkaMessage<Object>> messages = consumer.receive(1000L);
 
-                        if (kafkaMessage != null) {
-                            EntityNotification notification = null;
-                            if (kafkaMessage instanceof EntityNotification) {
-                                notification = (EntityNotification) kafkaMessage;
-                            } else {
-                                LOG.warn("Received Kafka notification of unexpected type:[" + kafkaMessage.getClass().toString() + "], Ignoring...");
-                            }
-                            if (notification != null) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Notification=" + getPrintableEntityNotification(notification));
-                                }
+					int index = 0;
 
-                                ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
-                                if (serviceTags != null) {
-                                    updateSink(serviceTags);
-                                }
-                            }
-                            TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
-                            consumer.commit(partition, message.getOffset());
-                        } else {
-                            LOG.error("Null message received from Kafka!! Ignoring..");
-                        }
-                    }
-                } catch (Exception exception) {
-                    LOG.error("Caught exception..: ", exception);
-                    return;
-                }
-            }
+					if (messages.size() > 0 && seenCommitException) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("seenCommitException=[true], offsetOfLastMessageDeliveredToRanger=[" + offsetOfLastMessageDeliveredToRanger + "]");
+						}
+						for (; index < messages.size(); index++) {
+							AtlasKafkaMessage<Object> message = messages.get(index);
+							Object kafkaMessage = message != null ? message.getMessage() : null;
+
+							if (kafkaMessage != null) {
+								if (message.getOffset() <= offsetOfLastMessageDeliveredToRanger) {
+									// Already delivered to Ranger
+									TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
+									try {
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("Committing previously commit-failed message with offset:[" + message.getOffset() + "]");
+										}
+										consumer.commit(partition, message.getOffset());
+									} catch (Exception commitException) {
+										LOG.warn("Ranger tagsync already processed message at offset " + message.getOffset() + ". Ignoring failure in committing this message and continuing to process next message", commitException);
+										LOG.warn("This will cause Kafka to deliver this message:[" + message.getOffset() + "] repeatedly!! This may be unrecoverable error!!");
+									}
+								} else {
+									break;
+								}
+							}
+						}
+					}
+
+					seenCommitException = false;
+					offsetOfLastMessageDeliveredToRanger = -1L;
+
+					for (; index < messages.size(); index++) {
+						AtlasKafkaMessage<Object> message = messages.get(index);
+						Object kafkaMessage = message != null ? message.getMessage() : null;
+
+						if (kafkaMessage != null) {
+							EntityNotification notification = null;
+							if (kafkaMessage instanceof EntityNotification) {
+								notification = (EntityNotification) kafkaMessage;
+							} else {
+								LOG.warn("Received Kafka notification of unexpected type:[" + kafkaMessage.getClass().toString() + "], Ignoring...");
+							}
+
+							if (notification != null) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Message-offset=" + message.getOffset() + ", Notification=" + getPrintableEntityNotification(notification));
+								}
+								ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notification);
+								if (serviceTags != null) {
+									updateSink(serviceTags);
+								}
+							}
+
+							offsetOfLastMessageDeliveredToRanger = message.getOffset();
+
+							if (!seenCommitException) {
+								TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
+								try {
+									consumer.commit(partition, message.getOffset());
+								} catch (Exception commitException) {
+									seenCommitException = true;
+									LOG.warn("Ranger tagsync processed message at offset " + message.getOffset() + ". Ignoring failure in committing this message and continuing to process next message", commitException);
+								}
+							}
+						} else {
+							LOG.error("Null entityNotification received from Kafka!! Ignoring..");
+						}
+					}
+				} catch (Exception exception) {
+					LOG.error("Caught exception..: ", exception);
+					// If transient error, retry after short interval
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException interrupted) {
+						LOG.error("Interrupted: ", interrupted);
+						LOG.error("Returning from thread. May cause process to be up but not processing events!!");
+						return;
+					}
+				}
+			}
 		}
 	}
 }

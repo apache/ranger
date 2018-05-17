@@ -128,11 +128,22 @@ public class AtlasNotificationMapper {
 
 		if(opType != null) {
 			switch (opType) {
-				case ENTITY_CREATE: {
-					LOG.debug("ENTITY_CREATE notification is not handled, as Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+				case ENTITY_CREATE:
+					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
+					if (!ret) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
+						}
+					}
 					break;
-				}
 				case ENTITY_UPDATE:
+					ret = CollectionUtils.isNotEmpty(entityNotification.getAllTraits());
+					if (!ret) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
+						}
+					}
+					break;
 				case ENTITY_DELETE:
 				case TRAIT_ADD:
 				case TRAIT_UPDATE:
