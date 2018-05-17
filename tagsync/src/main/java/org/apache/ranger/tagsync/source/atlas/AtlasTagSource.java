@@ -104,7 +104,6 @@ public class AtlasTagSource extends AbstractTagSource {
 			List<NotificationConsumer<EntityNotification>> iterators = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
 
 			consumerTask = new ConsumerRunnable(iterators.get(0));
-
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -163,11 +162,45 @@ public class AtlasTagSource extends AbstractTagSource {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> ConsumerRunnable.run()");
 			}
+
+			boolean seenCommitException = false;
+			long offsetOfLastMessageDeliveredToRanger = -1L;
+
 			while (true) {
 				try {
 					List<AtlasKafkaMessage<EntityNotification>> messages = consumer.receive(1000L);
 
-					for (AtlasKafkaMessage<EntityNotification> message :  messages) {
+					int index = 0;
+
+					if (messages.size() > 0 && seenCommitException) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("seenCommitException=[true], offsetOfLastMessageDeliveredToRanger=[" + offsetOfLastMessageDeliveredToRanger + "]");
+						}
+						for (; index < messages.size(); index++) {
+							AtlasKafkaMessage<EntityNotification> message = messages.get(index);
+							if (message.getOffset() <= offsetOfLastMessageDeliveredToRanger) {
+								// Already delivered to Ranger
+								TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
+								try {
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Committing previously commit-failed message with offset:[" + message.getOffset() + "]");
+									}
+									consumer.commit(partition, message.getOffset());
+								} catch (Exception commitException) {
+									LOG.warn("Ranger tagsync already processed message at offset " + message.getOffset() + ". Ignoring failure in committing this message and continuing to process next message", commitException);
+									LOG.warn("This will cause Kafka to deliver this message:[" + message.getOffset() + "] repeatedly!! This may be unrecoverable error!!");
+								}
+							} else {
+								break;
+							}
+						}
+					}
+
+					seenCommitException = false;
+					offsetOfLastMessageDeliveredToRanger = -1L;
+
+					for (; index < messages.size(); index++) {
+						AtlasKafkaMessage<EntityNotification> message = messages.get(index);
 						EntityNotification notification = message != null ? message.getMessage() : null;
 
 						if (notification != null) {
@@ -179,16 +212,24 @@ public class AtlasTagSource extends AbstractTagSource {
 							}
 							if (notificationWrapper != null) {
 								if (LOG.isDebugEnabled()) {
-									LOG.debug("Notification=" + getPrintableEntityNotification(notificationWrapper));
+									LOG.debug("Message-offset=" + message.getOffset() + ", Notification=" + getPrintableEntityNotification(notificationWrapper));
 								}
 
 								ServiceTags serviceTags = AtlasNotificationMapper.processEntityNotification(notificationWrapper);
 								if (serviceTags != null) {
 									updateSink(serviceTags);
 								}
+								offsetOfLastMessageDeliveredToRanger = message.getOffset();
 
-								TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
-								consumer.commit(partition, message.getOffset());
+								if (!seenCommitException) {
+									TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
+									try {
+										consumer.commit(partition, message.getOffset());
+									} catch (Exception commitException) {
+										seenCommitException = true;
+										LOG.warn("Ranger tagsync processed message at offset " + message.getOffset() + ". Ignoring failure in committing this message and continuing to process next message", commitException);
+									}
+								}
 							}
 						} else {
 							LOG.error("Null entityNotification received from Kafka!! Ignoring..");
@@ -196,7 +237,14 @@ public class AtlasTagSource extends AbstractTagSource {
 					}
 				} catch (Exception exception) {
 					LOG.error("Caught exception..: ", exception);
-					return;
+					// If transient error, retry after short interval
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException interrupted) {
+						LOG.error("Interrupted: ", interrupted);
+						LOG.error("Returning from thread. May cause process to be up but not processing events!!");
+						return;
+					}
 				}
 			}
 		}
