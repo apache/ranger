@@ -1142,6 +1142,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERPARTITION_LOCATION:
 			case ALTERPARTITION_MERGEFILES:
 			case ALTERTBLPART_SKEWED_LOCATION:
+			case QUERY:
 				ret = FsAction.ALL;
 				break;
 
@@ -1193,7 +1194,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_ROLE_GRANT:
 			case SHOW_ROLE_PRINCIPALS:
 			case TRUNCATETABLE:
-			case QUERY:
 			case DESCDATABASE:
 			case ALTERVIEW_RENAME:
 			case ALTERVIEW_AS:
