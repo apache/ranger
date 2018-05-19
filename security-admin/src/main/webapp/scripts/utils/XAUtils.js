@@ -1405,7 +1405,11 @@ define(function(require) {
     };
     XAUtils.copyToClipboard = function(e , copyText ){
         var input = document.createElement('input');
-        input.setAttribute('value', copyText.join(' | '));
+        if(_.isArray(copyText)){
+            input.setAttribute('value', copyText.join(' | '));
+        }else{
+            input.setAttribute('value', copyText);
+        }
         document.body.appendChild(input);
         input.select();
         document.execCommand('copy');
