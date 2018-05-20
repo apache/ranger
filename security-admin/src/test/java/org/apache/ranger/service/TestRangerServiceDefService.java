@@ -73,6 +73,9 @@ public class TestRangerServiceDefService {
 	@Mock
 	XUserService xUserService;
 
+	@Mock
+	XXServiceDefDao xServiceDefDao;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -344,7 +347,6 @@ public class TestRangerServiceDefService {
 
 	@Test
 	public void test4getAllServiceDefs() {
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
@@ -497,7 +499,6 @@ public class TestRangerServiceDefService {
 		enumElementDefObj.setOrder(0);
 		xElementsList.add(enumElementDefObj);
 
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.getAll()).thenReturn(xServiceDefList);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
@@ -541,7 +542,6 @@ public class TestRangerServiceDefService {
 		List<RangerServiceDef> dbRangerServiceDef = serviceDefService
 				.getAllServiceDefs();
 		Assert.assertNotNull(dbRangerServiceDef);
-		Mockito.verify(daoManager).getXXServiceConfigDef();
 		Mockito.verify(daoManager).getXXResourceDef();
 		Mockito.verify(daoManager).getXXAccessTypeDef();
 		Mockito.verify(daoManager).getXXPolicyConditionDef();

@@ -24,10 +24,12 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
+import org.springframework.stereotype.Service;
 
 /**
  */
 
+@Service
 public class XXServiceDao extends BaseDao<XXService> {
 	/**
 	 * Default Constructor

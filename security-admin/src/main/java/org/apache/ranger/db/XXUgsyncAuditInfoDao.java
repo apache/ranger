@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUgsyncAuditInfo;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.List;
 /**
  */
 
+@Service
 public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
 	protected static final Logger logger = Logger
 			.getLogger(XXUgsyncAuditInfoDao.class);

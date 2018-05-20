@@ -24,10 +24,11 @@ import javax.persistence.NoResultException;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPluginInfo;
+import org.springframework.stereotype.Service;
 
 /**
  */
-
+@Service
 public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
 	/**
 	 * Default Constructor

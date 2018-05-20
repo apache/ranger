@@ -22,10 +22,13 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
+
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXDataHist;
 import org.apache.ranger.common.DateUtil;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXDataHistDao extends BaseDao<XXDataHist> {
 
 	public XXDataHistDao(RangerDaoManagerBase daoManager) {

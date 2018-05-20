@@ -25,9 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.db.BaseDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -66,17 +64,6 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 	 */
 	public StringUtil getStringUtil() {
 		return stringUtil;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	public BaseDao<?> getDaoForClassType(int classType) {
-		if (classType == RangerConstants.CLASS_TYPE_NONE) {
-			return null;
-		}
-		return super.getDaoForClassType(classType);
 	}
 
 }

@@ -26,7 +26,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXModuleDef;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXModuleDefDao extends BaseDao<XXModuleDef>{
 
 	public XXModuleDefDao(RangerDaoManagerBase daoManager) {

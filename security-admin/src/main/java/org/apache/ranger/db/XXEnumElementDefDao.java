@@ -24,7 +24,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXEnumElementDef;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXEnumElementDefDao extends BaseDao<XXEnumElementDef> {
 
 	public XXEnumElementDefDao(RangerDaoManagerBase daoManager) {

@@ -24,7 +24,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
 
 	public XXAccessTypeDefGrantsDao(RangerDaoManagerBase daoManager) {

@@ -27,7 +27,9 @@ import javax.persistence.NoResultException;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPermMap;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXPermMapDao extends BaseDao<XXPermMap> {
 	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
 

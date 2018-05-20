@@ -21,7 +21,9 @@
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXCredentialStore;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXCredentialStoreDao extends BaseDao<XXCredentialStore> {
 
     public XXCredentialStoreDao( RangerDaoManagerBase daoManager ) {

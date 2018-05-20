@@ -31,7 +31,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupUser;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 	private static final Logger logger = Logger.getLogger(XXGroupUserDao.class);
 

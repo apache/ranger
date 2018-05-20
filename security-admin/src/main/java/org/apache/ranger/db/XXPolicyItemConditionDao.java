@@ -24,7 +24,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyItemCondition;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXPolicyItemConditionDao extends BaseDao<XXPolicyItemCondition> {
 
 	public XXPolicyItemConditionDao(RangerDaoManagerBase daoManager) {

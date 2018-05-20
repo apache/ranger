@@ -71,7 +71,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	}
 
 	public List<RangerServiceDef> getAllServiceDefs() {
-		List<XXServiceDef> xxServiceDefList = daoMgr.getXXServiceDef().getAll();
+		List<XXServiceDef> xxServiceDefList = getDao().getAll();
 		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
 
 		for (XXServiceDef xxServiceDef : xxServiceDefList) {

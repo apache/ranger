@@ -26,7 +26,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTagAttributeDef;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXTagAttributeDefDao extends BaseDao<XXTagAttributeDef> {
 
 	public XXTagAttributeDefDao(RangerDaoManagerBase daoManager) {

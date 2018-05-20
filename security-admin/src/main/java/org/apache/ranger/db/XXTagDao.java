@@ -28,7 +28,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTag;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXTagDao extends BaseDao<XXTag> {
 
 	public XXTagDao(RangerDaoManagerBase daoManager) {

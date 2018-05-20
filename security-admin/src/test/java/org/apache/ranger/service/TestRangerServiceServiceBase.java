@@ -66,6 +66,9 @@ public class TestRangerServiceServiceBase {
 	@Mock
 	RangerBizUtil bizUtil;
 
+	@Mock
+	BaseDao<XXService> baseDao;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -205,13 +208,9 @@ public class TestRangerServiceServiceBase {
 		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-		BaseDao baseDao = Mockito.mock(BaseDao.class);
-		Mockito.when(daoManager.getDaoForClassName(Mockito.anyString()))
-				.thenReturn(baseDao);
 		RangerServiceList dbRangerServiceList = rangerServiceService
 				.searchRangerServices(searchFilter);
 		Assert.assertNotNull(dbRangerServiceList);
-		Mockito.verify(daoManager).getDaoForClassName(Mockito.anyString());
 
 	}
 }

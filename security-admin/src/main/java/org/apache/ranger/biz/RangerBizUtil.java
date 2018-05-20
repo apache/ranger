@@ -19,13 +19,11 @@
 
 package org.apache.ranger.biz;
 
-import java.io.File;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,6 @@ import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -91,7 +88,6 @@ public class RangerBizUtil {
 	Set<Class<?>> groupEditableClasses;
 	private Class<?>[] groupEditableClassesList = {};
 
-	Map<String, Integer> classTypeMappings = new HashMap<String, Integer>();
 	private int maxFirstNameLength;
 	int maxDisplayNameLength = 150;
 	public final String EMPTY_CONTENT_DISPLAY_NAME = "...";
@@ -122,39 +118,6 @@ public class RangerBizUtil {
                 random = new SecureRandom();
 	}
 
-	public <T extends XXDBBase> List<? extends XXDBBase> getParentObjects(
-			T object) {
-		List<XXDBBase> parentObjectList = null;
-		// if (checkParentAcess.contains(object.getMyClassType())) {
-		// parentObjectList = new ArrayList<MBase>();
-		// }
-		return parentObjectList;
-	}
-
-	public int getClassType(Class<?> klass) {
-		String className = klass.getName();
-		// See if this mapping is already in the database
-		Integer classType = classTypeMappings.get(className);
-		if (classType == null) {
-			// Instantiate the class and call the getClassType method
-			if (XXDBBase.class.isAssignableFrom(klass)) {
-				try {
-					XXDBBase gjObj = (XXDBBase) klass.newInstance();
-					classType = gjObj.getMyClassType();
-					classTypeMappings.put(className, classType);
-				} catch (Throwable ex) {
-					logger.error("Error instantiating object for class "
-							+ className, ex);
-				}
-			}
-		}
-		if (classType == null) {
-			return RangerCommonEnums.CLASS_TYPE_NONE;
-		} else {
-			return classType;
-		}
-	}
-
 	// Access control methods
 	public void checkSystemAdminAccess() {
 		UserSessionBase currentUserSession = ContextUtil
@@ -164,101 +127,6 @@ public class RangerBizUtil {
 		}
 		throw restErrorUtil
 				.create403RESTException("Only System Administrators can add accounts");
-	}
-
-	/**
-	 * @param contentType
-	 * @return
-	 */
-	public int getMimeTypeInt(String contentType) {
-		if ("JPEG".equalsIgnoreCase(contentType)
-				|| "JPG".equalsIgnoreCase(contentType)
-				|| contentType.endsWith("jpg") || contentType.endsWith("jpeg")) {
-			return RangerConstants.MIME_JPEG;
-		}
-		if ("PNG".equalsIgnoreCase(contentType) || contentType.endsWith("png")) {
-			return RangerConstants.MIME_PNG;
-		}
-		return RangerConstants.MIME_UNKNOWN;
-	}
-
-	/**
-	 * @param mimeType
-	 * @return
-	 */
-	public String getMimeType(int mimeType) {
-		switch (mimeType) {
-		case RangerConstants.MIME_JPEG:
-			return "jpg";
-		case RangerConstants.MIME_PNG:
-			return "png";
-		}
-		return "";
-	}
-
-	/**
-	 * @param contentType
-	 * @return
-	 */
-	public String getImageExtension(String contentType) {
-		if (contentType.toLowerCase().endsWith("jpg")
-				|| contentType.toLowerCase().endsWith("jpeg")) {
-			return "jpg";
-		} else if (contentType.toLowerCase().endsWith("png")) {
-			return "png";
-		}
-		return "";
-	}
-
-	/**
-	 * @param file
-	 * @return
-	 */
-	public String getFileNameWithoutExtension(File file) {
-		if (file != null) {
-			String fileName = file.getName();
-			if (fileName.indexOf(".") > 0) {
-				return fileName.substring(0, fileName.indexOf("."));
-			}
-			return fileName;
-
-		}
-		return null;
-	}
-
-	public String getDisplayNameForClassName(XXDBBase obj) {
-		String classTypeDisplayName = RangerConstants
-				.getLabelFor_ClassTypes(obj.getMyClassType());
-		if (classTypeDisplayName == null) {
-			logger.error(
-					"Error get name for class type. obj=" + obj.toString(),
-					new Throwable());
-		}
-		return classTypeDisplayName;
-	}
-
-	public String getDisplayName(XXDBBase obj) {
-		if (obj != null) {
-			return handleGetDisplayName(obj.getMyDisplayValue());
-		} else {
-			return handleGetDisplayName(null);
-		}
-	}
-
-	/**
-	 * @param displayValue
-	 * @return
-	 */
-	private String handleGetDisplayName(String displayValue) {
-		if (displayValue == null || displayValue.trim().isEmpty()) {
-			return EMPTY_CONTENT_DISPLAY_NAME;
-		}
-
-		if (displayValue.length() > maxDisplayNameLength) {
-			displayValue = displayValue.substring(0, maxDisplayNameLength - 3)
-					.concat("...");
-		}
-		return displayValue;
 	}
 
 	/**
@@ -282,32 +150,6 @@ public class RangerBizUtil {
 			publicName = fName + " " + lastName.substring(0, 1) + ".";
 		}
 		return publicName;
-	}
-
-	public void updateCloneReferences(XXDBBase obj) {
-		if (obj == null) {
-			return;
-		}
-	}
-
-	public Long getForUserId(XXDBBase resource) {
-		return null;
-	}
-
-	public void deleteReferencedObjects(XXDBBase obj) {
-
-		if (obj == null) {
-			return;
-		}
-		if (obj.getMyClassType() == RangerConstants.CLASS_TYPE_NONE) {
-			return;
-		}
-
-	}
-
-	public <T extends XXDBBase> Class<? extends XXDBBase> getContextObject(
-			int objectClassType, Long objectId) {
-		return null;
 	}
 
 	public VXStringList mapStringListToVStringList(List<String> stringList) {

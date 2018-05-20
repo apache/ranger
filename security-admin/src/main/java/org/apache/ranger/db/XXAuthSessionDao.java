@@ -25,7 +25,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 
     public XXAuthSessionDao( RangerDaoManagerBase daoManager ) {

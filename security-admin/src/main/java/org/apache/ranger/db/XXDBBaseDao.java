@@ -21,7 +21,9 @@
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXDBBase;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXDBBaseDao extends BaseDao<XXDBBase> {
 
     public XXDBBaseDao( RangerDaoManagerBase daoManager ) {

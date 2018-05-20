@@ -21,7 +21,9 @@
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
 
     public XXPolicyExportAuditDao( RangerDaoManagerBase daoManager ) {

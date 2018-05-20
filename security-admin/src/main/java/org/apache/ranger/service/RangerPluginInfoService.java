@@ -207,7 +207,7 @@ public class RangerPluginInfoService {
 
 		EntityManager em = daoManager.getEntityManager();
 		return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria,
-				searchFieldList, bizUtil.getClassType(XXPluginInfo.class), false, isCountQuery);
+				searchFieldList, false, isCountQuery);
 	}
 
 	private long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {

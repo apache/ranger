@@ -24,7 +24,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyItemUserPerm;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXPolicyItemUserPermDao extends BaseDao<XXPolicyItemUserPerm> {
 
 	public XXPolicyItemUserPermDao(RangerDaoManagerBase daoManager) {

@@ -27,7 +27,9 @@ import javax.persistence.NoResultException;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTrxLog;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 	private static final Logger logger = Logger.getLogger(XXTrxLogDao.class);
 	

@@ -92,6 +92,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		tEntityValueMap.put(XXDBBase.class, "Base");
 	}
 
+	@Autowired
 	BaseDao<T> entityDao;
 
 	@Autowired
@@ -140,12 +141,9 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		// return className;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected BaseDao<T> getDao() {
 		if (entityDao == null) {
-			entityDao = (BaseDao<T>) daoManager.getDaoForClassName(tEntityClass
-					.getSimpleName());
-
+			throw new NullPointerException("entityDao is not injected by Spring!");
 		}
 		return entityDao;
 	}
@@ -169,12 +167,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		}
 		return null;
 	}
-
-	protected int getClassType() {
-		return bizUtil.getClassType(tEntityClass);
-	}
-
-	protected int ownerRatingWeight;
 
 	/**
 	 * constructor
@@ -262,8 +254,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 					+ ", className=" + resource.getClass().getName()
 					+ ", objectId=" + resource.getId());
 		}
-
-		bizUtil.updateCloneReferences(resource);
 
 		resource = getDao().create(resource);
 
@@ -402,7 +392,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		}
 		// Need to delete all dependent common objects like Notes and
 		// UserDataPref
-		bizUtil.deleteReferencedObjects(resource);
 		try {
 			result = getDao().remove(resource);
 		} catch (Exception e) {
@@ -529,7 +518,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 		EntityManager em = getDao().getEntityManager();
 		
 		Query query = searchUtil.createSearchQuery(em, searchString, sortString,
-				searchCriteria, searchFieldList, getClassType(), false,
+				searchCriteria, searchFieldList, false,
 				isCountQuery);
 		return query;
 	}

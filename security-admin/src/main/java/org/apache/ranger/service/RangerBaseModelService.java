@@ -84,7 +84,8 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	protected final String countQueryStr;
 	protected String queryStr;
 
-	BaseDao<T> entityDao;
+	@Autowired
+	protected BaseDao<T> entityDao;
 
 	@SuppressWarnings("unchecked")
 	public RangerBaseModelService() {
@@ -139,12 +140,9 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected BaseDao<T> getDao() {
 		if (entityDao == null) {
-			entityDao = (BaseDao<T>) daoMgr.getDaoForClassName(tEntityClass
-					.getSimpleName());
-
+			throw new NullPointerException("entityDao is not injected by Spring!");
 		}
 		return entityDao;
 	}
@@ -384,14 +382,9 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		
 		EntityManager em = getDao().getEntityManager();
 		Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria,
-				searchFieldList, getClassType(), false, isCountQuery);
+				searchFieldList, false, isCountQuery);
 		return query;
 	}
-	
-	protected int getClassType() {
-		return bizUtil.getClassType(tEntityClass);
-	}
-	
 
 	protected String getUserScreenName(Long userId) {
 		String ret = null;

@@ -19,7 +19,9 @@ package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceWithAssignedId;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXServiceWithAssignedIdDao extends BaseDao<XXServiceWithAssignedId> {
 
 	public XXServiceWithAssignedIdDao(RangerDaoManagerBase daoManager) {

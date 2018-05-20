@@ -199,12 +199,12 @@ public class RangerSearchUtil extends SearchUtil {
 	public Query createSearchQuery(EntityManager em, String queryStr, String sortClause,
 			SearchFilter searchCriteria, List<SearchField> searchFields,
 			boolean isCountQuery) {
-		return createSearchQuery(em, queryStr, sortClause, searchCriteria, searchFields, -1, false, isCountQuery);
+		return createSearchQuery(em, queryStr, sortClause, searchCriteria, searchFields, false, isCountQuery);
 	}
 	
 	public Query createSearchQuery(EntityManager em, String queryStr, String sortClause,
 			SearchFilter searchCriteria, List<SearchField> searchFields,
-			int objectClassType, boolean hasAttributes, boolean isCountQuery) {
+			boolean hasAttributes, boolean isCountQuery) {
 
 		StringBuilder queryClause = buildWhereClause(searchCriteria, searchFields);
 		super.addOrderByClause(queryClause, sortClause);

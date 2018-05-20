@@ -27,7 +27,9 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessAudit;
 import org.apache.ranger.entity.XXAccessAuditV4;
 import org.apache.ranger.entity.XXAccessAuditV5;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
 	private static final Logger logger = Logger.getLogger(XXAccessAuditDao.class);
     public XXAccessAuditDao( RangerDaoManagerBase daoManager ) {

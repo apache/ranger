@@ -26,7 +26,9 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 
 	private static final Logger logger = Logger.getLogger(XXGroupPermissionDao.class);

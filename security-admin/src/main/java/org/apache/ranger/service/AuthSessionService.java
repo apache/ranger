@@ -27,7 +27,6 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXAuthSession;
@@ -91,19 +90,6 @@ public class AuthSessionService extends
 	@Override
 	protected String getResourceName() {
 		return NAME;
-	}
-
-	@Override
-	protected int getClassType() {
-		return RangerConstants.CLASS_TYPE_AUTH_SESS;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected BaseDao<XXAuthSession> getDao() {
-		return daoManager.getXXAuthSession();
 	}
 
 	/*

@@ -27,7 +27,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUserRole;
+import org.springframework.stereotype.Service;
 
+@Service
 public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
 
 	public XXPortalUserRoleDao(RangerDaoManagerBase daoManager) {

@@ -100,6 +100,9 @@ public class TestRangerServiceDefServiceBase {
 	@Mock
 	JSONUtil jsonUtil;
 
+	@Mock
+	BaseDao<XXServiceDef> baseDao;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -784,14 +787,8 @@ public class TestRangerServiceDefServiceBase {
 		searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-		BaseDao baseDao = Mockito.mock(BaseDao.class);
-
-		Mockito.when(daoManager.getDaoForClassName(Mockito.anyString()))
-				.thenReturn(baseDao);
-
 		RangerServiceDefList dbRangerServiceDefList = rangerServiceDefService
 				.searchRangerServiceDefs(searchFilter);
 		Assert.assertNotNull(dbRangerServiceDefList);
-		Mockito.verify(daoManager).getDaoForClassName(Mockito.anyString());
 	}
 }
