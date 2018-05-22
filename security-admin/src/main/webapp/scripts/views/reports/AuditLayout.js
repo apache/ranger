@@ -1786,8 +1786,7 @@ define(function(require) {
 		onClose : function() {
 			clearInterval(this.timerId);
 			clearInterval(this.clearTimeUpdateInterval);
-			$('.datepicker').remove();
-                        $('.popover').remove();
+            XAUtils.removeUnwantedDomElement();
 		}
 	});
 

@@ -137,6 +137,7 @@ define(function(require){
 		},
 		/** on close */
 		onClose: function(){
+                    XAUtil.removeUnwantedDomElement();
 		}
 
 	});

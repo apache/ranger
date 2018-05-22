@@ -820,8 +820,7 @@ define(function(require){
 		/** on close */
 		onClose: function(){
 			XAUtil.allowNavigation();
-			$('.fade.modal').hide();
-			$('.modal-backdrop').hide();
+            XAUtil.removeUnwantedDomElement();
 		}
 
 	});

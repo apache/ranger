@@ -298,6 +298,7 @@ define(function(require){
 			XAUtil.allowNavigation();
 //			clear Vent 
 			Vent._events['resourceType:change']=[];
+                XAUtil.removeUnwantedDomElement();
 		}
 	});
 	return RangerPolicyCreate;

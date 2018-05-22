@@ -513,7 +513,7 @@ define(function(require){
 		},
 		/** on close */
 		onClose: function(){
-                        $('.popover').remove();
+            XAUtil.removeUnwantedDomElement();
 		}
 
 	});

@@ -258,7 +258,8 @@ define(function(require){
 		},
 		/** on close */
 		onClose: function(){
-			XAUtil.allowNavigation();
+            XAUtil.removeUnwantedDomElement();
+            XAUtil.allowNavigation();
 		}
 	});
 

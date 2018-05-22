@@ -1416,5 +1416,14 @@ define(function(require) {
         document.body.removeChild(input);
         e.currentTarget.title="Copied!";
     };
+    //If view is closed, closed all new DOM element that added in DOM like popup, modal, date-selector and select-list etc.
+    XAUtils.removeUnwantedDomElement = function(){
+        $('.modal').remove();
+        $('.modal-backdrop').remove();
+        $('#select2-drop').select2('close');
+        $('.datepicker').remove();
+        $('.popover').remove();
+        $('.datetimepicker').remove();
+    };
 	return XAUtils;
 });
