@@ -209,6 +209,12 @@ public class TestRangerServiceDefValidator {
 			{ 3L, "admin", new String[] { "write", "admin" } }  // non-existent access type (execute)
 	};
 
+	final Object[][] accessTypes_mixed_case_names = new Object[][] {
+			{ 1L, "Read",  null },
+			{ 2L, "WRITE", new String[] {   } },
+			{ 3L, "adminPrivilege", new String[] { "write", "admin" } }
+	};
+
 	@Test
 	public final void test_isValidAccessTypes_happyPath() {
 		List<RangerAccessTypeDef> input = _utils.createAccessTypeDefs(accessTypes_good);
@@ -252,6 +258,13 @@ public class TestRangerServiceDefValidator {
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_selfReference);
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "admin");
+
+		// Mixed case access types
+		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_mixed_case_names);
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_utils.checkFailure(_failures, null, null, null, "Read",null);
+		_utils.checkFailure(_failures, null, null, null, "WRITE",null);
+		_utils.checkFailure(_failures, null, null, null, "adminPrivilege",null);
 	}
 	
 	final Object[][] enums_bad_enumName_null = new Object[][] {
@@ -392,6 +405,13 @@ public class TestRangerServiceDefValidator {
 			{ 3L,      30,       "  " } // Name is all whitespace
 	};
 
+	Object[][] mixedCaseResources = new Object[][] {
+			//  { id,   level,      name }
+			{ 4L,     -10, "DBase" }, // -ve value for level is ok
+			{ 5L,      10,    "TABLE" }, // id is duplicate
+			{ 6L,     -10, "Column" } // (in different case) but name and level are duplicate
+	};
+
 	@Test
 	public final void test_isValidResources() {
 		// null/empty resources are an error
@@ -410,6 +430,12 @@ public class TestRangerServiceDefValidator {
 		_utils.checkFailureForMissingValue(_failures, "resource itemId");
 		_utils.checkFailureForSemanticError(_failures, "resource itemId", "1"); // id 1 is duplicate
 		_utils.checkFailureForSemanticError(_failures, "resource name", "DataBase");
+
+		resources.clear(); resources.addAll(_utils.createResourceDefsWithIds(mixedCaseResources));
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_utils.checkFailure(_failures, null, null, null, "DBase",null);
+		_utils.checkFailure(_failures, null, null, null, "TABLE",null);
+		_utils.checkFailure(_failures, null, null, null, "Column",null);
 	}
 	
 	@Test
