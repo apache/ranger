@@ -33,6 +33,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
@@ -588,6 +589,18 @@ public abstract class RangerValidator {
 		return valid;
 	}
 
+	boolean isInLowerCase(final String value, final String valueContext, final List<ValidationFailureDetails> failures) {
+		if (!StringUtils.isAllLowerCase(value)) {
+			ValidationErrorCode errorCode = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME;
+			failures.add(new ValidationFailureDetailsBuilder()
+					.errorCode(errorCode.getErrorCode())
+					.field(value)
+					.becauseOf(errorCode.getMessage(valueContext, value))
+					.build());
+			return false;
+		}
+		return true;
+	}
 	boolean isUnique(final String value, final Set<String> alreadySeen, final String valueName, final String collectionName, final List<ValidationFailureDetails> failures) {
 		return isUnique(value, null, alreadySeen, valueName, collectionName, failures);
 	}
