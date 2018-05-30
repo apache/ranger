@@ -2374,3 +2374,14 @@ textarea:read-only{
     white-space: nowrap;
     display: block;
 }
+.textAreaContainer {
+    width: 370px;
+    height: 170px;
+}
+.errorClass {
+    border-color: #b85355;
+    color: #b85355;
+}
+.validSyntax {
+    color: #3e910f;
+}

@@ -635,8 +635,16 @@ define(function(require) {
 			if(this.policyConditions.length > 0){
 				var tmpl = _.map(this.policyConditions,function(obj){
 					if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
-						return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span><i title="JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc." class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
-						</label><textarea name="'+obj.name+'" placeholder="Please enter condition.."></textarea></div>'
+						return '<div class="editable-address margin-bottom-5">\
+						            <label style="display:block !important;">\
+						                <span>'+obj.label+' : </span>\
+						                <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
+						            </label>\
+						            <textarea class="textAreaContainer" name="'+obj.name+'" placeholder="Please enter condition.."></textarea>\
+						            <div class="jsValidation">\
+						                <a href="javascript:;"class="jsValidationCheck btn btn-defult btn-mini" style="margin: 5px">Syntax check</a>\
+						            </div>\
+						       </div>'
 					}
 					return '<div class="editable-address margin-bottom-5"><label style="display:block !important;"><span>'+obj.label+' : </span></label><input type="text" name="'+obj.name+'" ></div>'
 						
@@ -699,7 +707,12 @@ define(function(require) {
 						}
 					},
 					validate:function(value){
-						var error = {'flag' : false};
+					    if(that.$el.find('.textAreaContainer').hasClass('errorClass') ||
+					            that.$el.find('.jsValidation span').hasClass('validSyntax')){
+					        that.$el.find('.textAreaContainer').removeClass('errorClass');
+					        that.$el.find('.jsValidation').find('span').remove();
+                        }
+					    var error = {'flag' : false};
 						_.each(value, function(val, name){
 							var tmp = _.findWhere(that.multiLinecond, { 'name' : name});
 							if(!_.isUndefined(tmp)){
@@ -722,12 +735,39 @@ define(function(require) {
 							return error.message;
 						}
 				    },
+				}).on('shown', function(e){
+				    that.$el.find('.jsValidationCheck').on('click',function(e){
+				        e.stopPropagation();
+				        var $textArea = $(e.currentTarget).parent().parent();
+				        if(that.$el.find('.editableform div.control-group').hasClass('error')){
+				            that.$el.find('.editableform div.control-group').removeClass('error');
+				            that.$el.find('.editable-error-block').remove();
+				        }
+				        if($textArea.find('.textAreaContainer').hasClass('errorClass') || $textArea.find('.jsValidation span').hasClass('validSyntax')){
+				            $textArea.find('.textAreaContainer').removeClass('errorClass');
+				            $textArea.find('.jsValidation').find('span').remove();
+				        }
+				        var tmp = $textArea.find('textarea').val();
+                        if(!_.isUndefined(tmp) && ! _.isEmpty(tmp)){
+				            var errorMessage;
+                            try {
+                                var t = esprima.parse(tmp);
+                            }catch(e){
+                                errorMessage = e.message;
+                            }
+                            if(!_.isUndefined(errorMessage)){
+                                $textArea.find('.textAreaContainer').addClass('errorClass');
+                                $textArea.find('.jsValidation').append('<span class="text-color-red">'+errorMessage+'</span>');
+                            }else{
+                                $textArea.find('.jsValidation').append('<span class="validSyntax">valid javascript condition</span>');
+                            }
+                        }
+				    })
 				});
 				that.ui.addConditionsSpan.click(function(e) {
 					e.stopPropagation();
 					that.$('#policyConditions').editable('toggle');
 				});
-				
 			}else{
 			    that.model.unset('conditions');
 			}

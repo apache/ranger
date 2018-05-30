@@ -466,7 +466,8 @@ define(function(require) {
 				groupNameValidationMsg :'1. Group name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
                 lastNameValidationMsg  :'1. Last name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
-                setTimeZoneErrorMsg    :'Please select Start/End date for Time zone'
+                setTimeZoneErrorMsg    :'Please select Start/End date for Time zone',
+                jsValidationMsg        :'1. JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc.\n2. Dragging bottom-right corner of javascript condition editor(Textarea) can resizable',
 			},
 			serverMsg : {
 
