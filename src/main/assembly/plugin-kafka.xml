@@ -69,6 +69,7 @@
 							</include>
 							<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}
 							</include>
+							<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 							<include>org.noggit:noggit:jar:${noggit.version}</include>
 							<include>org.codehaus.jackson:jackson-core-asl</include>
 							<include>org.codehaus.jackson:jackson-jaxrs</include>
