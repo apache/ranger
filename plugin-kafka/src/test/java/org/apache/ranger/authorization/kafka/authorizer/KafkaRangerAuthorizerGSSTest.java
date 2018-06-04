@@ -316,4 +316,26 @@ public class KafkaRangerAuthorizerGSSTest {
         producer.close();
     }
 
+
+    @Test
+    public void testAuthorizedIdempotentWrite() throws Exception {
+        // Create the Producer
+        Properties producerProps = new Properties();
+        producerProps.put("bootstrap.servers", "localhost:" + port);
+        producerProps.put("acks", "all");
+        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        producerProps.put("sasl.mechanism", "GSSAPI");
+        producerProps.put("sasl.kerberos.service.name", "kafka");
+        producerProps.put("enable.idempotence", "true");
+
+        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
+
+        // Send a message
+        Future<RecordMetadata> record =
+                producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
+        producer.flush();
+        producer.close();
+    }
 }
