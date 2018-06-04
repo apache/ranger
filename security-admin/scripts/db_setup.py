@@ -119,16 +119,16 @@ def subprocessCallWithRetry(query):
 			break
 	return returnCode
 def dbversionBasedOnUserName(userName):
-    version = ""
-    if userName == "admin" :
-        version = 'DEFAULT_ADMIN_UPDATE'
-    if userName == "rangerusersync" :
-        version = 'DEFAULT_RANGER_USERSYNC_UPDATE'
-    if userName == "rangertagsync" :
-        version = 'DEFAULT_RANGER_TAGSYNC_UPDATE'
-    if userName == "keyadmin" :
-        version = 'DEFAULT_KEYADMIN_UPDATE'
-    return version
+        version = ""
+        if userName == "admin" :
+                version = 'DEFAULT_ADMIN_UPDATE'
+        if userName == "rangerusersync" :
+                version = 'DEFAULT_RANGER_USERSYNC_UPDATE'
+        if userName == "rangertagsync" :
+                version = 'DEFAULT_RANGER_TAGSYNC_UPDATE'
+        if userName == "keyadmin" :
+                version = 'DEFAULT_KEYADMIN_UPDATE'
+        return version
 class BaseDB(object):
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -620,7 +620,7 @@ class MysqlConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+                                        log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -629,11 +629,18 @@ class MysqlConf(BaseDB):
 					jisql_log(query, db_password)
 					output = check_output(query)
 					if output.strip(version + " |"):
+                                                countTries = 0
 						while(output.strip(version + " |")):
-							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(retryPatchAfterSeconds)
-							jisql_log(query, db_password)
-							output = check_output(query)
+                                                        if countTries < 3:
+                                                                log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                                time.sleep(retryPatchAfterSeconds)
+                                                                jisql_log(query, db_password)
+                                                                output = check_output(query)
+                                                                countTries += 1
+                                                        else:
+                                                                log("[E] Tried updating the password "+ str(countTries) + " times","error")
+                                                                log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+                                                                sys.exit(1)
 					else:
 						if is_unix:
 							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
@@ -644,10 +651,10 @@ class MysqlConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+                                                        log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
-                                                    sys.exit(1)
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                        sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -858,7 +865,7 @@ class MysqlConf(BaseDB):
                         query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
                 output = check_output(query)
                 if not output.strip(version + " |"):
-                         sys.exit(0)
+                        sys.exit(0)
 
 class OracleConf(BaseDB):
 	# Constructor
@@ -1349,11 +1356,11 @@ class OracleConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 				elif os_name == "WINDOWS":
-				   query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-                                     log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+                                        log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -1362,11 +1369,18 @@ class OracleConf(BaseDB):
 					jisql_log(query, db_password)
 					output = check_output(query)
 					if output.strip(version + " |"):
+                                                countTries = 0
 						while(output.strip(version + " |")):
-							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(retryPatchAfterSeconds)
-							jisql_log(query, db_password)
-							output = check_output(query)
+                                                        if countTries < 3:
+                                                                log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                                time.sleep(retryPatchAfterSeconds)
+                                                                jisql_log(query, db_password)
+                                                                output = check_output(query)
+                                                                countTries += 1
+                                                        else:
+                                                                log("[E] Tried updating the password "+ str(countTries) + " times","error")
+                                                                log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+                                                                sys.exit(1)
 					else:
 						if is_unix:
 							query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
@@ -1575,23 +1589,23 @@ class OracleConf(BaseDB):
 				log("[I] "+ version +" status entry to x_db_version_h table completed", "info")
 
         def is_new_install(self, xa_db_host, db_user, db_password, db_name):
-            get_cmd = self.get_jisql_cmd(db_user, db_password)
-            if is_unix:
-              query = get_cmd + " -c \; -query \"select * from v$version;\""
-            elif os_name == "WINDOWS":
-              query = get_cmd + " -query \"select * from v$version;\" -c ;"
-            output = check_output(query)
-            if not output.strip('Production  |'):
-              sys.exit(0)
-            get_cmd = self.get_jisql_cmd(db_user, db_password)
-            version="J10001"
-            if is_unix:
-              query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
-            elif os_name == "WINDOWS":
-              query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
-            output = check_output(query)
-            if not output.strip(version + " |"):
-              sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password)
+                if is_unix:
+                        query = get_cmd + " -c \; -query \"select * from v$version;\""
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select * from v$version;\" -c ;"
+                output = check_output(query)
+                if not output.strip('Production  |'):
+                        sys.exit(0)
+                get_cmd = self.get_jisql_cmd(db_user, db_password)
+                version="J10001"
+                if is_unix:
+                        query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+                elif os_name == "WINDOWS":
+                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                output = check_output(query)
+                if not output.strip(version + " |"):
+                        sys.exit(0)
 
 class PostgresConf(BaseDB):
 	# Constructor
@@ -2057,11 +2071,11 @@ class PostgresConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
 				elif os_name == "WINDOWS":
-				   query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+                                        log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
@@ -2070,11 +2084,18 @@ class PostgresConf(BaseDB):
 					jisql_log(query, db_password)
 					output = check_output(query)
 					if output.strip(version + " |"):
+                                                countTries = 0
 						while(output.strip(version + " |")):
-							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(retryPatchAfterSeconds)
-							jisql_log(query, db_password)
-							output = check_output(query)
+                                                        if countTries < 3:
+                                                                log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                                time.sleep(retryPatchAfterSeconds)
+                                                                jisql_log(query, db_password)
+                                                                output = check_output(query)
+                                                                countTries += 1
+                                                        else:
+                                                                log("[E] Tried updating the password "+ str(countTries) + " times","error")
+                                                                log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+                                                                sys.exit(1)
 					else:
 						if is_unix:
 							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
@@ -2290,7 +2311,7 @@ class PostgresConf(BaseDB):
                         query = get_cmd + " -query \"SELECT 1;\" -c ;"
                 output = check_output(query)
                 if not output.strip('1 |'):
-                         sys.exit(0)
+                        sys.exit(0)
                 get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
                 version="J10001"
                 if is_unix:
@@ -2299,7 +2320,7 @@ class PostgresConf(BaseDB):
                         query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
                 output = check_output(query)
                 if not output.strip(version + " |"):
-                         sys.exit(0)
+                        sys.exit(0)
 
 class SqlServerConf(BaseDB):
 	# Constructor
@@ -2707,7 +2728,7 @@ class SqlServerConf(BaseDB):
 				if is_unix:
 					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c \;" %(version)
 				elif os_name == "WINDOWS":
-				   query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+                                        query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
@@ -2720,11 +2741,18 @@ class SqlServerConf(BaseDB):
 					jisql_log(query, db_password)
 					output = check_output(query)
 					if output.strip(version + " |"):
+                                                countTries = 0
 						while(output.strip(version + " |")):
-							log("[I] Ranger Password change utility is being executed by some other process" ,"info")
-							time.sleep(retryPatchAfterSeconds)
-							jisql_log(query, db_password)
-							output = check_output(query)
+                                                        if countTries < 3:
+                                                                log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                                time.sleep(retryPatchAfterSeconds)
+                                                                jisql_log(query, db_password)
+                                                                output = check_output(query)
+                                                                countTries += 1
+                                                        else:
+                                                                log("[E] Tried updating the password "+ str(countTries) + " times","error")
+                                                                log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+                                                                sys.exit(1)
 					else:
 						if is_unix:
 							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
@@ -2735,10 +2763,10 @@ class SqlServerConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+                                                        log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
-                                                    sys.exit(1)
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                        sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -2940,7 +2968,7 @@ class SqlServerConf(BaseDB):
                         query = get_cmd + " -query \"SELECT 1;\" -c ;"
                 output = check_output(query)
                 if not output.strip('1 |'):
-                         sys.exit(0)
+                        sys.exit(0)
                 get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
                 version="J10001"
                 if is_unix:
@@ -2949,7 +2977,7 @@ class SqlServerConf(BaseDB):
                         query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
                 output = check_output(query)
                 if not output.strip(version + " |"):
-                         sys.exit(0)
+                        sys.exit(0)
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
@@ -3374,7 +3402,7 @@ class SqlAnywhereConf(BaseDB):
 				jisql_log(query, db_password)
 				output = check_output(query)
 				if output.strip(version + " |"):
-                                    log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+                                        log("[I] Ranger "+ userName +" default password has already been changed!!","info")
 				else:
 					if is_unix:
 						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c \;" %(version)
@@ -3383,11 +3411,18 @@ class SqlAnywhereConf(BaseDB):
 					jisql_log(query, db_password)
 					output = check_output(query)
 					if output.strip(version + " |"):
+                                                countTries = 0
 						while(output.strip(version + " |")):
-                                                        log("[I] Ranger "+ userName +" change utility is being executed by some other process" ,"info")
-							time.sleep(retryPatchAfterSeconds)
-							jisql_log(query, db_password)
-							output = check_output(query)
+                                                        if countTries < 3:
+                                                                log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+                                                                time.sleep(retryPatchAfterSeconds)
+                                                                jisql_log(query, db_password)
+                                                                output = check_output(query)
+                                                                countTries += 1
+                                                        else:
+                                                                log("[E] Tried updating the password "+ str(countTries) + " times","error")
+                                                                log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+                                                                sys.exit(1)
 					else:
 						if is_unix:
 							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
@@ -3398,10 +3433,10 @@ class SqlAnywhereConf(BaseDB):
 							jisql_log(query, db_password)
 							ret = subprocess.call(query)
 						if ret == 0:
-                                                    log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+                                                        log ("[I] Ranger "+ userName +" default password change request is in process..","info")
 						else:
-                                                    log("[E] Ranger "+ userName +" default password change request failed", "error")
-                                                    sys.exit(1)
+                                                        log("[E] Ranger "+ userName +" default password change request failed", "error")
+                                                        sys.exit(1)
 						if is_unix:
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
@@ -3603,7 +3638,7 @@ class SqlAnywhereConf(BaseDB):
                         query = get_cmd + " -query \"SELECT 1;\" -c ;"
                 output = check_output(query)
                 if not output.strip('1 |'):
-                         sys.exit(0)
+                        sys.exit(0)
                 get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
                 version="J10001"
                 if is_unix:
@@ -3612,7 +3647,7 @@ class SqlAnywhereConf(BaseDB):
                         query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
                 output = check_output(query)
                 if not output.strip(version + " |"):
-                         sys.exit(0)
+                        sys.exit(0)
 
 def main(argv):
 	populate_global_dict()
