@@ -103,20 +103,25 @@ define(function(require) {
 								//checkParentHideShow field
 								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
 								formObj['resourceOpts'] = {'data-placeholder': v.label };
-								
-								if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
-									var opts = { 
-											'type' : v.name,
-											'lookupURL' 		: "service/plugins/services/lookupResource/"+form.rangerService.get('name')
-									};
+                                                                if(!_.isUndefined(v.lookupSupported)){
+                                                                        var opts = {};
 									if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
-										opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+                                        opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};
+                                    }
+                                    //To support single value input
+                                    if( XAUtils.isSinglevValueInput(v) ){
+                                        opts['singleValueInput'] = true;
+                                    }
+                                    opts['type'] = v.name;
+                                    if(v.lookupSupported){
+                                        opts['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
+                                        resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
+                                    }else{
+                                        resourceOpts['select2Opts'] = XAUtils.select2OptionForUserCreateChoice();
+                                        if(!_.isUndefined(opts.singleValueInput) && opts.singleValueInput){
+                                            resourceOpts['select2Opts']['maximumSelectionSize'] = 1;
+                                        }
 									}
-									//To support single value input
-									if( XAUtils.isSinglevValueInput(v) ){
-										opts['singleValueInput'] = true;
-									}	
-									resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
 									formObj['resourceOpts'] = resourceOpts; 
 								}
 								//same level resources check
@@ -187,11 +192,13 @@ define(function(require) {
 							formObj['name'] = v.name;
 							formObj['editorAttrs'] = {'data-placeholder': v.label };
                                                         formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
-							if(!_.isUndefined(v.lookupSupported) && v.lookupSupported ){
+                                                        if(!_.isUndefined(v.lookupSupported)){
 								var options = {
 										'containerCssClass' : v.name,
-										'lookupURL' : "service/plugins/services/lookupResource/"+form.rangerService.get('name')
-										};
+                                                                };
+                                                                if(v.lookupSupported){
+                                                                    options['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
+                                                                }
 								//to support regexp level validation
 								if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
 									options['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};

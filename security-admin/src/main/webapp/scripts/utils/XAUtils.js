@@ -1425,5 +1425,46 @@ define(function(require) {
         $('.popover').remove();
         $('.datetimepicker').remove();
     };
+    //select2 option
+    XAUtils.select2OptionForUserCreateChoice = function(){
+        var opts = {
+                multiple: true,
+                data:[],
+                closeOnSelect : true,
+                width :'220px',
+                allowClear: true,
+                tokenSeparators: ["," , " "],
+                minimumInputLength: 1,
+                initSelection : function (element, callback) {
+                    var data = [];
+                    //to set single select value
+                    if(!_.isUndefined(opts.singleValueInput) && opts.singleValueInput){
+                        callback({ id : element.val(), text : element.val() });
+                        return;
+                    }
+                    //this is form multi-select value
+                    $(element.val().split(",")).each(function () {
+                        data.push({id: this, text: this});
+                    });
+                    callback(data);
+                },
+                createSearchChoice: function(term, data) {
+                    term = _.escape(term);
+                    if ($(data).filter(function() {
+                        return this.text.localeCompare(term) === 0;
+                    }).length === 0) {
+                        if($.inArray(term, this.val()) >= 0){
+                            return null;
+                        }else{
+                            return {
+                                id : term,
+                                text: term
+                            };
+                        }
+                    }
+                },
+            }
+        return opts;
+    }
 	return XAUtils;
 });

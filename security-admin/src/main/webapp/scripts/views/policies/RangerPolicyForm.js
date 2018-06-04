@@ -560,77 +560,73 @@ define(function(require){
 			function extractLast( term ) {
 				return split( term ).pop();
 			}
-
-			this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit({
-				autocomplete : {
-					cache: false,
-					source: function( request, response ) {
-						var url = "service/plugins/services/lookupResource/"+that.rangerService.get('name');
-						var context ={
-							'userInput' : extractLast( request.term ),
-							'resourceName' : that.pathFieldName,
-							'resources' : {}
-						};
-						var val = that.fields[that.pathFieldName].editor.getValue();
-						context.resources[that.pathFieldName] = _.isNull(val) || _.isEmpty(val) ? [] : val.resource.split(","); 
-						var p = $.ajax({
-							url : url,
-							type : "POST",
-							data : JSON.stringify(context),
-							dataType : 'json',
-							contentType: "application/json; charset=utf-8",
-						}).done(function(data){
-							if(data){
-								response(data);
-							} else {
-								response();
-							}
-
-                                                }).fail(function(){
-							response();
-
-						});
-						setTimeout(function(){ 
-							p.abort();
-							console.log('connection timeout for resource path request...!!');
-						}, 10000);
-					},
-					open : function(){
-						$(this).removeClass('working');
-					},
-					search: function() {
-						if(!_.isUndefined(this.value) && _.contains(this.value,',')){ 
-							_.each(this.value.split(',') , function(tag){
-								that.fields[that.pathFieldName].editor.$el.tagit("createTag", tag);
-							});
-				        	return false;
-				        }	
-						var term = extractLast( this.value );
-						$(this).addClass('working');
-						if ( term.length < 1 ) {
-							return false;
-						}
-					},
-					
-				},
-				beforeTagAdded: function(event, ui) {
-			        // do something special
-					that.fields[that.pathFieldName].$el.removeClass('error');
-		        	that.fields[that.pathFieldName].$el.find('.help-inline').html('');
-					var tags =  [];
-			        console.log(ui.tag);
-			        if(!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(ui.tagLabel)){
-			        	that.fields[that.pathFieldName].$el.addClass('error');
-			        	that.fields[that.pathFieldName].$el.find('.help-inline').html(options.regExpValidation.message);
-			        	return false;
-			        }
-				}
-			}).on('change',function(e){
-				//check dirty field for tagit input type : `path`
-				XAUtil.checkDirtyField($(e.currentTarget).val(), defaultValue.toString(), $(e.currentTarget))
-			});
-	
-			
+                        var tagitOpts = {}
+                        if(!_.isUndefined(options.lookupURL) && options.lookupURL){
+                            tagitOpts["autocomplete"] = {
+                            cache: false,
+                    source: function( request, response ) {
+                        var url = "service/plugins/services/lookupResource/"+that.rangerService.get('name');
+                        var context ={
+                            'userInput' : extractLast( request.term ),
+                            'resourceName' : that.pathFieldName,
+                            'resources' : {}
+                        };
+                        var val = that.fields[that.pathFieldName].editor.getValue();
+                        context.resources[that.pathFieldName] = _.isNull(val) || _.isEmpty(val) ? [] : val.resource.split(",");
+                        var p = $.ajax({
+                            url : url,
+                            type : "POST",
+                            data : JSON.stringify(context),
+                            dataType : 'json',
+                            contentType: "application/json; charset=utf-8",
+                        }).done(function(data){
+                            if(data){
+                                response(data);
+                            } else {
+                                response();
+                            }
+                        }).fail(function(){
+                            response();
+                        });
+                        setTimeout(function(){
+                            p.abort();
+                            console.log('connection timeout for resource path request...!!');
+                        }, 10000);
+                    },
+                    open : function(){
+                        $(this).removeClass('working');
+                    },
+                    search: function() {
+                        if(!_.isUndefined(this.value) && _.contains(this.value,',')){
+                            _.each(this.value.split(',') , function(tag){
+                                that.fields[that.pathFieldName].editor.$el.tagit("createTag", tag);
+                            });
+                            return false;
+                        }
+                        var term = extractLast( this.value );
+                        $(this).addClass('working');
+                        if ( term.length < 1 ) {
+                            return false;
+                        }
+                    },
+                            }
+                        }
+                        tagitOpts['beforeTagAdded'] = function(event, ui) {
+                // do something special
+                that.fields[that.pathFieldName].$el.removeClass('error');
+                that.fields[that.pathFieldName].$el.find('.help-inline').html('');
+                var tags =  [];
+                console.log(ui.tag);
+                if(!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(ui.tagLabel)){
+                    that.fields[that.pathFieldName].$el.addClass('error');
+                    that.fields[that.pathFieldName].$el.find('.help-inline').html(options.regExpValidation.message);
+                    return false;
+                }
+            }
+            this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit(tagitOpts).on('change', function(e){
+                //check dirty field for tagit input type : `path`
+                XAUtil.checkDirtyField($(e.currentTarget).val(), defaultValue.toString(), $(e.currentTarget));
+            });
 		},
 		getPlugginAttr :function(autocomplete, options){
 			var that =this, type = options.containerCssClass, validRegExpString = true, select2Opts=[];

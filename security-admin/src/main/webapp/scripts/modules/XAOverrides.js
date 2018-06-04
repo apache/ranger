@@ -520,7 +520,7 @@
 		  	this.renderSameLevelResource();
 		    return this;
 		  },
-		  renderResource : function() {
+                  renderResource : function(def) {
 			  var that = this;
                           var Vent = require('modules/Vent');
 			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
@@ -539,6 +539,28 @@
 //			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
 			  		}
 			  	});
+                //Handle resource at same level option for lookupSupport true/false condition
+                if(def){
+                    if(def.lookupSupported){
+                        var opts = {};
+                        var singleValueInput = XAUtil.isSinglevValueInput(def);
+                        opts['singleValueInput'] = singleValueInput;
+                        if(_.has(def, 'validationRegEx') && !_.isEmpty(def.validationRegEx)){
+                            opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(def.validationRegEx), 'message' : def.validationMessage};
+                        }
+                        opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.rangerService.get('name');
+                        opts['type'] = def.name;
+                        this.resourceOpts['select2Opts'] = that.form.getPlugginAttr(true, opts);
+                    }else{
+                        this.resourceOpts.select2Opts['containerCssClass'] = def.name;
+                        delete this.resourceOpts.select2Opts['ajax'];
+                        delete this.resourceOpts.select2Opts['tags'];
+                        this.resourceOpts.select2Opts['data'] = [];
+                        if(singleValueInput){
+                            this.resourceOpts['select2Opts']['maximumSelectionSize'] = 1;
+                        }
+		    }
+                }
 			  	//create select2 if select2Opts is specified
 			    if(!_.isUndefined(this.resourceOpts.select2Opts)){
 			    	this.$resource.select2(this.resourceOpts.select2Opts).on('change',function(e){
@@ -607,7 +629,8 @@
 		  					var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value].split(','); 
 		  					that.$resource.select2('val', val)
 		  				}else{
-		  					that.$resource.select2('val', '')
+							that.$resource.select2('val', "");
+							that.value=[];
 		  				}
 			  			//reset values
 			  			that.value.isExcludes = false;
@@ -639,6 +662,8 @@
                             if(that.recursiveSupport) that.value.isRecursive = true;
                             that.excludeSupport = def.excludesSupported;
                             that.renderToggles();
+                            //Handle resource at same level option for lookupSupport true/false condition
+                            that.renderResource(def);
                         }
                         //trigger resource event for showing respective access permissions
                         Vent.trigger('resourceType:change', changeType = 'resourceType', e.currentTarget.value, e.currentTarget.value, e);
