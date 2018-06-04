@@ -57,6 +57,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String KEY_TOPIC = "topic";
 	public static final String KEY_CLUSTER = "cluster";
 	public static final String KEY_CONSUMER_GROUP = "consumer_group";
+	public static final String KEY_TRANSACTIONALID = "transactionalid";
 
 	public static final String ACCESS_TYPE_READ = "consume";
 	public static final String ACCESS_TYPE_WRITE = "publish";
@@ -65,6 +66,9 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String ACCESS_TYPE_CONFIGURE = "configure";
 	public static final String ACCESS_TYPE_DESCRIBE = "describe";
 	public static final String ACCESS_TYPE_KAFKA_ADMIN = "kafka_admin";
+	public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
+	public static final String ACCESS_TYPE_ALTER_CONFIGS    = "alter_configs";
+	public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
 
@@ -198,6 +202,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			// rangerResource.setValue(KEY_CLUSTER, resource.name());
 		} else if (resource.resourceType().equals(Group$.MODULE$)) {
 			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
+		} else if (resource.resourceType().equals(TransactionalId$.MODULE$)) {
+			rangerResource.setValue(KEY_TRANSACTIONALID,resource.name());
 		} else {
 			logger.fatal("Unsupported resourceType=" + resource.resourceType());
 			validationFailed = true;
@@ -327,6 +333,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			return ACCESS_TYPE_CREATE;
 		} else if (operation.equals(Delete$.MODULE$)) {
 			return ACCESS_TYPE_DELETE;
+		} else if (operation.equals(DescribeConfigs$.MODULE$)) {
+			return ACCESS_TYPE_DESCRIBE_CONFIGS;
+		} else if (operation.equals(AlterConfigs$.MODULE$)) {
+			return ACCESS_TYPE_ALTER_CONFIGS;
+		} else if (operation.equals(IdempotentWrite$.MODULE$)) {
+			return ACCESS_TYPE_IDEMPOTENT_WRITE;
 		}
 		return null;
 	}

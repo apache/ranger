@@ -49,10 +49,22 @@
             {
               "type": "kafka_admin",
               "isAllowed": true
+            },
+            {
+              "type": "idempotent_write",
+              "isAllowed": true
+            },
+            {
+              "type": "describe_configs",
+              "isAllowed": true
+            },
+            {
+              "type": "alter_configs",
+              "isAllowed": true
             }
           ],
           "users": [
-            "admin"
+            "admin","kafka"
           ],
           "groups": [
             "IT"
@@ -99,6 +111,18 @@
             {
               "type": "describe",
               "isAllowed": true
+            },
+            {
+              "type": "idempotent_write",
+              "isAllowed": true
+            },
+            {
+              "type": "describe_configs",
+              "isAllowed": true
+            },
+            {
+              "type": "alter_configs",
+              "isAllowed": true
             }
           ],
           "users": [],
@@ -115,6 +139,64 @@
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
       "id": 19,
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "cl1_kafka",
+      "name": "ClusterLevelPolicy",
+      "policyType": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "topic": {
+          "values": [
+            "test"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "publish",
+              "isAllowed": true
+            },
+            {
+              "type": "consume",
+              "isAllowed": true
+            },
+            {
+              "type": "describe",
+              "isAllowed": true
+            },
+            {
+              "type": "idempotent_write",
+              "isAllowed": true
+            },
+            {
+              "type": "describe_configs",
+              "isAllowed": true
+            },
+            {
+              "type": "alter_configs",
+              "isAllowed": true
+            }
+          ],
+          "users": ["kafka"],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 25,
       "isEnabled": true,
       "version": 1
     },
@@ -220,6 +302,26 @@
         "uiHint": "",
         "label": "Topic",
         "description": "Topic"
+      },
+      {
+        "itemId":2,
+        "name":"transactionalid",
+        "type":"string",
+        "level":1,
+        "mandatory":true,
+        "lookupSupported":false,
+        "recursiveSupported":false,
+        "excludesSupported":true,
+        "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":{
+          "wildCard":true,
+          "ignoreCase":true
+        },
+        "validationRegEx":"",
+        "validationMessage":"",
+        "uiHint":"",
+        "label":"Transactional Id",
+        "description":"Transactional Id"
       }
     ],
     "accessTypes": [
@@ -263,7 +365,7 @@
         "itemId": 9,
         "name": "delete",
         "label": "Delete",
-        "impliedGrants": []
+        "impliedGrants": ["describe"]
       },
       {
         "itemId": 7,
@@ -276,6 +378,24 @@
           "describe",
           "create",
           "delete"
+        ]
+      },
+      {
+        "itemId":10,
+        "name":"idempotent_write",
+        "label":"Idempotent Write"
+      },
+      {
+        "itemId":11,
+        "name":"describe_configs",
+        "label":"Describe Configs"
+      },
+      {
+        "itemId":12,
+        "name":"alter_configs",
+        "label":"Alter Configs",
+        "impliedGrants":[
+          "describe_configs"
         ]
       }
     ],
@@ -976,7 +1096,9 @@
           "itemId": 9018,
           "name": "kafka:delete",
           "label": "Delete",
-          "impliedGrants": []
+          "impliedGrants": [
+            "kafka:describe"
+          ]
         },
         {
           "itemId": 9016,
@@ -989,6 +1111,24 @@
             "kafka:describe",
             "kafka:create",
             "kafka:delete"
+          ]
+        },
+        {
+          "itemId":9019,
+          "name":"idempotent_write",
+          "label":"Idempotent Write"
+        },
+        {
+          "itemId":9020,
+          "name":"describe_configs",
+          "label":"Describe Configs"
+        },
+        {
+          "itemId":9021,
+          "name":"alter_configs",
+          "label":"Alter Configs",
+          "impliedGrants":[
+            "describe_configs"
           ]
         },
         {

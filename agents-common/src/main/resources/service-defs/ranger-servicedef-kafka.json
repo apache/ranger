@@ -24,6 +24,20 @@
 			"uiHint":"",
 			"label":"Topic",
 			"description":"Topic"
+		},
+		{
+			"itemId":2,
+			"name":"transactionalid",
+			"type":"string",
+			"level":1,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"label":"Transactional Id",
+			"description":"Transactional Id"
 		}
 		
 	],
@@ -68,7 +82,10 @@
 		{
 			"itemId":9,
 			"name":"delete",
-			"label":"Delete"
+			"label":"Delete",
+			"impliedGrants":[
+				"describe"
+			]
 		},
 		{
 			"itemId":7,
@@ -83,6 +100,24 @@
 				"delete"
 			]
 			
+		},
+		{
+			"itemId":10,
+			"name":"idempotent_write",
+			"label":"Idempotent Write"
+		},
+		{
+			"itemId":11,
+			"name":"describe_configs",
+			"label":"Describe Configs"
+		},
+		{
+			"itemId":12,
+			"name":"alter_configs",
+			"label":"Alter Configs",
+			"impliedGrants":[
+				"describe_configs"
+			]
 		}
 	],
 	"configs":[
