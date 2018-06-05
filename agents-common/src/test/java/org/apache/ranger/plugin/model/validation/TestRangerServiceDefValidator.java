@@ -209,12 +209,6 @@ public class TestRangerServiceDefValidator {
 			{ 3L, "admin", new String[] { "write", "admin" } }  // non-existent access type (execute)
 	};
 
-	final Object[][] accessTypes_mixed_case_names = new Object[][] {
-			{ 1L, "Read",  null },
-			{ 2L, "WRITE", new String[] {   } },
-			{ 3L, "adminPrivilege", new String[] { "write", "admin" } }
-	};
-
 	@Test
 	public final void test_isValidAccessTypes_happyPath() {
 		List<RangerAccessTypeDef> input = _utils.createAccessTypeDefs(accessTypes_good);
@@ -258,13 +252,6 @@ public class TestRangerServiceDefValidator {
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_selfReference);
 		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "admin");
-
-		// Mixed case access types
-		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_mixed_case_names);
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
-		_utils.checkFailure(_failures, null, null, null, "Read",null);
-		_utils.checkFailure(_failures, null, null, null, "WRITE",null);
-		_utils.checkFailure(_failures, null, null, null, "adminPrivilege",null);
 	}
 	
 	final Object[][] enums_bad_enumName_null = new Object[][] {

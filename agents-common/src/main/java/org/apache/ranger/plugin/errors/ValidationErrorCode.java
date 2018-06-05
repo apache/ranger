@@ -61,7 +61,7 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_INVALID_DEFAULT_INDEX(2019, "default index[{0}] for enum [{1}] is invalid"),
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT(2020, "An enum element in enum element collection of enum [{0}] is null"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS(2021, "Resource-def levels are not in increasing order in an hierarchy"),
-	SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid name. Name should consist of only lower case characters"),
+	SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
 
     // POLICY VALIDATION
     POLICY_VALIDATION_ERR_UNSUPPORTED_ACTION(3001, "Internal error: method signature isValid(Long) is only supported for DELETE"),
