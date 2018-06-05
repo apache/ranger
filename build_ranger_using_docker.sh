@@ -75,14 +75,14 @@ ENV JAVA_HOME /usr/java/latest
 ENV  PATH $JAVA_HOME/bin:$PATH
 
 
-ADD https://www.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz.md5 /tools
-ADD http://mirror.stjschools.org/public/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz /tools
-RUN md5sum apache-maven-3.3.9-bin.tar.gz | cut -f 1 -d " " > tmp.md5
+ADD https://www.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz.sha1 /tools
+ADD http://www-us.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz /tools
+RUN sha1sum  apache-maven-3.5.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
-RUN diff -w tmp.md5 apache-maven-3.3.9-bin.tar.gz.md5
+RUN diff -w tmp.sha1 apache-maven-3.5.3-bin.tar.gz.sha1
 
-RUN tar xfz apache-maven-3.3.9-bin.tar.gz
-RUN ln -sf /tools/apache-maven-3.3.9 /tools/maven
+RUN tar xfz apache-maven-3.5.3-bin.tar.gz
+RUN ln -sf /tools/apache-maven-3.5.3 /tools/maven
 
 ENV  PATH /tools/maven/bin:$PATH
 ENV MAVEN_OPTS "-Xmx2048m -XX:MaxPermSize=512m"
