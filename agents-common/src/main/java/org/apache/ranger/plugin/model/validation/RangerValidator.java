@@ -589,18 +589,33 @@ public abstract class RangerValidator {
 		return valid;
 	}
 
-	boolean isInLowerCase(final String value, final String valueContext, final List<ValidationFailureDetails> failures) {
-		if (!StringUtils.isAllLowerCase(value)) {
+	boolean isValidResourceName(final String value, final String valueContext, final List<ValidationFailureDetails> failures) {
+		boolean ret = true;
+
+		if (value != null && !StringUtils.isEmpty(value)) {
+			int sz = value.length();
+
+			for(int i = 0; i < sz; ++i) {
+				char c = value.charAt(i);
+				if (!(Character.isLowerCase(c) || c == '-' || c == '_')) { // Allow only lowercase, hyphen or underscore characters
+					ret = false;
+					break;
+				}
+			}
+		} else {
+			ret = false;
+		}
+		if (!ret) {
 			ValidationErrorCode errorCode = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME;
 			failures.add(new ValidationFailureDetailsBuilder()
 					.errorCode(errorCode.getErrorCode())
 					.field(value)
 					.becauseOf(errorCode.getMessage(valueContext, value))
 					.build());
-			return false;
 		}
-		return true;
+		return ret;
 	}
+
 	boolean isUnique(final String value, final Set<String> alreadySeen, final String valueName, final String collectionName, final List<ValidationFailureDetails> failures) {
 		return isUnique(value, null, alreadySeen, valueName, collectionName, failures);
 	}

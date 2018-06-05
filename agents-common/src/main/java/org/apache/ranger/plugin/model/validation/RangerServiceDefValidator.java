@@ -259,7 +259,6 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<Long> ids = new HashSet<>();
 			for (RangerAccessTypeDef def : accessTypeDefs) {
 				String name = def.getName();
-				valid = isInLowerCase(name, "access type name", failures) && valid;
 				valid = isUnique(name, accessNames, "access type name", "access types", failures) && valid;
 				valid = isUnique(def.getItemId(), ids, "access type itemId", "access types", failures) && valid;
 				if (CollectionUtils.isNotEmpty(def.getImpliedGrants())) {
@@ -473,7 +472,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Set<String> names = new HashSet<String>(resources.size());
 			Set<Long> ids = new HashSet<Long>(resources.size());
 			for (RangerResourceDef resource : resources) {
-				valid = isInLowerCase(resource.getName(), "resource type name", failures) && valid;
+				valid = isValidResourceName(resource.getName(), "resource type name", failures) && valid;
 
 				/*
 				 * While id is the natural key, name is a surrogate key.  At several places code expects resource name to be unique within a service.
