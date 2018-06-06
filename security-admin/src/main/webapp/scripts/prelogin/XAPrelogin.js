@@ -40,7 +40,7 @@ function doLogin() {
 		$('#errorBox').show();
 		$('#signInLoading').hide();
 		$('#signIn').removeAttr('disabled');
-		$('#errorBox .errorMsg').text("The username or password you entered is incorrect..");
+		$('#errorBox .errorMsg').text("The username or password you entered is incorrect.");
 		return false;
 	}
 

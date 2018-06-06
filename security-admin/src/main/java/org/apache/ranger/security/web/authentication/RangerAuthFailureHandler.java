@@ -85,17 +85,17 @@ ExceptionMappingAuthenticationFailureHandler {
 			if (msg != null && !msg.isEmpty()) {
 				if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials",request).equalsIgnoreCase(msg)) {
 				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-				vXResponse.setMsgDesc("The username or password you entered is incorrect...");
+				vXResponse.setMsgDesc("The username or password you entered is incorrect.");
 				logger.info("Error Message : " + msg);
 				} else if (msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("Unable to connect to DB...");
+					vXResponse.setMsgDesc("Unable to connect to DB.");
 				} else if (msg.contains("Communications link failure")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("Unable to connect to DB...");
+					vXResponse.setMsgDesc("Unable to connect to DB.");
 				} else if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.disabled",request).equalsIgnoreCase(msg)) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-					vXResponse.setMsgDesc("The username or password you entered is disable...");
+					vXResponse.setMsgDesc("The username or password you entered is disabled.");
 				}
 			}
 			jsonResp = jsonUtil.writeObjectAsString(vXResponse);
