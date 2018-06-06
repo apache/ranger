@@ -100,23 +100,25 @@ public class RangerServiceYarn extends RangerBaseService {
 		String queueResourceName = RangerYarnAuthorizer.KEY_RESOURCE_QUEUE;
 
 		for (RangerPolicy defaultPolicy : ret) {
-			RangerPolicy.RangerPolicyResource queuePolicyResource = defaultPolicy.getResources().get(queueResourceName);
-			if (queuePolicyResource != null) {
-				List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
-				RangerServiceDef.RangerResourceDef queueResourceDef = null;
-				for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-					if (resourceDef.getName().equals(queueResourceName)) {
-						queueResourceDef = resourceDef;
-						break;
+			if(defaultPolicy.getName().contains("all")){
+				RangerPolicy.RangerPolicyResource queuePolicyResource = defaultPolicy.getResources().get(queueResourceName);
+				if (queuePolicyResource != null) {
+					List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
+					RangerServiceDef.RangerResourceDef queueResourceDef = null;
+					for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+						if (resourceDef.getName().equals(queueResourceName)) {
+							queueResourceDef = resourceDef;
+							break;
+						}
 					}
-				}
-				if (queueResourceDef != null) {
-					queuePolicyResource.setValue(RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+					if (queueResourceDef != null) {
+						queuePolicyResource.setValue(RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+					} else {
+						LOG.warn("No resourceDef found in YARN service-definition for '" + queueResourceName + "'");
+					}
 				} else {
-					LOG.warn("No resourceDef found in YARN service-definition for '" + queueResourceName + "'");
+					LOG.warn("No '" + queueResourceName + "' found in default policy");
 				}
-			} else {
-				LOG.warn("No '" + queueResourceName + "' found in default policy");
 			}
 		}
 

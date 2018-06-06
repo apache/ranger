@@ -115,28 +115,30 @@ public class RangerServiceHdfs extends RangerBaseService {
 		String pathResourceName = RangerHdfsAuthorizer.KEY_RESOURCE_PATH;
 
 		for (RangerPolicy defaultPolicy : ret) {
-			RangerPolicy.RangerPolicyResource pathPolicyResource = defaultPolicy.getResources().get(pathResourceName);
-			if (pathPolicyResource != null) {
-				List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
-				RangerServiceDef.RangerResourceDef pathResourceDef = null;
-				for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-					if (resourceDef.getName().equals(pathResourceName)) {
-						pathResourceDef = resourceDef;
-						break;
+			if(defaultPolicy.getName().contains("all")){
+				RangerPolicy.RangerPolicyResource pathPolicyResource = defaultPolicy.getResources().get(pathResourceName);
+				if (pathPolicyResource != null) {
+					List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
+					RangerServiceDef.RangerResourceDef pathResourceDef = null;
+					for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+						if (resourceDef.getName().equals(pathResourceName)) {
+							pathResourceDef = resourceDef;
+							break;
+						}
 					}
-				}
-				if (pathResourceDef != null) {
-					String pathSeparator = pathResourceDef.getMatcherOptions().get(RangerPathResourceMatcher.OPTION_PATH_SEPARATOR);
-					if (StringUtils.isBlank(pathSeparator)) {
-						pathSeparator = Character.toString(RangerPathResourceMatcher.DEFAULT_PATH_SEPARATOR_CHAR);
+					if (pathResourceDef != null) {
+						String pathSeparator = pathResourceDef.getMatcherOptions().get(RangerPathResourceMatcher.OPTION_PATH_SEPARATOR);
+						if (StringUtils.isBlank(pathSeparator)) {
+							pathSeparator = Character.toString(RangerPathResourceMatcher.DEFAULT_PATH_SEPARATOR_CHAR);
+						}
+						String value = pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
+						pathPolicyResource.setValue(value);
+					} else {
+						LOG.warn("No resourceDef found in HDFS service-definition for '" + pathResourceName + "'");
 					}
-					String value = pathSeparator + RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
-					pathPolicyResource.setValue(value);
 				} else {
-					LOG.warn("No resourceDef found in HDFS service-definition for '" + pathResourceName + "'");
+					LOG.warn("No '" + pathResourceName + "' found in default policy");
 				}
-			} else {
-				LOG.warn("No '" + pathResourceName + "' found in default policy");
 			}
 		}
 
