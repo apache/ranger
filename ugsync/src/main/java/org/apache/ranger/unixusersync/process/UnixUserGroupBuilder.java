@@ -86,6 +86,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private UnixSyncSourceInfo unixSyncSourceInfo;
 	private boolean isStartupFlag = false;
+	Set<String> allGroups = new HashSet<>();
+
 
 	public static void main(String[] args) throws Throwable {
 		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder();
@@ -168,7 +170,6 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
 				String user = entry.getKey();
 				List<String> groups = entry.getValue();
-
 				try {
 					sink.addOrUpdateUser(user, groups);
 				} catch (Throwable t) {
@@ -181,7 +182,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 		try {
 			unixSyncSourceInfo.setTotalUsersSynced(user2GroupListMap.size());
-			unixSyncSourceInfo.setTotalGroupsSynced(groupId2groupNameMap.size());
+			unixSyncSourceInfo.setTotalGroupsSynced(allGroups.size());
 			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 		} catch (Throwable t) {
 			LOG.error("sink.postUserGroupAuditInfo failed with exception: ", t);
@@ -193,6 +194,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private void buildUserGroupInfo() throws Throwable {
 		user2GroupListMap = new HashMap<String,List<String>>();
 		groupId2groupNameMap = new HashMap<String, String>();
+		allGroups = new HashSet<>();
 
 		if (OS.startsWith("Mac")) {
 			buildUnixGroupList(MAC_GET_ALL_GROUPS_CMD, MAC_GET_GROUP_CMD, false);
@@ -294,6 +296,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 							groupList.addAll(map);
 						}
 						user2GroupListMap.put(userName, groupList);
+						allGroups.addAll(groupList);
 					} else {
 						// we are ignoring the possibility that this user was present in /etc/groups.
 						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
@@ -368,6 +371,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 
 				user2GroupListMap.put(entry.getKey(), allowedGroups);
+				allGroups.addAll(allowedGroups);
 			}
 			LOG.debug("End drill down group members");
 		}
