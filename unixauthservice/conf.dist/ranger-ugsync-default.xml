@@ -26,6 +26,10 @@
 		<value>true</value>
 	</property>
 	<property>
+		<name>ranger.usersync.https.ssl.enabled.protocols</name>
+		<value>SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2</value>
+	</property>
+	<property>
 		<name>ranger.usersync.passwordvalidator.path</name>
 		<value>./native/credValidator.uexe</value>
 	</property>

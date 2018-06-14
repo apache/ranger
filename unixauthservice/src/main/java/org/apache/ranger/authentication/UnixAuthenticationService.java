@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -70,6 +71,7 @@ public class UnixAuthenticationService {
 	private static final String CREDSTORE_FILENAME_PARAM = "ranger.usersync.credstore.filename";
 	
 	private String keyStorePath;
+	private List<String> enabledProtocolsList;
 	private String keyStorePathPassword;
 	private String trustStorePath;
 	private String trustStorePathPassword;
@@ -191,7 +193,9 @@ public class UnixAuthenticationService {
 		String SSLEnabledProp = prop.getProperty(SSL_ENABLED_PARAM);
 		
 		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true")));
-		
+		String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+		String enabledProtocols = prop.getProperty("ranger.usersync.https.ssl.enabled.protocols", defaultEnabledProtocols);
+		enabledProtocolsList=new ArrayList<String>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
 //		LOG.info("Key:" + keyStorePath);
 //		LOG.info("KeyPassword:" + keyStorePathPassword);
 //		LOG.info("TrustStore:" + trustStorePath);
@@ -273,7 +277,7 @@ public class UnixAuthenticationService {
 			String[] protocols = secureSocket.getEnabledProtocols();
 			Set<String> allowedProtocols = new HashSet<String>();
 			for(String ep : protocols) {
-				if (! ep.toUpperCase().startsWith("SSLV3")) {
+				if (enabledProtocolsList.contains(ep.toUpperCase())){
 					LOG.info("Enabling Protocol: [" + ep + "]");
 					allowedProtocols.add(ep);
 				}
