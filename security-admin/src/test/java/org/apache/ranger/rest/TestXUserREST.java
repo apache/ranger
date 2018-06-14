@@ -835,10 +835,9 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test45updateXPermMap() {
-		Mockito.when(xUserMgr.updateXPermMap(null)).thenReturn(null);
-		VXPermMap retVxGroup=xUserRest.updateXPermMap(null);
+		VXPermMap vXPermMap=null ;
+		VXPermMap retVxGroup=xUserRest.updateXPermMap(vXPermMap);
 		assertNull(retVxGroup);
-		Mockito.verify(xUserMgr).updateXPermMap(null);
 	}
 	@Test
 	public void test46updateXPermMap() {
@@ -1039,12 +1038,9 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test58updateXAuditMapVXResourceNull() {
-		
-		Mockito.when(xUserMgr.updateXAuditMap(null)).thenReturn(null);
-		VXAuditMap retvXAuditMap=xUserRest.updateXAuditMap(null);
-		Mockito.verify(xUserMgr).updateXAuditMap(null);
+		VXAuditMap vXAuditMap =null;
+		VXAuditMap retvXAuditMap=xUserRest.updateXAuditMap(vXAuditMap);
 		assertNull(retvXAuditMap);
-		
 	}
 	@Test
 	public void test59deleteXAuditMap() {

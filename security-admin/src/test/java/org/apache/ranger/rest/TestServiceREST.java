@@ -1836,9 +1836,7 @@ public class TestServiceREST {
 				lastKnownVersion, 0L, pluginId, "", request);
 		Assert.assertNotNull(dbServiceSecurePolicies);
 		Mockito.verify(serviceUtil).isValidService(serviceName, request);
-		Mockito.verify(daoManager).getXXService();
 		Mockito.verify(xServiceDao).findByName(serviceName);
-		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(xServiceDefDao).getById(xService.getType());
 		Mockito.verify(svcStore).getServiceByNameForDP(serviceName);
 		Mockito.verify(bizUtil).isUserAllowed(rs, ServiceREST.Allowed_User_List_For_Grant_Revoke);

@@ -736,7 +736,6 @@ public class TestRangerServiceDefService {
 		Mockito.verify(daoManager).getXXPolicyConditionDef();
 		Mockito.verify(daoManager).getXXContextEnricherDef();
 		Mockito.verify(daoManager).getXXEnumDef();
-		Mockito.verify(daoManager).getXXEnumElementDef();
 	}
 
 }

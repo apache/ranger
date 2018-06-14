@@ -544,14 +544,17 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_PERM_MAP + "\")")
 	public VXPermMap updateXPermMap(VXPermMap vXPermMap) {
-
+		VXPermMap vXPermMapRet = null;
 		if (vXPermMap != null) {
 			if (xResourceService.readResource(vXPermMap.getResourceId()) == null) {
 				throw restErrorUtil.createRESTException("Invalid Input Data - No resource found with Id: " + vXPermMap.getResourceId());
 			}
+			else{
+				vXPermMapRet = xUserMgr.updateXPermMap(vXPermMap);
+			}
 		}
 
-		return xUserMgr.updateXPermMap(vXPermMap);
+			return vXPermMapRet;
 	}
 
 	@DELETE
@@ -628,14 +631,17 @@ public class XUserREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_AUDIT_MAP + "\")")
 	public VXAuditMap updateXAuditMap(VXAuditMap vXAuditMap) {
-
+		VXAuditMap vXAuditMapRet = null;
 		if (vXAuditMap != null) {
 			if (xResourceService.readResource(vXAuditMap.getResourceId()) == null) {
 				throw restErrorUtil.createRESTException("Invalid Input Data - No resource found with Id: " + vXAuditMap.getResourceId(), MessageEnums.INVALID_INPUT_DATA);
 			}
+			else{
+				vXAuditMapRet = xUserMgr.updateXAuditMap(vXAuditMap);
+			}
 		}
 
-		return xUserMgr.updateXAuditMap(vXAuditMap);
+		return vXAuditMapRet;
 	}
 
 	@DELETE
