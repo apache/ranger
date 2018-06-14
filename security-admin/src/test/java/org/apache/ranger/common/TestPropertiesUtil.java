@@ -110,10 +110,23 @@ public class TestPropertiesUtil {
 	}
 	
 	@Test
-	public void testGetPropertyStringList(){
+        public void testGetPropertyStringListForNull(){
 		String key = null;
 		PropertiesUtil.getPropertyStringList(key);
 		Assert.assertNull(key);
 	}
 	
+        @Test
+        public void testGetPropertyStringList(){
+                String key = "ranger.users.roles.list";
+
+                PropertiesUtil.getPropertiesMap().put("ranger.users.roles.list", "read,write,access");
+                String[] actualroles = PropertiesUtil.getPropertyStringList(key);
+
+                Assert.assertEquals("read", actualroles[0]);
+                Assert.assertEquals("write", actualroles[1]);
+                Assert.assertEquals("access", actualroles[2]);
+
+        }
+
 }

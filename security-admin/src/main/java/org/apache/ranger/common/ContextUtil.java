@@ -27,7 +27,7 @@ public class ContextUtil {
 	/**
 	 * Singleton class
 	 */
-	private ContextUtil() {
+        public ContextUtil() {
 	}
 
 	public static Long getCurrentUserId() {

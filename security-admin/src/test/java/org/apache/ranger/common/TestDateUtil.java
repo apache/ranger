@@ -17,7 +17,10 @@
 package org.apache.ranger.common;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -26,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @SuppressWarnings("deprecation")
 public class TestDateUtil {
+
+        private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
 	@Autowired
 	DateUtil dateUtil = new DateUtil();
@@ -41,6 +46,28 @@ public class TestDateUtil {
 		Assert.assertEquals(dateCheck.getMinutes(), minutes);
 		Assert.assertEquals(dateCheck.getHours(), hourse);
 	}
+
+    @Test
+    public void testDateFromNow(){
+
+	int days = 2;
+	int hours = 3;
+	int minutes = 50;
+
+	Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.DATE, days);
+                cal.add(Calendar.HOUR, hours);
+                cal.add(Calendar.MINUTE, minutes);
+                Date expectedDate = cal.getTime();
+
+
+	Date actualDate = dateUtil.getDateFromNow(days, hours, minutes);
+
+	Assert.assertEquals(expectedDate.getYear(), actualDate.getYear());
+	Assert.assertEquals(expectedDate.getDay(), actualDate.getDay());
+	Assert.assertEquals(expectedDate.getMonth(), actualDate.getMonth());
+
+    }
 
 	@Test
 	public void testDateToString() {
@@ -73,5 +100,67 @@ public class TestDateUtil {
 		Assert.assertEquals(currentDate.getDate(),date.getDate());
 		Assert.assertEquals(currentDate.getMinutes(),mins);
 	}
+
+        @Test
+        public void testStringToDate(){
+                String dateString = "2018-05-31";
+                String dateFormat = "yyyy-MM-dd";
+
+                Calendar cal = Calendar.getInstance();
+	cal.set(2018 - 1900, 04, 31);
+	Date expectedDate = new Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DATE));
+
+                Date actualDate = dateUtil.stringToDate(dateString, dateFormat);
+                Assert.assertEquals(expectedDate.getYear(), actualDate.getYear());
+	Assert.assertEquals(expectedDate.getDay(), actualDate.getDay());
+	Assert.assertEquals(expectedDate.getMonth(), actualDate.getMonth());
+
+        }
+
+        @Test
+        public void testGetUTCDate(){
+
+                Calendar local=Calendar.getInstance();
+            int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+            GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+            utc.setTimeInMillis(local.getTimeInMillis());
+            utc.add(Calendar.MILLISECOND, -offset);
+            Date expectedDate = utc.getTime();
+
+                Date actualDate = dateUtil.getUTCDate();
+                Assert.assertEquals(actualDate.getDate(),expectedDate.getDate());
+                Assert.assertEquals(actualDate.getMinutes(),expectedDate.getMinutes());
+        }
+
+        @Test
+        public void testGetUTCDateEpoh(){
+
+                Calendar local=Calendar.getInstance();
+            int offset = local.getTimeZone().getOffset(2008);
+            GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+            utc.setTimeInMillis(2008);
+            utc.add(Calendar.MILLISECOND, -offset);
+            Date expectedDate = utc.getTime();
+
+                Date actualDate = dateUtil.getUTCDate(2008);
+                Assert.assertEquals(actualDate.getDate(),expectedDate.getDate());
+                Assert.assertEquals(actualDate.getMinutes(),expectedDate.getMinutes());
+        }
+
+        @Test
+        public void testGetLocalDateForUTCDate(){
+                Date dt = new Date();
+                Calendar local=Calendar.getInstance();
+            int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+            GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+            utc.setTimeInMillis(dt.getTime());
+            utc.add(Calendar.MILLISECOND, -offset);
+            Date expectedDate = utc.getTime();
+
+                Date actualDate = dateUtil.getLocalDateForUTCDate(dt);
+                Assert.assertEquals(actualDate.getDate(),expectedDate.getDate());
+                Assert.assertEquals(actualDate.getMinutes(),expectedDate.getMinutes());
+
+        }
 
 }

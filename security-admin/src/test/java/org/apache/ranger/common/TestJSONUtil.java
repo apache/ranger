@@ -16,9 +16,16 @@
  */
 package org.apache.ranger.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.ranger.view.VXResponse;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -63,5 +70,45 @@ public class TestJSONUtil {
 		Map<?, ?> map = new HashMap<Object, Object>();
 		String value = jsonUtil.readMapToString(map);
 		Assert.assertNotNull(value);
-	}	
+        }
+
+        @Test
+        public void testReadListToString() {
+                String expectedJsonString = "[\"hdfs\",\"hive\",\"knox\"]";
+                List<String> testList = new ArrayList<String>();
+
+                testList.add("hdfs");
+                testList.add("hive");
+                testList.add("knox");
+
+                String actualJsonString = jsonUtil.readListToString(testList);
+
+                Assert.assertEquals(expectedJsonString, actualJsonString);
+        }
+
+        @Test
+        public void testWriteObjectAsString(){
+                String expectedJsonString = "{\"statusCode\":200,\"msgDesc\":\"Logout Successful\"}";
+                VXResponse vXResponse = new VXResponse();
+                vXResponse.setStatusCode(HttpServletResponse.SC_OK);
+                vXResponse.setMsgDesc("Logout Successful");
+                String actualJsonString = jsonUtil.writeObjectAsString(vXResponse);
+
+                Assert.assertEquals(expectedJsonString, actualJsonString);
+
+        }
+
+        @Test
+        public void testWriteJsonToJavaObject(){
+                String jsonString = "[\"hdfs\",\"hive\",\"knox\"]";
+                String expectedSetString = "[hive, hdfs, knox]";
+                Set<String> testSet = new HashSet<>();
+                Set<String> expectedSet = new HashSet<>();
+                expectedSet = jsonUtil.writeJsonToJavaObject(jsonString, testSet.getClass());
+
+                String actualSetString = expectedSet.toString();
+                Assert.assertEquals(expectedSetString, actualSetString);
+
+
+        }
 }
