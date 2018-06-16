@@ -55,7 +55,6 @@
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>commons-collections:commons-collections</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
@@ -94,6 +93,15 @@
                         <include>org.apache.ranger:ranger-plugins-cred</include>
                         <include>org.apache.ranger:credentialbuilder</include>
                     </includes>
+            </dependencySet>
+            <dependencySet>
+                <outputDirectory>lib/</outputDirectory>
+                <unpack>false</unpack>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <includes>
+                    <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+                </includes>
             </dependencySet>
         </dependencySets>
         <outputDirectory>lib/ranger-storm-plugin-impl</outputDirectory>
