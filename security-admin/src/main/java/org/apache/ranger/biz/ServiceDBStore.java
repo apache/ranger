@@ -1470,6 +1470,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
 			xConfMap.setServiceId(xCreatedService.getId());
 			xConfMap.setConfigkey(configKey);
+                        if (StringUtils.equalsIgnoreCase(configKey, "username")) {
+                                configValue = stringUtil.getValidUserName(configValue);
+                        }
 			xConfMap.setConfigvalue(configValue);
 			xConfMapDao.create(xConfMap);
 		}
@@ -2610,6 +2613,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (svc != null) {
 
 			List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
+                        List<String> users = new ArrayList<String>();
+
+                        /*Need to create ambari service check user before initiating policy creation. */
+                        if(serviceCheckUsers != null){
+                                for (String userName : serviceCheckUsers) {
+                                        if(!StringUtils.isEmpty(userName)){
+                                                VXUser vXUser = null;
+                                                XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+                                                if (xxUser != null) {
+                                                        vXUser = xUserService.populateViewBean(xxUser);
+                                                } else {
+                                                        vXUser = xUserMgr.createServiceConfigUser(userName);
+                                                        LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
+                                                }
+                                                if(vXUser != null){
+                                                        users.add(vXUser.getName());
+                                                }
+                                        }
+                                }
+                        }
 
 			List<RangerPolicy> defaultPolicies = svc.getDefaultRangerPolicies();
 
@@ -2618,7 +2641,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				createDefaultPolicyUsersAndGroups(defaultPolicies);
 
 				for (RangerPolicy defaultPolicy : defaultPolicies) {
-					if (CollectionUtils.isNotEmpty(serviceCheckUsers) && StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+                                        if (CollectionUtils.isNotEmpty(users) && StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
 						RangerPolicyItem defaultAllowPolicyItem = CollectionUtils.isNotEmpty(defaultPolicy.getPolicyItems()) ? defaultPolicy.getPolicyItems().get(0) : null;
 
 						if (defaultAllowPolicyItem == null) {
@@ -2626,7 +2649,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						} else {
 							RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
-							policyItem.setUsers(serviceCheckUsers);
+                                                        policyItem.setUsers(users);
 							policyItem.setAccesses(defaultAllowPolicyItem.getAccesses());
 							policyItem.setDelegateAdmin(true);
 
@@ -2688,14 +2711,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 			if (StringUtils.isNotBlank(policyUser) && !StringUtils.equals(policyUser, RangerPolicyEngine.USER_CURRENT)
 					&& !StringUtils.equals(policyUser, RangerPolicyEngine.RESOURCE_OWNER)) {
-				XXUser xxUser = daoMgr.getXXUser().findByUserName(policyUser);
+                                String userName = stringUtil.getValidUserName(policyUser);
+                                XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
 				if (xxUser == null) {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isKeyAdmin() && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ policyUser + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					xUserMgr.createServiceConfigUser(policyUser);
+                                        xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 		}
@@ -2732,7 +2756,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			String[] userList = userNames.split(",");
 			for (String userName : userList) {
 				if (!StringUtils.isEmpty(userName)) {
-					ret.add(userName);
+                                        ret.add(userName.trim());
 				}
 			}
 		}
