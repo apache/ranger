@@ -1570,8 +1570,7 @@ public class TestServiceUtil {
                 vXAsset.setDescription("hive description");
                 vXAsset.setConfig("/myConfig");
 
-                VXRepository actualVXRepository = new VXRepository();
-                actualVXRepository = serviceUtil.vXAssetToPublicObject(vXAsset);
+                VXRepository actualVXRepository = serviceUtil.vXAssetToPublicObject(vXAsset);
 
                 Assert.assertNotNull(actualVXRepository);
                 Assert.assertEquals(expectedVXRepository.getId(), actualVXRepository.getId());
@@ -1889,8 +1888,7 @@ public class TestServiceUtil {
 
                 vXPolicy.setPermMapList(vXPermObjList);
 
-                RangerPolicy actualRangerPolicy = new RangerPolicy();
-                actualRangerPolicy = serviceUtil.toRangerPolicy(vXPolicy, service);
+                RangerPolicy actualRangerPolicy = serviceUtil.toRangerPolicy(vXPolicy, service);
 
                 Assert.assertNotNull(actualRangerPolicy);
                 Assert.assertEquals(expectedRangerPolicy.getId(), actualRangerPolicy.getId());

@@ -101,13 +101,13 @@ public class TestJSONUtil {
         @Test
         public void testWriteJsonToJavaObject(){
                 String jsonString = "[\"hdfs\",\"hive\",\"knox\"]";
-                String expectedSetString = "[hive, hdfs, knox]";
+                Set<String> expectedSet = new HashSet<String>();
+                expectedSet.add("hive");
+                expectedSet.add("hdfs");
+                expectedSet.add("knox");
                 Set<String> testSet = new HashSet<>();
-                Set<String> expectedSet = new HashSet<>();
-                expectedSet = jsonUtil.writeJsonToJavaObject(jsonString, testSet.getClass());
-
-                String actualSetString = expectedSet.toString();
-                Assert.assertEquals(expectedSetString, actualSetString);
+                Set<String> actualSet = jsonUtil.writeJsonToJavaObject(jsonString, testSet.getClass());
+                Assert.assertEquals(expectedSet, actualSet);
 
 
         }
