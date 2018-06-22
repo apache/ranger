@@ -47,7 +47,7 @@
 							<include>org.eclipse.persistence:eclipselink</include>
 							<include>org.eclipse.persistence:javax.persistence</include>
 							<include>com.sun.jersey:jersey-bundle</include>
-							<include>com.google.guava:guava:jar:${guava.version}</include>
+							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>org.codehaus.jackson:jackson-core-asl</include>
 							<include>org.codehaus.jackson:jackson-jaxrs</include>
 							<include>org.codehaus.jackson:jackson-mapper-asl</include>
@@ -69,7 +69,7 @@
 							<include>commons-lang:commons-lang:jar:${commons.lang.version}
 							</include>
 							<include>commons-logging:commons-logging</include>
-							<include>com.google.guava:guava:jar:${guava.version}</include>
+							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
 							<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}
 							</include>
