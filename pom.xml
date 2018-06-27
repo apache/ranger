@@ -224,6 +224,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>plugin-spark</module>
             </modules>
             <build>
                 <plugins>
@@ -251,6 +252,7 @@
                                 <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                <descriptor>src/main/assembly/plugin-spark.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>
