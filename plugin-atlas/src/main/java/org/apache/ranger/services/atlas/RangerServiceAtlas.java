@@ -60,6 +60,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String CONFIG_REST_ADDRESS            = "atlas.rest.address";
 	public static final String CONFIG_USERNAME                = "username";
 	public static final String CONFIG_PASSWORD                = "password";
+	public static final String ENTITY_NOT_CLASSIFIED          = "_NOT_CLASSIFIED";
 
 	private static final String TYPE_ENTITY         = "entity";
 	private static final String TYPE_CLASSIFICATION = "classification";
@@ -501,12 +502,16 @@ public class RangerServiceAtlas extends RangerBaseService {
 		}
 
 		void addIfStartsWithAndNotExcluded(List<String> list, List<String> values, String prefix, List<String> excludeList) {
-			if (values == null || list == null) {
+			if (list == null) {
 				return;
 			}
 
-			for (String value : values) {
-				addIfStartsWithAndNotExcluded(list, value, prefix, excludeList);
+			if (values == null) {
+				addIfStartsWithAndNotExcluded(list, ENTITY_NOT_CLASSIFIED, prefix, excludeList);
+			} else {
+				for (String value : values) {
+					addIfStartsWithAndNotExcluded(list, value, prefix, excludeList);
+				}
 			}
 		}
 

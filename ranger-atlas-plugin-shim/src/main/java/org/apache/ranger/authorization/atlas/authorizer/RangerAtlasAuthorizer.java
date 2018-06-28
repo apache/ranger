@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.atlas.authorizer;
 
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
+import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
 import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasAuthorizer;
@@ -173,6 +174,25 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public void scrubSearchResults(AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
+		if (isDebugEnabled) {
+			LOG.debug("==> scrubSearchResults(" + request + ")");
+		}
+
+		try {
+			activatePluginClassLoader();
+
+			rangerAtlasAuthorizerImpl.scrubSearchResults(request);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if (isDebugEnabled) {
+			LOG.debug("<== scrubSearchResults(): " + request);
+		}
 	}
 
     private void activatePluginClassLoader() {
