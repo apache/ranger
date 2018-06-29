@@ -26,46 +26,41 @@
     <moduleSets>
         <moduleSet>
             <binaries>
-                <includeDependencies>false</includeDependencies>
-                <unpack>false</unpack>
-                <directoryMode>755</directoryMode>
-                <fileMode>644</fileMode>
                 <outputDirectory>/jars</outputDirectory>
-            </binaries>
-            <includes>
-                <include>org.apache.ranger:ranger-hive-plugin-shim</include>
-                <include>org.apache.ranger:ranger-plugin-classloader</include>
-                <include>org.apache.ranger:ranger-spark-sql-plugin</include>
-            </includes>
-        </moduleSet>
-        <moduleSet>
-            <binaries>
-                <includeDependencies>false</includeDependencies>
-                <unpack>false</unpack>
+                <includeDependencies>true</includeDependencies>
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
+                <unpack>false</unpack>
                 <dependencySets>
+                    <dependencySet>
+                        <outputDirectory>/jars</outputDirectory>
+                        <includes>
+                            <include>org.apache.ranger:ranger-hive-plugin-shim</include>
+                            <include>org.apache.ranger:ranger-plugin-classloader</include>
+                        </includes>
+                    </dependencySet>
                     <dependencySet>
                         <outputDirectory>/jars/ranger-hive-plugin-impl</outputDirectory>
                         <includes>
                             <include>org.eclipse.persistence:eclipselink</include>
+                            <include>com.google.code.gson:gson</include>
                             <include>org.eclipse.persistence:javax.persistence</include>
-                            <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                            <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-                            <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-                            <include>org.noggit:noggit:jar:${noggit.version}</include>
+                            <include>org.apache.httpcomponents:httpmime</include>
+                            <include>org.apache.httpcomponents:httpclient</include>
+                            <include>org.apache.httpcomponents:httpcore</include>
+                            <include>org.noggit:noggit</include>
                             <include>org.apache.solr:solr-solrj</include>
+                            <include>com.sun.jersey:jersey-bundle</include>
+                            <include>org.apache.ranger:ranger-hive-plugin</include>
+                            <include>org.apache.ranger:ranger-plugins-common</include>
+                            <include>org.apache.ranger:ranger-plugins-cred</include>
+                            <include>org.apache.ranger:ranger-plugins-audit</include>
                         </includes>
-                        <unpack>false</unpack>
                     </dependencySet>
                 </dependencySets>
-                <outputDirectory>/jars/ranger-hive-plugin-impl</outputDirectory>
             </binaries>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-hive-plugin</include>
+                <include>org.apache.ranger:ranger-spark-plugin</include>
             </includes>
         </moduleSet>
     </moduleSets>

@@ -170,6 +170,7 @@
         <tomcat.embed.version>7.0.91</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.6</zookeeper.version>
+        <spark.ranger.plugin.version>0.6.3</spark.ranger.plugin.version>
     </properties>
     <profiles>
         <profile>
