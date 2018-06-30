@@ -94,7 +94,7 @@
 			},
 			"label": "Entity ID",
 			"description": "Entity ID",
-			"accessTypeRestrictions": [ "entity-read", "entity-create", "entity-update", "entity-delete", "entity-read-classification", "entity-add-classification", "entity-update-classification", "entity-remove-classification" ]
+			"accessTypeRestrictions": [ "entity-read", "entity-create", "entity-update", "entity-delete", "entity-add-classification", "entity-update-classification", "entity-remove-classification" ]
 		},
 		{
 			"itemId": 6,
@@ -153,31 +153,26 @@
 		},
 		{
 			"itemId": 8,
-			"name": "entity-read-classification",
-			"label": "Read Classification"
-		},
-		{
-			"itemId": 9,
 			"name": "entity-add-classification",
 			"label": "Add Classification"
 		},
 		{
-			"itemId": 10,
+			"itemId": 9,
 			"name": "entity-update-classification",
 			"label": "Update Classification"
 		},
 		{
-			"itemId": 11,
+			"itemId": 10,
 			"name": "entity-remove-classification",
 			"label": "Remove Classification"
 		},
 		{
-			"itemId": 12,
+			"itemId": 11,
 			"name": "admin-export",
 			"label": "Admin Export"
 		},
 		{
-			"itemId": 13,
+			"itemId": 12,
 			"name": "admin-import",
 			"label": "Admin Import"
 		}

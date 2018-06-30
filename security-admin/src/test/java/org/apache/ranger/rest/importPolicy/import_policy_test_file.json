@@ -117,10 +117,6 @@
               "isAllowed": true
             },
             {
-              "type": "entity-read-classification",
-              "isAllowed": true
-            },
-            {
               "type": "entity-add-classification",
               "isAllowed": true
             },

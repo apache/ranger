@@ -14,7 +14,6 @@
       {"name":"entity-create","label":"Create Entity"},
       {"name":"entity-update","label":"Update Entity"},
       {"name":"entity-delete","label":"Delete Entity"},
-      {"name":"entity-read-classification","label":"Read Entity Classification"},
       {"name":"entity-add-classification","label":"Add Entity Classification"},
       {"name":"entity-update-classification","label":"Update Entity Classification"},
       {"name":"entity-remove-classification","label":"Remove Entity Classification"}
