@@ -80,7 +80,7 @@ echo "${COMPONENT_NAME}" | grep 'plugin' > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
 	echo "$0 : is not applicable for component [${COMPONENT_NAME}]. It is applicable only for ranger plugin component; Exiting ..."
-	exit 0 
+	exit 0
 fi
 
 HCOMPONENT_NAME=`echo ${COMPONENT_NAME} | sed -e 's:-plugin::'`
@@ -107,7 +107,7 @@ fi
 
 
 #
-# environment variables for enable|disable scripts 
+# environment variables for enable|disable scripts
 #
 
 PROJ_INSTALL_DIR=`(cd ${basedir} ; pwd)`
@@ -210,18 +210,20 @@ elif [ "${HCOMPONENT_NAME}" = "sqoop" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/server/lib
 elif [ "${HCOMPONENT_NAME}" = "kylin" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/tomcat/webapps/kylin/WEB-INF/lib
+elif [ "${HCOMPONENT_NAME}" = "spark" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/jars
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
 if [ "${HCOMPONENT_NAME}" = "solr" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/resources
-    if [ ! -d $HCOMPONENT_CONF_DIR ]; then	
+    if [ ! -d $HCOMPONENT_CONF_DIR ]; then
 	install_owner=`ls -ld | cut -f 3 -d " "`
-	echo "INFO: Creating $HCOMPONENT_CONF_DIR" 
+	echo "INFO: Creating $HCOMPONENT_CONF_DIR"
 	mkdir -p $HCOMPONENT_CONF_DIR
-	echo "INFO: Changing ownership of  $HCOMPONENT_CONF_DIR to $install_owner" 
+	echo "INFO: Changing ownership of  $HCOMPONENT_CONF_DIR to $install_owner"
 	chown $install_owner:$install_owner $HCOMPONENT_CONF_DIR
-    fi    
+    fi
 elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/config
 elif [ "${HCOMPONENT_NAME}" = "hadoop" ]; then
@@ -266,7 +268,7 @@ if  [ "${HCOMPONENT_NAME}" = "hive" ]
 then
 	HCOMPONENT_CONF_SERVER_DIR="${HCOMPONENT_CONF_DIR}"/conf.server
 	if [ -d "${HCOMPONENT_CONF_SERVER_DIR}" ]
-	then 
+	then
 		ambari_hive_install="Y"
 	fi
 fi
@@ -306,7 +308,7 @@ create_jceks() {
 		rm -f ${tempFile}
 		exit 0
 	fi
-	
+
 	rm -f ${tempFile}
 }
 
@@ -331,7 +333,7 @@ then
 		log "Saving current ${SET_ENV_SCRIPT_NAME} to ${HCOMPONENT_ARCHIVE_CONF_DIR} ..."
 		mv ${SET_ENV_SCRIPT} ${HCOMPONENT_ARCHIVE_CONF_DIR}/${SET_ENV_SCRIPT_NAME}.${dt}
 	fi
-	
+
 	if [ "${action}" = "enable" ]
 	then
 
@@ -352,7 +354,7 @@ then
 			if [ $? -eq 0 ]
 			then
 				ts=`date '+%Y%m%d%H%M%S'`
-				grep -v 'xasecure-.*-env.sh' ${DEST_SCRIPT_FILE} > ${DEST_SCRIPT_FILE}.${ts} 
+				grep -v 'xasecure-.*-env.sh' ${DEST_SCRIPT_FILE} > ${DEST_SCRIPT_FILE}.${ts}
 				if [ $? -eq 0 ]
 				then
 					log "Removing old reference to xasecure setenv source ..."
@@ -379,12 +381,12 @@ fi
 fi
 
 #
-# Run, the enable|disable ${COMPONENT} configurations 
+# Run, the enable|disable ${COMPONENT} configurations
 #
 
 if [ -d "${PROJ_INSTALL_DIR}/install/conf.templates/${action}" ]
 then
-	INSTALL_CP="${PROJ_INSTALL_LIB_DIR}/*" 
+	INSTALL_CP="${PROJ_INSTALL_LIB_DIR}/*"
 	if [ "${action}" = "enable" ]
 	then
 		echo "<ranger>\n<enabled>`date`</enabled>\n</ranger>" > ${HCOMPONENT_CONF_DIR}/ranger-security.xml
@@ -423,7 +425,7 @@ then
 	chmod a+rx /etc/${PROJ_NAME}/${REPO_NAME}
 	chmod a+rx ${POLICY_CACHE_FILE_PATH}
 	chown -R ${CFG_OWNER_INF} /etc/${PROJ_NAME}/${REPO_NAME}
-	
+
 	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg
 	do
 		if [ -f "${f}" ]
@@ -437,7 +439,7 @@ then
 				then
 					log "Creating default file from [${DEFAULT_XML_CONFIG}] for [${fullpathorgfn}] .."
 					cp ${DEFAULT_XML_CONFIG} ${fullpathorgfn}
-				 	chown ${CFG_OWNER_INF} ${fullpathorgfn}	
+				 	chown ${CFG_OWNER_INF} ${fullpathorgfn}
 					chmod a+r ${fullpathorgfn}
 				else
         			echo "ERROR: Unable to find ${fullpathorgfn}"
@@ -458,7 +460,7 @@ then
                     then
                     	cat ${newfn} > ${fullpathorgfn}
                     fi
-                    
+
                     # For Ambari install copy the .xml to conf.server also
 					if [ "${ambari_hive_install}" = "Y" ]
 					then
@@ -467,13 +469,13 @@ then
         				newHS2fn="${HCOMPONENT_CONF_SERVER_DIR}/.${orgfn}-new.${dt}"
 						log "Saving current conf.server file: ${fullpathorgHS2fn} to ${archiveHS2fn} ..."
 						if [ -f ${fullpathorgHS2fn} ]
-						then 
+						then
             				cp ${fullpathorgHS2fn} ${archiveHS2fn}
             			fi
 						cp ${fullpathorgfn} ${HCOMPONENT_CONF_SERVER_DIR}/${orgfn}
 						chown ${CFG_OWNER_INF} ${HCOMPONENT_CONF_SERVER_DIR}/${orgfn}
 					fi
-					
+
                	else
 				    echo "ERROR: Unable to make changes to config. file: ${fullpathorgfn}"
                     echo "exiting ...."
@@ -526,10 +528,10 @@ then
 	fi
 
 	pardir=`dirname ${CredFile}`
-	
+
 	if [ ! -d "${pardir}" ]
 	then
-		mkdir -p "${pardir}" 
+		mkdir -p "${pardir}"
 		if [ $? -ne 0 ]
 		then
     		echo "ERROR: Unable to create credential store file path"
@@ -552,7 +554,7 @@ then
 	# To allow all users in the server (where Hive CLI and HBase CLI is used),
 	# user needs to have read access for the credential file.
 	#
-	chmod a+r ${CredFile} 
+	chmod a+r ${CredFile}
 fi
 
 #
@@ -581,13 +583,13 @@ then
     		bf=${dn}/.${bn}.${dt}
     		echo "backup of ${fn} to ${bf} ..."
     		cp ${fn} ${bf}
-    		echo "Updating topology file: [${fn}] ... " 
+    		echo "Updating topology file: [${fn}] ... "
     		cat ${fn} | sed -e "s-<name>${authFrom}</name>-<name>${authTo}</name>-" > ${fn}.${dt}.new
     		if [ $? -eq 0 ]
     		then
         		cat ${fn}.${dt}.new > ${fn}
         		rm ${fn}.${dt}.new
-    		fi 
+    		fi
   		fi
 	done
 fi
@@ -652,7 +654,7 @@ then
                 if (configured == 0) {
                     printf("nimbus.authorizer: \"org.apache.storm.security.auth.authorizer.SimpleACLAuthorizer\"\n") ;
                 }
-            }' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new	
+            }' ${CFG_FILE} > ${CFG_FILE}.new &&  cat ${CFG_FILE}.new > ${CFG_FILE} && rm -f ${CFG_FILE}.new
 		fi
 	fi
 fi
@@ -762,6 +764,30 @@ then
 		addOrUpdatePropertyToFile kylin.server.external-acl-provider $authName ${fn}
 	fi
 fi
+
+if [ "${HCOMPONENT_NAME}" = "spark" ]
+then
+	if [ "${action}" = "enable" ]
+	then
+		authName="org.apache.ranger.authorization.spark.authorizer.RangerSparkSQLExtension"
+	else
+		authName=""
+	fi
+
+	dt=`date '+%Y%m%d%H%M%S'`
+	fn=`ls ${HCOMPONENT_CONF_DIR}/spark.properties 2> /dev/null`
+	if [ -f "${fn}" ]
+	then
+		dn=`dirname ${fn}`
+		bn=`basename ${fn}`
+		bf=${dn}/.${bn}.${dt}
+		echo "backup of ${fn} to ${bf} ..."
+		cp ${fn} ${bf}
+		echo "Add or Update properties file: [${fn}] ... "
+		addOrUpdatePropertyToFile org.apache.spark.sql.hive.client.AuthzImpl $authName ${fn}
+	fi
+fi
+
 
 #
 # Set notice to restart the ${HCOMPONENT_NAME}

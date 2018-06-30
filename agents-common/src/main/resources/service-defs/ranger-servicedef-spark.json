@@ -1,0 +1,368 @@
+{
+	"id":3,
+	"name": "spark",
+	"implClass": "org.apache.ranger.services.spark.RangerServiceSpark",
+	"label": "SparkSQL Thrift Server",
+	"description": "SparkSQL Thrift Server",
+	"guid": "4e1afb5a-184a-4e82-9d9c-87a5cacc243d",
+	"resources":
+	[
+		{
+			"itemId": 1,
+			"name": "database",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Spark Database",
+			"description": "Spark Database"
+		},
+
+		{
+			"itemId": 2,
+			"name": "table",
+			"type": "string",
+			"level": 20,
+			"parent": "database",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Spark Table",
+			"description": "Spark Table"
+		},
+
+		{
+			"itemId": 3,
+			"name": "udf",
+			"type": "string",
+			"level": 20,
+			"parent": "database",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Spark UDF",
+			"description": "Spark UDF"
+		},
+
+		{
+			"itemId": 4,
+			"name": "column",
+			"type": "string",
+			"level": 30,
+			"parent": "table",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":true },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Spark Column",
+			"description": "Spark Column"
+		},
+
+		{
+			"itemId": 5,
+			"name": "url",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": false,
+			"recursiveSupported": true,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":false },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "URL",
+			"description": "URL"
+		}
+	],
+
+	"accessTypes":
+	[
+		{
+			"itemId": 1,
+			"name": "select",
+			"label": "select"
+		},
+
+		{
+			"itemId": 2,
+			"name": "update",
+			"label": "update"
+		},
+
+		{
+			"itemId": 3,
+			"name": "create",
+			"label": "Create"
+		},
+
+		{
+			"itemId": 4,
+			"name": "drop",
+			"label": "Drop"
+		},
+
+		{
+			"itemId": 5,
+			"name": "alter",
+			"label": "Alter"
+		},
+
+		{
+			"itemId": 6,
+			"name": "index",
+			"label": "Index"
+		},
+
+		{
+			"itemId": 7,
+			"name": "lock",
+			"label": "Lock"
+		},
+
+		{
+			"itemId": 8,
+			"name": "all",
+			"label": "All",
+			"impliedGrants":
+			[
+				"select",
+				"update",
+				"create",
+				"drop",
+				"alter",
+				"index",
+				"lock",
+				"read",
+				"write"
+			]
+		},
+
+		{
+			"itemId": 9,
+			"name": "read",
+			"label": "Read"
+		},
+
+		{
+			"itemId": 10,
+			"name": "write",
+			"label": "Write"
+		}
+	],
+
+	"configs":
+	[
+		{
+			"itemId": 1,
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Username"
+		},
+
+		{
+			"itemId": 2,
+			"name": "password",
+			"type": "password",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Password"
+		},
+
+		{
+			"itemId": 3,
+			"name": "jdbc.driverClassName",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"defaultValue": "org.apache.hive.jdbc.HiveDriver"
+		},
+
+		{
+			"itemId": 4,
+			"name": "jdbc.url",
+			"type": "string",
+			"mandatory": true,
+			"defaultValue": "",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1.For Remote Mode, eg.<br>jdbc:hive2://&lt;host&gt;:&lt;port&gt;<br>2.For Embedded Mode (no host or port), eg.<br>jdbc:hive2:///;initFile=&lt;file&gt;<br>3.For HTTP Mode, eg.<br>jdbc:hive2://&lt;host&gt;:&lt;port&gt;/;<br>transportMode=http;httpPath=&lt;httpPath&gt;<br>4.For SSL Mode, eg.<br>jdbc:hive2://&lt;host&gt;:&lt;port&gt;/;ssl=true;<br>sslTrustStore=tStore;trustStorePassword=pw<br>5.For ZooKeeper Mode, eg.<br>jdbc:hive2://&lt;host&gt;/;serviceDiscoveryMode=<br>zooKeeper;zooKeeperNamespace=hiveserver2<br>6.For Kerberos Mode, eg.<br>jdbc:hive2://&lt;host&gt;:&lt;port&gt;/;<br>principal=hive/domain@EXAMPLE.COM<br>\"}"
+		},
+
+		{
+			"itemId": 5,
+			"name": "commonNameForCertificate",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
+		}
+	],
+
+	"enums":
+	[
+
+	],
+
+	"contextEnrichers":
+	[
+	],
+
+	"policyConditions":
+	[
+	],
+	"dataMaskDef": {
+		"accessTypes": [
+			{
+				"name": "select"
+			}
+		],
+		"resources": [
+			{
+				"name": "database",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			},
+			{
+				"name": "table",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			},
+			{
+				"name": "column",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"uiHint":"{ \"singleValue\":true }"
+			}
+		],
+		"maskTypes": [
+			{
+				"itemId": 1,
+				"name": "MASK",
+				"label": "Redact",
+				"description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
+				"transformer": "mask({col})",
+				"dataMaskOptions": {
+				}
+			},
+			{
+				"itemId": 2,
+				"name": "MASK_SHOW_LAST_4",
+				"label": "Partial mask: show last 4",
+				"description": "Show last 4 characters; replace rest with 'x'",
+				"transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+			},
+			{
+				"itemId": 3,
+				"name": "MASK_SHOW_FIRST_4",
+				"label": "Partial mask: show first 4",
+				"description": "Show first 4 characters; replace rest with 'x'",
+				"transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+			},
+			{
+				"itemId": 4,
+				"name": "MASK_HASH",
+				"label": "Hash",
+				"description": "Hash the value",
+				"transformer": "mask_hash({col})"
+			},
+			{
+				"itemId": 5,
+				"name": "MASK_NULL",
+				"label": "Nullify",
+				"description": "Replace with NULL"
+			},
+			{
+				"itemId": 6,
+				"name": "MASK_NONE",
+				"label": "Unmasked (retain original value)",
+				"description": "No masking"
+			},
+			{
+				"itemId": 12,
+				"name": "MASK_DATE_SHOW_YEAR",
+				"label": "Date: show only year",
+				"description": "Date: show only year",
+				"transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
+			},
+			{
+				"itemId": 13,
+				"name": "CUSTOM",
+				"label": "Custom",
+				"description": "Custom"
+			}
+		]
+	},
+	"rowFilterDef": {
+		"accessTypes": [
+			{
+				"name": "select"
+			}
+		],
+		"resources": [
+			{
+				"name": "database",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"mandatory": true,
+				"uiHint": "{ \"singleValue\":true }"
+			},
+			{
+				"name": "table",
+				"matcherOptions": {
+					"wildCard": "false"
+				},
+				"lookupSupported": true,
+				"mandatory": true,
+				"uiHint": "{ \"singleValue\":true }"
+			}
+		]
+	}
+}
