@@ -22,7 +22,6 @@ import org.apache.atlas.type.AtlasClassificationType;
 import org.apache.atlas.type.AtlasStructType;
 import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
 
@@ -30,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerAtlasEntityWithTags {
+	static private final String                                             DEFAULT_TAG_ATTRIBUTE_TYPE = "string";
+
     private final RangerAtlasEntity                                         entity;
     private final List<EntityNotificationWrapper.RangerAtlasClassification> tags;
     private final AtlasTypeRegistry                                         typeRegistry;
@@ -55,7 +56,7 @@ public class RangerAtlasEntityWithTags {
     }
 
     public String getTagAttributeType(String tagTypeName, String tagAttributeName) {
-        String ret = StringUtils.EMPTY;
+        String ret = DEFAULT_TAG_ATTRIBUTE_TYPE;
 
         if (typeRegistry != null) {
             AtlasClassificationType classificationType = typeRegistry.getClassificationTypeByName(tagTypeName);
