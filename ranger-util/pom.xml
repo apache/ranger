@@ -50,7 +50,7 @@
                                     <arg value="${project.basedir}/src/scripts/saveVersion.py"/>
                                     <arg value="${project.version}"/>
                                     <arg value="${ranger.version.shortname}"/>
-                                    <arg value="${project.basedir}"/>
+                                    <arg value="${project.basedir}/target"/>
                                 </exec>
                             </target>
                         </configuration>
