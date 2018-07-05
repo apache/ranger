@@ -618,7 +618,7 @@ public class UserMgr {
 		return userProfile;
 	}
 
-	private void gjUserToUserProfile(XXPortalUser user, VXPortalUser userProfile) {
+	protected void gjUserToUserProfile(XXPortalUser user, VXPortalUser userProfile) {
 		UserSessionBase sess = ContextUtil.getCurrentUserSession();
 		if (sess == null) {
 			return;
@@ -810,7 +810,7 @@ public class UserMgr {
 	 * @param searchCriteria
 	 * @return
 	 */
-	private Query createUserSearchQuery(String queryStr, String sortClause,
+	protected Query createUserSearchQuery(String queryStr, String sortClause,
 			SearchCriteria searchCriteria) {
 		HashMap<String, Object> paramList = searchCriteria.getParamList();
 
