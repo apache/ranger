@@ -29,7 +29,7 @@ import datetime
 import getpass
 import socket
 import subprocess
-from subprocess import Popen,PIPE
+from subprocess import Popen,PIPE,CalledProcessError
 from time import gmtime, strftime
 import platform
 
@@ -37,8 +37,12 @@ def isWindowsSystem():
 	return 'Windows' in platform.system()
 
 def check_output(query):
-	output = subprocess.check_output(query)
-	return output.decode("UTF-8")
+	try:
+		output = subprocess.check_output(query)
+		return output.decode("UTF-8")
+	except CalledProcessError:
+		# Not a git repository, or no git is installed
+		return ''
 
 def hashfile(afile, hasher, blocksize=65536):
 	buf = afile.read(blocksize)
@@ -98,10 +102,10 @@ def main():
 				pass
 
 	sortedList = sorted(fileList, key = lambda x: x[:-4])
-	for i, val in enumerate(sortedList):
+	for _, val in enumerate(sortedList):
 		m = hashfile(open(val,'rb'), hashlib.md5())
 		f = m +"  "+ val + "\n"
-		c.append(f);
+		c.append(f)
 
 	srcChecksum = hashlib.md5(''.join(c).encode('UTF-8')).hexdigest()
 	print('hash of the ' + str(len(sortedList)) + '\n\t file from: ' + parent_dir + '\n\t is ' + srcChecksum)
