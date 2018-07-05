@@ -34,11 +34,12 @@ from time import gmtime, strftime
 import platform
 
 def isWindowsSystem():
-	return 'Windows' in platform.system()
+    return 'Windows' in platform.system()
 
 def check_output(query):
-	output = subprocess.check_output(query)
-	return output.decode("UTF-8")
+	p = subprocess.Popen(query, stdout=subprocess.PIPE)
+	output = p.communicate ()[0]
+	return output
 
 def hashfile(afile, hasher, blocksize=65536):
 	buf = afile.read(blocksize)
@@ -60,8 +61,8 @@ def main():
 	dir = os.getcwd()
 	cwd = dir.strip('scripts')
 	cwd = os.path.join(cwd, "src")
-	if isWindowsSystem():
-		cwd = cwd.replace("\\", "/")
+        if isWindowsSystem():
+                cwd = cwd.replace("\\", "/")
 
 	if revision == "" :
 		query = (["git","rev-parse","HEAD"])
@@ -86,9 +87,7 @@ def main():
 	c = []
 	fileList = []
 	sortedList = []
-	parent_dir = os.path.join(src_dir, os.pardir)
-
-	for (dir, _, files) in os.walk(parent_dir):
+	for (dir, _, files) in os.walk(src_dir):
 		for f in files:
 			path = os.path.join(dir, f)
 			if path.endswith(".java"):
@@ -103,10 +102,9 @@ def main():
 		f = m +"  "+ val + "\n"
 		c.append(f);
 
-	srcChecksum = hashlib.md5(''.join(c).encode('UTF-8')).hexdigest()
-	print('hash of the ' + str(len(sortedList)) + '\n\t file from: ' + parent_dir + '\n\t is ' + srcChecksum)
+	srcChecksum = hashlib.md5(''.join(c)).hexdigest()
 
-	dir = os.path.join(src_dir,"target","gen","org","apache","ranger","common")
+	dir = os.path.join(src_dir,"gen","org","apache","ranger","common")
 	if not os.path.exists(dir):
 		os.makedirs(dir)
 
@@ -143,7 +141,7 @@ def main():
 
 	content = content.format(VERSION=version,SHORTVERSION=shortversion,USER=user,DATE=date,URL=url,REV=revision,BRANCH=branch,SRCCHECKSUM=srcChecksum)
 	des = os.path.join(dir, "package-info.java")
-	f = open(des , 'w')
+	f = open(des , 'wb')
 	f.write(content)
 	f.close()
 
