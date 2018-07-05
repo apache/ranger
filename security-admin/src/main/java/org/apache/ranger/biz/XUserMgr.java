@@ -132,11 +132,11 @@ public class XUserMgr extends XUserMgrBase {
 	@Autowired
 	GUIDUtil guidUtil;
 
-    @Autowired
-    UserMgr userManager;
-
 	@Autowired
 	XUgsyncAuditInfoService xUgsyncAuditInfoService;
+
+	@Autowired
+	XGroupUserService xGroupUserService;
 
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
 
@@ -173,7 +173,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		if (vXUser.getDescription() == null) {
-			setUserDesc(vXUser);
+			vXUser.setDescription(vXUser.getName());
 		}
 
 		String actualPassword = vXUser.getPassword();
@@ -325,7 +325,7 @@ public class XUserMgr extends XUserMgrBase {
 		return null;
 	}
 
-	private VXGroupUser createXGroupUser(Long userId, Long groupId) {
+	protected VXGroupUser createXGroupUser(Long userId, Long groupId) {
 		VXGroupUser vXGroupUser = new VXGroupUser();
 		vXGroupUser.setParentGroupId(groupId);
 		vXGroupUser.setUserId(userId);
@@ -538,8 +538,7 @@ public class XUserMgr extends XUserMgrBase {
         List<String> existingRole = daoManager.getXXPortalUserRole()
                 .findXPortalUserRolebyXPortalUserId(xxPortalUser.getId());
         if (xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
-            vXPortalUser = userManager.updateRoleForExternalUsers(reqRoleList,
-                    existingRole, vXPortalUser);
+            vXPortalUser = userMgr.updateRoleForExternalUsers(reqRoleList, existingRole, vXPortalUser);
         }
         vXUser = xUserService.createXUserWithOutLogin(vXUser);
         vxUGInfo.setXuserInfo(vXUser);
@@ -603,10 +602,10 @@ public class XUserMgr extends XUserMgrBase {
                 List<String> existingRole = daoManager.getXXPortalUserRole()
                         .findXPortalUserRolebyXPortalUserId(
                                 xxPortalUser.getId());
-                VXPortalUser vxPortalUser = userManager
+                VXPortalUser vxPortalUser = userMgr
                         .mapXXPortalUserToVXPortalUserForDefaultAccount(xxPortalUser);
                 if (xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
-                    vxPortalUser = userManager.updateRoleForExternalUsers(
+                    vxPortalUser = userMgr.updateRoleForExternalUsers(
                             reqRoleList, existingRole, vxPortalUser);
                     assignPermissionToUser(vxPortalUser, true);
                 }
@@ -851,11 +850,6 @@ public class XUserMgr extends XUserMgrBase {
 		return vXUserList;
 	}
 
-	// FIXME Hack : Unnecessary, to be removed after discussion.
-	private void setUserDesc(VXUser vXUser) {
-		vXUser.setDescription(vXUser.getName());
-	}
-
 	@Override
 	public VXGroup updateXGroup(VXGroup vXGroup) {
 		checkAdminAccess();
@@ -872,7 +866,7 @@ public class XUserMgr extends XUserMgrBase {
 		return vXGroup;
 	}
 
-	private void updateXgroupUserForGroupUpdate(VXGroup vXGroup) {
+	protected void updateXgroupUserForGroupUpdate(VXGroup vXGroup) {
 		List<XXGroupUser> grpUsers = daoManager.getXXGroupUser().findByGroupId(vXGroup.getId());
 		if(CollectionUtils.isNotEmpty(grpUsers)){
 			for (XXGroupUser grpUser : grpUsers) {
@@ -1264,10 +1258,8 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
-
-		VXPermMapList returnList;
+		VXPermMapList returnList = null;
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-		// If user is system admin
 		if (currentUserSession != null && currentUserSession.isUserAdmin()) {
 			returnList = super.searchXPermMaps(searchCriteria);
 		} else {
@@ -1310,13 +1302,12 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
 
-		VXAuditMapList returnList;
+		VXAuditMapList returnList=new VXAuditMapList();
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 		// If user is system admin
 		if (currentUserSession != null && currentUserSession.isUserAdmin()) {
 			returnList = super.searchXAuditMaps(searchCriteria);
 		} else {
-			returnList = new VXAuditMapList();
 			int startIndex = searchCriteria.getStartIndex();
 			int pageSize = searchCriteria.getMaxRows();
 			searchCriteria.setStartIndex(0);
@@ -2255,7 +2246,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		return createdXUser;
         }
-        private void validatePassword(VXUser vXUser) {
+        protected void validatePassword(VXUser vXUser) {
                 if (vXUser.getPassword() != null && !vXUser.getPassword().isEmpty()) {
                         boolean checkPassword = false;
                         String pattern = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}";
