@@ -39,7 +39,7 @@
       "validationMessage": "Relative Path must not end with a slash",
       "uiHint":"",
       "label": "Relative Path",
-      "description": "Relative Path inside Storage Account Container"
+      "description": "Relative Path inside Storage Account"
     }
   ],
   "accessTypes":
@@ -95,6 +95,7 @@
   "policyConditions":
   [
     {
+      "itemId": 1,
       "name": "ip-range",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
       "label": "IP Address Range",
