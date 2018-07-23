@@ -2001,7 +2001,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setGuid(xxExisting.getGuid());
 		policy.setVersion(xxExisting.getVersion());
 
-		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
+		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 
 		updatePolicySignature(policy);
 
@@ -2126,6 +2126,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		return ret;
 	}
+
+	@Override
+	public Long getPolicyId(final Long serviceId, final String policyName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getPolicyId()");
+		}
+		Long ret = null;
+		XXPolicy xxPolicy = daoMgr.getXXPolicy().findByNameAndServiceId(policyName, serviceId);
+		if (xxPolicy != null) {
+			ret = xxPolicy.getId();
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getPolicyId()");
+		}
+		return ret;
+	}
+
 
 	public void getPoliciesInExcel(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
 		if (LOG.isDebugEnabled()) {
