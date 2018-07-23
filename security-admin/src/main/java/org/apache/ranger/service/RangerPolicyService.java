@@ -138,10 +138,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 	
 	public List<XXTrxLog> getTransactionLog(RangerPolicy vPolicy, int action) {
-		return getTransactionLog(vPolicy, null, action);
+		return getTransactionLog(vPolicy, null, null, action);
 	}
 
-	public List<XXTrxLog> getTransactionLog(RangerPolicy vObj, XXPolicy mObj, int action) {
+	public List<XXTrxLog> getTransactionLog(RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
 		if (vObj == null || action == 0 || (action == OPERATION_UPDATE_CONTEXT && mObj == null)) {
 			return null;
 		}
@@ -157,7 +157,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				if (!trxLogAttrs.containsKey(field.getName())) {
 					continue;
 				}
-				XXTrxLog xTrxLog = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, action);
+				XXTrxLog xTrxLog = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, oldPolicy, action);
 				if (xTrxLog != null) {
 					trxLogList.add(xTrxLog);
 				}
@@ -167,7 +167,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					.getDeclaredFields();
 			for (Field field : superClassFields) {
 				if ("isEnabled".equalsIgnoreCase(field.getName())) {
-					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, action);
+					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, oldPolicy, action);
 					if (xTrx != null) {
 						trxLogList.add(xTrx);
 					}
@@ -184,7 +184,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 	
 	private XXTrxLog processFieldToCreateTrxLog(Field field, String objectName,
-			Field nameField, RangerPolicy vObj, XXPolicy mObj, int action) {
+			Field nameField, RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
 
 		String actionString = "";
 
@@ -274,7 +274,6 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 						break;
 					}
 				}
-				RangerPolicy oldPolicy = populateViewBean(mObj);
 				if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyResourcesForTrxLog(oldPolicy.getResources());
