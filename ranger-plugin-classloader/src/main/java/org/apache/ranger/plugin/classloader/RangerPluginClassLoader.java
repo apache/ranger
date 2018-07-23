@@ -127,7 +127,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPluginClassLoader.loadClass" + name + "): " + ret);
+            LOG.debug("<== RangerPluginClassLoader.loadClass(" + name + "): " + ret);
         }
 
         return ret;
