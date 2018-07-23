@@ -42,7 +42,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerObjectFactory;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -229,6 +228,7 @@ public class TestRangerPolicyValidator {
 		// service name exists
 		RangerService service = mock(RangerService.class);
 		when(service.getType()).thenReturn("service-type");
+		when(service.getId()).thenReturn(2L);
 		when(_store.getServiceByName("service-name")).thenReturn(service);
 		// service points to a valid service-def
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes);
@@ -240,17 +240,7 @@ public class TestRangerPolicyValidator {
 		when(existingPolicy.getId()).thenReturn(8L);
 		when(existingPolicy.getService()).thenReturn("service-name");
 		when(_store.getPolicy(8L)).thenReturn(existingPolicy);
-		SearchFilter createFilter = new SearchFilter();
-		createFilter.setParam(SearchFilter.SERVICE_TYPE, "service-type");
-		createFilter.setParam(SearchFilter.POLICY_NAME, "policy-name-1"); // this name would be used for create
-		when(_store.getPolicies(createFilter)).thenReturn(new ArrayList<RangerPolicy>());
 		// a matching policy should not exist for update.
-		SearchFilter updateFilter = new SearchFilter();
-		updateFilter.setParam(SearchFilter.SERVICE_TYPE, "service-type");
-		updateFilter.setParam(SearchFilter.POLICY_NAME, "policy-name-2"); // this name would be used for update
-		List<RangerPolicy> existingPolicies = new ArrayList<>();
-		existingPolicies.add(existingPolicy);
-		when(_store.getPolicies(updateFilter)).thenReturn(existingPolicies);
 		// valid policy can have empty set of policy items if audit is turned on
 		// null value for audit is treated as audit on.
 		// for now we want to turn any resource related checking off
@@ -262,6 +252,7 @@ public class TestRangerPolicyValidator {
 					if (action == Action.CREATE) {
 						when(_policy.getId()).thenReturn(7L);
 						when(_policy.getName()).thenReturn("policy-name-1");
+						when(_store.getPolicyId(service.getId(), _policy.getName())).thenReturn(null);
 						Assert.assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
 						Assert.assertTrue(_failures.isEmpty());
 					} else {
@@ -272,6 +263,7 @@ public class TestRangerPolicyValidator {
 						Assert.assertTrue(_failures.isEmpty());
 	
 						when(_policy.getName()).thenReturn("policy-name-2");
+						when(_store.getPolicyId(service.getId(), _policy.getName())).thenReturn(null);
 						Assert.assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
 						Assert.assertTrue(_failures.isEmpty());
 					}
@@ -370,20 +362,22 @@ public class TestRangerPolicyValidator {
 				checkFailure_isValid(action, "missing", "id");
 			}
 		}
+		RangerService service = mock(RangerService.class);
 		/*
 		 * Id is ignored for Create but name should not belong to an existing policy.  For update, policy should exist for its id and should match its name.
 		 */
 		when(_policy.getName()).thenReturn("policy-name");
 		when(_policy.getService()).thenReturn("service-name");
 
+		when(_store.getServiceByName("service-name")).thenReturn(service);
+		when(service.getId()).thenReturn(2L);
+
 		RangerPolicy existingPolicy = mock(RangerPolicy.class);
 		when(existingPolicy.getId()).thenReturn(7L);
+		when(existingPolicy.getService()).thenReturn("service-name");
 		List<RangerPolicy> existingPolicies = new ArrayList<>();
-		existingPolicies.add(existingPolicy);
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, "service-name");
-		filter.setParam(SearchFilter.POLICY_NAME, "policy-name");
-		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
+
+		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(7L);
 		checkFailure_isValid(Action.CREATE, "semantic", "policy name");
 		
 		// update : does not exist for id
@@ -395,21 +389,11 @@ public class TestRangerPolicyValidator {
 		when(_store.getPolicy(7L)).thenReturn(existingPolicy);
 		RangerPolicy anotherExistingPolicy = mock(RangerPolicy.class);
 		when(anotherExistingPolicy.getId()).thenReturn(8L);
-		existingPolicies.clear();
-		existingPolicies.add(anotherExistingPolicy);
-		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
-		checkFailure_isValid(Action.UPDATE, "semantic", "id/name");
+		when(anotherExistingPolicy.getService()).thenReturn("service-name");
 
-		// more than one policies with same name is also an internal error
-		when(_policy.getName()).thenReturn("policy-name");
-		when(_store.getPolicies(filter)).thenReturn(existingPolicies);
-		existingPolicies.add(existingPolicy);
-		existingPolicy = mock(RangerPolicy.class);
-		existingPolicies.add(existingPolicy);
-		for (boolean isAdmin : new boolean[] { true, false }) {
-			_failures.clear(); Assert.assertFalse(_validator.isValid(_policy, Action.UPDATE, isAdmin, _failures));
-			_utils.checkFailureForInternalError(_failures);
-		}
+		existingPolicies.add(anotherExistingPolicy);
+		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(8L);
+		checkFailure_isValid(Action.UPDATE, "semantic", "id/name");
 		
 		// policy must have service name on it and it should be valid
 		when(_policy.getName()).thenReturn("policy-name");
@@ -450,9 +434,6 @@ public class TestRangerPolicyValidator {
 		
 		// policy must contain at least one policy item
 		List<RangerPolicyItem> policyItems = new ArrayList<>();
-		when(_policy.getService()).thenReturn("service-name");
-		RangerService service = mock(RangerService.class);
-		when(_store.getServiceByName("service-name")).thenReturn(service);
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
 				// when it is null
@@ -474,6 +455,8 @@ public class TestRangerPolicyValidator {
 		when(_store.getServiceDefByName("service-type")).thenReturn(null);
 		for (Action action : cu) {
 			for (boolean isAdmin : new boolean[] { true, false }) {
+				when(_policy.getService()).thenReturn("service-name");
+				when(_store.getServiceByName("service-name")).thenReturn(service);
 				_failures.clear(); Assert.assertFalse(_validator.isValid(_policy, action, isAdmin, _failures));
 				_utils.checkFailureForInternalError(_failures, "policy service def");
 			}
@@ -491,7 +474,7 @@ public class TestRangerPolicyValidator {
 		
 		// create the right service def with right resource defs - this is the same as in the happypath test above.
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes, "service-type");
-		when(_store.getPolicies(filter)).thenReturn(null);
+		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(null);
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
