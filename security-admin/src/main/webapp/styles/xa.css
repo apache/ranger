@@ -1254,7 +1254,9 @@ ul.tabs > li > a {
   margin-bottom: 18px;
   margin-left: 1px;
   padding: 8px 5px;
-  background-color: #f5f5f5;
+  background-color: #eeeeef;
+  border-bottom: 1px solid #64a424;
+  text-shadow: 0px 0px 0px #222;
 }
 
 /* loading indicator for button */
@@ -2384,4 +2386,8 @@ textarea:read-only{
 }
 .validSyntax {
     color: #3e910f;
+}
+.borderNone {
+	border: none;
+	padding: 0px;
 }
