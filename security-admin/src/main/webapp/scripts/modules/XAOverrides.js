@@ -398,7 +398,7 @@
 	  		 * Adds the editor to the DOM
 	  	     */
 	  		  render: function() {
-	  			  var that = this, attrs = { 'name': this.key };
+				  var that = this, attrs = { 'name': this.key.replace(/\./g, '_')};
 	  			  if(this.schema.editorAttrs){
 	  				  attrs = _.extend(attrs , this.schema.editorAttrs);
 	  		      }
