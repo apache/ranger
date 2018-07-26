@@ -39,9 +39,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 @Component
-public class PatchPersmissionModel_J10003 extends BaseLoader {
+public class PatchPermissionModel_J10003 extends BaseLoader {
 	private static final Logger logger = Logger
-			.getLogger(PatchPersmissionModel_J10003.class);
+			.getLogger(PatchPermissionModel_J10003.class);
 
 	@Autowired
 	XUserMgr xUserMgr;
@@ -65,8 +65,8 @@ public class PatchPersmissionModel_J10003 extends BaseLoader {
 					usersListFileName=args[0];
 				}
 			}
-			PatchPersmissionModel_J10003 loader = (PatchPersmissionModel_J10003) CLIUtil
-					.getBean(PatchPersmissionModel_J10003.class);
+			PatchPermissionModel_J10003 loader = (PatchPermissionModel_J10003) CLIUtil
+					.getBean(PatchPermissionModel_J10003.class);
 
 			loader.init();
 			while (loader.isMoreToProcess()) {
