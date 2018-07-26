@@ -20,6 +20,7 @@ package org.apache.ranger.services.atlas;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -125,9 +128,10 @@ public class RangerServiceAtlas extends RangerBaseService {
         }
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
-
+        RangerPolicyItemAccess readAccessTagsync = new RangerPolicyItemAccess();
         for (RangerPolicy defaultPolicy : ret) {
             for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+                List<RangerPolicyItemAccess> rPolItemAccessList=defaultPolicyItem.getAccesses();
                 List<String> users     = defaultPolicyItem.getUsers();
                 String       adminUser = service.getConfigs().get("atlas.admin.user");
 
@@ -137,6 +141,26 @@ public class RangerServiceAtlas extends RangerBaseService {
 
                 users.add(adminUser);
                 defaultPolicyItem.setUsers(users);
+                if(defaultPolicy.getName().contains(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
+	                for(RangerPolicyItemAccess rPolItemAccess: rPolItemAccessList){
+		                if(rPolItemAccess.getType().contains("read")){
+			                readAccessTagsync = rPolItemAccess;
+			                }
+	                }
+                }
+            }
+            if(defaultPolicy.getName().contains(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
+	            if(defaultPolicy.getResources().containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
+		            RangerPolicyItem rPItemTagsync = new RangerPolicyItem();
+		            List<RangerPolicyItem> tagSyncpolicyItems = new ArrayList<RangerPolicyItem>();
+		            rPItemTagsync.setUsers(new ArrayList<>(Arrays.asList("rangertagsync")));
+		            List<RangerPolicyItemAccess> tagsyncAccessList = new ArrayList<RangerPolicyItemAccess>();
+		            tagsyncAccessList.add(readAccessTagsync);
+		            rPItemTagsync.setAccesses(tagsyncAccessList);
+		            tagSyncpolicyItems = defaultPolicy.getPolicyItems();
+		            tagSyncpolicyItems.add(rPItemTagsync);
+		            defaultPolicy.setPolicyItems(tagSyncpolicyItems);
+	            }
             }
         }
 
