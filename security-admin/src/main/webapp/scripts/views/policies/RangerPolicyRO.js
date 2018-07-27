@@ -30,6 +30,7 @@ define(function(require) {
 
 	var RangerPolicyROTmpl = require('hbs!tmpl/policies/RangerPolicyRO_tmpl');
 	var RangerService = require('models/RangerService');
+	var RangerPolicy		= require('models/RangerPolicy');
 
 	var RangerPolicyRO = Backbone.Marionette.Layout.extend({
 		_viewName: 'RangerPolicyRO',
@@ -268,6 +269,7 @@ define(function(require) {
 			this.render();
 			var verEl = $(e.currentTarget).parent();
 			verEl.find('text').text('Version '+this.policy.get('version'));
+			var reverEl = verEl.next('#revert');
 			var prevEl = verEl.find('#preVer'),
 				nextEl = verEl.find('#nextVer');
 			if(this.policy.get('version')>1){
@@ -278,9 +280,34 @@ define(function(require) {
 			var policyVerIndexAt = this.policyVersionList.indexOf(this.policy.get('version').toString());
 			if(!_.isUndefined(this.policyVersionList[++policyVerIndexAt])){
 				nextEl.addClass('active');
+				reverEl.css('display','');
 			}else{
 				nextEl.removeClass('active');
+				reverEl.css('display','none');
 			}
+		},
+
+		revert : function(e){
+			e.preventDefault();
+			var policyId = this.policy.attributes.id;
+			var rangerPolicy = new RangerPolicy({id : policyId});
+			rangerPolicy.attributes = this.policy.attributes;
+			rangerPolicy.save({}, {
+				wait: true,
+				success: function() {
+					XAUtil.blockUI('unblock');
+					XAUtil.notifySuccess('Success', 'Policy reverted successfully.');
+					location.reload();
+				},
+				error: function(model, response, options) {
+					XAUtil.blockUI('unblock');
+					if(response && response.responseJSON && response.responseJSON.msgDesc) {
+						XAUtil.showErrorMsg(response.responseJSON.msgDesc);
+					} else {
+						XAUtil.notifyError('Error', 'Error reverting policy.');
+					}
+				}
+			});
 		},
 
 		/** on close */

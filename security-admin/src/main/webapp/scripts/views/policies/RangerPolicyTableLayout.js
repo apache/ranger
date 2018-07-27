@@ -202,6 +202,9 @@ define(function(require){
 				policyVerEl.append('<i id="nextVer" class="icon-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
 					view.nextVer(e);
 				});
+				policyVerEl.after('<a id="revert" href="#" class="btn btn-primary" style="display:none;">Revert</a>').next('#revert').click(function(e){
+					view.revert(e);
+				});
 				modal.$el.find('.cancel').hide();
 			});
 		},
