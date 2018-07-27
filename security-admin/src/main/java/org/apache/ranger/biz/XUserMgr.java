@@ -1596,8 +1596,8 @@ public class XUserMgr extends XUserMgrBase {
 							}
 							break;
 						case "emailaddress":
-							String email = vXUserExactMatch.getEmailAddress();
-							if(email != null && !email.equals(entry.getValue())){
+							String email = (String)entry.getValue();
+							if(email != null && !email.equals(vXUserExactMatch.getEmailAddress())){
 								vXUserExactMatchwithSearchCriteria = -1;
 							}
 							break;

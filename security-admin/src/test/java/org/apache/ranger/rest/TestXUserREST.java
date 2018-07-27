@@ -506,7 +506,7 @@ public class TestXUserREST {
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
 		Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null,null)).thenReturn(new ArrayList<String>());
-		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "userRole", "UserRole", null)).thenReturn("");
+		Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
 		
 		List<VXUser> vXUsersList= new ArrayList<VXUser>();
 		vXUsersList.add(vxUser);
@@ -525,7 +525,7 @@ public class TestXUserREST {
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "isVisible", "User Visibility");
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "status", "User Status");
 		Mockito.verify(searchUtil).extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null,null);
-		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "userRole", "UserRole", null);
+		Mockito.verify(searchUtil).extractRoleString(request, testSearchCriteria, "userRole", "Role", null);
 		assertNotNull(gotVXUserList);
 		assertEquals(testVXUserList.getTotalCount(),gotVXUserList.getTotalCount());
 		assertEquals(testVXUserList.getClass(),gotVXUserList.getClass());

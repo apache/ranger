@@ -208,6 +208,18 @@ public class SearchUtil {
 		return value;
 	}
 
+	public String extractRoleString(HttpServletRequest request,
+			SearchCriteria searchCriteria, String paramName,
+			String userFriendlyParamName, String regEx) {
+		String value = extractString(request, searchCriteria, paramName, userFriendlyParamName, regEx);
+		if(!RangerConstants.VALID_USER_ROLE_LIST.contains(value)) {
+			restErrorUtil.validateString(value, regEx, "Invalid value for "
+					+ userFriendlyParamName,
+					MessageEnums.INVALID_INPUT_DATA, null, paramName);
+		}
+		return value;
+	}
+
 	public List<Integer> extractEnum(HttpServletRequest request,
 			SearchCriteria searchCriteria, String paramName,
 			String userFriendlyParamName, String listName, int maxValue) {
