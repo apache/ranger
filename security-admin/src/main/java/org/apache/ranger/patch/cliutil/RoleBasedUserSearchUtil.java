@@ -72,15 +72,9 @@ public class RoleBasedUserSearchUtil extends BaseLoader {
 	                currentPassword = args[1];
 	                if (args.length == 3) {
 	                    userRole = args[2];
-	                    List<String> roles = new ArrayList<String>();
-	                    roles.add(RangerConstants.ROLE_USER);
-	                    roles.add(RangerConstants.ROLE_SYS_ADMIN);
-	                    roles.add(RangerConstants.ROLE_KEY_ADMIN);
-                        roles.add(RangerConstants.ROLE_ADMIN_AUDITOR);
-                        roles.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
                         if (!StringUtils.isBlank(userRole)) {
 	                        userRole = userRole.toUpperCase();
-	                        if (!roles.contains(userRole)) {
+	                        if (!RangerConstants.VALID_USER_ROLE_LIST.contains(userRole)) {
 	                            System.out.println("Invalid UserRole. Exiting!!!");
 	                            logger.info("Invalid UserRole. Exiting!!!");
 	                            System.exit(1);

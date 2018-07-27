@@ -23,6 +23,10 @@
 
 package org.apache.ranger.common;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class RangerConstants extends RangerCommonEnums {
 
 	// Default Roles
@@ -168,6 +172,10 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final int EMAIL_TYPE_USER_ACTIVATION = 8;
 	public static final int EMAIL_TYPE_USER_ROLE_UPDATED = 9;
 	public static final int EMAIL_TYPE_USER_GRP_ADD = 10;
+
+	public static final List<String> VALID_USER_ROLE_LIST = new ArrayList<String>(Arrays.asList(RangerConstants.ROLE_USER,
+			RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_ADMIN_AUDITOR,
+			RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
 
 	public static enum RBAC_PERM {
 		ALLOW_NONE,
