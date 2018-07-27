@@ -342,7 +342,7 @@ public class XUserREST {
 		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
 		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
 				null);
-		searchUtil.extractString(request, searchCriteria, "userRole", "UserRole", null);
+		searchUtil.extractRoleString(request, searchCriteria, "userRole", "Role", null);
 		if (CollectionUtils.isNotEmpty(userRolesList) && CollectionUtils.size(userRolesList) == 1 && userRolesList.get(0).equalsIgnoreCase(UserRoleParamName)) {
 			if (!(searchCriteria.getParamList().containsKey("name"))) {
 				searchCriteria.addParam("name", userName);
