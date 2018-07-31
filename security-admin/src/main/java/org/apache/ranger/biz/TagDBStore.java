@@ -62,7 +62,9 @@ import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.service.RangerServiceResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -85,6 +87,10 @@ public class TagDBStore extends AbstractTagStore {
 
 	@Autowired
 	RangerDaoManager daoManager;
+
+	@Autowired
+	@Qualifier(value = "transactionManager")
+	PlatformTransactionManager txManager;
 
 	@Autowired
 	RESTErrorUtil errorUtil;
@@ -985,7 +991,7 @@ public class TagDBStore extends AbstractTagStore {
 			throw new Exception("service-def does not exist. id=" + xxService.getType());
 		}
 
-		RangerTagDBRetriever tagDBRetriever = new RangerTagDBRetriever(daoManager, xxService);
+		RangerTagDBRetriever tagDBRetriever = new RangerTagDBRetriever(daoManager, txManager, xxService);
 
 		Map<Long, RangerTagDef> tagDefMap = tagDBRetriever.getTagDefs();
 		Map<Long, RangerTag> tagMap = tagDBRetriever.getTags();
