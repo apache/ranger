@@ -47,17 +47,36 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.service.RangerPolicyService;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerPolicyRetriever {
 	static final Log LOG      = LogFactory.getLog(RangerPolicyRetriever.class);
 	static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
 
-	final RangerDaoManager daoMgr;
-	final LookupCache      lookupCache;
+	private final RangerDaoManager  daoMgr;
+	private final LookupCache       lookupCache = new LookupCache();
+
+	private final PlatformTransactionManager  txManager;
+	private final TransactionTemplate         txTemplate;
+
+	public RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
+		this.daoMgr     = daoMgr;
+		this.txManager  = txManager;
+		if (this.txManager != null) {
+			this.txTemplate = new TransactionTemplate(this.txManager);
+			this.txTemplate.setReadOnly(true);
+		} else {
+			this.txTemplate = null;
+		}
+	}
 
 	public RangerPolicyRetriever(RangerDaoManager daoMgr) {
 		this.daoMgr      = daoMgr;
-		this.lookupCache = new LookupCache();
+		this.txManager   = null;
+		this.txTemplate  = null;
 	}
 
 	public List<RangerPolicy> getServicePolicies(Long serviceId) {
@@ -96,7 +115,41 @@ public class RangerPolicyRetriever {
 		return ret;
 	}
 
-	public List<RangerPolicy> getServicePolicies(XXService xService) {
+	private class PolicyLoaderThread extends Thread {
+		final TransactionTemplate txTemplate;
+		final XXService           xService;
+		List<RangerPolicy>  policies;
+
+		PolicyLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
+			this.txTemplate = txTemplate;
+			this.xService   = xService;
+		}
+
+		public List<RangerPolicy> getPolicies() { return policies; }
+
+		@Override
+		public void run() {
+			try {
+				policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
+					@Override
+					public List<RangerPolicy> doInTransaction(TransactionStatus status) {
+						try {
+							RetrieverContext ctx = new RetrieverContext(xService);
+							return ctx.getAllPolicies();
+						} catch (Exception ex) {
+							LOG.error("RangerPolicyRetriever.getServicePolicies(): Failed to get policies for service:[" + xService.getName() + "] in a new transaction", ex);
+							status.setRollbackOnly();
+							return null;
+						}
+					}
+				});
+			} catch (Throwable ex) {
+				LOG.error("RangerPolicyRetriever.getServicePolicies(): Failed to get policies for service:[" + xService.getName() + "] in a new transaction", ex);
+			}
+		}
+	}
+
+	public List<RangerPolicy> getServicePolicies(final XXService xService) {
 		String serviceName = xService == null ? null : xService.getName();
 		Long   serviceId   = xService == null ? null : xService.getId();
 
@@ -112,9 +165,26 @@ public class RangerPolicyRetriever {
 		}
 
 		if(xService != null) {
-			RetrieverContext ctx = new RetrieverContext(xService);
+			if (txTemplate == null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Transaction Manager is null; Retrieving policies in the existing transaction");
+				}
+				RetrieverContext ctx = new RetrieverContext(xService);
+				ret = ctx.getAllPolicies();
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Retrieving policies in a new, read-only transaction");
+				}
 
-			ret = ctx.getAllPolicies();
+				PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
+				t.start();
+				try {
+					t.join();
+					ret = t.getPolicies();
+				} catch (InterruptedException ie) {
+					LOG.error("Failed to retrieve policies in a new, read-only thread.", ie);
+				}
+			}
 		} else {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyRetriever.getServicePolicies(xService=" + xService + "): invalid parameter");
