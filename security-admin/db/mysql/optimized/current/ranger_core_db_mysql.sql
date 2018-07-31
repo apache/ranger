@@ -565,8 +565,8 @@ CREATE TABLE  `x_policy` (
 `added_by_id` bigint(20) DEFAULT NULL,
 `upd_by_id` bigint(20) DEFAULT NULL,
 `version` bigint(20) DEFAULT NULL,
-`service` bigint(20) DEFAULT NULL,
-`name` varchar(512) DEFAULT NULL,
+`service` bigint(20) NOT NULL,
+`name` varchar(512) NOT NULL,
 `policy_type` int(11) DEFAULT 0,
 `description` varchar(1024) DEFAULT NULL,
 `resource_signature` varchar(128) DEFAULT NULL,
@@ -581,6 +581,7 @@ KEY `x_policy_cr_time` (`create_time`),
 KEY `x_policy_up_time` (`update_time`),
 KEY `x_policy_service` (`service`),
 KEY `x_policy_resource_signature` (`resource_signature`),
+UNIQUE KEY `x_policy_UK_name_service` (`name`(180),`service`),
 CONSTRAINT `x_policy_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_service` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`)
@@ -1343,6 +1344,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
