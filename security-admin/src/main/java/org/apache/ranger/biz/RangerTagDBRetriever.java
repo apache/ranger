@@ -38,6 +38,10 @@ import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerTagDBRetriever {
 	static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
@@ -48,6 +52,9 @@ public class RangerTagDBRetriever {
 	private final XXService xService;
 	private final LookupCache lookupCache;
 
+	private final PlatformTransactionManager  txManager;
+	private final TransactionTemplate         txTemplate;
+
 	private List<RangerServiceResource> serviceResources;
 	private Map<Long, RangerTagDef> tagDefs;
 	private Map<Long, RangerTag> tags;
@@ -55,8 +62,15 @@ public class RangerTagDBRetriever {
 
 	private boolean filterForServicePlugin;
 
-	public RangerTagDBRetriever(final RangerDaoManager daoMgr, final XXService xService) {
+	public RangerTagDBRetriever(final RangerDaoManager daoMgr, final PlatformTransactionManager txManager, final XXService xService) {
 		this.daoMgr = daoMgr;
+		this.txManager = txManager;
+		if (this.txManager != null) {
+			this.txTemplate = new TransactionTemplate(this.txManager);
+			this.txTemplate.setReadOnly(true);
+		} else {
+			this.txTemplate = null;
+		}
 		this.xService = xService;
 		this.lookupCache = new LookupCache();
 
@@ -70,14 +84,27 @@ public class RangerTagDBRetriever {
 			}
 
 			filterForServicePlugin = RangerConfiguration.getInstance().getBoolean(OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN, false);
-			TagRetrieverServiceResourceContext serviceResourceContext = new TagRetrieverServiceResourceContext(xService);
-			TagRetrieverTagDefContext tagDefContext = new TagRetrieverTagDefContext(xService);
-			TagRetrieverTagContext tagContext = new TagRetrieverTagContext(xService);
 
-			serviceResources = serviceResourceContext.getAllServiceResources();
-			tagDefs = tagDefContext.getAllTagDefs();
-			tags = tagContext.getAllTags();
-			tagResourceMaps = getAllTagResourceMaps();
+			if (this.txTemplate == null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Load Tags in the same thread and using an existing transaction");
+				}
+				if (initializeTagCache(xService) == false) {
+					LOG.error("Failed to get tags for service:[" + xService.getName() + "] in the same thread and using an existing transaction");
+				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Load Tags in a separate thread and using a new transaction");
+				}
+
+				TagLoaderThread t = new TagLoaderThread(txTemplate, xService);
+				t.start();
+				try {
+					t.join();
+				} catch (InterruptedException ie) {
+					LOG.error("Failed to get Tags in a separate thread and using a new transaction", ie);
+				}
+			}
 
 			RangerPerfTracer.log(perf);
 
@@ -100,6 +127,30 @@ public class RangerTagDBRetriever {
 		return tags;
 	}
 
+	private boolean initializeTagCache(XXService xService) {
+		boolean ret;
+		try {
+			TagRetrieverServiceResourceContext  serviceResourceContext  = new TagRetrieverServiceResourceContext(xService);
+			TagRetrieverTagDefContext           tagDefContext           = new TagRetrieverTagDefContext(xService);
+			TagRetrieverTagContext              tagContext              = new TagRetrieverTagContext(xService);
+
+			serviceResources    = serviceResourceContext.getAllServiceResources();
+			tagDefs             = tagDefContext.getAllTagDefs();
+			tags                = tagContext.getAllTags();
+
+			tagResourceMaps     = getAllTagResourceMaps();
+
+			ret = true;
+		} catch (Exception ex) {
+			LOG.error("Failed to get tags for service:[" + xService.getName() + "]");
+			serviceResources    = null;
+			tagDefs             = null;
+			tags                = null;
+			tagResourceMaps     = null;
+			ret = false;
+		}
+		return ret;
+	}
 	private List<RangerTagResourceMap> getAllTagResourceMaps() {
 
 		List<XXTagResourceMap> xTagResourceMaps = filterForServicePlugin ? daoMgr.getXXTagResourceMap().findForServicePlugin(xService.getId()) : daoMgr.getXXTagResourceMap().findByServiceId(xService.getId());
@@ -197,6 +248,38 @@ public class RangerTagDBRetriever {
 			}
 
 			return ret;
+		}
+	}
+
+	private class TagLoaderThread extends Thread {
+		final TransactionTemplate txTemplate;
+		final XXService           xService;
+
+		TagLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
+			this.txTemplate = txTemplate;
+			this.xService   = xService;
+		}
+
+		@Override
+		public void run() {
+			try {
+				 Boolean result = txTemplate.execute(new TransactionCallback<Boolean>() {
+					@Override
+					public Boolean doInTransaction(TransactionStatus status) {
+						boolean ret = initializeTagCache(xService);
+						if (!ret) {
+							status.setRollbackOnly();
+							LOG.error("Failed to get tags for service:[" + xService.getName() + "] in a new transaction");
+						}
+						return ret;
+					}
+				});
+				 if (LOG.isDebugEnabled()) {
+				 	LOG.debug("transaction result:[" + result +"]");
+				 }
+			} catch (Throwable ex) {
+				LOG.error("Failed to get tags for service:[" + xService.getName() + "] in a new transaction", ex);
+			}
 		}
 	}
 
