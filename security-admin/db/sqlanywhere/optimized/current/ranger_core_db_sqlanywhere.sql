@@ -334,8 +334,8 @@ create table dbo.x_policy (
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
 	version bigint DEFAULT NULL NULL,
-	service bigint DEFAULT NULL NULL,
-	name varchar(512) DEFAULT NULL NULL,
+	service bigint NOT NULL,
+	name varchar(512) NOT NULL,
 	policy_type int DEFAULT 0 NULL,
 	description varchar(1024) DEFAULT NULL NULL,
 	resource_signature varchar(128) DEFAULT NULL NULL,
@@ -343,7 +343,8 @@ create table dbo.x_policy (
 	is_audit_enabled tinyint DEFAULT 0 NOT NULL,
 	policy_options varchar(4000) DEFAULT NULL NULL,
 	policy_priority int DEFAULT 0 NOT NULL,
-	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id)
+	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT x_policy_UK_name_service UNIQUE NONCLUSTERED (name,service)
 )
 GO
 create table dbo.x_service_config_def (
@@ -1585,6 +1586,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
