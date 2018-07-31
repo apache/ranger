@@ -35,6 +35,10 @@
         </layout>
     </appender>
     <!--
+    <logger name="org.apache.ranger.perf.resourcetrie" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="ranger_perf_appender" />
+    </logger>
     <logger name="org.apache.ranger.perf.policyengine.getResourceACLs" additivity="false">
         <level value="debug" />
         <appender-ref ref="ranger_perf_appender" />
