@@ -449,8 +449,8 @@ update_time DATE DEFAULT NULL NULL,
 added_by_id NUMBER(20) DEFAULT NULL NULL,
 upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT NULL NULL,
-service NUMBER(20) DEFAULT NULL NULL,
-name VARCHAR(512) DEFAULT NULL NULL,
+service NUMBER(20) NOT NULL,
+name VARCHAR(512) NOT NULL,
 policy_type NUMBER(11) DEFAULT '0' NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 resource_signature VARCHAR(128) DEFAULT NULL NULL,
@@ -459,6 +459,7 @@ is_audit_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 policy_options varchar(4000) DEFAULT NULL NULL,
 policy_priority NUMBER(11) DEFAULT 0 NOT NULL,
 primary key (id),
+CONSTRAINT x_policy_UK_name_service UNIQUE (name,service),
 CONSTRAINT x_policy_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_policy_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_policy_FK_service FOREIGN KEY (service) REFERENCES x_service (id)
@@ -1319,6 +1320,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '030',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '031',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '032',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '033',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,3,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,1,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);

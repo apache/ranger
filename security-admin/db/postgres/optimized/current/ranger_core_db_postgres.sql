@@ -456,8 +456,8 @@ update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
-service BIGINT DEFAULT NULL NULL,
-name VARCHAR(512) DEFAULT NULL NULL,
+service BIGINT NOT NULL,
+name VARCHAR(512) NOT NULL,
 policy_type int DEFAULT 0 NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 resource_signature VARCHAR(128) DEFAULT NULL NULL,
@@ -466,6 +466,7 @@ is_audit_enabled BOOLEAN DEFAULT '0' NOT NULL,
 policy_options VARCHAR(4000) DEFAULT NULL NULL,
 policy_priority INT DEFAULT 0 NOT NULL,
 primary key(id),
+CONSTRAINT x_policy_uk_name_service UNIQUE(name,service),
 CONSTRAINT x_policy_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_policy_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_policy_FK_service FOREIGN KEY(service) REFERENCES x_service(id)
@@ -1432,6 +1433,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('030',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,current_timestamp,current_timestamp,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,current_timestamp,current_timestamp,1,1,1);
