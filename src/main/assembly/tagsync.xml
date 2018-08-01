@@ -60,7 +60,7 @@
 					<include>com.fasterxml.jackson.core:jackson-databind:jar:${atlas.jackson.version}</include>
 					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${atlas.jackson.version}</include>
 					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${atlas.jackson.version}</include>
-					<include>com.fasterxml.jackson.jaxrs:jackson-module-jaxb-annotations:jar:${atlas.jackson.version}</include>
+					<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${atlas.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
 					<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
