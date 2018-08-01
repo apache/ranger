@@ -3055,12 +3055,13 @@ public class ServiceREST {
 				List<RangerPolicy> listToFilter = entry.getValue();
 
 				if (CollectionUtils.isNotEmpty(listToFilter)) {
-                                        if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin) {
+					boolean isServiceAdminUser=svcStore.isServiceAdminUser(serviceName, userName);
+					if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin || isServiceAdminUser) {
 						XXService xService     = daoManager.getXXService().findByName(serviceName);
 						Long      serviceDefId = xService.getType();
 						boolean   isKmsService = serviceDefId.equals(EmbeddedServiceDefsUtil.instance().getKmsServiceDefId());
 
-						if (isAdmin) {
+						if (isAdmin || isServiceAdminUser) {
 							if (!isKmsService) {
 								ret.addAll(listToFilter);
 							}
@@ -3108,17 +3109,13 @@ public class ServiceREST {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		String userName = bizUtil.getCurrentUserLoginId();
+		boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName);
 
-		if(!isAdmin && !isKeyAdmin) {
+		if(!isAdmin && !isKeyAdmin && !isSvcAdmin) {
 			boolean isAllowed = false;
 
-			RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
-
-			if (policyEngine != null) {
-				Set<String> userGroups = userMgr.getGroupsForUser(userName);
-
-				isAllowed = hasAdminAccess(policy, userName, userGroups);
-			}
+			Set<String> userGroups = userMgr.getGroupsForUser(userName);
+			isAllowed = hasAdminAccess(policy, userName, userGroups);
 
 			if (!isAllowed) {
 				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
@@ -3434,17 +3431,12 @@ public class ServiceREST {
                 String userName = bizUtil.getCurrentUserLoginId();
                 boolean isAuditAdmin = bizUtil.isAuditAdmin();
                 boolean isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
-                if (!isAdmin && !isKeyAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
+                boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName);
+                if (!isAdmin && !isKeyAdmin && !isSvcAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
                         boolean isAllowed = false;
 
-                        RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy
-                                        .getService());
-
-                        if (policyEngine != null) {
-                                Set<String> userGroups = userMgr.getGroupsForUser(userName);
-
-                                isAllowed = hasAdminAccess(policy, userName, userGroups);
-                        }
+                        Set<String> userGroups = userMgr.getGroupsForUser(userName);
+                        isAllowed = hasAdminAccess(policy, userName, userGroups);
 
                         if (!isAllowed) {
                                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,"User '"
