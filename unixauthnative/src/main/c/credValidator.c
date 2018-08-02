@@ -35,7 +35,7 @@ int main(int ac, char **av, char **ev)
 	struct spwd *spwd ; 
 
 	fgets(line,512,stdin) ;
-	sprintf(format, "LOGIN:%%%ds %%%ds", STRLEN, STRLEN);
+	sprintf(format, "LOGIN:%%%ds %%%ds", STRLEN-1, STRLEN-1);
 	sscanf(line, format, username,password) ;
 
 	pwp = getpwnam(username) ;
