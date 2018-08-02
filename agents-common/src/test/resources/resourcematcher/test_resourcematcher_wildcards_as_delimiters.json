@@ -17,7 +17,7 @@
 			  ,
 			  { "name":"exact-path","input":"/abcw", "evalContext": {"token:somestuff": "somethingelse"}, "result":false}
 			  ,
-			  { "name":"exact-path","input":"/abc*xyz?w", "evalContext": {"token:somestuff": "somethingelse"}, "result":false}
+			  { "name":"exact-path","input":"/abc*xyz?w", "evalContext": {"token:somestuff": "somethingelse"}, "result":true}
 			  ,
 			  { "name":"exact-path","input":"/abcabcdw", "evalContext": {"token:somestuff": "somethingelse", "token:xyz":"abcd"}, "result":true}
 			  ,

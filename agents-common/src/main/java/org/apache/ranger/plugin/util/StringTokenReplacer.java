@@ -73,9 +73,7 @@ public class StringTokenReplacer {
                         if (replaced != null) {
                             ret.append(replaced.toString());
                         } else {
-                            ret = null;
-                            token = null;
-                            break;
+                            ret.append(startChar).append(token).append(endChar);
                         }
                     } else {
                         ret.append(startChar).append(token).append(endChar);
@@ -91,6 +89,6 @@ public class StringTokenReplacer {
             ret.append(startChar).append(token);
         }
 
-        return ret != null ? ret.toString() : null;
+        return ret.toString();
     }  
 }

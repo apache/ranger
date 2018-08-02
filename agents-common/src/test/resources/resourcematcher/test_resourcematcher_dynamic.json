@@ -15,7 +15,7 @@
 			  ,
 			  { "name":"exact-path","input":"/abcw", "evalContext": {"token:somestuff": "somethingelse"}, "result":false}
 			  ,
-			  { "name":"exact-path","input":"/abc%xyz%w", "evalContext": {"token:somestuff": "somethingelse"}, "result":false}
+			  { "name":"exact-path","input":"/abc%xyz%w", "evalContext": {"token:somestuff": "somethingelse"}, "result":true}
 			  ,
 			  { "name":"exact-path","input":"/abc%xyz%w", "evalContext": {"token:somestuff": "somethingelse", "token:xyz":"abcd"}, "result":false}
 			  ,
@@ -39,7 +39,7 @@
 			  ,
 			  { "name":"hdfs-agent-test-11","input":"/tmp/tmpdir4/", "evalContext": {"token:FILENAME": ""}, "result":true}
 			  ,
-			  { "name":"hdfs-agent-test-12","input":"/tmp/tmpdir4/%FILENAME%", "evalContext": {"token:USER": "admin"}, "result":false}
+			  { "name":"hdfs-agent-test-12","input":"/tmp/tmpdir4/%FILENAME%", "evalContext": {"token:USER": "admin"}, "result":true}
 			  ,
 			  { "name":"hdfs-agent-test-13","input":"/tmp/tmpdir5/data-file.txt", "evalContext": {"token:BASE_FILENAME": "data-file"}, "result":true}
 			  ,
