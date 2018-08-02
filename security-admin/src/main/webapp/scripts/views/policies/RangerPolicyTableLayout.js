@@ -203,7 +203,7 @@ define(function(require){
 					view.nextVer(e);
 				});
 				policyVerEl.after('<a id="revert" href="#" class="btn btn-primary" style="display:none;">Revert</a>').next('#revert').click(function(e){
-					view.revert(e);
+					view.revert(e, that.collection, modal);
 				});
 				modal.$el.find('.cancel').hide();
 			});

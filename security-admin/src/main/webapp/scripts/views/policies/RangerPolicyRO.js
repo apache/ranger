@@ -287,7 +287,7 @@ define(function(require) {
 			}
 		},
 
-		revert : function(e){
+		revert : function(e, collection, modal){
 			e.preventDefault();
 			var policyId = this.policy.attributes.id;
 			var rangerPolicy = new RangerPolicy({id : policyId});
@@ -297,7 +297,11 @@ define(function(require) {
 				success: function() {
 					XAUtil.blockUI('unblock');
 					XAUtil.notifySuccess('Success', 'Policy reverted successfully.');
-					location.reload();
+					collection.fetch({
+						cache : false,
+						reset : true
+					});
+					modal.close();
 				},
 				error: function(model, response, options) {
 					XAUtil.blockUI('unblock');
