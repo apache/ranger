@@ -63,6 +63,7 @@ int main(int ac, char **av, char **ev)
 	int retval;
 	pam_handle_t *pamh = NULL;
 
+	sprintf(format, "LOGIN:%%%ds %%%ds", STRLEN-1, STRLEN-1);
 	fgets(line,512,stdin) ;
 	sscanf(line, "LOGIN:%s %s",username,password) ;
 	conv.appdata_ptr = (char *) password;
