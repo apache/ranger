@@ -3055,13 +3055,13 @@ public class ServiceREST {
 				List<RangerPolicy> listToFilter = entry.getValue();
 
 				if (CollectionUtils.isNotEmpty(listToFilter)) {
-					boolean isServiceAdminUser=svcStore.isServiceAdminUser(serviceName, userName);
+					boolean isServiceAdminUser=isAdmin || svcStore.isServiceAdminUser(serviceName, userName);
 					if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin || isServiceAdminUser) {
 						XXService xService     = daoManager.getXXService().findByName(serviceName);
 						Long      serviceDefId = xService.getType();
 						boolean   isKmsService = serviceDefId.equals(EmbeddedServiceDefsUtil.instance().getKmsServiceDefId());
 
-						if (isAdmin || isServiceAdminUser) {
+						if (isAdmin) {
 							if (!isKmsService) {
 								ret.addAll(listToFilter);
 							}
@@ -3073,10 +3073,12 @@ public class ServiceREST {
                                                         if (isKmsService) {
                                                                 ret.addAll(listToFilter);
                                                         }
-						} else { // isKeyAdmin
+						} else if (isKeyAdmin) {
 							if (isKmsService) {
 								ret.addAll(listToFilter);
 							}
+						} else if (isServiceAdminUser) {
+                                ret.addAll(listToFilter);
 						}
 
 						continue;
