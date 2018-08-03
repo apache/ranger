@@ -17,7 +17,7 @@
  * under the License.
  */
 
- 
+
 /* 
  * Repository/Service create view
  */
@@ -31,7 +31,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
-	
+
 	var ServiceForm		= require('views/service/ServiceForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
 	var ServiceCreateTmpl = require('hbs!tmpl/service/ServiceCreate_tmpl');
@@ -42,19 +42,19 @@ define(function(require){
 		_viewName : 'ServiceCreate',
 
 		template: ServiceCreateTmpl,
-		
+
 		templateHelpers : function(){
 			return { editService : this.editService};
 		},
-        
+
 		breadCrumbs :function(){
-			var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager'; 
+			var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager';
 			if(this.model.isNew()){
 				return [XALinks.get(name), XALinks.get('ServiceCreate')];
 			} else {
 				return [XALinks.get(name), XALinks.get('ServiceEdit')];
 			}
-		},        
+		},
 
 		/** Layout sub regions */
 		regions: {
@@ -132,7 +132,9 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
-			this.form.formValidation();
+			if (!this.form.formValidation()) {
+				return;
+			}
 			this.saveService();
 		},
 		saveService : function(){
@@ -165,7 +167,7 @@ define(function(require){
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();
-					
+
 					that.model.destroy({
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
@@ -182,7 +184,7 @@ define(function(require){
 							}
 						}
 					});
-					
+
 				}
 			});
 		},
@@ -242,7 +244,7 @@ define(function(require){
                                                         XAUtil.defaultErrorHandler(options , msResponse);
                                                 }
 						bootbox.alert("Connection Failed.");
-					}	
+					}
 				});
 		},
 		gotoResourceOrTagTab : function(){

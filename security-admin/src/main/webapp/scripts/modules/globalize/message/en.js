@@ -437,7 +437,8 @@ define(function(require) {
                 noUserFoundText			: 'No user associate with this group.',
                 showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
                 searchForUserSync       :"Search for your user sync audits...",
-                policyExpired           :'Policy Expired'
+                policyExpired           :'Policy Expired',
+                duplicateNewConfigValidationMsg     :'Please make sure the new configuration has no duplicate names'
 
 			},
 			plcHldr : {
