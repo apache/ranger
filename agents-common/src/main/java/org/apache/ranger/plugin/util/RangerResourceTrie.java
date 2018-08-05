@@ -122,9 +122,11 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         RangerPerfTracer.logAlways(perf);
 
-        if (PERF_TRIE_INIT_LOG.isTraceEnabled()) {
-            PERF_TRIE_INIT_LOG.trace(toString());
+        if (PERF_TRIE_INIT_LOG.isDebugEnabled()) {
+            PERF_TRIE_INIT_LOG.debug(toString());
+        }
 
+        if (PERF_TRIE_INIT_LOG.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder();
             root.toString("", sb);
             PERF_TRIE_INIT_LOG.trace("Trie Dump:\n{" + sb.toString() + "}");
@@ -425,7 +427,9 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 final String childStr = child.getStr();
                 final int childStrLen = childStr.length();
 
-                if (!StringUtils.equals(childStr, str)) {
+                final boolean isExactMatch = optIgnoreCase ? StringUtils.equalsIgnoreCase(childStr, str) : StringUtils.equals(childStr, str);
+
+                if (!isExactMatch) {
                     final int numOfCharactersToMatch = childStrLen < len ? childStrLen : len;
                     int index = 1;
                     for (; index < numOfCharactersToMatch; index++) {
