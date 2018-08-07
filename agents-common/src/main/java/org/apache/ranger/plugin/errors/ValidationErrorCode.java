@@ -34,6 +34,7 @@ public enum ValidationErrorCode {
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID(1005, "No service found for id [{0}]"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME(1006, "Missing service name"),
     SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT(1007, "Duplicate service name: name=[{0}]"),
+    SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME(3031, "Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space). : name=[{0}]"),
     SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT(1008, "Duplicate service name: name=[{0}], id=[{1}]"),
     SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF(1009, "Missing service def"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF(1010, "Service def not found: service-def-name=[{0}]"),

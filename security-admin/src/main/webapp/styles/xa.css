@@ -2391,3 +2391,9 @@ textarea:read-only{
 	border: none;
 	padding: 0px;
 }
+.serviceNameEllipsis {
+	max-width: 250px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
