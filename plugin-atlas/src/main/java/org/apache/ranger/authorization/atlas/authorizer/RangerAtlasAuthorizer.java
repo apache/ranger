@@ -24,6 +24,8 @@ import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
+import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
+
 import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasPrivilege;
@@ -44,14 +46,9 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.services.atlas.RangerServiceAtlas;
 
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_TYPE_CATEGORY;
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_TYPE_NAME;
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_TYPE;
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_CLASSIFICATION;
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_ID;
-import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_SERVICE;
-
 import java.util.*;
+
+import static org.apache.ranger.services.atlas.RangerServiceAtlas.*;
 
 
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
@@ -202,6 +199,78 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
         return ret;
     }
+
+    public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> isAccessAllowed(" + request + ")");
+        }
+
+        boolean ret;
+        RangerPerfTracer perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.isAccessAllowed(" + request + ")");
+            }
+
+            final String      action                      = request.getAction() != null ? request.getAction().getType() : null;
+            final Set<String> end1EntityTypeAndSuperTypes = request.getEnd1EntityTypeAndAllSuperTypes();
+            final Set<String> end1Classifications         = new HashSet<>(request.getEnd1EntityClassifications());
+            final String      end1EntityId                = request.getEnd1EntityId();
+
+            final Set<String> end2EntityTypeAndSuperTypes = request.getEnd2EntityTypeAndAllSuperTypes();
+            final Set<String> end2Classifications         = new HashSet<>(request.getEnd2EntityClassifications());
+            final String      end2EntityId                = request.getEnd2EntityId();
+
+
+            String relationShipType = request.getRelationshipType();
+
+            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            rangerRequest.setClientIPAddress(request.getClientIPAddress());
+            rangerRequest.setAccessTime(request.getAccessTime());
+            rangerRequest.setClusterName(getClusterName());
+            rangerRequest.setAction(action);
+
+
+            rangerResource.setValue(RESOURCE_RELATIONSHIP_TYPE, relationShipType);
+
+
+            Set<String> classificationsWithSuperTypesEnd1 = new HashSet();
+
+            for (String classificationToAuthorize : end1Classifications) {
+                classificationsWithSuperTypesEnd1.addAll(request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+            }
+
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_TYPE, end1EntityTypeAndSuperTypes);
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_CLASSIFICATION, classificationsWithSuperTypesEnd1);
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_ID, end1EntityId);
+
+
+            Set<String> classificationsWithSuperTypesEnd2 = new HashSet();
+
+            for (String classificationToAuthorize : end2Classifications) {
+                classificationsWithSuperTypesEnd2.addAll(request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+            }
+
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_TYPE, end2EntityTypeAndSuperTypes);
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_CLASSIFICATION, classificationsWithSuperTypesEnd2);
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_ID, end2EntityId);
+
+            ret = checkAccess(rangerRequest);
+
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== isAccessAllowed(" + request + "): " + ret);
+        }
+
+        return ret;
+    }
+
 
     @Override
     public void scrubSearchResults(AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
