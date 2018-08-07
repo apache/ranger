@@ -22,6 +22,7 @@ package org.apache.ranger.authorization.atlas.authorizer;
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
+import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
 import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasAuthorizer;
@@ -155,6 +156,30 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
 	@Override
 	public boolean isAccessAllowed(AtlasTypeAccessRequest request) throws AtlasAuthorizationException {
+		if (isDebugEnabled) {
+			LOG.debug("==> isAccessAllowed(AtlasTypeAccessRequest)");
+		}
+
+		final boolean ret;
+
+		try {
+			activatePluginClassLoader();
+
+			ret = rangerAtlasAuthorizerImpl.isAccessAllowed(request);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if (isDebugEnabled) {
+			LOG.debug("<== isAccessAllowed(AtlasTypeAccessRequest): " + ret);
+		}
+
+		return ret;
+	}
+
+
+	@Override
+	public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
 		if (isDebugEnabled) {
 			LOG.debug("==> isAccessAllowed(AtlasTypeAccessRequest)");
 		}
