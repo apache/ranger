@@ -1021,6 +1021,56 @@ public class TestServiceREST {
 		Mockito.verify(svcStore).getServices(filter);
 	}
 
+
+	@Test
+	public void test27getPoliciesWithoutServiceAdmin() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		SearchFilter filter = new SearchFilter();
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		policies.add(rangerPolicy());
+		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
+		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
+		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+		Mockito.when(svcStore.getPolicies(filter)).thenReturn(policies);
+		RangerPolicyList dbRangerPolicy = serviceREST.getPolicies(request);
+		Assert.assertNotNull(dbRangerPolicy);
+		/*here we are not setting service admin role,hence we will not get any policy without the service admin roles*/
+		Assert.assertEquals(dbRangerPolicy.getListSize(), 0);
+		Mockito.verify(searchUtil).getSearchFilter(request,
+				policyService.sortFields);
+	}
+
+	@Test
+	public void test28getPoliciesWithServiceAdmin() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerService rs = rangerService();
+		SearchFilter filter = new SearchFilter();
+		XXService xs = Mockito.mock(XXService.class);
+		xs.setType(3L);
+		XXServiceDao xSDao = Mockito.mock(XXServiceDao.class);
+		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		RangerPolicy rPol=rangerPolicy();
+		policies.add(rPol);
+		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
+		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
+		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+		Mockito.when(svcStore.getPolicies(filter)).thenReturn(policies);
+		/*here we are setting serviceAdminRole, so we will get the required policy with serviceAdmi role*/
+		Mockito.when(daoManager.getXXService()).thenReturn(xSDao);
+		Mockito.when(svcStore.isServiceAdminUser(rPol.getService(), null)).thenReturn(true);
+		Mockito.when(xSDao.findByName(rPol.getName())).thenReturn(xs);
+		RangerPolicyList dbRangerPolicy = serviceREST.getPolicies(request);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(dbRangerPolicy.getListSize(), 1);
+		Mockito.verify(searchUtil).getSearchFilter(request,
+				policyService.sortFields);
+		Mockito.verify(svcStore).getPolicies(filter);
+		Mockito.verify(svcStore).isServiceAdminUser(rPol.getService(), null);
+		Mockito.verify(daoManager).getXXService();
+		Mockito.verify(xSDao).findByName(rPol.getName());
+	}
+
+
 	@Test
 	public void test30getPolicyFromEventTime() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
