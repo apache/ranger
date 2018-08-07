@@ -1043,7 +1043,6 @@ public class TestServiceREST {
 	@Test
 	public void test28getPoliciesWithServiceAdmin() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		RangerService rs = rangerService();
 		SearchFilter filter = new SearchFilter();
 		XXService xs = Mockito.mock(XXService.class);
 		xs.setType(3L);
