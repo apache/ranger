@@ -60,6 +60,19 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_ENTITY_TYPE           = "entity-type";
 	public static final String RESOURCE_ENTITY_CLASSIFICATION = "entity-classification";
 	public static final String RESOURCE_ENTITY_ID             = "entity";
+
+	public static final String RESOURCE_RELATIONSHIP_TYPE =  "relationship-type";
+
+	public static final String RESOURCE_END_ONE_ENTITY_TYPE = "end-one-entity-type";
+	public static final String RESOURCE_END_ONE_ENTITY_CLASSIFICATION = "end-one-entity-classification";
+	public static final String RESOURCE_END_ONE_ENTITY_ID = "end-one-entity";
+
+	public static final String RESOURCE_END_TWO_ENTITY_TYPE =  "end-two-entity-type";
+	public static final String RESOURCE_END_TWO_ENTITY_CLASSIFICATION = "end-two-entity-classification";
+	public static final String RESOURCE_END_TWO_ENTITY_ID = "end-two-entity";
+
+
+
 	public static final String CONFIG_REST_ADDRESS            = "atlas.rest.address";
 	public static final String CONFIG_USERNAME                = "username";
 	public static final String CONFIG_PASSWORD                = "password";
@@ -230,6 +243,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 				}
 				break;
 
+				case RESOURCE_END_ONE_ENTITY_TYPE:
+				case RESOURCE_END_TWO_ENTITY_TYPE:
 				case RESOURCE_ENTITY_TYPE: {
 					refreshTypesDefs();
 
@@ -237,6 +252,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 				}
 				break;
 
+				case RESOURCE_END_ONE_ENTITY_CLASSIFICATION:
+				case RESOURCE_END_TWO_ENTITY_CLASSIFICATION:
 				case RESOURCE_ENTITY_CLASSIFICATION: {
 					refreshTypesDefs();
 
@@ -246,6 +263,37 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 				case RESOURCE_ENTITY_ID: {
 					List<String> searchTypes = lookupContext.getResources().get("entity-type");
+
+					if (searchTypes != null && searchTypes.size() == 1) {
+						List<String> values = searchEntities(userInput, searchTypes.get(0));
+
+						addIfStartsWithAndNotExcluded(ret, values, userInput, currentValues);
+					}
+				}
+				break;
+
+				case RESOURCE_RELATIONSHIP_TYPE: {
+					refreshTypesDefs();
+					addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_RELATIONSHIP), userInput, currentValues);
+
+				}
+				break;
+
+				case RESOURCE_END_ONE_ENTITY_ID: {
+
+					List<String> searchTypes = lookupContext.getResources().get(RESOURCE_END_ONE_ENTITY_TYPE);
+
+					if (searchTypes != null && searchTypes.size() == 1) {
+						List<String> values = searchEntities(userInput, searchTypes.get(0));
+
+						addIfStartsWithAndNotExcluded(ret, values, userInput, currentValues);
+					}
+
+				}
+				break;
+
+				case RESOURCE_END_TWO_ENTITY_ID: {
+					List<String> searchTypes = lookupContext.getResources().get(RESOURCE_END_TWO_ENTITY_TYPE);
 
 					if (searchTypes != null && searchTypes.size() == 1) {
 						List<String> values = searchEntities(userInput, searchTypes.get(0));
