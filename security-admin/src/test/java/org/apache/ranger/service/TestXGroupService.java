@@ -40,7 +40,7 @@ import java.util.Date;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXGroupService {
 

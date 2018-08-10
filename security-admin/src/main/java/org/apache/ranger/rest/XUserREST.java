@@ -218,8 +218,8 @@ public class XUserREST {
 				request, xGroupService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
-		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
-//		searchUtil.extractInt(request, searchCriteria, "groupSource", "group source");
+//		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
+		searchUtil.extractInt(request, searchCriteria, "groupSource", "group source");
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
