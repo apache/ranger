@@ -145,19 +145,22 @@ define(function(require){
 		formValidation : function(){
 			var valid = true;
 			var config = {};
-			this.extraConfigColl.each(function(obj){
+
+			for (var i = 0; i < this.extraConfigColl.length; i++) {
+				var obj = this.extraConfigColl.at(i);
 				if(!_.isEmpty(obj.attributes)) {
 					if (!_.isUndefined(config[obj.get('name')])) {
 						XAUtil.alertPopup({
 							msg : localization.tt('msg.duplicateNewConfigValidationMsg')
 						});
 						valid = false;
-						return;
+						break;
 					} else {
 						config[obj.get('name')] = obj.get('value');
 					}
 				}
-			});
+			}
+
 			return valid;
 		},
 
