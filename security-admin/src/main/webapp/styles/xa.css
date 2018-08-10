@@ -2221,3 +2221,9 @@ td.subgrid-custom-cell{
     text-overflow: ellipsis;
     max-width: 95%;
 }
+.serviceNameEllipsis {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

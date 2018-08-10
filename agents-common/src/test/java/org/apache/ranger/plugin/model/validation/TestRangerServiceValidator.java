@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ public class TestRangerServiceValidator {
 	final Action[] cud = new Action[] { Action.CREATE, Action.UPDATE, Action.DELETE };
 	final Action[] cu = new Action[] { Action.CREATE, Action.UPDATE };
 	final Action[] ud = new Action[] { Action.UPDATE, Action.DELETE };
+        String serviceNameValidationErrorMessage = "Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space). ";
 
 	@Before
 	public void before() {
@@ -72,6 +74,216 @@ public class TestRangerServiceValidator {
 	}
 	
 	@Test
+        public void testIsValidServiceNameCreationWithOutSpecialCharacters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setName("c1_yarn");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, Action.CREATE, _failures);
+                Assert.assertEquals(0, _failures.size());
+                Assert.assertTrue(valid);
+
+        }
+
+        @Test
+        public void testIsValidServiceNameUpdationWithOutSpecialCharacters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setId(1L);
+                rangerService.setName("c1_yarn");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getService(1L)).thenReturn(rangerService);
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, Action.UPDATE, _failures);
+                Assert.assertEquals(0, _failures.size());
+                Assert.assertTrue(valid);
+
+        }
+
+        @Test
+        public void testIsValidServiceNameUpdationWithSpecialCharacters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setId(1L);
+                rangerService.setName("<alert>c1_yarn</alert>");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getService(1L)).thenReturn(rangerService);
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, Action.UPDATE, _failures);
+                ValidationFailureDetails failureMessage = _failures.get(0);
+                Assert.assertFalse(valid);
+                Assert.assertEquals("name",failureMessage.getFieldName());
+                Assert.assertEquals(serviceNameValidationErrorMessage + ": name=[<alert>c1_yarn</alert>]",failureMessage._reason);
+                Assert.assertEquals(3031, failureMessage._errorCode);
+
+        }
+
+        @Test
+        public void testIsValidServiceNameCreationWithSpecialCharacters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setName("<script>c1_yarn</script>");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, _action, _failures);
+                ValidationFailureDetails failureMessage = _failures.get(0);
+                Assert.assertFalse(valid);
+                Assert.assertEquals("name",failureMessage.getFieldName());
+                Assert.assertEquals(serviceNameValidationErrorMessage + ": name=[<script>c1_yarn</script>]",failureMessage._reason);
+                Assert.assertEquals(3031, failureMessage._errorCode);
+
+        }
+
+        @Test
+        public void testIsValidServiceNameCreationWithGreater255Characters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setName("c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, _action, _failures);
+                ValidationFailureDetails failureMessage = _failures.get(0);
+                Assert.assertFalse(valid);
+                Assert.assertEquals("name",failureMessage.getFieldName());
+                Assert.assertEquals(serviceNameValidationErrorMessage + ": name=[c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1]",failureMessage._reason);
+                Assert.assertEquals(3031, failureMessage._errorCode);
+
+        }
+
+        @Test
+        public void testIsValidServiceNameUpdationWithGreater255Characters() throws Exception{
+                RangerService rangerService = new RangerService();
+                rangerService.setId(1L);
+                rangerService.setName("c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1");
+                rangerService.setType("yarn");
+                rangerService.setTagService("");
+
+                RangerServiceConfigDef configDef = new RangerServiceConfigDef();
+                configDef.setMandatory(true);
+
+                List<RangerServiceConfigDef> listRangerServiceConfigDef = new ArrayList<RangerServiceDef.RangerServiceConfigDef>();
+                listRangerServiceConfigDef.add(configDef);
+
+
+                configDef.setName("myconfig1");
+
+                Map<String,String> testMap = new HashMap<String, String>();
+                testMap.put("myconfig1", "myconfig1");
+
+                rangerService.setConfigs(testMap);
+
+
+                RangerServiceDef rangerServiceDef = new RangerServiceDef();
+                rangerServiceDef.setConfigs(listRangerServiceConfigDef);
+
+                when(_store.getService(1L)).thenReturn(rangerService);
+                when(_store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
+                boolean  valid = _validator.isValid(rangerService, Action.UPDATE, _failures);
+                ValidationFailureDetails failureMessage = _failures.get(0);
+                Assert.assertFalse(valid);
+                Assert.assertEquals("name",failureMessage.getFieldName());
+                Assert.assertEquals(serviceNameValidationErrorMessage +": name=[c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1_yarn_c1]",failureMessage._reason);
+                Assert.assertEquals(3031, failureMessage._errorCode);
+
+        }
+
+        @Test
 	public void testIsValid_failures() throws Exception {
 		RangerService service = mock(RangerService.class);
 		// passing in a null service to the check itself is an error

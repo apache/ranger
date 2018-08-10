@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.model.validation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
+import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,9 +35,10 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import com.google.common.collect.Sets;
 
 public class RangerServiceValidator extends RangerValidator {
-
 	private static final Log LOG = LogFactory.getLog(RangerServiceValidator.class);
+        static final public String VALIDATION_SERVICE_NAME = "^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}";
 
+        static Pattern serviceNameCompiledRegEx;
 	public RangerServiceValidator(ServiceStore store) {
 		super(store);
 	}
@@ -151,9 +152,8 @@ public class RangerServiceValidator extends RangerValidator {
 						.build());
 				valid = false;
 			} else {
-				RangerService otherService = getService(name);
-				if (otherService != null && action == Action.CREATE) {
-					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT;
+                                if(!validateString(VALIDATION_SERVICE_NAME, name)){
+                                        ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("name")
 							.isSemanticallyIncorrect()
@@ -161,15 +161,27 @@ public class RangerServiceValidator extends RangerValidator {
 							.becauseOf(error.getMessage(name))
 							.build());
 					valid = false;
-				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
-					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT;
-					failures.add(new ValidationFailureDetailsBuilder()
-							.field("id/name")
-							.isSemanticallyIncorrect()
-							.errorCode(error.getErrorCode())
-							.becauseOf(error.getMessage(name, otherService.getId()))
-							.build());
-					valid = false;
+                                }else{
+                                        RangerService otherService = getService(name);
+                                        if (otherService != null && action == Action.CREATE) {
+                                                ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT;
+                                                failures.add(new ValidationFailureDetailsBuilder()
+                                                                .field("name")
+                                                                .isSemanticallyIncorrect()
+                                                                .errorCode(error.getErrorCode())
+                                                                .becauseOf(error.getMessage(name))
+                                                                .build());
+                                                valid = false;
+                                        } else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
+                                                ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT;
+                                                failures.add(new ValidationFailureDetailsBuilder()
+                                                                .field("id/name")
+                                                                .isSemanticallyIncorrect()
+                                                                .errorCode(error.getErrorCode())
+                                                                .becauseOf(error.getMessage(name, otherService.getId()))
+                                                                .build());
+                                                valid = false;
+                                        }
 				}
 			}
 			String type = service.getType();
@@ -260,4 +272,23 @@ public class RangerServiceValidator extends RangerValidator {
 		}
 		return valid;
 	}
+
+        public boolean regExPatternMatch(String expression, String inputStr) {
+                Pattern pattern = serviceNameCompiledRegEx;
+                if (pattern == null) {
+                        pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+                        serviceNameCompiledRegEx = pattern;
+                }
+
+                return pattern != null ? pattern.matcher(inputStr).matches() : false;
+        }
+
+        public boolean validateString(String regExStr, String str) {
+                try {
+                        return regExPatternMatch(regExStr, str);
+                } catch (Throwable t) {
+                        LOG.error("Error validating string. str=" + str + " due to reason " + t.getMessage() + ". Stack Trace : " + t.getStackTrace());
+                        return false;
+                }
+        }
 }

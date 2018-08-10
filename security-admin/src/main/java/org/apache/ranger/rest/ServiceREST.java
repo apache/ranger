@@ -626,11 +626,16 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		try {
+
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createService(serviceName=" + service.getName() + ")");
 			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.CREATE);
+
+                        if(!StringUtils.isEmpty(service.getName().trim())){
+                                service.setName(service.getName().trim());
+                        }
 
 			UserSessionBase session = ContextUtil.getCurrentUserSession();
 			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
@@ -683,11 +688,16 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		try {
+
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateService(serviceName=" + service.getName() + ")");
 			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.UPDATE);
+
+                        if(!StringUtils.isEmpty(service.getName().trim())){
+                                service.setName(service.getName().trim());
+                        }
 
 			bizUtil.hasAdminPermissions("Services");
 

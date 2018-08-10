@@ -516,7 +516,7 @@
 					</div>'
 				}
 				tr += '<tr><td><div>\
-						<a data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+                                                <a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
 					  </div></td></tr>';
 			});
 		}
