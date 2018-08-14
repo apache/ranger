@@ -62,6 +62,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
 
 	private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
+	private static final Log PERF_TRIE_OP_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
+
 
 	public static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
 	public static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
@@ -401,6 +403,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		if (resource == null || resource.getKeys() == null || resource.getKeys().isEmpty() || serviceResourceTrie == null) {
 			ret = enrichedServiceTags.getServiceResourceMatchers();
 		} else {
+			RangerPerfTracer perf = null;
+
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_OP_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerTagEnricher.getEvaluators(resource=" + resource.getAsString() + ")");
+			}
+
 			Set<String> resourceKeys = resource.getKeys();
 			List<List<RangerServiceResourceMatcher>> serviceResourceMatchersList = null;
 			List<RangerServiceResourceMatcher> smallestList = null;
@@ -452,6 +460,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					ret = smallestList;
 				}
 			}
+			RangerPerfTracer.logAlways(perf);
 		}
 
 		if(ret == null) {
