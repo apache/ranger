@@ -52,6 +52,7 @@ class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
 
     private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
+    private static final Log PERF_TRIE_OP_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
 
     enum AuditModeEnum {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
@@ -146,9 +147,9 @@ class RangerPolicyRepository {
             dataMaskResourceTrie  = null;
             rowFilterResourceTrie = null;
         } else {
-            policyResourceTrie    = createResourceTrieMap(policyEvaluators);
-            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators);
-            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators);
+            policyResourceTrie    = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval);
+            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval);
+            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval);
         }
     }
 
@@ -191,9 +192,9 @@ class RangerPolicyRepository {
             dataMaskResourceTrie  = null;
             rowFilterResourceTrie = null;
         } else {
-            policyResourceTrie    = createResourceTrieMap(policyEvaluators);
-            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators);
-            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators);
+            policyResourceTrie    = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval);
+            dataMaskResourceTrie  = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval);
+            rowFilterResourceTrie = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval);
         }
     }
 
@@ -257,6 +258,12 @@ class RangerPolicyRepository {
         List<RangerPolicyEvaluator> ret          = null;
         Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
 
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_OP_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerPolicyRepository.getLikelyMatchEvaluators(resource=" + resource.getAsString() + ")");
+        }
+
         if(CollectionUtils.isNotEmpty(resourceKeys)) {
             List<List<RangerPolicyEvaluator>> resourceEvaluatorsList = null;
             List<RangerPolicyEvaluator> smallestList = null;
@@ -312,6 +319,8 @@ class RangerPolicyRepository {
         if(ret == null) {
             ret = Collections.emptyList();
         }
+
+        RangerPerfTracer.logAlways(perf);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.getLikelyMatchPolicyEvaluators(" + resource.getAsString() + "): evaluatorCount=" + ret.size());
@@ -833,14 +842,14 @@ class RangerPolicyRepository {
         return ret;
     }
 
-    private Map<String, RangerResourceTrie> createResourceTrieMap(List<RangerPolicyEvaluator> evaluators) {
+    private Map<String, RangerResourceTrie> createResourceTrieMap(List<RangerPolicyEvaluator> evaluators, boolean optimizeTrieForRetrieval) {
         final Map<String, RangerResourceTrie> ret;
 
         if (CollectionUtils.isNotEmpty(evaluators) && serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getResources())) {
             ret = new HashMap<String, RangerResourceTrie>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR));
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, optimizeTrieForRetrieval));
             }
         } else {
             ret = null;
