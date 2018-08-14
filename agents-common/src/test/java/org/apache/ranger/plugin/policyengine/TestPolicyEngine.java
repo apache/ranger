@@ -160,6 +160,10 @@ public class TestPolicyEngine {
 				"                <name>ranger.plugin.tag.attr.additional.date.formats</name>\n" +
 				"                <value>abcd||xyz||yyyy/MM/dd'T'HH:mm:ss.SSS'Z'</value>\n" +
 				"        </property>\n" +
+				"        <property>\n" +
+				"                <name>ranger.policyengine.trie.builder.thread.count</name>\n" +
+				"                <value>3</value>\n" +
+				"        </property>\n" +
                 "</configuration>\n");
 		writer.close();
 
@@ -368,6 +372,7 @@ public class TestPolicyEngine {
 
 		policyEngineOptions.disableTagPolicyEvaluation = false;
 		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
+		policyEngineOptions.optimizeTrieForRetrieval = false;
 
 		boolean useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = RangerConfiguration.getInstance().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
@@ -383,6 +388,8 @@ public class TestPolicyEngine {
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
 		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
+		policyEngineOptions.optimizeTrieForRetrieval = false;
+
 		RangerPolicyEngine policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
 
 		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
