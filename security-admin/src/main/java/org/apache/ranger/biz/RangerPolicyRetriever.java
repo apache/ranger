@@ -130,6 +130,7 @@ public class RangerPolicyRetriever {
 		@Override
 		public void run() {
 			try {
+				txTemplate.setReadOnly(true);
 				policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
 					@Override
 					public List<RangerPolicy> doInTransaction(TransactionStatus status) {
