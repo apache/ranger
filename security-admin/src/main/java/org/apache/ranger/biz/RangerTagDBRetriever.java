@@ -263,7 +263,8 @@ public class RangerTagDBRetriever {
 		@Override
 		public void run() {
 			try {
-				 Boolean result = txTemplate.execute(new TransactionCallback<Boolean>() {
+				txTemplate.setReadOnly(true);
+				Boolean result = txTemplate.execute(new TransactionCallback<Boolean>() {
 					@Override
 					public Boolean doInTransaction(TransactionStatus status) {
 						boolean ret = initializeTagCache(xService);
