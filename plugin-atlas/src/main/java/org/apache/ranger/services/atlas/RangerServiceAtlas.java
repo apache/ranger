@@ -20,7 +20,7 @@ package org.apache.ranger.services.atlas;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +30,8 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.model.discovery.AtlasSearchResult;
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
@@ -42,8 +42,10 @@ import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.PasswordUtils;
@@ -54,22 +56,23 @@ import javax.ws.rs.core.NewCookie;
 public class RangerServiceAtlas extends RangerBaseService {
 	private static final Log LOG = LogFactory.getLog(RangerServiceAtlas.class);
 
-	public static final String RESOURCE_SERVICE               = "atlas-service";
-	public static final String RESOURCE_TYPE_CATEGORY         = "type-category";
-	public static final String RESOURCE_TYPE_NAME             = "type";
-	public static final String RESOURCE_ENTITY_TYPE           = "entity-type";
-	public static final String RESOURCE_ENTITY_CLASSIFICATION = "entity-classification";
-	public static final String RESOURCE_ENTITY_ID             = "entity";
-
-	public static final String RESOURCE_RELATIONSHIP_TYPE =  "relationship-type";
-
-	public static final String RESOURCE_END_ONE_ENTITY_TYPE = "end-one-entity-type";
+	public static final String RESOURCE_SERVICE                       = "atlas-service";
+	public static final String RESOURCE_TYPE_CATEGORY                 = "type-category";
+	public static final String RESOURCE_TYPE_NAME                     = "type";
+	public static final String RESOURCE_ENTITY_TYPE                   = "entity-type";
+	public static final String RESOURCE_ENTITY_CLASSIFICATION         = "entity-classification";
+	public static final String RESOURCE_ENTITY_ID                     = "entity";
+	public static final String RESOURCE_RELATIONSHIP_TYPE             = "relationship-type";
+	public static final String RESOURCE_END_ONE_ENTITY_TYPE           = "end-one-entity-type";
 	public static final String RESOURCE_END_ONE_ENTITY_CLASSIFICATION = "end-one-entity-classification";
-	public static final String RESOURCE_END_ONE_ENTITY_ID = "end-one-entity";
-
-	public static final String RESOURCE_END_TWO_ENTITY_TYPE =  "end-two-entity-type";
+	public static final String RESOURCE_END_ONE_ENTITY_ID             = "end-one-entity";
+	public static final String RESOURCE_END_TWO_ENTITY_TYPE           =  "end-two-entity-type";
 	public static final String RESOURCE_END_TWO_ENTITY_CLASSIFICATION = "end-two-entity-classification";
-	public static final String RESOURCE_END_TWO_ENTITY_ID = "end-two-entity";
+	public static final String RESOURCE_END_TWO_ENTITY_ID             = "end-two-entity";
+
+	public static final String ACCESS_TYPE_ENTITY_READ  = "entity-read";
+	public static final String ADMIN_USERNAME_DEFAULT   = "admin";
+	public static final String TAGSYNC_USERNAME_DEFAULT = "rangertagsync";
 
 
 
@@ -140,40 +143,36 @@ public class RangerServiceAtlas extends RangerBaseService {
             LOG.debug("==> RangerServiceAtlas.getDefaultRangerPolicies()");
         }
 
-        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
-        RangerPolicyItemAccess readAccessTagsync = new RangerPolicyItemAccess();
+        List<RangerPolicy> ret                         = super.getDefaultRangerPolicies();
+        String             adminUser                   = getStringConfig("atlas.admin.user", ADMIN_USERNAME_DEFAULT);
+        String             tagSyncUser                 = getStringConfig("atlas.rangertagsync.user", TAGSYNC_USERNAME_DEFAULT);
+        boolean            relationshipTypeAllowPublic = getBooleanConfig("atlas.default-policy.relationship-type.allow.public", true);
+
         for (RangerPolicy defaultPolicy : ret) {
-            for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-                List<RangerPolicyItemAccess> rPolItemAccessList=defaultPolicyItem.getAccesses();
-                List<String> users     = defaultPolicyItem.getUsers();
-                String       adminUser = service.getConfigs().get("atlas.admin.user");
+            final Map<String, RangerPolicyResource> policyResources = defaultPolicy.getResources();
 
-                if (StringUtils.isBlank(adminUser)) {
-                    adminUser = "admin";
-                }
-
-                users.add(adminUser);
-                defaultPolicyItem.setUsers(users);
-                if(defaultPolicy.getName().contains(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
-	                for(RangerPolicyItemAccess rPolItemAccess: rPolItemAccessList){
-		                if(rPolItemAccess.getType().contains("read")){
-			                readAccessTagsync = rPolItemAccess;
-			                }
-	                }
-                }
+            // 1. add adminUser to every policyItem
+            for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+                defaultPolicyItem.getUsers().add(adminUser);
             }
-            if(defaultPolicy.getName().contains(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
-	            if(defaultPolicy.getResources().containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)){
-		            RangerPolicyItem rPItemTagsync = new RangerPolicyItem();
-		            List<RangerPolicyItem> tagSyncpolicyItems = new ArrayList<RangerPolicyItem>();
-		            rPItemTagsync.setUsers(new ArrayList<>(Arrays.asList("rangertagsync")));
-		            List<RangerPolicyItemAccess> tagsyncAccessList = new ArrayList<RangerPolicyItemAccess>();
-		            tagsyncAccessList.add(readAccessTagsync);
-		            rPItemTagsync.setAccesses(tagsyncAccessList);
-		            tagSyncpolicyItems = defaultPolicy.getPolicyItems();
-		            tagSyncpolicyItems.add(rPItemTagsync);
-		            defaultPolicy.setPolicyItems(tagSyncpolicyItems);
-	            }
+
+            // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
+            if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)) {
+                RangerPolicyItem policyItemForTagSyncUser = new RangerPolicyItem();
+
+                policyItemForTagSyncUser.setUsers(Collections.singletonList(tagSyncUser));
+                policyItemForTagSyncUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
+
+                defaultPolicy.getPolicyItems().add(policyItemForTagSyncUser);
+            }
+
+            if (relationshipTypeAllowPublic) {
+                // 3. add 'public' group in the policy for 'relationship-type',
+                if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_RELATIONSHIP_TYPE)) {
+                    for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+                        defaultPolicyItem.getGroups().add(RangerPolicyEngine.GROUP_PUBLIC);
+                    }
+                }
             }
         }
 
@@ -602,5 +601,17 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 			list.add(value);
 		}
+	}
+
+	String getStringConfig(String configName, String defaultValue) {
+		String val = service.getConfigs().get(configName);
+
+		return StringUtils.isBlank(val) ? defaultValue : val;
+	}
+
+	boolean getBooleanConfig(String configName, boolean defaultValue) {
+		String val = service.getConfigs().get(configName);
+
+		return StringUtils.isBlank(val) ? defaultValue : Boolean.parseBoolean(val);
 	}
 }
