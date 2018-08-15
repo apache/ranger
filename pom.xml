@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>19</version>
+        <version>20</version>
     </parent>
     <groupId>org.apache.ranger</groupId>
     <artifactId>ranger</artifactId>

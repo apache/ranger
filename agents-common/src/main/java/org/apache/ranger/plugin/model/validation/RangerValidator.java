@@ -45,7 +45,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerObjectFactory;
-import org.apache.ranger.plugin.util.SearchFilter;
 
 public abstract class RangerValidator {
 	

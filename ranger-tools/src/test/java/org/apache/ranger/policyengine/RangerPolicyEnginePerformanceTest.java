@@ -34,7 +34,6 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
 import org.apache.ranger.plugin.util.PerfDataRecorder.PerfStatistic;

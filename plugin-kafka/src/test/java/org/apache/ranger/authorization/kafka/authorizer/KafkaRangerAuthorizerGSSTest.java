@@ -333,8 +333,7 @@ public class KafkaRangerAuthorizerGSSTest {
         final Producer<String, String> producer = new KafkaProducer<>(producerProps);
 
         // Send a message
-        Future<RecordMetadata> record =
-                producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
+        producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
         producer.flush();
         producer.close();
     }

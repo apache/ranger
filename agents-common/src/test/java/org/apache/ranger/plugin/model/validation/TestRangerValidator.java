@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.model.validation;
 
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +57,6 @@ public class TestRangerValidator {
 		}
 		
 		boolean isValid(String behavior) {
-			boolean valid;
 			return "valid".equals(behavior);
 		}
 	}
