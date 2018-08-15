@@ -24,8 +24,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -43,8 +41,6 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 
 public class RangerValiditySchedule implements Serializable {
-
-    private static final Log LOG = LogFactory.getLog(RangerValiditySchedule.class);
 
     public static final String VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION = "yyyy/MM/dd HH:mm:ss";
 

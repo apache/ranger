@@ -495,7 +495,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			if (RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH_ALT.equals(path)) {
-				path = RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
+				path = HDFS_ROOT_FOLDER_PATH;
 			}
 
 			if (LOG.isDebugEnabled()) {
@@ -612,7 +612,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			if (RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH_ALT.equals(path)) {
-				path = RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
+				path = HDFS_ROOT_FOLDER_PATH;
 			}
 
 			if(LOG.isDebugEnabled()) {
@@ -666,7 +666,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			if (RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH_ALT.equals(path)) {
-				path = RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
+				path = HDFS_ROOT_FOLDER_PATH;
 			}
 
 			if (LOG.isDebugEnabled()) {
@@ -731,10 +731,10 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	public RangerHdfsPlugin() {
 		super("hdfs", "hdfs");
 	}
-	
+
 	public void init() {
 		super.init();
-		
+
 		RangerHdfsPlugin.hadoopAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
 		RangerHdfsPlugin.fileNameExtensionSeparator = RangerConfiguration.getInstance().get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
 		RangerHdfsPlugin.optimizeSubAccessAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT);
@@ -801,7 +801,7 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 			buildRequestContext(inode);
 		}
 	}
-	
+
 	private static String getRemoteIp() {
 		String ret = null;
 		InetAddress ip = Server.getRemoteIp();

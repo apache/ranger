@@ -651,7 +651,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		int allowedAccessCount = 0;
 		int deniedAccessCount = 0;
-		int deniedWithException = 0;
 		int undeterminedAccessCount = 0;
 		int accessesSize = 0;
 
@@ -665,12 +664,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				allowedAccessCount++;
 			} else if (accessResult.getResult() == RangerPolicyEvaluator.ACCESS_DENIED) {
 				deniedAccessCount++;
-			} else if (accessResult.getResult() == RangerPolicyEvaluator.ACCESS_UNDETERMINED) {
-				if (accessResult.getHasSeenDeny()) {
-					deniedWithException++;
-				} else {
-					undeterminedAccessCount++;
-				}
+			} else if (accessResult.getResult() == RangerPolicyEvaluator.ACCESS_UNDETERMINED && !accessResult.getHasSeenDeny()) {
+			    undeterminedAccessCount++;
 			}
 			accessesSize++;
 		}

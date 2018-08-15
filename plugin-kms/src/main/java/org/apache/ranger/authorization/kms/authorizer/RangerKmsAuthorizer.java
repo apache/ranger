@@ -222,7 +222,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			if(plugin != null && ret) {				
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi, clientIp, clusterName);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
-				ret = result == null ? false : result.getIsAllowed();
+				ret = result != null && result.getIsAllowed();
 			}
 			RangerPerfTracer.log(perf);
 			if(LOG.isDebugEnabled()) {
@@ -249,7 +249,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			if(plugin != null && ret) {				
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi, clientIp, clusterName);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
-				ret = result == null ? false : result.getIsAllowed();
+				ret = result != null && result.getIsAllowed();
 			}
 			
 			if(LOG.isDebugEnabled()) {

@@ -41,7 +41,6 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.services.kms.client.KMSClient;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -113,7 +112,7 @@ public class KMSClient {
 			}
 			hostsPart = t[0];
 		}
-		return createProvider(providerUri, origUrl, port, hostsPart);
+		return createProvider(origUrl, port, hostsPart);
 	}
 
 	private static Path extractKMSPath(URI uri) throws MalformedURLException,
@@ -121,7 +120,7 @@ public class KMSClient {
 		return ProviderUtils.unnestUri(uri);
 	}
 
-	private String[] createProvider(URI providerUri, URL origUrl, int port,
+	private String[] createProvider(URL origUrl, int port,
 			String hostsPart) throws IOException {
 		String[] hosts = hostsPart.split(";");
 		String[] providers = new String[hosts.length];
@@ -305,7 +304,7 @@ public class KMSClient {
 		return lret;
 	}
 
-	public static Map<String, Object> testConnection(String serviceName,
+	public static Map<String, Object> testConnection(String serviceName, //NOPMD
 			Map<String, String> configs) {
 
 		List<String> strList = new ArrayList<String>();

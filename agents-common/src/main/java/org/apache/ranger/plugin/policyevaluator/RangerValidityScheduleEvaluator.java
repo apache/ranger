@@ -32,7 +32,6 @@ import org.apache.ranger.plugin.resourcematcher.ScheduledTimeRangeMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import javax.annotation.Nonnull;
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

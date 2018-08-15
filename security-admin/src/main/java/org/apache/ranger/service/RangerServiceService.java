@@ -151,7 +151,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 					continue;
 				}
 				XXTrxLog xTrxLog = processFieldToCreateTrxLog(field,
-						objectName, nameField, vObj, mObj, action);
+						objectName, vObj, mObj, action);
 				if (xTrxLog != null) {
 					trxLogList.add(xTrxLog);
 				}
@@ -159,7 +159,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 			Field[] superClassFields = vObj.getClass().getSuperclass().getDeclaredFields();
 			for(Field field : superClassFields) {
 				if("isEnabled".equalsIgnoreCase(field.getName())) {
-					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, action);
+					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, vObj, mObj, action);
 					if(xTrx != null) {
 						trxLogList.add(xTrx);
 					}
@@ -176,7 +176,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 	@SuppressWarnings("unchecked")
 	private XXTrxLog processFieldToCreateTrxLog(Field field, String objectName,
-			Field nameField, RangerService vObj, XXService mObj, int action) {
+			RangerService vObj, XXService mObj, int action) {
 
 		String actionString = "";
 
@@ -191,15 +191,15 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 			String value = null;
 			boolean isEnum = vTrxLogAttr.isEnum();
-			if (isEnum) {
-
-			} else if ("configs".equalsIgnoreCase(fieldName)) {
-				Map<String, String> configs = (field.get(vObj) != null) ? (Map<String, String>) field
-						.get(vObj) : new HashMap<String, String>();
-
-						value = jsonUtil.readMapToString(configs);
-			} else {
-				value = "" + field.get(vObj);
+			if (!isEnum) {
+			    if ("configs".equalsIgnoreCase(fieldName)) {
+    				Map<String, String> configs = (field.get(vObj) != null) ? (Map<String, String>) field
+    						.get(vObj) : new HashMap<String, String>();
+    
+    						value = jsonUtil.readMapToString(configs);
+    			} else {
+    				value = "" + field.get(vObj);
+    			}
 			}
 
 			if (action == OPERATION_CREATE_CONTEXT) {
@@ -219,9 +219,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 					mField.setAccessible(true);
 					String mFieldName = mField.getName();
 					if (fieldName.equalsIgnoreCase(mFieldName)) {
-						if (isEnum) {
-
-						} else {
+						if (!isEnum) {
 							oldValue = mField.get(mObj) + "";
 						}
 						break;
