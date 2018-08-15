@@ -45,10 +45,13 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,8 +100,8 @@ public class RangerKeyStore extends KeyStoreSpi {
         int version;
     }
 
-    private Hashtable<String, Object> keyEntries = new Hashtable<String, Object>();
-    private Hashtable<String, Object> deltaEntries = new Hashtable<String, Object>();
+    private Map<String, Object> keyEntries = new ConcurrentHashMap<>();
+    private Map<String, Object> deltaEntries = new ConcurrentHashMap<>();
 
     RangerKeyStore() {
     }
@@ -265,7 +268,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
     @Override
     public Enumeration<String> engineAliases() {
-        return keyEntries.keys();
+        return Collections.enumeration(keyEntries.keySet());
     }
 
     @Override
@@ -293,24 +296,23 @@ public class RangerKeyStore extends KeyStoreSpi {
             MessageDigest md = getKeyedMessageDigest(password);
 
             byte digest[] = md.digest();
-            for (Enumeration<String> e = deltaEntries.keys(); e.hasMoreElements(); ) {
+            for (Entry<String, Object> entry : deltaEntries.entrySet()) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
 
                 ObjectOutputStream oos = null;
                 try {
 
-                    String alias = e.nextElement();
-                    Object entry = deltaEntries.get(alias);
-
                     oos = new ObjectOutputStream(dos);
-                    oos.writeObject(((SecretKeyEntry) entry).sealedKey);
+                    oos.writeObject(((SecretKeyEntry) entry.getValue()).sealedKey);
 
                     dos.write(digest);
                     dos.flush();
-                    Long creationDate = ((SecretKeyEntry) entry).date.getTime();
-                    SecretKeyEntry secretKey = (SecretKeyEntry) entry;
-                    XXRangerKeyStore xxRangerKeyStore = mapObjectToEntity(alias, creationDate, baos.toByteArray(), secretKey.cipher_field, secretKey.bit_length, secretKey.description, secretKey.version, secretKey.attributes);
+                    Long creationDate = ((SecretKeyEntry) entry.getValue()).date.getTime();
+                    SecretKeyEntry secretKey = (SecretKeyEntry) entry.getValue();
+                    XXRangerKeyStore xxRangerKeyStore = mapObjectToEntity(entry.getKey(), creationDate, baos.toByteArray(), 
+                                                                          secretKey.cipher_field, secretKey.bit_length, secretKey.description, 
+                                                                          secretKey.version, secretKey.attributes);
                     dbOperationStore(xxRangerKeyStore);
                 } finally {
                     if (oos != null) {

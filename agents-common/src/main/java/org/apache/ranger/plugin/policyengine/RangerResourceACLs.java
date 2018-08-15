@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -33,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_ALLOWED;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_DENIED;
 
 public class RangerResourceACLs {
@@ -59,7 +59,7 @@ public class RangerResourceACLs {
 				AccessResult accessResult = entry.getValue();
 				int access = accessResult.getResult();
 
-				if (access == RangerPolicyEvaluator.ACCESS_DENIED || access == RangerPolicyEvaluator.ACCESS_ALLOWED) {
+				if (access == ACCESS_DENIED || access == ACCESS_ALLOWED) {
 					for (Map.Entry<String, Map<String, AccessResult>> mapEntry : userACLs.entrySet()) {
 						Map<String, AccessResult> mapValue = mapEntry.getValue();
 						AccessResult savedAccessResult = mapValue.get(accessType);
@@ -223,10 +223,12 @@ public class RangerResourceACLs {
 		}
 		@Override
 		public String toString() {
-			if (result == RangerPolicyEvaluator.ACCESS_ALLOWED)
+			if (result == ACCESS_ALLOWED) {
 				return "ALLOWED, final=" + isFinal;
-			if (result == RangerPolicyEvaluator.ACCESS_DENIED)
+			}
+			if (result == ACCESS_DENIED) {
 				return "NOT_ALLOWED, final=" + isFinal;
+			}
 			return "CONDITIONAL_ALLOWED, final=" + isFinal;
 		}
 	}

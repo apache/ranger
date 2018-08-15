@@ -37,12 +37,12 @@ import com.google.common.collect.Sets;
 public class RangerServiceValidator extends RangerValidator {
 	private static final Log LOG = LogFactory.getLog(RangerServiceValidator.class);
 	static final public String VALIDATION_SERVICE_NAME = "^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}";
-	
-	static Pattern serviceNameCompiledRegEx; 
+
+	static Pattern serviceNameCompiledRegEx;
 	public RangerServiceValidator(ServiceStore store) {
 		super(store);
 	}
-	
+
 	public void validate(RangerService service, Action action) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceValidator.validate(%s, %s)", service, action));
@@ -62,7 +62,7 @@ public class RangerServiceValidator extends RangerValidator {
 			}
 		}
 	}
-	
+
 	boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceValidator.isValid(" + id + ")");
@@ -97,7 +97,7 @@ public class RangerServiceValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
 	boolean isValid(RangerService service, Action action, List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerServiceValidator.isValid(" + service + ")");
@@ -105,7 +105,7 @@ public class RangerServiceValidator extends RangerValidator {
 		if (!(action == Action.CREATE || action == Action.UPDATE)) {
 			throw new IllegalArgumentException("isValid(RangerService, ...) is only supported for CREATE/UPDATE");
 		}
-		
+
 		boolean valid = true;
 		if (service == null) {
 			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_NULL_SERVICE_OBJECT;
@@ -272,15 +272,15 @@ public class RangerServiceValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
 	public boolean regExPatternMatch(String expression, String inputStr) {
 		Pattern pattern = serviceNameCompiledRegEx;
 		if (pattern == null) {
 			pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
 			serviceNameCompiledRegEx = pattern;
 		}
-		
-		return pattern != null ? pattern.matcher(inputStr).matches() : false;
+
+		return pattern != null && pattern.matcher(inputStr).matches();
 	}
 
 	public boolean validateString(String regExStr, String str) {

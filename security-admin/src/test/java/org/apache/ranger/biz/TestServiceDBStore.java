@@ -24,18 +24,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
-import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -53,7 +49,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 //import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
-import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -69,12 +64,8 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
-import org.apache.ranger.view.VXAccessAuditList;
-import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
-import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXString;
-import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -87,9 +78,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -1320,7 +1308,6 @@ public class TestServiceDBStore {
 		policyResourceMap.setValue("1L");
 		policyResourceMapList.add(policyResourceMap);
 
-                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);

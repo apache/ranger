@@ -44,7 +44,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.services.atlas.RangerServiceAtlas;
 
 import java.util.*;
 
@@ -373,7 +372,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                         }
                     }
                 } else {
-                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, RangerServiceAtlas.ENTITY_NOT_CLASSIFIED);
+                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED);
 
                     ret = checkAccess(rangerRequest, auditHandler);
                 }

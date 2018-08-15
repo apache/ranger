@@ -157,7 +157,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				if (!trxLogAttrs.containsKey(field.getName())) {
 					continue;
 				}
-				XXTrxLog xTrxLog = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, oldPolicy, action);
+				XXTrxLog xTrxLog = processFieldToCreateTrxLog(field, objectName, vObj, mObj, oldPolicy, action);
 				if (xTrxLog != null) {
 					trxLogList.add(xTrxLog);
 				}
@@ -167,7 +167,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					.getDeclaredFields();
 			for (Field field : superClassFields) {
 				if ("isEnabled".equalsIgnoreCase(field.getName())) {
-					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, nameField, vObj, mObj, oldPolicy, action);
+					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, vObj, mObj, oldPolicy, action);
 					if (xTrx != null) {
 						trxLogList.add(xTrx);
 					}
@@ -184,7 +184,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 	
 	private XXTrxLog processFieldToCreateTrxLog(Field field, String objectName,
-			Field nameField, RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
+			RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
 
 		String actionString = "";
 
@@ -199,54 +199,54 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 
 			String value = null;
 			boolean isEnum = vTrxLogAttr.isEnum();
-			if (isEnum) {
-
-			} else if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyResourcesForTrxLog(field.get(vObj));
-			} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (POLICY_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyNameForTrxLog(field.get(vObj));
-			} else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (DENY_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPolicyItemsForTrxLog(field.get(vObj));
-			} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processDataMaskPolicyItemsForTrxLog(field.get(vObj));
-				if(vObj.getDataMaskPolicyItems() != null && CollectionUtils.isNotEmpty(vObj.getDataMaskPolicyItems())) {
-					for(RangerDataMaskPolicyItem policyItem : vObj.getDataMaskPolicyItems()) {
-						if(policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
-							List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
-							if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
-								for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
-									if(xxDataMaskTypeDef.getName().equalsIgnoreCase(policyItem.getDataMaskInfo().getDataMaskType())) {
-										String label = xxDataMaskTypeDef.getLabel();
-										StringBuilder sbValue = new StringBuilder(value);
-										label = ",\"DataMasklabel\":\""+label+"\"";
-										int sbValueIndex = sbValue.lastIndexOf("}]");
-										sbValue.insert(sbValueIndex, label);
-										value = sbValue.toString();
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-			} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
-			} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
-                        } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-                                value = processPolicyLabelsClassFieldNameForTrxLog(field.get(vObj));
-			} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processValiditySchedulesClassFieldNameForTrxLog(field.get(vObj));
-			} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				value = processPriorityClassFieldNameForTrxLog(field.get(vObj));
-			} else {
-				value = "" + field.get(vObj);
+			if (!isEnum) {
+			    if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyResourcesForTrxLog(field.get(vObj));
+    			} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyItemsForTrxLog(field.get(vObj));
+    			} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyItemsForTrxLog(field.get(vObj));
+    			} else if (POLICY_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyNameForTrxLog(field.get(vObj));
+    			} else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyItemsForTrxLog(field.get(vObj));
+    			} else if (DENY_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyItemsForTrxLog(field.get(vObj));
+    			} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processDataMaskPolicyItemsForTrxLog(field.get(vObj));
+    				if(vObj.getDataMaskPolicyItems() != null && CollectionUtils.isNotEmpty(vObj.getDataMaskPolicyItems())) {
+    					for(RangerDataMaskPolicyItem policyItem : vObj.getDataMaskPolicyItems()) {
+    						if(policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
+    							List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
+    							if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
+    								for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
+    									if(xxDataMaskTypeDef.getName().equalsIgnoreCase(policyItem.getDataMaskInfo().getDataMaskType())) {
+    										String label = xxDataMaskTypeDef.getLabel();
+    										StringBuilder sbValue = new StringBuilder(value);
+    										label = ",\"DataMasklabel\":\""+label+"\"";
+    										int sbValueIndex = sbValue.lastIndexOf("}]");
+    										sbValue.insert(sbValueIndex, label);
+    										value = sbValue.toString();
+    										break;
+    									}
+    								}
+    							}
+    						}
+    					}
+    				}
+    			} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
+    			} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
+                            } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+                                    value = processPolicyLabelsClassFieldNameForTrxLog(field.get(vObj));
+    			} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processValiditySchedulesClassFieldNameForTrxLog(field.get(vObj));
+    			} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPriorityClassFieldNameForTrxLog(field.get(vObj));
+    			} else {
+    				value = "" + field.get(vObj);
+    			}
 			}
 
 			if (action == OPERATION_CREATE_CONTEXT) {
@@ -266,9 +266,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					mField.setAccessible(true);
 					String mFieldName = mField.getName();
 					if (fieldName.equalsIgnoreCase(mFieldName)) {
-						if (isEnum) {
-
-						} else {
+						if (!isEnum) {
 							oldValue = mField.get(mObj) + "";
 						}
 						break;

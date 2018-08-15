@@ -122,7 +122,6 @@ import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
-import org.apache.ranger.view.VXPolicyLabelList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
@@ -2130,7 +2129,7 @@ public class ServiceREST {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file for specific resource...");
 						}
 						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)){
-							deletePoliciesForResource(sourceServices, destinationServices, polResource, request, policies);
+							deletePoliciesForResource(sourceServices, destinationServices, request, policies);
 						}
 					}
 					if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
@@ -2373,7 +2372,7 @@ public class ServiceREST {
 		}
 	}
 
-	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, String resource, HttpServletRequest request, List<RangerPolicy> exportPolicies) {
+	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies) {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {

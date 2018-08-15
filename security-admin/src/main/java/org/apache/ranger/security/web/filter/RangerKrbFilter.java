@@ -44,8 +44,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
