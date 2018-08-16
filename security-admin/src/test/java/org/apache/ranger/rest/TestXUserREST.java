@@ -327,7 +327,7 @@ public class TestXUserREST {
 	
 		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "group name", null)).thenReturn("");
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "Group Visibility")).thenReturn(1);
-		Mockito.when(searchUtil.extractString(request, testSearchCriteria, "groupSource", "group source", null)).thenReturn("");
+                Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "groupSource", "group source")).thenReturn(0);
 		VXGroupList testvXGroupList=createxGroupList();
 		Mockito.when(xUserMgr.searchXGroups(testSearchCriteria)).thenReturn(testvXGroupList);
 		VXGroupList outputvXGroupList=xUserRest.searchXGroups(request);
@@ -336,7 +336,7 @@ public class TestXUserREST {
 		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.anyObject() ,(List<SortField>)Mockito.anyObject());
 		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "name", "group name", null);
 		Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "isVisible", "Group Visibility");
-		Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "groupSource", "group source", null);
+                Mockito.verify(searchUtil).extractInt(request, testSearchCriteria, "groupSource", "group source");
 		assertNotNull(outputvXGroupList);
 		assertEquals(outputvXGroupList.getTotalCount(),testvXGroupList.getTotalCount());
 		assertEquals(outputvXGroupList.getClass(),testvXGroupList.getClass());

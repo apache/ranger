@@ -69,7 +69,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 		searchFields.add(new SearchField("name", "obj.name",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("groupSource", "obj.groupSource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+                                SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 
 		searchFields.add(new SearchField("isVisible", "obj.isVisible",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL ));
