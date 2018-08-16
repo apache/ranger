@@ -25,14 +25,8 @@
 
 import javax.persistence.EntityManager;
 
-import org.apache.ranger.common.RESTErrorUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-
 public abstract class RangerDaoManagerBase {
 
-	@Autowired
-	protected RESTErrorUtil restErrorUtil;
 	abstract public EntityManager getEntityManager();
 
 	public RangerDaoManagerBase() {

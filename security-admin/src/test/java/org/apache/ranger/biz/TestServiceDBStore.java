@@ -30,6 +30,7 @@ import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -138,9 +139,10 @@ public class TestServiceDBStore {
 	
 	@Mock
 	AssetMgr assetMgr;
-	
-	
-	
+
+	@Mock
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -1056,8 +1058,8 @@ public class TestServiceDBStore {
 	public void test20updateService() throws Exception {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
+		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -1134,9 +1136,9 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		RangerService dbRangerService = serviceDBStore
 				.updateService(rangerService, options);
@@ -1159,8 +1161,8 @@ public class TestServiceDBStore {
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
+		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 		XXPolicyItemDataMaskInfoDao xxPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
 		XXPolicyItemRowFilterInfoDao xxPolicyItemRowFilterInfoDao = Mockito.mock(XXPolicyItemRowFilterInfoDao.class);
@@ -1327,9 +1329,9 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
 		Mockito.when(xPolicyItemDao.findByPolicyId(policyItem.getId()))
@@ -1524,9 +1526,9 @@ public class TestServiceDBStore {
 		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
+		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 
 		XXServiceDef xServiceDef = serviceDef();
@@ -1682,9 +1684,9 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
-		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
@@ -1763,6 +1765,9 @@ public class TestServiceDBStore {
 				.thenReturn(policyConditionDefObj);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
 
+		//RangerTransactionSynchronizationAdapter spy = Mockito.spy(transactionSynchronizationAdapter);
+		//Mockito.doNothing().when(spy).executeOnTransactionCommit(Mockito.any(Runnable.class));
+
 		RangerPolicy dbRangerPolicy = serviceDBStore.createPolicy(rangerPolicy);
 		Assert.assertNull(dbRangerPolicy);
 		Assert.assertEquals(Id, rangerPolicy.getId());
@@ -1813,10 +1818,10 @@ public class TestServiceDBStore {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
                 XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
-		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
+		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 		XXPolicyResourceDao xPolicyResourceDao = Mockito
 				.mock(XXPolicyResourceDao.class);
 		XXPolicyResourceMapDao xPolicyResourceMapDao = Mockito
@@ -1883,9 +1888,9 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
@@ -1960,8 +1965,8 @@ public class TestServiceDBStore {
 		setup();
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
+		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
                 XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 		XXPolicyItemDataMaskInfoDao xPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
@@ -2136,9 +2141,9 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
+		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
@@ -2150,6 +2155,9 @@ public class TestServiceDBStore {
                                 xPolicyLabelMapDao);
                 Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId()))
                                 .thenReturn(xxPolicyLabelMapList);
+		//RangerTransactionSynchronizationAdapter spy = Mockito.spy(transactionSynchronizationAdapter);
+		//Mockito.doNothing().when(spy).executeOnTransactionCommit(Mockito.any(Runnable.class));
+
 
 		serviceDBStore.deletePolicy(Id);
 	}
