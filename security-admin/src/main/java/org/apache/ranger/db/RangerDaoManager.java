@@ -26,6 +26,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,9 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 
 	@Autowired
 	StringUtil stringUtil;
+
+	@Autowired
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Override
 	public EntityManager getEntityManager() {
@@ -64,6 +68,10 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 	 */
 	public StringUtil getStringUtil() {
 		return stringUtil;
+	}
+
+	public RangerTransactionSynchronizationAdapter getRangerTransactionSynchronizationAdapter() {
+		return transactionSynchronizationAdapter;
 	}
 
 }

@@ -138,7 +138,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 	}
 
-	protected final long getNextVersion(Long currentVersion) {
+	public static long getNextVersion(Long currentVersion) {
 		return currentVersion == null ? 1L : currentVersion + 1;
 	}
 

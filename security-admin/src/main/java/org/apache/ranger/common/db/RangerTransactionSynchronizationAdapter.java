@@ -22,6 +22,7 @@ package org.apache.ranger.common.db;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,6 +47,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
     private static final Log LOG = LogFactory.getLog(RangerTransactionSynchronizationAdapter.class);
 
     private static final ThreadLocal<List<Runnable>> RUNNABLES = new ThreadLocal<List<Runnable>>();
+    private static final ThreadLocal<List<Runnable>> RUNNABLES_AFTER_COMMIT = new ThreadLocal<List<Runnable>>();
 
     public void executeOnTransactionCompletion(Runnable runnable) {
         if (LOG.isDebugEnabled()) {
@@ -64,7 +66,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         TransactionSynchronizationAdapter
         */
 
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+        if (!registerSynchronization()) {
             LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
             runnable.run();
             return;
@@ -73,9 +75,36 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         if (threadRunnables == null) {
             threadRunnables = new ArrayList<Runnable>();
             RUNNABLES.set(threadRunnables);
-            // Register a new transaction synchronization for the current thread.
-            // TransactionSynchronizationManage will call afterCompletion() when current transaction completes.
-            TransactionSynchronizationManager.registerSynchronization(this);
+        }
+        threadRunnables.add(runnable);
+    }
+
+    public void executeOnTransactionCommit(Runnable runnable) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Submitting new runnable {" + runnable + "} to run after transaction is committed");
+        }
+
+        /*
+        From TransactionSynchronizationManager documentation:
+        TransactionSynchronizationManager is a central helper that manages resources and transaction synchronizations per thread.
+        Resource management code should only register synchronizations when this manager is active,
+        which can be checked via isSynchronizationActive(); it should perform immediate resource cleanup else.
+        If transaction synchronization isn't active, there is either no current transaction,
+        or the transaction manager doesn't support transaction synchronization.
+
+        Note: Synchronization is an Interface for transaction synchronization callbacks which is implemented by
+        TransactionSynchronizationAdapter
+        */
+
+        if (!registerSynchronization()) {
+            LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
+            runnable.run();
+            return;
+        }
+        List<Runnable> threadRunnables = RUNNABLES_AFTER_COMMIT.get();
+        if (threadRunnables == null) {
+            threadRunnables = new ArrayList<Runnable>();
+            RUNNABLES_AFTER_COMMIT.set(threadRunnables);
         }
         threadRunnables.add(runnable);
     }
@@ -83,48 +112,93 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
     @Override
     public void afterCompletion(int status) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Transaction completed with status {" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + "}");
+            LOG.debug("==> RangerTransactionSynchronizationAdapter.afterCompletion(status=" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + ")");
         }
-        /* Thread runnables are expected to be executed only when the status is STATUS_ROLLED_BACK. Currently, executeOnTransactionCompletion()
-         * is called only for those changes that are going to be rolled-back by TransactionSynchronizationManager - such
-         * as when the operation returns HttpServletResponse.SC_NOT_MODIFIED status.
-         */
-        //if (status == STATUS_ROLLED_BACK) {
-            final List<Runnable> threadRunnables = RUNNABLES.get();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Transaction completed, executing {" + threadRunnables.size() + "} runnables");
+
+        List<Runnable> allRunnables = null;
+
+        if (status == STATUS_COMMITTED) {
+            final List<Runnable> postCommitRunnables = RUNNABLES_AFTER_COMMIT.get();
+            if (CollectionUtils.isNotEmpty(postCommitRunnables)) {
+                allRunnables = postCommitRunnables;
             }
-            if (threadRunnables != null) {
-                try {
-                    //Create new  transaction
-                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-                    txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        }
 
-                    txTemplate.execute(new TransactionCallback<Object>() {
-                        public Object doInTransaction(TransactionStatus status) {
-                            for (Runnable runnable : threadRunnables) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Executing runnable {" + runnable + "}");
-                                }
-                                try {
-                                    runnable.run();
-                                } catch (RuntimeException e) {
-                                    LOG.error("Failed to execute runnable " + runnable, e);
-                                    break;
-                                }
-                            }
+        final List<Runnable> postCompletionRunnables = RUNNABLES.get();
 
-                            return null;
-                        }
-                    });
-                } catch (Exception e) {
-                    LOG.error("Failed to commit TransactionService transaction", e);
-                    LOG.error("Ignoring...");
-                }
+        if (CollectionUtils.isNotEmpty(postCompletionRunnables)) {
+            if (allRunnables == null) {
+                allRunnables = postCompletionRunnables;
+            } else {
+                allRunnables.addAll(postCompletionRunnables);
             }
+        }
 
-        //}
+        runRunnables(allRunnables);
+
+        RUNNABLES_AFTER_COMMIT.remove();
         RUNNABLES.remove();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerTransactionSynchronizationAdapter.afterCompletion(status=" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + ")");
+        }
     }
 
+    private boolean registerSynchronization() {
+        final boolean ret = TransactionSynchronizationManager.isSynchronizationActive();
+        if (ret) {
+            List<Runnable> threadRunnablesOnCompletion = RUNNABLES.get();
+            List<Runnable> threadRunnablesOnCommit = RUNNABLES_AFTER_COMMIT.get();
+            if (threadRunnablesOnCompletion == null && threadRunnablesOnCommit == null) {
+                TransactionSynchronizationManager.registerSynchronization(this);
+            }
+        }
+        return ret;
+    }
+
+    private void runRunnables(final List<Runnable> runnables) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerTransactionSynchronizationAdapter.runRunnables()");
+        }
+
+        if (runnables != null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Executing {" + runnables.size() + "} runnables");
+            }
+            try {
+                //Create new  transaction
+                TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+                txTemplate.execute(new TransactionCallback<Object>() {
+                    public Object doInTransaction(TransactionStatus status) {
+                        for (Runnable runnable : runnables) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Executing runnable {" + runnable + "}");
+                            }
+                            try {
+                                runnable.run();
+                            } catch (RuntimeException e) {
+                                LOG.error("Failed to execute runnable " + runnable, e);
+                                break;
+                            }
+                        }
+
+                        return null;
+                    }
+                });
+            } catch (Exception e) {
+                LOG.error("Failed to commit TransactionService transaction", e);
+                LOG.error("Ignoring...");
+            }
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("No runnables to execute");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerTransactionSynchronizationAdapter.runRunnables()");
+        }
+    }
 }
