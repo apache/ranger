@@ -57,6 +57,7 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -303,6 +304,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         @Autowired
         AssetMgr assetMgr;
+
+	@Autowired
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -2032,7 +2036,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 		
 		bizUtil.createTrxLog(trxLogList);
-		
+
 		return updPolicy;
 	}
 
@@ -2814,6 +2818,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updatePolicyVersion(service, isTagVersionUpdateNeeded);
 	}
 
+	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, POLICY_AND_TAG_VERSION }
+
 	private void updatePolicyVersion(RangerService service, boolean isTagVersionUpdateNeeded) throws Exception {
 		if(service == null || service.getId() == null) {
 			return;
@@ -2830,28 +2836,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
-		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
+		Runnable commitWork = new Runnable() {
+			@Override
+			public void run() {
+				persistVersionChange(daoMgr, serviceDbObj.getId(), VERSION_TYPE.POLICY_VERSION);
+			}
+		};
 
-		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(service.getId());
-
-		if(serviceVersionInfoDbObj != null) {
-			serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
-			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-
-			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
-
-		} else {
-			LOG.warn("updatePolicyVersion(service=" + serviceDbObj.getName() + "): serviceVersionInfo not found, creating it..");
-
-			serviceVersionInfoDbObj = new XXServiceVersionInfo();
-			serviceVersionInfoDbObj.setServiceId(serviceDbObj.getId());
-			serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceDbObj.getPolicyVersion()));
-			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-			serviceVersionInfoDbObj.setTagVersion(serviceDbObj.getTagVersion());
-			serviceVersionInfoDbObj.setTagUpdateTime(serviceDbObj.getTagUpdateTime());
-
-			serviceVersionInfoDao.create(serviceVersionInfoDbObj);
-		}
+		transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
 
 		// if this is a tag service, update all services that refer to this tag service
 		// so that next policy-download from plugins will get updated tag policies
@@ -2861,34 +2853,47 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			if(CollectionUtils.isNotEmpty(referringServices)) {
 				for(XXService referringService : referringServices) {
-					serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(referringService.getId());
-					if (serviceVersionInfoDbObj != null) {
-
-						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
-						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-
-						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
-							serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
-							serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+					commitWork = new Runnable() {
+						@Override
+						public void run() {
+							persistVersionChange(daoMgr, referringService.getId(),
+									filterForServicePlugin && isTagVersionUpdateNeeded ? VERSION_TYPE.POLICY_AND_TAG_VERSION : VERSION_TYPE.POLICY_VERSION);
 						}
-						serviceVersionInfoDao.update(serviceVersionInfoDbObj);
-					} else {
-						LOG.warn("updatePolicyVersion(service=" + referringService.getName() + "): serviceVersionInfo not found, creating it..");
-						serviceVersionInfoDbObj = new XXServiceVersionInfo();
-						serviceVersionInfoDbObj.setServiceId(referringService.getId());
-						serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-						serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-						if (filterForServicePlugin && isTagVersionUpdateNeeded) {
-							serviceVersionInfoDbObj.setTagVersion(getNextVersion(referringService.getTagVersion()));
-							serviceVersionInfoDbObj.setTagUpdateTime(new Date());
-						} else {
-							serviceVersionInfoDbObj.setTagVersion(referringService.getTagVersion());
-							serviceVersionInfoDbObj.setTagUpdateTime(referringService.getTagUpdateTime());
-						}
-						serviceVersionInfoDao.create(serviceVersionInfoDbObj);
-					}
+					};
+					transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
 				}
 			}
+		}
+	}
+
+	public static void persistVersionChange(RangerDaoManager daoMgr, Long id, VERSION_TYPE versionType) {
+		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
+
+		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
+
+		if(serviceVersionInfoDbObj != null) {
+			if (versionType == VERSION_TYPE.POLICY_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
+				serviceVersionInfoDbObj.setPolicyVersion(getNextVersion(serviceVersionInfoDbObj.getPolicyVersion()));
+				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+			}
+			if (versionType == VERSION_TYPE.TAG_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
+
+				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
+				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+			}
+
+			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
+
+		} else {
+			XXService service = daoMgr.getXXService().getById(id);
+			serviceVersionInfoDbObj = new XXServiceVersionInfo();
+			serviceVersionInfoDbObj.setServiceId(service.getId());
+			serviceVersionInfoDbObj.setPolicyVersion(1L);
+			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+			serviceVersionInfoDbObj.setTagVersion(1L);
+			serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+
+			serviceVersionInfoDao.create(serviceVersionInfoDbObj);
 		}
 	}
 
@@ -3308,52 +3313,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
-		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 
 		List<XXService> services = serviceDao.findByServiceDefId(serviceDef.getId());
 
 		if(CollectionUtils.isNotEmpty(services)) {
 			for(XXService service : services) {
-				XXServiceVersionInfo serviceVersionInfo = serviceVersionInfoDao.findByServiceId(service.getId());
-				if (serviceVersionInfo != null) {
-					serviceVersionInfo.setPolicyVersion(getNextVersion(serviceVersionInfo.getPolicyVersion()));
-					serviceVersionInfo.setPolicyUpdateTime(serviceDef.getUpdateTime());
-
-					serviceVersionInfoDao.update(serviceVersionInfo);
-				} else {
-					LOG.warn("updateServicesForServiceDefUpdate(service=" + service.getName() + "): serviceVersionInfo not found, creating it..");
-					serviceVersionInfo = new XXServiceVersionInfo();
-					serviceVersionInfo.setServiceId(service.getId());
-					serviceVersionInfo.setPolicyVersion(getNextVersion(service.getPolicyVersion()));
-					serviceVersionInfo.setTagVersion(service.getTagVersion());
-					serviceVersionInfo.setPolicyUpdateTime(new Date());
-					serviceVersionInfo.setTagUpdateTime(service.getTagUpdateTime());
-
-					serviceVersionInfoDao.create(serviceVersionInfo);
-				}
+				Runnable commitWork = new Runnable() {
+					@Override
+					public void run() {
+						persistVersionChange(daoMgr, service.getId(), VERSION_TYPE.POLICY_VERSION);
+					}
+				};
+				transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
 
 				if(isTagServiceDef) {
 					List<XXService> referrringServices = serviceDao.findByTagServiceId(service.getId());
 
 					if(CollectionUtils.isNotEmpty(referrringServices)) {
 						for(XXService referringService : referrringServices) {
-							serviceVersionInfo = serviceVersionInfoDao.findByServiceId(referringService.getId());
-							if (serviceVersionInfo != null) {
-								serviceVersionInfo.setPolicyVersion(getNextVersion(serviceVersionInfo.getPolicyVersion()));
-								serviceVersionInfo.setPolicyUpdateTime(serviceDef.getUpdateTime());
-
-								serviceVersionInfoDao.update(serviceVersionInfo);
-							} else {
-								LOG.warn("updateServicesForServiceDefUpdate(service=" + referringService.getName() + "): serviceVersionInfo not found, creating it..");
-								serviceVersionInfo = new XXServiceVersionInfo();
-								serviceVersionInfo.setServiceId(referringService.getId());
-								serviceVersionInfo.setPolicyVersion(getNextVersion(referringService.getPolicyVersion()));
-								serviceVersionInfo.setTagVersion(referringService.getTagVersion());
-								serviceVersionInfo.setPolicyUpdateTime(new Date());
-								serviceVersionInfo.setTagUpdateTime(referringService.getTagUpdateTime());
-
-								serviceVersionInfoDao.create(serviceVersionInfo);
-							}
+							commitWork = new Runnable() {
+								@Override
+								public void run() {
+									persistVersionChange(daoMgr, referringService.getId(), VERSION_TYPE.POLICY_VERSION);
+								}
+							};
+							transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
 						}
 					}
 				}
