@@ -17,4 +17,4 @@
 # under the License.
 #
 
--s /testdata/test_servicepolicies_hive.json -r /testdata/test_requests_hive.json -p /testdata/test_modules.txt -c 3 -n 1
+-s /testdata/test_servicepolicies_hive.json -r /testdata/test_requests_hive.json -p /testdata/test_modules.txt -c 3 -n 1 -t -d -f /testdata/ranger-config.xml
