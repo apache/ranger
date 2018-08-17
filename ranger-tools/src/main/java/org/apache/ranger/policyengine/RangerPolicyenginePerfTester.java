@@ -21,6 +21,7 @@ package org.apache.ranger.policyengine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
@@ -61,6 +62,14 @@ public class RangerPolicyenginePerfTester {
             policyEngineOptions.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
             policyEngineOptions.cacheAuditResults = false;
             policyEngineOptions.disableTrieLookupPrefilter = perfTestOptions.getIsTrieLookupPrefixDisabled();
+            policyEngineOptions.optimizeTrieForRetrieval = perfTestOptions.getIsOnDemandTriePostSetupDisabled();
+
+            URL configurationFileURL = perfTestOptions.getPerfConfigurationFileURL();
+
+            if (configurationFileURL != null) {
+	            RangerConfiguration config = RangerConfiguration.getInstance();
+	            config.addResource(configurationFileURL);
+            }
 
             PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, perfTestOptions.getIsDynamicReorderingDisabled());
             if (!perfTestEngine.init()) {

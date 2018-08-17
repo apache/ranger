@@ -28,12 +28,15 @@ public class PerfTestOptions {
 	private final URL statCollectionFileURL;
 	private final boolean isDynamicReorderingDisabled;
 	private final boolean isTrieLookupPrefixDisabled;
+	private final boolean isOnDemandTriePostSetupDisabled;
 
 
 	private final int concurrentClientCount;
 	private final int iterationsCount;
+	private final URL perfConfigurationFileURL;
 
-	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isDynamicReorderingDisabled, boolean isTrieLookupPrefixDisabled) {
+
+	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isDynamicReorderingDisabled, boolean isTrieLookupPrefixDisabled, boolean isOnDemandTriePostSetupDisabled, URL perfConfigurationFileURL) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.requestFileURLs = requestFileURLs;
 		this.statCollectionFileURL = statCollectionFileURL;
@@ -41,6 +44,8 @@ public class PerfTestOptions {
 		this.concurrentClientCount = concurrentClientCount;
 		this.isDynamicReorderingDisabled = isDynamicReorderingDisabled;
 		this.isTrieLookupPrefixDisabled = isTrieLookupPrefixDisabled;
+		this.isOnDemandTriePostSetupDisabled = isOnDemandTriePostSetupDisabled;
+		this.perfConfigurationFileURL = perfConfigurationFileURL;
 	}
 
 	public URL getServicePoliciesFileURL() {
@@ -66,4 +71,11 @@ public class PerfTestOptions {
 	public boolean getIsDynamicReorderingDisabled() { return isDynamicReorderingDisabled; }
 
 	public boolean getIsTrieLookupPrefixDisabled() { return isTrieLookupPrefixDisabled; }
+
+	public boolean getIsOnDemandTriePostSetupDisabled() { return isOnDemandTriePostSetupDisabled; }
+
+	public URL getPerfConfigurationFileURL() {
+		return  this.perfConfigurationFileURL;
+	}
+
 }
