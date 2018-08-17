@@ -68,7 +68,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie(name=" + resourceDef.getName() + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(name=" + resourceDef.getName() + ")");
         }
 
         int builderThreadCount = RangerConfiguration.getInstance().getInt(TRIE_BUILDER_THREAD_COUNT, 1);
@@ -152,6 +152,12 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private TrieNode<T> buildTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, Comparator<T> comparator, int builderThreadCount) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> buildTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isMultiThreaded=" + (builderThreadCount > 1) + ")");
+        }
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(resourceDef=" + resourceDef.getName() + ")");
         }
 
         TrieNode<T>                           ret                 = new TrieNode<>(null);
@@ -244,7 +250,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                     RangerPerfTracer postSetupPerf = null;
 
                     if (RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-                        postSetupPerf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie(name=" + resourceDef.getName() + "-postSetup)");
+                        postSetupPerf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(name=" + resourceDef.getName() + "-postSetup)");
                     }
 
                     ret.postSetup(null, comparator);
@@ -259,6 +265,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         if (isMultiThreaded) {
             cleanUpThreads(builderThreads);
         }
+
+        RangerPerfTracer.logAlways(perf);
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== buildTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isMultiThreaded=" + isMultiThreaded + ") :" +  ret);
@@ -325,11 +333,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     }
 
     private void insert(TrieNode<T> currentRoot, String resource, boolean isRecursive, T evaluator) {
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.insert(resource=" + resource + ")");
-        }
 
         TrieNode<T>   curr       = currentRoot;
         final String  prefix     = getNonWildcardPrefix(resource);
@@ -345,7 +348,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             curr.addEvaluator(evaluator);
         }
 
-        RangerPerfTracer.logAlways(perf);
     }
 
     private String getNonWildcardPrefix(String str) {
@@ -560,7 +562,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 RangerPerfTracer postSetupPerf = null;
 
                 if (RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-                    postSetupPerf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie(thread=" + this.getName() + "-postSetup)");
+                    postSetupPerf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(thread=" + this.getName() + "-postSetup)");
                 }
 
                 thisRoot.postSetup(parentWildcardEvaluators, comparator);

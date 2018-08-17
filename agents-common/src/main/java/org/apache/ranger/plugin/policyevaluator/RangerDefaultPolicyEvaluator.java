@@ -156,7 +156,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
     @Override
     public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+            LOG.debug("==> RangerDefaultPolicyEvaluator.evaluate(policyId=" + getPolicy().getId() + ", " + request + ", " + result + ")");
         }
 
 		RangerPerfTracer perf = null;
@@ -206,7 +206,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		RangerPerfTracer.log(perf);
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(" + request + ", " + result + ")");
+            LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(policyId=" + getPolicy().getId() + ", " + request + ", " + result + ")");
         }
     }
 
