@@ -51,6 +51,8 @@ This file describes how to build, setup, configure and run the performance testi
 						  tag-definitions, and service-resources with their associated tags;
 
 	testdata/test_requests_hive.json	- Contains access requests to be made to the policy-engine;
+
+	testdata/ranger-config.xml          - Contains any required Ranger configuration variables
 	
 	Please review the contents of these files and modify to suit your profiling needs.
 
@@ -58,10 +60,13 @@ This file describes how to build, setup, configure and run the performance testi
 
 6.	Run the tool with the following command
 
-	% ./ranger-perftester.sh -s <service-policies-file>  -r <requests-file> -c <number-of-concurrent-clients> -n <number-of-times-requests-file-to-be-run>
+	% ./ranger-perftester.sh -s <service-policies-file>  -r <requests-file> -c <number-of-concurrent-clients> -n <number-of-times-requests-file-to-be-run> -t -d -f <ranger-configuration-file> -p <test-modules-file>
+
+       where,    -t indicates enabling Trie,
+                 -d indicates enabling lazy post-setup of Trie structure,
 
 	Example:
-	% ./ranger-perftester.sh -s testdata/test_servicepolicies_hive.json  -r testdata/test_requests_hive.json -c 2 -n 1
+	% ./ranger-perftester.sh -s testdata/test_servicepolicies_hive.json  -r testdata/test_requests_hive.json -c 2 -n 1 -t -d -f testdata/ranger-config.xml -p testdata/test_modules.txt
 
 7. 	At the end of the run, the performance-statistics are printed on the console and in the log specified file in conf/log4j.properties file as shown below. This is for time spent in evaluating access by Ranger Policy Engine during the course of a test run.  The time values shown are in milliseconds.
 
