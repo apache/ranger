@@ -63,6 +63,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
 	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
 	public static final String EMBEDDED_SERVICEDEF_WASB_NAME  = "wasb";
+	public static final String EMBEDDED_SERVICEDEF_ABFS_NAME  = "abfs";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -93,6 +94,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef nifiServiceDef  = null;
 	private RangerServiceDef atlasServiceDef  = null;
 	private RangerServiceDef wasbServiceDef	 = null;
+	private RangerServiceDef abfsServiceDef = null;
 
 	private RangerServiceDef tagServiceDef = null;
 
@@ -133,6 +135,7 @@ public class EmbeddedServiceDefsUtil {
 
 			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
+			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 
 
 			// Ensure that tag service def is updated with access types of all service defs
@@ -191,6 +194,8 @@ public class EmbeddedServiceDefsUtil {
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
 	public long getWasbServiceDefId() { return getId(wasbServiceDef); }
+
+	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
