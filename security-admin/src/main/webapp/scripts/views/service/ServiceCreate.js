@@ -193,6 +193,9 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
+			if (!this.form.formValidation()) {
+				return;
+			}
 			this.form.beforeSave();
 			this.model.testConfig(this.model,{
 					//wait: true,
