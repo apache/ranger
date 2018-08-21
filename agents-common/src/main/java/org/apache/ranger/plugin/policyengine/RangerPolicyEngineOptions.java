@@ -33,7 +33,7 @@ public class RangerPolicyEngineOptions {
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
 	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
-	public boolean optimizeTrieForRetrieval = true;
+	public boolean optimizeTrieForRetrieval = false;
 
 	private RangerServiceDefHelper serviceDefHelper;
 
@@ -51,7 +51,7 @@ public class RangerPolicyEngineOptions {
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
 		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
-		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", true);
+		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 
 	}
 
