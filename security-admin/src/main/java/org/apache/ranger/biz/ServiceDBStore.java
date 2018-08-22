@@ -2836,31 +2836,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 			return;
 		}
 
-		Runnable commitWork = new Runnable() {
-			@Override
-			public void run() {
-				persistVersionChange(daoMgr, serviceDbObj.getId(), VERSION_TYPE.POLICY_VERSION);
-			}
-		};
+		final RangerDaoManager daoManager  = daoMgr;
+		final Long 			   serviceId   = serviceDbObj.getId();
+		final VERSION_TYPE     versionType = VERSION_TYPE.POLICY_VERSION;
 
-		transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
+		Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType);
+		transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
 
 		// if this is a tag service, update all services that refer to this tag service
 		// so that next policy-download from plugins will get updated tag policies
 		boolean isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
 		if(isTagService) {
-			List<XXService> referringServices = serviceDao.findByTagServiceId(serviceDbObj.getId());
+			List<XXService> referringServices = serviceDao.findByTagServiceId(serviceId);
 
 			if(CollectionUtils.isNotEmpty(referringServices)) {
 				for(XXService referringService : referringServices) {
-					commitWork = new Runnable() {
-						@Override
-						public void run() {
-							persistVersionChange(daoMgr, referringService.getId(),
-									filterForServicePlugin && isTagVersionUpdateNeeded ? VERSION_TYPE.POLICY_AND_TAG_VERSION : VERSION_TYPE.POLICY_VERSION);
-						}
-					};
-					transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
+					final Long 		    referringServiceId 	  = referringService.getId();
+					final VERSION_TYPE  tagServiceversionType = filterForServicePlugin && isTagVersionUpdateNeeded ? VERSION_TYPE.POLICY_AND_TAG_VERSION : VERSION_TYPE.POLICY_VERSION;
+
+					Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceversionType);
+					transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
 				}
 			}
 		}
@@ -2877,7 +2872,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
 			}
 			if (versionType == VERSION_TYPE.TAG_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
-
 				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
 				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
 			}
@@ -3310,6 +3304,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(serviceDef == null) {
 			return;
 		}
+
+		final RangerDaoManager daoManager = daoMgr;
+
 		boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
 		XXServiceDao serviceDao = daoMgr.getXXService();
@@ -3318,26 +3315,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		if(CollectionUtils.isNotEmpty(services)) {
 			for(XXService service : services) {
-				Runnable commitWork = new Runnable() {
-					@Override
-					public void run() {
-						persistVersionChange(daoMgr, service.getId(), VERSION_TYPE.POLICY_VERSION);
-					}
-				};
-				transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
+
+				final Long 		    serviceId 	= service.getId();
+				final VERSION_TYPE  versionType = VERSION_TYPE.POLICY_VERSION;
+
+				Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType);
+				transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
 
 				if(isTagServiceDef) {
-					List<XXService> referrringServices = serviceDao.findByTagServiceId(service.getId());
+					List<XXService> referringServices = serviceDao.findByTagServiceId(service.getId());
 
-					if(CollectionUtils.isNotEmpty(referrringServices)) {
-						for(XXService referringService : referrringServices) {
-							commitWork = new Runnable() {
-								@Override
-								public void run() {
-									persistVersionChange(daoMgr, referringService.getId(), VERSION_TYPE.POLICY_VERSION);
-								}
-							};
-							transactionSynchronizationAdapter.executeOnTransactionCommit(commitWork);
+					if(CollectionUtils.isNotEmpty(referringServices)) {
+						for(XXService referringService : referringServices) {
+
+							final Long 		    referringServiceId    = referringService.getId();
+							final VERSION_TYPE  tagServiceVersionType = VERSION_TYPE.POLICY_VERSION;
+
+							Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceVersionType);
+							transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
 						}
 					}
 				}
@@ -4786,5 +4781,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		return ret;
+	}
+
+	public static class ServiceVersionUpdater implements Runnable {
+		final Long 			   serviceId;
+		final RangerDaoManager daoManager;
+		final VERSION_TYPE     versionType;
+
+		public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType ) {
+			this.serviceId   = serviceId;
+			this.daoManager  = daoManager;
+			this.versionType = versionType;
+		}
+		@Override
+		public void run() {
+			ServiceDBStore.persistVersionChange(this.daoManager, this.serviceId, this.versionType);
+		}
 	}
 }

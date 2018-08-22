@@ -124,16 +124,13 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 		}
 
 		for(XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
+			final RangerDaoManager finaldaoManager 		  = daoManager;
+			final Long 		       finalServiceId  		  = serviceVersionInfo.getServiceId();
+			final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
 
-			Runnable commitWork = new Runnable() {
-				@Override
-				public void run() {
-					ServiceDBStore.persistVersionChange(daoManager, serviceVersionInfo.getId(), ServiceDBStore.VERSION_TYPE.TAG_VERSION);
-				}
-			};
+			Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType);
 
-			daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(commitWork);
-
+			daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
 		}
 
 	}
