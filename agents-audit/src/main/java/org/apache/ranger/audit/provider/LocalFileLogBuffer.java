@@ -144,6 +144,8 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 		mDispatcherThread = new DestinationDispatcherThread<T>(this, destination, mLogger);
 
+		mDispatcherThread.setDaemon(true);
+
 		mDispatcherThread.start();
 
 		mLogger.debug("<== LocalFileLogBuffer.start()");

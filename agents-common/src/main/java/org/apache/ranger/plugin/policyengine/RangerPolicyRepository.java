@@ -582,6 +582,9 @@ class RangerPolicyRepository {
                 }
             }
         }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("This policy engine contains " + (policyEvaluators.size()+dataMaskPolicyEvaluators.size()+rowFilterPolicyEvaluators.size()) + " policy evaluators");
+        }
         RangerPolicyEvaluator.PolicyEvalOrderComparator comparator = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
         Collections.sort(policyEvaluators, comparator);
         this.policyEvaluators = Collections.unmodifiableList(policyEvaluators);
