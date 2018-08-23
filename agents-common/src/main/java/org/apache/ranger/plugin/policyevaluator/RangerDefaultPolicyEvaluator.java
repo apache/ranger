@@ -740,7 +740,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isMatch(" + policy.getId() + ", " + evalContext + ")");
 		}
 
-		boolean ret = policy.getId() == getId() || isMatch(policy.getResources(), evalContext);
+		final boolean ret = isMatch(policy.getResources(), evalContext);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isMatch(" + policy.getId() + ", " + evalContext + "): " + ret);
