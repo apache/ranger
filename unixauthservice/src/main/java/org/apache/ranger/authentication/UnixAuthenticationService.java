@@ -131,6 +131,8 @@ public class UnixAuthenticationService {
 		UserGroupSync syncProc = new UserGroupSync();
 		Thread newSyncProcThread = new Thread(syncProc);
 		newSyncProcThread.setName("UnixUserSyncThread");
+		// If this thread is set as daemon, then the entire process will terminate if enableUnixAuth is false
+        // Therefore this is marked as non-daemon thread. Don't change the following line
 		newSyncProcThread.setDaemon(false);
 		newSyncProcThread.start();
 	}
