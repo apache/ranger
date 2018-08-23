@@ -170,6 +170,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             builderThreads = new ArrayList<>();
             for (int i = 0; i < builderThreadCount; i++) {
                 ResourceTrieBuilderThread t = new ResourceTrieBuilderThread(isOptimizedForRetrieval);
+                t.setDaemon(true);
                 builderThreads.add(t);
                 t.start();
             }
