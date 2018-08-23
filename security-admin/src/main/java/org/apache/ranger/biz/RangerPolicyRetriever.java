@@ -178,6 +178,7 @@ public class RangerPolicyRetriever {
 				}
 
 				PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
+				t.setDaemon(true);
 				t.start();
 				try {
 					t.join();

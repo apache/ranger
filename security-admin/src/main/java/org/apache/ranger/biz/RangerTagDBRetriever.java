@@ -98,6 +98,7 @@ public class RangerTagDBRetriever {
 				}
 
 				TagLoaderThread t = new TagLoaderThread(txTemplate, xService);
+				t.setDaemon(true);
 				t.start();
 				try {
 					t.join();
