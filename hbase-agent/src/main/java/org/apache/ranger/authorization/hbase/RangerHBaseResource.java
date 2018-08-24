@@ -81,7 +81,7 @@ public class RangerHBaseResource extends RangerAccessResourceImpl {
         if (StringUtils.equals(key, KEY_TABLE)) {
             Object value = getValue(key);
             if (value instanceof List) {
-                List tableNames = (List) value;
+                List<?> tableNames = (List<?>) value;
                 if (!tableNames.isEmpty()) {
                     super.setValue(key, tableNames.get(0));
                 }
