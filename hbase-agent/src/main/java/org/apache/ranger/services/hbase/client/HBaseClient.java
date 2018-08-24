@@ -33,12 +33,12 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
-
-import com.google.protobuf.ServiceException;
 
 public class HBaseClient extends BaseClient {
 
@@ -129,13 +129,14 @@ public class HBaseClient extends BaseClient {
 					@Override
 					public Boolean run() {
 						Boolean hbaseStatus1 = false;
+						Admin admin = null;
 						try {
 							LOG.info("getHBaseStatus: creating default Hbase configuration");
 
 							LOG.info("getHBaseStatus: setting config values from client");
-							setClientConfigValues(conf);						
+							setClientConfigValues(conf);
 							LOG.info("getHBaseStatus: checking HbaseAvailability with the new config");
-							HBaseAdmin.checkHBaseAvailable(conf);					
+							admin = ConnectionFactory.createConnection(conf).getAdmin();
 							LOG.info("getHBaseStatus: no exception: HbaseAvailability true");
 							hbaseStatus1 = true;
 						} catch (ZooKeeperConnectionException zce) {
@@ -160,15 +161,6 @@ public class HBaseClient extends BaseClient {
 							LOG.error(msgDesc + mnre);
 							throw hdpException;
 
-						} catch (ServiceException se) {
-							String msgDesc = "getHBaseStatus: Unable to check availability of "
-									+ "Hbase environment [" + getConfigHolder().getDatasourceName() + "].";
-							HadoopException hdpException = new HadoopException(msgDesc, se);
-							hdpException.generateResponseDataMap(false, getMessage(se),
-									msgDesc + errMsg, null, null);
-							LOG.error(msgDesc + se);
-							throw hdpException;
-
 						} catch(IOException io) {
 							String msgDesc = "getHBaseStatus: Unable to check availability of"
 									+ " Hbase environment [" + getConfigHolder().getDatasourceName() + "].";
@@ -187,7 +179,15 @@ public class HBaseClient extends BaseClient {
 							hdpException.generateResponseDataMap(false, getMessage(e),
 									msgDesc + errMsg, null, null);
 							throw hdpException;
-						}
+						} finally {
+	                        if (admin != null) {
+	                            try {
+	                                admin.close();
+	                            } catch (IOException e) {
+	                                LOG.error("Unable to close HBase connection [" + getConfigHolder().getDatasourceName() + "]", e);
+	                            }
+	                        }
+	                    }
 						return hbaseStatus1;
 					}
 				});
@@ -217,7 +217,7 @@ public class HBaseClient extends BaseClient {
 			if (v != null && !v.equalsIgnoreCase(e.getValue())) {
 				conf.set(e.getKey(), e.getValue());
 			}
-		}		
+		}
 	}
 
 	public List<String> getTableList(final String tableNameMatching, final List<String> existingTableList ) throws HadoopException {
@@ -239,14 +239,13 @@ public class HBaseClient extends BaseClient {
 				public List<String> run() {
 
 					List<String> tableList = new ArrayList<String>();
-					HBaseAdmin admin = null;
+					Admin admin = null;
 					try {
 						LOG.info("getTableList: setting config values from client");
-						setClientConfigValues(conf);						
+						setClientConfigValues(conf);
 						LOG.info("getTableList: checking HbaseAvailability with the new config");
-						HBaseAdmin.checkHBaseAvailable(conf);					
+						admin = ConnectionFactory.createConnection(conf).getAdmin();
 						LOG.info("getTableList: no exception: HbaseAvailability true");
-						admin = new HBaseAdmin(conf);
 						HTableDescriptor [] htds = admin.listTables(tableNameMatching);
 						if (htds != null) {
 							for (HTableDescriptor htd : htds) {
@@ -339,18 +338,17 @@ public class HBaseClient extends BaseClient {
 					@Override
 					public List<String> run() {
 						List<String> colfList = new ArrayList<String>();
-						HBaseAdmin admin = null;
+						Admin admin = null;
 						try {
 							LOG.info("getColumnFamilyList: setting config values from client");
-							setClientConfigValues(conf);						
+							setClientConfigValues(conf);
 							LOG.info("getColumnFamilyList: checking HbaseAvailability with the new config");
-							HBaseAdmin.checkHBaseAvailable(conf);					
+							admin = ConnectionFactory.createConnection(conf).getAdmin();
 							LOG.info("getColumnFamilyList: no exception: HbaseAvailability true");
-							admin = new HBaseAdmin(conf);
 							if (tableList != null) {
 								for (String tableName: tableList) {
 									tblName = tableName;
-									HTableDescriptor htd = admin.getTableDescriptor(tblName.getBytes());
+									HTableDescriptor htd = admin.getTableDescriptor(TableName.valueOf(tblName.getBytes()));
 									if (htd != null) {
 										for (HColumnDescriptor hcd : htd.getColumnFamilies()) {
 											String colf = hcd.getNameAsString();
@@ -404,7 +402,7 @@ public class HBaseClient extends BaseClient {
 							hdpException.generateResponseDataMap(false, getMessage(se),
 									msgDesc + errMsg, null, null);
 							LOG.error(msgDesc + se);
-							throw hdpException;							
+							throw hdpException;
 
 						} catch (Throwable e) {
 							String msgDesc = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for "
