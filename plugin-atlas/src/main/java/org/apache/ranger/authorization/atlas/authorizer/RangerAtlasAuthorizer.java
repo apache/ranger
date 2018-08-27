@@ -140,8 +140,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.isAccessAllowed(" + request + ")");
             }
 
-            // not initializing audit handler, so that audits are not logged when entity details are NULL
-            if (!(request.getEntityId() == null && request.getClassification() == null && request.getEntity() == null)) {
+            // not initializing audit handler, so that audits are not logged when entity details are NULL or EMPTY STRING
+            if (!(StringUtils.isEmpty(request.getEntityId()) && request.getClassification() == null && request.getEntity() == null)) {
                 auditHandler = new RangerAtlasAuditHandler(request, getServiceDef());
             }
 
