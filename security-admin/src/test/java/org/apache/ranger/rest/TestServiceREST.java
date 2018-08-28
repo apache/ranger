@@ -44,6 +44,7 @@ import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
@@ -52,6 +53,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -95,6 +97,7 @@ import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUser;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -1020,8 +1023,7 @@ public class TestServiceREST {
 		Assert.assertNotNull(dbRangerService);
 		Mockito.verify(svcStore).getServices(filter);
 	}
-
-
+	
 	@Test
 	public void test27getPoliciesWithoutServiceAdmin() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -1109,7 +1111,8 @@ public class TestServiceREST {
 		RangerServiceList dbRangerService = serviceREST.getServices(request);
 		Assert.assertNull(dbRangerService);
 	}
-
+	
+	
 	@Test
 	public void test32getPolicyVersionList() throws Exception {
 		VXString vXString = new VXString();
@@ -1914,5 +1917,158 @@ public class TestServiceREST {
 
 		serviceREST.getPolicyFromEventTime(request);
 	}
+	
+	@Test
+	public void test61getServiceWillOnlyReturnNameIdAndTypeForRoleUser() throws Exception {
+		RangerService actualService = rangerService();
+		
+		String userLoginID = "testuser";
+		Long userId = 8L;
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = new VXUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(svcStore.getService(Id)).thenReturn(actualService);
+
+		RangerService service = serviceREST.getService(Id);
+		Assert.assertNotNull(service);
+		Mockito.verify(svcStore).getService(Id);
+		Assert.assertNull(service.getDescription());
+		Assert.assertTrue(service.getConfigs().isEmpty());
+		Assert.assertEquals(service.getId(), Id);
+		Assert.assertEquals(service.getName(), "HDFS_1");
+		Assert.assertEquals(service.getType(), "1");
+	}
+
+	@Test
+	public void test62getServiceByNameWillOnlyReturnNameIdAndTypeForRoleUser() throws Exception {
+		RangerService actualService = rangerService();
+		
+		String userLoginID = "testuser";
+		Long userId = 8L;
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = new VXUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(svcStore.getServiceByName(actualService.getName())).thenReturn(actualService);
+
+		RangerService service = serviceREST.getServiceByName(actualService.getName());
+		Assert.assertNotNull(service);
+		Mockito.verify(svcStore).getServiceByName(actualService.getName());
+		Assert.assertNull(service.getDescription());
+		Assert.assertTrue(service.getConfigs().isEmpty());
+		Assert.assertEquals(service.getId(), Id);
+		Assert.assertEquals(service.getName(), "HDFS_1");
+		Assert.assertEquals(service.getType(), "1");
+	}
+	
+	@Test
+	public void test63getServices() throws Exception{
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		PList<RangerService> paginatedSvcs = new PList<RangerService>();
+		RangerService svc1 = rangerService();
+		
+		String userLoginID = "testuser";
+		Long userId = 8L;
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = new VXUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		Map<String, String> configs = new HashMap<String, String>();
+		configs.put("username", "servicemgr");
+		configs.put("password", "servicemgr");
+		configs.put("namenode", "servicemgr");
+		configs.put("hadoop.security.authorization", "No");
+		configs.put("hadoop.security.authentication", "Simple");
+		configs.put("hadoop.security.auth_to_local", "");
+		configs.put("dfs.datanode.kerberos.principal", "");
+		configs.put("dfs.namenode.kerberos.principal", "");
+		configs.put("dfs.secondary.namenode.kerberos.principal", "");
+		configs.put("hadoop.rpc.protection", "Privacy");
+		configs.put("commonNameForCertificate", "");
+
+		RangerService svc2 = new RangerService();
+		svc2.setId(9L);
+		svc2.setConfigs(configs);
+		svc2.setCreateTime(new Date());
+		svc2.setDescription("service policy");
+		svc2.setGuid("1427365526516_835_1");
+		svc2.setIsEnabled(true);
+		svc2.setName("YARN_1");
+		svc2.setPolicyUpdateTime(new Date());
+		svc2.setType("yarn");
+		svc2.setUpdatedBy("Admin");
+		svc2.setUpdateTime(new Date());
+		
+		List<RangerService> rangerServiceList = new ArrayList<RangerService>();
+		rangerServiceList.add(svc1);
+		rangerServiceList.add(svc2);
+		
+		paginatedSvcs.setList(rangerServiceList);
+		
+		SearchFilter filter = new SearchFilter();
+		Mockito.when(searchUtil.getSearchFilter(request, svcService.sortFields)).thenReturn(filter);
+		Mockito.when(svcStore.getPaginatedServices(filter)).thenReturn(paginatedSvcs);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		RangerServiceList retServiceList = serviceREST.getServices(request);
+		Assert.assertNotNull(retServiceList);
+		Assert.assertNull(retServiceList.getServices().get(0).getDescription());
+		Assert.assertTrue(retServiceList.getServices().get(0).getConfigs().isEmpty());
+		Assert.assertNull(retServiceList.getServices().get(1).getDescription());
+		Assert.assertTrue(retServiceList.getServices().get(1).getConfigs().isEmpty());
+		Assert.assertEquals(retServiceList.getServices().get(0).getId(), Id);
+		Assert.assertEquals(retServiceList.getServices().get(0).getName(), "HDFS_1");
+		Assert.assertEquals(retServiceList.getServices().get(0).getType(), "1");
+		
+		Assert.assertEquals(retServiceList.getServices().get(1).getId(), svc2.getId());
+		Assert.assertEquals(retServiceList.getServices().get(1).getName(), "YARN_1");
+		Assert.assertEquals(retServiceList.getServices().get(1).getType(), "yarn");
+		
+		
+	}
+
+
 
 }
