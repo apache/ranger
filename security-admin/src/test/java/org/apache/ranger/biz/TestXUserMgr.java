@@ -590,9 +590,17 @@ public class TestXUserMgr {
 		vxUser.getGroupNameList());
 		Mockito.verify(xUserService).createResource(vxUser);
 		Mockito.when(xUserService.readResourceWithOutLogin(userId)).thenReturn(vxUser);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		
 		VXUser dbvxUser = xUserMgr.getXUser(userId);
 		Mockito.verify(userMgr).createDefaultAccountUser((VXPortalUser) Mockito.any());
-		Mockito.verify(daoManager).getXXModuleDef();
 		Assert.assertNotNull(dbvxUser);
 		Assert.assertEquals(userId, dbvxUser.getId());
 		Assert.assertEquals(dbvxUser.getDescription(), vxUser.getDescription());
@@ -1568,6 +1576,22 @@ public class TestXUserMgr {
 		Mockito.when(xPortalUserRoleDao.findByUserId(userId)).thenReturn(xPortalUserRoleList);
 		Mockito.when(xUserMgr.getXUser(userId)).thenReturn(vXUser);
 		Mockito.when(userMgr.getUserProfileByLoginId(vXUser.getName())).thenReturn(userProfile);
+		
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+		
 		VXStringList vXStringList = xUserMgr.setUserRolesByExternalID(userId,vStringRolesList);
 		Assert.assertNotNull(vXStringList);
 	}
@@ -1598,6 +1622,22 @@ public class TestXUserMgr {
 		groupPermList.add(groupPermission);
 		Mockito.when(xUserMgr.getXUser(userId)).thenReturn(vXUser);
 		Mockito.when(userMgr.getUserProfileByLoginId(vXUser.getName())).thenReturn(null);
+		
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+		
 		Mockito.when(restErrorUtil.createRESTException("User ID doesn't exist.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		xUserMgr.setUserRolesByExternalID(userId, vStringRolesList);
@@ -1734,6 +1774,22 @@ public class TestXUserMgr {
 		Mockito.when(xPortalUserRoleDao.findByUserId(userId)).thenReturn(xPortalUserRoleList);
 		Mockito.when(xUserMgr.getXUser(userId)).thenReturn(vXUser);
 		Mockito.when(userMgr.getUserProfileByLoginId(vXUser.getName())).thenReturn(userProfile);
+		
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+		
 		VXStringList vXStringList = xUserMgr.getUserRolesByExternalID(userId);
 		Assert.assertNotNull(vXStringList);
 		Mockito.when(restErrorUtil.createRESTException("Please provide a valid ID",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
@@ -1772,6 +1828,22 @@ public class TestXUserMgr {
 		Mockito.when(xPortalUserRoleDao.findByUserId(userId)).thenReturn(xPortalUserRoleList);
 		Mockito.when(xUserMgr.getXUser(userId)).thenReturn(vXUser);
 		Mockito.when(userMgr.getUserProfileByLoginId(vXUser.getName())).thenReturn(userProfile);
+		
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+		
 		VXStringList vXStringList = xUserMgr.getUserRolesByExternalID(userId);
 		Assert.assertNotNull(vXStringList);
 		Mockito.when(restErrorUtil.createRESTException("User ID doesn't exist.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
@@ -3130,6 +3202,281 @@ public class TestXUserMgr {
 		destroySession();
 		VXStringList vXStringList=xUserMgr.getStringListFromUserRoleList(null);
 		Assert.assertNull(vXStringList);
+	}
+	
+	
+	@Test
+	public void test101getAdminUserDetailsWithUserHavingUSER_ROLE() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_ADMIN);
+		vxUser.setId(5L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.readResourceWithOutLogin(5L)).thenReturn(vxUser);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.getXUser(5L);
+	}
+	
+	@Test
+	public void test102getKeyAdminUserDetailsWithUserHavingUSER_ROLE() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_KEY_ADMIN);
+		vxUser.setId(5L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.readResourceWithOutLogin(5L)).thenReturn(vxUser);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.getXUser(5L);
+	}
+	
+	@Test
+	public void test103getAdminAuditorUserDetailsWithUserHavingUSER_ROLE() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+		vxUser.setId(5L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.readResourceWithOutLogin(5L)).thenReturn(vxUser);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.getXUser(5L);
+	}
+
+	@Test
+	public void test104getKeyAdminAuditorUserDetailsWithUserHavingUSER_ROLE() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+		vxUser.setId(5L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.readResourceWithOutLogin(5L)).thenReturn(vxUser);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.getXUser(5L);
+	}
+
+	@Test
+	public void test105getUserDetailsOfItsOwn() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_USER);
+		vxUser.setId(8L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.readResourceWithOutLogin(8L)).thenReturn(vxUser);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+		VXUser expectedVXUser = xUserMgr.getXUser(8L);
+		Assert.assertNotNull(expectedVXUser);
+		Assert.assertEquals(expectedVXUser.getName(), vxUser.getName());
+	}
+	
+	@Test
+	public void test106getErrorWhenRoleUserFetchAnotherUserGroupInfo() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		List<Long> groupIdList = new ArrayList<Long>();
+		groupIdList.add(2L);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		loggedInUser.setGroupIdList(groupIdList);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_USER);
+		vxUser.setId(8L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+
+		XXGroupUserDao mockxxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(mockxxGroupUserDao);
+		Mockito.when(mockxxGroupUserDao.findGroupIdListByUserId(loggedInUser.getId())).thenReturn(groupIdList);
+
+		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested group data.")).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.getXGroup(5L);
+	}
+	
+	@Test
+	public void test107RoleUserWillFetchOnlyHisOwnGroupDetails() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		List<Long> groupIdList = new ArrayList<Long>();
+		groupIdList.add(5L);
+		
+		VXGroup expectedVXGroup = new VXGroup();
+		expectedVXGroup.setId(5L);
+		expectedVXGroup.setName("testGroup");
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		loggedInUser.setGroupIdList(groupIdList);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_USER);
+		vxUser.setId(8L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xGroupService.readResourceWithOutLogin(5L)).thenReturn(expectedVXGroup);
+
+		VXGroup rcvVXGroup = xUserMgr.getXGroup(5L);
+		Assert.assertNotNull(rcvVXGroup);
+		Assert.assertEquals(expectedVXGroup.getId(), rcvVXGroup.getId());
+		Assert.assertEquals(expectedVXGroup.getName(), rcvVXGroup.getName());
 	}
 
 }

@@ -816,6 +816,23 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceId=" + id + ")");
 			}
 			ret = svcStore.getService(id);
+			
+			if (ret != null) {
+				UserSessionBase userSession = ContextUtil
+						.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService
+							.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(
+										RangerConstants.ROLE_USER)) {
+
+							ret = hideCriticalServiceDetailsForRoleUser(ret);
+						}
+					}
+				}
+			}
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -854,6 +871,24 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceName=" + name + ")");
 			}
 			ret = svcStore.getServiceByName(name);
+			
+			if (ret != null) {
+				UserSessionBase userSession = ContextUtil
+						.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService
+							.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(
+										RangerConstants.ROLE_USER)) {
+
+							ret = hideCriticalServiceDetailsForRoleUser(ret);
+						}
+					}
+				}
+			}
+			
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -896,6 +931,33 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
 			}
 			paginatedSvcs = svcStore.getPaginatedServices(filter);
+			
+			if(paginatedSvcs!= null && !paginatedSvcs.getList().isEmpty()){
+				UserSessionBase userSession = ContextUtil
+						.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService
+							.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(
+										RangerConstants.ROLE_USER)) {
+							
+							List<RangerService> updateServiceList = new ArrayList<RangerService>();
+							for(RangerService rangerService : paginatedSvcs.getList()){
+								
+								if(rangerService != null){
+									updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
+								}
+							}
+							
+							if(updateServiceList != null && !updateServiceList.isEmpty()){
+								paginatedSvcs.setList(updateServiceList);
+							}
+						}
+					}
+				}
+			}
 
 			if(paginatedSvcs != null) {
 				ret = new RangerServiceList();
@@ -3435,6 +3497,24 @@ public class ServiceREST {
         }
         return ret;
     }
+	
+	private RangerService hideCriticalServiceDetailsForRoleUser(RangerService rangerService){
+		RangerService ret = rangerService;
+		
+		ret.setConfigs(null);
+		ret.setDescription(null);
+		ret.setCreatedBy(null);
+		ret.setUpdatedBy(null);
+		ret.setCreateTime(null);
+		ret.setUpdateTime(null);
+		ret.setPolicyVersion(null);
+		ret.setPolicyUpdateTime(null);
+		ret.setTagVersion(null);
+		ret.setTagUpdateTime(null);
+		ret.setVersion(null);
+		
+		return ret;
+	}
 
         void ensureAdminAndAuditAccess(RangerPolicy policy) {
                 boolean isAdmin = bizUtil.isAdmin();
