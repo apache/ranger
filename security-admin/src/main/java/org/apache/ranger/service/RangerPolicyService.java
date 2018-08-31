@@ -147,7 +147,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		}
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 		Field[] fields = vObj.getClass().getDeclaredFields();
-		
+
 		try {
 			
 			Field nameField = vObj.getClass().getDeclaredField("name");
@@ -236,14 +236,16 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
     				}
     			} else if (ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processRowFilterPolicyItemForTrxLog(field.get(vObj));
-    			} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-    				value = String.valueOf(processIsEnabledClassFieldNameForTrxLog(field.get(vObj)));
-                            } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-                                    value = processPolicyLabelsClassFieldNameForTrxLog(field.get(vObj));
-    			} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-    				value = processValiditySchedulesClassFieldNameForTrxLog(field.get(vObj));
-    			} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					value = processIsEnabledClassFieldNameForTrxLog(field.get(vObj));
+				} else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					value = processPolicyLabelsClassFieldNameForTrxLog(field.get(vObj));
+				} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					value = processValiditySchedulesClassFieldNameForTrxLog(field.get(vObj));
+				} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processPriorityClassFieldNameForTrxLog(field.get(vObj));
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					value = processIsAuditEnabledClassFieldNameForTrxLog(field.get(vObj));
     			} else {
     				value = "" + field.get(vObj);
     			}
@@ -330,9 +332,13 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					}
 				}else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
-						oldValue = String.valueOf(processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled()));
+						oldValue = processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled());
 					}
-				} else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if (oldPolicy != null) {
+						oldValue = processIsAuditEnabledClassFieldNameForTrxLog(oldPolicy.getIsAuditEnabled());
+					}
+				}else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = processPolicyLabelsClassFieldNameForTrxLog(oldPolicy.getPolicyLabels());
 				} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = processValiditySchedulesClassFieldNameForTrxLog(oldPolicy.getValiditySchedules());
@@ -399,11 +405,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					    return null;
 					}
 				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-                                        if (compareTwoPolicyName(value, oldValue)) {
-                                                return null;
-                                        }
-                                } else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-                                        if (compareTwoPolicyLabelList(value, oldValue)) {
+					if (compareTwoPolicyName(value, oldValue)) {
+						return null;
+					}
+				} else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if (compareTwoPolicyLabelList(value, oldValue)) {
 						return null;
 					}
 				}
@@ -662,6 +668,13 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return null;
 		String isEnabled = String.valueOf(value);
 			return isEnabled;
+	}
+
+	private String processIsAuditEnabledClassFieldNameForTrxLog(Object value) {
+		if(value == null)
+			return null;
+		String isAuditEnabled = String.valueOf(value);
+		return isAuditEnabled;
 	}
 
 	private boolean compareTwoDataMaskingPolicyItemList(String value, String oldValue) {
