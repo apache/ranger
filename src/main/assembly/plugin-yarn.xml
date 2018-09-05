@@ -66,7 +66,7 @@
                     <includes>
                         <include>commons-cli:commons-cli</include>
                         <include>commons-collections:commons-collections</include>
-                        <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                        <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                         <include>commons-io:commons-io:jar:${commons.io.version}</include>
                         <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                         <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -76,6 +76,9 @@
                         <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
 						<include>org.apache.ranger:ranger-plugins-cred</include>
 						<include>org.apache.ranger:credentialbuilder</include>
+                        <include>org.codehaus.woodstox:stax2-api</include>
+                        <include>com.fasterxml.woodstox:woodstox-core</include>
+                        <include>org.apache.htrace:htrace-core4</include>
                     </includes>
             </dependencySet>
         </dependencySets>

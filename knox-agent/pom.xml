@@ -68,7 +68,7 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
  -->
         </dependency>
@@ -76,7 +76,7 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-audit</artifactId>
             <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion 
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
  -->
         </dependency>
@@ -152,6 +152,13 @@
             <artifactId>ranger-knox-plugin-shim</artifactId>
             <scope>test</scope>
             <version>${project.version}</version>
+        </dependency>
+        <!-- The Jetty dependency is required as Knox is not using Jetty 9.3, which gets imported via Hadoop 3.0.0 -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>9.4.12.v20180830</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

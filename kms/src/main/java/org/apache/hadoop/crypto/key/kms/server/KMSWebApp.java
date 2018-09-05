@@ -33,7 +33,6 @@ import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.log4j.PropertyConfigurator;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -168,14 +167,14 @@ public class KMSWebApp implements ServletContextListener {
       if (providerString == null) {
         throw new IllegalStateException("No KeyProvider has been defined");
       }
-      Log.info("------------------ Ranger KMSWebApp---------------------");
-      Log.info("provider string = "+providerString);
-      Log.info("URI = "+new URI(providerString).toString()+" scheme = "+new URI(providerString).getScheme());
-      Log.info("kmsconf size= "+kmsConf.size() + " kms classname="+kmsConf.getClass().getName());
-      Log.info("----------------Instantiating key provider ---------------");
+      LOG.info("------------------ Ranger KMSWebApp---------------------");
+      LOG.info("provider string = "+providerString);
+      LOG.info("URI = "+new URI(providerString).toString()+" scheme = "+new URI(providerString).getScheme());
+      LOG.info("kmsconf size= "+kmsConf.size() + " kms classname="+kmsConf.getClass().getName());
+      LOG.info("----------------Instantiating key provider ---------------");
       KeyProvider keyProvider =
           KeyProviderFactory.get(new URI(providerString), kmsConf);
-      Log.info("keyProvider = "+keyProvider.toString());
+      LOG.info("keyProvider = "+keyProvider.toString());
       if (kmsConf.getBoolean(KMSConfiguration.KEY_CACHE_ENABLE,
           KMSConfiguration.KEY_CACHE_ENABLE_DEFAULT)) {
         long keyTimeOutMillis =

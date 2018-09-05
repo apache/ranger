@@ -35,7 +35,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -334,7 +334,7 @@ public class AuthorizationSession {
 	}
 	
 	String requestToString() {
-		return Objects.toStringHelper(_request.getClass())
+		return MoreObjects.toStringHelper(_request.getClass())
 			.add("operation", _operation)
 			.add("otherInformation", _otherInformation)
 			.add("access", _access)

@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
@@ -135,7 +135,7 @@ public class RangerAuthorizationFilter extends FilterBase {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(getClass())
+		return MoreObjects.toStringHelper(getClass())
 				.add("familiesAccessAllowed", _familiesAccessAllowed)
 				.add("familiesAccessDenied", _familiesAccessDenied)
 				.add("familiesAccessUnknown", _familiesAccessIndeterminate)

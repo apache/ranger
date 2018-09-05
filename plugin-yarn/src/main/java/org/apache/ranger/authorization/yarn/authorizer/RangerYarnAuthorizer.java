@@ -23,6 +23,7 @@ package org.apache.ranger.authorization.yarn.authorizer;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -93,7 +94,11 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	}
 
 	@Override
-	public boolean checkPermission(AccessType accessType, PrivilegedEntity entity, UserGroupInformation ugi) {
+	public boolean checkPermission(AccessRequest accessRequest) {
+		AccessType accessType = accessRequest.getAccessType();
+	    PrivilegedEntity entity = accessRequest.getEntity();
+		UserGroupInformation ugi = accessRequest.getUser();
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerYarnAuthorizer.checkPermission(" + accessType + ", " + toString(entity) + ", " + ugi + ")");
 		}
@@ -181,7 +186,14 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	}
 
 	@Override
-	public void setPermission(PrivilegedEntity entity, Map<AccessType, AccessControlList> permission, UserGroupInformation ugi) {
+	public void setPermission(List<Permission> permissions, UserGroupInformation ugi) {
+		for (Permission permission : permissions) {
+			setPermission(permission.getTarget(), permission.getAcls(), ugi);
+		}
+
+	}
+
+	private void setPermission(PrivilegedEntity entity, Map<AccessType, AccessControlList> permission, UserGroupInformation ugi) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerYarnAuthorizer.setPermission(" + toString(entity) + ", " + permission + ", " + ugi + ")");
 		}

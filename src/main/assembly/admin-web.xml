@@ -101,7 +101,7 @@
               <include>org.apache.hbase:hbase-client:jar:${hbase.version}</include>
               <include>org.apache.hbase:hbase-protocol:jar:${hbase.version}</include>
               <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
-              <include>org.apache.htrace:htrace-core</include>
+              <include>org.apache.htrace:htrace-core4</include>
             </includes>
           </dependencySet>
         </dependencySets>
@@ -211,9 +211,12 @@
                     <include>com.sun.jersey.contribs:jersey-multipart</include>
                     <include>com.google.guava:guava</include>
                     <include>commons-collections:commons-collections</include>
-                    <include>commons-configuration:commons-configuration</include>
                     <include>commons-lang:commons-lang</include>
-		    <include>commons-io:commons-io</include>
+		    		<include>commons-io:commons-io</include>
+                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
+                    <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
+                    <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -223,7 +226,6 @@
 	    <include>org.apache.ranger:embeddedwebserver</include>
      </includes>
     </moduleSet>
-
 
     <moduleSet>
      <binaries>
@@ -247,7 +249,10 @@
                     <include>org.slf4j:slf4j-api</include>
                     <include>org.apache.hadoop:hadoop-common</include>
                     <include>org.apache.hadoop:hadoop-auth</include>
-              		<include>org.apache.htrace:htrace-core</include>
+              		<include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
+					<include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
+					<include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+					<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
 				</includes>
             </dependencySet>
         </dependencySets>

@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.hbase;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -88,7 +89,12 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
 	@Override
 	public User getUser() {
 		// current implementation does not use the request object!
-		User user = RpcServer.getRequestUser();
+		User user = null;
+		try {
+			user = RpcServer.getRequestUser().get();
+		} catch (NoSuchElementException e) {
+			LOG.info("Unable to get request user");
+		}
 		if (user == null) {
 			try {
 				user = User.getCurrent();

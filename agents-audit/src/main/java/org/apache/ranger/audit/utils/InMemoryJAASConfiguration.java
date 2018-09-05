@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -159,25 +158,6 @@ public final class InMemoryJAASConfiguration extends Configuration {
 	        }
         }
         LOG.debug("<== InMemoryJAASConfiguration.init( {} ) ", propFile);
-    }
-
-    @SuppressWarnings("unchecked")
-	public static void init(org.apache.commons.configuration.Configuration configuration) throws Exception {
-     	LOG.debug("==> InMemoryJAASConfiguration.init()");
-
-        if (configuration != null && !configuration.isEmpty()) {
-            Properties properties = new Properties();
-            Iterator<String> iterator = configuration.getKeys();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                properties.put(key, configuration.getProperty(key));
-            }
-            init(properties);
-        } else {
-            throw new Exception("Failed to load JAAS application properties: configuration NULL or empty!");
-        }
-
-        LOG.debug("<== InMemoryJAASConfiguration.init()");
     }
 
     public static void init(Properties properties) throws Exception {

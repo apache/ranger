@@ -358,7 +358,9 @@ public class HDFSRangerTest {
         HDFSReadFailTest("/tmp/tmpdir5/t/data-file.txt");
     }
 
+    // TODO
     @org.junit.Test
+    @org.junit.Ignore
     public void HDFSContentSummaryTest() throws Exception {
         HDFSGetContentSummary("/tmp/get-content-summary");
     }

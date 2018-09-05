@@ -40,7 +40,7 @@
                 <include>com.google.code.gson:gson</include>
                 <include>log4j:log4j</include>
                 <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-                <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+                <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                 <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                 <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
                 <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>

@@ -26,9 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang.NullArgumentException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class LdapConfig {
 
@@ -405,7 +408,11 @@ public class LdapConfig {
                                     String userSearchBase, String userSearchFilter,
                                     String authUser, String authPass) {
         try {
-            PropertiesConfiguration config = new PropertiesConfiguration(CONFIG_FILE);
+            Parameters params = new Parameters();
+            FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
+                new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+                .configure(params.fileBased().setFileName(CONFIG_FILE));
+            FileBasedConfiguration config = builder.getConfiguration();
             // Update properties in memory and update the file as well
             prop.setProperty(LGSYNC_LDAP_URL, ldapUrl);
             prop.setProperty(LGSYNC_LDAP_BIND_DN, bindDn);
@@ -421,7 +428,7 @@ public class LdapConfig {
             config.setProperty(LGSYNC_USER_SEARCH_FILTER, userSearchFilter);
             config.setProperty(AUTH_USERNAME, authUser);
             //config.setProperty(AUTH_PASSWORD, authPass);
-            config.save();
+            builder.save();
         } catch (ConfigurationException e) {
             System.out.println("Failed to update " + CONFIG_FILE + ": " + e);
         }
