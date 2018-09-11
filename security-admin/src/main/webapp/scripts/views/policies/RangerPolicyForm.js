@@ -597,11 +597,16 @@ define(function(require){
                         $(this).removeClass('working');
                     },
                     search: function() {
-                        if(!_.isUndefined(this.value) && _.contains(this.value,',')){
-                            _.each(this.value.split(',') , function(tag){
-                                that.fields[that.pathFieldName].editor.$el.tagit("createTag", tag);
-                            });
-                            return false;
+                        if(!_.isUndefined(this.value) && (/[ ,]+/).test(this.value)){
+                            var values = this.value.trim().split(/[ ,]+/);
+                            if (values.length > 1) {
+                                for (var i = 0; i < values.length; i++) {
+                                    that.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit("createTag", values[i]);
+                                }
+                                return ''
+                            } else {
+                                return val
+                            }
                         }
                         var term = extractLast( this.value );
                         $(this).addClass('working');
