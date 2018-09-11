@@ -163,12 +163,21 @@ public class KylinClient extends BaseClient {
 	private List<KylinProjectResponse> getKylinProjectResponse(ClientResponse response) {
 		List<KylinProjectResponse> projectResponses = null;
 		try {
-			if (response != null && response.getStatus() == HttpStatus.SC_OK) {
-				String jsonString = response.getEntity(String.class);
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			if (response != null) {
+				if (response.getStatus() == HttpStatus.SC_OK) {
+					String jsonString = response.getEntity(String.class);
+					Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-				projectResponses = gson.fromJson(jsonString, new TypeToken<List<KylinProjectResponse>>() {
-				}.getType());
+					projectResponses = gson.fromJson(jsonString, new TypeToken<List<KylinProjectResponse>>() {
+					}.getType());
+				} else {
+					String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE
+							+ "], kylinUrl: " + kylinUrl + " - got http response code " + response.getStatus();
+					LOG.error(msgDesc);
+					HadoopException hdpException = new HadoopException(msgDesc);
+					hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
+					throw hdpException;
+				}
 			} else {
 				String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE
 						+ "], kylinUrl: " + kylinUrl + " - got null response.";
