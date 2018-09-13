@@ -26,7 +26,8 @@
 	'modules/XAOverrides',
 	'modules/RestCsrf',
 	'utils/XAUtils',
-	'hbs!tmpl/common/loading_tmpl'
+	'hbs!tmpl/common/loading_tmpl',
+	'backbone-fetch-cache'
 ],
 function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,RestCSRF, XAUtils, loadingHTML ) {
     'use strict';

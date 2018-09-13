@@ -120,10 +120,15 @@
 			<i class="icon-arrow-up bigger-120 _allowNav"></i>
 		</a>
 
+		<script src="libs/bower/requirejs/js/require.js"></script>
 
-		<!-- build:js scripts/main.js -->
-		<script data-main="scripts/Init.js?ver=build.version" src="libs/bower/requirejs/js/require.js"></script>
-		<!-- endbuild -->
+		<!--
+		the script tags below are commented/uncommented during the packaging phase.
+		(see the replacer configuration in POM)
+		-->
+		<!-- dev --><script src="scripts/Init.js?ver=build.version"></script>
+		<!-- prod <script src="scripts/Main.min.js?ver=build.version"></script> -->
+
 		<script type="text/javascript">
 			require.config({
 				waitSeconds : 0

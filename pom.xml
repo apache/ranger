@@ -603,6 +603,10 @@
                         <exclude>**/target/apidocs/**</exclude>
                         <exclude>**/target/kms/apidocs/**</exclude>
                         <exclude>**/importPolicy/*.json</exclude>
+                        <exclude>**/node/**</exclude>
+                        <exclude>**/node_modules/**</exclude>
+                        <exclude>**/package.json</exclude>
+                        <exclude>**/package-lock.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
