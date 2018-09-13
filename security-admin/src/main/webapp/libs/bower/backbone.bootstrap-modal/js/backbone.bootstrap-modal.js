@@ -260,16 +260,6 @@
     module.exports = Modal;
   }
 
-  //AMD / RequireJS
-  if (typeof define === 'function' && define.amd) {
-    return define(function() {
-      Backbone.BootstrapModal = Modal;
-    })
-  }
-
-  //Regular; add to Backbone.Bootstrap.Modal
-  else {
-    Backbone.BootstrapModal = Modal;
-  }
+  Backbone.BootstrapModal = Modal;
 
 })(jQuery, _, Backbone);
