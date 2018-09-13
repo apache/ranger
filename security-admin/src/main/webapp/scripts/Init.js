@@ -19,33 +19,23 @@
 
  require.config({
 
-//    baseUrl: "/scripts",
+     baseUrl: "scripts",
 
 	 urlArgs : 'ver=build.version',
-	
+
 	/* starting point for application */
-    deps: ['backbone.marionette', 'bootstrap', 'Main','globalize','utils/XALangSupport'],
+    deps: ['Main'],
 
     shim: {
-        backbone: {
-            deps: [ 'underscore', 'jquery'],
-            exports: 'Backbone'
-        },
         bootstrap: {
             deps: ['jquery'],
-            exports: 'jquery'
-        },
-        backgrid : {
-        	deps: [ 'backbone','backbone-fetch-cache']
+            exports: 'jQuery'
         },
         'backgrid-paginator' : {
         	deps: [ 'backbone', 'backgrid' ]
         },
         'backgrid-filter' : {
         	deps: [ 'backbone', 'backgrid' ]
-        },
-        'backbone-forms.templates' : {
-        	deps: [ 'backbone-forms.list', 'backbone-forms' ]
         },
         'backbone-forms.XAOverrides' : {
         	deps: [ 'backbone-forms' ]
@@ -74,7 +64,7 @@
    	   'bootstrap-datepicker' : {
    		   deps: ['bootstrap']
    	   } ,
-       
+
        'bootstrap-notify' :	{
     	   deps: ['jquery','bootstrap'],
        },
@@ -83,9 +73,6 @@
        'momentTz'  :    { deps: ['jquery']},
 
        'localstorage' :{
-            deps : ['backbone','underscore','jquery']
-       },
-       'backbone-fetch-cache' :{
             deps : ['backbone','underscore','jquery']
        },
        'visualsearch': {
@@ -111,21 +98,21 @@
 
         /* alias all marionette libs */
         'backbone.marionette'		: '../libs/bower/backbone.marionette/js/backbone.marionette',
-		'backbone.wreqr'			: '../libs/bower/backbone.wreqr/js/backbone.wreqr',
+        'backbone.wreqr'			: '../libs/bower/backbone.wreqr/js/backbone.wreqr',
         'backbone.babysitter'		: '../libs/bower/backbone.babysitter/js/backbone.babysitter',
 
         /* alias the bootstrap js lib */
         bootstrap					: '../libs/bower/bootstrap/js/bootstrap',
-        
+
         /* BackGrid for Tables */
         'backgrid'					: '../libs/other/backgrid/backgrid',
         'backbone-fetch-cache'		: '../libs/other/backbone.fetch-cache',
-        
+
         'backgrid-paginator'		: '../libs/bower/backgrid-paginator/js/backgrid-paginator',
         'backgrid-filter'			: '../libs/bower/backgrid-filter/js/backgrid-filter',
-       
+
         'backbone-pageable'			: '../libs/bower/backbone-pageable/js/backbone-pageable',
-		'localstorage'				: '../libs/bower/backbone.localstorage/backbone.localStorage',
+        'localstorage'				: '../libs/bower/backbone.localstorage/backbone.localStorage',
         'backbone-forms'			: '../libs/bower/backbone-forms/js/backbone-forms',
         'backbone-forms.list'		: '../libs/bower/backbone-forms/js/list',
         'backbone-forms.templates'	: '../libs/bower/backbone-forms/js/bootstrap',
@@ -158,12 +145,12 @@
     },
 
     hbs: {
-		disableI18n: true,
+        disableI18n: true,
         helperPathCallback:         // Callback to determine the path to look for helpers
             function (name) {       // ('/template/helpers/'+name by default)
-        		return "../helpers/XAHelpers";
+                return "../helpers/XAHelpers";
         },
-        templateExtension: "html", 
-        compileOptions: {} 
+        templateExtension: "html",
+        compileOptions: {}
     }
 });
