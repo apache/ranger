@@ -112,6 +112,18 @@
             <artifactId>gateway-server</artifactId>
             <scope>test</scope>
             <version>${knox.gateway.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.minidev</groupId>
+                    <artifactId>json-smart</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+            <scope>test</scope>
+            <version>${jsonsmart.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.knox</groupId>
@@ -128,6 +140,10 @@
                 <exclusion>
                     <groupId>org.apache.knox</groupId>
                     <artifactId>gateway-provider-security-pac4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.minidev</groupId>
+                    <artifactId>json-smart</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
