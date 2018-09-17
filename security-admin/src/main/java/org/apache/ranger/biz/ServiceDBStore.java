@@ -2880,14 +2880,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		} else {
 			XXService service = daoMgr.getXXService().getById(id);
-			serviceVersionInfoDbObj = new XXServiceVersionInfo();
-			serviceVersionInfoDbObj.setServiceId(service.getId());
-			serviceVersionInfoDbObj.setPolicyVersion(1L);
-			serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-			serviceVersionInfoDbObj.setTagVersion(1L);
-			serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+			if (service != null) {
+				serviceVersionInfoDbObj = new XXServiceVersionInfo();
+				serviceVersionInfoDbObj.setServiceId(service.getId());
+				serviceVersionInfoDbObj.setPolicyVersion(1L);
+				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+				serviceVersionInfoDbObj.setTagVersion(1L);
+				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
 
-			serviceVersionInfoDao.create(serviceVersionInfoDbObj);
+				serviceVersionInfoDao.create(serviceVersionInfoDbObj);
+			}
 		}
 	}
 
