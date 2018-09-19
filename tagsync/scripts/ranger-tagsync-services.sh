@@ -111,17 +111,41 @@ elif [ "${action}" == "STOP" ]; then
 	NR_ITER_FOR_SHUTDOWN_CHECK=15
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf` > /dev/null 2>&1
-		echo "Found Apache Ranger TagSync Service with pid $pid, Stopping..."
-		kill -9 $pid > /dev/null 2>&1
-		sleep 1 #Give kill -9 sometime to "kill"
-		if ps -p $pid > /dev/null; then
-			echo "Wow, even kill -9 failed, giving up! Sorry.."
-                else
-			rm -f $pidf
-			echo "Apache Ranger Tagsync Service pid = ${pid} has been stopped."
-                fi
+		echo "Getting pid from $pidf .."
 	else
-            echo "Ranger Tagsync Service not running"
+		pid=`ps -ef | grep java | grep -- '-Dproc_rangertagsync' | grep -v grep | awk '{ print $2 }'`
+		if [ "$pid" != "" ];then
+			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
+		else
+			echo "Apache Ranger Tagsync Service is not running"
+			exit 1	
+		fi
+	fi
+	echo "Found Apache Ranger Tagsync Service with pid $pid, Stopping it..."
+	kill -15 $pid
+	for ((i=0; i<$NR_ITER_FOR_SHUTDOWN_CHECK; i++))
+	do
+		sleep $WAIT_TIME_FOR_SHUTDOWN
+		if ps -p $pid > /dev/null ; then
+			echo "Shutdown in progress. Will check after $WAIT_TIME_FOR_SHUTDOWN secs again.."
+			continue;
+		else
+			break;
+		fi
+	done
+	# if process is still around, use kill -9
+	if ps -p $pid > /dev/null ; then
+		echo "Initial kill failed, getting serious now..."
+		kill -9 $pid
+	fi
+	sleep 1 #give kill -9  sometime to "kill"
+	if ps -p $pid > /dev/null ; then
+		echo "Wow, even kill -9 failed, giving up! Sorry.."
+		exit 1
+
+	else
+		rm -rf $pidf
+		echo "Apache Ranger Tagsync Service with pid ${pid} has been stopped."
 	fi
 	exit;
 	
