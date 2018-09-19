@@ -60,4 +60,18 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
 		}
 	}
 
+	public XXServiceConfigMap findByServiceNameAndConfigKey(String serviceName, String configKey) {
+		if(serviceName == null || configKey == null) {
+			return null;
+		}
+		try {
+			return getEntityManager()
+				.createNamedQuery("XXServiceConfigMap.findByServiceNameAndConfigKey", tClass)
+				.setParameter("name", serviceName)
+				.setParameter("configKey", configKey).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 }
