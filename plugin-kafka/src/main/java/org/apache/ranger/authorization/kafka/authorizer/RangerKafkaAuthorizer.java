@@ -26,7 +26,6 @@ import javax.security.auth.Subject;
 
 import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.security.JaasContext;
-import org.apache.kafka.common.security.JaasContext.Type;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
@@ -37,7 +36,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.authenticator.LoginManager;
+import org.apache.kafka.common.security.kerberos.KerberosLogin;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -95,8 +96,9 @@ public class RangerKafkaAuthorizer implements Authorizer {
 						final String listenerName = (jaasContext instanceof String
 								&& StringUtils.isNotEmpty((String) jaasContext)) ? (String) jaasContext
 										: SecurityProtocol.SASL_PLAINTEXT.name();
-						JaasContext context = JaasContext.load(Type.SERVER, new ListenerName(listenerName), configs);
-						LoginManager loginManager = LoginManager.acquireLoginManager(context, true, configs);
+						final String saslMechanism = SaslConfigs.GSSAPI_MECHANISM;
+						JaasContext context = JaasContext.loadServerContext(new ListenerName(listenerName), saslMechanism, configs);
+						LoginManager loginManager = LoginManager.acquireLoginManager(context, saslMechanism, KerberosLogin.class, configs);
 						Subject subject = loginManager.subject();
 						UserGroupInformation ugi = MiscUtil
 								.createUGIFromSubject(subject);
