@@ -77,10 +77,19 @@ define(function(require){
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
-                /* on show action button*/
-                showAction : function(){
-                        App.sessionId = this.model.get('id');
-                },
+        /* on show action button*/
+        showAction : function(){
+            App.sessionId = this.model.get('id');
+
+            var view = require('views/reports/AuditLayout');
+            var VXAccessAuditList = require('collections/VXAccessAuditList');
+            var accessAuditList = new VXAccessAuditList();
+            _.extend(accessAuditList.queryParams, {'sortBy' : 'eventTime'});
+            App.rContent.show(new view({
+                accessAuditList : accessAuditList,
+                tab : "admin"
+            }));
+        },
 		/** on close */
 		onClose: function(){
 		}

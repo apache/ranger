@@ -46,6 +46,7 @@ define(function(require) {
 	var RangerPolicy 				= require('models/RangerPolicy');
 	var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
 	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
+    var vLoginSessionDetail         = require('views/reports/LoginSessionDetail');
 
 	var moment = require('moment');
 	require('bootstrap-datepicker');
@@ -92,7 +93,8 @@ define(function(require) {
                         btnShowLess : '[data-id="showLess"]',
             iconqueryInfo : '[data-name="queryInfo"]',
             hidePopup : '[data-id="hide-popup"]',
-            syncDetailes : '[data-id="syncDetailes"]'
+            syncDetailes : '[data-id="syncDetailes"]',
+            viewSession : '[data-name="viewSession"]',
 		},
 
 		/** ui events hash */
@@ -107,6 +109,7 @@ define(function(require) {
                 events['click ' + this.ui.hidePopup]  = 'onClickOutSide';
             }
             events['click '+this.ui.syncDetailes] = 'onSyncDetailes';
+            events['click ' + this.ui.viewSession]  = 'onViewSession';
             return events;
 		},
 
@@ -923,17 +926,24 @@ define(function(require) {
 						}
 					})
 				},
-				sessionId : {
-					label : localization.tt("lbl.sessionId"),
-					cell: "uri",
-					href: function(model){
-						return '#!/reports/audit/loginSession/extSessionId/'+model.get('sessionId');
-					},
-					click : false,
-					drag : false,
-					sortable:false,
-					editable:false
-				}
+                sessionId : {
+                    label : localization.tt("lbl.sessionId"),
+                    cell: "html",
+                    click : false,
+                    drag : false,
+                    sortable:false,
+                    editable:false,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            var sessionId = model.get('sessionId');
+                            if (!_.isUndefined(sessionId)) {
+                                return '<a href="javascript:void(0);" data-name ="viewSession" data-id="'+sessionId+'" title="'+sessionId+'">'+sessionId+'</a>';
+                            } else {
+                                return '';
+                            }
+                        }
+                    })
+                }
 			};
 			return this.trxLogList.constructor.getTableCols(cols, this.trxLogList);
 		},
@@ -1196,16 +1206,23 @@ define(function(require) {
 			});
 
 			var cols = {
-				id : {
-					label : localization.tt("lbl.sessionId"),
-					cell : "uri",
-					href: function(model){
-						return '#!/reports/audit/loginSession/id/'+model.get('id');
-					},
-					editable:false,
-					sortType: 'toggle',
-					direction: 'descending'
-				},
+                id : {
+                    label : localization.tt("lbl.sessionId"),
+                    cell : "html",
+                    editable:false,
+                    sortType: 'toggle',
+                    direction: 'descending',
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            var sessionId = model.get('id');
+                            if (!_.isUndefined(sessionId)) {
+                                return '<a href="javascript:void(0);" data-name ="viewSession" data-id="'+sessionId+'" title="'+sessionId+'">'+sessionId+'</a>';
+                            } else {
+                                return '';
+                            }
+                        }
+                    })
+                },
 				loginId : {
 					label : localization.tt("lbl.loginId"),
 					cell: "String",
@@ -1645,6 +1662,31 @@ define(function(require) {
         onSyncDetailes : function(e){
             XAViewUtils.syncSourceDetail(e , this);
         },
+
+        onViewSession : function(e) {
+            var authSessionList = new VXAuthSession();
+            var sessionId = $(e.currentTarget).data('id');
+            authSessionList.fetch({
+                data : {
+                    id : sessionId
+                }
+            }).done(function() {
+                var view = new vLoginSessionDetail({
+                    model : authSessionList.first()
+                });
+                var modal = new Backbone.BootstrapModal({
+                    animate : true,
+                    content : view,
+                    title : localization.tt("lbl.sessionDetail"),
+                    okText : localization.tt("lbl.ok"),
+                    allowCancel : true,
+                    escape : true
+                }).open();
+                modal.$el.addClass('modal-diff').attr('tabindex', -1);
+                modal.$el.find('.cancel').hide();
+            });
+        },
+
         isDateDifferenceMoreThanHr : function(date1, date2){
                 var diff = Math.abs(date1 - date2) / 36e5;
                 return parseInt(diff) >= 1 ? true : false;

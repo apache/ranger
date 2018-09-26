@@ -1,4 +1,4 @@
-{{!-- 
+{{!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -14,39 +14,34 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<h3 class="wrap-header bold">Session Detail:</h3>
-<div class="wrap non-collapsible">
-	<div class="datagrid-stretch-wrapper "style="margin-left: 44px; margin-top: 35px;">
-		<table class="table table-bordered table-condensed">
-	<tbody>
-		<tr>
-			<th>{{tt 'lbl.loginId'}}</th>
-			<td>{{loginId}}</td>
-		</tr>
-		<tr>
-			<th>{{tt 'lbl.result'}}</th>
-			<td>{{{convertEnumValueToLabel 'AuthStatus' authStatus}}}</td>
-		</tr>
-		<tr>
-			<th>{{tt 'lbl.loginType'}}</th>
-			<td>{{{convertEnumValueToLabel 'AuthType' authType}}}</td>
-		</tr>
-		<tr>
-			<th>{{tt 'lbl.ip'}}</th>
-			<td>{{requestIP}}</td>
-		</tr>
-		<tr>
-			<th>{{tt 'lbl.userAgent'}}</th>
-			<td>{{requestUserAgent}}</td>
-		</tr>
-		<tr>
-			<th style="width: 10%;">{{tt 'lbl.loginTime'}}</th>
-			<td data-id="loginTime"></td>
-		</tr>
-	</tbody>
-</table>
-	</div>
-        <a href="#!/reports/audit/admin" class="link-tag" data-id="showAction">Show Actions</a>
+<div class="non-collapsible">
+    <table class="table table-bordered table-condensed">
+        <tbody>
+            <tr>
+                <th>{{tt 'lbl.loginId'}}</th>
+                <td>{{loginId}}</td>
+            </tr>
+            <tr>
+                <th>{{tt 'lbl.result'}}</th>
+                <td>{{{convertEnumValueToLabel 'AuthStatus' authStatus}}}</td>
+            </tr>
+            <tr>
+                <th>{{tt 'lbl.loginType'}}</th>
+                <td>{{{convertEnumValueToLabel 'AuthType' authType}}}</td>
+            </tr>
+            <tr>
+                <th>{{tt 'lbl.ip'}}</th>
+                <td>{{requestIP}}</td>
+            </tr>
+            <tr>
+                <th>{{tt 'lbl.userAgent'}}</th>
+                <td>{{requestUserAgent}}</td>
+            </tr>
+            <tr>
+                <th style="width: 10%;">{{tt 'lbl.loginTime'}}</th>
+                <td data-id="loginTime"></td>
+            </tr>
+        </tbody>
+    </table>
+    <a href="javascript:void(0);" class="link-tag" data-id="showAction">Show Actions</a>
 </div>
-
-
