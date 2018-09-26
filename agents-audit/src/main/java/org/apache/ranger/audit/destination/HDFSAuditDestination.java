@@ -63,6 +63,7 @@ public class HDFSAuditDestination extends AuditDestination {
 	private String logFolder;
 
 	private PrintWriter logWriter = null;
+	volatile FSDataOutputStream ostream = null; // output stream wrapped in logWriter
 
 	private String currentFileName;
 
@@ -169,6 +170,7 @@ public class HDFSAuditDestination extends AuditDestination {
 				addDeferredCount(events.size());
 				out.close();
 				logWriter = null;
+				ostream = null;
 				return false;
 			}
 		} catch (Throwable t) {
@@ -187,10 +189,22 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	public void flush() {
-		if ( logWriter != null) {
-			logWriter.flush();
-			logger.info("Flush HDFS audit logs completed.....");
-		 }
+		logger.info("Flush called. name=" + getName());
+		if (ostream != null) {
+			try {
+				synchronized (this) {
+					if (ostream != null)
+						// 1) PrinterWriter does not have bufferring of its own so
+						// we need to flush its underlying stream
+						// 2) HDFS flush() does not really flush all the way to disk.
+						ostream.hflush();
+						logger.info("Flush HDFS audit logs completed.....");
+				}
+			} catch (IOException e) {
+				logger.error("Error on flushing log writer: " + e.getMessage() +
+				 "\nException will be ignored. name=" + getName() + ", fileName=" + currentFileName);
+			}
+		}
 	}
 
 	/*
@@ -246,6 +260,7 @@ public class HDFSAuditDestination extends AuditDestination {
 						+ getName() + ", fileName=" + currentFileName);
 			}
 			logWriter = null;
+			ostream = null;
 		}
 		logStatus();
 	}
@@ -290,7 +305,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
 			// Create the file to write
 			logger.info("Creating new log file. hdfPath=" + fullPath);
-			FSDataOutputStream ostream = fileSystem.create(hdfPath);
+			ostream = fileSystem.create(hdfPath);
 			logWriter = new PrintWriter(ostream);
 			currentFileName = fullPath;
 		}
@@ -341,6 +356,7 @@ public class HDFSAuditDestination extends AuditDestination {
 			}
 
 			logWriter = null;
+			ostream = null;
 			currentFileName = null;
 
 			if (!rollOverByDuration) {
