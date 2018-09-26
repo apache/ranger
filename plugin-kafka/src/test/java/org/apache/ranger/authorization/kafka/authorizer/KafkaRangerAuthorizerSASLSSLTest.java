@@ -56,7 +56,8 @@ import kafka.utils.ZkUtils;
  * CustomAuthorizer that enforces some authorization rules:
  * 
  *  - The "IT" group can do anything
- *  - The "public" group can only "read/describe" on the "test" topic, not "write".
+ *  - The "public" group can "read/describe/write" on the "test" topic.
+ *  - The "public" group can only "read/describe" on the "dev" topic, but not write.
  * 
  * Policies available from admin via:
  * 
