@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.model.validation;
 
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -409,42 +407,6 @@ public class TestRangerValidator {
 		when(policy.getIsAuditEnabled()).thenReturn(Boolean.TRUE);
 		result = _validator.getIsAuditEnabled(policy);
 		Assert.assertTrue(result);
-	}
-
-	@Test
-	public void test_getPolicies() throws Exception {
-
-		// returns null when store returns null
-		String policyName = "aPolicy";
-		String serviceName = "aService";
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		
-		when(_store.getPolicies(filter)).thenReturn(null);
-		List<RangerPolicy> result = _validator.getPolicies(serviceName, policyName);
-		// validate store is queried with both parameters
-		verify(_store).getPolicies(filter);
-		Assert.assertNull(result);
-
-		// returns null if store throws an exception
-		when(_store.getPolicies(filter)).thenThrow(new Exception());
-		result = _validator.getPolicies(serviceName, policyName);
-		Assert.assertNull(result);
-		
-		// does not shove policy into search filter if policy name passed in is "blank"
-		filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-
-		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
-		RangerPolicy policy = mock(RangerPolicy.class);
-		policies.add(policy);
-		
-		when(_store.getPolicies(filter)).thenReturn(policies);
-		for (String aName : new String[]{ null, "", "  "}) {
-			result = _validator.getPolicies(serviceName, aName);
-			Assert.assertTrue(result.iterator().next() == policy);
-		}
 	}
 	
 	@Test

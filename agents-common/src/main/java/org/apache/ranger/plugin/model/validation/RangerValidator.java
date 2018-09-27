@@ -246,29 +246,23 @@ public abstract class RangerValidator {
 		return result;
 	}
 
-	List<RangerPolicy> getPolicies(final String serviceName, final String policyName) {
+	Long getPolicyId(final Long serviceId, final String policyName) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.getPolicies(" + serviceName + ", " + policyName + ")");
+			LOG.debug("==> RangerValidator.getPolicyId(" + serviceId + ", " + policyName + ")");
 		}
 
-		List<RangerPolicy> policies = null;
+		Long policyId = null;
 		try {
-			SearchFilter filter = new SearchFilter();
-			if (StringUtils.isNotBlank(policyName)) {
-				filter.setParam(SearchFilter.POLICY_NAME, policyName);
-			}
-			filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-			
-			policies = _store.getPolicies(filter);
+			policyId = _store.getPolicyId(serviceId, policyName);
+
 		} catch (Exception e) {
 			LOG.debug("Encountred exception while retrieving service from service store!", e);
 		}
-		
+
 		if(LOG.isDebugEnabled()) {
-			int count = policies == null ? 0 : policies.size();
-			LOG.debug("<== RangerValidator.getPolicies(" + serviceName + ", " + policyName + "): count[" + count + "], " + policies);
+			LOG.debug("<== RangerValidator.getPolicyId(" + serviceId + ", " + policyName + "): policy-id[" + policyId + "]");
 		}
-		return policies;
+		return policyId;
 	}
 	
 	List<RangerPolicy> getPoliciesForResourceSignature(String serviceName, String policySignature) {
