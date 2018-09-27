@@ -82,8 +82,8 @@ public class KafkaRangerAuthorizerTest {
     @org.junit.BeforeClass
     public static void setup() throws Exception {
     	// Create keys
-        String serviceDN = "CN=localhost,O=Apache,L=Dublin,ST=Leinster,C=IE";
-        String clientDN = "CN=localhost,O=Apache,L=Dublin,ST=Leinster,C=IE";
+    	String serviceDN = "CN=Service,O=Apache,L=Dublin,ST=Leinster,C=IE";
+    	String clientDN = "CN=Client,O=Apache,L=Dublin,ST=Leinster,C=IE";
     	
     	// Create a truststore
     	KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -257,6 +257,7 @@ public class KafkaRangerAuthorizerTest {
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
         
         final Producer<String, String> producer = new KafkaProducer<>(producerProps);
+        
         // Send a message
         Future<RecordMetadata> record = 
             producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
@@ -295,6 +296,7 @@ public class KafkaRangerAuthorizerTest {
             record = producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
             producer.flush();
             record.get();
+            Assert.fail("Authorization failure expected");
         } catch (Exception ex) {
             Assert.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
         }
