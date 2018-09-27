@@ -23,11 +23,14 @@
 #include <sys/types.h>
 #include <crypt.h>
 
+#define STRLEN 64
+
 int main(int ac, char **av, char **ev)
 {
-	char username[64] ;
-	char password[64] ;
+	char username[STRLEN] ;
+	char password[STRLEN] ;
 	char line[512] ;
+	char format[20];
 	struct passwd *pwp;
 	struct spwd *spwd ; 
 

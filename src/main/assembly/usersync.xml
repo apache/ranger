@@ -113,7 +113,7 @@
 	</fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
-	    	<fileMode>755</fileMode>
+	    	<fileMode>750</fileMode>
 		<outputDirectory>/native</outputDirectory>
 		<directory>unixauthnative/target</directory>
 		               <includes>
@@ -122,7 +122,7 @@
 	</fileSet>
 	<fileSet>
 	    	<directoryMode>755</directoryMode>
-	    	<fileMode>755</fileMode>
+	    	<fileMode>750</fileMode>
 		<outputDirectory>/native</outputDirectory>
 		<directory>unixauthpam/target</directory>
 		               <includes>

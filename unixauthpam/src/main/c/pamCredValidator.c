@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <security/pam_appl.h>
 
+#define STRLEN 64
+
 int pamconv(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {
   if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF) {
 		fprintf(stderr, "ERROR: Unexpected PAM conversation '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
@@ -56,16 +58,17 @@ struct pam_conv conv = { pamconv, NULL };
 
 int main(int ac, char **av, char **ev)
 {
-	char username[64] ;
-	char password[64] ;
+	char username[STRLEN] ;
+	char password[STRLEN] ;
 	char line[512] ;
+	char format[20];
 
 	int retval;
 	pam_handle_t *pamh = NULL;
 
 	sprintf(format, "LOGIN:%%%ds %%%ds", STRLEN-1, STRLEN-1);
 	fgets(line,512,stdin) ;
-	sscanf(line, "LOGIN:%s %s",username,password) ;
+	sscanf(line, format, username,password) ;
 	conv.appdata_ptr = (char *) password;
 
 	retval = pam_start("ranger-remote", username, &conv, &pamh);
