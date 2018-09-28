@@ -211,46 +211,50 @@ public class TestRangerServiceDefValidator {
 
 	@Test
 	public final void test_isValidAccessTypes_happyPath() {
+		long id = 7;
+		when(_serviceDef.getId()).thenReturn(id);
 		List<RangerAccessTypeDef> input = _utils.createAccessTypeDefs(accessTypes_good);
-		assertTrue(_validator.isValidAccessTypes(input, _failures));
+		assertTrue(_validator.isValidAccessTypes(id, input, _failures, Action.CREATE));
 		assertTrue(_failures.isEmpty());
 	}
 	
 	@Test
 	public final void test_isValidAccessTypes_failures() {
+		long id = 7;
+		when(_serviceDef.getId()).thenReturn(id);
 		// null or empty access type defs
 		List<RangerAccessTypeDef> accessTypeDefs = null;
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "access types");
 		
 		accessTypeDefs = new ArrayList<RangerAccessTypeDef>();
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "access types");
 
 		// null/empty access types
 		accessTypeDefs = _utils.createAccessTypeDefs(new String[] { null, "", "		" });
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "access type name");
 		
 		// duplicate access types
 		accessTypeDefs = _utils.createAccessTypeDefs(new String[] { "read", "write", "execute", "read" } );
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "access type name", "read");
 		
 		// duplicate access types - case-insensitive
 		accessTypeDefs = _utils.createAccessTypeDefs(new String[] { "read", "write", "execute", "READ" } );
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "access type name", "READ");
 		
 		// unknown access type in implied grants list
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_unknownType);
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "execute");
 		_utils.checkFailureForSemanticError(_failures, "access type itemId", "1"); // id 1 is duplicated
 		
 		// access type with implied grant referring to itself
 		accessTypeDefs = _utils.createAccessTypeDefs(accessTypes_bad_selfReference);
-		_failures.clear(); assertFalse(_validator.isValidAccessTypes(accessTypeDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidAccessTypes(id, accessTypeDefs, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "implied grants", "admin");
 	}
 	
@@ -396,16 +400,16 @@ public class TestRangerServiceDefValidator {
 	public final void test_isValidResources() {
 		// null/empty resources are an error
 		when(_serviceDef.getResources()).thenReturn(null);
-		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "resources");
 		
 		List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
 		when(_serviceDef.getResources()).thenReturn(resources);
-		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "resources");
 		
 		resources.addAll(_utils.createResourceDefsWithIds(invalidResources));
-		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures));
+		_failures.clear(); assertFalse(_validator.isValidResources(_serviceDef, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "resource name");
 		_utils.checkFailureForMissingValue(_failures, "resource itemId");
 		_utils.checkFailureForSemanticError(_failures, "resource itemId", "1"); // id 1 is duplicate
@@ -456,7 +460,7 @@ public class TestRangerServiceDefValidator {
 		};
 		List<RangerResourceDef> resources = _utils.createResourceDefsWithIds(data);
 		when(_serviceDef.getResources()).thenReturn(resources);
-		assertTrue(_validator.isValidResources(_serviceDef, _failures));
+		assertTrue(_validator.isValidResources(_serviceDef, _failures, Action.CREATE));
 		assertTrue(_failures.isEmpty());
 	}
 
@@ -490,11 +494,13 @@ public class TestRangerServiceDefValidator {
 
 	@Test
 	public final void test_isValidPolicyConditions() {
+		long id = 7;
+		when(_serviceDef.getId()).thenReturn(id);
 		// null/empty policy conditions are ok
-		assertTrue(_validator.isValidPolicyConditions(null, _failures));
+		assertTrue(_validator.isValidPolicyConditions(id,null, _failures, Action.CREATE));
 		assertTrue(_failures.isEmpty());
 		List<RangerPolicyConditionDef> conditionDefs = new ArrayList<RangerServiceDef.RangerPolicyConditionDef>();
-		assertTrue(_validator.isValidPolicyConditions(conditionDefs, _failures));
+		assertTrue(_validator.isValidPolicyConditions(id, conditionDefs, _failures, Action.CREATE));
 		assertTrue(_failures.isEmpty());
 		
 		Object[][] policyCondition_data = {
@@ -506,7 +512,7 @@ public class TestRangerServiceDefValidator {
 		};
 		
 		conditionDefs.addAll(_utils.createPolicyConditionDefs(policyCondition_data));
-		_failures.clear(); assertFalse(_validator.isValidPolicyConditions(conditionDefs, _failures));
+		_failures.clear(); assertFalse(_validator.isValidPolicyConditions(id, conditionDefs, _failures, Action.CREATE));
 		_utils.checkFailureForMissingValue(_failures, "policy condition def itemId");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def name");
 		_utils.checkFailureForMissingValue(_failures, "policy condition def evaluator");

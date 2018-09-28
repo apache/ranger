@@ -477,6 +477,7 @@ public class TestXUserMgr {
 		vXGroup.setName("grouptest");
 
 		XXGroup xxGroup = new XXGroup();
+		xxGroup.setName("grouptest");
 		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
 		Mockito.when(xxGroupDao.getById(vXGroup.getId())).thenReturn(xxGroup);
 		Mockito.when(xGroupService.updateResource(vXGroup)).thenReturn(vXGroup);

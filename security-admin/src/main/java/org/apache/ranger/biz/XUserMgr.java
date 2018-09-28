@@ -353,11 +353,15 @@ public class XUserMgr extends XUserMgrBase {
 		checkAccess(vXUser.getName());
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser
 				.getName());
+		if (oldUserProfile == null) {
+			throw restErrorUtil.createRESTException(
+					"user " + vXUser.getName() + " does not exist.",
+					MessageEnums.INVALID_INPUT_DATA);
+		}
 		VXPortalUser vXPortalUser = new VXPortalUser();
 		if (oldUserProfile != null && oldUserProfile.getId() != null) {
 			vXPortalUser.setId(oldUserProfile.getId());
 		}
-		// TODO : There is a possibility that old user may not exist.
 
 		vXPortalUser.setFirstName(vXUser.getFirstName());
 		if("null".equalsIgnoreCase(vXPortalUser.getFirstName())){
@@ -841,6 +845,11 @@ public class XUserMgr extends XUserMgrBase {
 	public VXGroup updateXGroup(VXGroup vXGroup) {
 		checkAdminAccess();
 		XXGroup xGroup = daoManager.getXXGroup().getById(vXGroup.getId());
+		if (vXGroup != null && xGroup != null && !vXGroup.getName().equals(xGroup.getName())) {
+			throw restErrorUtil.createRESTException(
+					"group name updates are not allowed.",
+					MessageEnums.INVALID_INPUT_DATA);
+		}
 		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
 				xGroup, "update");
 		xaBizUtil.createTrxLog(trxLogList);
