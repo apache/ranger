@@ -414,7 +414,19 @@
     </developers>
     <contributors>
         <contributor>
+          	<name>Alejandro Fernandez</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
           	<name>Aneela Saleem</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Ankit Singhal</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Anna Shaverdian</name>
           	<organization></organization>
         </contributor>
         <contributor>
@@ -430,6 +442,10 @@
           	<organization></organization>
         </contributor>
         <contributor>
+          	<name>Bhavik Patel</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
           	<name>Bolke de Bruin</name>
           	<organization>ING</organization>
         </contributor>
@@ -438,7 +454,27 @@
           	<organization></organization>
         </contributor>
         <contributor>
+          	<name>Dhaval Rajpara</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Dongying Jiao</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
           	<name>Edward Zhang</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Endre Kovacs</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Fatima Amjad Khan</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Haihui Xu</name>
           	<organization></organization>
         </contributor>
         <contributor>
@@ -450,8 +486,24 @@
           	<organization></organization>
         </contributor>
         <contributor>
+          	<name>Kent Yao</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Kevin Risden</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Koji Kawamura</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
           	<name>Mack Hendricks</name>
           	<organization>Hortonworks Inc.,</organization>
+        </contributor>
+        <contributor>
+          	<name>Madhavi Amirneni</name>
+          	<organization></organization>
         </contributor>
         <contributor>
           	<name>Mani Raman</name>
@@ -462,11 +514,51 @@
           	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
+          	<name>Nicholas Hughes</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Nigel Jones</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Nikhil Purbhe</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Nitin Galave</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Nixon Rodrigues</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Paul Otto</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Peng Xing</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
           	<name>Rich Haase</name>
           	<organization>Pandora</organization>
         </contributor>
         <contributor>
+          	<name>Rohit Sinha</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Shi Wang</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
           	<name>Sree Vaddi</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Suneel Marthi</name>
           	<organization></organization>
         </contributor>
         <contributor>
@@ -476,6 +568,22 @@
         <contributor>
           	<name>Varun Rao</name>
           	<organization>Accenture</organization>
+        </contributor>
+        <contributor>
+          	<name>Vishal Suvagia</name>
+          	<organization>Freestone Infotech</organization>
+        </contributor>
+        <contributor>
+          	<name>Wang Yuan</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Yan Zhou</name>
+          	<organization></organization>
+        </contributor>
+        <contributor>
+          	<name>Yujie Li</name>
+          	<organization></organization>
         </contributor>
     </contributors>
     <organization>
