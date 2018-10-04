@@ -19,6 +19,7 @@
 package org.apache.ranger.authorization.hbase;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Set;
 
@@ -36,6 +38,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.AuthUtil;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -83,6 +86,7 @@ import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
 import org.apache.hadoop.hbase.security.AccessDeniedException;
 import org.apache.hadoop.hbase.security.User;
+import org.apache.hadoop.hbase.security.access.AccessControlLists;
 import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.access.RangerAccessControlLists;
@@ -97,13 +101,19 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs.AccessResult;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+import com.google.common.collect.Sets;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
@@ -1272,8 +1282,116 @@ public class RangerAuthorizationCoprocessor extends RangerAuthorizationCoprocess
 	}
 
 	@Override
-	public void getUserPermissions(RpcController controller, AccessControlProtos.GetUserPermissionsRequest request, RpcCallback<AccessControlProtos.GetUserPermissionsResponse> done) {
-		LOG.debug("getUserPermissions(): ");
+	public void getUserPermissions(RpcController controller, AccessControlProtos.GetUserPermissionsRequest request,
+			RpcCallback<AccessControlProtos.GetUserPermissionsResponse> done) {
+		AccessControlProtos.GetUserPermissionsResponse response = null;
+		try {
+			String operation = "userPermissions";
+			final RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
+			User user = getActiveUser();
+			Set<String> groups = _userUtils.getUserGroups(user);
+			if (groups.isEmpty() && user.getUGI() != null) {
+				String[] groupArray = user.getUGI().getGroupNames();
+				if (groupArray != null) {
+					groups = Sets.newHashSet(groupArray);
+				}
+			}
+			RangerAccessRequestImpl rangerAccessrequest = new RangerAccessRequestImpl(resource, null,
+					_userUtils.getUserAsString(user), groups);
+			rangerAccessrequest.setAction(operation);
+			rangerAccessrequest.setClientIPAddress(getRemoteAddress());
+			rangerAccessrequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
+			rangerAccessrequest.setClusterName(hbasePlugin.getClusterName());
+			List<UserPermission> perms = null;
+			if (request.getType() == AccessControlProtos.Permission.Type.Table) {
+				final TableName table = request.hasTableName() ? ProtobufUtil.toTableName(request.getTableName())
+						: null;
+				requirePermission(operation, table.getName(), Action.ADMIN);
+				resource.setValue(RangerHBaseResource.KEY_TABLE, table.getNameAsString());
+				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
+					@Override
+					public List<UserPermission> run() throws Exception {
+						return getUserPrermissions(
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
+								table.getNameAsString(), false);
+					}
+				});
+			} else if (request.getType() == AccessControlProtos.Permission.Type.Namespace) {
+				final String namespace = request.getNamespaceName().toStringUtf8();
+				requireGlobalPermission("getUserPermissionForNamespace", namespace, Action.ADMIN);
+				resource.setValue(RangerHBaseResource.KEY_TABLE, namespace + RangerHBaseResource.NAMESPACE_SEPARATOR);
+				rangerAccessrequest.setRequestData(namespace);
+				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
+					@Override
+					public List<UserPermission> run() throws Exception {
+						return getUserPrermissions(
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
+								namespace, true);
+					}
+				});
+			} else {
+				requirePermission("userPermissions", Action.ADMIN);
+				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
+					@Override
+					public List<UserPermission> run() throws Exception {
+						return getUserPrermissions(
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest), null,
+								false);
+					}
+				});
+				if (_userUtils.isSuperUser(user)) {
+					perms.add(new UserPermission(Bytes.toBytes(_userUtils.getUserAsString(user)),
+							AccessControlLists.ACL_TABLE_NAME, null, Action.values()));
+				}
+			}
+			response = ResponseConverter.buildGetUserPermissionsResponse(perms);
+		} catch (IOException ioe) {
+			// pass exception back up
+			ResponseConverter.setControllerException(controller, ioe);
+		}
+		done.run(response);
+	}
+
+	private List<UserPermission> getUserPrermissions(RangerResourceACLs rangerResourceACLs, String resource,
+			boolean isNamespace) {
+		List<UserPermission> userPermissions = new ArrayList<UserPermission>();
+		Action[] hbaseActions = Action.values();
+		List<String> hbaseActionsList = new ArrayList<String>();
+		for (Action action : hbaseActions) {
+			hbaseActionsList.add(action.name());
+		}
+		addPermission(rangerResourceACLs.getUserACLs(), isNamespace, hbaseActionsList, userPermissions, resource,
+				false);
+		addPermission(rangerResourceACLs.getGroupACLs(), isNamespace, hbaseActionsList, userPermissions, resource,
+				true);
+		return userPermissions;
+	}
+
+	private void addPermission(Map<String, Map<String, AccessResult>> acls, boolean isNamespace,
+			List<String> hbaseActionsList, List<UserPermission> userPermissions, String resource, boolean isGroup) {
+		for (Entry<String, Map<String, AccessResult>> userAcls : acls.entrySet()) {
+			String user = !isGroup ? userAcls.getKey() : AuthUtil.toGroupEntry(userAcls.getKey());
+			List<Action> allowedPermissions = new ArrayList<Action>();
+			for (Entry<String, AccessResult> permissionAccess : userAcls.getValue().entrySet()) {
+				String permission = permissionAccess.getKey().toUpperCase();
+				if (hbaseActionsList.contains(permission)
+						&& permissionAccess.getValue().getResult() == RangerPolicyEvaluator.ACCESS_ALLOWED) {
+					allowedPermissions.add(Action.valueOf(permission));
+				}
+
+			}
+			if (!allowedPermissions.isEmpty()) {
+				UserPermission up = null;
+				if (isNamespace) {
+					up = new UserPermission(Bytes.toBytes(user), resource,
+							allowedPermissions.toArray(new Action[allowedPermissions.size()]));
+				} else {
+					up = new UserPermission(Bytes.toBytes(user), TableName.valueOf(resource), null, null,
+							allowedPermissions.toArray(new Action[allowedPermissions.size()]));
+				}
+				userPermissions.add(up);
+			}
+		}
 	}
 
 	@Override
