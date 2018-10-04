@@ -42,6 +42,9 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos;
+import org.apache.hadoop.hbase.security.access.AccessControlClient;
+import org.apache.hadoop.hbase.security.access.Permission;
+import org.apache.hadoop.hbase.security.access.UserPermission;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Assert;
@@ -116,6 +119,15 @@ public class HBaseRangerAuthorizationTest {
             admin.createTable(tableDescriptor);
         }
 
+		if (!admin.tableExists(TableName.valueOf("default:temp5"))) {
+			HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf("default:temp5"));
+
+			// Adding column families to table descriptor
+			tableDescriptor.addFamily(new HColumnDescriptor("colfam1"));
+
+			admin.createTable(tableDescriptor);
+		}
+
         // Add a new row
         Put put = new Put(Bytes.toBytes("row1"));
         put.addColumn(Bytes.toBytes("colfam1"), Bytes.toBytes("col1"), Bytes.toBytes("val1"));
@@ -174,7 +186,7 @@ public class HBaseRangerAuthorizationTest {
         for (HTableDescriptor desc : tableDescriptors) {
             LOG.info("Found table:[" + desc.getTableName().getNameAsString() + "]");
         }
-        Assert.assertEquals(2, tableDescriptors.length);
+        Assert.assertEquals(3, tableDescriptors.length);
 
         conn.close();
     }
@@ -960,6 +972,63 @@ public class HBaseRangerAuthorizationTest {
 
         conn.close();
     }
+
+	@Test
+	public void testGetUserPermission() throws Throwable {
+		final Configuration conf = HBaseConfiguration.create();
+		conf.set("hbase.zookeeper.quorum", "localhost");
+		conf.set("hbase.zookeeper.property.clientPort", "" + port);
+		conf.set("zookeeper.znode.parent", "/hbase-unsecure");
+		String user = "IT";
+		UserGroupInformation ugi = UserGroupInformation.createUserForTesting(user, new String[] { "IT" });
+		ugi.doAs(new PrivilegedExceptionAction<Void>() {
+			public Void run() throws Exception {
+				try (Connection conn = ConnectionFactory.createConnection(conf)) {
+					AccessControlClient.getUserPermissions(conn, "temp");
+					Assert.fail();
+				} catch (Throwable e) {
+					// expected
+				}
+				return null;
+			}
+
+		});
+
+		user = "QA";
+		ugi = UserGroupInformation.createUserForTesting(user, new String[] { "QA" });
+		ugi.doAs(new PrivilegedExceptionAction<Void>() {
+			public Void run() throws Exception {
+				List<UserPermission> userPermissions;
+				try (Connection conn = ConnectionFactory.createConnection(conf)) {
+					userPermissions = AccessControlClient.getUserPermissions(conn, "@test_namespace");
+				} catch (Throwable e) {
+					throw new Exception(e);
+				}
+				boolean found = false;
+				for (UserPermission namespacePermission : userPermissions) {
+					if (namespacePermission.hasNamespace()) {
+						found = Bytes.equals(namespacePermission.getUser(), Bytes.toBytes("@QA"));
+						if (found) {
+							break;
+						}
+					}
+				}
+				Assert.assertTrue("QA is not found", found);
+				return null;
+			}
+		});
+
+		List<UserPermission> userPermissions;
+		try (Connection conn = ConnectionFactory.createConnection(conf)) {
+			userPermissions = AccessControlClient.getUserPermissions(conn, "temp5");
+		} catch (Throwable e) {
+			throw new Exception(e);
+		}
+		UserPermission userPermission = new UserPermission(Bytes.toBytes("@IT"), TableName.valueOf("temp5"), null,
+				Permission.Action.READ, Permission.Action.WRITE);
+		Assert.assertTrue("@IT permission should be there", userPermissions.contains(userPermission));
+
+	}
 
     private static int getFreePort() throws IOException {
         ServerSocket serverSocket = new ServerSocket(0);

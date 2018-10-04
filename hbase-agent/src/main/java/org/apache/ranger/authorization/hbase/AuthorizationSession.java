@@ -174,7 +174,8 @@ public class AuthorizationSession {
 				StringUtils.equals(_operation, "deleteNamespace") ||
 				StringUtils.equals(_operation, "modifyNamespace") ||
 				StringUtils.equals(_operation, "setUserNamespaceQuota") ||
-				StringUtils.equals(_operation, "setNamespaceQuota");
+				StringUtils.equals(_operation, "setNamespaceQuota") ||
+				StringUtils.equals(_operation, "getUserPermissionForNamespace");
 	}
 
 	AuthorizationSession buildRequest() {
