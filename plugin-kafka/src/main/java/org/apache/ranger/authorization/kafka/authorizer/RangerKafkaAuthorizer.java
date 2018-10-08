@@ -40,7 +40,6 @@ import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.authenticator.LoginManager;
 import org.apache.kafka.common.security.kerberos.KerberosLogin;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -59,6 +58,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String KEY_CLUSTER = "cluster";
 	public static final String KEY_CONSUMER_GROUP = "consumer_group";
 	public static final String KEY_TRANSACTIONALID = "transactionalid";
+	public static final String KEY_DELEGATIONTOKEN = "delegationtoken";
 
 	public static final String ACCESS_TYPE_READ = "consume";
 	public static final String ACCESS_TYPE_WRITE = "publish";
@@ -72,6 +72,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
+	RangerKafkaAuditHandler auditHandler = null;
 
 	public RangerKafkaAuthorizer() {
 	}
@@ -115,7 +116,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		}
 		logger.info("Calling plugin.init()");
 		rangerPlugin.init();
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+		auditHandler = new RangerKafkaAuditHandler();
 		rangerPlugin.setResultProcessor(auditHandler);
 	}
 
@@ -199,13 +200,14 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 		if (resource.resourceType().equals(Topic$.MODULE$)) {
 			rangerResource.setValue(KEY_TOPIC, resource.name());
-		} else if (resource.resourceType().equals(Cluster$.MODULE$)) { //NOPMD
-			// CLUSTER should go as null
-			// rangerResource.setValue(KEY_CLUSTER, resource.name());
+		} else if (resource.resourceType().equals(Cluster$.MODULE$)) {
+			rangerResource.setValue(KEY_CLUSTER, resource.name());
 		} else if (resource.resourceType().equals(Group$.MODULE$)) {
 			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
 		} else if (resource.resourceType().equals(TransactionalId$.MODULE$)) {
-			rangerResource.setValue(KEY_TRANSACTIONALID,resource.name());
+			rangerResource.setValue(KEY_TRANSACTIONALID, resource.name());
+		} else if (resource.resourceType().equals(DelegationToken$.MODULE$)) {
+			rangerResource.setValue(KEY_DELEGATIONTOKEN, resource.name());
 		} else {
 			logger.fatal("Unsupported resourceType=" + resource.resourceType());
 			validationFailed = true;
@@ -228,6 +230,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			} catch (Throwable t) {
 				logger.error("Error while calling isAccessAllowed(). request="
 						+ rangerRequest, t);
+			} finally {
+				auditHandler.flushAudit();
 			}
 		}
 		RangerPerfTracer.log(perf);

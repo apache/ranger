@@ -23,13 +23,15 @@
 			"validationMessage":"",
 			"uiHint":"",
 			"label":"Topic",
-			"description":"Topic"
+			"description":"Topic",
+			"accessTypeRestrictions": ["create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish", "kafka_admin"]
 		},
 		{
 			"itemId":2,
 			"name":"transactionalid",
 			"type":"string",
 			"level":1,
+			"mandatory":true,
 			"excludesSupported":true,
 			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions":{
@@ -37,9 +39,41 @@
 				"ignoreCase":true
 			},
 			"label":"Transactional Id",
-			"description":"Transactional Id"
+			"description":"Transactional Id",
+			"accessTypeRestrictions": ["publish", "describe"]
+		},
+		{
+			"itemId":3,
+			"name":"cluster",
+			"type":"string",
+			"level":1,
+			"mandatory":true,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"label":"Cluster",
+			"description":"Cluster",
+			"accessTypeRestrictions": ["configure", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write"]
+		},
+		{
+			"itemId":4,
+			"name":"delegationtoken",
+			"type":"string",
+			"level":1,
+			"mandatory":true,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"label":"Delegation Token",
+			"description":"Delegation Token",
+			"accessTypeRestrictions": ["describe"]
 		}
-		
 	],
 	"accessTypes":[
 		{
@@ -49,7 +83,6 @@
 			"impliedGrants":[
 				"describe"
 			]
-			
 		},
 		{
 			"itemId":2,
@@ -58,7 +91,6 @@
 			"impliedGrants":[
 				"describe"
 			]
-			
 		},
 		{
 			"itemId":5,
@@ -67,7 +99,6 @@
 			"impliedGrants":[
 				"describe"
 			]
-			
 		},
 		{
 			"itemId":6,
@@ -99,7 +130,6 @@
 				"create",
 				"delete"
 			]
-			
 		},
 		{
 			"itemId":10,
@@ -150,13 +180,10 @@
 			"mandatory":false,
 			"label":"Ranger Plugin SSL CName"
 		}
-		
 	],
 	"enums":[
-		
 	],
 	"contextEnrichers":[
-		
 	],
 	"policyConditions":[
 		{
@@ -164,7 +191,6 @@
 			"name":"ip-range",
 			"evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
 			"evaluatorOptions":{
-				
 			},
 			"validationRegEx":"",
 			"validationMessage":"",
@@ -172,6 +198,5 @@
 			"label":"IP Address Range",
 			"description":"IP Address Range"
 		}
-		
 	]
 }
