@@ -854,21 +854,21 @@ public class ServiceUtil {
 		int permGroup = 0;
 		for(RangerPolicy.RangerPolicyItem policyItem : policy.getPolicyItems()) {
 			String ipAddress = null;
-			
-			for(RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
-				if(condition.getType() == "ipaddress") {
-					List<String> values = condition.getValues();
-					if (CollectionUtils.isNotEmpty(values)) {
-						// TODO changes this to properly deal with collection for now just returning 1st item
-						ipAddress = values.get(0);
-					}
-				}
-	
-				if(ipAddress != null && !ipAddress.isEmpty()) {
-					break; // only 1 IP-address per permMap
-				}
-			}
-	
+
+            for (RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
+                if ("ipaddress".equalsIgnoreCase(condition.getType())) {
+                    List<String> values = condition.getValues();
+                    if (CollectionUtils.isNotEmpty(values)) {
+                        // TODO changes this to properly deal with collection for now just returning 1st item
+                        ipAddress = values.get(0);
+                    }
+                }
+
+                if (ipAddress != null && !ipAddress.isEmpty()) {
+                    break; // only 1 IP-address per permMap
+                }
+            }
+
 			for(String userName : policyItem.getUsers()) {
 				for(RangerPolicyItemAccess access : policyItem.getAccesses()) {
 					if(! access.getIsAllowed()) {
