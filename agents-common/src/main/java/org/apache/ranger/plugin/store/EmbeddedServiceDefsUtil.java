@@ -67,6 +67,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_WASB_NAME  = "wasb";
 	public static final String EMBEDDED_SERVICEDEF_SQOOP_NAME = "sqoop";
 	public static final String EMBEDDED_SERVICEDEF_KYLIN_NAME  = "kylin";
+	public static final String EMBEDDED_SERVICEDEF_ABFS_NAME  = "abfs";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -100,6 +101,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef wasbServiceDef;
 	private RangerServiceDef sqoopServiceDef;
 	private RangerServiceDef kylinServiceDef;
+	private RangerServiceDef abfsServiceDef;
 
 	private RangerServiceDef tagServiceDef;
 
@@ -142,6 +144,7 @@ public class EmbeddedServiceDefsUtil {
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
 			sqoopServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SQOOP_NAME);
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
+			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -211,6 +214,8 @@ public class EmbeddedServiceDefsUtil {
 	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
 	public long getWasbServiceDefId() { return getId(wasbServiceDef); }
+
+	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
