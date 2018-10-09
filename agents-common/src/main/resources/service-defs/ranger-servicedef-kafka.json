@@ -56,7 +56,7 @@
 			},
 			"label":"Cluster",
 			"description":"Cluster",
-			"accessTypeRestrictions": ["configure", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write"]
+			"accessTypeRestrictions": ["create", "configure", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write"]
 		},
 		{
 			"itemId":4,
