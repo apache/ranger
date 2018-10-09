@@ -461,6 +461,10 @@ IF (OBJECT_ID('x_plugin_info_UK') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_plugin_info] DROP CONSTRAINT x_plugin_info_UK
 END
+IF (OBJECT_ID('x_policy$x_policy_UK_name_service') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_policy] DROP CONSTRAINT x_policy$x_policy_UK_name_service
+END
 IF (OBJECT_ID('vx_trx_log') IS NOT NULL)
 BEGIN
     DROP VIEW [dbo].[vx_trx_log]
@@ -1136,8 +1140,8 @@ CREATE TABLE [dbo].[x_policy] (
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [version] [bigint] DEFAULT NULL NULL,
-        [service] [bigint] DEFAULT NULL NULL,
-        [name] [varchar](512) DEFAULT NULL NULL,
+        [service] [bigint] NOT NULL,
+        [name] [varchar](512) NOT NULL,
         [policy_type] [int] DEFAULT 0 NULL,
         [description] [varchar](1024) DEFAULT NULL NULL,
         [resource_signature] [varchar](128) DEFAULT NULL NULL,
@@ -1146,7 +1150,11 @@ CREATE TABLE [dbo].[x_policy] (
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_policy$x_policy_UK_name_service] UNIQUE NONCLUSTERED
+(
+        [name] ASC, [service] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
@@ -2990,6 +2998,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('027',CURRENT_TIMESTAMP,'Ranger 0.7.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('028',CURRENT_TIMESTAMP,'Ranger 0.7.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('029',CURRENT_TIMESTAMP,'Ranger 0.7.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',CURRENT_TIMESTAMP,'Ranger 0.7.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 0.7.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
