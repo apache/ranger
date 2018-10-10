@@ -538,11 +538,12 @@
                             <goal>war</goal>
                         </goals>
                         <configuration>
-                            <packagingExcludes>
-                                                        WEB-INF/lib/spring-*.SEC03.jar,
-                                                        WEB-INF/lib/spring-*.RC3.jar,
-                                                        WEB-INF/lib/spring-2.*.jar
-                                                </packagingExcludes>
+							<packagingExcludes>
+								WEB-INF/lib/spring-*.SEC03.jar,
+								WEB-INF/lib/spring-*.RC3.jar,
+								WEB-INF/lib/spring-2.*.jar,
+								WEB-INF/lib/jetty-*.jar
+							</packagingExcludes>
                             <warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
                         </configuration>
                     </execution>
