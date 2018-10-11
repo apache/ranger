@@ -101,7 +101,7 @@ public class AbstractPredicateUtil {
 	}
 
 	public Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
-		String sortBy = filter == null ? null : filter.getParam(SearchFilter.SORT_BY);
+		String sortBy = filter == null ? null : filter.getSortBy();
 
 		if(StringUtils.isEmpty(sortBy)) {
 			return null;
