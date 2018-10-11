@@ -429,6 +429,9 @@ public class Jisql {
 	                    if (trimmedLine.toUpperCase().startsWith("DECLARE")) {
 	                        commandTerminator="/";
 	                    }
+	                    if ((trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE PROCEDURE")) || (trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE FUNCTION"))) {
+	                        commandTerminator="/";
+	                    }
                     }
                     if(connectString.toLowerCase().startsWith("jdbc:postgresql") && inputFileName!=null){
 	                    if (trimmedLine.toLowerCase().startsWith("select 'delimiter start';")) {
