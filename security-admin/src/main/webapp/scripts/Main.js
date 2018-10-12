@@ -17,7 +17,7 @@
  * under the License.
  */
 
- require([
+ define([
 	'backbone',
 	'App',
 	'RegionManager',
@@ -32,17 +32,34 @@
 function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,RestCSRF, XAUtils, loadingHTML ) {
     'use strict';
 
-    var controller = new AppController();
-    //deny some routes access for normal users
-    controller = XAUtils.filterAllowedActions(controller);
-	App.appRouter = new AppRouter({
-		controller: controller
-	});
-	App.appRouter.on('beforeroute', function(event) {
-		if(!window._preventNavigation)
-			$(App.rContent.$el).html(loadingHTML);
-	});
-	// Start Marionette Application in desktop mode (default)
-	Backbone.fetchCache._cache = {};
-	App.start();
+	function startApp(){
+		var controller = new AppController();
+		//deny some routes access for normal users
+		controller = XAUtils.filterAllowedActions(controller);
+		App.appRouter = new AppRouter({
+			controller: controller
+		});
+		App.appRouter.on('beforeroute', function(event) {
+			if(!window._preventNavigation)
+				$(App.rContent.$el).html(loadingHTML);
+		});
+		// Start Marionette Application in desktop mode (default)
+		Backbone.fetchCache._cache = {};
+		App.start();
+	}
+
+	//export an object so that we can assert that at least RequireJS loading works or not
+	var mainModule={
+		name: 'Main'
+	};
+
+	try{
+		startApp();
+		mainModule.success = true;
+	}
+	catch(e){
+		mainModule.success = false;
+		mainModule.error = e;
+	}
+	return mainModule;
 });

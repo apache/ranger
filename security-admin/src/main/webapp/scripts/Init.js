@@ -23,9 +23,6 @@
 
 	 urlArgs : 'ver=build.version',
 
-	/* starting point for application */
-    deps: ['Main'],
-
     shim: {
         bootstrap: {
             deps: ['jquery'],

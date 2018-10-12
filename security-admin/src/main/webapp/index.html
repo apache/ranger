@@ -134,7 +134,11 @@
 				waitSeconds : 0
 			});
 			if (!window.console) window.console = {};
-            if (!window.console.log) window.console.log = function () { };
+			if (!window.console.log) window.console.log = function () { };
+
+			require(['Main'], function(){
+				//nothing to do, loading Main already triggers the app
+			});
 
 		</script>
 	</body>
