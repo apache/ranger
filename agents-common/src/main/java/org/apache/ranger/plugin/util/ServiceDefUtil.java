@@ -261,7 +261,10 @@ public class ServiceDefUtil {
     private static RangerResourceDef mergeResourceDef(RangerResourceDef base, RangerResourceDef delta) {
         RangerResourceDef ret = new RangerResourceDef(base);
 
-        // retain base values for: itemId, name, type, level, parent, mandatory, lookupSupported
+        // retain base values for: itemId, name, type, level, parent, lookupSupported
+
+        if(Boolean.TRUE.equals(delta.getMandatory()))
+            ret.setMandatory(delta.getMandatory());
 
         if(delta.getRecursiveSupported() != null)
             ret.setRecursiveSupported(delta.getRecursiveSupported());
@@ -288,8 +291,7 @@ public class ServiceDefUtil {
         if(StringUtils.isNotEmpty(delta.getValidationMessage()))
             ret.setValidationMessage(delta.getValidationMessage());
 
-        if(StringUtils.isNotEmpty(delta.getUiHint()))
-            ret.setUiHint(delta.getUiHint());
+        ret.setUiHint(delta.getUiHint());
 
         if(StringUtils.isNotEmpty(delta.getLabel()))
             ret.setLabel(delta.getLabel());

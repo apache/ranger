@@ -599,6 +599,38 @@ public class RangerServiceDefValidator extends RangerValidator {
 				}
 			}
 		}
+		// If a resource is not mandatory, then it cannot be non-leaf in any hierarchy (RANGER-2207)
+		List<RangerResourceDef> resources = serviceDef.getResources();
+		List<String> resourceNames = new ArrayList<>(resources.size());
+		for (RangerResourceDef resourceDef : resources) {
+			resourceNames.add(resourceDef.getName());
+		}
+		for (String resourceName : resourceNames) {
+			for (int policyType : RangerPolicy.POLICY_TYPES) {
+				Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policyType);
+				for (List<RangerResourceDef> aHierarchy : hierarchies) {
+					boolean foundOptionalResource = false;
+					for (RangerResourceDef resourceDef : aHierarchy) {
+						if (!foundOptionalResource) {
+							if (resourceDef.getName().equalsIgnoreCase(resourceName) && !Boolean.TRUE.equals(resourceDef.getMandatory())) {
+								foundOptionalResource = true;
+							}
+						} else {
+							if (Boolean.TRUE.equals(resourceDef.getMandatory())) {
+								valid = false;
+								ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_INVALID_MANADORY_VALUE_FOR_SERVICE_RESOURCE;
+								failures.add(new ValidationFailureDetailsBuilder()
+										.field(resourceDef.getName())
+										.isSemanticallyIncorrect()
+										.errorCode(error.getErrorCode())
+										.becauseOf(error.getMessage(resourceDef.getName(), resourceName))
+										.build());
+							}
+						}
+					}
+				}
+			}
+		}
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== RangerServiceDefValidator.isValidResourceGraph(%s, %s): %s", serviceDef, failures, valid));

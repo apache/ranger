@@ -1262,6 +1262,22 @@ define(function(require) {
 		}
 		return singleValue;
 	};
+	XAUtils.hideIfNull = function(obj, form){
+		//resorces hide show
+		var hideIfNull = false;
+		if(!_.isEmpty(obj.uiHint)){
+			var UIHint = JSON.parse(obj.uiHint);
+			if(!_.isUndefined(form.model.get('resources')) && !_.isEmpty(form.model.get('resources')) &&
+					_.has(form.model.get('resources'), obj.name)){
+				 hideIfNull = false;
+			}else{
+				if(!_.isUndefined(UIHint.hideIfNull) && ! obj.mandatory){
+					hideIfNull = UIHint.hideIfNull;
+				}
+			}
+		}
+		return hideIfNull;
+	};
 	XAUtils.getBaseUrl = function (){
 		if(!window.location.origin){
 			window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
