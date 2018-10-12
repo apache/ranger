@@ -491,6 +491,30 @@ public class TestRangerServiceDefValidator {
         _failures.clear(); assertFalse("Graph was valid!", _validator.isValidResourceGraph(_serviceDef, _failures));
         assertFalse(_failures.isEmpty());
         _utils.checkFailureForSemanticError(_failures, "resource graph");
+
+        data_bad = new Object[][] {
+                //  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+                { "db",     null, null, null, null, "" ,     -10 }, // -ve level is ok
+                { "table",  null, null, true, null, "db",    0 },   // 0 level is ok; mandatory true here, but not at parent level?
+                { "column", null, null, null, null, "table", 10 },  // level is null!
+                { "udf",    null, null, null, null, "db",    0 },   // should not conflict as it belong to a different hierarchy
+        };
+        resourceDefs = _utils.createResourceDefs(data_bad);
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        _failures.clear(); assertFalse(_validator.isValidResourceGraph(_serviceDef, _failures));
+        assertFalse(_failures.isEmpty());
+
+        data_good = new Object[][] {
+                //  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
+                { "db",     null, null, true, null, "" ,     -10 }, // -ve level is ok
+                { "table",  null, null, null, null, "db",    0 },   // 0 level is ok; mandatory true here, but not at parent level?
+                { "column", null, null, null, null, "table", 10 },  // level is null!
+                { "udf",    null, null, true, null, "db",    0 },   // should not conflict as it belong to a different hierarchy
+        };
+        resourceDefs = _utils.createResourceDefs(data_good);
+        when(_serviceDef.getResources()).thenReturn(resourceDefs);
+        _failures.clear(); assertTrue(_validator.isValidResourceGraph(_serviceDef, _failures));
+        assertTrue(_failures.isEmpty());
     }
 	
 	@Test

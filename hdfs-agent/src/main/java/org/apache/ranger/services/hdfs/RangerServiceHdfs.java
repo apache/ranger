@@ -145,7 +145,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 		try {
 			// we need to create one policy for keyadmin user for audit to HDFS
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
+			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
 				RangerPolicy policy = getPolicyForKMSAudit(aHierarchy);
 				if (policy != null) {
 					ret.add(policy);

@@ -183,6 +183,18 @@ public class RangerServiceDefHelper {
 		return _delegate.getResourceHierarchies(policyType);
 	}
 
+	public Set<List<RangerResourceDef>> filterHierarchies_containsOnlyMandatoryResources(Integer policyType) {
+		Set<List<RangerResourceDef>> hierarchies = getResourceHierarchies(policyType);
+		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
+		for (List<RangerResourceDef> aHierarchy : hierarchies) {
+			Set<String> mandatoryResources = getMandatoryResourceNames(aHierarchy);
+			if (aHierarchy.size() == mandatoryResources.size()) {
+				result.add(aHierarchy);
+			}
+		}
+		return result;
+	}
+
 	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType, Collection<String> keys) {
 
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();

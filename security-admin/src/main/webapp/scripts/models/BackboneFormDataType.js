@@ -48,7 +48,6 @@ define(function(require) {
 						return configs;
 					}
 				}
-				configs = _.sortBy(configs, function(m){ return m.itemId });
 				return configs;
 			};
 			var getValidators = function(formObj, v){
@@ -70,8 +69,13 @@ define(function(require) {
 			};
 			
 			//Get configs for perticular policy type
-			configs = getResourceConfigs(configs)
-			
+			configs = getResourceConfigs(configs);
+			configs = _.sortBy(configs, function(m){ return m.itemId });
+			configs = _.filter(configs, function(m){
+				if(! _.isUndefined(m.uiHint) && ! XAUtils.hideIfNull(m, form)){
+					return m;
+				}
+			})
 			var samelevelFieldCreated = [];
 			_.each(configs, function(v, k,config) {
 				if (v != null) {
@@ -89,10 +93,9 @@ define(function(require) {
 								}
 								break;
 							}
-                                                        if($.inArray(v.parent, samelevelFieldCreated) >= 0){
+							if($.inArray(v.parent, samelevelFieldCreated) >= 0){
 								return;
 							}
-							
 							if( isPolicyForm ){
 								var resourceOpts = {};
 								formObj.type = 'Resource';
