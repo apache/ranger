@@ -125,7 +125,7 @@ public abstract class RangerBaseService {
 		try {
 			// we need to create one policy for each resource hierarchy
 			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
+			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
 				RangerPolicy policy = getDefaultPolicy(aHierarchy);
 				if (policy != null) {
 					ret.add(policy);
