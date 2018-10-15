@@ -81,7 +81,7 @@ if [ "${action}" == "START" ]; then
 		if  ps -p $pid > /dev/null
 		then
 			echo "Apache Ranger Tagsync Service is already running [pid={$pid}]"
-			exit 1
+			exit ;
 		else
 			rm -rf $pidf
 		fi
@@ -118,7 +118,7 @@ elif [ "${action}" == "STOP" ]; then
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
 			echo "Apache Ranger Tagsync Service is not running"
-			exit 1	
+			return	
 		fi
 	fi
 	echo "Found Apache Ranger Tagsync Service with pid $pid, Stopping it..."
