@@ -138,7 +138,7 @@ elif [ "${action}" == "STOP" ]; then
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
 			echo "Apache Ranger Usersync Service is not running"
-			exit 1	
+			return	
 		fi
 	fi
 	echo "Found Apache Ranger Usersync Service with pid $pid, Stopping it..."
