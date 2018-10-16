@@ -72,9 +72,10 @@ define(function(require) {
 			configs = getResourceConfigs(configs);
 			configs = _.sortBy(configs, function(m){ return m.itemId });
 			configs = _.filter(configs, function(m){
-				if(! _.isUndefined(m.uiHint) && ! XAUtils.hideIfNull(m, form)){
-					return m;
+				if(m.uiHint && !_.isEmpty(m.uiHint) && XAUtils.hideIfNull(m, form)){
+					return;
 				}
+				return m;
 			})
 			var samelevelFieldCreated = [];
 			_.each(configs, function(v, k,config) {
