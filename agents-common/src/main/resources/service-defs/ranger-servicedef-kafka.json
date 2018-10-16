@@ -24,7 +24,7 @@
 			"uiHint":"",
 			"label":"Topic",
 			"description":"Topic",
-			"accessTypeRestrictions": ["create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish", "kafka_admin"]
+			"accessTypeRestrictions": ["create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish"]
 		},
 		{
 			"itemId":2,
