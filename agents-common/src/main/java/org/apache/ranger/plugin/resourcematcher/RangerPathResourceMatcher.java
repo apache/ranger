@@ -227,8 +227,8 @@ abstract class RecursiveMatcher extends ResourceMatcher {
 	}
 
 	String getStringToCompare(String policyValue) {
-		if (policyValue == null) {
-			return null;
+		if (StringUtils.isEmpty(policyValue)) {
+			return policyValue;
 		}
 		return (policyValue.lastIndexOf(levelSeparatorChar) == policyValue.length()-1) ?
 			policyValue.substring(0, policyValue.length()-1) : policyValue;

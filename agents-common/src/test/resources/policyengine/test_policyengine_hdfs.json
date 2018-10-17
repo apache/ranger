@@ -60,6 +60,12 @@
            "values":["var country_code = ctx.getRequestContextAttribute('LOCATION_TEST_COUNTRY_CODE'); ctx.result = !!country_code;"]
          }]}
      ]
+    },
+    {"id":4,"name":"invalid policy with a single backslash","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["\\"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
     }
   ],
 
