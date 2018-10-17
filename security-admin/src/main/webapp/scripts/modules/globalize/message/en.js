@@ -434,7 +434,7 @@ define(function(require) {
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',
-                noUserFoundText			: 'No user associate with this group.',
+                noUserFoundText			: 'No user is associated with this group.',
                 showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
                 searchForUserSync       :"Search for your user sync audits...",
                 policyExpired           :'Policy Expired',
