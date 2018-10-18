@@ -126,6 +126,10 @@ public abstract class XXPolicyBase extends XXDBBase {
      */
     @Column(name = "policy_options")
     protected String options;
+
+    	@Column(name = "policy_text")
+    	protected String policyText;
+
 	/**
 	 * @return the gUID
 	 */
@@ -310,7 +314,16 @@ public abstract class XXPolicyBase extends XXDBBase {
         return this.options;
     }
 
-	/*
+
+    	public void setPolicyText(String policyText) {
+        	this.policyText = policyText;
+    	}
+
+    	public String getPolicyText() {
+        	return this.policyText;
+    	}
+
+    /*
 	 * (non-Javadoc)
 	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
@@ -399,6 +412,13 @@ public abstract class XXPolicyBase extends XXDBBase {
 		} else if (!options.equals(other.options)) {
 			return false;
 		}
+        if (policyText == null) {
+            if (other.policyText != null) {
+                return false;
+            }
+        } else if (!policyText.equals(other.policyText)) {
+            return false;
+        }
 
 		return true;
 	}

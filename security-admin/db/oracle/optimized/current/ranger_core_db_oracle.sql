@@ -52,6 +52,12 @@ CREATE SEQUENCE X_POLICY_ITEM_CONDITION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE 
 CREATE SEQUENCE X_CONTEXT_ENRICHER_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_ITEM_USER_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_ITEM_GROUP_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_ACCESS_TYPE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_CONDITION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_DATAMASK_TYPE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_DATA_HIST_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_MODULES_MASTER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_USER_MODULE_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -59,11 +65,7 @@ CREATE SEQUENCE X_GROUP_MODULE_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCY
 CREATE SEQUENCE X_TAG_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_TAG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SERVICE_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_SERVICE_RESOURCE_ELEMENT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_TAG_ATTR_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_TAG_ATTR_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_TAG_RESOURCE_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_SERVICE_RES_EL_VAL_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_DATAMASK_TYPE_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_ITEM_DATAMASK_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_ITEM_ROWFILTER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -458,6 +460,7 @@ is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 is_audit_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 policy_options varchar(4000) DEFAULT NULL NULL,
 policy_priority NUMBER(11) DEFAULT 0 NOT NULL,
+policy_text CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_policy_UK_name_service UNIQUE (name,service),
 CONSTRAINT x_policy_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -860,6 +863,7 @@ version NUMBER(20) DEFAULT NULL NULL,
 name VARCHAR(255) NOT NULL,
 source VARCHAR(128) DEFAULT NULL NULL,
 is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
+TAG_ATTRS_DEF_TEXT CLOB DEFAULT NULL NULL,
 PRIMARY KEY (id),
 CONSTRAINT x_tag_def_UK_guid UNIQUE (guid),
 CONSTRAINT x_tag_def_UK_name UNIQUE (name),
@@ -878,6 +882,7 @@ version NUMBER(20) DEFAULT NULL NULL,
 type NUMBER(20) NOT NULL,
 owned_by NUMBER(6) DEFAULT 0 NOT NULL,
 policy_options varchar(4000) DEFAULT NULL NULL,
+TAG_ATTRS_TEXT CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_tag_UK_guid UNIQUE (guid),
 CONSTRAINT x_tag_FK_type FOREIGN KEY (type) REFERENCES x_tag_def (id),
@@ -896,58 +901,13 @@ version NUMBER(20) DEFAULT NULL NULL,
 service_id NUMBER(20) NOT NULL,
 resource_signature VARCHAR(128) DEFAULT NULL NULL,
 is_enabled NUMBER(1) DEFAULT '1' NOT NULL,
+SERVICE_RESOURCE_ELEMENTS_TEXT CLOB DEFAULT NULL NULL,
+TAGS_TEXT CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_service_res_UK_guid UNIQUE (guid),
 CONSTRAINT x_service_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_service_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
-);
-
-CREATE TABLE x_service_resource_element(
-id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
-res_id NUMBER(20) NOT NULL,
-res_def_id NUMBER(20) NOT NULL,
-is_excludes NUMBER(1) DEFAULT '0' NOT NULL,
-is_recursive NUMBER(1) DEFAULT '0' NOT NULL,
-primary key (id),
-CONSTRAINT x_srvc_res_el_FK_res_def_id FOREIGN KEY (res_def_id) REFERENCES x_resource_def (id),
-CONSTRAINT x_srvc_res_el_FK_res_id FOREIGN KEY (res_id) REFERENCES x_service_resource (id),
-CONSTRAINT x_srvc_res_el_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_srvc_res_el_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
-);
-
-CREATE TABLE x_tag_attr_def(
-id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
-tag_def_id NUMBER(20) NOT NULL,
-name VARCHAR(255) NOT NULL,
-type VARCHAR(50) NOT NULL,
-primary key (id),
-CONSTRAINT x_tag_attr_def_FK_tag_def_id FOREIGN KEY (tag_def_id) REFERENCES x_tag_def (id),
-CONSTRAINT x_tag_attr_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_tag_attr_def_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
-);
-
-CREATE TABLE x_tag_attr(
-id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
-tag_id NUMBER(20) NOT NULL,
-name VARCHAR(255) NOT NULL,
-value VARCHAR(512) DEFAULT NULL NULL,
-primary key (id),
-CONSTRAINT x_tag_attr_FK_tag_id FOREIGN KEY (tag_id) REFERENCES x_tag (id),
-CONSTRAINT x_tag_attr_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_tag_attr_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
 CREATE TABLE x_tag_resource_map(
@@ -967,20 +927,6 @@ CONSTRAINT x_tag_res_map_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_p
 CONSTRAINT x_tag_res_map_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-CREATE TABLE x_service_resource_element_val(
-id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
-res_element_id NUMBER(20) NOT NULL,
-value VARCHAR(1024) NOT NULL,
-sort_order NUMBER(3) DEFAULT '0' NULL,
-primary key (id),
-CONSTRAINT x_srvc_res_el_val_FK_res_el_id FOREIGN KEY (res_element_id) REFERENCES x_service_resource_element (id),
-CONSTRAINT x_srvc_res_el_val_FK_add_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_srvc_res_el_val_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
-);
 INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Tag Based Policies','');
 commit;
 
@@ -1115,6 +1061,115 @@ session_id VARCHAR(255) DEFAULT NULL,
 );
 commit;
 
+CREATE TABLE x_policy_ref_resource (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+resource_def_id NUMBER(20) NOT NULL,
+resource_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_res_UK_polId_resDefId UNIQUE (policy_id, resource_def_id),
+CONSTRAINT x_p_ref_res_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id),
+CONSTRAINT x_p_ref_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+CREATE TABLE x_policy_ref_access_type (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+access_def_id NUMBER(20) NOT NULL,
+access_type_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_acc_UK_polId_accDefId UNIQUE(policy_id, access_def_id),
+CONSTRAINT x_p_ref_acc_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_acc_FK_acc_def_id FOREIGN KEY (access_def_id) REFERENCES x_access_type_def (id),
+CONSTRAINT x_p_ref_acc_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_acc_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+CREATE TABLE x_policy_ref_condition (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+condition_def_id NUMBER(20) NOT NULL,
+condition_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE(policy_id, condition_def_id),
+CONSTRAINT x_p_ref_cond_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_cond_FK_cond_def_id FOREIGN KEY (condition_def_id) REFERENCES x_policy_condition_def (id),
+CONSTRAINT x_p_ref_cond_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_cond_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+CREATE TABLE x_policy_ref_datamask_type (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+datamask_def_id NUMBER(20) NOT NULL,
+datamask_type_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_dmsk_UK_polId_dDefId UNIQUE(policy_id, datamask_def_id),
+CONSTRAINT x_p_ref_dmsk_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_dmsk_FK_dmk_def_id FOREIGN KEY (datamask_def_id) REFERENCES x_datamask_type_def (id),
+CONSTRAINT x_p_ref_dmsk_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_dmsk_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+CREATE TABLE x_policy_ref_user (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+user_id NUMBER(20) NOT NULL,
+user_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_usr_UK_polId_userId UNIQUE(policy_id, user_id),
+CONSTRAINT x_p_ref_usr_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_usr_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id),
+CONSTRAINT x_p_ref_usr_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_usr_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+CREATE TABLE x_policy_ref_group (
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+group_id NUMBER(20) NOT NULL,
+group_name VARCHAR(4000) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE(policy_id, group_id),
+CONSTRAINT x_p_ref_grp_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id),
+CONSTRAINT x_p_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_p_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 commit;
 
@@ -1227,21 +1282,10 @@ CREATE INDEX x_tag_IDX_added_by_id ON x_tag(added_by_id);
 CREATE INDEX x_tag_IDX_upd_by_id ON x_tag(upd_by_id);
 CREATE INDEX x_service_res_IDX_added_by_id ON x_service_resource(added_by_id);
 CREATE INDEX x_service_res_IDX_upd_by_id ON x_service_resource(upd_by_id);
-CREATE INDEX x_srvc_res_el_IDX_added_by_id ON x_service_resource_element(added_by_id);
-CREATE INDEX x_srvc_res_el_IDX_upd_by_id ON x_service_resource_element(upd_by_id);
-CREATE INDEX x_tag_attr_def_IDX_tag_def_id ON x_tag_attr_def(tag_def_id);
-CREATE INDEX x_tag_attr_def_IDX_added_by_id ON x_tag_attr_def(added_by_id);
-CREATE INDEX x_tag_attr_def_IDX_upd_by_id ON x_tag_attr_def(upd_by_id);
-CREATE INDEX x_tag_attr_IDX_tag_id ON x_tag_attr(tag_id);
-CREATE INDEX x_tag_attr_IDX_added_by_id ON x_tag_attr(added_by_id);
-CREATE INDEX x_tag_attr_IDX_upd_by_id ON x_tag_attr(upd_by_id);
 CREATE INDEX x_tag_res_map_IDX_tag_id ON x_tag_resource_map(tag_id);
 CREATE INDEX x_tag_res_map_IDX_res_id ON x_tag_resource_map(res_id);
 CREATE INDEX x_tag_res_map_IDX_added_by_id ON x_tag_resource_map(added_by_id);
 CREATE INDEX x_tag_res_map_IDX_upd_by_id ON x_tag_resource_map(upd_by_id);
-CREATE INDEX x_srvc_res_el_val_IDX_resel_id ON x_service_resource_element_val(res_element_id);
-CREATE INDEX x_srvc_res_el_val_IDX_addby_id ON x_service_resource_element_val(added_by_id);
-CREATE INDEX x_srvc_res_el_val_IDX_updby_id ON x_service_resource_element_val(upd_by_id);
 CREATE INDEX x_service_conf_def_IDX_defid ON x_service_config_def(def_id);
 CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
@@ -1263,8 +1307,6 @@ CREATE INDEX x_plc_itm_usr_perm_IDX_user_id ON x_policy_item_user_perm(user_id);
 CREATE INDEX x_plc_itm_grp_perm_IDX_pi_id ON x_policy_item_group_perm(policy_item_id);
 CREATE INDEX x_plc_itm_grp_perm_IDX_grp_id ON x_policy_item_group_perm(group_id);
 CREATE INDEX x_srvc_res_IDX_service_id ON x_service_resource(service_id);
-CREATE INDEX x_srvc_res_el_IDX_res_def_id ON x_service_resource_element(res_id);
-CREATE INDEX x_srvc_res_el_IDX_res_id ON x_service_resource_element(res_def_id);
 CREATE INDEX x_dm_type_def_IDX_def_id ON x_datamask_type_def(def_id);
 CREATE INDEX x_plc_item_dm_IDX_plc_item_id ON x_policy_item_datamask(policy_item_id);
 CREATE INDEX x_plc_item_rf_IDX_plc_item_id ON x_policy_item_rowfilter(policy_item_id);
@@ -1321,6 +1363,9 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '031',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '032',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '033',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '034',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '035',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '036',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,3,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,1,1,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),1,1,1);
@@ -1358,6 +1403,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10014',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10015',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10016',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
-INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10018',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10019',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10020',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'JAVA_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 commit;

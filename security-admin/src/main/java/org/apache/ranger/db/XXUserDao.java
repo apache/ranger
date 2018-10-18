@@ -17,10 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-
-import java.util.List;
+package org.apache.ranger.db;
 
 import javax.persistence.NoResultException;
 
@@ -53,20 +50,6 @@ public class XXUserDao extends BaseDao<XXUser> {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<String> findByPolicyItemId(Long polItemId) {
-		if (polItemId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXUser.findByPolicyItemId")
-					.setParameter("polItemId", polItemId).getResultList();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-
 	public XXUser findByPortalUserId(Long portalUserId) {
 		if (portalUserId == null) {
 			return null;
@@ -78,4 +61,5 @@ public class XXUserDao extends BaseDao<XXUser> {
 			return null;
 		}
 	}
+
 }

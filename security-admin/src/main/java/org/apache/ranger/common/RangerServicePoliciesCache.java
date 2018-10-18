@@ -274,6 +274,7 @@ public class RangerServicePoliciesCache {
 					// policy.setName(null); /* this is used by GUI in policy list page */
 					// policy.setDescription(null); /* this is used by export policy */
 					policy.setResourceSignature(null);
+					policy.setOptions(null);
 				}
 			}
 		}

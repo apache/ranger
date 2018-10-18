@@ -28,11 +28,12 @@ action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
+max_memory=1g
 
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
 RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${max_memory} -Xms1g -Xloggc:${XAPOLICYMGR_EWS_DIR}/logs/gc-worker.log -verbose:gc -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=1m -XX:+PrintGCDetails -XX:+PrintHeapAtGC -XX:+PrintGCDateStamps"
 if [[ ${JAVA_OPTS} != *"-Duser.timezone"* ]] ;then  export JAVA_OPTS=" ${JAVA_OPTS} -Duser.timezone=UTC" ;fi
 if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
         . ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
@@ -145,11 +146,11 @@ stop(){
 }
 
 metric(){
-  if [ "$JAVA_HOME" == "" ]; then
-    echo "[E] JAVA_HOME environment variable not defined, aborting Apache Ranger Admin metric collection" 1>&2;
-    exit 1;
-  fi
-  java ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/META-INF:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/META-INF:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.patch.cliutil.MetricUtil ${arg2} ${arg3} 2>/dev/null
+ if [ "$JAVA_HOME" == "" ]; then
+  echo "[E] JAVA_HOME environment variable not defined, aborting Apache Ranger Admin metric collection"
+  exit 1;
+ fi
+ java ${JAVA_OPTS} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/META-INF:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/META-INF:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.patch.cliutil.MetricUtil ${arg2} ${arg3} 2>/dev/null
 }
 
 if [ "${action}" == "START" ]; then

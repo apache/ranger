@@ -40,7 +40,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 	GUIDUtil guidUtil;
 
 	@Autowired
-	RangerAuditFields rangerAuditFields;
+	RangerAuditFields<?> rangerAuditFields;
 	
 	@Autowired
 	RangerConfigUtil configUtil;

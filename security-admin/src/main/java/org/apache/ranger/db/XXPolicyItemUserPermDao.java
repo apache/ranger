@@ -33,19 +33,6 @@ public class XXPolicyItemUserPermDao extends BaseDao<XXPolicyItemUserPerm> {
 		super(daoManager);
 	}
 
-	public List<XXPolicyItemUserPerm> findByPolicyItemId(Long polItemId) {
-		if(polItemId == null) {
-			return new ArrayList<XXPolicyItemUserPerm>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyItemUserPerm.findByPolicyItemId", tClass)
-					.setParameter("polItemId", polItemId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemUserPerm>();
-		}
-	}
-
 	public List<XXPolicyItemUserPerm> findByPolicyId(Long policyId) {
 		if(policyId == null) {
 			return new ArrayList<XXPolicyItemUserPerm>();
