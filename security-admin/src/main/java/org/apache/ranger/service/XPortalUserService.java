@@ -269,18 +269,10 @@ public class XPortalUserService extends
 		//0.6
 		daoManager.getXXTagDef().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXTagDef().updateUserIDReference("upd_by_id", xXPortalUserId);
-		daoManager.getXXTagAttributeDef().updateUserIDReference("added_by_id", xXPortalUserId);
-		daoManager.getXXTagAttributeDef().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXServiceResource().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXServiceResource().updateUserIDReference("upd_by_id", xXPortalUserId);
-		daoManager.getXXServiceResourceElement().updateUserIDReference("added_by_id", xXPortalUserId);
-		daoManager.getXXServiceResourceElement().updateUserIDReference("upd_by_id", xXPortalUserId);
-		daoManager.getXXServiceResourceElementValue().updateUserIDReference("added_by_id", xXPortalUserId);
-		daoManager.getXXServiceResourceElementValue().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXTag().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXTag().updateUserIDReference("upd_by_id", xXPortalUserId);
-		daoManager.getXXTagAttribute().updateUserIDReference("added_by_id", xXPortalUserId);
-		daoManager.getXXTagAttribute().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXTagResourceMap().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXTagResourceMap().updateUserIDReference("upd_by_id", xXPortalUserId);
 	}

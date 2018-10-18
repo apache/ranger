@@ -18,6 +18,8 @@
  */
 package org.apache.ranger.service;
 
+import org.apache.ranger.db.XXServiceResourceDao;
+import org.apache.ranger.entity.XXServiceResource;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,11 +71,16 @@ public class TestRangerTagService {
         @Mock
         XXTagDao xXTagDao;
 
+        @Mock
+    XXServiceResourceDao xxServiceResourceDao;
+
+        @Mock
+        XXServiceResource xxServiceResource;
+
         @Test
         public void test1postUpdate() {
                 Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
                 Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
-                Mockito.when(daoMgr.getXXTagAttribute()).thenReturn(xXTagAttributeDao);
                 Mockito.when(xXTagDefDao.getById(xXTag.getType())).thenReturn(xXTagDef);
                 Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xXServiceVersionInfoDao);
                 rangerTagService.postUpdate(xXTag);
@@ -86,7 +93,6 @@ public class TestRangerTagService {
                 Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
                 XXTag xXTag = createXXTag();
                 Mockito.when(xXTagDefDao.getById(1L)).thenReturn(xXTagDef);
-                Mockito.when(daoMgr.getXXTagAttribute()).thenReturn(xXTagAttributeDao);
                 rangerTagService.getPopulatedViewObject(xXTag);
 
         }
@@ -107,14 +113,17 @@ public class TestRangerTagService {
 
         @Test
         public void test5GetTagsForResourceId() {
-                Mockito.when(daoMgr.getXXTag()).thenReturn(xXTagDao);
-                rangerTagService.getTagsForResourceId(1L);
+                Mockito.when(daoMgr.getXXServiceResource()).thenReturn(xxServiceResourceDao);
+                Mockito.when(xxServiceResourceDao.getById(1L)).thenReturn(xxServiceResource);
+
+            rangerTagService.getTagsForResourceId(1L);
 
         }
 
         @Test
         public void test6GetTagsForResourceGuid() {
-                Mockito.when(daoMgr.getXXTag()).thenReturn(xXTagDao);
+            Mockito.when(daoMgr.getXXServiceResource()).thenReturn(xxServiceResourceDao);
+            Mockito.when(xxServiceResourceDao.findByGuid("1")).thenReturn(xxServiceResource);
                 rangerTagService.getTagsForResourceGuid("1");
 
         }

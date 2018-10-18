@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
@@ -102,5 +104,27 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
 		return ret;
 	}
+
+    @Override
+    protected RangerTagDef mapEntityToViewBean(RangerTagDef vObj, XXTagDef xObj) {
+        super.mapEntityToViewBean(vObj, xObj);
+
+        List<RangerTagDef.RangerTagAttributeDef> attributeDefs = RangerTagDBRetriever.gsonBuilder.fromJson(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
+        vObj.setAttributeDefs(attributeDefs);
+
+        return vObj;
+    }
+
+    @Override
+    protected XXTagDef mapViewToEntityBean(RangerTagDef vObj, XXTagDef xObj, int OPERATION_CONTEXT) {
+        super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
+        xObj.setTagAttrDefs(JsonUtils.listToJson(vObj.getAttributeDefs()));
+        return xObj;
+    }
+
+    @Override
+    public List<RangerTagDef.RangerTagAttributeDef> getAttributeDefForTagDef(XXTagDef xtagDef) {
+        return new ArrayList<>();
+    }
 	
 }

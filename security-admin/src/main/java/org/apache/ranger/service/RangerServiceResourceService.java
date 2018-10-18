@@ -19,113 +19,167 @@
 
 package org.apache.ranger.service;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
 
-	private boolean serviceUpdateNeeded = true;
+    private static final Log LOG = LogFactory.getLog(RangerServiceResourceService.class);
 
-	public RangerServiceResourceService() {
-		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_SIGNATURE, "obj.resourceSignature", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-	}
+    private boolean serviceUpdateNeeded = true;
 
-	@Override
-	protected void validateForCreate(RangerServiceResource vObj) {
+    public static final Type subsumedDataType   = new TypeToken<Map<String, RangerPolicy.RangerPolicyResource>>() {}.getType();
+    public static final Type duplicatedDataType = new TypeToken<List<RangerTag>>() {}.getType();
 
-	}
+    public RangerServiceResourceService() {
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_SIGNATURE, "obj.resourceSignature", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+    }
 
-	@Override
-	protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
-		if (StringUtils.equals(entityObj.getGuid(), vObj.getGuid()) &&
-				StringUtils.equals(entityObj.getResourceSignature(), vObj.getResourceSignature())) {
-			serviceUpdateNeeded = false;
-		} else {
-			serviceUpdateNeeded = true;
-		}
-	}
+    @Override
+    protected void validateForCreate(RangerServiceResource vObj) {
 
-	@Override
-	public RangerServiceResource postUpdate(XXServiceResource resource) {
-		RangerServiceResource ret = super.postUpdate(resource);
+    }
 
-		if (serviceUpdateNeeded) {
-			daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
-		}
+    @Override
+    protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
+        if (StringUtils.equals(entityObj.getGuid(), vObj.getGuid()) &&
+                StringUtils.equals(entityObj.getResourceSignature(), vObj.getResourceSignature())) {
+            serviceUpdateNeeded = false;
+        } else {
+            serviceUpdateNeeded = true;
+        }
+    }
 
-		return ret;
-	}
+    @Override
+    public RangerServiceResource postUpdate(XXServiceResource resource) {
+        RangerServiceResource ret = super.postUpdate(resource);
 
-	public RangerServiceResource getPopulatedViewObject(XXServiceResource xObj) {
-		return populateViewBean(xObj);
-	}
+        if (serviceUpdateNeeded) {
+            daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForServiceResourceUpdate(resource.getId(), resource.getUpdateTime());
+        }
 
-	public RangerServiceResource getServiceResourceByGuid(String guid) {
-		RangerServiceResource ret = null;
+        return ret;
+    }
 
-		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByGuid(guid);
-		
-		if(xxServiceResource != null) {
-			ret = populateViewBean(xxServiceResource);
-		}
+    public RangerServiceResource getPopulatedViewObject(XXServiceResource xObj) {
+        return populateViewBean(xObj);
+    }
 
-		return ret;
-	}
+    public RangerServiceResource getServiceResourceByGuid(String guid) {
+        RangerServiceResource ret = null;
 
-	public List<RangerServiceResource> getByServiceId(Long serviceId) {
-		List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
+        XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByGuid(guid);
 
-		List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
+        if (xxServiceResource != null) {
+            ret = populateViewBean(xxServiceResource);
+        }
 
-		if(CollectionUtils.isNotEmpty(xxServiceResources)) {
-			for(XXServiceResource xxServiceResource : xxServiceResources) {
-				RangerServiceResource serviceResource = populateViewBean(xxServiceResource);
+        return ret;
+    }
 
-				ret.add(serviceResource);
-			}
-		}
+    public List<RangerServiceResource> getByServiceId(Long serviceId) {
+        List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
 
-		return ret;
-	}
+        List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
 
-	public RangerServiceResource getByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
-		RangerServiceResource ret = null;
+        if (CollectionUtils.isNotEmpty(xxServiceResources)) {
+            for (XXServiceResource xxServiceResource : xxServiceResources) {
+                RangerServiceResource serviceResource = populateViewBean(xxServiceResource);
 
-		XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByServiceAndResourceSignature(serviceId, resourceSignature);
-		
-		if(xxServiceResource != null) {
-			ret = populateViewBean(xxServiceResource);
-		}
+                ret.add(serviceResource);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<RangerServiceResource> getTaggedResourcesInServiceId(Long serviceId) {
-		List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
+    public RangerServiceResource getByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
+        RangerServiceResource ret = null;
 
-		List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
-		
-		if(CollectionUtils.isNotEmpty(xxServiceResources)) {
-			for(XXServiceResource xxServiceResource : xxServiceResources) {
-				RangerServiceResource serviceResource = populateViewBean(xxServiceResource);
+        XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByServiceAndResourceSignature(serviceId, resourceSignature);
 
-				ret.add(serviceResource);
-			}
-		}
+        if (xxServiceResource != null) {
+            ret = populateViewBean(xxServiceResource);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
+
+    public List<RangerServiceResource> getTaggedResourcesInServiceId(Long serviceId) {
+        List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
+
+        List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
+
+        if (CollectionUtils.isNotEmpty(xxServiceResources)) {
+            for (XXServiceResource xxServiceResource : xxServiceResources) {
+                RangerServiceResource serviceResource = populateViewBean(xxServiceResource);
+
+                ret.add(serviceResource);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected XXServiceResource mapViewToEntityBean(RangerServiceResource serviceResource, XXServiceResource xxServiceResource, int operationContext) {
+        XXServiceResource ret = super.mapViewToEntityBean(serviceResource, xxServiceResource, operationContext);
+        if (MapUtils.isNotEmpty(serviceResource.getResourceElements())) {
+            String serviceResourceElements = JsonUtils.mapToJson(serviceResource.getResourceElements());
+            if (StringUtils.isNotEmpty(serviceResourceElements)) {
+                ret.setServiceResourceElements(serviceResourceElements);
+            } else {
+                LOG.info("Empty string representing serviceResourceElements in [" + ret + "]!!");
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected RangerServiceResource mapEntityToViewBean(RangerServiceResource serviceResource, XXServiceResource xxServiceResource) {
+        RangerServiceResource ret = super.mapEntityToViewBean(serviceResource, xxServiceResource);
+        if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
+            Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements =
+                RangerTagDBRetriever.gsonBuilder.fromJson(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+            if (MapUtils.isNotEmpty(serviceResourceElements)) {
+                ret.setResourceElements(serviceResourceElements);
+            } else {
+                LOG.info("Empty serviceResourceElement in [" + ret + "]!!");
+            }
+        } else {
+            LOG.info("Empty string representing serviceResourceElements in [" + xxServiceResource + "]!!");
+        }
+
+        return ret;
+    }
+
+    @Override
+    Map<String, RangerPolicy.RangerPolicyResource> getServiceResourceElements(XXServiceResource xxServiceResource) {
+        return new HashMap<>();
+    }
 }

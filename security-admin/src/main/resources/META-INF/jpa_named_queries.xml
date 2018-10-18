@@ -244,21 +244,10 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXUser.findByPolicyItemId">
-		<query>select obj.name from XXUser obj, XXPolicyItemUserPerm polItemUser 
-		where polItemUser.policyItemId = :polItemId and polItemUser.userId = obj.id </query>
-	</named-query>
-
 	<named-query name="XXUser.findByPortalUserId">
 		<query>select obj from XXUser obj, XXPortalUser portalUser where portalUser.id = :portalUserId and 
 		obj.name = portalUser.loginId</query>
 	</named-query>
-
-	<named-query name="XXGroup.findByPolicyItemId">
-		<query>select obj.name from XXGroup obj, XXPolicyItemGroupPerm polItemGrp 
-		where polItemGrp.policyItemId = :polItemId and polItemGrp.groupId = obj.id </query>
-	</named-query>
-
 
 	<!-- XXPolicyItem -->
 	<named-query name="XXPolicyItem.findByPolicyId">
@@ -388,18 +377,6 @@
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
 	</named-query>
 
-	<named-query name="XXPolicyConditionDef.findByPolicyItemId">
-		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
-		where xPolItemCond.policyItemId = :polItemId and obj.id = xPolItemCond.type order by obj.order</query>
-	</named-query>
-
-	<named-query name="XXPolicyConditionDef.findByPolicyItemIdAndName">
-		<query>select obj from XXPolicyConditionDef obj, XXPolicyItemCondition xPolItemCond 
-				where xPolItemCond.policyItemId = :polItemId and obj.name = :name 
-				and obj.id = xPolItemCond.type order by obj.order 
-		</query>
-	</named-query>
-
 	<!-- XXContextEnricherDef -->
 	<named-query name="XXContextEnricherDef.findByServiceDefId">
 		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId order by obj.order</query>
@@ -511,10 +488,6 @@
 	</named-query>
 
 	<!-- XXPolicyResource -->
-	<named-query name="XXPolicyResource.findByResDefIdAndPolicyId">
-		<query>select obj from XXPolicyResource obj where 
-				obj.policyId = :polId and obj.resDefId = :resDefId</query>
-	</named-query>
 
 	<named-query name="XXPolicyResource.findByPolicyId">
 		<query>select obj from XXPolicyResource obj
@@ -532,11 +505,6 @@
 
 	<named-query name="XXPolicyResource.findByResDefId">
 		<query>select obj from XXPolicyResource obj where obj.resDefId = :resDefId</query>
-	</named-query>
-	
-	<!-- XXPolicyResourceMap -->
-	<named-query name="XXPolicyResourceMap.findByPolicyResId">
-		<query>select obj from XXPolicyResourceMap obj where obj.resourceId = :polResId order by obj.order</query>
 	</named-query>
 
 	<named-query name="XXPolicyResourceMap.findByPolicyId">
@@ -556,13 +524,6 @@
 	</named-query>
 
 	<!-- XXPolicyItemAccess -->
-	<named-query name="XXPolicyItemAccess.findByPolicyItemId">
-		<query>select obj from XXPolicyItemAccess obj where obj.policyItemId = :polItemId order by obj.order</query>
-	</named-query>
-	
-	<named-query name="XXPolicyItemAccess.findByType">
-		<query>select obj from XXPolicyItemAccess obj where obj.type = :type</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemAccess.findByPolicyId">
 		<query>select obj from XXPolicyItemAccess obj, XXPolicyItem item
@@ -579,20 +540,213 @@
 		        order by item.policyId, obj.policyItemId, obj.order
 		</query>
 	</named-query>
-	
+
+	<!-- XXPolicyRefAccessType -->
+	<named-query name="XXPolicyRefAccessType.findByPolicyId">
+		<query>select obj from XXPolicyRefAccessType obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefAccessType.findByAccessTypeDefId">
+		<query>select obj from XXPolicyRefAccessType obj where obj.accessDefId = :accessDefId</query>
+	</named-query>
+
+	<!-- XXPolicyRefCondition -->
+	<named-query name="XXPolicyRefCondition.findByPolicyId">
+		<query>select obj from XXPolicyRefCondition obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefCondition.findByConditionName">
+		<query>select obj from XXPolicyRefCondition obj where obj.conditionName = :conditionName</query>
+	</named-query>
+
+	<!-- XXPolicyRefGroup -->
+	<named-query name="XXPolicyRefGroup.findByPolicyId">
+		<query>select obj from XXPolicyRefGroup obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefGroup.findByGroupName">
+		<query>select obj from XXPolicyRefGroup obj where obj.groupName = :groupName</query>
+	</named-query>
+
+<!-- 	new queries -->
+	<named-query name="XXPolicyRefGroup.findByGroupIdAndPolicyId">
+		<query>select obj from XXPolicyRefGroup obj where obj.groupId = :groupId and obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefCondition.findByConditionDefIdAndPolicyId">
+		<query>select obj from XXPolicyRefCondition obj where obj.conditionDefId = :conditionDefId and obj.policyId = :policyId </query>
+	</named-query>
+	<named-query name="XXPolicyRefCondition.findByConditionDefId">
+		<query>select obj from XXPolicyRefCondition obj where obj.conditionDefId = :conditionDefId </query>
+	</named-query>
+
+	<named-query name="XXUser.findUpdatedUserNames">
+		<query>select distinct obj from XXUser obj, XXPolicyRefUser ref where ref.policyId   = :policyId and ref.userId    = obj.id
+		and ref.userName != obj.name</query>
+	</named-query>
+
+	<named-query name="XXAccessTypeDef.findUpdatedAccessDefNames">
+		<query>select distinct obj from XXAccessTypeDef obj, XXPolicyRefAccessType ref where ref.policyId   = :policyId and ref.accessDefId    = obj.id
+		and ref.accessTypeName != obj.name</query>
+	</named-query>
+
+	<named-query name="XXDataMaskTypeDef.findUpdatedDataMaskDefNames">
+		<query>select distinct obj from XXDataMaskTypeDef obj, XXPolicyRefDataMaskType ref where ref.policyId   = :policyId and ref.dataMaskDefId    = obj.id
+		and ref.dataMaskTypeName != obj.name</query>
+	</named-query>
+
+	<named-query name="XXResourceDef.findUpdatedResourceDefNames">
+		<query>select distinct obj from XXResourceDef obj, XXPolicyRefResource ref where ref.policyId   = :policyId and ref.resourceDefId    = obj.id
+		and ref.resourceName != obj.name</query>
+	</named-query>
+
+    <named-query name="XXPolicyRefGroup.findUpdatedGroupNamesByPolicy">
+        <query>select groupRef.policyId, groupRef.groupName, grp.name
+            from XXPolicyRefGroup groupRef, XXGroup grp
+            where groupRef.policyId    = :policy
+            and groupRef.groupId       = grp.id
+            and groupRef.groupName    != grp.name
+        </query>
+    </named-query>
+
+	<named-query name="XXPolicyRefGroup.findUpdatedGroupNamesByService">
+		<query>select groupRef.policyId, groupRef.groupName, grp.name
+		    from XXPolicy policy, XXPolicyRefGroup groupRef, XXGroup grp
+		    where policy.service       = :service
+		    and groupRef.policyId      = policy.id
+		    and groupRef.groupId       = grp.id
+		    and groupRef.groupName    != grp.name
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.findUpdatedUserNamesByPolicy">
+        <query>select userRef.policyId, userRef.userName, user.name
+            from XXPolicyRefUser userRef, XXUser user
+            where userRef.policyId    = :policy
+            and userRef.userId       = user.id
+            and userRef.userName    != user.name
+        </query>
+    </named-query>
+
+	<named-query name="XXPolicyRefUser.findUpdatedUserNamesByService">
+		<query>select userRef.policyId, userRef.userName, user.name
+		    from XXPolicy policy, XXPolicyRefUser userRef, XXUser user
+		    where policy.service       = :service
+		    and userRef.policyId      = policy.id
+		    and userRef.userId       = user.id
+		    and userRef.userName    != user.name
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefAccessType.findUpdatedAccessNamesByPolicy">
+        <query>select accessRef.policyId, accessRef.accessTypeName, accessDef.name
+            from XXPolicyRefAccessType accessRef, XXAccessTypeDef accessDef
+            where accessRef.policyId    = :policy
+            and accessRef.accessDefId       = accessDef.id
+            and accessRef.accessTypeName    != accessDef.name
+        </query>
+    </named-query>
+
+	<named-query name="XXPolicyRefAccessType.findUpdatedAccessNamesByService">
+		<query>select accessRef.policyId, accessRef.accessTypeName, accessDef.name
+            from  XXPolicy policy, XXPolicyRefAccessType accessRef, XXAccessTypeDef accessDef
+		    where policy.service       = :service
+		    and accessRef.policyId      = policy.id
+		    and accessRef.accessDefId       = accessDef.id
+            and accessRef.accessTypeName    != accessDef.name
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefResource.findUpdatedResourceNamesByPolicy">
+		<query>select resourceRef.policyId, resourceRef.resourceName, resourceDef.name
+            from XXPolicyRefResource resourceRef, XXResourceDef resourceDef
+		    where resourceRef.policyId     = :policy
+		    and resourceRef.resourceDefId       = resourceDef.id
+            and resourceRef.resourceName    != resourceDef.name
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefResource.findUpdatedResourceNamesByService">
+		<query>select resourceRef.policyId, resourceRef.resourceName, resourceDef.name
+            from  XXPolicy policy, XXPolicyRefResource resourceRef, XXResourceDef resourceDef
+		    where policy.service       = :service
+		    and resourceRef.policyId      = policy.id
+		    and resourceRef.resourceDefId       = resourceDef.id
+            and resourceRef.resourceName    != resourceDef.name
+        </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByPolicy">
+	        <query>select dataMaskRef.policyId, dataMaskRef.dataMaskTypeName, dMaskDef.name
+	            from XXPolicyRefDataMaskType dataMaskRef, XXDataMaskTypeDef dMaskDef
+	            where dataMaskRef.policyId    = :policy
+	            and dataMaskRef.dataMaskDefId       = dMaskDef.id
+	            and dataMaskRef.dataMaskTypeName    != dMaskDef.name
+	        </query>
+	    </named-query>
+
+	<named-query name="XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByService">
+		<query>select dataMaskRef.policyId, dataMaskRef.dataMaskTypeName, dMaskDef.name
+		    from XXPolicy policy, XXPolicyRefDataMaskType dataMaskRef, XXDataMaskTypeDef dMaskDef
+		    where policy.service       = :service
+		    and dataMaskRef.policyId      = policy.id
+		    and dataMaskRef.dataMaskDefId       = dMaskDef.id
+		    and dataMaskRef.dataMaskTypeName    != dMaskDef.name
+	    </query>
+	</named-query>
+
+    <named-query name="XXPolicyRefCondition.findUpdatedConditionNamesByPolicy">
+        <query>select conditionRef.policyId, conditionRef.conditionName, condDef.name
+            from XXPolicyRefCondition conditionRef, XXPolicyConditionDef condDef
+            where conditionRef.policyId    = :policy
+            and conditionRef.conditionDefId       = condDef.id
+            and conditionRef.conditionName    != condDef.name
+        </query>
+    </named-query>
+
+	<named-query name="XXPolicyRefCondition.findUpdatedConditionNamesByService">
+		<query>select conditionRef.policyId, conditionRef.conditionName, condDef.name
+		    from XXPolicy policy, XXPolicyRefCondition conditionRef, XXPolicyConditionDef condDef
+		    where policy.service       = :service
+		    and conditionRef.policyId      = policy.id
+		    and conditionRef.conditionDefId       = condDef.id
+		    and conditionRef.conditionName    != condDef.name
+        </query>
+	</named-query>
+<!-- end -->
+
+	<!-- XXPolicyRefDataMaskType -->
+	<named-query name="XXPolicyRefDataMaskType.findByPolicyId">
+		<query>select obj from XXPolicyRefDataMaskType obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefDataMaskType.findByDataMaskTypeName">
+		<query>select obj from XXPolicyRefDataMaskType obj where obj.dataMaskTypeName = :dataMaskTypeName</query>
+	</named-query>
+
+	<!-- XXPolicyRefResource -->
+	<named-query name="XXPolicyRefResource.findByPolicyId">
+		<query>select obj from XXPolicyRefResource obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefResource.findByResourceDefId">
+		<query>select obj from XXPolicyRefResource obj where obj.resourceDefId = :resourceDefId</query>
+	</named-query>
+
+	<!-- XXPolicyRefUser -->
+	<named-query name="XXPolicyRefUser.findByPolicyId">
+		<query>select obj from XXPolicyRefUser obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.findByUserName">
+		<query>select obj from XXPolicyRefUser obj where obj.userName = :userName</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.findByUserId">
+		<query>select obj from XXPolicyRefUser obj where obj.userId = :userId</query>
+	</named-query>
+
 	<!-- XXPolicyItemCondition -->
-	<named-query name="XXPolicyItemCondition.findByPolicyItemId">
-		<query>select obj from XXPolicyItemCondition obj where obj.policyItemId = :polItemId order by obj.order</query>
-	</named-query>
-
-	<named-query name="XXPolicyItemCondition.findByPolicyItemAndDefId">
-		<query>select obj from XXPolicyItemCondition obj where 
-				obj.policyItemId = :polItemId and obj.type = :polCondDefId order by obj.order</query>
-	</named-query>
-
-	<named-query name="XXPolicyItemCondition.findByPolicyConditionDefId">
-		<query>select obj from XXPolicyItemCondition obj where obj.type = :polCondDefId</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemCondition.findByPolicyId">
 		<query>select obj from XXPolicyItemCondition obj, XXPolicyItem item
@@ -611,9 +765,6 @@
 	</named-query>
 	
 	<!-- XXPolicyItemGroupPerm -->
-	<named-query name="XXPolicyItemGroupPerm.findByPolicyItemId">
-		<query>select obj from XXPolicyItemGroupPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyId">
 		<query>select obj from XXPolicyItemGroupPerm obj, XXPolicyItem item
@@ -632,9 +783,6 @@
 	</named-query>
 
 	<!-- XXPolicyItemUserPerm -->
-	<named-query name="XXPolicyItemUserPerm.findByPolicyItemId">
-		<query>select obj from XXPolicyItemUserPerm obj where obj.policyItemId = :polItemId order by obj.order</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemUserPerm.findByPolicyId">
 		<query>select obj from XXPolicyItemUserPerm obj, XXPolicyItem item
@@ -653,9 +801,6 @@
 	</named-query>
 
 	<!-- XXPolicyItemDataMaskInfo -->
-	<named-query name="XXPolicyItemDataMaskInfo.findByPolicyItemId">
-		<query>select obj from XXPolicyItemDataMaskInfo obj where obj.policyItemId = :polItemId</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemDataMaskInfo.findByPolicyId">
 		<query>select obj from XXPolicyItemDataMaskInfo obj, XXPolicyItem item
@@ -673,14 +818,7 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXPolicyItemDataMaskInfo.findByType">
-		<query>select obj from XXPolicyItemDataMaskInfo obj where obj.type = :type</query>
-	</named-query>
-
 	<!-- XXPolicyItemRowFilterInfo -->
-	<named-query name="XXPolicyItemRowFilterInfo.findByPolicyItemId">
-		<query>select obj from XXPolicyItemRowFilterInfo obj where obj.policyItemId = :polItemId</query>
-	</named-query>
 
 	<named-query name="XXPolicyItemRowFilterInfo.findByPolicyId">
 		<query>select obj from XXPolicyItemRowFilterInfo obj, XXPolicyItem item
@@ -855,20 +993,6 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXServiceResourceElement.findForServicePlugin">
-		<query>
-			select obj from XXServiceResourceElement obj where obj.resourceId in
-			(select serviceRes.id from XXServiceResource serviceRes, XXService service where service.id = :serviceId and service.tagService is not null and serviceRes.serviceId = service.id and serviceRes.id in
-			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
-			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			)
-			)
-			order by obj.resourceId, obj.id
-		</query>
-	</named-query>
-
 	<named-query name="XXServiceResourceElement.findByServiceId">
 		<query>select obj from XXServiceResourceElement obj where obj.resourceId in
 					(select serviceresource.id from XXServiceResource serviceresource where serviceresource.serviceId = :serviceId)
@@ -893,20 +1017,6 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXServiceResourceElementValue.findForServicePlugin">
-		<query>
-			select obj from XXServiceResourceElementValue obj, XXServiceResourceElement serviceResElem where obj.resElementId = serviceResElem.id and
-			serviceResElem.resourceId in
-			(select serviceRes.id from XXServiceResource serviceRes, XXService service where service.id = :serviceId and service.tagService is not null and serviceRes.serviceId = service.id and serviceRes.id in
-			(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
-			where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			)
-			)
-			order by serviceResElem.resourceId, serviceResElem.id
-		</query>
-	</named-query>
 	<named-query name="XXServiceResourceElementValue.findByServiceId">
 		<query>select obj from XXServiceResourceElementValue obj, XXServiceResourceElement resElem where obj.resElementId = resElem.id and resElem.resourceId in
 			(select res.id from XXServiceResource res where res.serviceId = :serviceId)
@@ -954,19 +1064,6 @@
 				order by obj.resourceId</query>
 	</named-query>
 
-	<named-query name="XXTagResourceMap.findForServicePlugin">
-		<query>
-			select obj from XXTagResourceMap obj, XXService service, XXServiceResource serviceRes where service.id = :serviceId and service.tagService is not null
-			and obj.resourceId = serviceRes.id and serviceRes.serviceId = :serviceId
-			and obj.tagId in
-			(select tag.id from XXTag tag, XXTagDef tagDef where tag.type = tagDef.id and tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			)
-			order by obj.resourceId
-		</query>
-	</named-query>
-
 	<named-query name="XXTagResourceMap.getTagIdsForResourceId">
 		<query>select obj.tagId from XXTagResourceMap obj
 				where obj.resourceId = :resourceId order by obj.id
@@ -980,22 +1077,14 @@
 	<named-query name="XXTagDef.findByName">
 		<query>select obj from XXTagDef obj where obj.name = :name</query>
 	</named-query>
-	
-	<named-query name="XXTagDef.findByServiceId">
-		<query>select obj from XXTagDef obj where obj.id in
-				(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
-				order by obj.id
-		</query>
-	</named-query>
 
-	<named-query name="XXTagDef.findForServicePlugin">
-		<query>select obj from XXTagDef obj, XXService service where service.id = :serviceId and service.tagService is not null and
-			obj.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policyRes.policyId = policy.id and policy.isEnabled = TRUE and policyResMap.resourceId = policyRes.id)
+	<named-query name="XXTagDef.findByServiceId">
+		<query>select obj.id, obj.guid, obj.version, obj.isEnabled, obj.name, obj.source, obj.tagAttrDefs from XXTagDef obj where obj.id in
+			(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
 			order by obj.id
 		</query>
 	</named-query>
+
 	<named-query name="XXTagDef.findByResourceId">
 		<query>select obj from XXTagDef obj where obj.id in
 			(select tag.type from XXTag tag, XXTagResourceMap tagRes where tag.id = tagRes.tagId and tagRes.resourceId = :resourceId)
@@ -1014,16 +1103,6 @@
 	<named-query name="XXTagAttributeDef.findByServiceId">
 		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
 			(select tag.type from XXTag tag, XXTagResourceMap tagRes, XXServiceResource resource where tag.id = tagRes.tagId and tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
-			order by obj.tagDefId
-		</query>
-	</named-query>
-	<named-query name="XXTagAttributeDef.findForServicePlugin">
-		<query>select obj from XXTagAttributeDef obj where obj.tagDefId in
-			(select tagDef.id from XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
-			tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			)
 			order by obj.tagDefId
 		</query>
 	</named-query>
@@ -1062,16 +1141,6 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXTag.findForServicePlugin">
-		<query>
-			select obj from XXTag obj, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
-			obj.type = tagDef.id and tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			order by obj.id
-		</query>
-	</named-query>
-
 	<named-query name="XXTag.findByServiceIdAndOwner">
 		<query>select obj from XXTag obj where obj.owner = :owner and obj.id in
 			(select tagRes.tagId from XXTagResourceMap tagRes, XXServiceResource resource where tagRes.resourceId = resource.id and resource.serviceId = :serviceId)
@@ -1106,18 +1175,6 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXTagAttribute.findForServicePlugin">
-		<query>
-			select obj from XXTagAttribute obj where obj.tagId in
-			(select tag.id from XXTag tag, XXTagDef tagDef, XXService service where service.id = :serviceId and service.tagService is not null and
-			tag.type = tagDef.id and tagDef.name in
-			(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-			where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-			)
-			order by obj.tagId
-		</query>
-	</named-query>
-
 	<named-query name="XXServiceResource.findByGuid">
 		<query>select obj from XXServiceResource obj where obj.guid = :guid</query>
 	</named-query>
@@ -1129,27 +1186,15 @@
 	</named-query>
 
 	<named-query name="XXServiceResource.findTaggedResourcesInServiceId">
-		<query>select obj from XXServiceResource obj where obj.serviceId = :serviceId and obj.id in
-					(select tagResMap.resourceId from XXTagResourceMap tagResMap)
-				order by obj.id
+		<query>select obj.id, obj.guid, obj.version, obj.isEnabled, obj.resourceSignature, obj.serviceId, obj.serviceResourceElements, obj.tags from XXServiceResource obj where obj.serviceId = :serviceId and obj.id in
+            (select tagResMap.resourceId from XXTagResourceMap tagResMap)
+            order by obj.id
 		</query>
 	</named-query>
 
 	<named-query name="XXServiceResource.countTaggedResourcesInServiceId">
 		<query>select count(obj.id) from XXServiceResource obj where obj.serviceId = :serviceId and obj.id in
 			(select tagResMap.resourceId from XXTagResourceMap tagResMap)
-		</query>
-	</named-query>
-
-	<named-query name="XXServiceResource.findForServicePlugin">
-		<query>
-			select obj from XXServiceResource obj, XXService service where service.id = :serviceId and service.tagService is not null and obj.serviceId = service.id and obj.id in
-				(select tagResMap.resourceId from XXTagResourceMap tagResMap, XXTag tag, XXTagDef tagDef
-					where tagResMap.tagId = tag.id and tag.type = tagDef.id and tagDef.name in
-						(select policyResMap.value from XXPolicyResourceMap policyResMap, XXPolicyResource policyRes, XXPolicy policy
-							where policy.service = service.tagService and policy.isEnabled = TRUE and policyRes.policyId = policy.id and policyResMap.resourceId = policyRes.id)
-				)
-			order by obj.id
 		</query>
 	</named-query>
 
@@ -1182,12 +1227,12 @@
 		</query>
 	</named-query>
 	<named-query name="XXPolicy.findByUserId">
-		<query>select obj from XXPolicy obj, XXPolicyItem polItem,XXPolicyItemUserPerm polItemUserPerm where 
-		 obj.id = polItem.policyId and polItem.id = polItemUserPerm.policyItemId and polItemUserPerm.userId = :userId</query>
+		<query>select obj from XXPolicy obj, XXPolicyRefUser ref where
+		 obj.id = ref.policyId and ref.userId = :userId</query>
 	</named-query>
 	<named-query name="XXPolicy.findByGroupId">
-		<query>select obj from XXPolicy obj, XXPolicyItem polItem,XXPolicyItemGroupPerm polItemGroupPerm where 
-		 obj.id = polItem.policyId and polItem.id = polItemGroupPerm.policyItemId and polItemGroupPerm.groupId = :groupId</query>
+		<query>select obj from XXPolicy obj, XXPolicyRefGroup ref where
+		 obj.id = ref.policyId and ref.groupId = :groupId</query>
 	</named-query>
 	<named-query name="XXAccessAudit.getMaxIdOfXXAccessAudit">
 		<query>select max(obj.id) from XXAccessAudit obj</query>

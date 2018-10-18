@@ -264,5 +264,29 @@ public abstract class RangerDaoManagerBase {
 	public XXUgsyncAuditInfoDao getXXUgsyncAuditInfo() {
 		return new XXUgsyncAuditInfoDao(this);
 	}
+
+	public XXPolicyRefConditionDao getXXPolicyRefCondition() {
+		return new XXPolicyRefConditionDao(this);
+	}
+
+	public XXPolicyRefGroupDao getXXPolicyRefGroup() {
+		return new XXPolicyRefGroupDao(this);
+	}
+
+	public XXPolicyRefDataMaskTypeDao getXXPolicyRefDataMaskType() {
+		return new XXPolicyRefDataMaskTypeDao(this);
+	}
+
+	public XXPolicyRefResourceDao getXXPolicyRefResource() {
+		return new XXPolicyRefResourceDao(this);
+	}
+
+	public XXPolicyRefUserDao getXXPolicyRefUser() {
+		return new XXPolicyRefUserDao(this);
+	}
+
+	public XXPolicyRefAccessTypeDao getXXPolicyRefAccessType() {
+		return new XXPolicyRefAccessTypeDao(this);
+	}
 }
 

@@ -23,7 +23,7 @@ import org.apache.ranger.entity.XXDBBase;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RangerAuditFields {
+public class RangerAuditFields<T extends XXDBBase> {
 
 	public <T extends XXDBBase, PARENT extends XXDBBase> T populateAuditFields(T xObj, PARENT parentObj) {
 		xObj.setCreateTime(parentObj.getCreateTime());

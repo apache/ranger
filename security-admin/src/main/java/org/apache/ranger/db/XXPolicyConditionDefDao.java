@@ -61,33 +61,5 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
 			return null;
 		}
 	}
-
-	public List<XXPolicyConditionDef> findByPolicyItemId(Long polItemId) {
-		if(polItemId == null) {
-			return new ArrayList<XXPolicyConditionDef>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyConditionDef.findByPolicyItemId", tClass)
-					.setParameter("polItemId", polItemId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyConditionDef>();
-		}
-	}
-	
-	public XXPolicyConditionDef findByPolicyItemIdAndName(Long polItemId, String name) {
-		if(polItemId == null || name == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyConditionDef.findByPolicyItemIdAndName", tClass)
-					.setParameter("polItemId", polItemId)
-					.setParameter("name", name).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-
 	
 }
