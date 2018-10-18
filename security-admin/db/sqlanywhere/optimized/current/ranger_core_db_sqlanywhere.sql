@@ -343,6 +343,7 @@ create table dbo.x_policy (
 	is_audit_enabled tinyint DEFAULT 0 NOT NULL,
 	policy_options varchar(4000) DEFAULT NULL NULL,
 	policy_priority int DEFAULT 0 NOT NULL,
+	policy_text text DEFAULT NULL NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_policy_UK_name_service UNIQUE NONCLUSTERED (name,service)
 )
@@ -678,6 +679,7 @@ CREATE TABLE dbo.x_tag_def(
 	name varchar(255) NOT NULL,
 	source varchar(128) DEFAULT NULL NULL,
 	is_enabled tinyint DEFAULT 0 NOT NULL,
+	tag_attrs_def_text text DEFAULT NULL NULL,
 	CONSTRAINT x_tag_def_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_tag_def_UK_guid UNIQUE NONCLUSTERED (guid),
 	CONSTRAINT x_tag_def_UK_name UNIQUE NONCLUSTERED (name)
@@ -694,6 +696,7 @@ CREATE TABLE dbo.x_tag(
 	type bigint NOT NULL,
 	owned_by smallint DEFAULT 0 NOT NULL,
 	policy_options varchar(4000) DEFAULT NULL NULL,
+	tag_attrs_text text DEFAULT NULL NULL,
 	CONSTRAINT x_tag_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_tag_UK_guid UNIQUE NONCLUSTERED (guid)
 )
@@ -709,45 +712,10 @@ CREATE TABLE dbo.x_service_resource(
 	service_id bigint NOT NULL,
 	resource_signature varchar(128) DEFAULT NULL NULL,
 	is_enabled tinyint DEFAULT 1 NOT NULL,
+	service_resource_elements_text text DEFAULT NULL NULL,
+	tags_text text DEFAULT NULL NULL,
 	CONSTRAINT x_service_res_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_res_UK_guid UNIQUE NONCLUSTERED (guid)
-)
-GO
-CREATE TABLE dbo.x_service_resource_element(
-	id bigint IDENTITY NOT NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
-	res_id bigint NOT NULL,
-	res_def_id bigint NOT NULL,
-	is_excludes tinyint DEFAULT 0 NOT NULL,
-	is_recursive tinyint DEFAULT 0 NOT NULL,
-	CONSTRAINT x_srvc_res_el_PK_id PRIMARY KEY CLUSTERED(id)
-)
-GO
-CREATE TABLE dbo.x_tag_attr_def(
-	id bigint IDENTITY NOT NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
-	tag_def_id bigint NOT NULL,
-	name varchar(255) NOT NULL,
-	type varchar(50) NOT NULL,
-	CONSTRAINT x_tag_attr_def_PK_id PRIMARY KEY CLUSTERED(id)
-)
-GO
-CREATE TABLE dbo.x_tag_attr(
-	id bigint IDENTITY NOT NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
-	tag_id bigint NOT NULL,
-	name varchar(255) NOT NULL,
-	value varchar(512) DEFAULT NULL NULL,
-	CONSTRAINT x_tag_attr_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 CREATE TABLE dbo.x_tag_resource_map(
@@ -761,18 +729,6 @@ CREATE TABLE dbo.x_tag_resource_map(
 	res_id bigint NOT NULL,
 	CONSTRAINT x_tag_res_map_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_tag_res_map_UK_guid UNIQUE NONCLUSTERED (guid)
-)
-GO
-CREATE TABLE dbo.x_service_resource_element_val(
-	id bigint IDENTITY NOT NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
-	res_element_id bigint NOT NULL,
-	value varchar(1024) NOT NULL,
-	sort_order tinyint DEFAULT 0  NULL,
-	CONSTRAINT x_srvc_res_el_val_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 CREATE TABLE dbo.x_datamask_type_def(
@@ -884,6 +840,90 @@ CREATE TABLE dbo.x_ugsync_audit_info(
         sync_source_info varchar(4000) NOT NULL,
         session_id varchar(255) DEFAULT NULL NULL,
         CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+create table dbo.x_policy_ref_resource (
+	id bigint IDENTITY NOT NULL,
+	guid varchar(1024) DEFAULT NULL NULL,
+	create_time datetime DEFAULT NULL NULL,
+	update_time datetime DEFAULT NULL NULL,
+	added_by_id bigint DEFAULT NULL NULL,
+	upd_by_id bigint DEFAULT NULL NULL,
+	policy_id bigint NOT NULL,
+	resource_def_id bigint NOT NULL,
+	resource_name varchar(4000) DEFAULT NULL NULL,
+	CONSTRAINT x_policy_ref_res_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT x_p_ref_res_UK_polId_resDefId UNIQUE NONCLUSTERED (policy_id, resource_def_id)
+)
+GO
+create table dbo.x_policy_ref_access_type (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(1024) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        access_def_id bigint NOT NULL,
+        access_type_name varchar(4000) DEFAULT NULL NULL,
+        CONSTRAINT x_policy_ref_acc_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_acc_UK_polId_accDefId UNIQUE NONCLUSTERED (policy_id, access_def_id)
+)
+GO
+create table dbo.x_policy_ref_condition (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(1024) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        condition_def_id bigint NOT NULL,
+        condition_name varchar(4000) DEFAULT NULL NULL,
+        CONSTRAINT x_policy_ref_cond_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE NONCLUSTERED (policy_id, condition_def_id)
+)
+GO
+create table dbo.x_policy_ref_datamask_type (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(1024) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        datamask_def_id bigint NOT NULL,
+        datamask_type_name varchar(4000) DEFAULT NULL NULL,
+        CONSTRAINT x_policy_ref_dmk_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_dmk_UK_polId_dDefId UNIQUE NONCLUSTERED (policy_id, datamask_def_id)
+)
+GO
+create table dbo.x_policy_ref_user (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(1024) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        user_id bigint NOT NULL,
+        user_name varchar(4000) DEFAULT NULL NULL,
+        CONSTRAINT x_policy_ref_user_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_usr_UK_polId_userId UNIQUE NONCLUSTERED (policy_id, user_id)
+)
+GO
+create table dbo.x_policy_ref_group (
+        id bigint IDENTITY NOT NULL,
+        guid varchar(1024) DEFAULT NULL NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        policy_id bigint NOT NULL,
+        group_id bigint NOT NULL,
+        group_name varchar(4000) DEFAULT NULL NULL,
+        CONSTRAINT x_policy_ref_group_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE NONCLUSTERED (policy_id, group_id)
 )
 GO
 
@@ -1123,26 +1163,6 @@ ALTER TABLE dbo.x_service_resource ADD CONSTRAINT x_service_res_FK_upd_by_id FOR
 GO
 ALTER TABLE dbo.x_service_resource ADD CONSTRAINT x_service_res_FK_service_id FOREIGN KEY(service_id) REFERENCES dbo.x_service (id)
 GO
-ALTER TABLE dbo.x_service_resource_element ADD CONSTRAINT x_srvc_res_el_FK_res_def_id FOREIGN KEY(res_def_id) REFERENCES dbo.x_resource_def (id)
-GO
-ALTER TABLE dbo.x_service_resource_element ADD CONSTRAINT x_srvc_res_el_FK_res_id FOREIGN KEY(res_id) REFERENCES dbo.x_service_resource (id)
-GO
-ALTER TABLE dbo.x_service_resource_element ADD CONSTRAINT x_srvc_res_el_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_service_resource_element ADD CONSTRAINT x_srvc_res_el_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_tag_attr_def ADD CONSTRAINT x_tag_attr_def_FK_tag_def_id FOREIGN KEY(tag_def_id) REFERENCES dbo.x_tag_def (id)
-GO
-ALTER TABLE dbo.x_tag_attr_def ADD CONSTRAINT x_tag_attr_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_tag_attr_def ADD CONSTRAINT x_tag_attr_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_tag_attr ADD CONSTRAINT x_tag_attr_FK_tag_id FOREIGN KEY(tag_id) REFERENCES dbo.x_tag (id)
-GO
-ALTER TABLE dbo.x_tag_attr ADD CONSTRAINT x_tag_attr_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_tag_attr ADD CONSTRAINT x_tag_attr_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_tag_id FOREIGN KEY(tag_id) REFERENCES dbo.x_tag (id)
 GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_res_id FOREIGN KEY(res_id) REFERENCES dbo.x_service_resource (id)
@@ -1150,12 +1170,6 @@ GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_service_resource_element_val ADD CONSTRAINT x_srvc_res_el_val_FK_res_el_id FOREIGN KEY(res_element_id) REFERENCES dbo.x_service_resource_element (id)
-GO
-ALTER TABLE dbo.x_service_resource_element_val ADD CONSTRAINT x_srvc_res_el_val_FK_add_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_service_resource_element_val ADD CONSTRAINT x_srvc_res_el_val_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_service ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY(tag_service) REFERENCES dbo.x_service (id)
 GO
@@ -1193,7 +1207,55 @@ ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_policy_i
 GO
 ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES dbo.x_policy_label (id)
 GO
-ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT [x_policy_label_map$x_policy_label_map_pid_plid] UNIQUE (policy_id, policy_label_id)
+ALTER TABLE dbo.x_policy_label_map ADD CONSTRAINT x_policy_label_map$x_policy_label_map_pid_plid UNIQUE (policy_id, policy_label_id)
+GO
+ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES dbo.x_resource_def (id)
+GO
+ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_access_def_id FOREIGN KEY (access_def_id) REFERENCES dbo.x_access_type_def (id)
+GO
+ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_condition_def_id FOREIGN KEY (condition_def_id) REFERENCES dbo.x_policy_condition_def (id)
+GO
+ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_datamask_def_id FOREIGN KEY (datamask_def_id) REFERENCES dbo.x_datamask_type_def (id)
+GO
+ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES dbo.x_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES dbo.x_group (id)
+GO
+ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 CREATE NONCLUSTERED INDEX x_asset_cr_time ON dbo.x_asset(create_time ASC)
 GO
@@ -1415,22 +1477,6 @@ CREATE NONCLUSTERED INDEX x_service_res_IDX_added_by_id ON dbo.x_service_resourc
 GO
 CREATE NONCLUSTERED INDEX x_service_res_IDX_upd_by_id ON dbo.x_service_resource(upd_by_id ASC)
 GO
-CREATE NONCLUSTERED INDEX x_srvc_res_el_IDX_added_by_id ON dbo.x_service_resource_element(added_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_srvc_res_el_IDX_upd_by_id ON dbo.x_service_resource_element(upd_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_def_IDX_tag_def_id ON dbo.x_tag_attr_def(tag_def_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_def_IDX_added_by_id ON dbo.x_tag_attr_def(added_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_def_IDX_upd_by_id ON dbo.x_tag_attr_def(upd_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_IDX_tag_id ON dbo.x_tag_attr(tag_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_IDX_added_by_id ON dbo.x_tag_attr(added_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_attr_IDX_upd_by_id ON dbo.x_tag_attr(upd_by_id ASC)
-GO
 CREATE NONCLUSTERED INDEX x_tag_res_map_IDX_tag_id ON dbo.x_tag_resource_map(tag_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_tag_res_map_IDX_res_id ON dbo.x_tag_resource_map(res_id ASC)
@@ -1438,12 +1484,6 @@ GO
 CREATE NONCLUSTERED INDEX x_tag_res_map_IDX_added_by_id ON dbo.x_tag_resource_map(added_by_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_tag_res_map_IDX_upd_by_id ON dbo.x_tag_resource_map(upd_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_srvc_res_el_val_IDX_resel_id ON dbo.x_service_resource_element_val(res_element_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_srvc_res_el_val_IDX_addby_id ON dbo.x_service_resource_element_val(added_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_srvc_res_el_val_IDX_updby_id ON dbo.x_service_resource_element_val(upd_by_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_service_config_def_IDX_def_id ON dbo.x_service_config_def(def_id ASC)
 GO
@@ -1486,10 +1526,6 @@ GO
 CREATE NONCLUSTERED INDEX x_policy_item_group_perm_IDX_group_id ON dbo.x_policy_item_group_perm(group_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_service_resource_IDX_service_id ON dbo.x_service_resource(service_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_service_resource_element_IDX_res_id ON dbo.x_service_resource_element(res_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_service_resource_element_IDX_res_def_id ON dbo.x_service_resource_element(res_def_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_datamask_type_def_IDX_def_id ON dbo.x_datamask_type_def(def_id ASC)
 GO
@@ -1589,6 +1625,12 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('034',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,1);
@@ -1661,7 +1703,11 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10015',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10016,CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10016',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10019',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10020',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

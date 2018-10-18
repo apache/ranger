@@ -62,7 +62,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
 
 	@Autowired
-	RangerAuditFields rangerAuditFields;
+	RangerAuditFields<?> rangerAuditFields;
 
 	@Autowired
 	JSONUtil jsonUtil;

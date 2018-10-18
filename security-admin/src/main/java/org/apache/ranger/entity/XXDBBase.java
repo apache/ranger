@@ -25,6 +25,7 @@
  */
 
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.EntityListeners;
@@ -203,6 +204,11 @@ public abstract class XXDBBase implements java.io.Serializable {
 		str += "updatedByUserId={" + updatedByUserId + "} ";
 		str += "}";
 		return str;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(createTime, updateTime, addedByUserId, updatedByUserId);
 	}
 
 	/**

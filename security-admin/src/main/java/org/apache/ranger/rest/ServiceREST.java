@@ -101,8 +101,8 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCacheForEngineOpt
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -1515,10 +1515,11 @@ public class ServiceREST {
 				String serviceName    = request.getParameter(PARAM_SERVICE_NAME);
 				String policyName     = request.getParameter(PARAM_POLICY_NAME);
 				String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
-				
-				if (serviceName == null && policyName == null && updateIfExists != null && updateIfExists.equalsIgnoreCase("true")){
-					serviceName    = (String) request.getAttribute(PARAM_SERVICE_NAME);
-					policyName     = (String) request.getAttribute(PARAM_POLICY_NAME);
+
+				if (serviceName == null && policyName == null && updateIfExists != null
+						&& updateIfExists.equalsIgnoreCase("true")) {
+					serviceName = (String) request.getAttribute(PARAM_SERVICE_NAME);
+					policyName = (String) request.getAttribute(PARAM_POLICY_NAME);
 				}
 
 				if(StringUtils.isNotEmpty(serviceName)) {
@@ -1529,7 +1530,7 @@ public class ServiceREST {
 					policy.setName(StringUtils.trim(policyName));
 				}
 
-                                if(updateIfExists != null && Boolean.valueOf(updateIfExists)) {
+				if (updateIfExists != null && Boolean.valueOf(updateIfExists)) {
 					RangerPolicy existingPolicy = null;
 					try {
 						if(StringUtils.isNotEmpty(policy.getGuid())) {
@@ -2413,7 +2414,7 @@ public class ServiceREST {
 										validator.validate(rangerPolicy.getId(), Action.DELETE);
 										ensureAdminAccess(rangerPolicy);
                                                                                 bizUtil.blockAuditorRoleUser();
-										svcStore.deletePolicy(rangerPolicy);
+										svcStore.deletePolicy(rangerPolicy.getId());
 										totalDeletedPilicies = totalDeletedPilicies + 1;
 										if (LOG.isDebugEnabled()) {
 											LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully." );
@@ -3149,7 +3150,7 @@ public class ServiceREST {
 								ret.addAll(listToFilter);
 							}
 						} else if (isServiceAdminUser) {
-                                ret.addAll(listToFilter);
+							ret.addAll(listToFilter);
 						}
 
 						continue;

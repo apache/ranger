@@ -22,8 +22,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerFactory;
@@ -47,7 +47,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-//import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -67,6 +66,7 @@ import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -130,13 +130,16 @@ public class TestServiceDBStore {
 	@Mock
 	ServicePredicateUtil predicateUtil;
 
+    @Mock
+    PolicyRefUpdater policyRefUpdater;
+
 	@Mock
 	XGroupService xGroupService;
 	
 	
 	@Mock
 	RESTErrorUtil restErrorUtil;
-	
+
 	@Mock
 	AssetMgr assetMgr;
 
@@ -153,6 +156,22 @@ public class TestServiceDBStore {
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
+	}
+	
+	private XXAccessTypeDef rangerKmsAccessTypes(String accessTypeName, int itemId) {
+		XXAccessTypeDef accessTypeDefObj = new XXAccessTypeDef();
+		accessTypeDefObj.setAddedByUserId(Id);
+		accessTypeDefObj.setCreateTime(new Date());
+		accessTypeDefObj.setDefid(Long.valueOf(itemId));
+		accessTypeDefObj.setId(Long.valueOf(itemId));
+		accessTypeDefObj.setItemId(Long.valueOf(itemId));
+		accessTypeDefObj.setLabel(accessTypeName);
+		accessTypeDefObj.setName(accessTypeName);
+		accessTypeDefObj.setOrder(null);
+		accessTypeDefObj.setRbkeylabel(null);
+		accessTypeDefObj.setUpdatedByUserId(Id);
+		accessTypeDefObj.setUpdateTime(new Date());
+		return accessTypeDefObj;
 	}
 
 	private RangerServiceDef rangerServiceDef() {
@@ -222,6 +241,28 @@ public class TestServiceDBStore {
 		rangerService.setUpdatedBy("Admin");
 		rangerService.setUpdateTime(new Date());
 
+		return rangerService;
+	}
+	
+	private RangerService rangerKMSService() {
+		Map<String, String> configs = new HashMap<String, String>();
+		configs.put("username", "servicemgr");
+		configs.put("password", "servicemgr");
+		configs.put("provider", "kmsurl");
+		
+		RangerService rangerService = new RangerService();
+		rangerService.setId(Id);
+		rangerService.setConfigs(configs);
+		rangerService.setCreateTime(new Date());
+		rangerService.setDescription("service kms policy");
+		rangerService.setGuid("1427365526516_835_1");
+		rangerService.setIsEnabled(true);
+		rangerService.setName("KMS_1");
+		rangerService.setPolicyUpdateTime(new Date());
+		rangerService.setType("7");
+		rangerService.setUpdatedBy("Admin");
+		rangerService.setUpdateTime(new Date());
+		
 		return rangerService;
 	}
 
@@ -531,14 +572,19 @@ public class TestServiceDBStore {
 
 	@Test
 	public void test13deleteServiceDef() throws Exception {
+		setup();
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXDataMaskTypeDefDao xDataMaskDefDao = Mockito.mock(XXDataMaskTypeDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
 		XXAccessTypeDefGrantsDao xAccessTypeDefGrantsDao = Mockito
 				.mock(XXAccessTypeDefGrantsDao.class);
-		XXPolicyItemAccessDao xPolicyItemAccessDao = Mockito
-				.mock(XXPolicyItemAccessDao.class);
+		XXPolicyRefAccessTypeDao xPolicyRefAccessTypeDao = Mockito
+				.mock(XXPolicyRefAccessTypeDao.class);
+		XXPolicyRefConditionDao xPolicyRefConditionDao  = Mockito
+				.mock(XXPolicyRefConditionDao.class);
+		XXPolicyRefResourceDao xPolicyRefResourceDao = Mockito
+				.mock(XXPolicyRefResourceDao.class);
 		XXContextEnricherDefDao xContextEnricherDefDao = Mockito
 				.mock(XXContextEnricherDefDao.class);
 		XXEnumDefDao xEnumDefDao = Mockito.mock(XXEnumDefDao.class);
@@ -546,13 +592,7 @@ public class TestServiceDBStore {
 				.mock(XXEnumElementDefDao.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
-		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
-				.mock(XXPolicyItemConditionDao.class);
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
-		XXPolicyResourceDao xPolicyResourceDao = Mockito
-				.mock(XXPolicyResourceDao.class);
-		XXPolicyResourceMapDao xPolicyResourceMapDao = Mockito
-				.mock(XXPolicyResourceMapDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
 				.mock(XXServiceConfigDefDao.class);
 
@@ -783,6 +823,40 @@ public class TestServiceDBStore {
 		policyItemUserPermObj.setUserId(Id);
 		policyItemUserPermList.add(policyItemUserPermObj);
 
+		List<XXPolicyRefAccessType> policyRefAccessTypeList = new ArrayList<XXPolicyRefAccessType>();
+		XXPolicyRefAccessType policyRefAccessType = new XXPolicyRefAccessType();
+		policyRefAccessType.setId(Id);
+		policyRefAccessType.setAccessTypeName("myAccessType");
+		policyRefAccessType.setPolicyId(Id);
+		policyRefAccessType.setCreateTime(new Date());
+		policyRefAccessType.setUpdateTime(new Date());
+		policyRefAccessType.setAddedByUserId(Id);
+		policyRefAccessType.setUpdatedByUserId(Id);
+		policyRefAccessTypeList.add(policyRefAccessType);
+
+		List<XXPolicyRefCondition> policyRefConditionsList = new ArrayList<XXPolicyRefCondition>();
+		XXPolicyRefCondition policyRefCondition = new XXPolicyRefCondition();
+		policyRefCondition.setId(Id);
+		policyRefCondition.setAddedByUserId(Id);
+		policyRefCondition.setConditionDefId(Id);
+		policyRefCondition.setConditionName("myConditionName");
+		policyRefCondition.setPolicyId(Id);
+		policyRefCondition.setUpdatedByUserId(Id);
+		policyRefCondition.setCreateTime(new Date());
+		policyRefCondition.setUpdateTime(new Date());
+		policyRefConditionsList.add(policyRefCondition);
+
+		List<XXPolicyRefResource> policyRefResourcesList = new ArrayList<XXPolicyRefResource>();
+		XXPolicyRefResource policyRefResource = new XXPolicyRefResource();
+		policyRefResource.setAddedByUserId(Id);
+		policyRefResource.setCreateTime(new Date());
+		policyRefResource.setId(Id);
+		policyRefResource.setPolicyId(Id);
+		policyRefResource.setResourceDefId(Id);
+		policyRefResource.setUpdateTime(new Date());
+		policyRefResource.setResourceName("myresourceName");
+		policyRefResourcesList.add(policyRefResource);
+
 		XXUser xUser = new XXUser();
 		xUser.setAddedByUserId(Id);
 		xUser.setCreateTime(new Date());
@@ -794,6 +868,18 @@ public class TestServiceDBStore {
 		xUser.setStatus(0);
 		xUser.setUpdatedByUserId(Id);
 		xUser.setUpdateTime(new Date());
+
+		Mockito.when(daoManager.getXXPolicyRefAccessType()).thenReturn(xPolicyRefAccessTypeDao);
+		Mockito.when(xPolicyRefAccessTypeDao.findByAccessTypeDefId(Id)).thenReturn(policyRefAccessTypeList);
+		Mockito.when(xPolicyRefAccessTypeDao.remove(policyRefAccessType)).thenReturn(true);
+
+		Mockito.when(daoManager.getXXPolicyRefCondition()).thenReturn(xPolicyRefConditionDao);
+		Mockito.when(xPolicyRefConditionDao.findByConditionDefId(Id)).thenReturn(policyRefConditionsList);
+		Mockito.when(xPolicyRefConditionDao.remove(policyRefCondition)).thenReturn(true);
+
+		Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(xPolicyRefResourceDao);
+		Mockito.when(xPolicyRefResourceDao.findByResourceDefID(Id)).thenReturn(policyRefResourcesList);
+		Mockito.when(xPolicyRefResourceDao.remove(policyRefResource)).thenReturn(true);
 
 		Mockito.when(serviceDefService.read(Id)).thenReturn(rangerServiceDef);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -810,11 +896,6 @@ public class TestServiceDBStore {
 		Mockito.when(
 				xAccessTypeDefGrantsDao.findByATDId(accessTypeDefObj.getId()))
 				.thenReturn(accessTypeDefGrantslist);
-
-		Mockito.when(daoManager.getXXPolicyItemAccess()).thenReturn(
-				xPolicyItemAccessDao);
-		Mockito.when(xPolicyItemAccessDao.findByType(accessTypeDefObj.getId()))
-				.thenReturn(policyItemAccessList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);
@@ -835,27 +916,9 @@ public class TestServiceDBStore {
 		Mockito.when(xPolicyConditionDefDao.findByServiceDefId(serviceDefId))
 				.thenReturn(xConditionDefList);
 
-		Mockito.when(daoManager.getXXPolicyItemCondition()).thenReturn(
-				xPolicyItemConditionDao);
-		Mockito.when(
-				xPolicyItemConditionDao
-						.findByPolicyConditionDefId(policyConditionDefObj
-								.getId())).thenReturn(policyItemConditionList);
-
 		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
 		Mockito.when(xResourceDefDao.findByServiceDefId(serviceDefId))
 				.thenReturn(resDefList);
-
-		Mockito.when(daoManager.getXXPolicyResource()).thenReturn(
-				xPolicyResourceDao);
-		Mockito.when(xPolicyResourceDao.findByResDefId(resourceDef.getId()))
-				.thenReturn(policyResourceList);
-
-		Mockito.when(daoManager.getXXPolicyResourceMap()).thenReturn(
-				xPolicyResourceMapDao);
-		Mockito.when(
-				xPolicyResourceMapDao.findByPolicyResId(policyResource.getId()))
-				.thenReturn(policyResourceMapList);
 
 		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
 				xServiceConfigDefDao);
@@ -1058,8 +1121,6 @@ public class TestServiceDBStore {
 	public void test20updateService() throws Exception {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -1136,10 +1197,6 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
-
 		RangerService dbRangerService = serviceDBStore
 				.updateService(rangerService, options);
 		Assert.assertNotNull(dbRangerService);
@@ -1158,31 +1215,16 @@ public class TestServiceDBStore {
 
 	@Test
 	public void test21deleteService() throws Exception {
+		setup();
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
-		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
-		XXPolicyItemDataMaskInfoDao xxPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
-		XXPolicyItemRowFilterInfoDao xxPolicyItemRowFilterInfoDao = Mockito.mock(XXPolicyItemRowFilterInfoDao.class);
-                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
-		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
-				.mock(XXPolicyItemConditionDao.class);
-		XXPolicyItemGroupPermDao xPolicyItemGroupPermDao = Mockito
-				.mock(XXPolicyItemGroupPermDao.class);
-		XXPolicyItemUserPermDao xPolicyItemUserPermDao = Mockito
-				.mock(XXPolicyItemUserPermDao.class);
-		XXPolicyItemAccessDao xPolicyItemAccessDao = Mockito
-				.mock(XXPolicyItemAccessDao.class);
-		XXPolicyResourceDao xPolicyResourceDao = Mockito
-				.mock(XXPolicyResourceDao.class);
-		XXPolicyResourceMapDao xPolicyResourceMapDao = Mockito
-				.mock(XXPolicyResourceMapDao.class);
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
+		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 
-		RangerService rangerService = rangerService();
+
+        RangerService rangerService = rangerService();
 		RangerPolicy rangerPolicy = rangerPolicy();
 		String name = "HDFS_1-1-20150316062453";
 
@@ -1223,9 +1265,6 @@ public class TestServiceDBStore {
 		policyItem.setUpdatedByUserId(Id);
 		policyItem.setUpdateTime(new Date());
 		policyItemList.add(policyItem);
-
-		//List<XXPolicyItemDataMaskInfo> policyItemDataMaskInfoList = new ArrayList<XXPolicyItemDataMaskInfo>();
-		//List<XXPolicyItemRowFilterInfo> policyItemRowFilterInfoList = new ArrayList<XXPolicyItemRowFilterInfo>();
 
 		List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<XXPolicyItemCondition>();
 		XXPolicyItemCondition policyItemCondition = new XXPolicyItemCondition();
@@ -1329,54 +1368,6 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
-
-		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
-		Mockito.when(xPolicyItemDao.findByPolicyId(policyItem.getId()))
-				.thenReturn(policyItemList);
-
-		Mockito.when(daoManager.getXXPolicyItemDataMaskInfo()).thenReturn(xxPolicyItemDataMaskInfoDao);
-		//Mockito.when(xxPolicyItemDataMaskInfoDao.findByPolicyItemId(policyItem.getId())).thenReturn(policyItemDataMaskInfoList);
-
-		Mockito.when(daoManager.getXXPolicyItemRowFilterInfo()).thenReturn(xxPolicyItemRowFilterInfoDao);
-		//Mockito.when(xxPolicyItemRowFilterInfoDao.findByPolicyItemId(policyItem.getId())).thenReturn(policyItemRowFilterInfoList);
-
-		Mockito.when(daoManager.getXXPolicyItemCondition()).thenReturn(
-				xPolicyItemConditionDao);
-		/*Mockito.when(
-				xPolicyItemConditionDao.findByPolicyItemId(policyItemCondition
-						.getId())).thenReturn(policyItemConditionList);
-		*/
-		Mockito.when(daoManager.getXXPolicyItemGroupPerm()).thenReturn(
-				xPolicyItemGroupPermDao);
-		/*Mockito.when(
-				xPolicyItemGroupPermDao.findByPolicyItemId(policyItem.getId()))
-				.thenReturn(policyItemGroupPermList);
-		*/
-		Mockito.when(daoManager.getXXPolicyItemUserPerm()).thenReturn(
-				xPolicyItemUserPermDao);
-		/*Mockito.when(xPolicyItemUserPermDao.findByPolicyItemId(Id)).thenReturn(
-				policyItemUserPermList);*/
-
-		Mockito.when(daoManager.getXXPolicyItemAccess()).thenReturn(
-				xPolicyItemAccessDao);
-		/*Mockito.when(
-				xPolicyItemAccessDao.findByPolicyItemId(policyItemAccess
-						.getId())).thenReturn(policyItemAccessList);
-		*/
-		Mockito.when(daoManager.getXXPolicyResource()).thenReturn(
-				xPolicyResourceDao);
-		Mockito.when(xPolicyResourceDao.findByPolicyId(policyResource.getId()))
-				.thenReturn(policyResourceList);
-
-		Mockito.when(daoManager.getXXPolicyResourceMap()).thenReturn(
-				xPolicyResourceMapDao);
-		/*Mockito.when(
-				xPolicyResourceMapDao.findByPolicyResId(policyResourceMap
-						.getId())).thenReturn(policyResourceMapList);
-		*/
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
@@ -1389,12 +1380,14 @@ public class TestServiceDBStore {
 		Mockito.when(
 				xServiceConfigMapDao.findByServiceId(rangerService.getId()))
 				.thenReturn(xConfMapList);
-
-                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
-                /*Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(xxPolicyLabelMapList);*/
+		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-		serviceDBStore.deleteService(Id);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
+
+        serviceDBStore.deleteService(Id);
+		Mockito.verify(svcService).delete(rangerService);
 	}
 
 	@Test
@@ -1520,16 +1513,13 @@ public class TestServiceDBStore {
 	}
 
 	@Test
-	public void tess26createPolicy() throws Exception {
+	public void test26createPolicy() throws Exception {
 		setup();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
-		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
 
 		XXServiceDef xServiceDef = serviceDef();
 		Map<String, String> configs = new HashMap<String, String>();
@@ -1684,9 +1674,6 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
-		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
@@ -1701,15 +1688,8 @@ public class TestServiceDBStore {
 				rangerPolicy);
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
-		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
-
-		Mockito.when(
-				rangerAuditFields.populateAuditFields(
-						Mockito.isA(XXPolicyItem.class),
-						Mockito.isA(XXPolicy.class))).thenReturn(xPolicyItem);
-		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
-		Mockito.when(xPolicyItemDao.create(xPolicyItem))
-				.thenReturn(xPolicyItem);
+		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
@@ -1721,61 +1701,12 @@ public class TestServiceDBStore {
 				.mock(RangerPolicyResourceSignature.class);
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
 				.thenReturn(signature);
-
-		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
-		XXResourceDef xResourceDef = Mockito.mock(XXResourceDef.class);
-		XXPolicyResourceDao xPolicyResourceDao = Mockito
-				.mock(XXPolicyResourceDao.class);
-		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
-				.mock(XXPolicyConditionDefDao.class);
-		Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-		Mockito.when(xResourceDefDao.findByNameAndPolicyId(policyName, Id))
-				.thenReturn(xResourceDef);
-
-		Mockito.when(
-				rangerAuditFields.populateAuditFields(
-						Mockito.isA(XXPolicyResource.class),
-						Mockito.isA(XXPolicy.class))).thenReturn(
-				xPolicyResource);
-		Mockito.when(daoManager.getXXPolicyResource()).thenReturn(
-				xPolicyResourceDao);
-		Mockito.when(xPolicyResourceDao.create(xPolicyResource)).thenReturn(
-				xPolicyResource);
-
-		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
-				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByServiceDefIdAndName(Id,
-						policyItemCondition.getType())).thenReturn(
-				policyConditionDefObj);
-		for (Entry<String, RangerPolicyResource> resource : policyResource
-				.entrySet()) {
-			Mockito.when(daoManager.getXXResourceDef()).thenReturn(
-					xResourceDefDao);
-			Mockito.when(
-					xResourceDefDao.findByNameAndPolicyId(resource.getKey(),
-							rangerPolicy.getId())).thenReturn(xResourceDef);
-		}
-
-		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
-				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByServiceDefIdAndName(
-						xServiceDef.getId(), policyItemCondition.getType()))
-				.thenReturn(policyConditionDefObj);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
 
-		//RangerTransactionSynchronizationAdapter spy = Mockito.spy(transactionSynchronizationAdapter);
-		//Mockito.doNothing().when(spy).executeOnTransactionCommit(Mockito.any(Runnable.class));
-
 		RangerPolicy dbRangerPolicy = serviceDBStore.createPolicy(rangerPolicy);
-		Assert.assertNull(dbRangerPolicy);
-		Assert.assertEquals(Id, rangerPolicy.getId());
-		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(policyService).create(rangerPolicy);
-		Mockito.verify(rangerAuditFields).populateAuditFields(
-				Mockito.isA(XXPolicyItem.class), Mockito.isA(XXPolicy.class));
-		Mockito.verify(daoManager).getXXPolicyItem();
+
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
 	}
 
 	@Test
@@ -1816,18 +1747,10 @@ public class TestServiceDBStore {
 		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
-		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
-		XXPolicyResourceDao xPolicyResourceDao = Mockito
-				.mock(XXPolicyResourceDao.class);
-		XXPolicyResourceMapDao xPolicyResourceMapDao = Mockito
-				.mock(XXPolicyResourceMapDao.class);
-		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
-		XXPolicyItem xPolicyItem = Mockito.mock(XXPolicyItem.class);
+		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 
 		RangerService rangerService = rangerService();
 
@@ -1859,8 +1782,6 @@ public class TestServiceDBStore {
 		policyResourceMap.setValue("1L");
 		policyResourceMapList.add(policyResourceMap);
 
-                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
-
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);
@@ -1888,10 +1809,6 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
-
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
 				.thenReturn(xServiceDef);
@@ -1902,24 +1819,6 @@ public class TestServiceDBStore {
 		Mockito.when(xPolicyDao.getById(rangerPolicy.getId())).thenReturn(
 				xPolicy);
 
-		Mockito.when(daoManager.getXXPolicyResource()).thenReturn(
-				xPolicyResourceDao);
-		Mockito.when(xPolicyResourceDao.findByPolicyId(rangerPolicy.getId()))
-				.thenReturn(policyResourceList);
-
-		Mockito.when(daoManager.getXXPolicyResourceMap()).thenReturn(
-				xPolicyResourceMapDao);
-		Mockito.when(
-				xPolicyResourceMapDao.findByPolicyResId(policyResourceMap
-						.getId())).thenReturn(policyResourceMapList);
-
-		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
-
-		Mockito.when(
-				rangerAuditFields.populateAuditFields(
-						Mockito.isA(XXPolicyItem.class),
-						Mockito.isA(XXPolicy.class))).thenReturn(xPolicyItem);
-
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
@@ -1927,19 +1826,19 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
+		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
-                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(
-                                xPolicyLabelMapDao);
-                Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId()))
-                                .thenReturn(xxPolicyLabelMapList);
 
 		RangerPolicyResourceSignature signature = Mockito
 				.mock(RangerPolicyResourceSignature.class);
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
 				.thenReturn(signature);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
 
-		RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
+
+        RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
@@ -1955,9 +1854,6 @@ public class TestServiceDBStore {
 				rangerPolicy.getIsEnabled());
 		Assert.assertEquals(dbRangerPolicy.getVersion(),
 				rangerPolicy.getVersion());
-
-		Mockito.verify(rangerAuditFields).populateAuditFields(
-				Mockito.isA(XXPolicyItem.class), Mockito.isA(XXPolicy.class));
 	}
 
 	@Test
@@ -1965,24 +1861,7 @@ public class TestServiceDBStore {
 		setup();
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
-		//XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-		//XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
-                XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
-		XXPolicyItemDao xPolicyItemDao = Mockito.mock(XXPolicyItemDao.class);
-		XXPolicyItemDataMaskInfoDao xPolicyItemDataMaskInfoDao = Mockito.mock(XXPolicyItemDataMaskInfoDao.class);
-		XXPolicyItemRowFilterInfoDao xPolicyItemRowFilterInfoDao = Mockito.mock(XXPolicyItemRowFilterInfoDao.class);
-		XXPolicyItemConditionDao xPolicyItemConditionDao = Mockito
-				.mock(XXPolicyItemConditionDao.class);
-		XXPolicyItemGroupPermDao xPolicyItemGroupPermDao = Mockito
-				.mock(XXPolicyItemGroupPermDao.class);
-		XXPolicyItemUserPermDao xPolicyItemUserPermDao = Mockito
-				.mock(XXPolicyItemUserPermDao.class);
-		XXPolicyItemAccessDao xPolicyItemAccessDao = Mockito
-				.mock(XXPolicyItemAccessDao.class);
-		XXPolicyResourceDao xPolicyResourceDao = Mockito
-				.mock(XXPolicyResourceDao.class);
-		XXPolicyResourceMapDao xPolicyResourceMapDao = Mockito
-				.mock(XXPolicyResourceMapDao.class);
+		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 
 		RangerService rangerService = rangerService();
 		RangerPolicy rangerPolicy = rangerPolicy();
@@ -2071,7 +1950,6 @@ public class TestServiceDBStore {
 		policyResource.setUpdateTime(new Date());
 		policyResourceList.add(policyResource);
 
-		List<XXPolicyResourceMap> policyResourceMapList = new ArrayList<XXPolicyResourceMap>();
 		XXPolicyResourceMap policyResourceMap = new XXPolicyResourceMap();
 		policyResourceMap.setAddedByUserId(Id);
 		policyResourceMap.setCreateTime(new Date());
@@ -2081,8 +1959,6 @@ public class TestServiceDBStore {
 		policyResourceMap.setUpdatedByUserId(Id);
 		policyResourceMap.setUpdateTime(new Date());
 		policyResourceMap.setValue("1L");
-		policyResourceMapList.add(policyResourceMap);
-                List<XXPolicyLabelMap> xxPolicyLabelMapList = new ArrayList<>();
 		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);
@@ -2096,68 +1972,17 @@ public class TestServiceDBStore {
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 				rangerService);
 
-		Mockito.when(daoManager.getXXPolicyItem()).thenReturn(xPolicyItemDao);
-		Mockito.when(xPolicyItemDao.findByPolicyId(policyItem.getId()))
-				.thenReturn(policyItemList);
-
-		Mockito.when(daoManager.getXXPolicyItemDataMaskInfo()).thenReturn(xPolicyItemDataMaskInfoDao);
-
-		Mockito.when(daoManager.getXXPolicyItemRowFilterInfo()).thenReturn(xPolicyItemRowFilterInfoDao);
-
-		Mockito.when(daoManager.getXXPolicyItemCondition()).thenReturn(
-				xPolicyItemConditionDao);
-		Mockito.when(
-				xPolicyItemConditionDao.findByPolicyItemId(policyItemCondition
-						.getId())).thenReturn(policyItemConditionList);
-
-		Mockito.when(daoManager.getXXPolicyItemGroupPerm()).thenReturn(
-				xPolicyItemGroupPermDao);
-		Mockito.when(
-				xPolicyItemGroupPermDao.findByPolicyItemId(policyItem.getId()))
-				.thenReturn(policyItemGroupPermList);
-
-		Mockito.when(daoManager.getXXPolicyItemUserPerm()).thenReturn(
-				xPolicyItemUserPermDao);
-		Mockito.when(xPolicyItemUserPermDao.findByPolicyItemId(Id)).thenReturn(
-				policyItemUserPermList);
-
-		Mockito.when(daoManager.getXXPolicyItemAccess()).thenReturn(
-				xPolicyItemAccessDao);
-		Mockito.when(
-				xPolicyItemAccessDao.findByPolicyItemId(policyItemAccess
-						.getId())).thenReturn(policyItemAccessList);
-
-		Mockito.when(daoManager.getXXPolicyResource()).thenReturn(
-				xPolicyResourceDao);
-		Mockito.when(xPolicyResourceDao.findByPolicyId(policyResource.getId()))
-				.thenReturn(policyResourceList);
-
-		Mockito.when(daoManager.getXXPolicyResourceMap()).thenReturn(
-				xPolicyResourceMapDao);
-		Mockito.when(
-				xPolicyResourceMapDao.findByPolicyResId(policyResourceMap
-						.getId())).thenReturn(policyResourceMapList);
-
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
-
-		//Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
-		//Mockito.when(xServiceVersionInfoDao.findByServiceId(Id)).thenReturn(xServiceVersionInfo);
-		//Mockito.when(xServiceVersionInfoDao.update(xServiceVersionInfo)).thenReturn(xServiceVersionInfo);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
+		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-
-                Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(
-                                xPolicyLabelMapDao);
-                Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId()))
-                                .thenReturn(xxPolicyLabelMapList);
-		//RangerTransactionSynchronizationAdapter spy = Mockito.spy(transactionSynchronizationAdapter);
-		//Mockito.doNothing().when(spy).executeOnTransactionCommit(Mockito.any(Runnable.class));
-
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
 
 		serviceDBStore.deletePolicy(Id);
 	}
@@ -2493,4 +2318,98 @@ public class TestServiceDBStore {
     	Mockito.verify(daoManager).getXXServiceConfigMap();
     	Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), configName);
     }
+	
+	@Test
+	public void test41createKMSService() throws Exception {
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
+				.mock(XXServiceConfigMapDao.class);
+		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
+				.mock(XXServiceConfigDefDao.class);
+		XXService xService = Mockito.mock(XXService.class);
+		XXUser xUser = Mockito.mock(XXUser.class);
+
+		Mockito.when(xServiceDao.findByName("KMS_1")).thenReturn(
+				xService);
+		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
+
+		RangerService rangerService = rangerKMSService();
+		VXUser vXUser = null;
+		String userName = "servicemgr";
+
+		List<XXServiceConfigDef> svcConfDefList = new ArrayList<XXServiceConfigDef>();
+		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
+		serviceConfigDefObj.setId(Id);
+		serviceConfigDefObj.setType("7");
+		svcConfDefList.add(serviceConfigDefObj);
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
+				xServiceConfigDefDao);
+
+		Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
+
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
+				xService);
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(
+				xServiceConfigMapDao);
+
+		Mockito.when(stringUtil.getValidUserName(userName))
+		.thenReturn(userName);
+		Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+		Mockito.when(xUserDao.findByUserName(userName)).thenReturn(xUser);
+
+		Mockito.when(xUserService.populateViewBean(xUser)).thenReturn(vXUser);
+		VXUser vXUserHdfs = new VXUser();
+		vXUserHdfs.setName("hdfs");
+		vXUserHdfs.setPassword("hdfs");
+		VXUser vXUserHive = new VXUser();
+		vXUserHive.setName("hive");
+		vXUserHive.setPassword("hive");
+
+		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+
+		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
+				rangerService);
+
+		Mockito.when(
+				rangerAuditFields.populateAuditFields(
+						Mockito.isA(XXServiceConfigMap.class),
+						Mockito.isA(XXService.class))).thenReturn(xConfMap);
+
+		List<XXAccessTypeDef> accessTypeDefList = new ArrayList<XXAccessTypeDef>();
+		accessTypeDefList.add(rangerKmsAccessTypes("getmetadata", 7));
+		accessTypeDefList.add(rangerKmsAccessTypes("generateeek", 8));
+		accessTypeDefList.add(rangerKmsAccessTypes("decrypteek", 9));
+
+		RangerServiceDef ran = new RangerServiceDef();
+		ran.setName("KMS Test");
+
+		ServiceDBStore spy = Mockito.spy(serviceDBStore);
+
+		Mockito.when(spy.getServiceByName("KMS_1")).thenReturn(
+				rangerService);
+		Mockito.doNothing().when(spy).createDefaultPolicies(rangerService);
+
+		RangerResourceDef resourceDef = new RangerResourceDef();
+		resourceDef.setItemId(Id);
+		resourceDef.setName("keyname");
+		resourceDef.setType("string");
+		resourceDef.setType("string");
+		resourceDef.setLabel("Key Name");
+		resourceDef.setDescription("Key Name");
+
+		List<RangerResourceDef> resourceHierarchy = new ArrayList<RangerResourceDef>();
+		resourceHierarchy.addAll(resourceHierarchy);
+
+		spy.createService(rangerService);
+		vXUser = new VXUser();
+		vXUser.setName(userName);
+		vXUser.setPassword(userName);
+		
+		spy.createDefaultPolicies(rangerService);
+
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+	}
 }

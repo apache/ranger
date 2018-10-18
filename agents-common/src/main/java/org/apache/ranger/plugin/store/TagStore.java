@@ -84,6 +84,8 @@ public interface TagStore {
 
     RangerServiceResource updateServiceResource(RangerServiceResource resource) throws Exception;
 
+    void refreshServiceResource(Long resourceId) throws Exception;
+
     void deleteServiceResource(Long id) throws Exception;
 
     void deleteServiceResourceByGuid(String guid) throws Exception;

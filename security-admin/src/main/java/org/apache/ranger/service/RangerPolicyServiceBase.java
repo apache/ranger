@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.GUIDUtil;
@@ -30,12 +29,10 @@ import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends
@@ -58,18 +55,20 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 				"XXService xSvc", "xSvc.id = obj.service"));
 		searchFields
 				.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.IS_RECURSIVE,"xPolRes.isRecursive",DATA_TYPE.BOOLEAN,SEARCH_TYPE.FULL,
-				"XXPolicyResource xPolRes","obj.id=xPolRes.policyId"));
+		//might need updation
+		/*searchFields.add(new SearchField(SearchFilter.IS_RECURSIVE,"xPolRes.isRecursive",DATA_TYPE.BOOLEAN,SEARCH_TYPE.FULL,
+				"XXPolicyResource xPolRes","obj.id=xPolRes.policyId"));*/
 		searchFields.add(new SearchField(SearchFilter.POLICY_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.GUID, "obj.guid", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.USER, "xUser.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
-				"XXUser xUser, XXPolicyItem xPolItem, XXPolicyItemUserPerm userPerm", "obj.id = xPolItem.policyId "
-						+ "and userPerm.policyItemId = xPolItem.id and xUser.id = userPerm.userId"));
+				"XXUser xUser, XXPolicyRefUser refUser", "obj.id = refUser.policyId "
+						+ "and xUser.id = refUser.userId"));
 		searchFields.add(new SearchField(SearchFilter.GROUP, "xGrp.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
-				"XXGroup xGrp, XXPolicyItem xPolItem, XXPolicyItemGroupPerm grpPerm", "obj.id = xPolItem.policyId "
-						+ "and grpPerm.policyItemId = xPolItem.id and xGrp.id = grpPerm.groupId"));
-		searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
+				"XXGroup xGrp , XXPolicyRefGroup refGroup", "obj.id = refGroup.policyId "
+						+ "and xGrp.id = refGroup.groupId"));
+		//might need updation
+		/*searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
 				SEARCH_TYPE.PARTIAL, "XXPolicyResourceMap resMap, XXPolicyResource polRes",
 				"resMap.resourceId = polRes.id and polRes.policyId = obj.id"));
                 /*searchFields.add(new SearchField(SearchFilter.POLICY_LABELS_PARTIAL, "obj.label_name", DATA_TYPE.STRING,
@@ -118,9 +117,11 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 			options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
 		}
 
-        xObj.setOptions(JsonUtils.mapToJson(options));
+		xObj.setOptions(JsonUtils.mapToJson(options));
 
-        return xObj;
+		xObj.setPolicyText(JsonUtils.objectToJson(vObj));
+
+		return xObj;
 	}
 
 	@Override
@@ -137,19 +138,15 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
 
-		Map<String, Object> options = JsonUtils.jsonToObject(xObj.getOptions(), Map.class);
+		String policyText = xObj.getPolicyText();
 
-		if (MapUtils.isNotEmpty(options)) {
-			String optionPolicyValiditySchedule = (String)options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
+		RangerPolicy ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
 
-			if (StringUtils.isNotBlank(optionPolicyValiditySchedule)) {
-				List<RangerValiditySchedule> validitySchedules = JsonUtils.jsonToRangerValiditySchedule(optionPolicyValiditySchedule);
-
-				vObj.setValiditySchedules(validitySchedules);
-			}
+		if (ret != null) {
+			vObj.setOptions(ret.getOptions());
+			vObj.setValiditySchedules(ret.getValiditySchedules());
+			vObj.setPolicyLabels(ret.getPolicyLabels());
 		}
-
-		vObj.setOptions(options);
 
 		return vObj;
 	}

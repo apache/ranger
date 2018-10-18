@@ -32,19 +32,6 @@ public class XXPolicyResourceMapDao extends BaseDao<XXPolicyResourceMap> {
 	public XXPolicyResourceMapDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
-	
-	public List<XXPolicyResourceMap> findByPolicyResId(Long polResId) {
-		if(polResId == null) {
-			return new ArrayList<XXPolicyResourceMap>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyResourceMap.findByPolicyResId", tClass)
-					.setParameter("polResId", polResId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyResourceMap>();
-		}
-	}
 
 	public List<XXPolicyResourceMap> findByPolicyId(Long policyId) {
 		if(policyId == null) {
