@@ -126,19 +126,6 @@ public class XXTagDao extends BaseDao<XXTag> {
 		}
 	}
 
-	public List<XXTag> findForServicePlugin(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXTag>();
-		}
-
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findForServicePlugin", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
-
 	public List<XXTag> findByServiceIdAndOwner(Long serviceId, Short owner) {
 		if (serviceId == null) {
 			return new ArrayList<XXTag>();

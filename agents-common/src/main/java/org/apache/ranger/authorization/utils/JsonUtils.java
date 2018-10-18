@@ -42,7 +42,6 @@ public class JsonUtils {
 
     static {
         gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-                .setPrettyPrinting()
                 .create();
     }
 
@@ -67,6 +66,20 @@ public class JsonUtils {
                 LOG.error("Invalid input data: ", e);
             }
         }
+        return ret;
+    }
+
+    public static String objectToJson(Object object) {
+        String ret = null;
+
+        if(object != null) {
+            try {
+                ret = gson.toJson(object);
+            } catch(Exception excp) {
+                LOG.warn("objectToJson() failed to convert object to Json", excp);
+            }
+        }
+
         return ret;
     }
 

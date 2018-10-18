@@ -31,19 +31,6 @@ public class XXPolicyItemRowFilterInfoDao extends BaseDao<XXPolicyItemRowFilterI
 	public XXPolicyItemRowFilterInfoDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
-	
-	public List<XXPolicyItemRowFilterInfo> findByPolicyItemId(Long polItemId) {
-		if(polItemId == null) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyItemRowFilterInfo.findByPolicyItemId", tClass)
-					.setParameter("polItemId", polItemId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-	}
 
 	public List<XXPolicyItemRowFilterInfo> findByPolicyId(Long policyId) {
 		if(policyId == null) {
