@@ -45,7 +45,7 @@
             </div>
             <div class="span2">
                 <div class="clearfix btn-right">
-                    {{#if isNotAuditorAdminOrKmsAuditor}}
+                    {{#if isAddNewPolicyButtonShow}}
                             <a data-js="addNewPolicy" href="#!/service/{{rangerService.id}}/policies/create/{{this.rangerPolicyType}}" class="btn btn-primary " type="button">{{tt 'lbl.addNewPolicy'}} </a>
                     {{/if}}
                 </div>
