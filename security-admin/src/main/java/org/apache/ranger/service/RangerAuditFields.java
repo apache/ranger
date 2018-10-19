@@ -17,27 +17,17 @@
 
 package org.apache.ranger.service;
 
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.entity.XXDBBase;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RangerAuditFields<T extends XXDBBase> {
 
-	public T populateAuditFields(T xObj, T parentObj) {
+	public <T extends XXDBBase, PARENT extends XXDBBase> T populateAuditFields(T xObj, PARENT parentObj) {
 		xObj.setCreateTime(parentObj.getCreateTime());
 		xObj.setUpdateTime(parentObj.getUpdateTime());
 		xObj.setAddedByUserId(parentObj.getAddedByUserId());
 		xObj.setUpdatedByUserId(parentObj.getUpdatedByUserId());
-		return xObj;
-	}
-
-	public T populateAuditFieldsForCreate(T xObj) {
-		xObj.setCreateTime(DateUtil.getUTCDate());
-		xObj.setUpdateTime(DateUtil.getUTCDate());
-		xObj.setAddedByUserId(ContextUtil.getCurrentUserId());
-		xObj.setUpdatedByUserId(ContextUtil.getCurrentUserId());
 		return xObj;
 	}
 

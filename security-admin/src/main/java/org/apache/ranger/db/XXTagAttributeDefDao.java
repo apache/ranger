@@ -57,18 +57,6 @@ public class XXTagAttributeDefDao extends BaseDao<XXTagAttributeDef> {
 		}
 	}
 
-	public List<XXTagAttributeDef> findForServicePlugin(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXTagAttributeDef>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagAttributeDef.findForServicePlugin", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagAttributeDef>();
-		}
-	}
-
 	public List<XXTagAttributeDef> findByResourceId(Long resourceId) {
 		if (resourceId == null) {
 			return new ArrayList<XXTagAttributeDef>();

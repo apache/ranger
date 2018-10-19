@@ -30,19 +30,6 @@ public class XXPolicyItemAccessDao extends BaseDao<XXPolicyItemAccess> {
 	public XXPolicyItemAccessDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
-	
-	public List<XXPolicyItemAccess> findByPolicyItemId(Long polItemId) {
-		if(polItemId == null) {
-			return new ArrayList<XXPolicyItemAccess>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyItemAccess.findByPolicyItemId", tClass)
-					.setParameter("polItemId", polItemId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemAccess>();
-		}
-	}
 
 	public List<XXPolicyItemAccess> findByPolicyId(Long policyId) {
 		if(policyId == null) {
@@ -65,18 +52,6 @@ public class XXPolicyItemAccessDao extends BaseDao<XXPolicyItemAccess> {
 			return getEntityManager()
 					.createNamedQuery("XXPolicyItemAccess.findByServiceId", tClass)
 					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemAccess>();
-		}
-	}
-
-	public List<XXPolicyItemAccess> findByType(Long type) {
-		if (type == null) {
-			return new ArrayList<XXPolicyItemAccess>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXPolicyItemAccess.findByType", tClass)
-					.setParameter("type", type).getResultList();
 		} catch (NoResultException e) {
 			return new ArrayList<XXPolicyItemAccess>();
 		}

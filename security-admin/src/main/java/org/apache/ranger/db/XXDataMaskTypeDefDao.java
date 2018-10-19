@@ -58,5 +58,4 @@ public class XXDataMaskTypeDefDao extends BaseDao<XXDataMaskTypeDef> {
 			return null;
 		}
 	}
-
 }

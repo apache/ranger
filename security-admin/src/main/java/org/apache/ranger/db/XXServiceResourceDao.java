@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
@@ -73,15 +74,32 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 	}
 
 	public List<XXServiceResource> findTaggedResourcesInServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXServiceResource>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findTaggedResourcesInServiceId", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXServiceResource>();
-		}
+	    List<XXServiceResource> ret = new ArrayList<>();
+		if (serviceId != null) {
+            List<Object[]> rows = null;
+            try {
+                rows = getEntityManager().createNamedQuery("XXServiceResource.findTaggedResourcesInServiceId", Object[].class)
+                        .setParameter("serviceId", serviceId).getResultList();
+            } catch (NoResultException e) {
+                // Nothing
+            }
+            if (CollectionUtils.isNotEmpty(rows)) {
+                for (Object[] row : rows) {
+                    XXServiceResource xxServiceResource = new XXServiceResource();
+                    xxServiceResource.setId((Long) row[0]);
+                    xxServiceResource.setGuid((String) row[1]);
+                    xxServiceResource.setVersion((Long) row[2]);
+                    xxServiceResource.setIsEnabled((Boolean) row[3]);
+                    xxServiceResource.setResourceSignature((String) row[4]);
+                    xxServiceResource.setServiceId((Long) row[5]);
+                    xxServiceResource.setServiceResourceElements((String) row[6]);
+                    xxServiceResource.setTags((String) row[7]);
+
+                    ret.add(xxServiceResource);
+                }
+            }
+        }
+        return ret;
 	}
 
 	public long countTaggedResourcesInServiceId(Long serviceId) {

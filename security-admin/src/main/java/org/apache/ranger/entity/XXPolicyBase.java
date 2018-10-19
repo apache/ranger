@@ -110,6 +110,10 @@ public abstract class XXPolicyBase extends XXDBBase {
 	@Column(name = "is_audit_enabled")
 	protected boolean isAuditEnabled;
 
+
+    	@Column(name = "policy_text")
+    	protected String policyText;
+
 	/**
 	 * @return the gUID
 	 */
@@ -267,7 +271,15 @@ public abstract class XXPolicyBase extends XXDBBase {
 		this.policyType = policyType;
 	}
 
-	/*
+    	public void setPolicyText(String policyText) {
+        	this.policyText = policyText;
+    	}
+
+    	public String getPolicyText() {
+        	return this.policyText;
+    	}
+
+    /*
 	 * (non-Javadoc)
 	 *
 	 * @see java.lang.Object#equals(java.lang.Object)

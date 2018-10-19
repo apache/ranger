@@ -24,19 +24,13 @@
  */
 
 import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.db.BaseDao;
-import org.springframework.beans.factory.annotation.Autowired;
-
 
 public abstract class RangerDaoManagerBase {
 	private static final Logger logger = Logger.getLogger(RangerDaoManagerBase.class);
 
-	@Autowired
-	protected RESTErrorUtil restErrorUtil;
 	abstract public EntityManager getEntityManager();
 
 	public RangerDaoManagerBase() {
@@ -366,6 +360,24 @@ public abstract class RangerDaoManagerBase {
 		if (className.equals("XXPluginInfo")) {
 			return getXXPluginInfo();
 		}
+		if (className.equals("XXPolicyRefCondition")) {
+			return getXXPolicyRefCondition();
+		}
+		if (className.equals("XXPolicyRefGroup")) {
+			return getXXPolicyRefGroup();
+		}
+		if (className.equals("XXPolicyRefDataMaskType")) {
+			return getXXPolicyRefDataMaskType();
+		}
+		if (className.equals("XXPolicyRefResource")) {
+			return getXXPolicyRefResource();
+		}
+		if (className.equals("XXPolicyRefUser")) {
+			return getXXPolicyRefUser();
+		}
+		if (className.equals("XXPolicyRefAccessType")) {
+			return getXXPolicyRefAccessType();
+		}
 		logger.error("No DaoManager found for className=" + className, new Throwable());
 		return null;
 	}
@@ -589,6 +601,30 @@ public abstract class RangerDaoManagerBase {
 
 	public XXPluginInfoDao getXXPluginInfo() {
 		return new XXPluginInfoDao(this);
+	}
+
+	public XXPolicyRefConditionDao getXXPolicyRefCondition() {
+		return new XXPolicyRefConditionDao(this);
+	}
+
+	public XXPolicyRefGroupDao getXXPolicyRefGroup() {
+		return new XXPolicyRefGroupDao(this);
+	}
+
+	public XXPolicyRefDataMaskTypeDao getXXPolicyRefDataMaskType() {
+		return new XXPolicyRefDataMaskTypeDao(this);
+	}
+
+	public XXPolicyRefResourceDao getXXPolicyRefResource() {
+		return new XXPolicyRefResourceDao(this);
+	}
+
+	public XXPolicyRefUserDao getXXPolicyRefUser() {
+		return new XXPolicyRefUserDao(this);
+	}
+
+	public XXPolicyRefAccessTypeDao getXXPolicyRefAccessType() {
+		return new XXPolicyRefAccessTypeDao(this);
 	}
 }
 

@@ -247,7 +247,7 @@ public class TestServiceREST {
 		return rangerService;
 	}
 
-	private RangerPolicy rangerPolicy() {
+	RangerPolicy rangerPolicy() {
 		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
 		List<String> users = new ArrayList<String>();
 		List<String> groups = new ArrayList<String>();

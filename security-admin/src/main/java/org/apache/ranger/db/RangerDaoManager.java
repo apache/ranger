@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +44,9 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 
 	@Autowired
 	StringUtil stringUtil;
+
+	@Autowired
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Override
 	public EntityManager getEntityManager() {
@@ -68,15 +72,19 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 		return stringUtil;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	public BaseDao<?> getDaoForClassType(int classType) {
-		if (classType == RangerConstants.CLASS_TYPE_NONE) {
-			return null;
-		}
-		return super.getDaoForClassType(classType);
+        /**
+         * (non-Javadoc)
+         */
+        @Override
+        public BaseDao<?> getDaoForClassType(int classType) {
+                if (classType == RangerConstants.CLASS_TYPE_NONE) {
+                      return null;
+                }
+                return super.getDaoForClassType(classType);
+        }
+
+	public RangerTransactionSynchronizationAdapter getRangerTransactionSynchronizationAdapter() {
+		return transactionSynchronizationAdapter;
 	}
 
 }

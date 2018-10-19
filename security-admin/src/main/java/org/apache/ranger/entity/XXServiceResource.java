@@ -63,6 +63,12 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 	@Column(name = "service_id")
 	protected Long serviceId;
 
+	@Column(name = "service_resource_elements_text")
+	protected String serviceResourceElements;
+
+	@Column(name = "tags_text")
+	protected String tags;
+
 	@Override
 	public void setId(Long id) {
 		this.id = id;
@@ -148,6 +154,16 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 		this.isEnabled = isEnabled;
 	}
 
+	public String getServiceResourceElements() { return serviceResourceElements; }
+
+	public void setServiceResourceElements(String serviceResourceElements) {
+		this.serviceResourceElements = serviceResourceElements;
+	}
+
+	public String getTags() { return tags; }
+
+	public void setTags(String tags) { this.tags = tags; }
+
 	@Override
 	public int getMyClassType() {
 		return AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE;
@@ -168,6 +184,8 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 		result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
 		result = prime * result + ((resourceSignature == null) ? 0 : resourceSignature.hashCode());
 		result = prime * result + ((serviceId == null) ? 0 : serviceId.hashCode());
+		result = prime * result + ((serviceResourceElements == null) ? 0 : serviceResourceElements.hashCode());
+		result = prime * result + ((tags == null) ? 0 : tags.hashCode());
 		return result;
 	}
 
@@ -215,6 +233,16 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 				return false;
 		} else if (!version.equals(other.version))
 			return false;
+		if (serviceResourceElements == null) {
+			if (other.serviceResourceElements != null)
+				return false;
+		} else if (!serviceResourceElements.equals(other.serviceResourceElements))
+			return false;
+		if (tags == null) {
+			if (other.tags != null)
+				return false;
+		} else if (!tags.equals(other.tags))
+			return false;
 		return true;
 	}
 
@@ -239,6 +267,8 @@ public class XXServiceResource extends XXDBBase implements Serializable {
 		sb.append("isEnabled={").append(isEnabled).append("} ");
 		sb.append("resourceSignature={").append(resourceSignature).append("} ");
 		sb.append("serviceId={").append(serviceId).append("} ");
+		sb.append("serviceResourceElements={").append(serviceResourceElements).append("} ");
+		sb.append("tags={").append(tags).append("} ");
 		sb.append(" }");
 
 		return sb;

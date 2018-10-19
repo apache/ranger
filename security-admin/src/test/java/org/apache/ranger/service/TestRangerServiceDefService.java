@@ -322,9 +322,6 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);
@@ -547,9 +544,6 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);
@@ -745,9 +739,6 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
-		Mockito.when(
-				xPolicyConditionDefDao.findByPolicyItemId(xPolicyItem.getId()))
-				.thenReturn(xConditionDefList);
 
 		Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(
 				xContextEnricherDefDao);

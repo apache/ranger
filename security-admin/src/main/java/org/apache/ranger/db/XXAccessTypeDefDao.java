@@ -58,5 +58,4 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
 			return null;
 		}
 	}
-
 }

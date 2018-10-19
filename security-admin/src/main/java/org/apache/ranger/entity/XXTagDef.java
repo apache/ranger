@@ -63,6 +63,9 @@ public class XXTagDef extends XXDBBase implements Serializable {
 	@Column(name = "source")
 	protected String source;
 
+	@Column(name = "tag_attrs_def_text")
+	protected String tagAttrDefs;
+
 	/**
 	 * @return the guid
 	 */
@@ -138,6 +141,10 @@ public class XXTagDef extends XXDBBase implements Serializable {
 		this.source = source;
 	}
 
+	public String getTagAttrDefs() { return tagAttrDefs; }
+
+	public void setTagAttrDefs(String tagAttrDefs) { this.tagAttrDefs = tagAttrDefs; }
+
 	@Override
 	public void setId(Long id) {
 		this.id = id;
@@ -168,6 +175,7 @@ public class XXTagDef extends XXDBBase implements Serializable {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((source == null) ? 0 : source.hashCode());
 		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		result = prime * result + ((tagAttrDefs == null) ? 0 : tagAttrDefs.hashCode());
 		return result;
 	}
 
@@ -215,6 +223,11 @@ public class XXTagDef extends XXDBBase implements Serializable {
 				return false;
 		} else if (!version.equals(other.version))
 			return false;
+		if (tagAttrDefs == null) {
+			if (other.tagAttrDefs != null)
+				return false;
+		} else if (!tagAttrDefs.equals(other.tagAttrDefs))
+			return false;
 		return true;
 	}
 
@@ -239,6 +252,7 @@ public class XXTagDef extends XXDBBase implements Serializable {
 		sb.append("isEnabled={").append(isEnabled).append("} ");
 		sb.append("source={").append(source).append("} ");
 		sb.append("name={").append(name).append("} ");
+		sb.append("tagAttrDefs={").append(tagAttrDefs).append("} ");
 		sb.append(" }");
 
 		return sb;

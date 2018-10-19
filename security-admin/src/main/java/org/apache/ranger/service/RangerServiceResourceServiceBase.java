@@ -73,26 +73,31 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 
 		vObj.setServiceName(xService.getName());
 
-		List<XXServiceResourceElement> resElementList = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
-		Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
-
-		for (XXServiceResourceElement resElement : resElementList) {
-			List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
-
-			XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
-
-			RangerPolicyResource policyRes = new RangerPolicyResource();
-			policyRes.setIsExcludes(resElement.getIsExcludes());
-			policyRes.setIsRecursive(resElement.getIsRecursive());
-			policyRes.setValues(resValueMapList);
-
-			resourceElements.put(xResDef.getName(), policyRes);
-		}
+		Map<String, RangerPolicy.RangerPolicyResource> resourceElements = getServiceResourceElements(xObj);
 
 		vObj.setResourceElements(resourceElements);
 
 		return vObj;
 	}
+
+	Map<String, RangerPolicyResource> getServiceResourceElements(T xObj) {
+        List<XXServiceResourceElement> resElementList = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
+        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+
+        for (XXServiceResourceElement resElement : resElementList) {
+            List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
+
+            XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
+
+            RangerPolicyResource policyRes = new RangerPolicyResource();
+            policyRes.setIsExcludes(resElement.getIsExcludes());
+            policyRes.setIsRecursive(resElement.getIsRecursive());
+            policyRes.setValues(resValueMapList);
+
+            resourceElements.put(xResDef.getName(), policyRes);
+        }
+        return resourceElements;
+    }
 
 	public PList<V> searchServiceResources(SearchFilter searchFilter) {
 		PList<V> retList = new PList<V>();

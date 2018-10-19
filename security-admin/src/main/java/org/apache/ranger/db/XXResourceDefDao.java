@@ -97,5 +97,4 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
 			return new ArrayList<XXResourceDef>();
 		}
 	}
-
 }

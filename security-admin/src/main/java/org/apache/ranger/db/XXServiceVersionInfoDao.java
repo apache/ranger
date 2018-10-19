@@ -23,6 +23,7 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 
@@ -30,6 +31,7 @@ import org.apache.ranger.entity.XXServiceVersionInfo;
  */
 
 public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
+
 	/**
 	 * Default Constructor
 	 */
@@ -121,14 +123,14 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 		}
 
 		for(XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
-			Long currentTagVersion = serviceVersionInfo.getTagVersion();
+			final RangerDaoManager finaldaoManager 		  = daoManager;
+			final Long 		       finalServiceId  		  = serviceVersionInfo.getServiceId();
+			final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
 
-			if(currentTagVersion == null) {
-				currentTagVersion = Long.valueOf(0);
-			}
+			Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType);
 
-			serviceVersionInfo.setTagVersion(currentTagVersion + 1);
-			serviceVersionInfo.setTagUpdateTime(updateTime);
+			daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
 		}
+
 	}
 }
