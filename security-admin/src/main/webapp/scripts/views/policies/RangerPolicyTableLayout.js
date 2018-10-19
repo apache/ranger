@@ -56,7 +56,7 @@ define(function(require){
 				rangerPolicyType : this.collection.queryParams['policyType'],
 				isRenderAccessTab : XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef')) ? true 
                                         : XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef')) ? true : false,
-                isNotAuditorAdminOrKmsAuditor : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr))
+                isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled')
 			};
 		},
         
@@ -168,7 +168,7 @@ define(function(require){
 				gridOpts : {
 					row: Backgrid.Row.extend({}),
 					header : XABackgrid,
-					emptyText : 'No Policies found!'
+					emptyText : 'No Policies found!' + (this.rangerService.get('isEnabled') ? '' : ' The service is disabled!')
 				},
 			}));
 		},
