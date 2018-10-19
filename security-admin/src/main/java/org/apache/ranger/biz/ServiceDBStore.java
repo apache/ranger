@@ -2838,7 +2838,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				AppConstants.CLASS_TYPE_RANGER_POLICY, policyId);
 
 		if (xDataHist == null) {
-			String errMsg = "No policy history found for given time: " + eventTime;
+			String errMsg = "No policy history found for given policy ID: " + policyId + " and event time: " + eventTime;
 			LOG.error(errMsg);
 			throw restErrorUtil.createRESTException(errMsg, MessageEnums.DATA_NOT_FOUND);
 		}
