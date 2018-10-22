@@ -195,3 +195,39 @@ select removekeys();
 
 select 'delimiter end';
 
+commit;
+select 'delimiter start';
+CREATE OR REPLACE FUNCTION update_TagDefAccessTypes_for_atlas()
+RETURNS void AS $$
+DECLARE
+ new_atlas_def_name VARCHAR(1024);
+ v_record_exists integer := 0;
+BEGIN
+select count(*) into v_record_exists from x_db_version_h where version = 'J10013';
+IF v_record_exists = 1 THEN
+	select name into new_atlas_def_name from x_service_def where name like 'atlas.%';
+	select count(*) into v_record_exists from x_access_type_def where def_id in(select id from x_service_def where name='tag') and name in('atlas:read','atlas:create','atlas:update','atlas:delete','atlas:all');
+	IF v_record_exists > 0 THEN
+		update x_access_type_def set name=(new_atlas_def_name || ':read')where def_id=100 and name='atlas:read';
+		update x_access_type_def set name=(new_atlas_def_name || ':create') where def_id=100 and name='atlas:create';
+		update x_access_type_def set name=(new_atlas_def_name || ':update') where def_id=100 and name='atlas:update';
+		update x_access_type_def set name=(new_atlas_def_name || ':delete') where def_id=100 and name='atlas:delete';
+		update x_access_type_def set name=(new_atlas_def_name || ':all') where def_id=100 and name='atlas:all';
+	 END IF;
+	 select count(*) into v_record_exists from x_access_type_def_grants where atd_id in (select id from x_access_type_def where def_id in (select id from x_service_def where name='tag') and name like 'atlas%') and implied_grant in ('atlas:read','atlas:create','atlas:update','atlas:delete','atlas:all');
+	 IF v_record_exists > 0 THEN
+		update x_access_type_def_grants set implied_grant=(new_atlas_def_name || ':read') where implied_grant='atlas:read';
+		update x_access_type_def_grants set implied_grant=(new_atlas_def_name || ':create') where implied_grant='atlas:create';
+		update x_access_type_def_grants set implied_grant=(new_atlas_def_name || ':update') where implied_grant='atlas:update';
+		update x_access_type_def_grants set implied_grant=(new_atlas_def_name || ':delete') where implied_grant='atlas:delete';
+		update x_access_type_def_grants set implied_grant=(new_atlas_def_name || ':all') where implied_grant='atlas:all';
+	 END IF;
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+select 'delimiter end';
+
+select update_TagDefAccessTypes_for_atlas();
+commit;
+select 'delimiter end';
+
