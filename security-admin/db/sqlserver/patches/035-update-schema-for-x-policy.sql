@@ -425,29 +425,47 @@ GO
 
 EXEC dbo.removeConstraints 'x_policy_item'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_access'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_condition'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_datamask'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_group_perm'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_user_perm'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_item_rowfilter'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_resource'
 GO
-
 EXEC dbo.removeConstraints 'x_policy_resource_map'
 GO
 
+IF EXISTS (select version from x_db_version_h where version = 'J10013')
+BEGIN
+	IF EXISTS(select name from x_service_def where name like 'atlas.%')
+	BEGIN
+		DECLARE @new_atlas_def_name VARCHAR(100);
+		set @new_atlas_def_name=(select name into new_atlas_def_name from x_service_def where name like 'atlas.%')
+		IF EXISTS(select * from x_access_type_def where def_id in(select id from x_service_def where name='tag') and name in('atlas:read','atlas:create','atlas:update','atlas:delete','atlas:all'))
+		BEGIN
+			update x_access_type_def set name=concat(new_atlas_def_name , ':read') where def_id=100 and name='atlas:read';
+			update x_access_type_def set name=concat(new_atlas_def_name , ':create') where def_id=100 and name='atlas:create';
+			update x_access_type_def set name=concat(new_atlas_def_name , ':update') where def_id=100 and name='atlas:update';
+			update x_access_type_def set name=concat(new_atlas_def_name , ':delete') where def_id=100 and name='atlas:delete';
+			update x_access_type_def set name=concat(new_atlas_def_name , ':all') where def_id=100 and name='atlas:all';
+		END IF;
+		IF EXISTS(select * from x_access_type_def_grants where atd_id in (select id from x_access_type_def where def_id in (select id from x_service_def where name='tag') and name like 'atlas%') and implied_grant in ('atlas:read','atlas:create','atlas:update','atlas:delete','atlas:all'))
+		BEGIN
+			update x_access_type_def_grants set implied_grant=concat(new_atlas_def_name , ':read') where implied_grant='atlas:read';
+			update x_access_type_def_grants set implied_grant=concat(new_atlas_def_name , ':create') where implied_grant='atlas:create';
+			update x_access_type_def_grants set implied_grant=concat(new_atlas_def_name , ':update') where implied_grant='atlas:update';
+			update x_access_type_def_grants set implied_grant=concat(new_atlas_def_name , ':delete') where implied_grant='atlas:delete';
+			update x_access_type_def_grants set implied_grant=concat(new_atlas_def_name , ':all') where implied_grant='atlas:all';
+		END IF;
+	END IF;
+END IF;
+END
+GO
 EXIT
