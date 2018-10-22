@@ -551,14 +551,14 @@ def main():
 
     if isfile(nativeAuthProgramName):
         os.chown(nativeAuthProgramName, rootOwnerId, groupId)
-        os.chmod(nativeAuthProgramName, 04555)
+        os.chmod(nativeAuthProgramName, 0750)
     else:
         print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         nativeAuthProgramName, "root", groupName)
 
     if isfile(pamAuthProgramName):
         os.chown(pamAuthProgramName, rootOwnerId, groupId)
-        os.chmod(pamAuthProgramName, 04555)
+        os.chmod(pamAuthProgramName, 0750)
     else:
         print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         pamAuthProgramName, "root", groupName)
