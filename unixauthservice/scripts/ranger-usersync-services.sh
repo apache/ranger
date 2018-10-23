@@ -26,6 +26,7 @@ realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
+ranger_usersync_max_heap_size=1g
 
 for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
         if [ -f $custom_env_script ]; then
@@ -39,6 +40,8 @@ pidf=${USERSYNC_PID_DIR_PATH}/usersync.pid
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
         UNIX_USERSYNC_USER=ranger
 fi
+
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_usersync_max_heap_size} -Xms1g "
 
 if [ "${action}" == "START" ]; then
 

@@ -33,7 +33,7 @@ RANGER_KMS_EWS_DIR=${RANGER_KMS_DIR}/ews
 RANGER_KMS_EWS_CONF_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf"
 RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/lib"
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MaxPermSize=256m -Xmx1024m -Xms1024m "
+ranger_kms_max_heap_size=1g
 
 if [ -f ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
         . ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
@@ -44,6 +44,8 @@ for custom_env_script in `find ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf
                 . $custom_env_script
         fi
 done
+
+JAVA_OPTS=" ${JAVA_OPTS}  -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=256m -Xmx${ranger_kms_max_heap_size} -Xms1g "
 
 if [ "$JAVA_HOME" != "" ]; then
         export PATH=$JAVA_HOME/bin:$PATH

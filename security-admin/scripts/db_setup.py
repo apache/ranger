@@ -37,7 +37,6 @@ jisql_debug=True
 retryPatchAfterSeconds=120
 java_patch_regex="^Patch.*?J\d{5}.class$"
 is_unix = os_name == "LINUX" or os_name == "DARWIN"
-max_memory='1g'
 
 if is_unix:
 	RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
@@ -94,6 +93,8 @@ def populate_global_dict():
 				value = ''
 			value = value.strip()
 			globalDict[key] = value
+		if 'ranger_admin_max_heap_size' not in globalDict:
+			globalDict['ranger_admin_max_heap_size']='1g'
 
 def jisql_log(query, db_password):
 	if jisql_debug == True:
@@ -486,6 +487,7 @@ class MysqlConf(BaseDB):
 		self.grant_audit_db_user(db_user, audit_db_name, audit_db_user, audit_db_password, db_password,TABLE_NAME)
 
 	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = ""
@@ -556,7 +558,7 @@ class MysqlConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,max_memory,ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -1176,6 +1178,7 @@ class OracleConf(BaseDB):
 		self.grant_audit_db_user( audit_db_name ,db_user, audit_db_user, db_password,audit_db_password)
 
 	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = ""
@@ -1271,7 +1274,7 @@ class OracleConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,max_memory,ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Djava.security.egd=file:///dev/urandom -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -1311,6 +1314,7 @@ class OracleConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
@@ -1360,7 +1364,7 @@ class OracleConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,max_memory,ranger_log,path,className,userName,oldPassword,newPassword)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userName,oldPassword,newPassword)
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
@@ -1871,6 +1875,7 @@ class PostgresConf(BaseDB):
 		self.grant_audit_db_user(audit_db_name ,db_user, audit_db_user, db_password,audit_db_password)
 
 	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = ""
@@ -1941,7 +1946,7 @@ class PostgresConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,max_memory,ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -1981,6 +1986,7 @@ class PostgresConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
@@ -2030,7 +2036,7 @@ class PostgresConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,max_memory,ranger_log,path,className,userName,oldPassword,newPassword)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userName,oldPassword,newPassword)
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
@@ -2503,6 +2509,7 @@ class SqlServerConf(BaseDB):
 		self.grant_audit_db_user( audit_db_name ,db_user, audit_db_user, db_password,audit_db_password,TABLE_NAME)
 
 	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = ""
@@ -2573,7 +2580,7 @@ class SqlServerConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,max_memory,ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -2613,6 +2620,7 @@ class SqlServerConf(BaseDB):
 								sys.exit(1)
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
@@ -2662,7 +2670,7 @@ class SqlServerConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,max_memory,ranger_log,path,className,userName,oldPassword,newPassword)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userName,oldPassword,newPassword)
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
@@ -3127,6 +3135,7 @@ class SqlAnywhereConf(BaseDB):
 		self.grant_audit_db_user( audit_db_name ,db_user, audit_db_user, db_password,audit_db_password,TABLE_NAME)
 
 	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = ""
@@ -3197,7 +3206,7 @@ class SqlAnywhereConf(BaseDB):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,max_memory,ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -3258,6 +3267,7 @@ class SqlAnywhereConf(BaseDB):
 		ret = subprocessCallWithRetry(shlex.split(query))
 
 	def change_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userName,oldPassword,newPassword):
+		global globalDict
 		my_dict = {}
 		version = ""
 		className = "ChangePasswordUtil"
@@ -3307,7 +3317,7 @@ class SqlAnywhereConf(BaseDB):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,max_memory,ranger_log,path,className,userName,oldPassword,newPassword)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userName,oldPassword,newPassword)
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
