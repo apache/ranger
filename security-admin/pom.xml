@@ -83,11 +83,6 @@
             <version>${commons.collections.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons.compress.version}</version>
-        </dependency>
-        <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>${commons.configuration.version}</version>
@@ -368,6 +363,10 @@
             <version>${hadoop.version}</version>
             <exclusions>
 		<exclusion>
+		    <groupId>org.apache.commons</groupId>
+            	    <artifactId>commons-compress</artifactId>
+                </exclusion>
+		<exclusion>
                     <groupId>commons-httpclient</groupId>
                     <artifactId>commons-httpclient</artifactId>
                 </exclusion>
@@ -542,7 +541,8 @@
 								WEB-INF/lib/spring-*.SEC03.jar,
 								WEB-INF/lib/spring-*.RC3.jar,
 								WEB-INF/lib/spring-2.*.jar,
-								WEB-INF/lib/jetty-*.jar
+								WEB-INF/lib/jetty-*.jar,
+								WEB-INF/lib/commons-compress-*.jar
 							</packagingExcludes>
                             <warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
                         </configuration>
