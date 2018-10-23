@@ -3649,12 +3649,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (CollectionUtils.isNotEmpty(groups)) {
 				groupNames = groupNames + groups.toString();
 				StringTokenizer groupToken = new StringTokenizer(groupNames, "[]");
-				groupNames = groupToken.nextToken().toString();
+				while(groupToken.hasMoreTokens()) {
+					groupNames = groupToken.nextToken().toString();
+				}
 			}
 			if (CollectionUtils.isNotEmpty(users)) {
 				userNames = userNames + users.toString();
 				StringTokenizer userToken = new StringTokenizer(userNames, "[]");
-				userNames = userToken.nextToken().toString();
+				while(userToken.hasMoreTokens()) {
+					userNames = userToken.nextToken().toString();
+				}
 			}
 			cell = row.createCell(3);
 			cell.setCellValue(groupNames);
