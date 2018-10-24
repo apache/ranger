@@ -19,6 +19,7 @@ package org.apache.ranger.patch;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
@@ -53,6 +54,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -292,9 +294,9 @@ public class PatchForKafkaServiceDefUpdate_J10025 extends BaseLoader {
 				xxPolicy.setGuid(guidUtil.genGUID());
 				xxPolicy.setAddedByUserId(currentUserId);
 				xxPolicy.setUpdatedByUserId(currentUserId);
-				RangerPolicy rangerPolicy = new RangerPolicy();
-				RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(rangerPolicy);
-				xxPolicy.setResourceSignature(resourceSignature.getSignature());
+				RangerPolicy rangerPolicy = getRangerPolicy(newResource,xxPortalUser,xxService);
+				xxPolicy.setPolicyText(JsonUtils.objectToJson(rangerPolicy));
+				xxPolicy.setResourceSignature(rangerPolicy.getResourceSignature());
 				XXPolicy createdPolicy = daoMgr.getXXPolicy().create(xxPolicy);
 
 				XXPolicyItem xxPolicyItem = new XXPolicyItem();
@@ -307,7 +309,7 @@ public class PatchForKafkaServiceDefUpdate_J10025 extends BaseLoader {
 				xxPolicyItem.setPolicyId(createdPolicy.getId());
 				XXPolicyItem createdXXPolicyItem = daoMgr.getXXPolicyItem().create(xxPolicyItem);
 
-				List<String> accessTypes = Arrays.asList("create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish", "kafka_admin","idempotent_write");
+				List<String> accessTypes = getAccessTypes();
 				for (int i = 0; i < accessTypes.size(); i++) {
 					XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessTypes.get(i),
 							xxPolicy.getService());
@@ -377,5 +379,70 @@ public class PatchForKafkaServiceDefUpdate_J10025 extends BaseLoader {
 			}
 		}
 		logger.info("<== createDefaultPolicyForNewResources ");
+	}
+
+
+	private RangerPolicy getRangerPolicy(String newResource, XXPortalUser xxPortalUser, XXService xxService) {
+		RangerPolicy policy = new RangerPolicy();
+
+		List<RangerPolicy.RangerPolicyItemAccess> accesses = getPolicyItemAccesses();
+		List<String> users = new ArrayList<>(DEFAULT_POLICY_USERS);
+		List<String> groups = new ArrayList<>();
+		List<RangerPolicy.RangerPolicyItemCondition> conditions = new ArrayList<>();
+		List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<>();
+		RangerPolicy.RangerPolicyItem rangerPolicyItem = new RangerPolicy.RangerPolicyItem();
+		rangerPolicyItem.setAccesses(accesses);
+		rangerPolicyItem.setConditions(conditions);
+		rangerPolicyItem.setGroups(groups);
+		rangerPolicyItem.setUsers(users);
+		rangerPolicyItem.setDelegateAdmin(false);
+
+		policyItems.add(rangerPolicyItem);
+
+		Map<String, RangerPolicy.RangerPolicyResource> policyResource = new HashMap<>();
+		RangerPolicy.RangerPolicyResource rangerPolicyResource = new RangerPolicy.RangerPolicyResource();
+		rangerPolicyResource.setIsExcludes(false);
+		rangerPolicyResource.setIsRecursive(false);
+		rangerPolicyResource.setValue("*");
+		String policyResourceName = KAFKA_RESOURCE_CLUSTER;
+		if ("all - delegationtoken".equals(newResource)) {
+			policyResourceName = KAFKA_RESOURCE_DELEGATIONTOKEN;
+		}
+		policyResource.put(policyResourceName, rangerPolicyResource);
+		policy.setCreateTime(new Date());
+		policy.setDescription(newResource);
+		policy.setIsEnabled(true);
+		policy.setName(newResource);
+		policy.setCreatedBy(xxPortalUser.getLoginId());
+		policy.setUpdatedBy(xxPortalUser.getLoginId());
+		policy.setUpdateTime(new Date());
+		policy.setService(xxService.getName());
+		policy.setIsAuditEnabled(true);
+		policy.setPolicyItems(policyItems);
+		policy.setResources(policyResource);
+		policy.setPolicyType(0);
+		policy.setId(0L);
+		policy.setGuid("");
+		policy.setPolicyLabels(new ArrayList<>());
+		policy.setVersion(1L);
+		RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(policy);
+		policy.setResourceSignature(resourceSignature.getSignature());
+		return policy;
+	}
+
+	private List<String> getAccessTypes() {
+		List<String> accessTypes = Arrays.asList("create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish", "kafka_admin", "idempotent_write");
+		return accessTypes;
+	}
+
+	private ArrayList<RangerPolicy.RangerPolicyItemAccess> getPolicyItemAccesses() {
+		ArrayList<RangerPolicy.RangerPolicyItemAccess> rangerPolicyItemAccesses = new ArrayList<>();
+		for(String type:getAccessTypes()) {
+			RangerPolicy.RangerPolicyItemAccess policyItemAccess = new  RangerPolicy.RangerPolicyItemAccess();
+			policyItemAccess.setType(type);
+			policyItemAccess.setIsAllowed(true);
+			rangerPolicyItemAccesses.add(policyItemAccess);
+		}
+		return rangerPolicyItemAccesses;
 	}
 }
