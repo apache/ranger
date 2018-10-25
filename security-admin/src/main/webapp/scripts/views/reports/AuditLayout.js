@@ -420,9 +420,9 @@ define(function(require) {
 		},
 		addSearchForAdminTab : function(){
 			var that = this;
-			var searchOpt = ["Audit Type", "User", "Actions", "Session Id", "Start Date", "End Date"];
+			var searchOpt = ["Audit Type", "User", "Actions", "Session ID", "Start Date", "End Date"];
 			var serverAttrName  = [{text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes)},
-                                               {text : "User", label :"owner"}, {text :  "Session Id", label :"sessionId"},
+                                               {text : "User", label :"owner"}, {text :  "Session ID", label :"sessionId"},
                                                {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
                                                {text : "Actions", label :"action",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAGlobals.ActionType)},];
 			
@@ -490,8 +490,8 @@ define(function(require) {
 		},
 		addSearchForLoginSessionTab : function(){
                         var that = this , query = '' ;
-			var searchOpt = ["Session Id", "Login Id", "Result", "Login Type", "IP", "User Agent", "Start Date","End Date"];
-			var serverAttrName  = [{text : "Session Id", label :"id"}, {text : "Login Id", label :"loginId"},
+			var searchOpt = ["Session ID", "Login ID", "Result", "Login Type", "IP", "User Agent", "Start Date","End Date"];
+			var serverAttrName  = [{text : "Session ID", label :"id"}, {text : "Login ID", label :"loginId"},
 			                       {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus)},
 			                       {text : "Login Type", label :"authType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthType)},
 			                       {text : "IP", label :"requestIP"},{text :"User Agent", label :"requestUserAgent"},
