@@ -510,9 +510,9 @@ define(function(require){
             }).then(function(){
                 XAUtil.blockUI('unblock');
                 totalRecords = this.state.totalRecords;
-                var title =  "<h4>User's List: " + name + "</h4>";
+                var title =  "<h4>User's List: " + _.escape(name) + "</h4>";
                     _.each(that.grpUserList.models , function(model){
-                        msg +='<span class="link-tag userLists span-margin setEllipsis" title="'+ model.get('name') +'"><a href="#!/user/'+ model.id+'">'+ model.get('name') + '</a></span>';
+                        msg +='<span class="link-tag userLists span-margin setEllipsis" title="'+ _.escape(model.get('name')) +'"><a href="#!/user/'+ model.id+'">'+ _.escape(model.get('name')) + '</a></span>';
                         that.copyUserLists.push(model.get('name'));
                     });
                     var html = '<div class="row-fluid">\
@@ -568,7 +568,7 @@ define(function(require){
                     modal.$el.find('.modal-body').removeClass('pointer-event');
                     modal.$el.find('.loaderForModal').remove();
                     _.each(this.models, function(m){
-                        tag +='<span class="link-tag userLists span-margin setEllipsis" title="'+ m.get('name') +'" ><a href="#!/user/'+ m.get('id')+'" >'+ m.get('name') + '</a></span>';
+                        tag +='<span class="link-tag userLists span-margin setEllipsis" title="'+ _.escape(m.get('name')) +'" ><a href="#!/user/'+ m.get('id')+'" >'+ _.escape(m.get('name')) + '</a></span>';
                         that.copyUserLists.push(m.get('name'));
                     });
                     modal.$el.find(".usernames").empty();
