@@ -187,15 +187,64 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 				List<RangerPolicy> policies = policyRetriever.getServicePolicies(dbService);
 
 				if (CollectionUtils.isNotEmpty(policies)) {
+					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
 					for (RangerPolicy policy : policies) {
-						policyRefUpdater.cleanupRefTables(policy);
-						portPolicy(service.getType(), policy);
+						XXPolicy xPolicy = daoMgr.getXXPolicy().getById(policy.getId());
+						if (xPolicy != null && StringUtil.isEmpty(xPolicy.getPolicyText())) {
+
+							PolicyUpdaterThread updaterThread = new PolicyUpdaterThread(txTemplate, service, policy);
+							updaterThread.setDaemon(true);
+							updaterThread.start();
+							updaterThread.join();
+
+							String errorMsg = updaterThread.getErrorMsg();
+							if (StringUtils.isNotEmpty(errorMsg)) {
+								throw new Exception(errorMsg);
+							}
+						}
 					}
 				}
 			}
 		}
 
 		logger.info("<== updateRangerPolicyTableWithPolicyJson() ");
+	}
+
+	private class PolicyUpdaterThread extends Thread {
+		final TransactionTemplate txTemplate;
+		final RangerService       service;
+		final RangerPolicy        policy;
+		String                    errorMsg;
+
+		PolicyUpdaterThread(TransactionTemplate txTemplate, final RangerService service, final RangerPolicy policy) {
+			this.txTemplate = txTemplate;
+			this.service   = service;
+			this.policy    = policy;
+			this.errorMsg  = null;
+		}
+
+		public String getErrorMsg() {
+			return errorMsg;
+		}
+
+		@Override
+		public void run() {
+			errorMsg = txTemplate.execute(new TransactionCallback<String>() {
+				@Override
+				public String doInTransaction(TransactionStatus status) {
+					String ret = null;
+					try {
+						policyRefUpdater.cleanupRefTables(policy);
+						portPolicy(service.getType(), policy);
+					} catch (Throwable e) {
+						logger.error("PortPolicy failed for policy:[" + policy + "]", e);
+						ret = e.toString();
+					}
+					return ret;
+				}
+			});
+		}
 	}
 
 	private void portPolicy(String serviceType, RangerPolicy policy) throws Exception {
