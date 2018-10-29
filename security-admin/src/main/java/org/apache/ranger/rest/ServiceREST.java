@@ -370,6 +370,11 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDef(serviceDefId=" + id + ")");
 			}
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
+			if(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(xServiceDef.getName())) {
+				if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_TAG_BASED_POLICIES)) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the tag module.", true);
+				}
+			}
 			if (!bizUtil.hasAccess(xServiceDef, null)) {
 				throw restErrorUtil.createRESTException(
 						"User is not allowed to access service-def, id: " + xServiceDef.getId(),
@@ -416,6 +421,11 @@ public class ServiceREST {
 			}
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().findByName(name);
 			if (xServiceDef != null) {
+				if(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(xServiceDef.getName())) {
+					if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_TAG_BASED_POLICIES)) {
+						throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the tag module", true);
+					}
+				}
 				if (!bizUtil.hasAccess(xServiceDef, null)) {
 					throw restErrorUtil.createRESTException(
 							"User is not allowed to access service-def: " + xServiceDef.getName(),
