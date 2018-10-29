@@ -1269,7 +1269,7 @@ public class TestXUserMgr {
 	@Test
 	public void test26updateXModuleDefPermission() {
 		XXModuleDefDao xModuleDefDao = Mockito.mock(XXModuleDefDao.class);
-		XXModuleDef xModuleDef = Mockito.mock(XXModuleDef.class);
+		XXModuleDef xModuleDef = xxModuleDef();
 		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
 		XXGroupPermissionDao xGroupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
 		VXModuleDef vXModuleDef = vxModuleDef();
@@ -2998,7 +2998,7 @@ public class TestXUserMgr {
 	@Test
 	public void test96updateXModuleDefPermission() {
 		XXModuleDefDao xModuleDefDao = Mockito.mock(XXModuleDefDao.class);
-		XXModuleDef xModuleDef = Mockito.mock(XXModuleDef.class);
+		XXModuleDef xModuleDef = xxModuleDef();
 		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
 		XXGroupPermissionDao xGroupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
 		VXModuleDef vXModuleDef = vxModuleDef();
@@ -3073,7 +3073,7 @@ public class TestXUserMgr {
 	@Test
 	public void test97updateXModuleDefPermission() {
 		XXModuleDefDao xModuleDefDao = Mockito.mock(XXModuleDefDao.class);
-		XXModuleDef xModuleDef = Mockito.mock(XXModuleDef.class);
+		XXModuleDef xModuleDef = xxModuleDef();
 		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
 		XXGroupPermissionDao xGroupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
 		VXModuleDef vXModuleDef = vxModuleDef();

@@ -1417,4 +1417,13 @@ public class RangerBizUtil {
                 }
         }
 
+	public boolean hasModuleAccess(String moduleName) {
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		if(!currentUserSession.isUserAdmin() && !currentUserSession.isAuditUserAdmin()) {
+			if(!currentUserSession.getRangerUserPermission().getUserPermissions().contains(moduleName)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

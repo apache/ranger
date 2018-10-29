@@ -1060,6 +1060,9 @@ public class XUserMgr extends XUserMgrBase {
 		List<VXUserPermission> userPermListOld = new ArrayList<VXUserPermission>();
 
 		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(vXModuleDef.getId());
+		if(!StringUtil.equals(xModuleDef.getModule(), vXModuleDef.getModule())) {
+			throw restErrorUtil.createRESTException("Module name change is not allowed!", MessageEnums.DATA_NOT_UPDATABLE);
+		}
 		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef);
 
 		List<XXGroupPermission> xgroupPermissionList = daoManager.getXXGroupPermission().findByModuleId(vXModuleDef.getId(), true);
