@@ -123,13 +123,13 @@ public class TestRangerPolicyValidator {
 	private final Object[][] policyResourceMap_good = new Object[][] {
 			// resource-name, values, excludes, recursive
 			{ "db", new String[] { "db1", "db2" }, null, null },
-			{ "TBL", new String[] { "tbl1", "tbl2" }, true, false } // case should not matter
+			{ "tbl", new String[] { "tbl1", "tbl2" }, true, false } // case matters - use only lowercase characters
 	};
 	
 	private final Object[][] policyResourceMap_goodMultipleHierarchies = new Object[][] {
 			// resource-name, values, excludes, recursive
 			{ "db", new String[] { "db1", "db2" }, null, null },
-			{ "UDF", new String[] { "udf1", "udf2" }, true, false } // case should not matter
+			{ "udf", new String[] { "udf1", "udf2" }, true, false } // case matters - use only lowercase characters
 	};
 	
 	private final Object[][] policyResourceMap_bad = new Object[][] {
