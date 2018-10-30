@@ -303,7 +303,7 @@ public abstract class RangerValidator {
 					if (StringUtils.isBlank(accessType)) {
 						LOG.warn("Access type def name was null/empty/blank!");
 					} else {
-						accessTypes.add(accessType.toLowerCase());
+						accessTypes.add(accessType);
 					}
 				}
 			}
@@ -409,22 +409,22 @@ public abstract class RangerValidator {
 		}
 		return resourceNames;
 	}
-	
+
 	/**
-	 * Returns the resource-types defined on the policy converted to lowe-case
+	 * Converts, in place, the resources defined in the policy to have lower-case resource-def-names
 	 * @param policy
 	 * @return
 	 */
-	Set<String> getPolicyResources(RangerPolicy policy) {
-		if (policy == null || policy.getResources() == null || policy.getResources().isEmpty()) {
-			return new HashSet<>();
-		} else {
-			Set<String> result = new HashSet<>();
-			for (String name : policy.getResources().keySet()) {
-				result.add(name.toLowerCase());
+
+	void convertPolicyResourceNamesToLower(RangerPolicy policy) {
+		Map<String, RangerPolicyResource> lowerCasePolicyResources = new HashMap<>();
+		if (policy.getResources() != null) {
+			for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
+				String lowerCasekey = entry.getKey().toLowerCase();
+				lowerCasePolicyResources.put(lowerCasekey, entry.getValue());
 			}
-			return result;
 		}
+		policy.setResources(lowerCasePolicyResources);
 	}
 
 	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {
@@ -582,6 +582,10 @@ public abstract class RangerValidator {
 		return valid;
 	}
 
+	/*
+	 * Important: Resource-names are required to be lowercase. This is used in validating policy create/update operations.
+	 * Ref: RANGER-2272
+	 */
 	boolean isValidResourceName(final String value, final String valueContext, final List<ValidationFailureDetails> failures) {
 		boolean ret = true;
 
