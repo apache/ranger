@@ -65,6 +65,9 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -351,9 +354,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 					+ serviceDef.getName() + " already exists",
 					MessageEnums.ERROR_DUPLICATE_OBJECT);
 		}
-		
+
 		List<RangerServiceConfigDef> configs = serviceDef.getConfigs();
 		List<RangerResourceDef> resources = serviceDef.getResources();
+
+		if (CollectionUtils.isNotEmpty(resources)) {
+			RangerServiceDefValidator validator = new RangerServiceDefValidator(this);
+			List<ValidationFailureDetails> failures = new ArrayList<>();
+			boolean isValidResources = validator.isValidResources(serviceDef, failures, RangerValidator.Action.CREATE);
+			if (!isValidResources) {
+				throw restErrorUtil.createRESTException("service-def with name: "
+								+ serviceDef.getName() + " has invalid resources:[" + failures.toString() + "]",
+						MessageEnums.INVALID_INPUT_DATA);
+			}
+		}
+
 		List<RangerAccessTypeDef> accessTypes = serviceDef.getAccessTypes();
 		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
 		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers();

@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -45,8 +44,6 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Maps;
 
 public class TestRangerValidator {
 
@@ -264,8 +261,8 @@ public class TestRangerValidator {
 		Assert.assertEquals(4, accessTypes.size());
 		Assert.assertTrue(accessTypes.contains("a"));
 		Assert.assertTrue(accessTypes.contains("b "));
-		Assert.assertTrue(accessTypes.contains(" c"));
-		Assert.assertTrue(accessTypes.contains("	d	"));
+		Assert.assertTrue(accessTypes.contains(" C"));
+		Assert.assertTrue(accessTypes.contains("	D	"));
 	}
 	
 	@Test
@@ -350,36 +347,6 @@ public class TestRangerValidator {
 		Assert.assertEquals("regex1", regExMap.get("b"));
 		Assert.assertEquals("regex2", regExMap.get("d"));
 		Assert.assertEquals("regex3", regExMap.get("f"));
-	}
-
-	@Test
-	public void test_getPolicyResources() {
-		
-		Set<String> result;
-		RangerPolicy policy = null;
-		// null policy
-		result = _validator.getPolicyResources(null);
-		Assert.assertTrue(result != null);
-		Assert.assertTrue(result.isEmpty());
-		// null resource map
-		policy = mock(RangerPolicy.class);
-		when(policy.getResources()).thenReturn(null);
-		result = _validator.getPolicyResources(null);
-		Assert.assertTrue(result != null);
-		Assert.assertTrue(result.isEmpty());
-		// empty resource map
-		Map<String, RangerPolicyResource> input = Maps.newHashMap();
-		when(policy.getResources()).thenReturn(input);
-		result = _validator.getPolicyResources(policy);
-		Assert.assertTrue(result != null);
-		Assert.assertTrue(result.isEmpty());
-		// known resource map
-		input.put("r1", mock(RangerPolicyResource.class));
-		input.put("R2", mock(RangerPolicyResource.class));
-		result = _validator.getPolicyResources(policy);
-		Assert.assertEquals(2, result.size());
-		Assert.assertTrue("r1", result.contains("r1"));
-		Assert.assertTrue("R2", result.contains("r2")); // result should lowercase the resource-names
 	}
 
 	@Test
