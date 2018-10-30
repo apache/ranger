@@ -495,7 +495,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 		return valid;
 	}
 
-	boolean isValidResources(RangerServiceDef serviceDef, List<ValidationFailureDetails> failures, final Action action) {
+	public boolean isValidResources(RangerServiceDef serviceDef, List<ValidationFailureDetails> failures, final Action action) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceDefValidator.isValidResources(%s, %s)", serviceDef, failures));
 		}
