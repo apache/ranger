@@ -33,6 +33,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
@@ -303,7 +304,7 @@ public abstract class RangerValidator {
 					if (StringUtils.isBlank(accessType)) {
 						LOG.warn("Access type def name was null/empty/blank!");
 					} else {
-						accessTypes.add(accessType.toLowerCase());
+						accessTypes.add(accessType);
 					}
 				}
 			}
@@ -409,22 +410,22 @@ public abstract class RangerValidator {
 		}
 		return resourceNames;
 	}
-	
+
 	/**
-	 * Returns the resource-types defined on the policy converted to lowe-case
+	 * Converts, in place, the resources defined in the policy to have lower-case resource-def-names
 	 * @param policy
 	 * @return
 	 */
-	Set<String> getPolicyResources(RangerPolicy policy) {
-		if (policy == null || policy.getResources() == null || policy.getResources().isEmpty()) {
-			return new HashSet<String>();
-		} else {
-			Set<String> result = new HashSet<String>();
-			for (String name : policy.getResources().keySet()) {
-				result.add(name.toLowerCase());
+
+	void convertPolicyResourceNamesToLower(RangerPolicy policy) {
+		Map<String, RangerPolicyResource> lowerCasePolicyResources = new HashMap<>();
+		if (policy.getResources() != null) {
+			for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
+				String lowerCasekey = entry.getKey().toLowerCase();
+				lowerCasePolicyResources.put(lowerCasekey, entry.getValue());
 			}
-			return result;
 		}
+		policy.setResources(lowerCasePolicyResources);
 	}
 
 	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {
@@ -580,6 +581,37 @@ public abstract class RangerValidator {
 			LOG.debug(String.format("==> RangerServiceDefValidator.isValueUnique(%s, %s, %s, %s, %s): %s", value, alreadySeen, valueName, collectionName, failures, valid));
 		}
 		return valid;
+	}
+
+	/*
+	 * Important: Resource-names are required to be lowercase. This is used in validating policy create/update operations.
+	 * Ref: RANGER-2272
+	 */
+	boolean isValidResourceName(final String value, final String valueContext, final List<ValidationFailureDetails> failures) {
+		boolean ret = true;
+
+		if (value != null && !StringUtils.isEmpty(value)) {
+			int sz = value.length();
+
+			for(int i = 0; i < sz; ++i) {
+				char c = value.charAt(i);
+				if (!(Character.isLowerCase(c) || c == '-' || c == '_')) { // Allow only lowercase, hyphen or underscore characters
+					ret = false;
+					break;
+				}
+			}
+		} else {
+			ret = false;
+		}
+		if (!ret) {
+			ValidationErrorCode errorCode = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME;
+			failures.add(new ValidationFailureDetailsBuilder()
+					.errorCode(errorCode.getErrorCode())
+					.field(value)
+					.becauseOf(errorCode.getMessage(valueContext, value))
+					.build());
+		}
+		return ret;
 	}
 
 	boolean isUnique(final String value, final Set<String> alreadySeen, final String valueName, final String collectionName, final List<ValidationFailureDetails> failures) {
