@@ -521,8 +521,11 @@
                                                 <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
                                            </div>'
 				}
-				tr += '<tr><td><div>\
-						<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+				tr += '<tr><td><div>';
+				if (!serv.get('isEnabled')) {
+					tr += '<i class="icon-ban-circle text-color-red pull-left icon-large"></i>';
+				}
+				tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
 					  </div></td></tr>';
 			});
 		}
