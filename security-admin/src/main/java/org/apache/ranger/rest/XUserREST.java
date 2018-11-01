@@ -19,6 +19,7 @@
 
  package org.apache.ranger.rest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -383,6 +384,67 @@ public class XUserREST {
 		}
 
 		return xUserMgr.searchXUsers(searchCriteria);
+	}
+
+	@GET
+	@Path("/lookup/users")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USERS_LOOKUP + "\")")
+	public VXStringList getUsersLookup(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xUserService.sortFields);
+		VXStringList ret = new VXStringList();
+		List<VXString> vXList = new ArrayList<>();
+		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
+		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
+		try {
+			VXUserList vXUserList = xUserMgr.searchXUsers(searchCriteria);
+			VXString VXString = null;
+			for (VXUser vxUser : vXUserList.getList()) {
+				VXString = new VXString();
+				VXString.setValue(vxUser.getName());
+				vXList.add(VXString);
+			}
+			ret.setVXStrings(vXList);
+			ret.setPageSize(vXUserList.getPageSize());
+			ret.setTotalCount(vXUserList.getTotalCount());
+			ret.setSortType(vXUserList.getSortType());
+			ret.setSortBy(vXUserList.getSortBy());
+		}
+		catch(Throwable excp){
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/lookup/groups")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_GROUPS_LOOKUP + "\")")
+	public VXStringList getGroupsLookup(@Context HttpServletRequest request) {
+		VXStringList ret = new VXStringList();
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xGroupService.sortFields);
+		List<VXString> vXList = new ArrayList<>();
+		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
+		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
+		try {
+			VXGroupList vXGroupList = xUserMgr.lookupXGroups(searchCriteria);
+			for (VXGroup vxGroup : vXGroupList.getList()) {
+				VXString VXString = new VXString();
+				VXString.setValue(vxGroup.getName());
+				vXList.add(VXString);
+			}
+			ret.setVXStrings(vXList);
+			ret.setPageSize(vXGroupList.getPageSize());
+			ret.setTotalCount(vXGroupList.getTotalCount());
+			ret.setSortType(vXGroupList.getSortType());
+			ret.setSortBy(vXGroupList.getSortBy());
+		}
+		catch(Throwable excp){
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+		return ret;
 	}
 
 	@GET
