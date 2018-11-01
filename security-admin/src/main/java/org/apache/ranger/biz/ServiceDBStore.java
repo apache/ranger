@@ -4365,7 +4365,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		String svcAdminUsers = cfgSvcAdminUsers != null ? cfgSvcAdminUsers.getConfigvalue() : null;
 		if (svcAdminUsers != null) {
 			for (String svcAdminUser : svcAdminUsers.split(",")) {
-				if (userName.equals(svcAdminUser)) {
+				if (userName.equals(svcAdminUser.trim())) {
 					ret=true;
 					break;
 				}

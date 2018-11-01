@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -83,6 +85,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.entity.XXPortalUserRole;
+import org.springframework.util.StringUtils;
 
 @Component
 public class XUserMgr extends XUserMgrBase {
@@ -1848,6 +1851,98 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 		return vXGroupList;
+	}
+
+	public VXGroupList lookupXGroups(SearchCriteria searchCriteria) {
+		VXGroupList ret = null;
+
+		try {
+			HashMap<String, Object> searchParams  = searchCriteria.getParamList();
+			String                  nameToLookFor = searchParams != null ? (String) searchParams.get("name") : null;
+			VXGroup                 exactMatch    = null;
+
+			if (StringUtils.isEmpty(searchCriteria.getSortBy())) {
+				searchCriteria.setSortBy(nameToLookFor != null ? "name" : "id");
+			}
+
+			if(nameToLookFor != null) {
+				exactMatch = getGroupByGroupName(nameToLookFor);
+
+				for (Map.Entry<String, Object> entry : searchParams.entrySet()) {
+					if(exactMatch == null) {
+						break;
+					}
+
+					String paramName  = entry.getKey();
+					Object paramValue = entry.getValue();
+
+					switch (paramName.toLowerCase()) {
+						case "isvisible":
+							if (!Objects.equals(exactMatch.getIsVisible(), paramValue)) {
+								exactMatch = null;
+							}
+							break;
+
+						case "groupsource":
+							if (!Objects.equals(exactMatch.getGroupSource(), paramValue)) {
+								exactMatch = null;
+							}
+							break;
+
+						default:
+							// ignore
+							break;
+					}
+				}
+			}
+
+			VXGroupList searchResult = xGroupService.searchXGroups(searchCriteria);
+
+			if (exactMatch != null && exactMatch.getId() != null) {
+				List<VXGroup> groups = searchResult.getList();
+
+				if (!groups.isEmpty()) { // remove exactMatch from groups if it is present
+					boolean removed = false;
+
+					for (Iterator<VXGroup> iter = groups.iterator(); iter.hasNext(); ) {
+						VXGroup group = iter.next();
+
+						if (group != null && exactMatch.getId().equals(group.getId())) {
+							iter.remove();
+							removed = true;
+
+							break;
+						}
+					}
+
+					if (!removed) { // remove the last entry, if exactMatch was not removed above - to accomodate for add() below
+						groups.remove(groups.size() - 1);
+					}
+				}
+
+				groups.add(0, exactMatch);
+
+				ret = new VXGroupList(groups);
+
+				ret.setStartIndex(searchCriteria.getStartIndex());
+				ret.setTotalCount(searchResult.getTotalCount());
+				ret.setPageSize(searchCriteria.getMaxRows());
+				ret.setSortBy(searchCriteria.getSortBy());
+				ret.setSortType(searchCriteria.getSortType());
+			} else {
+				ret = searchResult;
+			}
+		} catch (Exception e) {
+			logger.error("Error getting the exact match of group =>"+e);
+		}
+
+		if (ret != null && ret.getListSize() > 0 && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)) {
+			for(VXGroup vXGroup : ret.getList()) {
+				getMaskedVXGroup(vXGroup);
+			}
+		}
+
+		return ret;
 	}
 
 	public Collection<String> getMaskedCollection(Collection<String> listunMasked){

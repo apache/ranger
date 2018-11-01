@@ -662,7 +662,7 @@ define(function(require) {'use strict';
 					callback(data);
 				},
 				ajax: { 
-					url: "service/xusers/groups",
+					url: "service/xusers/lookup/groups",
 					dataType: 'json',
 					data: function (term, page) {
 						return {name : term};
@@ -671,8 +671,8 @@ define(function(require) {'use strict';
 						var results = [],selectedVals = [];
 						if(!_.isEmpty(that.ui.userGroup.val()))
 							selectedVals = that.ui.userGroup.val().split(',');
-						if(data.resultSize != "0"){
-							results = data.vXGroups.map(function(m, i){	return {id : m.name, text: _.escape(m.name) };	});
+						if(data.totalCount != "0"){
+							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							return {results : results};
@@ -716,7 +716,7 @@ define(function(require) {'use strict';
 					callback(data);
 				},
 				ajax: { 
-					url: "service/xusers/users",
+					url: "service/xusers/lookup/users",
 					dataType: 'json',
 					data: function (term, page) {
 						return {name : term};
@@ -725,8 +725,8 @@ define(function(require) {'use strict';
 						var results = [],selectedVals=[];
 						if(!_.isEmpty(that.ui.userName.select2('val')))
 							selectedVals = that.ui.userName.select2('val');
-						if(data.resultSize != "0"){
-							results = data.vXUsers.map(function(m, i){	return {id : m.name, text: _.escape(m.name) };	});
+						if(data.totalCount != "0"){
+							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
 								results = XAUtil.filterResultByIds(results, selectedVals);
 							return {results : results};
