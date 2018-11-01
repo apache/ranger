@@ -192,10 +192,10 @@ define(function(require) {
 				}
 			});
 		},
-                createDropDown :function($select, typeGroup){
-                        var that = this, tags = [],
+		createDropDown :function($select, typeGroup){
+			var that = this, tags = [],
 			placeholder = (typeGroup) ? 'Select Group' : 'Select User',
-					searchUrl   = (typeGroup) ? "service/xusers/groups" : "service/xusers/users";
+					searchUrl   = (typeGroup) ? "service/xusers/lookup/groups" : "service/xusers/lookup/users";
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
 				var temp = this.model.attributes[ (typeGroup) ? 'groupName': 'userName'];
 				_.each(temp , function(name){
@@ -221,11 +221,11 @@ define(function(require) {
 						var results = [] , selectedVals = [];
 						//Get selected values of groups/users dropdown
 						selectedVals = that.getSelectedValues($select, typeGroup);
-						if(data.resultSize != "0"){
+						if(data.totalCount != "0"){
 							if(typeGroup){
-								results = data.vXGroups.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
+								results = data.vXStrings.map(function(m){	return {id : _.escape(m.value), text: _.escape(m.value) };	});
 							} else {
-								results = data.vXUsers.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
+								results = data.vXStrings.map(function(m){	return {id : _.escape(m.value), text: _.escape(m.value) };	});
 							}
 							if(!_.isEmpty(selectedVals)){
 								results = XAUtil.filterResultByText(results, selectedVals);
