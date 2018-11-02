@@ -3666,6 +3666,15 @@ def main(argv):
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
+	global retryPatchAfterSeconds
+	retryPatchAfterSeconds=120
+	if 'PATCH_RETRY_INTERVAL' in globalDict:
+		interval = globalDict['PATCH_RETRY_INTERVAL']
+		try:
+			retryPatchAfterSeconds=int(interval)
+		except ValueError:
+			retryPatchAfterSeconds=120
+
 	if (not 'JAVA_HOME' in os.environ) or (os.environ['JAVA_HOME'] == ""):
 		log("[E] ---------- JAVA_HOME environment property not defined, aborting installation. ----------", "error")
 		sys.exit(1)
