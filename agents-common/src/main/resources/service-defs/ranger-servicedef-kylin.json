@@ -88,6 +88,17 @@
 			"validationMessage": "",
 			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1.For one url, eg.<br>'http://&lt;ipaddr&gt;:7070'<br>2.For multiple urls (use , or ; delimiter), eg.<br>'http://&lt;ipaddr1&gt;:7070,http://&lt;ipaddr2&gt;:7070'\"}",
 			"label": "Kylin URL"
+		},
+
+		{
+			"itemId": 4,
+			"name": "commonNameForCertificate",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Common Name for Certificate"
 		}
 
 	],
