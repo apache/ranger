@@ -703,6 +703,109 @@ class MysqlConf(BaseDB):
                                                         log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
+	def change_all_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userPwdArray):
+		userPwdString =""
+		if len(userPwdArray)>5:
+			for j in range(len(userPwdArray)):
+				if str(userPwdArray[j]) == "-pair":
+					userPwdString= userPwdString + " \"" + userPwdArray[j+1] + "\" \"" + userPwdArray[j+2] + "\" \"" + userPwdArray[j+3] +"\""
+
+		userName = "all admins"
+		className = "ChangePasswordUtil"
+		version = "DEFAULT_ALL_ADMIN_UPDATE"
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		if os.path.exists(filePath):
+			if version != "":
+				get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+				if is_unix:
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				jisql_log(query, db_password)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+				else:
+					if is_unix:
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c ;" %(version)
+					jisql_log(query, db_password)
+					output = check_output(query)
+					if output.strip(version + " |"):
+						countTries = 0
+						while(output.strip(version + " |")):
+							if countTries < 3:
+								log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+								time.sleep(retryPatchAfterSeconds)
+								jisql_log(query, db_password)
+								output = check_output(query)
+								countTries += 1
+							else:
+								log("[E] Tried updating the password "+ str(countTries) + " times","error")
+								log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+								sys.exit(1)
+					else:
+						if is_unix:
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\"" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', now(), '%s', now(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+						else:
+							log("[E] Ranger "+ userName +" default password change request failed", "error")
+							sys.exit(1)
+						if is_unix:
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,ranger_log,path,className, userPwdString)
+						if is_unix:
+							status = subprocess.call(shlex.split(get_java_cmd))
+						elif os_name == "WINDOWS":
+							status = subprocess.call(get_java_cmd)
+						if status == 0 or status==2:
+							if is_unix:
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+							if ret == 0 and status == 0:
+								log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
+							elif ret == 0 and status == 2:
+								log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
+							else:
+								if is_unix:
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+									log("[E] Ranger "+ userName +" default password change request failed", "error")
+									sys.exit(1)
+						else:
+							if is_unix:
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+								log("[E] Ranger "+ userName +" default password change request failed", "error")
+								sys.exit(1)
+
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
 		name = basename(file_name)
 		if os.path.isfile(file_name):
@@ -1445,6 +1548,109 @@ class OracleConf(BaseDB):
                                                         log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
+	def change_all_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userPwdArray):
+		userPwdString =""
+		if len(userPwdArray)>5:
+			for j in range(len(userPwdArray)):
+				if str(userPwdArray[j]) == "-pair":
+					userPwdString= userPwdString + " \"" + userPwdArray[j+1] + "\" \"" + userPwdArray[j+2] + "\" \"" + userPwdArray[j+3] +"\""
+
+		userName = "all admins"
+		className = "ChangePasswordUtil"
+		version = "DEFAULT_ALL_ADMIN_UPDATE"
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		if os.path.exists(filePath):
+			if version != "":
+				get_cmd = self.get_jisql_cmd(db_user, db_password)
+				if is_unix:
+					query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				jisql_log(query, db_password)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+				else:
+					if is_unix:
+						query = get_cmd + " -c \; -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c ;" %(version)
+					jisql_log(query, db_password)
+					output = check_output(query)
+					if output.strip(version + " |"):
+						countTries = 0
+						while(output.strip(version + " |")):
+							if countTries < 3:
+								log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+								time.sleep(retryPatchAfterSeconds)
+								jisql_log(query, db_password)
+								output = check_output(query)
+								countTries += 1
+							else:
+								log("[E] Tried updating the password "+ str(countTries) + " times","error")
+								log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+								sys.exit(1)
+					else:
+						if is_unix:
+							query = get_cmd + " -c \; -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\"" %(version, ranger_version, client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"insert into x_db_version_h (id,version, inst_at, inst_by, updated_at, updated_by,active) values ( X_DB_VERSION_H_SEQ.nextval,'%s', sysdate, '%s', sysdate, '%s','N');\" -c ;" %(version, ranger_version, client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+						else:
+							log("[E] Ranger "+ userName +" default password change request failed", "error")
+							sys.exit(1)
+						if is_unix:
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userPwdString)
+						if is_unix:
+							status = subprocess.call(shlex.split(get_java_cmd))
+						elif os_name == "WINDOWS":
+							status = subprocess.call(get_java_cmd)
+						if status == 0 or status==2:
+							if is_unix:
+								query = get_cmd + " -c \; -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+							if ret == 0 and status == 0:
+								log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
+							elif ret == 0 and status == 2:
+								log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
+							else:
+								if is_unix:
+									query = get_cmd + " -c \; -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+									log("[E] Ranger	"+ userName +" default password change request failed", "error")
+									sys.exit(1)
+						else:
+							if is_unix:
+								query = get_cmd + " -c \; -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+								log("[E] Ranger "+ userName +" default password change request failed", "error")
+								sys.exit(1)
+
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
 		name = basename(file_name)
 		if os.path.isfile(file_name):
@@ -2162,6 +2368,109 @@ class PostgresConf(BaseDB):
                                                         log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
+	def change_all_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userPwdArray):
+		userPwdString =""
+		if len(userPwdArray)>5:
+			for j in range(len(userPwdArray)):
+				if str(userPwdArray[j]) == "-pair":
+					userPwdString= userPwdString + " \"" + userPwdArray[j+1] + "\" \"" + userPwdArray[j+2] + "\" \"" + userPwdArray[j+3] +"\""
+
+		userName = "all admins"
+		className = "ChangePasswordUtil"
+		version = "DEFAULT_ALL_ADMIN_UPDATE"
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		if os.path.exists(filePath):
+			if version != "":
+				get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+				if is_unix:
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\"" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				jisql_log(query, db_password)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+				else:
+					if is_unix:
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\"" %(version)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c ;" %(version)
+					jisql_log(query, db_password)
+					output = check_output(query)
+					if output.strip(version + " |"):
+						countTries = 0
+						while(output.strip(version + " |")):
+							if countTries < 3:
+								log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+								time.sleep(retryPatchAfterSeconds)
+								jisql_log(query, db_password)
+								output = check_output(query)
+								countTries += 1
+							else:
+								log("[E] Tried updating the password "+ str(countTries) + " times","error")
+								log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+								sys.exit(1)
+					else:
+						if is_unix:
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\"" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', current_timestamp, '%s', current_timestamp, '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+						else:
+							log("[E] Ranger "+ userName +" default password change request failed", "error")
+							sys.exit(1)
+						if is_unix:
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userPwdString)
+						if is_unix:
+							status = subprocess.call(shlex.split(get_java_cmd))
+						elif os_name == "WINDOWS":
+							status = subprocess.call(get_java_cmd)
+						if status == 0 or status==2:
+							if is_unix:
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+							if ret == 0 and status == 0:
+								log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
+							elif ret == 0 and status == 2:
+								log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
+							else:
+								if is_unix:
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+									log("[E] Ranger "+ userName +" default password change request failed", "error")
+									sys.exit(1)
+						else:
+							if is_unix:
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+								log("[E] Ranger "+ userName +" default password change request failed", "error")
+								sys.exit(1)
+
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
 		name = basename(file_name)
 		if os.path.isfile(file_name):
@@ -2820,6 +3129,109 @@ class SqlServerConf(BaseDB):
 								ret = subprocess.call(query)
                                                         log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
+
+	def change_all_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userPwdArray):
+		userPwdString =""
+		if len(userPwdArray)>5:
+			for j in range(len(userPwdArray)):
+				if str(userPwdArray[j]) == "-pair":
+					userPwdString= userPwdString + " \"" + userPwdArray[j+1] + "\" \"" + userPwdArray[j+2] + "\" \"" + userPwdArray[j+3] +"\""
+
+		userName = "all admins"
+		className = "ChangePasswordUtil"
+		version = "DEFAULT_ALL_ADMIN_UPDATE"
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		if os.path.exists(filePath):
+			if version != "":
+				get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+				if is_unix:
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c \;" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				jisql_log(query, db_password)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+				else:
+					if is_unix:
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c \;" %(version)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c ;" %(version)
+					jisql_log(query, db_password)
+					output = check_output(query)
+					if output.strip(version + " |"):
+						countTries = 0
+						while(output.strip(version + " |")):
+							if countTries < 3:
+								log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+								time.sleep(retryPatchAfterSeconds)
+								jisql_log(query, db_password)
+								output = check_output(query)
+								countTries += 1
+							else:
+								log("[E] Tried updating the password "+ str(countTries) + " times","error")
+								log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+								sys.exit(1)
+					else:
+						if is_unix:
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+						else:
+							log("[E] Ranger "+ userName +" default password change request failed", "error")
+							sys.exit(1)
+						if is_unix:
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userPwdString)
+						if is_unix:
+							status = subprocess.call(shlex.split(get_java_cmd))
+						elif os_name == "WINDOWS":
+							status = subprocess.call(get_java_cmd)
+						if status == 0 or status==2:
+							if is_unix:
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+							if ret == 0 and status == 0:
+								log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
+							elif ret == 0 and status == 2:
+								log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
+							else:
+								if is_unix:
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+									log("[E] Ranger "+ userName +" default password change request failed", "error")
+									sys.exit(1)
+						else:
+							if is_unix:
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+								log("[E] Ranger "+ userName +" default password change request failed", "error")
+								sys.exit(1)
 
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
 		name = basename(file_name)
@@ -3493,6 +3905,110 @@ class SqlAnywhereConf(BaseDB):
                                                         log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
+	def change_all_admin_default_password(self, xa_db_host, db_user, db_password, db_name,userPwdArray):
+		userPwdString =""
+		if len(userPwdArray)>5:
+			for j in range(len(userPwdArray)):
+				if str(userPwdArray[j]) == "-pair":
+					userPwdString= userPwdString + " \"" + userPwdArray[j+1] + "\" \"" + userPwdArray[j+2] + "\" \"" + userPwdArray[j+3] +"\""
+
+		userName = "all admins"
+		className = "ChangePasswordUtil"
+		version = "DEFAULT_ALL_ADMIN_UPDATE"
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		if os.path.exists(filePath):
+			if version != "":
+				get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+				if is_unix:
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c \;" %(version)
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'Y';\" -c ;" %(version)
+				jisql_log(query, db_password)
+				output = check_output(query)
+				if output.strip(version + " |"):
+					log("[I] Ranger "+ userName +" default password has already been changed!!","info")
+				else:
+					if is_unix:
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c \;" %(version)
+					elif os_name == "WINDOWS":
+						query = get_cmd + " -query \"select version from x_db_version_h where version = '%s' and active = 'N';\" -c ;" %(version)
+					jisql_log(query, db_password)
+					output = check_output(query)
+					if output.strip(version + " |"):
+						countTries = 0
+						while(output.strip(version + " |")):
+							if countTries < 3:
+								log("[I] Ranger Password change utility is being executed by some other process" ,"info")
+								time.sleep(retryPatchAfterSeconds)
+								jisql_log(query, db_password)
+								output = check_output(query)
+								countTries += 1
+							else:
+								log("[E] Tried updating the password "+ str(countTries) + " times","error")
+								log("[E] If Ranger "+  userName +" user password is not being changed by some other process then manually delete the entry from ranger database table x_db_version_h table where version is " + version ,"error")
+								sys.exit(1)
+					else:
+						if is_unix:
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c \;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"insert into x_db_version_h (version, inst_at, inst_by, updated_at, updated_by,active) values ('%s', GETDATE(), '%s', GETDATE(), '%s','N') ;\" -c ;" %(version,ranger_version,client_host)
+							jisql_log(query, db_password)
+							ret = subprocess.call(query)
+						if ret == 0:
+							log ("[I] Ranger "+ userName +" default password change request is in process..","info")
+						else:
+							log("[E] Ranger "+ userName +" default password change request failed", "error")
+							sys.exit(1)
+						if is_unix:
+							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						elif os_name == "WINDOWS":
+							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
+						get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className,userPwdString)
+						if is_unix:
+							status = subprocess.call(shlex.split(get_java_cmd))
+						elif os_name == "WINDOWS":
+							status = subprocess.call(get_java_cmd)
+						if status == 0 or status==2:
+							if is_unix:
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+							if ret == 0 and status == 0:
+								log ("[I] Ranger "+ userName +" default password change request processed successfully..","info")
+							elif ret == 0 and status == 2:
+								log ("[I] Ranger "+ userName +" default password change request process skipped!","info")
+							else:
+								if is_unix:
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+									log("[E] Ranger "+ userName +" default password change request failed", "error")
+									sys.exit(1)
+						else:
+							if is_unix:
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c \;"  %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(shlex.split(query))
+							elif os_name == "WINDOWS":
+								query = get_cmd + " -query \"delete from x_db_version_h where version='%s' and active='N' and updated_by='%s';\" -c ;" %(version,client_host)
+								jisql_log(query, db_password)
+								ret = subprocess.call(query)
+								log("[E] Ranger "+ userName +" default password change request failed", "error")
+								sys.exit(1)
+
+
 	def create_version_history_table(self, db_name, db_user, db_password, file_name,table_name):
 		name = basename(file_name)
 		if os.path.isfile(file_name):
@@ -3955,7 +4471,23 @@ def main(argv):
                                 xa_sqlObj.is_new_install(xa_db_host, db_user, db_password, db_name)
 
 			if str(argv[i]) == "-changepassword":
-				if len(argv)==5:
+				if len(argv)>5:
+					isValidPassWord = False
+					for j in range(len(argv)):
+						if str(argv[j]) == "-pair":
+							userName=argv[j+1]
+							oldPassword=argv[j+2]
+							newPassword=argv[j+3]
+							if oldPassword==newPassword:
+								log("[E] Old Password and New Password argument are same. Exiting!!", "error")
+								sys.exit(1)
+							if userName != "" and oldPassword != "" and newPassword != "":
+								password_validation(newPassword)
+								isValidPassWord=True
+					if isValidPassWord == True:
+						xa_sqlObj.change_all_admin_default_password(xa_db_host, db_user, db_password, db_name,argv)
+
+				elif len(argv)==5:
 					userName=argv[2]
 					oldPassword=argv[3]
 					newPassword=argv[4]

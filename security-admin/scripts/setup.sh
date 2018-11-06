@@ -1384,7 +1384,7 @@ setup_install_files(){
 	fi
 }
 python_command_for_change_password(){
-        $PYTHON_COMMAND_INVOKER db_setup.py -changepassword  "${1}" "${2}" "${3}"
+        $PYTHON_COMMAND_INVOKER db_setup.py -changepassword -pair "${1}" "${2}" "${3}" -pair "${4}" "${5}" "${6}" -pair "${7}" "${8}" "${9}" -pair "${10}" "${11}" "${12}"
 }
 validateDefaultUsersPassword(){
         if [ "${2}" == "" ]
@@ -1399,38 +1399,47 @@ validateDefaultUsersPassword(){
 }
 
 change_default_users_password(){
-        if [ "${rangerAdmin_password}" != "admin" ]
-        then
-                python_command_for_change_password  'admin' 'admin' "${rangerAdmin_password}"
-                if [ "$?" != "0" ]
-                then
-                        exit 1
-                fi
-        fi
-        if [ "${rangerTagsync_password}" != "rangertagsync" ]
-        then
-                python_command_for_change_password 'rangertagsync' 'rangertagsync' "${rangerTagsync_password}"
-                if [ "$?" != "0" ]
-                then
-                        exit 1
-                fi
-        fi
-        if [ "${rangerUsersync_password}" != "rangerusersync" ]
-        then
-                python_command_for_change_password 'rangerusersync' 'rangerusersync' "${rangerUsersync_password}"
-                if [ "$?" != "0" ]
-                then
-                        exit 1
-                fi
-        fi
-        if [ "${keyadmin_password}" != "keyadmin" ]
-        then
-                python_command_for_change_password 'keyadmin' 'keyadmin' "${keyadmin_password}"
-                if [ "$?" != "0" ]
-                then
-                        exit 1
-                fi
-        fi
+	if [ "${rangerAdmin_password}" != "admin" ] && [ "${rangerTagsync_password}" != "rangertagsync" ] && [ "${rangerUsersync_password}" != "rangerusersync" ] && [ "${keyadmin_password}" != "keyadmin" ]
+	then
+		python_command_for_change_password  'admin' 'admin' "${rangerAdmin_password}" 'rangertagsync' 'rangertagsync' "${rangerTagsync_password}" 'rangerusersync' 'rangerusersync' "${rangerUsersync_password}" 'keyadmin' 'keyadmin' "${keyadmin_password}"
+		if [ "$?" != "0" ]
+		then
+			exit 1
+		fi
+	else
+		if [ "${rangerAdmin_password}" != "admin" ]
+		then
+			python_command_for_change_password  'admin' 'admin' "${rangerAdmin_password}"
+			if [ "$?" != "0" ]
+			then
+				exit 1
+			fi
+		fi
+		if [ "${rangerTagsync_password}" != "rangertagsync" ]
+		then
+			python_command_for_change_password 'rangertagsync' 'rangertagsync' "${rangerTagsync_password}"
+			if [ "$?" != "0" ]
+			then
+				exit 1
+			fi
+		fi
+		if [ "${rangerUsersync_password}" != "rangerusersync" ]
+		then
+			python_command_for_change_password 'rangerusersync' 'rangerusersync' "${rangerUsersync_password}"
+			if [ "$?" != "0" ]
+			then
+				exit 1
+			fi
+		fi
+		if [ "${keyadmin_password}" != "keyadmin" ]
+		then
+			python_command_for_change_password 'keyadmin' 'keyadmin' "${keyadmin_password}"
+			if [ "$?" != "0" ]
+			then
+				exit 1
+			fi
+		fi
+	fi
 }
 log " --------- Running Ranger PolicyManager Web Application Install Script --------- "
 log "[I] uname=`uname`"
@@ -1447,10 +1456,10 @@ check_python_command
 check_ranger_version
 if [ "$?" != "0" ]
 then
-        validateDefaultUsersPassword 'admin' "${rangerAdmin_password}"
-        validateDefaultUsersPassword 'rangertagsync' "${rangerTagsync_password}"
-        validateDefaultUsersPassword 'rangerusersync' "${rangerUsersync_password}"
-        validateDefaultUsersPassword 'keyadmin' "${keyadmin_password}"
+	validateDefaultUsersPassword 'admin' "${rangerAdmin_password}"
+	validateDefaultUsersPassword 'rangertagsync' "${rangerTagsync_password}"
+	validateDefaultUsersPassword 'rangerusersync' "${rangerUsersync_password}"
+	validateDefaultUsersPassword 'keyadmin' "${keyadmin_password}"
 fi
 run_dba_steps
 if [ "$?" == "0" ]
@@ -1474,10 +1483,10 @@ then
 	if [ "$?" == "0" ]
 	then
 		$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
-                if [ "$?" == "0" ]
-                then
-                        change_default_users_password
-                fi
+		if [ "$?" == "0" ]
+		then
+			change_default_users_password
+		fi
 	else
 		exit 1
 	fi
