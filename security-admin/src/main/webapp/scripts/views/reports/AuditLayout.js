@@ -1408,7 +1408,7 @@ define(function(require) {
 				gridOpts : {
 					row : 	Backgrid.Row.extend({}),
 					header : XABackgrid,
-						emptyText : 'No plugin found!'
+						emptyText : 'No plugin status found!'
 				}
 			}));	
 		},
@@ -1582,7 +1582,7 @@ define(function(require) {
                 gridOpts : {
                     row : Backgrid.Row.extend({}),
                     header : XABackgrid,
-                    emptyText : 'No plugin found!'
+                    emptyText : 'No user sync audit found!'
                 }
             }));
         },
