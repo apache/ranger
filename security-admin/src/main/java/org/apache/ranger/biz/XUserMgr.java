@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -44,13 +45,13 @@ import org.apache.ranger.security.context.RangerAPIMapping;
 import org.apache.ranger.service.*;
 import org.apache.ranger.view.*;
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerServicePoliciesCache;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAuditMapDao;
@@ -85,7 +86,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.springframework.util.StringUtils;
 
 @Component
 public class XUserMgr extends XUserMgrBase {
@@ -141,9 +141,10 @@ public class XUserMgr extends XUserMgrBase {
 	@Autowired
 	XGroupUserService xGroupUserService;
 
+	@Autowired
+	StringUtil stringUtil;
+
 	static final Logger logger = Logger.getLogger(XUserMgr.class);
-
-
 
 	public VXUser getXUserByUserName(String userName) {
 		VXUser vXUser=null;
@@ -191,7 +192,15 @@ public class XUserMgr extends XUserMgrBase {
 		if("null".equalsIgnoreCase(vXPortalUser.getLastName())){
 			vXPortalUser.setLastName("");
 		}
-		vXPortalUser.setEmailAddress(vXUser.getEmailAddress());
+
+		String emailAddress = vXUser.getEmailAddress();
+		if (StringUtils.isNotEmpty(emailAddress) && !stringUtil.validateEmail(emailAddress)) {
+			logger.warn("Invalid email address:" + emailAddress);
+			throw restErrorUtil.createRESTException("Please provide valid email address.",
+					MessageEnums.INVALID_INPUT_DATA);
+		}
+		vXPortalUser.setEmailAddress(emailAddress);
+
 		if (vXPortalUser.getFirstName() != null
 				&& vXPortalUser.getLastName() != null
 				&& !vXPortalUser.getFirstName().trim().isEmpty()
@@ -1063,7 +1072,7 @@ public class XUserMgr extends XUserMgrBase {
 		List<VXUserPermission> userPermListOld = new ArrayList<VXUserPermission>();
 
 		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(vXModuleDef.getId());
-		if(!StringUtil.equals(xModuleDef.getModule(), vXModuleDef.getModule())) {
+		if(!StringUtils.equals(xModuleDef.getModule(), vXModuleDef.getModule())) {
 			throw restErrorUtil.createRESTException("Module name change is not allowed!", MessageEnums.DATA_NOT_UPDATABLE);
 		}
 		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef);
@@ -1977,7 +1986,7 @@ public class XUserMgr extends XUserMgrBase {
 		XXGroupDao xXGroupDao = daoManager.getXXGroup();
 		XXGroup xXGroup = xXGroupDao.getById(id);
 		VXGroup vXGroup = xGroupService.populateViewBean(xXGroup);
-		if (vXGroup == null || StringUtil.isEmpty(vXGroup.getName())) {
+		if (vXGroup == null || StringUtils.isEmpty(vXGroup.getName())) {
 			throw restErrorUtil.createRESTException("Group ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
 		}
 		if(logger.isDebugEnabled()){
@@ -2146,7 +2155,7 @@ public class XUserMgr extends XUserMgrBase {
 		XXUserDao xXUserDao = daoManager.getXXUser();
 		XXUser xXUser =	xXUserDao.getById(id);
 		VXUser vXUser =	xUserService.populateViewBean(xXUser);
-		if(vXUser==null ||StringUtil.isEmpty(vXUser.getName())){
+		if(vXUser==null || StringUtils.isEmpty(vXUser.getName())){
 			throw restErrorUtil.createRESTException("No user found with id=" + id);
 		}
 		XXPortalUserDao xXPortalUserDao=daoManager.getXXPortalUser();
@@ -2155,7 +2164,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(xXPortalUser!=null){
 			vXPortalUser=xPortalUserService.populateViewBean(xXPortalUser);
 		}
-		if(vXPortalUser==null ||StringUtil.isEmpty(vXPortalUser.getLoginId())){
+		if(vXPortalUser==null || StringUtils.isEmpty(vXPortalUser.getLoginId())){
 			throw restErrorUtil.createRESTException("No user found with id=" + id);
 		}
 		if (logger.isDebugEnabled()) {
@@ -2329,10 +2338,10 @@ public class XUserMgr extends XUserMgrBase {
 	private <T extends RangerPolicyItem> void removeUserGroupReferences(List<T> policyItems, String user, String group) {
 		List<T> itemsToRemove = null;
 		for(T policyItem : policyItems) {
-			if(!StringUtil.isEmpty(user)) {
+			if(StringUtils.isNotEmpty(user)) {
 				policyItem.getUsers().remove(user);
 			}
-			if(!StringUtil.isEmpty(group)) {
+			if(StringUtils.isNotEmpty(group)) {
 				policyItem.getGroups().remove(group);
 			}
 			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty()) {
@@ -2353,7 +2362,7 @@ public class XUserMgr extends XUserMgrBase {
 			if (!session.isUserAdmin()) {
 				throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to perform the action.");
 			}else{
-				if(!StringUtil.isEmpty(loginID) && loginID.equals(session.getLoginId())){
+				if(StringUtils.isNotEmpty(loginID) && loginID.equals(session.getLoginId())){
 					throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to delete his own profile.");
 				}
 			}
