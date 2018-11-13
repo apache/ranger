@@ -171,7 +171,7 @@ define(function(require){
 						that.form.fields.newPassword.setError(localization.tt('validationMessages.newPasswordError'));
 						that.form.fields.reEnterPassword.setError(localization.tt('validationMessages.newPasswordError'));
 					}else if((msResponse.responseJSON.msgDesc) == "serverMsg.userMgrOldPassword"){
-						that.form.fields.oldPassword.setError(localization.tt('validationMessages.oldPasswordRepeatError'));
+						that.form.fields.newPassword.setError(localization.tt('validationMessages.oldPasswordRepeatError'));
                                         }else if(msResponse.status == 419){
                                                 XAUtil.defaultErrorHandler(options , msResponse);
 					} else {

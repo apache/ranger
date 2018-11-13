@@ -418,7 +418,7 @@ public class UserMgr {
 		String encryptedOldPwd = encrypt(pwdChange.getLoginId(),pwdChange.getOldPassword());
 		if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
 			logger.info("changePassword(). Invalid old password. LoginId="+ pwdChange.getLoginId());
-			throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
+			throw restErrorUtil.createRESTException("validationMessages.oldPasswordError",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
 		}
 
 		//validate new password
@@ -448,7 +448,7 @@ public class UserMgr {
 		} else {
 			ret.setMsgDesc("Password update failed");
 			ret.setStatusCode(VXResponse.STATUS_ERROR);
-			throw restErrorUtil.createRESTException("serverMsg.userMgrNewPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
+			throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
 		}
 		return ret;
 	}
