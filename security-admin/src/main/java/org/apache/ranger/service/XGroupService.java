@@ -69,6 +69,11 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 
 		searchFields.add(new SearchField("isVisible", "obj.isVisible",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL ));
+		
+		searchFields.add(new SearchField("userId", "groupUser.userId",
+				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
+				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
+
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
