@@ -1750,7 +1750,23 @@ public class XUserMgr extends XUserMgrBase {
 	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
 		VXGroupList vXGroupList= new VXGroupList();
 		VXGroup vXGroupExactMatch = null;
+		VXUser loggedInVXUser = null;
 		try{
+			//In case of user we need to fetch only its associated groups.
+			UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+			if (userSession != null
+					&& userSession.getUserRoleList().size() == 1
+					&& userSession.getUserRoleList().contains(
+							RangerConstants.ROLE_USER)
+					&& userSession.getLoginId() != null) {
+				loggedInVXUser = xUserService.getXUserByUserName(userSession
+						.getLoginId());
+				if (loggedInVXUser != null) {
+					searchCriteria.addParam("userId", loggedInVXUser.getId());
+				}
+
+			}
+			
 			VXGroupList vXGroupListSort= new VXGroupList();
 			if(searchCriteria.getParamList() != null && searchCriteria.getParamList().get("name") != null){
 				searchCriteria.setSortBy("name");
@@ -1776,6 +1792,18 @@ public class XUserMgr extends XUserMgrBase {
 								vXGroupExactMatchwithSearchCriteria = -1;
 							}
 							break;
+						//Its required because we need to filter groups for user role
+						case "userid":
+							if (loggedInVXUser != null) {
+									List<Long> listGroupId = daoManager
+											.getXXGroupUser()
+											.findGroupIdListByUserId(loggedInVXUser.getId());
+									if (!listGroupId.contains(vXGroupExactMatch.getId())) {
+										vXGroupExactMatchwithSearchCriteria = -1;
+									}
+							}
+	
+							break;
 						default:
 							logger.warn("XUserMgr.searchXGroups: unexpected searchCriteriaParam:" + caseKey);
 							break;
@@ -1785,6 +1813,7 @@ public class XUserMgr extends XUserMgrBase {
 					}
 				}
 			}
+			
 			if(vXGroupExactMatchwithSearchCriteria == 1){
 				List<VXGroup> vXGroups = new ArrayList<VXGroup>();
 				if(searchCriteria.getStartIndex() == 0){
@@ -1812,33 +1841,6 @@ public class XUserMgr extends XUserMgrBase {
 			searchCriteria.setSortBy("id");
 			vXGroupList=xGroupService.searchXGroups(searchCriteria);
 		}
-		
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && userSession.getLoginId() != null) {
-			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
-					.getLoginId());
-			if (loggedInVXUser != null) {
-				if (loggedInVXUser.getUserRoleList().size() == 1
-						&& loggedInVXUser.getUserRoleList().contains(
-								RangerConstants.ROLE_USER)) {
-
-					List<VXGroup> updatedList = new ArrayList<VXGroup>();
-
-					List<Long> listGroupId = daoManager.getXXGroupUser()
-							.findGroupIdListByUserId(loggedInVXUser.getId());
-
-					for (VXGroup group : vXGroupList.getList()) {
-						if (listGroupId.contains(group.getId())) {
-							updatedList.add(group);
-						}
-					}
-					logger.info("Logged-In user having user role will be able to fetch his own groups details.");
-					vXGroupList.setVXGroups(updatedList);
-
-				}
-			}
-		}
-		
 		
 		if(vXGroupList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
 			if(vXGroupList!=null && vXGroupList.getListSize()>0){
