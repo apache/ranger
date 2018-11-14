@@ -3478,5 +3478,65 @@ public class TestXUserMgr {
 		Assert.assertEquals(expectedVXGroup.getId(), rcvVXGroup.getId());
 		Assert.assertEquals(expectedVXGroup.getName(), rcvVXGroup.getName());
 	}
+	
+	@Test
+	public void test108RoleUserWillSearchOnlyHisOwnGroupDetails() {
+		destroySession();
+		
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		currentUserSession.setUserAdmin(false);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		currentUserSession.setXXPortalUser(xXPortalUser);
+		List<String> permissionList = new ArrayList<String>();
+		permissionList.add(RangerConstants.MODULE_USER_GROUPS);
+		
+		SearchCriteria testSearchCriteria = createsearchCriteria();
+		
+		List<Long> groupIdList = new ArrayList<Long>();
+		groupIdList.add(5L);
+		
+		VXGroup expectedVXGroup = new VXGroup();
+		expectedVXGroup.setId(5L);
+		expectedVXGroup.setName("testGroup");
+		
+		List<VXGroup> grpList = new ArrayList<VXGroup>();
+		grpList.add(expectedVXGroup);
+		
+		
+		VXGroupList expectedVXGroupList = new VXGroupList();
+		expectedVXGroupList.setVXGroups(grpList);
+		
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_USER);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		loggedInUser.setGroupIdList(groupIdList);
+		
+		VXUser vxUser = vxUser();
+		List<String> userRole = new ArrayList<String>();
+		userRole.add(RangerConstants.ROLE_USER);
+		vxUser.setId(8L);
+		vxUser.setName("test3");
+		vxUser.setUserRoleList(userRole);
+		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		Mockito.when(xGroupService.searchXGroups(testSearchCriteria)).thenReturn(expectedVXGroupList);
+		XXModuleDefDao mockxxModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(mockxxModuleDefDao);
+		Mockito.when(mockxxModuleDefDao.findAccessibleModulesByUserId(8L, 8L)).thenReturn(permissionList);
+
+		VXGroupList rcvVXGroupList = xUserMgr.searchXGroups(testSearchCriteria);
+		Assert.assertNotNull(rcvVXGroupList);
+		
+		Assert.assertEquals(rcvVXGroupList.getList().get(0).getId(),expectedVXGroup.getId());
+		Assert.assertEquals(rcvVXGroupList.getList().get(0).getName(),expectedVXGroup.getName());
+	}
 
 }
