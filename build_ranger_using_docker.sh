@@ -22,12 +22,12 @@
 #5. To delete the image, run "[sudo] docker rmi ranger_dev"
 
 #Usage: [sudo] ./build_ranger_using_docker.sh [-build_image] mvn  <build params>
-#Example 1 (default no param): (mvn -DskipTests=true clean compile package install assembly:assembly)
-#Example 2 (Regular build): ./build_ranger_using_docker.sh mvn clean install -DskipTests=true 
-#Example 3 (Recreate Docker image): ./build_ranger_using_docker.sh mvn -build_image clean install -DskipTests=true 
+#Example 1 (default no param): (mvn -Pall -DskipTests=true clean compile package install assembly:assembly)
+#Example 2 (Regular build): ./build_ranger_using_docker.sh mvn -Pall clean install -DskipTests=true
+#Example 3 (Recreate Docker image): ./build_ranger_using_docker.sh mvn -Pall -build_image clean install -DskipTests=true 
 #Notes: To remove build image manually, run "docker rmi ranger_dev" or "sudo docker rmi ranger_dev"
 
-default_command="mvn -DskipTests=true clean compile package install assembly:assembly"
+default_command="mvn -Pall -DskipTests=true clean compile package install assembly:assembly"
 build_image=0
 if [ "$1" = "-build_image" ]; then
     build_image=1
@@ -75,14 +75,14 @@ ENV JAVA_HOME /usr/java/latest
 ENV  PATH $JAVA_HOME/bin:$PATH
 
 
-ADD https://www.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz.sha1 /tools
-ADD http://www-us.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz /tools
-RUN sha1sum  apache-maven-3.5.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
+ADD https://www.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz.sha512 /tools
+ADD http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz /tools
+RUN sha512sum  apache-maven-3.5.4-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
-RUN diff -w tmp.sha1 apache-maven-3.5.3-bin.tar.gz.sha1
+RUN diff -w tmp.sha1 apache-maven-3.5.4-bin.tar.gz.sha512
 
-RUN tar xfz apache-maven-3.5.3-bin.tar.gz
-RUN ln -sf /tools/apache-maven-3.5.3 /tools/maven
+RUN tar xfz apache-maven-3.5.4-bin.tar.gz
+RUN ln -sf /tools/apache-maven-3.5.4 /tools/maven
 
 ENV  PATH /tools/maven/bin:$PATH
 ENV MAVEN_OPTS "-Xmx2048m -XX:MaxPermSize=512m"
