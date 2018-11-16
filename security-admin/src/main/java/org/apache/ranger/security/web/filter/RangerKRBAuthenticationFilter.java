@@ -270,16 +270,16 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 							final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 							grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
 							final UserDetails principal = new User(doAsUser, "", grantedAuths);
-							final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+							Authentication authentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
 							WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
-							((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
-							SecurityContextHolder.getContext().setAuthentication(finalAuthentication);
+							((AbstractAuthenticationToken) authentication).setDetails(webDetails);
+							authentication = getGrantedAuthority(authentication);
+							SecurityContextHolder.getContext().setAuthentication(authentication);
 							request.setAttribute("spnegoEnabled", true);
+							LOG.info("Logged into Ranger as doAsUser = " + doAsUser + ", by authenticatedUser=" + authToken.getUserName());
 						}
 
 					}
-					LOG.info("Logged into Ranger as doAsUser = " + doAsUser + ", by authenticatedUser=" + authToken.getUserName());
-
 
 				}else {
 					//if we get the userName from the token then log into ranger using the same user
