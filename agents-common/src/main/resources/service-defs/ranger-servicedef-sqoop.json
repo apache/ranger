@@ -103,7 +103,18 @@
 			"validationMessage": "",
 			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"eg. 'http://&lt;ipaddr&gt;:12000'\"}",
 			"label": "Sqoop URL"
-		}
+		},
+
+        {
+            "itemId": 3,
+            "name": "commonNameForCertificate",
+            "type": "string",
+            "mandatory": false,
+            "validationRegEx":"",
+            "validationMessage": "",
+            "uiHint":"",
+            "label": "Common Name for Certificate"
+        }
 
 	],
 	"options": { "enableDenyAndExceptionsInPolicies": "false" },
