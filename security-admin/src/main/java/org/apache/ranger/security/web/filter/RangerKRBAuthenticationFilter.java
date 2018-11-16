@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -53,6 +54,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.SaslRpcServer;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.server.AuthenticationToken;
+import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.hadoop.util.HttpExceptionUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -98,6 +106,8 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
 	static final String AUTH_COOKIE_NAME = "hadoop.auth";
 	static final String HOST_NAME = "ranger.service.host";
+	static final String ALLOW_TRUSTED_PROXY = "ranger.authentication.allow.trustedproxy";
+	static final String PROXY_PREFIX = "ranger.proxyuser.";
 
 	private static final String KERBEROS_TYPE = "kerberos";
 	private static final String S_USER = "suser";
@@ -119,6 +129,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		params.put(TOKEN_VALID_PARAM, PropertiesUtil.getProperty(TOKEN_VALID,"30"));
 		params.put(COOKIE_DOMAIN_PARAM, PropertiesUtil.getProperty(COOKIE_DOMAIN, PropertiesUtil.getProperty(HOST_NAME, "localhost")));
 		params.put(COOKIE_PATH_PARAM, PropertiesUtil.getProperty(COOKIE_PATH, "/"));
+		params.put(ALLOW_TRUSTED_PROXY, PropertiesUtil.getProperty(ALLOW_TRUSTED_PROXY, "false"));
 		try {
 			params.put(PRINCIPAL_PARAM, SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL,""), PropertiesUtil.getProperty(HOST_NAME)));
 		} catch (IOException ignored) {
@@ -153,6 +164,20 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 			}
 		};
 		super.init(myConf);
+		Configuration conf1 = this.getProxyuserConfiguration();
+		ProxyUsers.refreshSuperUserGroupsConfiguration(conf1, PROXY_PREFIX);
+	}
+
+	protected Configuration getProxyuserConfiguration() {
+		Configuration conf = new Configuration(false);
+		Map<String, String> propertiesMap = PropertiesUtil.getPropertiesMap();
+		for (String key : propertiesMap.keySet()) {
+			if (!key.startsWith(PROXY_PREFIX)) {
+				continue;
+			}
+			conf.set(key, propertiesMap.get(key));
+		}
+		return conf;
 	}
 
 	@Override
@@ -162,6 +187,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		String authType = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
 		String userName = null;
 		boolean checkCookie = response.containsHeader("Set-Cookie");
+		boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
 		if(checkCookie){
 			Collection<String> authUserName = response.getHeaders("Set-Cookie");
 			if(authUserName != null){
@@ -200,46 +226,98 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 			userName = sessionUserName;
 		}
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("Remote user from request = " + request.getRemoteUser());
+		}
+
 		if((isSpnegoEnable(authType) && (!StringUtils.isEmpty(userName)))){
 			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
 			if(existingAuth == null || !existingAuth.isAuthenticated()){
 				//--------------------------- To Create Ranger Session --------------------------------------
 				String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
-				//if we get the userName from the token then log into ranger using the same user
-				final List<GrantedAuthority> grantedAuths = new ArrayList<>();
-				grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
-				final UserDetails principal = new User(userName, "",grantedAuths);
-				final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-				WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
-				((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
-				RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
-				Authentication authentication = authenticationProvider.authenticate(finalAuthentication);
-				authentication = getGrantedAuthority(authentication);
-				if(authentication != null && authentication.isAuthenticated()) {
-					if (request.getParameterMap().containsKey("doAs")) {
-						if(!response.isCommitted()) {
-							if(LOG.isDebugEnabled()) {
-								LOG.debug("Request contains unsupported parameter, doAs.");
-							}
-							request.setAttribute("spnegoenabled", false);
-							response.sendError(HttpServletResponse.SC_FORBIDDEN, "Missing authentication token.");
-						}
-					}
-					if(request.getParameterMap().containsKey("user.name")) {
-						if(!response.isCommitted()) {
-							if(LOG.isDebugEnabled()) {
-								LOG.debug("Request contains an unsupported parameter user.name");
-							}
-							request.setAttribute("spnegoenabled", false);
-							response.sendError(HttpServletResponse.SC_FORBIDDEN, "Missing authentication token.");
-						} else {
-							LOG.info("Response seems to be already committed for user.name.");
-						}
-					}
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Http headers: " + Collections.list(request.getHeaderNames()).toString());
 				}
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-				request.setAttribute("spnegoEnabled", true);
-				LOG.info("Logged into Ranger as = "+userName);
+				String doAsUser = request.getParameter("doAs");
+
+				if (allowTrustedProxy && doAsUser != null && !doAsUser.isEmpty()) {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("userPrincipal from request = " + request.getUserPrincipal() + " request paramerters = " + request.getParameterMap().keySet());
+					}
+					AuthenticationToken authToken = (AuthenticationToken)request.getUserPrincipal();
+					if(authToken != null && authToken != AuthenticationToken.ANONYMOUS) {
+						if(LOG.isDebugEnabled()) {
+							LOG.debug("remote user from authtoken = " + authToken.getUserName());
+						}
+						UserGroupInformation ugi = UserGroupInformation.createRemoteUser(authToken.getUserName(), SaslRpcServer.AuthMethod.KERBEROS);
+						if(ugi != null) {
+							ugi = UserGroupInformation.createProxyUser(doAsUser, ugi);
+							if(LOG.isDebugEnabled()) {
+								LOG.debug("Real user from UGI = " + ugi.getRealUser().getShortUserName());
+							}
+
+							try {
+								ProxyUsers.authorize(ugi, request.getRemoteAddr());
+							} catch (AuthorizationException ex) {
+								HttpExceptionUtils.createServletExceptionResponse(response, 403, ex);
+								if(LOG.isDebugEnabled()) {
+									LOG.debug("Authentication exception: " + ex.getMessage(), ex);
+								} else {
+									LOG.warn("Authentication exception: " + ex.getMessage());
+								}
+								return;
+							}
+							final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+							grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+							final UserDetails principal = new User(doAsUser, "", grantedAuths);
+							Authentication authentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+							WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
+							((AbstractAuthenticationToken) authentication).setDetails(webDetails);
+							authentication = getGrantedAuthority(authentication);
+							SecurityContextHolder.getContext().setAuthentication(authentication);
+							request.setAttribute("spnegoEnabled", true);
+							LOG.info("Logged into Ranger as doAsUser = " + doAsUser + ", by authenticatedUser=" + authToken.getUserName());
+						}
+
+					}
+
+				}else {
+					//if we get the userName from the token then log into ranger using the same user
+					final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+					grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+					final UserDetails principal = new User(userName, "", grantedAuths);
+					final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+					WebAuthenticationDetails webDetails = new WebAuthenticationDetails(request);
+					((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+					RangerAuthenticationProvider authenticationProvider = new RangerAuthenticationProvider();
+					Authentication authentication = authenticationProvider.authenticate(finalAuthentication);
+					authentication = getGrantedAuthority(authentication);
+					if (authentication != null && authentication.isAuthenticated()) {
+						if (request.getParameterMap().containsKey("doAs")) {
+							if (!response.isCommitted()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Request contains unsupported parameter, doAs.");
+								}
+								request.setAttribute("spnegoenabled", false);
+								response.sendError(HttpServletResponse.SC_FORBIDDEN, "Missing authentication token.");
+							}
+						}
+						if (request.getParameterMap().containsKey("user.name")) {
+							if (!response.isCommitted()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Request contains an unsupported parameter user.name");
+								}
+								request.setAttribute("spnegoenabled", false);
+								response.sendError(HttpServletResponse.SC_FORBIDDEN, "Missing authentication token.");
+							} else {
+								LOG.info("Response seems to be already committed for user.name.");
+							}
+						}
+					}
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+					request.setAttribute("spnegoEnabled", true);
+					LOG.info("Logged into Ranger as = " + userName);
+				}
 				filterChain.doFilter(request, response);
 			}else{
 				try{
