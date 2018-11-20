@@ -770,15 +770,14 @@ define(function(require) {
 					text : m.attributes.category
 				});
 				var extraParam = {};
-				if (_.has(serverParamName, 'multiple')
-						&& serverParamName.multiple) {
-					extraParam[serverParamName.label] = XAUtils
-							.enumLabelToValue(serverParamName.optionsArr, m
-									.get('value'));
-					;
-					$.extend(params, extraParam);
-				} else {
-					if (!_.isUndefined(serverParamName)) {
+				if (!_.isUndefined(serverParamName)) {
+					if (_.has(serverParamName, 'multiple')
+							&& serverParamName.multiple) {
+						extraParam[serverParamName.label] = XAUtils
+								.enumLabelToValue(serverParamName.optionsArr, m
+										.get('value'));
+						$.extend(params, extraParam);
+					} else {
 						extraParam[serverParamName.label] = m.get('value');
 						$.extend(params, extraParam);
 					}
