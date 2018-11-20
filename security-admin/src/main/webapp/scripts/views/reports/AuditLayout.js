@@ -443,8 +443,8 @@ define(function(require) {
 			})
 			if(!_.isUndefined(App.sessionId)){
                                 App.vsHistory.admin = [] ;
-				query = '"Session Id": "'+App.sessionId+'"';
-                                App.vsHistory.admin.push(new Backbone.Model({'category':'Session Id', value:App.sessionId}));
+				query = '"Session ID": "'+App.sessionId+'"';
+                                App.vsHistory.admin.push(new Backbone.Model({'category':'Session ID', value:App.sessionId}));
 				delete App.sessionId;
                         }else{
                                 _.map(App.vsHistory.admin, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
