@@ -300,6 +300,18 @@
             </organization>
         </developer>
         <developer>
+            <id>ni3galave</id>
+            <name>Nitin Galave</name>
+            <email>ni3galave@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>omalley</id>
             <name>Owen O'Malley</name>
             <email>omalley@apache.org</email>
@@ -531,10 +543,6 @@
         </contributor>
         <contributor>
           	<name>Nikhil Purbhe</name>
-          	<organization>Freestone Infotech</organization>
-        </contributor>
-        <contributor>
-          	<name>Nitin Galave</name>
           	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
