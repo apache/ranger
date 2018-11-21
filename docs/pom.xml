@@ -125,6 +125,18 @@
             </organization>
         </developer>
         <developer>
+            <id>bpatel</id>
+            <name>Bhavik Patel</name>
+            <email>bpatel@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>bganesan</id>
             <name>Balaji Ganesan</name>
             <email>bganesan@apache.org</email>
@@ -440,10 +452,6 @@
         <contributor>
           	<name>Bennet Daniel</name>
           	<organization></organization>
-        </contributor>
-        <contributor>
-          	<name>Bhavik Patel</name>
-          	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
           	<name>Bolke de Bruin</name>
