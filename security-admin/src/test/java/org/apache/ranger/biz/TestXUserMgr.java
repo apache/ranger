@@ -579,6 +579,7 @@ public class TestXUserMgr {
 		XXModuleDefDao value = Mockito.mock(XXModuleDefDao.class);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(value);
 		Mockito.when(userMgr.createDefaultAccountUser((VXPortalUser) Mockito.any())).thenReturn(vXPortalUser);
+    Mockito.when(stringUtil.validateEmail("test@test.com")).thenReturn(true);
 		VXUser dbUser = xUserMgr.createXUser(vxUser);
 		Assert.assertNotNull(dbUser);
 		userId = dbUser.getId();
@@ -649,6 +650,7 @@ public class TestXUserMgr {
 		vxUser.setFirstName("null");
 		vxUser.setLastName("null");
 		Mockito.when(xUserService.createResource(vxUser)).thenReturn(vxUser);
+    Mockito.when(stringUtil.validateEmail("test@test.com")).thenReturn(true);
 		xUserMgr.createXUser(vxUser);
 	}
 
