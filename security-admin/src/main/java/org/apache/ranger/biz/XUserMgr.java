@@ -694,6 +694,12 @@ public class XUserMgr extends XUserMgrBase {
 	public VXUser getXUser(Long id) {
 		VXUser vXUser=null;
 		vXUser=xUserService.readResourceWithOutLogin(id);
+                if(vXUser != null){
+                        if(!hasAccessToGetUserInfo(vXUser)){
+                                logger.info("Logged-In user is not allowed to access requested user data.");
+                                throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                                }
+                }
 		if(vXUser!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
 			vXUser=getMaskedVXUser(vXUser);
 		}
@@ -707,6 +713,27 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXGroup getXGroup(Long id) {
 		VXGroup vXGroup=null;
+                        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                        if (userSession != null && userSession.getLoginId() != null) {
+                                        VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
+                                                        .getLoginId());
+                                        if (loggedInVXUser != null) {
+                                                if (loggedInVXUser.getUserRoleList().size() == 1
+                                                                && loggedInVXUser.getUserRoleList().contains(
+                                                                                RangerConstants.ROLE_USER)) {
+
+                                                        List<Long> listGroupId = daoManager.getXXGroupUser()
+                                                                        .findGroupIdListByUserId(loggedInVXUser.getId());
+
+                                                        if (!listGroupId.contains(id)) {
+                                                                logger.info("Logged-In user is not allowed to access requested user data.");
+                                                                throw restErrorUtil
+                                                                                .create403RESTException("Logged-In user is not allowed to access requested group data.");
+                                                        }
+
+                                                }
+                                        }
+                        }
 		vXGroup=xGroupService.readResourceWithOutLogin(id);
 		if(vXGroup!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
 			vXGroup=getMaskedVXGroup(vXGroup);
@@ -1734,6 +1761,31 @@ public class XUserMgr extends XUserMgrBase {
 			searchCriteria.setSortBy("id");
 			vXGroupList=xGroupService.searchXGroups(searchCriteria);
 		}
+                UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                if (userSession != null && userSession.getLoginId() != null) {
+                                        VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
+                                                        .getLoginId());
+                                        if (loggedInVXUser != null) {
+                                                if (loggedInVXUser.getUserRoleList().size() == 1
+                                                                && loggedInVXUser.getUserRoleList().contains(
+                                                                                RangerConstants.ROLE_USER)) {
+
+                                                        List<VXGroup> updatedList = new ArrayList<VXGroup>();
+
+                                                        List<Long> listGroupId = daoManager.getXXGroupUser()
+                                                                        .findGroupIdListByUserId(loggedInVXUser.getId());
+
+                                                        for (VXGroup group : vXGroupList.getList()) {
+                                                                if (listGroupId.contains(group.getId())) {
+                                                                        updatedList.add(group);
+                                                                }
+                                                        }
+                                                        logger.info("Logged-In user having user role will be able to fetch his own groups details.");
+                                                        vXGroupList.setVXGroups(updatedList);
+
+                                                }
+                                        }
+                }
 		if(vXGroupList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
 			if(vXGroupList!=null && vXGroupList.getListSize()>0){
 				List<VXGroup> listMasked=new ArrayList<VXGroup>();
@@ -2245,6 +2297,25 @@ public class XUserMgr extends XUserMgrBase {
                 }
         }
 
+        private boolean hasAccessToGetUserInfo(VXUser requestedVXUser) {
+                                UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                                if (userSession != null && userSession.getLoginId() != null) {
+                                        VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
+                                                        .getLoginId());
+                                        if (loggedInVXUser != null) {
+                                                if (loggedInVXUser.getUserRoleList().size() == 1
+                                                                && loggedInVXUser.getUserRoleList().contains(
+                                                                                RangerConstants.ROLE_USER)) {
+
+                                                        return requestedVXUser.getId().equals(loggedInVXUser.getId()) ? true : false;
+
+                                                }else{
+                                                        return true;
+                                                }
+                                        }
+                                }
+                                return false;
+                        }
         public void denySelfRoleChange(String userName) {
             UserSessionBase session = ContextUtil.getCurrentUserSession();
             if (session != null && session.getXXPortalUser()!=null) {

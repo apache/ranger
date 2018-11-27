@@ -17,11 +17,10 @@
  * under the License.
  */
 
- package org.apache.ranger.rest;
+package org.apache.ranger.rest;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -33,17 +32,20 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import org.apache.log4j.Logger;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.db.RangerDaoManager;
@@ -149,6 +151,11 @@ public class XUserREST {
 	
 	@Autowired
 	XResourceService xResourceService;
+
+        @Autowired
+        StringUtil stringUtil;
+
+        static final Logger logger = Logger.getLogger(XUserMgr.class);
 
 	// Handle XGroup
 	@GET
@@ -372,9 +379,26 @@ public class XUserREST {
 			else if ((searchCriteria.getParamList().containsKey("name")) && userName!= null && userName.contains((String) searchCriteria.getParamList().get("name"))) {
 				searchCriteria.addParam("name", userName);
 			}
-			else {
-				String randomString = new Random().toString();
-				searchCriteria.addParam("name", randomString);
+                }
+
+                UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                if (userSession != null && userSession.getLoginId() != null) {
+                        VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
+                                        .getLoginId());
+                        if (loggedInVXUser != null) {
+                                if (loggedInVXUser.getUserRoleList().size() == 1
+                                                && loggedInVXUser.getUserRoleList().contains(
+                                                                RangerConstants.ROLE_USER)) {
+                                        logger.info("Logged-In user having user role will be able to fetch his own user details.");
+                                        if (!searchCriteria.getParamList().containsKey("name")) {
+                                                searchCriteria.addParam("name", loggedInVXUser.getName());
+                                        }else if(searchCriteria.getParamList().containsKey("name")
+                                                        && !stringUtil.isEmpty(searchCriteria.getParamValue("name").toString())
+                                                        && !searchCriteria.getParamValue("name").toString().equalsIgnoreCase(loggedInVXUser.getName())){
+                                                throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                                        }
+
+                                }
 			}
 		}
 

@@ -71,6 +71,7 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
@@ -113,6 +114,7 @@ import org.apache.ranger.service.RangerPluginInfoService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
@@ -120,6 +122,7 @@ import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXUser;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -203,6 +206,9 @@ public class ServiceREST {
 	
 	@Autowired
     JSONUtil jsonUtil;
+	
+	@Autowired
+	XUserService xUserService;
 
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
@@ -807,6 +813,19 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceId=" + id + ")");
 			}
 			ret = svcStore.getService(id);
+			if (ret != null) {
+				UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+
+							ret = hideCriticalServiceDetailsForRoleUser(ret);
+						}
+					}
+				}
+			}
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -845,6 +864,19 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getService(serviceName=" + name + ")");
 			}
 			ret = svcStore.getServiceByName(name);
+			if (ret != null) {
+				UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+
+							ret = hideCriticalServiceDetailsForRoleUser(ret);
+						}
+					}
+				}
+			}
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -887,8 +919,29 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
 			}
 			paginatedSvcs = svcStore.getPaginatedServices(filter);
+			if (paginatedSvcs != null && !paginatedSvcs.getList().isEmpty()) {
+				UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+				if (userSession != null && userSession.getLoginId() != null) {
+					VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+					if (loggedInVXUser != null) {
+						if (loggedInVXUser.getUserRoleList().size() == 1
+								&& loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
 
-			if(paginatedSvcs != null) {
+							List<RangerService> updateServiceList = new ArrayList<RangerService>();
+							for (RangerService rangerService : paginatedSvcs.getList()) {
+								if (rangerService != null) {
+									updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
+								}
+							}
+
+							if (updateServiceList != null && !updateServiceList.isEmpty()) {
+								paginatedSvcs.setList(updateServiceList);
+							}
+						}
+					}
+				}
+			}
+			if (paginatedSvcs != null) {
 				ret = new RangerServiceList();
 
 				ret.setServices(paginatedSvcs.getList());
@@ -3330,4 +3383,22 @@ public class ServiceREST {
         }
         return ret;
     }
+	
+	private RangerService hideCriticalServiceDetailsForRoleUser(RangerService rangerService) {
+		RangerService ret = rangerService;
+
+		ret.setConfigs(null);
+		ret.setDescription(null);
+		ret.setCreatedBy(null);
+		ret.setUpdatedBy(null);
+		ret.setCreateTime(null);
+		ret.setUpdateTime(null);
+		ret.setPolicyVersion(null);
+		ret.setPolicyUpdateTime(null);
+		ret.setTagVersion(null);
+		ret.setTagUpdateTime(null);
+		ret.setVersion(null);
+
+		return ret;
+	}
 }
