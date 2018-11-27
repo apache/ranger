@@ -12,7 +12,46 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
 /
+call spdropsequence('X_TAG_DEF_SEQ');
+call spdropsequence('X_TAG_SEQ');
+call spdropsequence('X_SERVICE_RESOURCE_SEQ');
+call spdropsequence('X_SERVICE_RESOURCE_ELEMENT_SEQ');
+call spdropsequence('X_TAG_ATTR_DEF_SEQ');
+call spdropsequence('X_TAG_ATTR_SEQ');
+call spdropsequence('X_TAG_RESOURCE_MAP_SEQ');
+call spdropsequence('X_SERVICE_RES_EL_VAL_SEQ');
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+call spdroptable('x_service_resource_element_val');
+call spdroptable('x_tag_resource_map');
+call spdroptable('x_tag_attr');
+call spdroptable('x_tag_attr_def');
+call spdroptable('x_service_resource_element');
+call spdroptable('x_service_resource');
+call spdroptable('x_tag');
+call spdroptable('x_tag_def');
+
 CREATE SEQUENCE X_TAG_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE TABLE x_tag_def (
 id NUMBER(20) NOT NULL,

@@ -5,7 +5,7 @@
 --(the "License"); you may not use this file except in compliance with
 -- the License.  You may obtain a copy of the License at
 --
---     http://www.apache.org/licenses/LICENSE-2.0
+--	 http://www.apache.org/licenses/LICENSE-2.0
 --
 -- Unless required by applicable law or agreed to in writing,software
 -- distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,164 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+
+CREATE OR REPLACE PROCEDURE dbo.removeForeignKeysAndTable (IN table_name varchar(100))
+AS
+BEGIN
+	DECLARE @stmt VARCHAR(300)
+	DECLARE @tblname VARCHAR(300)
+	DECLARE @drpstmt VARCHAR(1000)
+	DECLARE cur CURSOR FOR select 'alter table dbo.' + table_name + ' drop constraint ' + role from SYS.SYSFOREIGNKEYS where foreign_creator ='dbo' and foreign_tname = table_name
+	OPEN cur WITH HOLD
+		fetch cur into @stmt
+		WHILE (@@sqlstatus = 0)
+		BEGIN
+			execute(@stmt)
+			fetch cur into @stmt
+		END
+	close cur
+	DEALLOCATE CURSOR cur
+	SET @tblname ='dbo.' + table_name;
+	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
+	execute(@drpstmt)
+END
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_group')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_user')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_datamask_type')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_condition')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_access_type')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_ugsync_audit_info')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_label_map')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_label')
+GO
+call dbo.removeForeignKeysAndTable('x_plugin_info')
+GO
+call dbo.removeForeignKeysAndTable('x_service_version_info')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_rowfilter')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_datamask')
+GO
+call dbo.removeForeignKeysAndTable('x_datamask_type_def')
+GO
+call dbo.removeForeignKeysAndTable('x_service_resource_element_val')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_resource_map')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_attr')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_attr_def')
+GO
+call dbo.removeForeignKeysAndTable('x_service_resource_element')
+GO
+call dbo.removeForeignKeysAndTable('x_service_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_tag')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_def')
+GO
+call dbo.removeForeignKeysAndTable('x_group_module_perm')
+GO
+call dbo.removeForeignKeysAndTable('x_user_module_perm')
+GO
+call dbo.removeForeignKeysAndTable('x_modules_master')
+GO
+call dbo.removeForeignKeysAndTable('x_data_hist')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_group_perm')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_user_perm')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_condition')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_access')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_resource_map')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_service_config_map')
+GO
+call dbo.removeForeignKeysAndTable('x_enum_element_def')
+GO
+call dbo.removeForeignKeysAndTable('x_enum_def')
+GO
+call dbo.removeForeignKeysAndTable('x_context_enricher_def')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_condition_def')
+GO
+call dbo.removeForeignKeysAndTable('x_access_type_def_grants')
+GO
+call dbo.removeForeignKeysAndTable('x_access_type_def')
+GO
+call dbo.removeForeignKeysAndTable('x_resource_def')
+GO
+call dbo.removeForeignKeysAndTable('x_service_config_def')
+GO
+call dbo.removeForeignKeysAndTable('x_policy')
+GO
+call dbo.removeForeignKeysAndTable('x_service')
+GO
+call dbo.removeForeignKeysAndTable('x_service_def')
+GO
+call dbo.removeForeignKeysAndTable('x_audit_map')
+GO
+call dbo.removeForeignKeysAndTable('x_perm_map')
+GO
+DROP VIEW IF EXISTS dbo.vx_trx_log
+GO
+call dbo.removeForeignKeysAndTable('x_trx_log')
+GO
+call dbo.removeForeignKeysAndTable('x_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_export_audit')
+GO
+call dbo.removeForeignKeysAndTable('x_group_users')
+GO
+call dbo.removeForeignKeysAndTable('x_user')
+GO
+call dbo.removeForeignKeysAndTable('x_group_groups')
+GO
+call dbo.removeForeignKeysAndTable('x_group')
+GO
+call dbo.removeForeignKeysAndTable('x_db_base')
+GO
+call dbo.removeForeignKeysAndTable('x_cred_store')
+GO
+call dbo.removeForeignKeysAndTable('x_auth_sess')
+GO
+call dbo.removeForeignKeysAndTable('x_asset')
+GO
+call dbo.removeForeignKeysAndTable('xa_access_audit')
+GO
+call dbo.removeForeignKeysAndTable('x_portal_user_role')
+GO
+call dbo.removeForeignKeysAndTable('x_portal_user')
+GO
+call dbo.removeForeignKeysAndTable('x_db_version_h')
+GO
+create table dbo.x_db_version_h(
+id bigint identity not null primary key,
+version varchar(64) not null,
+inst_at datetime not null,
+inst_by varchar(256) not null,
+updated_at datetime not null,
+updated_by varchar(256) not null,
+active varchar(1) default 'Y' check(active IN ('Y', 'N'))
+)
+GO
 create table dbo.x_portal_user(
 	id bigint IDENTITY NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
@@ -788,58 +946,58 @@ CREATE TABLE dbo.x_service_version_info(
 )
 GO
 CREATE TABLE dbo.x_plugin_info(
-        id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        service_name varchar(255) NOT NULL,
-        app_type varchar(128) NOT NULL,
-        host_name varchar(255) NOT NULL,
-        ip_address varchar(64) NOT NULL,
-        info varchar(1024) NOT NULL,
-        CONSTRAINT x_plugin_info_PK_id PRIMARY KEY CLUSTERED(id),
-        CONSTRAINT x_plugin_info_UK UNIQUE NONCLUSTERED (service_name, host_name, app_type)
+		id bigint IDENTITY NOT NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		service_name varchar(255) NOT NULL,
+		app_type varchar(128) NOT NULL,
+		host_name varchar(255) NOT NULL,
+		ip_address varchar(64) NOT NULL,
+		info varchar(1024) NOT NULL,
+		CONSTRAINT x_plugin_info_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_plugin_info_UK UNIQUE NONCLUSTERED (service_name, host_name, app_type)
 )
 GO
 CREATE TABLE dbo.x_policy_label (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(64) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        label_name varchar(512) DEFAULT NULL,
-        CONSTRAINT x_policy_label_PK_id PRIMARY KEY CLUSTERED(id),
-        CONSTRAINT x_policy_label_UK_label_name UNIQUE NONCLUSTERED (label_name)
+		id bigint IDENTITY NOT NULL,
+		guid varchar(64) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		label_name varchar(512) DEFAULT NULL,
+		CONSTRAINT x_policy_label_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_policy_label_UK_label_name UNIQUE NONCLUSTERED (label_name)
 )
 GO
 CREATE TABLE dbo.x_policy_label_map (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(64) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        policy_label_id bigint NOT NULL,
-        CONSTRAINT x_policy_label_map_PK_id PRIMARY KEY CLUSTERED(id)
+		id bigint IDENTITY NOT NULL,
+		guid varchar(64) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		policy_label_id bigint NOT NULL,
+		CONSTRAINT x_policy_label_map_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 CREATE TABLE dbo.x_ugsync_audit_info(
-        id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        event_time datetime DEFAULT NULL NULL,
-        user_name varchar(255) NOT  NULL,
-        sync_source varchar(128) NOT NULL,
-        no_of_new_users bigint NOT NULL,
-        no_of_new_groups bigint NOT NULL,
-        no_of_modified_users bigint NOT NULL,
-        no_of_modified_groups bigint NOT NULL,
-        sync_source_info varchar(4000) NOT NULL,
-        session_id varchar(255) DEFAULT NULL NULL,
-        CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
+		id bigint IDENTITY NOT NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		event_time datetime DEFAULT NULL NULL,
+		user_name varchar(255) NOT  NULL,
+		sync_source varchar(128) NOT NULL,
+		no_of_new_users bigint NOT NULL,
+		no_of_new_groups bigint NOT NULL,
+		no_of_modified_users bigint NOT NULL,
+		no_of_modified_groups bigint NOT NULL,
+		sync_source_info varchar(4000) NOT NULL,
+		session_id varchar(255) DEFAULT NULL NULL,
+		CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 create table dbo.x_policy_ref_resource (
@@ -857,72 +1015,72 @@ create table dbo.x_policy_ref_resource (
 )
 GO
 create table dbo.x_policy_ref_access_type (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(1024) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        access_def_id bigint NOT NULL,
-        access_type_name varchar(4000) DEFAULT NULL NULL,
-        CONSTRAINT x_policy_ref_acc_PK_id PRIMARY KEY CLUSTERED(id),
+		id bigint IDENTITY NOT NULL,
+		guid varchar(1024) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		access_def_id bigint NOT NULL,
+		access_type_name varchar(4000) DEFAULT NULL NULL,
+		CONSTRAINT x_policy_ref_acc_PK_id PRIMARY KEY CLUSTERED(id),
 		CONSTRAINT x_p_ref_acc_UK_polId_accDefId UNIQUE NONCLUSTERED (policy_id, access_def_id)
 )
 GO
 create table dbo.x_policy_ref_condition (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(1024) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        condition_def_id bigint NOT NULL,
-        condition_name varchar(4000) DEFAULT NULL NULL,
-        CONSTRAINT x_policy_ref_cond_PK_id PRIMARY KEY CLUSTERED(id),
+		id bigint IDENTITY NOT NULL,
+		guid varchar(1024) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		condition_def_id bigint NOT NULL,
+		condition_name varchar(4000) DEFAULT NULL NULL,
+		CONSTRAINT x_policy_ref_cond_PK_id PRIMARY KEY CLUSTERED(id),
 		CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE NONCLUSTERED (policy_id, condition_def_id)
 )
 GO
 create table dbo.x_policy_ref_datamask_type (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(1024) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        datamask_def_id bigint NOT NULL,
-        datamask_type_name varchar(4000) DEFAULT NULL NULL,
-        CONSTRAINT x_policy_ref_dmk_PK_id PRIMARY KEY CLUSTERED(id),
+		id bigint IDENTITY NOT NULL,
+		guid varchar(1024) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		datamask_def_id bigint NOT NULL,
+		datamask_type_name varchar(4000) DEFAULT NULL NULL,
+		CONSTRAINT x_policy_ref_dmk_PK_id PRIMARY KEY CLUSTERED(id),
 		CONSTRAINT x_p_ref_dmk_UK_polId_dDefId UNIQUE NONCLUSTERED (policy_id, datamask_def_id)
 )
 GO
 create table dbo.x_policy_ref_user (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(1024) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        user_id bigint NOT NULL,
-        user_name varchar(4000) DEFAULT NULL NULL,
-        CONSTRAINT x_policy_ref_user_PK_id PRIMARY KEY CLUSTERED(id),
+		id bigint IDENTITY NOT NULL,
+		guid varchar(1024) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		user_id bigint NOT NULL,
+		user_name varchar(4000) DEFAULT NULL NULL,
+		CONSTRAINT x_policy_ref_user_PK_id PRIMARY KEY CLUSTERED(id),
 		CONSTRAINT x_p_ref_usr_UK_polId_userId UNIQUE NONCLUSTERED (policy_id, user_id)
 )
 GO
 create table dbo.x_policy_ref_group (
-        id bigint IDENTITY NOT NULL,
-        guid varchar(1024) DEFAULT NULL NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
-        policy_id bigint NOT NULL,
-        group_id bigint NOT NULL,
-        group_name varchar(4000) DEFAULT NULL NULL,
-        CONSTRAINT x_policy_ref_group_PK_id PRIMARY KEY CLUSTERED(id),
+		id bigint IDENTITY NOT NULL,
+		guid varchar(1024) DEFAULT NULL NULL,
+		create_time datetime DEFAULT NULL NULL,
+		update_time datetime DEFAULT NULL NULL,
+		added_by_id bigint DEFAULT NULL NULL,
+		upd_by_id bigint DEFAULT NULL NULL,
+		policy_id bigint NOT NULL,
+		group_id bigint NOT NULL,
+		group_name varchar(4000) DEFAULT NULL NULL,
+		CONSTRAINT x_policy_ref_group_PK_id PRIMARY KEY CLUSTERED(id),
 		CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE NONCLUSTERED (policy_id, group_id)
 )
 GO
