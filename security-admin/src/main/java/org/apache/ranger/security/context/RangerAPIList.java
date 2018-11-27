@@ -137,6 +137,8 @@ public class RangerAPIList {
 	public static final String MODIFY_GROUPS_VISIBILITY = "XUserREST.modifyGroupsVisibility";
 	public static final String DELETE_X_GROUP = "XUserREST.deleteXGroup";
 	public static final String SEARCH_X_GROUPS = "XUserREST.searchXGroups";
+        public static final String GET_USERS_LOOKUP = "XUserREST.getUsersLookup";
+        public static final String GET_GROUPS_LOOKUP = "XUserREST.getGroupsLookup";
 	public static final String COUNT_X_GROUPS = "XUserREST.countXGroups";
 	public static final String GET_X_USER = "XUserREST.getXUser";
 	public static final String SECURE_GET_X_USER = "XUserREST.secureGetXUser";
