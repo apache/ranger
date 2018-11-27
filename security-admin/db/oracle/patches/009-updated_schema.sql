@@ -12,7 +12,71 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
 /
+
+call spdropsequence('X_SERVICE_DEF_SEQ');
+call spdropsequence('X_SERVICE_SEQ');
+call spdropsequence('X_POLICY_SEQ');
+call spdropsequence('X_SERVICE_CONFIG_DEF_SEQ');
+call spdropsequence('X_RESOURCE_DEF_SEQ');
+call spdropsequence('X_ACCESS_TYPE_DEF_SEQ');
+call spdropsequence('X_ACCESS_TYPE_DEF_GRANTS_SEQ');
+call spdropsequence('X_POLICY_CONDITION_DEF_SEQ');
+call spdropsequence('X_ENUM_DEF_SEQ');
+call spdropsequence('X_ENUM_ELEMENT_DEF_SEQ');
+call spdropsequence('X_SERVICE_CONFIG_MAP_SEQ');
+call spdropsequence('X_POLICY_RESOURCE_SEQ');
+call spdropsequence('X_POLICY_RESOURCE_MAP_SEQ');
+call spdropsequence('X_POLICY_ITEM_SEQ');
+call spdropsequence('X_POLICY_ITEM_ACCESS_SEQ');
+call spdropsequence('X_POLICY_ITEM_CONDITION_SEQ');
+call spdropsequence('X_CONTEXT_ENRICHER_DEF_SEQ');
+call spdropsequence('X_POLICY_ITEM_USER_PERM_SEQ');
+call spdropsequence('X_POLICY_ITEM_GROUP_PERM_SEQ');
+call spdropsequence('X_DATA_HIST_SEQ');
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+call spdroptable('x_data_hist');
+call spdroptable('x_policy_item_group_perm');
+call spdroptable('x_policy_item_user_perm');
+call spdroptable('x_policy_item_condition');
+call spdroptable('x_policy_item_access');
+call spdroptable('x_policy_item');
+call spdroptable('x_policy_resource_map');
+call spdroptable('x_policy_resource');
+call spdroptable('x_service_config_map');
+call spdroptable('x_enum_element_def');
+call spdroptable('x_enum_def');
+call spdroptable('x_context_enricher_def');
+call spdroptable('x_policy_condition_def');
+call spdroptable('x_access_type_def_grants');
+call spdroptable('x_access_type_def');
+call spdroptable('x_resource_def');
+call spdroptable('x_service_config_def');
+call spdroptable('x_policy');
+call spdroptable('x_service');
+call spdroptable('x_service_def')
+
 CREATE SEQUENCE X_SERVICE_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SERVICE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;

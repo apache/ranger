@@ -13,6 +13,34 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE OR REPLACE PROCEDURE dbo.removeForeignKeysAndTable (IN table_name varchar(100))
+AS
+BEGIN
+	DECLARE @stmt VARCHAR(300)
+	DECLARE @tblname VARCHAR(300)
+	DECLARE @drpstmt VARCHAR(1000)
+	DECLARE cur CURSOR FOR select 'alter table dbo.' + table_name + ' drop constraint ' + role from SYS.SYSFOREIGNKEYS where foreign_creator ='dbo' and foreign_tname = table_name
+	OPEN cur WITH HOLD
+		fetch cur into @stmt
+		WHILE (@@sqlstatus = 0)
+		BEGIN
+			execute(@stmt)
+			fetch cur into @stmt
+		END
+	close cur
+	DEALLOCATE CURSOR cur
+	SET @tblname ='dbo.' + table_name;
+	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
+	execute(@drpstmt)
+END
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_rowfilter')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_item_datamask')
+GO
+call dbo.removeForeignKeysAndTable('x_datamask_type_def')
+GO
+
 CREATE TABLE dbo.x_datamask_type_def(
 	id bigint IDENTITY NOT NULL,
 	guid varchar(64) DEFAULT NULL NULL,

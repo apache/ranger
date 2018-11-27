@@ -13,7 +13,126 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_condition CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_access_type CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_resource CASCADE;
+DROP TABLE IF EXISTS x_ugsync_audit_info CASCADE;
+DROP TABLE IF EXISTS x_policy_label_map CASCADE;
+DROP TABLE IF EXISTS x_policy_label CASCADE;
+DROP TABLE IF EXISTS x_plugin_info CASCADE;
+DROP TABLE IF EXISTS x_service_version_info;
+DROP TABLE IF EXISTS x_policy_item_rowfilter;
+DROP TABLE IF EXISTS x_policy_item_datamask;
+DROP TABLE IF EXISTS x_datamask_type_def;
+DROP TABLE IF EXISTS x_service_resource_element_val CASCADE;
+DROP TABLE IF EXISTS x_tag_resource_map CASCADE;
+DROP TABLE IF EXISTS x_tag_attr CASCADE;
+DROP TABLE IF EXISTS x_tag_attr_def CASCADE;
+DROP TABLE IF EXISTS x_service_resource_element CASCADE;
+DROP TABLE IF EXISTS x_service_resource CASCADE;
+DROP TABLE IF EXISTS x_tag CASCADE;
+DROP TABLE IF EXISTS x_tag_def CASCADE;
+DROP TABLE IF EXISTS x_group_module_perm CASCADE;
+DROP TABLE IF EXISTS x_user_module_perm CASCADE;
+DROP TABLE IF EXISTS x_modules_master CASCADE;
+DROP TABLE IF EXISTS x_data_hist CASCADE;
+DROP TABLE IF EXISTS x_policy_item_group_perm CASCADE;
+DROP TABLE IF EXISTS x_policy_item_user_perm CASCADE;
+DROP TABLE IF EXISTS x_policy_item_condition CASCADE;
+DROP TABLE IF EXISTS x_policy_item_access CASCADE;
+DROP TABLE IF EXISTS x_policy_item CASCADE;
+DROP TABLE IF EXISTS x_policy_resource_map CASCADE;
+DROP TABLE IF EXISTS x_policy_resource CASCADE;
+DROP TABLE IF EXISTS x_service_config_map CASCADE;
+DROP TABLE IF EXISTS x_enum_element_def CASCADE;
+DROP TABLE IF EXISTS x_enum_def CASCADE;
+DROP TABLE IF EXISTS x_context_enricher_def CASCADE;
+DROP TABLE IF EXISTS x_policy_condition_def CASCADE;
+DROP TABLE IF EXISTS x_access_type_def_grants CASCADE;
+DROP TABLE IF EXISTS x_access_type_def CASCADE;
+DROP TABLE IF EXISTS x_resource_def CASCADE;
+DROP TABLE IF EXISTS x_service_config_def CASCADE;
+DROP TABLE IF EXISTS x_policy CASCADE;
+DROP TABLE IF EXISTS x_service CASCADE;
+DROP TABLE IF EXISTS x_service_def CASCADE;
+DROP TABLE IF EXISTS x_audit_map CASCADE;
+DROP TABLE IF EXISTS x_perm_map CASCADE;
+DROP TABLE IF EXISTS x_trx_log CASCADE;
+DROP TABLE IF EXISTS x_resource CASCADE;
+DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
+DROP TABLE IF EXISTS x_group_users CASCADE;
+DROP TABLE IF EXISTS x_user CASCADE;
+DROP TABLE IF EXISTS x_group_groups;
+DROP TABLE IF EXISTS x_group CASCADE;
+DROP TABLE IF EXISTS x_db_base CASCADE;
+DROP TABLE IF EXISTS x_cred_store CASCADE;
+DROP TABLE IF EXISTS x_auth_sess CASCADE;
+DROP TABLE IF EXISTS x_asset CASCADE;
+DROP TABLE IF EXISTS xa_access_audit CASCADE;
+DROP TABLE IF EXISTS x_portal_user_role CASCADE;
+DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
+
+DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
+DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
+DROP SEQUENCE IF EXISTS x_policy_ref_access_type_seq;
+DROP SEQUENCE IF EXISTS x_policy_ref_resource_seq;
+DROP SEQUENCE IF EXISTS x_ugsync_audit_info_seq;
+DROP SEQUENCE IF EXISTS x_policy_label_map_seq;
+DROP SEQUENCE IF EXISTS x_policy_label_seq;
+DROP SEQUENCE IF EXISTS x_plugin_info_seq;
+DROP SEQUENCE IF EXISTS x_service_version_info_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_rowfilter_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_datamask_seq;
+DROP SEQUENCE IF EXISTS x_datamask_type_def_seq;
+DROP SEQUENCE IF EXISTS x_tag_resource_map_seq;
+DROP SEQUENCE IF EXISTS x_service_resource_seq;
+DROP SEQUENCE IF EXISTS x_tag_seq;
+DROP SEQUENCE IF EXISTS x_tag_def_seq;
+DROP SEQUENCE IF EXISTS x_group_module_perm_seq;
+DROP SEQUENCE IF EXISTS x_user_module_perm_seq;
+DROP SEQUENCE IF EXISTS x_modules_master_seq;
+DROP SEQUENCE IF EXISTS x_data_hist_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_group_perm_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_user_perm_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_condition_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_access_seq;
+DROP SEQUENCE IF EXISTS x_policy_item_seq;
+DROP SEQUENCE IF EXISTS x_policy_resource_map_seq;
+DROP SEQUENCE IF EXISTS x_policy_resource_seq;
+DROP SEQUENCE IF EXISTS x_service_config_map_seq;
+DROP SEQUENCE IF EXISTS x_enum_element_def_seq;
+DROP SEQUENCE IF EXISTS x_enum_def_seq;
+DROP SEQUENCE IF EXISTS x_context_enricher_def_seq;
+DROP SEQUENCE IF EXISTS x_policy_condition_def_seq;
+DROP SEQUENCE IF EXISTS x_access_type_def_grants_seq;
+DROP SEQUENCE IF EXISTS x_access_type_def_seq;
+DROP SEQUENCE IF EXISTS x_resource_def_seq;
+DROP SEQUENCE IF EXISTS x_service_config_def_seq;
+DROP SEQUENCE IF EXISTS x_policy_seq;
+DROP SEQUENCE IF EXISTS x_service_seq;
+DROP SEQUENCE IF EXISTS x_service_def_seq;
+DROP SEQUENCE IF EXISTS x_audit_map_seq;
+DROP SEQUENCE IF EXISTS x_perm_map_seq;
+DROP SEQUENCE IF EXISTS x_trx_log_seq;
+DROP SEQUENCE IF EXISTS x_resource_seq;
+DROP SEQUENCE IF EXISTS x_policy_export_seq;
+DROP SEQUENCE IF EXISTS x_group_users_seq;
+DROP SEQUENCE IF EXISTS x_user_seq;
+DROP SEQUENCE IF EXISTS x_group_groups_seq;
+DROP SEQUENCE IF EXISTS x_group_seq;
+DROP SEQUENCE IF EXISTS x_db_base_seq;
+DROP SEQUENCE IF EXISTS x_cred_store_seq;
+DROP SEQUENCE IF EXISTS x_auth_sess_seq;
+DROP SEQUENCE IF EXISTS x_asset_seq;
+DROP SEQUENCE IF EXISTS xa_access_audit_seq;
+DROP SEQUENCE IF EXISTS x_portal_user_role_seq;
+DROP SEQUENCE IF EXISTS x_portal_user_seq;
+
 create table x_db_version_h(
 id	SERIAL primary key,
 version	varchar(64) NOT NULL,
@@ -24,8 +143,6 @@ updated_by	varchar(256) NOT NULL,
 active	VARCHAR(1) CHECK (active IN ('Y','N')) DEFAULT 'Y'
 );
 
-DROP TABLE IF EXISTS x_portal_user CASCADE;
-DROP SEQUENCE IF EXISTS x_portal_user_seq;
 CREATE SEQUENCE x_portal_user_seq;
 CREATE TABLE x_portal_user(
 id BIGINT DEFAULT nextval('x_portal_user_seq'::regclass),
@@ -49,8 +166,6 @@ CONSTRAINT x_portal_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_po
 CONSTRAINT x_portal_user_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_portal_user_role CASCADE;
-DROP SEQUENCE IF EXISTS x_portal_user_role_seq;
 CREATE SEQUENCE x_portal_user_role_seq;
 CREATE TABLE x_portal_user_role(
 id BIGINT DEFAULT nextval('x_portal_user_role_seq'::regclass),
@@ -67,8 +182,6 @@ CONSTRAINT x_portal_user_role_FK_updby FOREIGN KEY(upd_by_id) REFERENCES x_porta
 CONSTRAINT x_portal_user_role_FK_user_id FOREIGN KEY(user_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS xa_access_audit CASCADE;
-DROP SEQUENCE IF EXISTS xa_access_audit_seq;
 CREATE SEQUENCE xa_access_audit_seq;
 CREATE TABLE xa_access_audit(
 id BIGINT DEFAULT nextval('xa_access_audit_seq'::regclass),
@@ -97,8 +210,6 @@ resource_type VARCHAR(255) DEFAULT NULL NULL,
 PRIMARY KEY(id)
 );
 
-DROP TABLE IF EXISTS x_asset CASCADE;
-DROP SEQUENCE IF EXISTS x_asset_seq;
 CREATE SEQUENCE x_asset_seq;
 CREATE TABLE x_asset(
 id BIGINT DEFAULT nextval('x_asset_seq'::regclass),
@@ -117,8 +228,6 @@ CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_u
 CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_auth_sess CASCADE;
-DROP SEQUENCE IF EXISTS x_auth_sess_seq;
 CREATE SEQUENCE x_auth_sess_seq;
 CREATE TABLE x_auth_sess(
 id BIGINT DEFAULT nextval('x_auth_sess_seq'::regclass),
@@ -142,9 +251,6 @@ CONSTRAINT x_auth_sess_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_u
 CONSTRAINT x_auth_sess_FK_user_id FOREIGN KEY(user_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_cred_store CASCADE;
-DROP SEQUENCE IF EXISTS x_cred_store_seq;
 CREATE SEQUENCE x_cred_store_seq;
 CREATE TABLE x_cred_store(
 id BIGINT DEFAULT nextval('x_cred_store_seq'::regclass),
@@ -159,9 +265,6 @@ CONSTRAINT x_cred_store_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_por
 CONSTRAINT x_cred_store_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_db_base CASCADE;
-DROP SEQUENCE IF EXISTS x_db_base_seq;
 CREATE SEQUENCE x_db_base_seq;
 CREATE TABLE x_db_base(
 id BIGINT DEFAULT nextval('x_db_base_seq'::regclass),
@@ -174,8 +277,6 @@ CONSTRAINT x_db_base_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal
 CONSTRAINT x_db_base_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_group CASCADE;
-DROP SEQUENCE IF EXISTS x_group_seq;
 CREATE SEQUENCE x_group_seq;
 CREATE TABLE x_group(
 id BIGINT DEFAULT nextval('x_group_seq'::regclass),
@@ -197,8 +298,6 @@ CONSTRAINT X_GROUP_FK_CRED_STORE_ID FOREIGN KEY(CRED_STORE_ID) REFERENCES X_CRED
 CONSTRAINT X_GROUP_FK_UPD_BY_ID FOREIGN KEY(UPD_BY_ID) REFERENCES X_PORTAL_USER(ID)
 );
 
-DROP TABLE IF EXISTS x_group_groups;
-DROP SEQUENCE IF EXISTS x_group_groups_seq;
 CREATE SEQUENCE x_group_groups_seq;
 CREATE TABLE x_group_groups(
 id BIGINT DEFAULT nextval('x_group_groups_seq'::regclass),
@@ -216,8 +315,6 @@ CONSTRAINT x_group_groups_FK_p_group_id FOREIGN KEY(p_group_id) REFERENCES x_gro
 CONSTRAINT x_group_groups_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_user CASCADE;
-DROP SEQUENCE IF EXISTS x_user_seq;
 CREATE SEQUENCE x_user_seq;
 CREATE TABLE x_user(
 id BIGINT DEFAULT nextval('x_user_seq'::regclass),
@@ -237,8 +334,6 @@ CONSTRAINT x_user_FK_cred_store_id FOREIGN KEY(cred_store_id) REFERENCES x_cred_
 CONSTRAINT x_user_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_group_users CASCADE;
-DROP SEQUENCE IF EXISTS x_group_users_seq;
 CREATE SEQUENCE x_group_users_seq;
 CREATE TABLE x_group_users(
 id BIGINT DEFAULT nextval('x_group_users_seq'::regclass),
@@ -257,8 +352,6 @@ CONSTRAINT x_group_users_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal
 CONSTRAINT x_group_users_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id)
 );
 
-DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_export_seq;
 CREATE SEQUENCE x_policy_export_seq;
 CREATE TABLE x_policy_export_audit(
 id BIGINT DEFAULT nextval('x_policy_export_seq'::regclass),
@@ -279,8 +372,6 @@ CONSTRAINT x_policy_export_audit_FK_added FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_policy_export_audit_FK_upd FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_resource CASCADE;
-DROP SEQUENCE IF EXISTS x_resource_seq;
 CREATE SEQUENCE x_resource_seq;
 CREATE TABLE x_resource(
 id BIGINT DEFAULT nextval('x_resource_seq'::regclass),
@@ -316,9 +407,6 @@ CONSTRAINT x_resource_FK_parent_id FOREIGN KEY(parent_id) REFERENCES x_resource(
 CONSTRAINT x_resource_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_trx_log CASCADE;
-DROP SEQUENCE IF EXISTS x_trx_log_seq;
 CREATE SEQUENCE x_trx_log_seq;
 CREATE TABLE x_trx_log(
 id BIGINT DEFAULT nextval('x_trx_log_seq'::regclass),
@@ -345,8 +433,6 @@ CONSTRAINT x_trx_log_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal
 CONSTRAINT x_trx_log_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_perm_map CASCADE;
-DROP SEQUENCE IF EXISTS x_perm_map_seq;
 CREATE SEQUENCE x_perm_map_seq;
 CREATE TABLE x_perm_map(
 id BIGINT DEFAULT nextval('x_perm_map_seq'::regclass),
@@ -372,8 +458,6 @@ CONSTRAINT x_perm_map_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_us
 CONSTRAINT x_perm_map_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id)
 );
 
-DROP TABLE IF EXISTS x_audit_map CASCADE;
-DROP SEQUENCE IF EXISTS x_audit_map_seq;
 CREATE SEQUENCE x_audit_map_seq;
 CREATE TABLE x_audit_map(
 id BIGINT DEFAULT nextval('x_audit_map_seq'::regclass),
@@ -393,8 +477,6 @@ CONSTRAINT X_AUDIT_MAP_FK_UPD_BY_ID FOREIGN KEY(UPD_BY_ID) REFERENCES X_PORTAL_U
 CONSTRAINT X_AUDIT_MAP_FK_USER_ID FOREIGN KEY(USER_ID) REFERENCES X_USER(ID)
 );
 
-DROP TABLE IF EXISTS x_service_def CASCADE;
-DROP SEQUENCE IF EXISTS x_service_def_seq;
 CREATE SEQUENCE x_service_def_seq;
 CREATE TABLE x_service_def(
 id BIGINT DEFAULT nextval('x_service_def_seq'::regclass),
@@ -417,8 +499,6 @@ CONSTRAINT x_service_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_po
 CONSTRAINT x_service_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_service CASCADE;
-DROP SEQUENCE IF EXISTS x_service_seq;
 CREATE SEQUENCE x_service_seq;
 CREATE TABLE x_service(
 id BIGINT DEFAULT nextval('x_service_seq'::regclass),
@@ -445,8 +525,6 @@ CONSTRAINT x_service_FK_type FOREIGN KEY(type) REFERENCES x_service_def(id),
 CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
 );
 
-DROP TABLE IF EXISTS x_policy CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_seq;
 CREATE SEQUENCE x_policy_seq;
 CREATE TABLE x_policy(
 id BIGINT DEFAULT nextval('x_policy_seq'::regclass),
@@ -473,8 +551,6 @@ CONSTRAINT x_policy_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user
 CONSTRAINT x_policy_FK_service FOREIGN KEY(service) REFERENCES x_service(id)
 );
 
-DROP TABLE IF EXISTS x_service_config_def CASCADE;
-DROP SEQUENCE IF EXISTS x_service_config_def_seq;
 CREATE SEQUENCE x_service_config_def_seq;
 CREATE TABLE x_service_config_def(
 id BIGINT DEFAULT nextval('x_service_config_def_seq'::regclass),
@@ -505,8 +581,6 @@ CONSTRAINT x_service_conf_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_service_conf_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_resource_def CASCADE;
-DROP SEQUENCE IF EXISTS x_resource_def_seq;
 CREATE SEQUENCE x_resource_def_seq;
 CREATE TABLE x_resource_def(
 id BIGINT DEFAULT nextval('x_resource_def_seq'::regclass),
@@ -545,8 +619,6 @@ CONSTRAINT x_resource_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_p
 CONSTRAINT x_resource_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_access_type_def CASCADE;
-DROP SEQUENCE IF EXISTS x_access_type_def_seq;
 CREATE SEQUENCE x_access_type_def_seq;
 CREATE TABLE x_access_type_def(
 id BIGINT DEFAULT nextval('x_access_type_def_seq'::regclass),
@@ -569,8 +641,6 @@ CONSTRAINT x_access_type_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_p
 CONSTRAINT x_access_type_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_access_type_def_grants CASCADE;
-DROP SEQUENCE IF EXISTS x_access_type_def_grants_seq;
 CREATE SEQUENCE x_access_type_def_grants_seq;
 CREATE TABLE x_access_type_def_grants(
 id BIGINT DEFAULT nextval('x_access_type_def_grants_seq'::regclass),
@@ -587,8 +657,6 @@ CONSTRAINT x_atd_grants_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_por
 CONSTRAINT x_atd_grants_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_policy_condition_def CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_condition_def_seq;
 CREATE SEQUENCE x_policy_condition_def_seq;
 CREATE TABLE x_policy_condition_def(
 id BIGINT DEFAULT nextval('x_policy_condition_def_seq'::regclass),
@@ -617,9 +685,6 @@ CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_p
 CONSTRAINT x_policy_cond_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_context_enricher_def CASCADE;
-DROP SEQUENCE IF EXISTS x_context_enricher_def_seq;
 CREATE SEQUENCE x_context_enricher_def_seq;
 CREATE TABLE x_context_enricher_def(
 id BIGINT DEFAULT nextval('x_context_enricher_def_seq'::regclass),
@@ -640,9 +705,6 @@ CONSTRAINT x_context_enricher_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERE
 CONSTRAINT x_context_enricher_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_enum_def CASCADE;
-DROP SEQUENCE IF EXISTS x_enum_def_seq;
 CREATE SEQUENCE x_enum_def_seq;
 CREATE TABLE x_enum_def(
 id BIGINT DEFAULT nextval('x_enum_def_seq'::regclass),
@@ -661,8 +723,6 @@ CONSTRAINT x_enum_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_porta
 CONSTRAINT x_enum_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_enum_element_def CASCADE;
-DROP SEQUENCE IF EXISTS x_enum_element_def_seq;
 CREATE SEQUENCE x_enum_element_def_seq;
 CREATE TABLE x_enum_element_def(
 id BIGINT DEFAULT nextval('x_enum_element_def_seq'::regclass),
@@ -683,9 +743,6 @@ CONSTRAINT x_enum_element_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_enum_element_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_service_config_map CASCADE;
-DROP SEQUENCE IF EXISTS x_service_config_map_seq;
 CREATE SEQUENCE x_service_config_map_seq;
 CREATE TABLE x_service_config_map(
 id BIGINT DEFAULT nextval('x_service_config_map_seq'::regclass),
@@ -703,9 +760,6 @@ CONSTRAINT x_service_conf_map_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_service_conf_map_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_policy_resource CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_resource_seq;
 CREATE SEQUENCE x_policy_resource_seq;
 CREATE TABLE x_policy_resource(
 id BIGINT DEFAULT nextval('x_policy_resource_seq'::regclass),
@@ -725,9 +779,6 @@ CONSTRAINT x_policy_res_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_por
 CONSTRAINT x_policy_res_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_policy_resource_map CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_resource_map_seq;
 CREATE SEQUENCE x_policy_resource_map_seq;
 CREATE TABLE x_policy_resource_map(
 id BIGINT DEFAULT nextval('x_policy_resource_map_seq'::regclass),
@@ -745,9 +796,6 @@ CONSTRAINT x_policy_res_map_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_po
 CONSTRAINT x_policy_res_map_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_policy_item CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_item_seq;
 CREATE SEQUENCE x_policy_item_seq;
 CREATE TABLE x_policy_item(
 id BIGINT DEFAULT nextval('x_policy_item_seq'::regclass),
@@ -768,8 +816,6 @@ CONSTRAINT x_policy_item_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_po
 CONSTRAINT x_policy_item_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_policy_item_access CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_item_access_seq;
 CREATE SEQUENCE x_policy_item_access_seq;
 CREATE TABLE x_policy_item_access(
 id BIGINT DEFAULT nextval('x_policy_item_access_seq'::regclass),
@@ -789,9 +835,6 @@ CONSTRAINT x_plc_item_access_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_p
 CONSTRAINT x_plc_item_access_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_policy_item_condition CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_item_condition_seq;
 CREATE SEQUENCE x_policy_item_condition_seq;
 CREATE TABLE x_policy_item_condition(
 id BIGINT DEFAULT nextval('x_policy_item_condition_seq'::regclass),
@@ -811,8 +854,6 @@ CONSTRAINT x_plc_item_cond_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_plc_item_cond_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_policy_item_user_perm CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_item_user_perm_seq;
 CREATE SEQUENCE x_policy_item_user_perm_seq;
 CREATE TABLE x_policy_item_user_perm(
 id BIGINT DEFAULT nextval('x_policy_item_user_perm_seq'::regclass),
@@ -831,9 +872,6 @@ CONSTRAINT x_plc_itm_usr_perm_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_plc_itm_usr_perm_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_policy_item_group_perm CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_item_group_perm_seq;
 CREATE SEQUENCE x_policy_item_group_perm_seq;
 CREATE TABLE x_policy_item_group_perm(
 id BIGINT DEFAULT nextval('x_policy_item_group_perm_seq'::regclass),
@@ -852,9 +890,6 @@ CONSTRAINT x_plc_itm_grp_perm_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_
 CONSTRAINT x_plc_itm_grp_perm_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-
-DROP TABLE IF EXISTS x_data_hist CASCADE;
-DROP SEQUENCE IF EXISTS x_data_hist_seq;
 CREATE SEQUENCE x_data_hist_seq;
 CREATE TABLE x_data_hist(
 id BIGINT DEFAULT nextval('x_data_hist_seq'::regclass),
@@ -872,8 +907,6 @@ content TEXT NOT NULL,
 primary key(id)
 );
 
-DROP TABLE IF EXISTS x_modules_master CASCADE;
-DROP SEQUENCE IF EXISTS x_modules_master_seq;
 CREATE SEQUENCE x_modules_master_seq;
 CREATE TABLE x_modules_master(
 id BIGINT DEFAULT nextval('x_modules_master_seq'::regclass),
@@ -886,8 +919,6 @@ url VARCHAR(1024) DEFAULT NULL NULL,
 PRIMARY KEY(id)
 );
 
-DROP TABLE IF EXISTS x_user_module_perm CASCADE;
-DROP SEQUENCE IF EXISTS x_user_module_perm_seq;
 CREATE SEQUENCE x_user_module_perm_seq;
 CREATE TABLE x_user_module_perm(
 id BIGINT DEFAULT nextval('x_user_module_perm_seq'::regclass),
@@ -903,8 +934,6 @@ CONSTRAINT x_user_module_perm_FK_moduleid FOREIGN KEY (module_id) REFERENCES x_m
 CONSTRAINT x_user_module_perm_FK_userid FOREIGN KEY (user_id) REFERENCES x_portal_user(id)
 );
 
-DROP TABLE IF EXISTS x_group_module_perm CASCADE;
-DROP SEQUENCE IF EXISTS x_group_module_perm_seq;
 CREATE SEQUENCE x_group_module_perm_seq;
 CREATE TABLE x_group_module_perm(
 id BIGINT DEFAULT nextval('x_group_module_perm_seq'::regclass),
@@ -920,8 +949,6 @@ CONSTRAINT x_grp_module_perm_FK_module_id FOREIGN KEY (module_id) REFERENCES x_m
 CONSTRAINT x_grp_module_perm_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group(id)
 );
 
-DROP TABLE IF EXISTS x_tag_def CASCADE;
-DROP SEQUENCE IF EXISTS x_tag_def_seq;
 CREATE SEQUENCE x_tag_def_seq;
 CREATE TABLE x_tag_def(
 id BIGINT DEFAULT nextval('x_tag_def_seq'::regclass),
@@ -942,9 +969,6 @@ CONSTRAINT x_tag_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_porta
 CONSTRAINT x_tag_def_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-
-DROP TABLE IF EXISTS x_tag CASCADE;
-DROP SEQUENCE IF EXISTS x_tag_seq;
 CREATE SEQUENCE x_tag_seq;
 CREATE TABLE x_tag(
 id BIGINT DEFAULT nextval('x_tag_seq'::regclass),
@@ -965,8 +989,6 @@ CONSTRAINT x_tag_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_us
 CONSTRAINT x_tag_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-DROP TABLE IF EXISTS x_service_resource CASCADE;
-DROP SEQUENCE IF EXISTS x_service_resource_seq;
 CREATE SEQUENCE x_service_resource_seq;
 CREATE TABLE x_service_resource(
 id BIGINT DEFAULT nextval('x_service_resource_seq'::regclass),
@@ -988,8 +1010,6 @@ CONSTRAINT x_service_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_p
 CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-DROP TABLE IF EXISTS x_tag_resource_map CASCADE;
-DROP SEQUENCE IF EXISTS x_tag_resource_map_seq;
 CREATE SEQUENCE x_tag_resource_map_seq;
 CREATE TABLE x_tag_resource_map(
 id BIGINT NOT NULL,
@@ -1008,10 +1028,6 @@ CONSTRAINT x_tag_res_map_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_p
 CONSTRAINT x_tag_res_map_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-DROP TABLE IF EXISTS x_policy_item_datamask;
-DROP SEQUENCE IF EXISTS x_policy_item_datamask_seq;
-DROP TABLE IF EXISTS x_datamask_type_def;
-DROP SEQUENCE IF EXISTS x_datamask_type_def_seq;
 CREATE SEQUENCE x_datamask_type_def_seq;
 CREATE TABLE x_datamask_type_def (
   id BIGINT DEFAULT nextval('x_datamask_type_def_seq'::regclass),
@@ -1055,8 +1071,6 @@ CREATE TABLE x_policy_item_datamask (
   CONSTRAINT x_policy_item_datamask_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-DROP TABLE IF EXISTS x_policy_item_rowfilter;
-DROP SEQUENCE IF EXISTS x_policy_item_rowfilter_seq;
 CREATE SEQUENCE x_policy_item_rowfilter_seq;
 CREATE TABLE x_policy_item_rowfilter (
   id BIGINT DEFAULT nextval('x_policy_item_rowfilter_seq'::regclass),
@@ -1073,8 +1087,6 @@ CREATE TABLE x_policy_item_rowfilter (
   CONSTRAINT x_policy_item_rowfilter_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-DROP TABLE IF EXISTS x_service_version_info;
-DROP SEQUENCE IF EXISTS x_service_version_info_seq;
 CREATE SEQUENCE x_service_version_info_seq;
 CREATE TABLE x_service_version_info (
 id BIGINT DEFAULT nextval('x_service_version_info_seq'::regclass),
@@ -1087,8 +1099,6 @@ primary key (id),
 CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 
-DROP TABLE IF EXISTS x_plugin_info CASCADE;
-DROP SEQUENCE IF EXISTS x_plugin_info_seq;
 CREATE SEQUENCE x_plugin_info_seq;
 CREATE TABLE x_plugin_info (
 id BIGINT DEFAULT nextval('x_plugin_info_seq'::regclass),
@@ -1103,10 +1113,6 @@ primary key (id),
 CONSTRAINT x_plugin_info_UK UNIQUE (service_name, host_name, app_type)
 );
 
-DROP TABLE IF EXISTS x_policy_label_map CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_label_map_seq;
-DROP TABLE IF EXISTS x_policy_label CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_label_seq;
 CREATE SEQUENCE x_policy_label_seq;
 CREATE TABLE x_policy_label (
 id BIGINT DEFAULT nextval('x_policy_label_seq'::regclass),
@@ -1140,8 +1146,6 @@ CONSTRAINT x_policy_label_map_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_
 CONSTRAINT x_policy_label_map_FK_policy_label_id FOREIGN KEY (policy_label_id) REFERENCES x_policy_label (id)
 );
 
-DROP TABLE IF EXISTS x_ugsync_audit_info CASCADE;
-DROP SEQUENCE IF EXISTS x_ugsync_audit_info_seq;
 CREATE SEQUENCE x_ugsync_audit_info_seq;
 CREATE TABLE x_ugsync_audit_info (
 id BIGINT DEFAULT nextval('x_ugsync_audit_info_seq'::regclass),
@@ -1161,8 +1165,6 @@ session_id varchar(255) DEFAULT NULL,
 primary key (id)
 );
 
-DROP TABLE IF EXISTS x_policy_ref_resource CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_resource_seq;
 CREATE SEQUENCE x_policy_ref_resource_seq;
 CREATE TABLE x_policy_ref_resource(
 id BIGINT DEFAULT nextval('x_policy_ref_resource_seq'::regclass),
@@ -1182,8 +1184,7 @@ CONSTRAINT x_p_ref_res_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_res_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_access_type CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_access_type_seq;
+
 CREATE SEQUENCE x_policy_ref_access_type_seq;
 CREATE TABLE x_policy_ref_access_type(
 id BIGINT DEFAULT nextval('x_policy_ref_access_type_seq'::regclass),
@@ -1224,8 +1225,7 @@ CONSTRAINT x_p_ref_cond_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_por
 CONSTRAINT x_p_ref_cond_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
+
 CREATE SEQUENCE x_policy_ref_datamask_type_seq;
 CREATE TABLE x_policy_ref_datamask_type(
 id BIGINT DEFAULT nextval('x_policy_ref_datamask_type_seq'::regclass),
@@ -1245,8 +1245,7 @@ CONSTRAINT x_p_ref_dmk_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_dmk_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
+
 CREATE SEQUENCE x_policy_ref_user_seq;
 CREATE TABLE x_policy_ref_user(
 id BIGINT DEFAULT nextval('x_policy_ref_user_seq'::regclass),
@@ -1266,8 +1265,7 @@ CONSTRAINT x_p_ref_usr_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_usr_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
+
 CREATE SEQUENCE x_policy_ref_group_seq;
 CREATE TABLE x_policy_ref_group(
 id BIGINT DEFAULT nextval('x_policy_ref_group_seq'::regclass),

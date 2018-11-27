@@ -513,6 +513,42 @@ IF (OBJECT_ID('vx_trx_log') IS NOT NULL)
 BEGIN
     DROP VIEW [dbo].[vx_trx_log]
 END
+IF (OBJECT_ID('x_policy_ref_group') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_group]
+END
+IF (OBJECT_ID('x_policy_ref_user') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_user]
+END
+IF (OBJECT_ID('x_policy_ref_datamask_type') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_datamask_type]
+END
+IF (OBJECT_ID('x_policy_ref_condition') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_condition]
+END
+IF (OBJECT_ID('x_policy_ref_access_type') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_access_type]
+END
+IF (OBJECT_ID('x_policy_ref_resource') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_resource]
+END
+IF (OBJECT_ID('x_ugsync_audit_info') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_ugsync_audit_info]
+END
+IF (OBJECT_ID('x_policy_label_map') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_label_map]
+END
+IF (OBJECT_ID('x_policy_label') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_label]
+END
 IF (OBJECT_ID('x_plugin_info') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_plugin_info]
@@ -728,10 +764,6 @@ END
 IF (OBJECT_ID('x_portal_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_portal_user]
-END
-IF (OBJECT_ID('x_ugsync_audit_info') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_ugsync_audit_info]
 END
 IF (OBJECT_ID('x_db_version_h') IS NOT NULL)
 BEGIN
