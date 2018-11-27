@@ -12,7 +12,43 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
 /
+
+call spdropsequence('X_POLICY_REF_RESOURCE_SEQ');
+call spdropsequence('X_POLICY_REF_ACCESS_TYPE_SEQ');
+call spdropsequence('X_POLICY_REF_CONDITION_SEQ');
+call spdropsequence('X_POLICY_REF_DATAMASK_TYPE_SEQ');
+call spdropsequence('X_POLICY_REF_USER_SEQ');
+call spdropsequence('X_POLICY_REF_GROUP_SEQ');
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+call spdroptable('x_policy_ref_group');
+call spdroptable('x_policy_ref_user');
+call spdroptable('x_policy_ref_datamask_type');
+call spdroptable('x_policy_ref_condition');
+call spdroptable('x_policy_ref_access_type');
+call spdroptable('x_policy_ref_resource');
+
 CREATE SEQUENCE X_POLICY_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_ACCESS_TYPE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_CONDITION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
