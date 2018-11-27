@@ -13,7 +13,78 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- create sequences
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
+/
+
+call spdropsequence('SEQ_GEN_IDENTITY');
+call spdropsequence('X_ACCESS_AUDIT_SEQ');
+call spdropsequence('X_ASSET_SEQ');
+call spdropsequence('X_AUDIT_MAP_SEQ');
+call spdropsequence('X_AUTH_SESS_SEQ');
+call spdropsequence('X_CRED_STORE_SEQ');
+call spdropsequence('X_DB_BASE_SEQ');
+call spdropsequence('X_GROUP_SEQ');
+call spdropsequence('X_GROUP_USERS_SEQ');
+call spdropsequence('X_GROUP_GROUPS_SEQ');
+call spdropsequence('X_PERM_MAP_SEQ');
+call spdropsequence('X_POLICY_EXPORT_SEQ');
+call spdropsequence('X_PORTAL_USER_SEQ');
+call spdropsequence('X_PORTAL_USER_ROLE_SEQ');
+call spdropsequence('X_RESOURCE_SEQ');
+call spdropsequence('X_TRX_LOG_SEQ');
+call spdropsequence('X_USER_SEQ');
+call spdropsequence('V_TRX_LOG_SEQ');
+call spdropsequence('XA_ACCESS_AUDIT_SEQ');
+call spdropsequence('X_SERVICE_DEF_SEQ');
+call spdropsequence('X_SERVICE_SEQ');
+call spdropsequence('X_POLICY_SEQ');
+call spdropsequence('X_SERVICE_CONFIG_DEF_SEQ');
+call spdropsequence('X_ENUM_ELEMENT_DEF_SEQ');
+call spdropsequence('X_RESOURCE_DEF_SEQ');
+call spdropsequence('X_ACCESS_TYPE_DEF_SEQ');
+call spdropsequence('X_ACCESS_TYPE_DEF_GRANTS_SEQ');
+call spdropsequence('X_POLICY_CONDITION_DEF_SEQ');
+call spdropsequence('X_ENUM_DEF_SEQ');
+call spdropsequence('X_SERVICE_CONFIG_MAP_SEQ');
+call spdropsequence('X_POLICY_RESOURCE_SEQ');
+call spdropsequence('X_POLICY_RESOURCE_MAP_SEQ');
+call spdropsequence('X_POLICY_ITEM_SEQ');
+call spdropsequence('X_POLICY_ITEM_ACCESS_SEQ');
+call spdropsequence('X_POLICY_ITEM_CONDITION_SEQ');
+call spdropsequence('X_CONTEXT_ENRICHER_DEF_SEQ');
+call spdropsequence('X_POLICY_ITEM_USER_PERM_SEQ');
+call spdropsequence('X_POLICY_ITEM_GROUP_PERM_SEQ');
+call spdropsequence('X_POLICY_REF_RESOURCE_SEQ');
+call spdropsequence('X_POLICY_REF_ACCESS_TYPE_SEQ');
+call spdropsequence('X_POLICY_REF_CONDITION_SEQ');
+call spdropsequence('X_POLICY_REF_DATAMASK_TYPE_SEQ');
+call spdropsequence('X_POLICY_REF_USER_SEQ');
+call spdropsequence('X_POLICY_REF_GROUP_SEQ');
+call spdropsequence('X_DATA_HIST_SEQ');
+call spdropsequence('X_MODULES_MASTER_SEQ');
+call spdropsequence('X_USER_MODULE_PERM_SEQ');
+call spdropsequence('X_GROUP_MODULE_PERM_SEQ');
+call spdropsequence('X_TAG_DEF_SEQ');
+call spdropsequence('X_TAG_SEQ');
+call spdropsequence('X_SERVICE_RESOURCE_SEQ');
+call spdropsequence('X_TAG_RESOURCE_MAP_SEQ');
+call spdropsequence('X_DATAMASK_TYPE_DEF_SEQ');
+call spdropsequence('X_POLICY_ITEM_DATAMASK_SEQ');
+call spdropsequence('X_POLICY_ITEM_ROWFILTER_SEQ');
+call spdropsequence('X_SERVICE_VERSION_INFO_SEQ');
+call spdropsequence('X_PLUGIN_INFO_SEQ');
+call spdropsequence('X_POLICY_LABEL_MAP_SEQ');
+call spdropsequence('X_POLICY_LABEL_SEQ');
+call spdropsequence('X_UGSYNC_AUDIT_INFO_SEQ');
+call spdropsequence('X_DB_VERSION_H_SEQ');
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ASSET_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -74,11 +145,109 @@ CREATE SEQUENCE X_PLUGIN_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_LABEL_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_LABEL_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_UGSYNC_AUDIT_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
---CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+
+CREATE OR REPLACE PROCEDURE spdropview(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from User_Views where VIEW_NAME = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'DROP VIEW ' || ObjName;
+     end if;
+END;/
+/
+
+call spdropview('vx_trx_log');
+
+call spdroptable('x_policy_ref_group');
+call spdroptable('x_policy_ref_user');
+call spdroptable('x_policy_ref_datamask_type');
+call spdroptable('x_policy_ref_condition');
+call spdroptable('x_policy_ref_access_type');
+call spdroptable('x_policy_ref_resource');
+call spdroptable('x_ugsync_audit_info');
+call spdroptable('x_policy_label_map');
+call spdroptable('x_policy_label');
+call spdroptable('x_plugin_info');
+call spdroptable('x_service_version_info');
+call spdroptable('x_policy_item_rowfilter');
+call spdroptable('x_policy_item_datamask');
+call spdroptable('x_datamask_type_def');
+call spdroptable('x_service_resource_element_val');
+call spdroptable('x_tag_resource_map');
+call spdroptable('x_tag_attr');
+call spdroptable('x_tag_attr_def');
+call spdroptable('x_service_resource_element');
+call spdroptable('x_service_resource');
+call spdroptable('x_tag');
+call spdroptable('x_tag_def');
+call spdroptable('x_group_module_perm');
+call spdroptable('x_user_module_perm');
+call spdroptable('x_modules_master');
+call spdroptable('x_data_hist');
+call spdroptable('x_policy_item_group_perm');
+call spdroptable('x_policy_item_user_perm');
+call spdroptable('x_policy_item_condition');
+call spdroptable('x_policy_item_access');
+call spdroptable('x_policy_item');
+call spdroptable('x_policy_resource_map');
+call spdroptable('x_policy_resource');
+call spdroptable('x_service_config_map');
+call spdroptable('x_enum_element_def');
+call spdroptable('x_enum_def');
+call spdroptable('x_context_enricher_def');
+call spdroptable('x_policy_condition_def');
+call spdroptable('x_access_type_def_grants');
+call spdroptable('x_access_type_def');
+call spdroptable('x_resource_def');
+call spdroptable('x_service_config_def');
+call spdroptable('x_policy');
+call spdroptable('x_service');
+call spdroptable('x_service_def');
+call spdroptable('x_audit_map');
+call spdroptable('x_perm_map');
+call spdroptable('x_trx_log');
+call spdroptable('x_resource');
+call spdroptable('x_policy_export_audit');
+call spdroptable('x_group_users');
+call spdroptable('x_user');
+call spdroptable('x_group_groups');
+call spdroptable('x_group');
+call spdroptable('x_db_base');
+call spdroptable('x_cred_store');
+call spdroptable('x_auth_sess');
+call spdroptable('x_asset');
+call spdroptable('xa_access_audit');
+call spdroptable('x_portal_user_role');
+call spdroptable('x_portal_user');
+call spdroptable('x_db_version_h');
 
 
 -- create tables
+create table X_DB_VERSION_H  (
+	id NUMBER(20) NOT NULL,
+	version VARCHAR(64) NOT NULL,
+	inst_at DATE DEFAULT SYSDATE NOT NULL,
+	inst_by VARCHAR(256) NOT NULL,
+	updated_at DATE DEFAULT SYSDATE NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+	active VARCHAR(1) DEFAULT 'Y'
+);
+
 CREATE TABLE x_portal_user (
         id NUMBER(20) NOT NULL,
         create_time DATE DEFAULT NULL NULL ,

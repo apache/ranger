@@ -14,6 +14,15 @@
 -- limitations under the License.
 
 DROP VIEW IF EXISTS `vx_trx_log`;
+DROP TABLE IF EXISTS `x_policy_ref_group`;
+DROP TABLE IF EXISTS `x_policy_ref_user`;
+DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
+DROP TABLE IF EXISTS `x_policy_ref_condition`;
+DROP TABLE IF EXISTS `x_policy_ref_access_type`;
+DROP TABLE IF EXISTS `x_policy_ref_resource`;
+DROP TABLE IF EXISTS `x_ugsync_audit_info`;
+DROP TABLE IF EXISTS `x_policy_label_map`;
+DROP TABLE IF EXISTS `x_policy_label`;
 DROP TABLE IF EXISTS `x_plugin_info`;
 DROP TABLE IF EXISTS `x_service_version_info`;
 DROP TABLE IF EXISTS `x_policy_item_rowfilter`;
@@ -38,10 +47,6 @@ DROP TABLE IF EXISTS `x_policy_item_access`;
 DROP TABLE IF EXISTS `x_policy_item`;
 DROP TABLE IF EXISTS `x_policy_resource_map`;
 DROP TABLE IF EXISTS `x_policy_resource`;
-DROP TABLE IF EXISTS `x_policy_ref_resource`;
-DROP TABLE IF EXISTS `x_policy_ref_access_type`;
-DROP TABLE IF EXISTS `x_policy_ref_condition`;
-DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
 DROP TABLE IF EXISTS `x_service_config_map`;
 DROP TABLE IF EXISTS `x_enum_element_def`;
 DROP TABLE IF EXISTS `x_enum_def`;
@@ -51,8 +56,6 @@ DROP TABLE IF EXISTS `x_access_type_def_grants`;
 DROP TABLE IF EXISTS `x_access_type_def`;
 DROP TABLE IF EXISTS `x_resource_def`;
 DROP TABLE IF EXISTS `x_service_config_def`;
-DROP TABLE IF EXISTS `x_policy_label_map`;
-DROP TABLE IF EXISTS `x_policy_label`;
 DROP TABLE IF EXISTS `x_policy`;
 DROP TABLE IF EXISTS `x_service`;
 DROP TABLE IF EXISTS `x_service_def`;
@@ -62,8 +65,6 @@ DROP TABLE IF EXISTS `x_trx_log`;
 DROP TABLE IF EXISTS `x_resource`;
 DROP TABLE IF EXISTS `x_policy_export_audit`;
 DROP TABLE IF EXISTS `x_group_users`;
-DROP TABLE IF EXISTS `x_policy_ref_user`;
-DROP TABLE IF EXISTS `x_policy_ref_group`;
 DROP TABLE IF EXISTS `x_user`;
 DROP TABLE IF EXISTS `x_group_groups`;
 DROP TABLE IF EXISTS `x_group`;
@@ -84,27 +85,6 @@ CREATE TABLE `x_db_version_h`  (
         `updated_at`      	timestamp NULL DEFAULT NULL,
     `updated_by`      	varchar(256) NOT NULL,
         `active`          	ENUM('Y', 'N') DEFAULT 'Y'
-)ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE IF NOT EXISTS `x_ugsync_audit_info`(
-`id` bigint(20) NOT NULL AUTO_INCREMENT,
-`create_time` datetime NULL DEFAULT NULL,
-`update_time` datetime NULL DEFAULT NULL,
-`added_by_id` bigint(20) NULL DEFAULT NULL,
-`upd_by_id` bigint(20) NULL DEFAULT NULL,
-`event_time` datetime NULL DEFAULT NULL,
-`user_name` varchar(255) NOT  NULL,
-`sync_source` varchar(128) NOT NULL,
-`no_of_new_users` bigint(20) NOT NULL,
-`no_of_new_groups` bigint(20) NOT NULL,
-`no_of_modified_users` bigint(20) NOT NULL,
-`no_of_modified_groups` bigint(20) NOT NULL,
-`sync_source_info` varchar(4000) NOT NULL,
-`session_id` varchar(255) DEFAULT NULL,
- PRIMARY KEY (`id`),
- KEY `x_ugsync_audit_info_etime`(`event_time`),
- KEY `x_ugsync_audit_info_sync_src`(`sync_source`),
- KEY `x_ugsync_audit_info_uname`(`user_name`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `x_portal_user` (
@@ -1194,6 +1174,27 @@ CONSTRAINT `x_policy_label_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFER
 CONSTRAINT `x_policy_label_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_label_map_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES `x_policy` (`id`),
 CONSTRAINT `x_policy_label_map_FK_policy_label_id` FOREIGN KEY (`policy_label_id`) REFERENCES `x_policy_label` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_ugsync_audit_info`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`event_time` datetime NULL DEFAULT NULL,
+`user_name` varchar(255) NOT  NULL,
+`sync_source` varchar(128) NOT NULL,
+`no_of_new_users` bigint(20) NOT NULL,
+`no_of_new_groups` bigint(20) NOT NULL,
+`no_of_modified_users` bigint(20) NOT NULL,
+`no_of_modified_groups` bigint(20) NOT NULL,
+`sync_source_info` varchar(4000) NOT NULL,
+`session_id` varchar(255) DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ KEY `x_ugsync_audit_info_etime`(`event_time`),
+ KEY `x_ugsync_audit_info_sync_src`(`sync_source`),
+ KEY `x_ugsync_audit_info_uname`(`user_name`)
 )ROW_FORMAT=DYNAMIC;
 
 DROP TABLE IF EXISTS `x_policy_ref_resource`;

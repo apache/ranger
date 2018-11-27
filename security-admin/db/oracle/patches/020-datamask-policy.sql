@@ -13,7 +13,36 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
 /
+
+call spdropsequence('X_DATAMASK_TYPE_DEF_SEQ');
+call spdropsequence('X_POLICY_ITEM_DATAMASK_SEQ');
+call spdropsequence('X_POLICY_ITEM_ROWFILTER_SEQ');
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+call spdroptable('x_policy_item_rowfilter');
+call spdroptable('x_policy_item_datamask');
+call spdroptable('x_datamask_type_def');
+
 CREATE SEQUENCE X_DATAMASK_TYPE_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE TABLE x_datamask_type_def (
 id NUMBER(20) NOT NULL,
