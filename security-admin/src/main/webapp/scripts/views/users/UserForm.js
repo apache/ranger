@@ -105,9 +105,11 @@ define(function(require){
 					errorMsg    :localization.tt('validationMessages.lastNameValidationMsg'),
 				},
 				emailAddress : {
-					type		: 'Text',
+					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.emailAddress"),
-					validators  : ['email']
+					validators  : [{type:'regexp',regexp:/^[\w]([\-\.\w])+[\w]+@[\w]+[\w\-]+[\w]*\.([\w]+[\w\-]+[\w]*(\.[a-z][a-z|0-9]*)?)$/,
+						message :'Invalid email address'}],
+					errorMsg    :localization.tt('validationMessages.emailAddressValidationMsg'),
 				},
 				userRoleList : {
 					type : 'Select',
