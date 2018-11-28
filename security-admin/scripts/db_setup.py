@@ -1019,9 +1019,21 @@ class MysqlConf(BaseDB):
 							isSchemaCreated=True
 						else:
 							isImported=self.import_db_file(db_name, db_user, db_password, file_name)
-							if (isImported==False):
+							if (isImported):
+								if is_unix:
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\"" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c ;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+								if ret == 0:
+									log("[I] Patches status entries updated from base ranger version to current installed ranger version:"+ranger_version, "info")
+							else:
 								log("[I] Unable to create DB schema, Please drop the database and try again" ,"info")
 								break
+
 					if isSchemaCreated == True:
 						if is_unix:
 							query = get_cmd + " -query \"update x_db_version_h set active='Y' where version='%s' and active='N' and updated_by='%s';\"" %(version,client_host)
@@ -1968,7 +1980,18 @@ class OracleConf(BaseDB):
 							isSchemaCreated=True
 						else:
 							isImported=self.import_db_file(db_name, db_user, db_password, file_name)
-							if (isImported==False):
+							if (isImported):
+								if is_unix:
+									query = get_cmd + " -c \; -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\"" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c ;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+								if ret == 0:
+									log("[I] Patches status entries updated from base ranger version to current installed ranger version:"+ranger_version, "info")
+							else:
 								log("[I] Unable to create DB schema, Please drop the database and try again" ,"info")
 								break
 
@@ -2938,7 +2961,18 @@ class PostgresConf(BaseDB):
 							isSchemaCreated=True
 						else:
 							isImported=self.import_db_file(db_name, db_user, db_password, file_name)
-							if (isImported==False):
+							if (isImported):
+								if is_unix:
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\"" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c ;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+								if ret == 0:
+									log("[I] Patches status entries updated from base ranger version to current installed ranger version:"+ranger_version, "info")
+							else:
 								log("[I] Unable to create DB schema, Please drop the database and try again" ,"info")
 								break
 					if isSchemaCreated == True:
@@ -3863,7 +3897,18 @@ class SqlServerConf(BaseDB):
 							isSchemaCreated=True
 						else:
 							isImported=self.import_db_file(db_name, db_user, db_password, file_name)
-							if (isImported==False):
+							if (isImported):
+								if is_unix:
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c \;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c ;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+								if ret == 0:
+									log("[I] Patches status entries updated from base ranger version to current installed ranger version:"+ranger_version, "info")
+							else:
 								log("[I] Unable to create DB schema, Please drop the database and try again" ,"info")
 								break
 					if isSchemaCreated == True:
@@ -4801,7 +4846,18 @@ class SqlAnywhereConf(BaseDB):
 							isSchemaCreated=True
 						else:
 							isImported=self.import_db_file(db_name, db_user, db_password, file_name)
-							if (isImported==False):
+							if (isImported):
+								if is_unix:
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c \;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(shlex.split(query))
+								elif os_name == "WINDOWS":
+									query = get_cmd + " -query \"update x_db_version_h set inst_by='%s' where active='Y' and updated_by='localhost';\" -c ;" %(ranger_version)
+									jisql_log(query, db_password)
+									ret = subprocess.call(query)
+								if ret == 0:
+									log("[I] Patches status entries updated from base ranger version to current installed ranger version:"+ranger_version, "info")
+							else:
 								log("[I] Unable to create DB schema, Please drop the database and try again" ,"info")
 								break
 					if isSchemaCreated == True:
