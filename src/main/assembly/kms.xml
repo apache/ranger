@@ -314,7 +314,6 @@
                 <include>ranger-kms-initd</include>
                 <include>ranger-kms</include>
                 <include>setup.sh</include>
-                <include>install.properties</include>
                 <include>importJCEKSKeys.sh</include>
                 <include>exportKeysToJCEKS.sh</include>
                 <include>HSMMK2DB.sh</include>
@@ -323,6 +322,14 @@
                 <include>VerifyIsHSMMasterkeyCorrect.sh</include>
             </includes>
             <fileMode>544</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>kms/scripts</directory>
+            <includes>
+                <include>install.properties</include>
+            </includes>
+            <fileMode>700</fileMode>
         </fileSet>
         <fileSet>
             <outputDirectory>/ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>
