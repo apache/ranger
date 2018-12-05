@@ -52,6 +52,7 @@ Build Process
    ranger-<version>-tagsync.tar.gz
    ranger-<version>-usersync.tar.gz
    ranger-<version>-yarn-plugin.tar.gz
+   ranger-<version>-kylin-plugin.tar.gz
 
 Importing Apache Ranger Project into Eclipse
 ============================================
@@ -77,6 +78,7 @@ Installation Host Information
     (f)  Kafka/Solr Plugin needs to be installed on their respective component hosts.
     (g)  YARN plugin needs to be installed on YARN Resource Manager hosts
     (h)  Sqoop plugin needs to be installed on Sqoop2 hosts
+    (i)  Kylin plugin needs to be installed on Kylin hosts
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
