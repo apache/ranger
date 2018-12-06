@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.knox;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.AccessType;
@@ -56,6 +57,8 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 		Set<String> _groups;
 		String _clientIp;
 		String _clusterName;
+		String _remoteIp;
+		List<String> _forwardedAddresses;
 		
 		RequestBuilder service(String service) {
 			_service = service;
@@ -81,6 +84,14 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			_clusterName = clusterName;
 			return this;
 		}
+		RequestBuilder remoteIp(String remoteIp) {
+			_remoteIp = remoteIp;
+			return this;
+		}
+		RequestBuilder forwardedAddresses(List<String> forwardedAddresses) {
+			_forwardedAddresses = forwardedAddresses;
+			return this;
+		}
 		void verifyBuildable() {
 			if (_topology == null) throw new IllegalStateException("_topology can't be null!");
 			if (_service == null) throw new IllegalStateException("_service can't be null!");
@@ -101,6 +112,8 @@ public class KnoxRangerPlugin extends RangerBasePlugin {
 			request.setUserGroups(_groups);
 			request.setResource(resource);
 			request.setClusterName(_clusterName);
+			request.setRemoteIPAddress(_remoteIp);
+			request.setForwardedAddresses(_forwardedAddresses);
 			return request;
 		}
 	}
