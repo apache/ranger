@@ -21,7 +21,9 @@ package org.apache.ranger.authorization.knox;
 import java.io.IOException;
 import java.security.AccessController;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.security.auth.Subject;
@@ -31,6 +33,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -40,6 +43,7 @@ import org.apache.knox.gateway.security.GroupPrincipal;
 import org.apache.knox.gateway.security.ImpersonatedPrincipal;
 import org.apache.knox.gateway.security.PrimaryPrincipal;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.knox.KnoxRangerPlugin.RequestBuilder;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -131,21 +135,25 @@ public class RangerPDPKnoxFilter implements Filter {
 
 		String clientIp = request.getRemoteAddr();
 		String clusterName = plugin.getClusterName();
+		List<String> forwardedAddresses = getForwardedAddresses(request);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Checking access primaryUser: " + primaryUser
 					+ ", impersonatedUser: " + impersonatedUser
 					+ ", effectiveUser: " + user + ", groups: " + groups
-					+ ", clientIp: " + clientIp + ", clusterName: "
-					+ clusterName);
+					+ ", clientIp: " + clientIp + ", clusterName: " + clusterName
+			    + ", remoteIp: " + clientIp + ", forwardedAddresses: " + forwardedAddresses);
 		}
-		RangerAccessRequest accessRequest = new KnoxRangerPlugin.RequestBuilder()
+
+		RangerAccessRequest accessRequest = new RequestBuilder()
 			.service(serviceName)
 			.topology(topologyName)
 			.user(user)
 			.groups(groups)
 			.clientIp(clientIp)
 			.clusterName(clusterName)
+			.remoteIp(clientIp)
+			.forwardedAddresses(forwardedAddresses)
 			.build();
 
 		boolean accessAllowed = false;
@@ -167,6 +175,18 @@ public class RangerPDPKnoxFilter implements Filter {
 		} else {
 			sendForbidden((HttpServletResponse) response);
 		}
+	}
+
+	private List<String> getForwardedAddresses(ServletRequest request) {
+		List<String> forwardedAddresses = null;
+		if (request instanceof HttpServletRequest) {
+			HttpServletRequest httpRequest = (HttpServletRequest) request;
+			String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
+			if(xForwardedFor != null) {
+				forwardedAddresses = Arrays.asList(xForwardedFor.split(","));
+			}
+		}
+		return forwardedAddresses;
 	}
 
 	private void sendForbidden(HttpServletResponse res) {
