@@ -59,7 +59,7 @@ public class AuditFileCacheProvider extends BaseAuditHandler {
         boolean ret = false;
         if ( event != null) {
             fileSpooler.stashLogs(event);
-            if ( !fileSpooler.isSpoolingSuccessful()) {
+            if ( fileSpooler.isSpoolingSuccessful()) {
                 ret = true;
             }
         }
