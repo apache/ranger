@@ -573,6 +573,7 @@ public class TestServiceREST {
 		serviceDefList.setStartIndex(0);
 		serviceDefList.setTotalCount(10);
 		serviceDefList.setList(serviceDefsList);
+		Mockito.when(bizUtil.hasModuleAccess(RangerConstants.MODULE_RESOURCE_BASED_POLICIES)).thenReturn(true);
 		Mockito.when(svcStore.getPaginatedServiceDefs(filter)).thenReturn(
 				serviceDefList);
 		RangerServiceDefList dbRangerServiceDef = serviceREST
