@@ -464,6 +464,10 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getServiceDefs()");
 		}
 
+		if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_RESOURCE_BASED_POLICIES)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the "+RangerConstants.MODULE_RESOURCE_BASED_POLICIES+" module.", true);
+		}
+
 		RangerServiceDefList ret  = null;
 		RangerPerfTracer     perf = null;
 

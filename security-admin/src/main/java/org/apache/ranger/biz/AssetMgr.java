@@ -44,6 +44,7 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -1087,7 +1088,9 @@ public class AssetMgr extends AssetMgrBase {
     }
 
 	public VXUgsyncAuditInfoList getUgsyncAudits(SearchCriteria searchCriteria) {
-
+		if (!msBizUtil.hasModuleAccess(RangerConstants.MODULE_AUDIT)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the "+RangerConstants.MODULE_AUDIT+" module.", true);
+		}
 		if (searchCriteria == null) {
 			searchCriteria = new SearchCriteria();
 		}
