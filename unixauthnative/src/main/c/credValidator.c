@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <crypt.h>
+#include <errno.h>
 
 #define STRLEN 64
 
@@ -48,11 +49,15 @@ int main(int ac, char **av, char **ev)
 	spwd = getspnam(pwp->pw_name) ;
 
 	if (spwd == (struct spwd *)NULL) {
-		fprintf(stdout, "FAILED: unable to get (shadow) password for %s\n", username) ;
+		fprintf(stdout, "FAILED: unable to get (shadow) password for '%s', because '%s'\n", username, strerror(errno));
 		exit(1) ;
 	}
 	else {
 		char *gen = crypt(password,spwd->sp_pwdp) ;
+		if (gen == (char *)NULL) {
+			fprintf(stdout, "FAILED: crypt failed with: '%s'\n", strerror(errno));
+			exit(1);
+		}
 		if (strcmp(spwd->sp_pwdp,gen) == 0) {
 			fprintf(stdout, "OK:\n") ;
 			exit(0);
