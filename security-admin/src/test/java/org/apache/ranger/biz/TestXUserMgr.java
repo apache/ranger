@@ -928,6 +928,7 @@ public class TestXUserMgr {
 		testSearchCriteria.addParam("xGroupId", userId);
 		VXGroupUserList vxGroupUserList = vxGroupUserList();
 		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.any())).thenReturn(vxGroupUserList);
+		Mockito.when(msBizUtil.hasModuleAccess(RangerConstants.MODULE_USER_GROUPS)).thenReturn(true);
 		VXUserList dbVXUserList = xUserMgr.getXGroupUsers(testSearchCriteria);
 		Assert.assertNotNull(dbVXUserList);
 	}

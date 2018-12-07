@@ -882,8 +882,10 @@ public class XUserMgr extends XUserMgrBase {
 		return ret;
 	}
 
-        public VXUserList getXGroupUsers(SearchCriteria searchCriteria) {
-
+	public VXUserList getXGroupUsers(SearchCriteria searchCriteria) {
+		if (!msBizUtil.hasModuleAccess(RangerConstants.MODULE_USER_GROUPS)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the "+RangerConstants.MODULE_USER_GROUPS+" module.", true);
+		}
                 VXUserList vXUserList = new VXUserList();
 
 		VXGroupUserList vXGroupUserList = xGroupUserService
