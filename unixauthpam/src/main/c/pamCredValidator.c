@@ -83,7 +83,7 @@ int main(int ac, char **av, char **ev)
 
 	retval = pam_authenticate(pamh, 0);
 	if (retval != PAM_SUCCESS) {
-		fprintf(stdout, "FAILED: Password did not match.\n") ;
+		fprintf(stdout, "FAILED: Password did not match(%s).\n", pam_strerror(pamh, retval)) ;
 		if (pamh) {
 			pam_end(pamh, retval);
 		}		
