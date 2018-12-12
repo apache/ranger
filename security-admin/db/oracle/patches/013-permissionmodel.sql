@@ -55,11 +55,23 @@ url VARCHAR(1024) DEFAULT NULL NULL,
 PRIMARY KEY (id)
 );
 COMMIT;
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Resource Based Policies','');
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Users/Groups','');
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Reports','');
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Audit','');
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Key Manager','');
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val IN VARCHAR2)
+RETURN NUMBER iS
+BEGIN
+DECLARE
+myid Number := 0;
+begin
+    SELECT x_portal_user.id into myid FROM x_portal_user
+    WHERE x_portal_user.login_id=input_val;
+    RETURN myid;
+end;
+END; /
+/
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies','');
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups','');
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports','');
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit','');
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager','');
 COMMIT;
 CREATE SEQUENCE X_USER_MODULE_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE TABLE x_user_module_perm(

@@ -113,7 +113,7 @@ CREATE TABLE `x_portal_user` (
   KEY `x_portal_user_email` (`email`),
   CONSTRAINT `x_portal_user_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
   CONSTRAINT `x_portal_user_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
-)AUTO_INCREMENT=2 ROW_FORMAT=DYNAMIC;
+) ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `x_portal_user_role` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -133,7 +133,7 @@ CREATE TABLE `x_portal_user_role` (
   CONSTRAINT `x_portal_user_role_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
   CONSTRAINT `x_portal_user_role_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
   CONSTRAINT `x_portal_user_role_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_portal_user` (`id`)
-)AUTO_INCREMENT=2 ROW_FORMAT=DYNAMIC;
+) ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `xa_access_audit` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -925,8 +925,6 @@ CREATE TABLE `x_modules_master` (
 PRIMARY KEY (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Resource Based Policies',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Reports',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'Key Manager','');
-
 CREATE TABLE `x_user_module_perm` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `user_id` bigint(20) NULL DEFAULT NULL,
@@ -1053,7 +1051,7 @@ CONSTRAINT `x_tag_res_map_FK_res_id` FOREIGN KEY (`res_id`) REFERENCES `x_servic
 CONSTRAINT `x_tag_res_map_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_res_map_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
-INSERT INTO `x_modules_master` VALUES (6,now(),now(),1,1,'Tag Based Policies','');
+
 CREATE TABLE `x_datamask_type_def` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT ,
 `guid` varchar(64) NULL DEFAULT NULL,
@@ -1342,19 +1340,41 @@ CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 
-INSERT INTO `x_portal_user` VALUES (1,now(),now(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
-INSERT INTO `x_portal_user_role` VALUES (1,now(),now(),NULL,NULL,1,'ROLE_SYS_ADMIN',1);
-INSERT INTO x_group (ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_SRC, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (1, UTC_TIMESTAMP(), 'public group', 0, 0, 'public', 0, UTC_TIMESTAMP(), 1);
+DELIMITER $$
+DROP FUNCTION if exists getXportalUIdByLoginId$$
+CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
+BEGIN DECLARE myid INT; SELECT x_portal_user.id into myid FROM x_portal_user
+WHERE x_portal_user.login_id = input_val;
+RETURN myid;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+DROP FUNCTION if exists getModulesIdByName$$
+CREATE FUNCTION `getModulesIdByName`(input_val VARCHAR(100)) RETURNS int(11)
+BEGIN DECLARE myid INT; SELECT x_modules_master.id into myid FROM x_modules_master
+WHERE x_modules_master.module = input_val;
+RETURN myid;
+END $$
+
+DELIMITER ;
+
+INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (now(),now(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
+INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (now(),now(),NULL,NULL,getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1);
+INSERT INTO x_group (ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_SRC, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (getXportalUIdByLoginId('admin'), UTC_TIMESTAMP(), 'public group', 0, 0, 'public', 0, UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'));
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'rangerusersync','','rangerusersync','rangerusersync','70b8374d3dfe0325aaa5002a688c7e3b','rangerusersync',1,0,NULL);
-INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,2,'ROLE_SYS_ADMIN',1);
+INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('rangerusersync'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (UTC_TIMESTAMP(), UTC_TIMESTAMP(),NULL,NULL,'admin','Administrator',0);
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (UTC_TIMESTAMP(), UTC_TIMESTAMP(),NULL,NULL,'rangerusersync','rangerusersync',0);
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'keyadmin','','keyadmin','keyadmin','a05f34d2dce2b4688fa82e82a89ba958','keyadmin',1,0,NULL);
-INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,3,'ROLE_KEY_ADMIN',1);
+INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('keyadmin'),'ROLE_KEY_ADMIN',1);
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (UTC_TIMESTAMP(), UTC_TIMESTAMP(),NULL,NULL,'keyadmin','keyadmin',0);
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'rangertagsync','','rangertagsync','rangertagsync','f5820e1229418dcf2575908f2c493da5','rangertagsync',1,0,NULL);
-INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,4,'ROLE_SYS_ADMIN',1);
+INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('rangertagsync'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (UTC_TIMESTAMP(), UTC_TIMESTAMP(),NULL,NULL,'rangertagsync','rangertagsync',0);
+
+INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('CORE_DB_SCHEMA',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
@@ -1391,26 +1411,46 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',UTC_TIMESTAMP(),'Ranger 2.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',UTC_TIMESTAMP(),'Ranger 2.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,4,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,2,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (1,6,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (2,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (2,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (2,4,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (2,2,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (2,6,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (3,5,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (3,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (3,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (4,3,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (4,1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (4,4,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (4,2,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (4,6,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (3,2,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (3,4,UTC_TIMESTAMP(),UTC_TIMESTAMP(),1,1,1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Resource Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Audit'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Users/Groups'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Tag Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Reports'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Resource Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Audit'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Users/Groups'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Tag Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Key Manager'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Reports'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Resource Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Reports'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Resource Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Audit'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Users/Groups'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Tag Based Policies'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Users/Groups'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
+VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Audit'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10003',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
