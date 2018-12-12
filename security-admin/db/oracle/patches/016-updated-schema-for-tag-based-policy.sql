@@ -212,7 +212,20 @@ CONSTRAINT x_srvc_res_el_val_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_p
 CREATE INDEX x_srvc_res_el_val_IDX_resel_id ON x_service_resource_element_val(res_element_id);
 CREATE INDEX x_srvc_res_el_val_IDX_addby_id ON x_service_resource_element_val(added_by_id);
 CREATE INDEX x_srvc_res_el_val_IDX_updby_id ON x_service_resource_element_val(upd_by_id);
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,1,1,'Tag Based Policies','');
+
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val IN VARCHAR2)
+RETURN NUMBER iS
+BEGIN
+DECLARE
+myid Number := 0;
+begin
+    SELECT x_portal_user.id into myid FROM x_portal_user
+    WHERE x_portal_user.login_id=input_val;
+    RETURN myid;
+end;
+END; /
+/
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,SYSDATE,SYSDATE,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 
 DECLARE
 	v_column_exists number := 0;
