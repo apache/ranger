@@ -1948,7 +1948,10 @@ public class XUserMgr extends XUserMgrBase {
 		} catch (Exception e) {
 			logger.error("Error getting the exact match of group =>"+e);
 		}
-
+		if(ret == null || ret.getList().isEmpty()) {
+			searchCriteria.setSortBy("id");
+			ret=xGroupService.searchXGroups(searchCriteria);
+		}
 		if (ret != null && ret.getListSize() > 0 && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)) {
 			for(VXGroup vXGroup : ret.getList()) {
 				getMaskedVXGroup(vXGroup);
