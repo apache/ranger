@@ -371,6 +371,40 @@ CREATE TABLE [dbo].[x_service_resource_element_val](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'dbo.getXportalUIdByLoginId')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+  DROP FUNCTION dbo.getXportalUIdByLoginId
+  PRINT 'Dropped function dbo.getXportalUIdByLoginId'
+
+GO
+PRINT 'Creating function dbo.getXportalUIdByLoginId'
+GO
+CREATE FUNCTION dbo.getXportalUIdByLoginId
+(
+
+        @inputValue varchar(200)
+)
+RETURNS int
+AS
+BEGIN
+        Declare @myid int;
+
+        Select @myid = id from x_portal_user where x_portal_user.login_id = @inputValue;
+
+        return @myid;
+
+END
+GO
+
+PRINT 'Created function dbo.getXportalUIdByLoginId successfully'
+GO
 ALTER TABLE [dbo].[x_tag_def] WITH CHECK ADD CONSTRAINT [x_tag_def_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_tag_def] WITH CHECK ADD CONSTRAINT [x_tag_def_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
@@ -421,7 +455,7 @@ ALTER TABLE [dbo].[x_service_resource_element_val] WITH CHECK ADD CONSTRAINT [x_
 GO
 ALTER TABLE [dbo].[x_service_resource_element_val] WITH CHECK ADD CONSTRAINT [x_srvc_res_el_val_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1,'Tag Based Policies','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 GO
 CREATE NONCLUSTERED INDEX [x_tag_def_IDX_added_by_id] ON [x_tag_def]
 (

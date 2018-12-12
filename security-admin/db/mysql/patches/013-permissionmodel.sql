@@ -25,7 +25,17 @@ CREATE TABLE `x_modules_master` (
 PRIMARY KEY (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-INSERT INTO `x_modules_master` VALUES (1,now(),now(),1,1,'Resource Based Policies',''),(2,now(),now(),1,1,'Users/Groups',''),(3,now(),now(),1,1,'Reports',''),(4,now(),now(),1,1,'Audit',''),(5,now(),now(),1,1,'Key Manager','');
+DELIMITER $$
+DROP FUNCTION if exists getXportalUIdByLoginId$$
+CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
+BEGIN DECLARE myid INT; SELECT x_portal_user.id into myid FROM x_portal_user
+WHERE x_portal_user.login_id = input_val;
+RETURN myid;
+END $$
+
+DELIMITER ;
+
+INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager','');
 
 DROP TABLE IF EXISTS `x_user_module_perm`;
 CREATE TABLE `x_user_module_perm` (
