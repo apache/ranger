@@ -210,6 +210,8 @@ elif [ "${HCOMPONENT_NAME}" = "sqoop" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/server/lib
 elif [ "${HCOMPONENT_NAME}" = "kylin" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/tomcat/webapps/kylin/WEB-INF/lib
+elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugins
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -219,7 +221,7 @@ if [ "${HCOMPONENT_NAME}" = "solr" ]; then
 	install_owner=`ls -ld | cut -f 3 -d " "`
 	echo "INFO: Creating $HCOMPONENT_CONF_DIR" 
 	mkdir -p $HCOMPONENT_CONF_DIR
-	echo "INFO: Changing ownership of  $HCOMPONENT_CONF_DIR to $install_owner" 
+	echo "INFO: Changing ownership of $HCOMPONENT_CONF_DIR to $install_owner"
 	chown $install_owner:$install_owner $HCOMPONENT_CONF_DIR
     fi    
 elif [ "${HCOMPONENT_NAME}" = "kafka" ]; then
@@ -230,6 +232,14 @@ elif [ "${HCOMPONENT_NAME}" = "yarn" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc/hadoop
 elif [ "${HCOMPONENT_NAME}" = "sqoop" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
+elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/config/ranger-elasticsearch-plugin
+	if [ ! -d $HCOMPONENT_CONF_DIR ]; then
+	echo "INFO: Creating $HCOMPONENT_CONF_DIR"
+	mkdir -p $HCOMPONENT_CONF_DIR
+	echo "INFO: Changing ownership of $HCOMPONENT_CONF_DIR to $CFG_OWNER_INF"
+	chown $CFG_OWNER_INF $HCOMPONENT_CONF_DIR
+    fi
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive

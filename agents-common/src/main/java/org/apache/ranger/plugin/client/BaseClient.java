@@ -37,7 +37,7 @@ public abstract class BaseClient {
 
 
 	private static final String DEFAULT_NAME_RULE = "DEFAULT";
-	private static final String DEFAULT_ERROR_MESSAGE = " You can still save the repository and start creating "
+	protected static final String DEFAULT_ERROR_MESSAGE = " You can still save the repository and start creating "
 				+ "policies, but you would not be able to use autocomplete for "
 				+ "resource names. Check ranger_admin.log for more info.";
 

@@ -376,6 +376,18 @@
           </includes>
       </moduleSet>
 
+      <moduleSet>
+          <binaries>
+              <includeDependencies>true</includeDependencies>
+              <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/elasticsearch</outputDirectory>
+              <unpack>false</unpack>
+              <directoryMode>755</directoryMode>
+              <fileMode>644</fileMode>
+          </binaries>
+          <includes>
+              <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
+          </includes>
+      </moduleSet>
   </moduleSets>
 
   <fileSets>
