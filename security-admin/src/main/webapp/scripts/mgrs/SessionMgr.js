@@ -49,6 +49,13 @@ define(function(require){
 		return vXPortalUser;
 	};
 
+	SessionMgr.updateUserProfile = function() {
+		if (vXPortalUser){
+			vXPortalUser.getUserProfile({async : false,cache:false}).done(function(data){
+				vXPortalUser.set(data);
+			});
+		}
+	};
 
 	SessionMgr.getLoginId = function() {
 		if (vXPortalUser) {

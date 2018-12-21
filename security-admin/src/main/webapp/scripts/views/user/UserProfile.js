@@ -28,6 +28,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
+	var SessionMgr		= require('mgrs/SessionMgr');
 
 	var VPasswordChange	= require("models/VXPasswordChange");
 	var UserProfileForm = require('views/user/UserProfileForm');
@@ -121,6 +122,7 @@ define(function(require){
 				wait: true,
 				success: function () {
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
+					SessionMgr.updateUserProfile();
 					App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
 					Communicator.vent.trigger('ProfileBar:rerender');
 				},
