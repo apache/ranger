@@ -267,19 +267,30 @@ public class SqoopClient extends BaseClient {
 	private <T> T getSqoopResourceResponse(ClientResponse response, Class<T> classOfT) {
 		T resource = null;
 		try {
-			if (response != null && response.getStatus() == HttpStatus.SC_OK) {
-				String jsonString = response.getEntity(String.class);
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            if (response != null) {
+                if (response.getStatus() == HttpStatus.SC_OK) {
+                    String jsonString = response.getEntity(String.class);
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-				resource = gson.fromJson(jsonString, classOfT);
-			} else {
-				String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE
-						+ "], sqoopUrl: " + sqoopUrl + " - got null response.";
-				LOG.error(msgDesc);
-				HadoopException hdpException = new HadoopException(msgDesc);
-				hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
-				throw hdpException;
-			}
+                    resource = gson.fromJson(jsonString, classOfT);
+                } else {
+                    String msgDesc = "Unable to get a valid response for " + "expected mime type : ["
+                            + EXPECTED_MIME_TYPE + "], sqoopUrl: " + sqoopUrl + " - got http response code "
+                            + response.getStatus();
+                    LOG.error(msgDesc);
+                    HadoopException hdpException = new HadoopException(msgDesc);
+                    hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
+                    throw hdpException;
+                }
+
+            } else {
+                String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE
+                        + "], sqoopUrl: " + sqoopUrl + " - got null response.";
+                LOG.error(msgDesc);
+                HadoopException hdpException = new HadoopException(msgDesc);
+                hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
+                throw hdpException;
+            }
 		} catch (HadoopException he) {
 			throw he;
 		} catch (Throwable t) {
