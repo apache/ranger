@@ -353,7 +353,7 @@ public class TagSynchronizer {
 		return tagSource;
 	}
 
-	private static boolean initializeKerberosIdentity(Properties props) {
+	public static boolean initializeKerberosIdentity(Properties props) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
 		}

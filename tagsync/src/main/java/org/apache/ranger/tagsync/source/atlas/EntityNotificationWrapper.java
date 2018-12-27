@@ -93,7 +93,7 @@ public class EntityNotificationWrapper {
                 isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
                 isEntityDeleteOp       = EntityNotificationV2.OperationType.ENTITY_DELETE == v2Notification.getOperationType();
                 isEntityCreateOp       = EntityNotificationV2.OperationType.ENTITY_CREATE == v2Notification.getOperationType();
-                isEmptyClassifications = CollectionUtils.isNotEmpty(atlasEntity.getClassifications());
+                isEmptyClassifications = CollectionUtils.isEmpty(atlasEntity.getClassifications());
 
                 List<AtlasClassification> allClassifications = atlasEntity.getClassifications();
 
@@ -166,7 +166,7 @@ public class EntityNotificationWrapper {
                 isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
                 isEntityDeleteOp       = EntityNotificationV1.OperationType.ENTITY_DELETE == v1Notification.getOperationType();
                 isEntityCreateOp       = EntityNotificationV1.OperationType.ENTITY_CREATE == v1Notification.getOperationType();
-                isEmptyClassifications = CollectionUtils.isNotEmpty(v1Notification.getAllTraits());
+                isEmptyClassifications = CollectionUtils.isEmpty(v1Notification.getAllTraits());
 
                 List<Struct> allTraits = ((EntityNotificationV1) notification).getAllTraits();
 

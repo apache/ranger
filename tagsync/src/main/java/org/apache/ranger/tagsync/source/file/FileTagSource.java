@@ -66,26 +66,33 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 		TagSynchronizer.printConfigurationProperties(props);
 
-		TagSink tagSink = TagSynchronizer.initializeTagSink(props);
+		boolean ret = TagSynchronizer.initializeKerberosIdentity(props);
 
-		if (tagSink != null) {
+		if (ret) {
+			TagSink tagSink = TagSynchronizer.initializeTagSink(props);
 
-			if (fileTagSource.initialize(props)) {
-				try {
-					tagSink.start();
-					fileTagSource.setTagSink(tagSink);
-					fileTagSource.synchUp();
-				} catch (Exception exception) {
-					LOG.error("ServiceTags upload failed : ", exception);
+			if (tagSink != null) {
+
+				if (fileTagSource.initialize(props)) {
+					try {
+						tagSink.start();
+						fileTagSource.setTagSink(tagSink);
+						fileTagSource.synchUp();
+					} catch (Exception exception) {
+						LOG.error("ServiceTags upload failed : ", exception);
+						System.exit(1);
+					}
+				} else {
+					LOG.error("FileTagSource initialized failed, exiting.");
 					System.exit(1);
 				}
+
 			} else {
-				LOG.error("FileTagSource initialized failed, exiting.");
+				LOG.error("TagSink initialialization failed, exiting.");
 				System.exit(1);
 			}
-
 		} else {
-			LOG.error("TagSink initialialization failed, exiting.");
+			LOG.error("Error initializing kerberos identity");
 			System.exit(1);
 		}
 
