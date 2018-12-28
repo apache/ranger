@@ -32,7 +32,7 @@
                 1. Check out the code from GIT repository
             </p>
             <ul>
-               <source>git clone https://git-wip-us.apache.org/repos/asf/ranger.git</source>
+               <source>git clone https://gitbox.apache.org/repos/asf/ranger.git</source>
                <source>cd ranger </source>
             </ul>
             <p>
