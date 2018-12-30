@@ -500,6 +500,12 @@
             <artifactId>guice</artifactId>
             <version>3.0</version>
         </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>jsr250-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
 		<dependency>
 			<groupId>com.webcohesion.enunciate</groupId>
 			<artifactId>enunciate-core-annotations</artifactId>
@@ -607,12 +613,22 @@
 				<groupId>com.webcohesion.enunciate</groupId>
 				<artifactId>enunciate-maven-plugin</artifactId>
 				<configuration>
-					<configFile>enunciate.xml</configFile>
-					<enunciateArtifactId/>
-					<docsDir>docs/target/</docsDir>
-					<source>1.7</source>
-					<target>1.7</target>
+					<configFile>${basedir}/../enunciate.xml</configFile>
+					<docsDir>${basedir}/../docs/target/</docsDir>
 				</configuration>
+                <dependencies>
+                    <!-- dependency management version doesn't apply here, need to repeat the version numbers -->
+                    <dependency>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                        <version>${jaxb.api.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>javax.jws</groupId>
+                        <artifactId>javax.jws-api</artifactId>
+                        <version>1.1</version>
+                    </dependency>
+                </dependencies>
 			</plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>

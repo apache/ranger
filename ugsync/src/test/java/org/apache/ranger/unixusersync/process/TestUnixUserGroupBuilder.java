@@ -20,6 +20,7 @@
 package org.apache.ranger.unixusersync.process;
 
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class TestUnixUserGroupBuilder {
         Map<String, List<String>> users = builder.getUser2GroupListMap();
         List<String> usergroups = users.get("root");
         assertNotNull(usergroups);
-        assertThat(usergroups, anyOf(hasItem("wheel"), hasItem("root")));
+        assertThat(usergroups, (Matcher)anyOf(hasItem("wheel"), hasItem("root")));
 
     }
 
@@ -74,7 +75,7 @@ public class TestUnixUserGroupBuilder {
         Map<String, List<String>> users = builder.getUser2GroupListMap();
         List<String> usergroups = users.get("root");
         assertNotNull(usergroups);
-        assertThat(usergroups, anyOf(hasItem("wheel"), hasItem("root")));
+        assertThat(usergroups, (Matcher)anyOf(hasItem("wheel"), hasItem("root")));
     }
 
     @Test
@@ -124,7 +125,7 @@ public class TestUnixUserGroupBuilder {
         Map<String, List<String>> users = builder.getUser2GroupListMap();
         List<String> usergroups = users.get("sam");
         assertNotNull(usergroups);
-        assertThat(usergroups, anyOf(hasItem("wheel"), hasItem("sam")));
+        assertThat(usergroups, (Matcher) anyOf(hasItem("wheel"), hasItem("sam")));
 
     }
 

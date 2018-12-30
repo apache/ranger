@@ -36,5 +36,6 @@
 	</modules>
   <api-classes>
     <include pattern="org.apache.hadoop.crypto.key.kms.server.*"/>
+    <include pattern="org.apache.ranger.**"/>
   </api-classes>
 </enunciate>

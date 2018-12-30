@@ -109,6 +109,7 @@
         <derby.version>10.11.1.1</derby.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
         <elasticsearch.version>6.2.2</elasticsearch.version>
+        <enunciate.version>2.11.1</enunciate.version>
         <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
         <google.guava.version>25.1-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
@@ -126,6 +127,7 @@
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>
+        <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.3</jersey-bundle.version>
         <jersey-client.version>2.6</jersey-client.version>
@@ -136,6 +138,7 @@
         <jline.version>0.9.94</jline.version>
         <json4s.version>3.2.11</json4s.version>
         <jsonsmart.version>2.3</jsonsmart.version>
+        <jsr250.version>1.0</jsr250.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.12</junit.version>
         <kafka.version>2.0.0</kafka.version>
@@ -146,7 +149,7 @@
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>2.7.22</mockito.version>
+        <mockito.version>2.23.4</mockito.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.10.5.Final</netty.version>
         <noggit.version>0.6</noggit.version>
@@ -820,7 +823,7 @@
 			<dependency>
 				<groupId>com.webcohesion.enunciate</groupId>
 				<artifactId>enunciate-core-annotations</artifactId>
-				<version>2.10.1</version>
+				<version>${enunciate.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>commons-beanutils</groupId>
@@ -832,6 +835,21 @@
 				<artifactId>hbase-client</artifactId>
 				<version>${hbase.version}</version>
 			</dependency>
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>jsr250-api</artifactId>
+                <version>${jsr250.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>${jaxb.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jaxb</groupId>
+                <artifactId>jaxb-runtime</artifactId>
+                <version>${jaxb.api.version}</version>
+            </dependency>
 		</dependencies>
     </dependencyManagement>
     <build>
@@ -928,9 +946,8 @@
 				<plugin>
 					<groupId>com.webcohesion.enunciate</groupId>
 					<artifactId>enunciate-maven-plugin</artifactId>
-					<version>2.10.1</version>
+					<version>${enunciate.version}</version>
 					<configuration>
-						<configFile>enunciate.xml</configFile>
 						<enunciateArtifactId/>
 						<docsDir>docs/src/site/</docsDir>
 						<source>1.8</source>
