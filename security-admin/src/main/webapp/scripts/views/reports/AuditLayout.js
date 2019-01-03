@@ -310,13 +310,13 @@ define(function(require) {
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
-			                      {text : 'Service Name',label :'repoName'},
+			                      {text : 'Service Name',label :'repoName'},{text : 'Policy ID',label :'policyId'},
 			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'}];
-            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name'];//,'Policy ID'
+            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name', 'Policy ID'];
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
