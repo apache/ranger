@@ -64,5 +64,5 @@ Apache Ranger&#8482;
   concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem.
   
   Contributors can check out the source code from our
-  {{{https://git.apache.org/ranger.git/}Git repository}}
+  {{{https://gitbox.apache.org/repos/asf/ranger.git}Git repository}} or from {{{https://github.com/apache/ranger}Github}}
 
