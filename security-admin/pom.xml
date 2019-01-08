@@ -26,6 +26,9 @@
         <artifactId>ranger</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
+    <properties>
+        <skipJSTests>false</skipJSTests>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -605,10 +608,29 @@
                         </goals>
                         <phase>validate</phase>
                         <configuration>
-                            <outputDirectory>${basedir}/target/</outputDirectory>
+                            <outputDirectory>${project.build.directory}/jsmain</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/src/main/webapp</directory>
+                                    <includes>
+                                        <include>package.json</include>
+                                        <include>package-lock.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-js-test-resources</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jstest</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/src/test/javascript</directory>
                                     <includes>
                                         <include>package.json</include>
                                         <include>package-lock.json</include>
@@ -625,6 +647,7 @@
                 <version>1.6</version>
                 <configuration>
                     <workingDirectory>${project.build.directory}</workingDirectory>
+                    <installDirectory>${project.build.directory}</installDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -639,12 +662,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <phase>process-resources</phase>
-                        <id>npm install</id>
+                        <phase>prepare-package</phase>
+                        <id>npm install for packaging</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
@@ -655,7 +679,20 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run r.js -- -o ${project.build.finalName}/minify.build.js</arguments>
+                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
+                            <arguments>run r.js -- -o ../${project.build.finalName}/minify.build.js</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <id>npm install for tests</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <arguments>install</arguments>
                         </configuration>
                     </execution>
                     <execution>
@@ -665,11 +702,13 @@
                             <goal>karma</goal>
                         </goals>
                         <configuration>
-                            <karmaConfPath>../src/test/javascript/karma-dev.conf.js</karmaConfPath>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
                         </configuration>
                     </execution>
                     <execution>
-                        <phase>verify</phase>
+                        <phase>integration-test</phase>
                         <id>karma prd</id>
                         <goals>
                             <goal>karma</goal>
@@ -678,7 +717,9 @@
                             <environmentVariables>
                                 <buildDir>${project.build.finalName}</buildDir>
                             </environmentVariables>
-                            <karmaConfPath>../src/test/javascript/karma-prd.conf.js</karmaConfPath>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <karmaConfPath>../../src/test/javascript/karma-prd.conf.js</karmaConfPath>
                         </configuration>
                     </execution>
                 </executions>

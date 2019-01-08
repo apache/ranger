@@ -32,6 +32,10 @@ Build Process
    $ mvn clean compile package install assembly:assembly
    $ mvn eclipse:eclipse
 
+   (Ranger Admin UI tests depend on PhantomJS. If the build fails with npm or Karma errors you can either
+      i. install PhantomJS dependencies for your platform (bzip2 and fontconfig)
+     ii. skip JavaScript test execution: mvn -DskipJSTests ...)
+
 3. After the above build command execution, you should see the following TAR files in the target folder:
 
 

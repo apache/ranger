@@ -36,9 +36,9 @@ module.exports = function(config, appJsLoader, jssrc) {
 
     // list of files / patterns to load in the browser
     files: [
-      'target/node_modules/chai/chai.js',
+      'target/jstest/node_modules/chai/chai.js',
       jssrc + '/libs/bower/requirejs/js/require.js',
-      'target/node_modules/karma-requirejs/lib/adapter.js',
+      'target/jstest/node_modules/karma-requirejs/lib/adapter.js',
       jssrc + '/' + appJsLoader, // scripts/Init.js or scripts/Main.min.js
       'src/test/javascript/test-main.js',
       {pattern: jssrc + '/libs/**', included: false},

@@ -66,6 +66,7 @@ WORKDIR /tools
 RUN yum install -y wget
 RUN yum install -y git
 RUN yum install -y gcc
+RUN yum install -y bzip2 fontconfig
 
 #Download and install JDK8 from AWS s3's docker-assets 
 RUN wget https://s3.eu-central-1.amazonaws.com/docker-assets/dist/jdk-8u101-linux-x64.rpm
