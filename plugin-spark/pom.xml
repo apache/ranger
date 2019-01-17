@@ -33,7 +33,7 @@
     <parent>
         <artifactId>ranger</artifactId>
         <groupId>org.apache.ranger</groupId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
@@ -60,13 +60,13 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hive-plugin</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hive-plugin-shim</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugin-classloader</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -99,7 +99,7 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-cred</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-audit</artifactId>
-            <version>${spark.ranger.plugin.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

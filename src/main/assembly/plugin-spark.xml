@@ -55,6 +55,10 @@
                             <include>org.apache.ranger:ranger-plugins-common</include>
                             <include>org.apache.ranger:ranger-plugins-cred</include>
                             <include>org.apache.ranger:ranger-plugins-audit</include>
+                            <include>org.codehaus.jackson:jackson-core-asl</include>
+                            <include>org.codehaus.jackson:jackson-jaxrs</include>
+                            <include>org.codehaus.jackson:jackson-mapper-asl</include>
+                            <include>org.codehaus.jackson:jackson-xc</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>

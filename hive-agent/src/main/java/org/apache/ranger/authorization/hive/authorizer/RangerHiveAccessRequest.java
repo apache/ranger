@@ -19,18 +19,26 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
+	private static final Log LOG = LogFactory.getLog(RangerHiveAccessRequest.class);
+
 	private HiveAccessType accessType = HiveAccessType.NONE;
+
+	private boolean isForwardedAddressesMethodAvailable = true;
 
 	public RangerHiveAccessRequest() {
 		super();
@@ -53,7 +61,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 
 		if(context != null) {
 			this.setRequestData(context.getCommandString());
-			this.setForwardedAddresses(context.getForwardedAddresses());
+			this.setForwardedAddresses(getForwardedAddresses(context));
 			this.setRemoteIPAddress(context.getIpAddress());
 		}
 
@@ -63,6 +71,18 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		}
 		
 		this.setClusterName(clusterName);
+	}
+
+	protected List<String> getForwardedAddresses(HiveAuthzContext context) {
+		if (isForwardedAddressesMethodAvailable) {
+			try {
+				return context.getForwardedAddresses();
+			} catch (NoSuchMethodError ex) {
+				LOG.warn("Method getForwardedAddresses() not found in HiveAuthzContext class. Possibily Hive is older version. We will ignore this and not call this method again", ex);
+				isForwardedAddressesMethodAvailable = false;
+			}
+		}
+		return new ArrayList<String>();
 	}
 
 	public RangerHiveAccessRequest(RangerHiveResource      resource,
