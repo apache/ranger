@@ -19,11 +19,13 @@ package org.apache.spark.sql.hive.client
 
 import java.util.{List => JList}
 
+import org.apache.commons.logging.LogFactory
 import org.apache.hadoop.hive.ql.security.authorization.plugin._
 import org.apache.hadoop.hive.ql.session.SessionState
-
-import org.apache.spark.sql.{Logging, SparkSession}
+import org.apache.hadoop.security.UserGroupInformation
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.hive.{AuthzUtils, HiveExternalCatalog}
+import org.apache.spark.sql.internal.NonClosableMutableURLClassLoader
 
 /**
  * A Tool for Authorizer implementation.
@@ -40,7 +42,10 @@ import org.apache.spark.sql.hive.{AuthzUtils, HiveExternalCatalog}
  * generated, will be reused then.
  *
  */
-object AuthzImpl extends Logging {
+object AuthzImpl {
+
+  private val logger = LogFactory.getLog(getClass.getSimpleName.stripSuffix("$"))
+
   def checkPrivileges(
       spark: SparkSession,
       hiveOpType: HiveOperationType,
@@ -57,6 +62,8 @@ object AuthzImpl extends Logging {
         val clientLoader =
           AuthzUtils.getFieldVal(client, "clientLoader").asInstanceOf[IsolatedClientLoader]
         AuthzUtils.setFieldVal(clientLoader, "isolationOn", false)
+        AuthzUtils.setFieldVal(clientLoader,
+          "classLoader", new NonClosableMutableURLClassLoader(clientLoader.baseClassLoader))
         clientLoader.cachedHive = null
         val newClient = clientLoader.createClient()
         AuthzUtils.setFieldVal(
@@ -66,28 +73,39 @@ object AuthzImpl extends Logging {
         newClient.asInstanceOf[HiveClientImpl]
     }
 
+    val state = clientImpl.state
+    SessionState.setCurrentSessionState(state)
+    val user = UserGroupInformation.getCurrentUser.getShortUserName
+    if (state.getAuthenticator.getUserName != user) {
+      val hiveConf = state.getConf
+      val newState = new SessionState(hiveConf, user)
+      SessionState.start(newState)
+      AuthzUtils.setFieldVal(clientImpl, "state", newState)
+    }
+
     val authz = clientImpl.state.getAuthorizerV2
-    if (authz != null) {
-      try {
-        authz.checkPrivileges(hiveOpType, inputObjs, outputObjs, context)
-      } catch {
-        case hae: HiveAccessControlException =>
-          error(
-            s"""
-               |+===============================+
-               ||Spark SQL Authorization Failure|
-               ||-------------------------------|
-               ||${hae.getMessage}
-               ||-------------------------------|
-               ||Spark SQL Authorization Failure|
-               |+===============================+
+    clientImpl.withHiveState {
+      if (authz != null) {
+        try {
+          authz.checkPrivileges(hiveOpType, inputObjs, outputObjs, context)
+        } catch {
+          case hae: HiveAccessControlException =>
+            error(
+              s"""
+                 |+===============================+
+                 ||Spark SQL Authorization Failure|
+                 ||-------------------------------|
+                 ||${hae.getMessage}
+                 ||-------------------------------|
+                 ||Spark SQL Authorization Failure|
+                 |+===============================+
                """.stripMargin)
-          throw hae
-        case e: Exception => throw e
+            throw hae
+          case e: Exception => throw e
+        }
+      } else {
+        logger.warn("Authorizer V2 not configured. Skipping privilege checking")
       }
-    } else {
-      warn("Authorizer V2 not configured. Skip privilege checking")
     }
   }
 }
-

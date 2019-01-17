@@ -15,13 +15,15 @@
  *   limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark.authorizer
+package org.apache.spark.sql.catalyst.optimizer
 
-import org.apache.spark.sql.SparkSessionExtensions
-import org.apache.spark.sql.catalyst.optimizer.AuthorizerExtension
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.catalyst.rules.Rule
 
-class RangerSparkSQLExtension extends Extensions {
-  override def apply(ext: SparkSessionExtensions): Unit = {
-    ext.injectOptimizerRule(AuthorizerExtension)
-  }
-}
+/**
+ * An Optimizer Rule to do Hive Authorization V2 for Spark SQL.
+ *
+ * For Apache Spark 2.2.x and later
+ */
+case class AuthorizerExtension(spark: SparkSession) extends Rule[LogicalPlan] with Authorizable

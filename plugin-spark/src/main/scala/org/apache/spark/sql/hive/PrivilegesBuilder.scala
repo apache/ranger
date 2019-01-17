@@ -79,24 +79,22 @@ private[sql] object PrivilegesBuilder {
    * @param hivePrivilegeObjects input or output hive privilege object list
    * @param projectionList Projection list after pruning
    */
-  private[this] def buildQuery(
+  private def buildQuery(
       plan: LogicalPlan,
       hivePrivilegeObjects: JList[HPO],
-      projectionList: Seq[NamedExpression] = null): Unit = {
+      projectionList: Seq[NamedExpression] = Nil): Unit = {
 
     /**
      * Columns in Projection take priority for column level privilege checking
      * @param table catalogTable of a given relation
      */
     def mergeProjection(table: CatalogTable): Unit = {
-      if (projectionList == null) {
+      if (projectionList.isEmpty) {
         addTableOrViewLevelObjs(
           table.identifier,
           hivePrivilegeObjects,
           table.partitionColumnNames,
           table.schema.fieldNames)
-      } else if (projectionList.isEmpty) {
-        addTableOrViewLevelObjs(table.identifier, hivePrivilegeObjects)
       } else {
         addTableOrViewLevelObjs(
           table.identifier,
@@ -137,7 +135,7 @@ private[sql] object PrivilegesBuilder {
    * @param inputObjs input hive privilege object list
    * @param outputObjs output hive privilege object list
    */
-  private[this] def buildCommand(
+  private def buildCommand(
       plan: LogicalPlan,
       inputObjs: JList[HPO],
       outputObjs: JList[HPO]): Unit = {
@@ -366,7 +364,7 @@ private[sql] object PrivilegesBuilder {
    * @param dbName database name as hive privilege object
    * @param hivePrivilegeObjects input or output list
    */
-  private[this] def addDbLevelObjs(
+  private def addDbLevelObjs(
       dbName: String,
       hivePrivilegeObjects: JList[HPO]): Unit = {
     hivePrivilegeObjects.add(
@@ -415,10 +413,10 @@ private[sql] object PrivilegesBuilder {
   private def addTableOrViewLevelObjs(
       tableIdentifier: TableIdentifier,
       hivePrivilegeObjects: JList[HPO],
-      partKeys: Seq[String] = null,
-      columns: Seq[String] = null,
+      partKeys: Seq[String] = Nil,
+      columns: Seq[String] = Nil,
       mode: SaveMode = SaveMode.ErrorIfExists,
-      cmdParams: Seq[String] = null): Unit = {
+      cmdParams: Seq[String] = Nil): Unit = {
     tableIdentifier.database match {
       case Some(db) =>
         val tbName = tableIdentifier.table
