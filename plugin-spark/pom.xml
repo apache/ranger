@@ -154,7 +154,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>4.4.4</version>
+            <version>${httpcomponents.httpcore.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -165,7 +165,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>4.5.2</version>
+            <version>${httpcomponents.httpmime.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -176,7 +176,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.2</version>
+            <version>${httpcomponents.httpclient.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -187,7 +187,7 @@
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
-            <version>1.17.1</version>
+            <version>${jersey-bundle.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -209,7 +209,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>5.5.1</version>
+            <version>${solr.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
