@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+DROP TABLE IF EXISTS `x_policy_label_map`;
 DROP TABLE IF EXISTS `x_policy_label`;
 CREATE TABLE  `x_policy_label` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT ,
@@ -33,7 +34,7 @@ CONSTRAINT `x_policy_label_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCE
 CONSTRAINT `x_policy_label_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_label_map`;
+
 CREATE TABLE  `x_policy_label_map` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT ,
 `guid` varchar(1024) DEFAULT NULL,
