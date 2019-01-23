@@ -13,10 +13,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS x_datamask_type_def;
 DROP TABLE IF EXISTS x_policy_item_datamask;
-DROP SEQUENCE IF EXISTS x_datamask_type_def_seq;
 DROP SEQUENCE IF EXISTS x_policy_item_datamask_def_seq;
+DROP TABLE IF EXISTS x_datamask_type_def;
+DROP SEQUENCE IF EXISTS x_datamask_type_def_seq;
 
 CREATE SEQUENCE x_datamask_type_def_seq;
 CREATE TABLE x_datamask_type_def (
