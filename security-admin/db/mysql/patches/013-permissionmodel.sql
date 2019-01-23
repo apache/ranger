@@ -13,6 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+DROP TABLE IF EXISTS `x_group_module_perm`;
+DROP TABLE IF EXISTS `x_user_module_perm`;
 DROP TABLE IF EXISTS `x_modules_master`;
 CREATE TABLE `x_modules_master` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -37,7 +39,6 @@ DELIMITER ;
 
 INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager','');
 
-DROP TABLE IF EXISTS `x_user_module_perm`;
 CREATE TABLE `x_user_module_perm` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `user_id` bigint(20) NULL DEFAULT NULL,
@@ -54,7 +55,6 @@ CONSTRAINT `x_user_module_perm_FK_module_id` FOREIGN KEY (`module_id`) REFERENCE
 CONSTRAINT `x_user_module_perm_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_portal_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 )ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_group_module_perm`;
 CREATE TABLE `x_group_module_perm` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `group_id` bigint(20) NULL DEFAULT NULL,

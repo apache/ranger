@@ -64,9 +64,9 @@ BEGIN
     ALTER TABLE [dbo].[x_policy_item_rowfilter] DROP CONSTRAINT x_policy_item_rowfilter_FK_upd_by_id
 END
 GO
-IF (OBJECT_ID('x_datamask_type_def') IS NOT NULL)
+IF (OBJECT_ID('x_policy_item_rowfilter') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_datamask_type_def]
+    DROP TABLE [dbo].[x_policy_item_rowfilter]
 END
 GO
 IF (OBJECT_ID('x_policy_item_datamask') IS NOT NULL)
@@ -74,10 +74,11 @@ BEGIN
     DROP TABLE [dbo].[x_policy_item_datamask]
 END
 GO
-IF (OBJECT_ID('x_policy_item_rowfilter') IS NOT NULL)
+IF (OBJECT_ID('x_datamask_type_def') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_policy_item_rowfilter]
+    DROP TABLE [dbo].[x_datamask_type_def]
 END
+GO
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

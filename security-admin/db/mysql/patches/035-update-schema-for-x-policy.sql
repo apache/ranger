@@ -109,9 +109,12 @@ call removeConstraints('x_policy_item_rowfilter');
 call removeConstraints('x_policy_resource');
 call removeConstraints('x_policy_resource_map');
 
-
 DROP PROCEDURE removeConstraints;
-
+DROP TABLE IF EXISTS `x_policy_ref_group`;
+DROP TABLE IF EXISTS `x_policy_ref_user`;
+DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
+DROP TABLE IF EXISTS `x_policy_ref_condition`;
+DROP TABLE IF EXISTS `x_policy_ref_access_type`;
 DROP TABLE IF EXISTS `x_policy_ref_resource`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_resource` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -129,11 +132,8 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_resource` (
   CONSTRAINT `x_policy_ref_res_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
   CONSTRAINT `x_policy_ref_res_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES `x_policy` (`id`),
   CONSTRAINT `x_policy_ref_res_FK_resource_def_id` FOREIGN KEY (`resource_def_id`) REFERENCES `x_resource_def` (`id`)
-
 ) ROW_FORMAT=DYNAMIC;
 
-
-DROP TABLE IF EXISTS `x_policy_ref_access_type`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_access_type` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -152,8 +152,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_access_type` (
   CONSTRAINT `x_policy_ref_access_FK_access_def_id` FOREIGN KEY (`access_def_id`) REFERENCES `x_access_type_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-
-DROP TABLE IF EXISTS `x_policy_ref_condition`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_condition` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -170,10 +168,8 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_condition` (
   CONSTRAINT `x_policy_ref_condition_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
   CONSTRAINT `x_policy_ref_condition_FK_policy_id` FOREIGN KEY (`policy_id`) REFERENCES `x_policy` (`id`),
   CONSTRAINT `x_policy_ref_condition_FK_condition_def_id` FOREIGN KEY (`condition_def_id`) REFERENCES `x_policy_condition_def` (`id`)
-  
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_datamask_type` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -192,7 +188,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_datamask_type` (
   CONSTRAINT `x_policy_ref_datamask_FK_datamask_def_id` FOREIGN KEY (`datamask_def_id`) REFERENCES `x_datamask_type_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_user`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -211,8 +206,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_user` (
   CONSTRAINT `x_policy_ref_user_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_user` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-
-DROP TABLE IF EXISTS `x_policy_ref_group`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_group` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
