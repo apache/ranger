@@ -12,8 +12,20 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
+DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
+DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
+DROP TABLE IF EXISTS x_policy_ref_condition CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_ref_condition_seq;
+DROP TABLE IF EXISTS x_policy_ref_access_type CASCADE;
+DROP SEQUENCE IF EXISTS x_policy_ref_access_type_seq;
 DROP TABLE IF EXISTS x_policy_ref_resource CASCADE;
 DROP SEQUENCE IF EXISTS x_policy_ref_resource_seq;
+
 CREATE SEQUENCE x_policy_ref_resource_seq;
 CREATE TABLE x_policy_ref_resource(
 id BIGINT DEFAULT nextval('x_policy_ref_resource_seq'::regclass),
@@ -33,8 +45,7 @@ CONSTRAINT x_p_ref_res_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_res_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_access_type CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_access_type_seq;
+
 CREATE SEQUENCE x_policy_ref_access_type_seq;
 CREATE TABLE x_policy_ref_access_type(
 id BIGINT DEFAULT nextval('x_policy_ref_access_type_seq'::regclass),
@@ -54,8 +65,7 @@ CONSTRAINT x_p_ref_acc_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_acc_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_condition CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_condition_seq;
+
 CREATE SEQUENCE x_policy_ref_condition_seq;
 CREATE TABLE x_policy_ref_condition(
 id BIGINT DEFAULT nextval('x_policy_ref_condition_seq'::regclass),
@@ -75,8 +85,7 @@ CONSTRAINT x_p_ref_cond_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_por
 CONSTRAINT x_p_ref_cond_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
+
 CREATE SEQUENCE x_policy_ref_datamask_type_seq;
 CREATE TABLE x_policy_ref_datamask_type(
 id BIGINT DEFAULT nextval('x_policy_ref_datamask_type_seq'::regclass),
@@ -96,8 +105,7 @@ CONSTRAINT x_p_ref_dmk_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_dmk_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
+
 CREATE SEQUENCE x_policy_ref_user_seq;
 CREATE TABLE x_policy_ref_user(
 id BIGINT DEFAULT nextval('x_policy_ref_user_seq'::regclass),
@@ -117,8 +125,7 @@ CONSTRAINT x_p_ref_usr_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_port
 CONSTRAINT x_p_ref_usr_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 commit;
-DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
-DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
+
 CREATE SEQUENCE x_policy_ref_group_seq;
 CREATE TABLE x_policy_ref_group(
 id BIGINT DEFAULT nextval('x_policy_ref_group_seq'::regclass),

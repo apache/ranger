@@ -28,11 +28,6 @@ BEGIN
     ALTER TABLE [dbo].[x_policy_ref_resource] DROP CONSTRAINT x_policy_ref_resource_UK
 END
 GO
-IF (OBJECT_ID('x_policy_ref_resource') IS NOT NULL)
-BEGIN
-  DROP TABLE [dbo].[x_policy_ref_resource]
-END
-GO
 IF (OBJECT_ID('x_policy_ref_access_type_FK_policy_id') IS NOT NULL)
 BEGIN
   ALTER TABLE [dbo].[x_policy_ref_access_type] DROP CONSTRAINT x_policy_ref_access_type_FK_policy_id
@@ -46,11 +41,6 @@ GO
 IF (OBJECT_ID('x_policy_ref_access_type_UK') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_policy_ref_access_type] DROP CONSTRAINT x_policy_ref_access_type_UK
-END
-GO
-IF (OBJECT_ID('x_policy_ref_access_type') IS NOT NULL)
-BEGIN
-  DROP TABLE [dbo].[x_policy_ref_access_type]
 END
 GO
 IF (OBJECT_ID('x_policy_ref_condition_FK_policy_id') IS NOT NULL)
@@ -68,11 +58,6 @@ BEGIN
     ALTER TABLE [dbo].[x_policy_ref_condition] DROP CONSTRAINT x_policy_ref_condition_UK
 END
 GO
-IF (OBJECT_ID('x_policy_ref_condition') IS NOT NULL)
-BEGIN
-  DROP TABLE [dbo].[x_policy_ref_condition]
-END
-GO
 IF (OBJECT_ID('x_policy_ref_datamask_type_FK_policy_id') IS NOT NULL)
 BEGIN
   ALTER TABLE [dbo].[x_policy_ref_datamask_type] DROP CONSTRAINT x_policy_ref_datamask_type_FK_policy_id
@@ -88,11 +73,6 @@ BEGIN
     ALTER TABLE [dbo].[x_policy_ref_datamask_type] DROP CONSTRAINT x_policy_ref_datamask_type_UK
 END
 GO
-IF (OBJECT_ID('x_policy_ref_datamask_type') IS NOT NULL)
-BEGIN
-  DROP TABLE [dbo].[x_policy_ref_datamask_type]
-END
-GO
 IF (OBJECT_ID('x_policy_ref_user_FK_policy_id') IS NOT NULL)
 BEGIN
   ALTER TABLE [dbo].[x_policy_ref_user] DROP CONSTRAINT x_policy_ref_user_FK_policy_id
@@ -106,11 +86,6 @@ GO
 IF (OBJECT_ID('x_policy_ref_user_UK') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_policy_ref_user] DROP CONSTRAINT x_policy_ref_user_UK
-END
-GO
-IF (OBJECT_ID('x_policy_ref_user') IS NOT NULL)
-BEGIN
-  DROP TABLE [dbo].[x_policy_ref_user]
 END
 GO
 IF (OBJECT_ID('x_policy_ref_group_FK_policy_id') IS NOT NULL)
@@ -131,6 +106,31 @@ GO
 IF (OBJECT_ID('x_policy_ref_group') IS NOT NULL)
 BEGIN
   DROP TABLE [dbo].[x_policy_ref_group]
+END
+GO
+IF (OBJECT_ID('x_policy_ref_user') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_user]
+END
+GO
+IF (OBJECT_ID('x_policy_ref_datamask_type') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_datamask_type]
+END
+GO
+IF (OBJECT_ID('x_policy_ref_condition') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_condition]
+END
+GO
+IF (OBJECT_ID('x_policy_ref_access_type') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_access_type]
+END
+GO
+IF (OBJECT_ID('x_policy_ref_resource') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_resource]
 END
 GO
 SET ANSI_NULLS ON
