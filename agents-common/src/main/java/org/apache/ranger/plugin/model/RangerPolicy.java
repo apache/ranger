@@ -82,9 +82,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private Map<String, Object>               options;
 	private List<RangerValiditySchedule>      validitySchedules;
 	private List<String>                      policyLabels;
+	private String                            zoneName;
 
 	public RangerPolicy() {
-		this(null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null);
+	}
+
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables) {
+		this(service, name, policyType, policyPriority, description, resources, policyItems, resourceSignature, options, validitySchedules, policyLables, null);
 	}
 
 	/**
@@ -96,7 +101,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems
 	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables) {
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName) {
 		super();
 
 		setService(service);
@@ -116,6 +121,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setOptions(options);
 		setValiditySchedules(validitySchedules);
 		setPolicyLabels(policyLables);
+		setZoneName(zoneName);
 
 	}
 
@@ -142,6 +148,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setOptions(other.getOptions());
 		setValiditySchedules(other.getValiditySchedules());
 		setPolicyLabels(other.getPolicyLabels());
+		setZoneName(other.getZoneName());
 	}
 
 	/**
@@ -475,6 +482,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
             this.validitySchedules.addAll(validitySchedules);
         }
     }
+    public String getZoneName() { return zoneName; }
+
+    public void setZoneName(String zoneName) {
+	    this.zoneName = zoneName;
+    }
 
 	@Override
 	public String toString( ) {
@@ -596,6 +608,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
                 }
             }
         }
+        sb.append(", zoneName=").append(zoneName);
         sb.append("}");
 
 		sb.append("}");

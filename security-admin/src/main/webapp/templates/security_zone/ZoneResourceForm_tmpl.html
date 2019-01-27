@@ -1,0 +1,108 @@
+{{!-- Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements. See the NOTICE file distributed with
+this work for additional information regarding copyright ownership. The
+ASF licenses this file to You under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable
+law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License. --}}
+<form class="form-horizontal">
+        <fieldset>
+                <p class="formHeader">
+                        Policy Details :
+                </p>
+                {{#if policyType}}
+                        <div class="control-group field-id">
+                                <label class="control-label" for="c1836_id">Policy Type</label>
+                                <div class="controls">
+                                        <label class="label label-ranger" style="margin-top: 5px; margin-left: 9px;">{{policyType}}</label>
+                                        <a href="javascript:void(0);" data-js="policyTimeBtn" data-id="1" class="btn btn-primary pull-right" title="set time for policy"><i class="icon-time icon-large"></i> {{policyTimeBtnLabel}} </a>
+                                </div>
+
+                        </div>
+                {{/if}}
+                {{#if id}}
+                <div class="control-group field-id">
+                        <label class="control-label" for="c1836_id">Policy ID</label>
+                        <div class="controls">
+                                <label class="label label-ranger"
+                                        style="margin-top: 5px; margin-left: 9px;">{{id}}</label>
+                        </div>
+                </div>
+                {{/if}} <b data-fieldsets class="policy-form"></b>
+        </fieldset>
+        <fieldset>
+                        <p class="wrap-header bold formHeader">
+                                {{conditionType}} Conditions : <span class="label label-yellow pull-right"></span>
+                        </p>
+                        &nbsp;
+                        <div class="wrap position-relative">
+
+                                <div data-customfields="groupPerms">
+                                        <div class="control-group">
+                                                <label class="control-label">{{tt 'lbl.permissions'}}</label>
+                                                <div class="controls">
+                                                        <img src="images/loading.gif"
+                                                                style="margin-left: 4%; margin-top: 1%;" />
+                                                </div>
+                                        </div>
+                                </div>
+                                {{#compare "Allow" "eq" conditionType}}
+                                        <div class="form-indent-right" data-js="allowExcludePerm">
+                                                <p class="wrap-header reportSearchHeader "><i class="icon-warning-sign icon-1 text-color-red"></i>
+                                                Exclude from Allow Conditions :</p>
+                                                &nbsp;
+                                                <div class="wrap position-relative borderNone">
+
+                                                        <div class="" data-customfields="groupPermsAllowExclude">
+                                                                <div class="control-group" style="margin-left: -100px;">
+                                                                        <label class="control-label">Exclude :</label>
+                                                                        <div class="controls">
+                                                                                <img src="images/loading.gif"
+                                                                                        style="margin-left: 4%; margin-top: 1%;" />
+                                                                        </div>
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                {{/compare}}
+                        </div>
+                        {{#compare "Allow" "eq" conditionType}}
+                                <div data-js="denyConditionItems">
+                                        <p class="wrap-header bold formHeader">Deny Conditions :</p>
+                                        &nbsp;
+                                        <div class="wrap position-relative">
+                                                <div class="" data-customfields="groupPermsDeny">
+                                                        <div class="control-group">
+                                                                <label class="control-label">{{tt 'lbl.permissions'}}</label>
+                                                                <div class="controls">
+                                                                        <img src="images/loading.gif"
+                                                                                style="margin-left: 4%; margin-top: 1%;" />
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                                <div class="form-indent-right">
+                                                        <p class="wrap-header reportSearchHeader"><i class="icon-warning-sign icon-1 text-color-red"></i>
+                                                        Exclude from Deny Conditions :</p>
+                                                        &nbsp;
+                                                        <div class="wrap position-relative borderNone">
+                                                                <div class="" data-customfields="groupPermsDenyExclude">
+                                                                        <div class="control-group">
+                                                                                <label class="control-label">Exclude :</label>
+                                                                                <div class="controls">
+                                                                                        <img src="images/loading.gif"
+                                                                                                style="margin-left: 4%; margin-top: 1%;" />
+                                                                                </div>
+                                                                        </div>
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                        {{/compare}}
+        </fieldset>
+</form>

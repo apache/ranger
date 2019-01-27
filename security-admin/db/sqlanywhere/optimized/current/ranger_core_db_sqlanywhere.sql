@@ -35,6 +35,8 @@ BEGIN
 	execute(@drpstmt)
 END
 GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_user')
@@ -120,6 +122,16 @@ GO
 call dbo.removeForeignKeysAndTable('x_service_config_def')
 GO
 call dbo.removeForeignKeysAndTable('x_policy')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_group')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_user')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
+GO
+call dbo.removeForeignKeysAndTable('x_ranger_global_state')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone')
 GO
 call dbo.removeForeignKeysAndTable('x_service')
 GO
@@ -356,6 +368,7 @@ create table dbo.x_policy_export_audit(
 	exported_json text DEFAULT NULL NULL,
 	http_ret_code int DEFAULT 0 NOT NULL,
 	cluster_name varchar(255) DEFAULT NULL NULL,
+	zone_name varchar(255) DEFAULT NULL NULL,
 	CONSTRAINT x_policy_export_audit_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -481,7 +494,34 @@ create table dbo.x_service (
 	tag_service bigint DEFAULT NULL NULL,
 	tag_version bigint DEFAULT 0 NOT NULL,
 	tag_update_time datetime DEFAULT NULL NULL,
-	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id)
+	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT x_service_UK_name UNIQUE NONCLUSTERED (name)
+)
+GO
+CREATE TABLE dbo.x_security_zone(
+	id bigint IDENTITY NOT NULL,
+	create_time datetime DEFAULT NULL NULL,
+	update_time datetime DEFAULT NULL NULL,
+	added_by_id bigint DEFAULT NULL NULL,
+	upd_by_id bigint DEFAULT NULL NULL,
+	version bigint DEFAULT NULL NULL,
+	name varchar(255) NOT NULL,
+	jsonData text DEFAULT NULL NULL,
+	CONSTRAINT x_security_zone_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT x_security_zone_UK_name UNIQUE NONCLUSTERED(name)
+)
+GO
+CREATE TABLE dbo.x_ranger_global_state(
+	id bigint IDENTITY NOT NULL,
+	create_time datetime DEFAULT NULL NULL,
+	update_time datetime DEFAULT NULL NULL,
+	added_by_id bigint DEFAULT NULL NULL,
+	upd_by_id bigint DEFAULT NULL NULL,
+	version bigint DEFAULT NULL NULL,
+	state_name varchar(255) NOT NULL,
+	app_data varchar(255) DEFAULT NULL NULL,
+	CONSTRAINT x_ranger_global_state_PK_id PRIMARY KEY CLUSTERED(id),
+	CONSTRAINT x_ranger_global_state_UK_state_name UNIQUE NONCLUSTERED(state_name)
 )
 GO
 create table dbo.x_policy (
@@ -502,6 +542,7 @@ create table dbo.x_policy (
 	policy_options varchar(4000) DEFAULT NULL NULL,
 	policy_priority int DEFAULT 0 NOT NULL,
 	policy_text text DEFAULT NULL NULL,
+	zone_id bigint DEFAULT NULL NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_policy_UK_name_service UNIQUE NONCLUSTERED (name,service)
 )
@@ -1084,7 +1125,56 @@ create table dbo.x_policy_ref_group (
 		CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE NONCLUSTERED (policy_id, group_id)
 )
 GO
-
+CREATE TABLE dbo.x_security_zone_ref_service(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        service_id bigint DEFAULT NULL NULL,
+        service_name varchar(255) DEFAULT NULL NULL,
+        CONSTRAINT x_sz_ref_service_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+CREATE TABLE dbo.x_security_zone_ref_resource(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        resource_def_id bigint DEFAULT NULL NULL,
+        resource_name varchar(255) DEFAULT NULL NULL,
+        CONSTRAINT x_sz_ref_resource_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+CREATE TABLE dbo.x_security_zone_ref_user(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        user_id bigint DEFAULT NULL NULL,
+        user_name varchar(767) DEFAULT NULL NULL,
+        user_type tinyint DEFAULT NULL,
+        CONSTRAINT x_sz_ref_auser_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+CREATE TABLE dbo.x_security_zone_ref_group(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        group_id bigint DEFAULT NULL NULL,
+        group_name varchar(767) DEFAULT NULL NULL,
+        group_type tinyint DEFAULT NULL,
+        CONSTRAINT x_sz_ref_agroup_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user(id)
 GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
@@ -1414,6 +1504,52 @@ GO
 ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_ranger_global_state ADD CONSTRAINT x_ranger_global_state_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_ranger_global_state ADD CONSTRAINT x_ranger_global_state_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_policy ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY(service_id) REFERENCES dbo.x_service (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY(service_name) REFERENCES dbo.x_service (name)
+GO
+ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_service_id FOREIGN KEY(resource_def_id) REFERENCES dbo.x_resource_def (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_user_id FOREIGN KEY(user_id) REFERENCES dbo.x_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY(user_name) REFERENCES dbo.x_user (user_name)
+GO
+ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_group_id FOREIGN KEY(group_id) REFERENCES dbo.x_group (id)
 GO
 CREATE NONCLUSTERED INDEX x_asset_cr_time ON dbo.x_asset(create_time ASC)
 GO
@@ -1746,6 +1882,8 @@ INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,modul
 GO
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),'Tag Based Policies','')
 GO
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),'Security Zone','')
+GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'rangerusersync','','rangerusersync','rangerusersync','70b8374d3dfe0325aaa5002a688c7e3b','rangerusersync',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('rangerusersync'),'ROLE_SYS_ADMIN',1)
@@ -1806,6 +1944,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
@@ -1847,6 +1987,12 @@ GO
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('keyadmin'),dbo.getModulesIdByName('Users/Groups'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 GO
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('keyadmin'),dbo.getModulesIdByName('Audit'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+GO
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+GO
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangerusersync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+GO
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangertagsync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

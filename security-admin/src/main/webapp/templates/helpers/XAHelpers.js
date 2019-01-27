@@ -566,6 +566,18 @@
 				&& ( !_.isUndefined(rowFilterDef.resources) ) && rowFilterDef.resources.length > 0 )
 				? options.fn(this) : options.inverse(this); 
 	});
+	Handlebars.registerHelper('printZoneResourceGroups', function(zoneServiceResources) {
+		var resourceStr = '';	
+		_.each(zoneServiceResources, function(resourceGroup){
+			resourceStr += '<div class="zone-resource">';
+			_.map(resourceGroup,function(res, resType){ 
+				resourceStr +=  '<strong>' + resType + '</strong> : ' + res + '<br>' ;
+			});
+			resourceStr += '</div>';
+		});
+		
+		return resourceStr;
+	});
         Handlebars.registerHelper('blankCheck', function(context, options) {
                 return _.isUndefined(context) || _.isEmpty(context) ? '--' : context;
         });

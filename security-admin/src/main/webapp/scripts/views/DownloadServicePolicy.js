@@ -35,8 +35,18 @@ define(function(require){
 		
 		initialize: function(options) {
 			console.log("initialized a DownloadServicePolicy Layout");
-			_.extend(this, _.pick(options, 'collection','serviceNames','serviceDefList','serviceType','services'));
-			var componentServices = this.services.where({'type' : this.serviceType });
+                        var that = this, componentServices = [];
+                        _.extend(this, _.pick(options, 'collection','serviceNames','serviceDefList','serviceType','services',
+                                'zoneServiceDefList','zoneServices'));
+                        if(!_.isEmpty(that.zoneServices) && !_.isUndefined(that.zoneServices)){
+                                _.each(that.zoneServices, function(value, key){
+                                        if(key === that.serviceType){
+                                                componentServices = componentServices.concat(value);
+                                        }
+                                });
+                        }else{
+                                componentServices = this.services.where({'type' : this.serviceType });
+                        }
 			this.serviceNames = componentServices.map(function(m){ return { 'name' : m.get('name') } })
 			this.bind("ok", this.okClicked);
 		},
@@ -99,7 +109,11 @@ define(function(require){
 		},
 		renderComponentSelect: function(){
 			var that = this;
-			var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}; });
+                        if(!_.isEmpty(this.zoneServiceDefList) && !_.isUndefined(this.zoneServiceDefList)){
+                                var options = this.zoneServiceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
+                        }else{
+                                var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
+                        }
 			var componentTyp = options.map(function(m){return m.text})
             this.ui.componentTypeSelected.val(componentTyp);
 			this.ui.componentTypeSelected.select2({
@@ -114,8 +128,16 @@ define(function(require){
 				console.log(e);
 				var selectedComp  = e.currentTarget.value, componentServices = [];
 				_.each(selectedComp.split(","), function(type){
-					that.serviceNam = that.services.where({'type' : type });
-					componentServices = componentServices.concat(that.serviceNam);
+                                        if(!_.isEmpty(that.zoneServices) && !_.isUndefined(that.zoneServices)){
+                                                _.each(that.zoneServices, function(value, key){
+                                                        if(key === type){
+                                                                componentServices = componentServices.concat(value);
+                                                        }
+                                                });
+                                        }else{
+                                                that.serviceNam = that.services.where({'type' : type });
+                                                componentServices = componentServices.concat(that.serviceNam);
+                                        }
 				});
 				var names = componentServices.map(function(m){ return { 'name' : m.get('name') } });
 				that.serviceNames = names;
@@ -127,12 +149,11 @@ define(function(require){
 		serviceSelect :function(e){
 			var options =this.serviceNames.map(function(m){ return { 'id' : m.name, 'text' : m.name}; });
 			var serviceTyp = options.map(function(m){return m.text})
-                        this.ui.servicesName.val(serviceTyp);
+            this.ui.servicesName.val(serviceTyp);
 			this.ui.servicesName.select2({
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Service Name',
-			    //maximumSelectionSize : 1,
 			    width: '530px',
 			    allowClear: true,
 			    data: options

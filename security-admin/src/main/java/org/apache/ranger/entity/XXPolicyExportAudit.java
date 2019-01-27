@@ -140,6 +140,16 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	@Column(name="CLUSTER_NAME" , nullable=false  , length=255)
 	protected String clusterName;
 
+	/**
+	 * Name of the ZoneName
+	 * <ul>
+	 * <li>The maximum length for this attribute is <b>255</b>.
+	 * </ul>
+	 *
+	 */
+	@Column(name="ZONE_NAME" , nullable=false  , length=255)
+	protected String zoneName;
+
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -289,6 +299,23 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b>zoneName</b>.
+	 * You cannot set null to the attribute.
+	 * @param zoneName Value to set member attribute <b>zoneName</b>
+	 */
+	public void setZoneName(String zoneName) {
+		this.zoneName = zoneName;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>zoneName</b>
+	 * @return String - value of member attribute <b>zoneName</b>.
+	 */
+	public String getZoneName() {
+		return zoneName;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -304,6 +331,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 		str += "exportedJson={" + exportedJson + "} ";
 		str += "httpRetCode={" + httpRetCode + "} ";
 		str += "clusterName={" + clusterName + "} ";
+		str += "zoneName={" + zoneName + "} ";
 		str += "}";
 		return str;
 	}
@@ -339,6 +367,9 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
         	if( this.httpRetCode != other.httpRetCode ) return false;
 			if ((this.clusterName == null && other.clusterName != null) || (this.clusterName != null && !this.clusterName.equals(other.clusterName))) {
 	    		return false;
+			}
+			if ((this.zoneName == null && other.zoneName != null) || (this.zoneName != null && !this.zoneName.equals(other.zoneName))) {
+				return false;
 			}
 		return true;
 	}

@@ -56,6 +56,8 @@ public class SearchFilter {
     public static final String POLICY_LABEL     = "policyLabel";    // search
     public static final String POLICY_LABELS_PARTIAL     = "policyLabelsPartial";    // search
     public static final String POLICY_LABEL_ID       = "policyLabelId";      // search, sort
+    public static final String ZONE_ID               = "zoneId";      // search, sort
+    public static final String ZONE_NAME             = "zoneName";      // search, sort
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search

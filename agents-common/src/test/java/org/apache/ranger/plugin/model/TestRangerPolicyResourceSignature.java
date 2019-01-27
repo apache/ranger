@@ -158,6 +158,7 @@ public class TestRangerPolicyResourceSignature {
 		when(policy.getPolicyType()).thenReturn(null);
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(first);
 		when(policy.getResources()).thenReturn(policyResources);
+		when(policy.getZoneName()).thenReturn(null);
 		serializer = new PolicySerializer(policy);
 		String expectedVersion = "version=1";
 		String expectedType = "type=0";

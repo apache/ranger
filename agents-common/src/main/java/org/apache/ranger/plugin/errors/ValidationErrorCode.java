@@ -96,7 +96,25 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_POLICY_TYPE_CHANGE_NOT_ALLOWED(3028, "attempt to change type of policy id={0} from type={1} to type={2} is not allowed"),
     POLICY_VALIDATION_ERR_POLICY_INVALID_VALIDITY_SCHEDULE(3029, "Invalid validity schedule specification"),
     POLICY_VALIDATION_ERR_POLICY_INVALID_PRIORITY(3030, "Invalid priority value"),
-   ;
+    POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED(3032, "Update of Zone name from={0} to={1} in policy is not supported"),
+    POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
+
+    // SECURITY_ZONE Validations
+    SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD(3035, "Internal error: missing field[{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT(3036, "Another security zone already exists for this name: zone-id=[{0}]]"),
+    SECURITY_ZONE_VALIDATION_ERR_INVALID_ZONE_ID(3037, "No security zone found for [{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3038, "both users and user-groups collections for the security zone were null/empty"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES(3039, "No resources specified for service [{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME(3040, "Invalid service [{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE(3041, "Invalid service-type [{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_INVALID_RESOURCE_HIERARCHY(3042, "Invalid resource hierarchy specified for service:[{0}], resource-hierarchy:[{1}]"),
+    SECURITY_ZONE_VALIDATION_ERR_ALL_WILDCARD_RESOURCE_VALUES(3043, "All wildcard values specified for resources for service:[{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_SERVICES(3044, "No services specified for security-zone:[{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
+    SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
+
+    ;
 
 
     private static final Log LOG = LogFactory.getLog(ValidationErrorCode.class);

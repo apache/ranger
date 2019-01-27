@@ -206,6 +206,8 @@ define(function(require) {
 		   var view 				= require('views/policymanager/ServiceLayout');
 		   var RangerServiceDefList	= require('collections/RangerServiceDefList');
 		   var RangerServiceDef		= require('models/RangerServiceDef');
+                   var RangerZoneList 		= require('collections/RangerZoneList');
+                   var rangerZoneList 		= new RangerZoneList();
 		   
 		   var collection 			= new RangerServiceDefList();
 		   collection.queryParams.sortBy = 'serviceTypeId';
@@ -226,10 +228,18 @@ define(function(require) {
 			   var coll = collection.filter(function(model){ return model.get('name') != XAEnums.ServiceType.SERVICE_TAG.label})
 			   collection.reset(coll)
 		   }
+                   rangerZoneList.fetch({
+                                cache : false,
+                                async:false,
+                                success: function(coll, resp) {
+                                        rangerZoneList.set(resp);
+                                }
+                        })
 //		   if(App.rContent.currentView) App.rContent.currentView.close();
 		   App.rContent.show(new view({
 			   collection : collection,
-			   type	: type
+                           type	: type,
+                           rangerZoneList : rangerZoneList
 		   }));
 	   },
 
@@ -387,6 +397,88 @@ define(function(require) {
 			   kmsServiceName : kmsServiceName
 		   }));
 	   },
+           /**************** SECURITY ZONE ******************************/
+        zoneManagmentAction: function(listId) {
+            MAppState.set({
+                'currentTab': XAGlobals.AppTabs.SecurityZone.value
+            });
+            var XAUtil = require('utils/XAUtils');
+            var vSecurityZone = require('views/security_zone/SecurityZone');
+            var RangerServiceList = require('collections/RangerServiceList');
+            var RangerZoneList = require('collections/RangerZoneList');
+            var rangerServiceList = new RangerServiceList();
+            var rangerZoneList = new RangerZoneList();
+            rangerServiceList.fetch({
+                cache: false,
+                async: false
+            });
+            rangerZoneList.fetch({
+                cache: false,
+                async: false,
+                success: function(coll, resp) {
+                    rangerZoneList.set(resp);
+                    App.rContent.show(new vSecurityZone({
+                        rangerService: rangerServiceList,
+                        collection: rangerZoneList,
+                        zoneId: listId
+                    }));
+                }
+            });
+        },
+
+        RangerZoneCreateAction: function() {
+            MAppState.set({
+                'currentTab': XAGlobals.AppTabs.SecurityZone.value
+            });
+            var view = require('views/security_zone/ZoneCreate');
+            var RangerServiceList = require('collections/RangerServiceList');
+            var RangerZone = require('models/RangerZone');
+            var RangerZoneList = require('collections/RangerZoneList');
+            var zoneSerivesColl = new RangerZoneList();
+            var rangerServiceList = new RangerServiceList();
+            rangerServiceList.fetch({
+                cache: false,
+            }).done(function() {
+                App.rContent.show(new view({
+                    model: new RangerZone({
+                        'policyType': 0
+                    }),
+                    rangerService: rangerServiceList,
+                    zoneSerivesColl: zoneSerivesColl
+                }));
+            });
+        },
+
+        RangerZoneEditAction: function(zoneId) {
+            MAppState.set({
+                'currentTab': XAGlobals.AppTabs.AccessManager.value
+            });
+            var view = require('views/security_zone/ZoneCreate');
+            var RangerServiceList = require('collections/RangerServiceList');
+            var RangerZone = require('models/RangerZone');
+            var RangerZoneList = require('collections/RangerZoneList');
+            var XAUtil = require('utils/XAUtils');
+            var rangerServiceList = new RangerServiceList();
+            var rangerZone = new RangerZone({
+                id: zoneId
+            })
+            var zoneSerivesColl = new RangerZoneList();
+            rangerServiceList.fetch({
+                cache: false,
+                async: false,
+            });
+            rangerZone.fetch({
+                cache: false,
+                async: false,
+            }).done(function() {
+                App.rContent.show(new view({
+                    rangerService: rangerServiceList,
+                    model: rangerZone,
+                    zoneSerivesColl: zoneSerivesColl,
+                }));
+            })
+        },
+
 	   /**************** ERROR PAGE ******************************/
 	   pageNotFoundAction	: function() {
 		   var XAUtils			= require('utils/XAUtils');

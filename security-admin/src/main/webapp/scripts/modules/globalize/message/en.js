@@ -242,6 +242,7 @@ define(function(require) {
                 lastUpdate                      : 'Last Update',
 		  		modules		                	: 'Modules',
                 clusterName                     : 'Cluster Name',
+                zoneName                        : 'Zone Name',
                 policyLabels					: 'Policy Labels',
                 activeStatus                    : 'Active Status',
                 selectTagService                : 'Tag Service',
@@ -348,6 +349,7 @@ define(function(require) {
                 udf                         :'Hive udf.',
                 pluginStatus                :'Plugin Status',
                 clusterName                 :'Name of ambari cluster',
+                zoneName                    :"Name of Zone",
                 url        					:'Hive url.',
                 rowFilter                   : 'Row Filter',
                 policyLabelsinfo			: 'Label of policy',
@@ -364,7 +366,10 @@ define(function(require) {
                 link                        :'Linker Name.',
                 job                         :'Sqoop Job Name.',
                 project                     :'Kylin Project Level.',
-                nifiResource                :'NiFi Resource Identifier.'
+                nifiResource                :'NiFi Resource Identifier.',
+                securityZone				:'Security Zone',
+                zoneCreate					:'Create Zone',
+                zoneEdit					:'Zone Edit'
                         },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
@@ -438,7 +443,12 @@ define(function(require) {
                 showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
                 searchForUserSync       :"Search for your user sync audits...",
                 policyExpired           :'Policy Expired',
-                duplicateNewConfigValidationMsg     :'Please make sure the new configuration has no duplicate names'
+                duplicateNewConfigValidationMsg     :'Please make sure the new configuration has no duplicate names',
+                zoneDeleteMsg 		    : 'Zone deleted successfully',
+                zoneNameValidation	    : 'Please select Zone Name.',
+                zoneServiceNameValidation: 'Please select Service Name for selected zone.',
+                adminUserGroupValidation: 'Please select atleast one Admin Users/Usergroups to Zone else Zone will not be added.',
+                auditorUserGroupValidation: 'Please select atleast one Auditor Users/Usergroups to Zone else Zone will not be added.',
 
 			},
 			plcHldr : {
@@ -450,7 +460,8 @@ define(function(require) {
 				preventNavRepositoryForm : 'Repository form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavUserForm : 'User form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!',
-				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!'
+				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!',
+				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!'
 				
 			},	
 			validationMessages : {
@@ -470,6 +481,7 @@ define(function(require) {
                 setTimeZoneErrorMsg    :'Please select Start/End date for Time zone',
                 jsValidationMsg        :'1. JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc.\n2. Dragging bottom-right corner of javascript condition editor(Textarea) can resizable',
 				emailAddressValidationMsg  :'1. Email address should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character <b>.-@</b> .<br>3. Email address length should be greater than 9 characters.<br> 4. Email address examples : abc@de.fg, A-C@D-.FG',
+                nameValidationMsg      :'Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).',
 			},
 			serverMsg : {
 

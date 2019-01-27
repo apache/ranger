@@ -27,6 +27,7 @@ import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXPolicyBase;
+import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -76,11 +77,16 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		searchFields.add(new SearchField(SearchFilter.POLICY_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING,
 				SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField(SearchFilter.POLICY_TYPE, "obj.policyType", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.ZONE_NAME, "xZone.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
+				"XXSecurityZone xZone", "xZone.id = obj.zoneId"));
+		searchFields.add(new SearchField(SearchFilter.ZONE_ID, "xZone.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL,
+				"XXSecurityZone xZone", "xZone.id = obj.zoneId"));
 
 		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
 		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
 		sortFields.add(new SortField(SearchFilter.POLICY_ID, "obj.id", true, SORT_ORDER.ASC));
 		sortFields.add(new SortField(SearchFilter.POLICY_NAME, "obj.name"));
+
 	}
 
 	@Override
@@ -103,6 +109,9 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
 		xObj.setIsEnabled(vObj.getIsEnabled());
+		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName());
+
+		xObj.setZoneId(zoneId);
 
 		String              validitySchedules = JsonUtils.listToJson(vObj.getValiditySchedules());
 		Map<String, Object> options           = vObj.getOptions();
@@ -137,6 +146,8 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setResourceSignature(xObj.getResourceSignature());
 		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
+		String zoneName = convertZoneIdToZoneName(xObj.getZoneId());
+		vObj.setZoneName(zoneName);
 
 		String policyText = xObj.getPolicyText();
 
@@ -150,4 +161,16 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 
 		return vObj;
 	}
+
+	private Long convertZoneNameToZoneId(String zoneName) {
+	    if (StringUtils.isEmpty(zoneName)) return null;
+	    XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+	    return zone == null ? null : zone.getId();
+    }
+
+    private String convertZoneIdToZoneName(Long zoneId) {
+        if (zoneId == null) return null;
+        XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneId(zoneId);
+        return zone == null ? null : zone.getName();
+    }
 }

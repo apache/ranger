@@ -30,6 +30,8 @@ define(function(require){
 	var UserUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/UserUpdateOperationDiff_tmpl');
 	var GroupOperationDiff_tmpl 		= require('hbs!tmpl/reports/GroupOperationDiff_tmpl');
 	var GroupUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/GroupUpdateOperationDiff_tmpl');
+	var ZoneOperationDiff_tmpl 			= require('hbs!tmpl/reports/ZoneOperationDiff_tmpl');
+	var ZoneUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/ZoneUpdateOperationDiff_tmpl');
 	
 	var OperationDiffDetail = Backbone.Marionette.ItemView.extend(
 	/** @lends OperationDiffDetail */
@@ -73,7 +75,15 @@ define(function(require){
         				isGroup 			: this.isGroup
         		});
         	}
-        	
+        	if(this.templateType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value){
+        		obj = $.extend(obj, {
+        			newServiceResourceArr 		: this.newServiceResourceArr,
+        			isNewServiceResourceArr		: _.isEmpty(this.newServiceResourceArr) ? false : true,
+        			oldServiceResourceArr 		: this.oldServiceResourceArr,
+        			isOldServiceResourceArr		: _.isEmpty(this.oldServiceResourceArr) ? false : true,
+        			isServiceResourcesDiffEmpty : (_.isEmpty(this.oldServiceResourceArr) && _.isEmpty(this.oldServiceResourceArr)) ? false : true
+        		});
+        	}
         	
         	return obj;
         },
@@ -162,8 +172,16 @@ define(function(require){
 				}
 				this.templateType = XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value;
 			} 
+			if (this.classType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value){
+				this.zoneDiffOperation();
+				this.templateType = XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value;
+				if(this.action == 'update')
+					this.template = ZoneUpdateOperationDiff_tmpl;
+				else
+					this.template = ZoneOperationDiff_tmpl;
+			}
 		},
-		assetDiffOperation : function(){
+		assetDiffOperation : function(){	
 			var that = this, configModel;
 			
 			this.collection.each(function(m){
@@ -254,6 +272,34 @@ define(function(require){
 			});
 			this.collection.remove(modelArr);
 		},	
+		zoneDiffOperation : function(){
+			var that = this;
+			this.newServiceResourceArr=[], this.oldServiceResourceArr=[];
+			var servicesObj = this.collection.findWhere({attributeName : 'Zone Services'});
+			if(servicesObj && servicesObj.get('newValue')  != ''){
+				var newValJson = $.parseJSON(servicesObj.get('newValue'));
+				var serviceNames = Object.keys(newValJson);
+				_.each(serviceNames, function(serviceName){
+					that.newServiceResourceArr.push({serviceName : serviceName, resources : newValJson[serviceName]['resources'] });
+				});
+			}
+			if(servicesObj && servicesObj.get('previousValue')  != ''){
+				var oldValJson = $.parseJSON(servicesObj.get('previousValue'));
+				var serviceNames = Object.keys(oldValJson);
+				_.each(serviceNames, function(serviceName){
+					that.oldServiceResourceArr.push({serviceName : serviceName, resources : oldValJson[serviceName]['resources'] });
+				});
+			}
+			this.collection.remove(this.collection.where({attributeName : 'Zone Services'}));
+			this.collection.each(function(m){
+				if(m.get('newValue')[0] == '[' && m.get('newValue')[m.get('newValue').length-1] == ']')
+					m.set('newValue', m.get('newValue').substr(1).slice(0, -1));
+
+				if(m.get('previousValue')[0] == '[' && m.get('previousValue')[m.get('previousValue').length - 1] == ']')
+					m.set('previousValue', m.get('previousValue').substr(1).slice(0, -1));
+			});
+
+		},
 		removeUnwantedFromObject : function(obj){
 			_.each(obj, function(val, key){
 					if(_.isEmpty(val))

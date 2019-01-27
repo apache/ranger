@@ -45,13 +45,8 @@ define(function(require){
 		 */
 
 		schemaBase : function(){
-			var attrs = _.omit(this.serverSchema, 'id', 'createDate', 'updateDate', "version",
-					"permList", "status", "updatedBy", "isSystem");
-
-			_.each(attrs, function(o){
-				o.type = 'Hidden';
-			});
-			return;
+                        var attrs = {}
+                        return attrs;
 
 		},
 

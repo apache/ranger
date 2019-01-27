@@ -65,14 +65,14 @@ define(function(require){
 					title		: 'Description',
 					validators	: []
 				},
-                                policyLabels : {
-                                    type	   : 'Select2Remote',
-                                    title	   : 'Policy Label',
-                                    pluginAttr : this.getPluginAttr(),
-                                    options    : function(callback, editor){
-                                        callback();
-                                    },
-                                },
+                policyLabels : {
+                    type	   : 'Select2Remote',
+                    title	   : 'Policy Label',
+                    pluginAttr : this.getPluginAttr(),
+                    options    : function(callback, editor){
+                        callback();
+                    },
+                },
 				isEnabled : {
 					type		: 'Switch',
 					title		: '',//localization.tt("lbl.policyStatus"),
@@ -81,14 +81,14 @@ define(function(require){
 					width		: '80',
 					switchOn	: true
 				},
-                                policyPriority : {
-                                        type            : 'Switch',
-                                        title           : '',//localization.tt("lbl.policyStatus"),
-                                        onText          : 'override',
-                                        offText         : 'normal',
-                                width           : '80',
-                                switchOn        : false
-                                },
+                policyPriority : {
+                    type            : 'Switch',
+                    title           : '',//localization.tt("lbl.policyStatus"),
+                    onText          : 'override',
+                    offText         : 'normal',
+                    width           : '80',
+                    switchOn        : false
+                },
 				isAuditEnabled : {
 					type		: 'Switch',
 					title		: localization.tt("lbl.auditLogging"),
@@ -199,7 +199,7 @@ define(function(require){
                 },
             }
         },
-	}, {
+    }, {
 		// static class members
 	});
 

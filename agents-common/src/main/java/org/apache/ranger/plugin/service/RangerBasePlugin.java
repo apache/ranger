@@ -408,6 +408,10 @@ public class RangerBasePlugin {
 				throw new Exception("ranger-admin client is null");
 			}
 
+			if (policyEngine != null) {
+				request.setZoneName(policyEngine.getMatchedZoneName(request));
+			}
+
 			admin.grantAccess(request);
 
 			isSuccess = true;
@@ -432,6 +436,10 @@ public class RangerBasePlugin {
 		try {
 			if(admin == null) {
 				throw new Exception("ranger-admin client is null");
+			}
+
+			if (policyEngine != null) {
+				request.setZoneName(policyEngine.getMatchedZoneName(request));
 			}
 
 			admin.revokeAccess(request);

@@ -90,4 +90,5 @@
   <field name="tags" type="key_lower_case" multiValued="true"/>
   <field name="tags_str" type="text_std_token_lower_case" multiValued="false"/>
   <field name="text" type="text_std_token_lower_case" multiValued="true" indexed="true" stored="false"/>
+  <field name="zoneName" type="key_lower_case" multiValued="false"/>
 </schema>

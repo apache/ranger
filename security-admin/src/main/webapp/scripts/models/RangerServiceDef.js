@@ -57,7 +57,7 @@ define(function(require){
 				name : {
 					type		: 'Text',
 					title		: 'Service Name *',
-					validators	: ['required',{type:'regexp',regexp:/^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}/,message :"Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space)."}],
+                                        validators	: ['required',{type:'regexp',regexp:/^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,message : localization.tt("validationMessages.nameValidationMsg")}],
 				},
 				description : {
 					type		: 'TextArea',

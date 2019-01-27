@@ -20,8 +20,10 @@
 package org.apache.ranger.common;
 
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
+import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -40,4 +42,8 @@ public class RangerValidatorFactory {
 	public RangerServiceDefValidator getServiceDefValidator(ServiceStore store) {
 		return new RangerServiceDefValidator(store);
 	}
+
+	public RangerSecurityZoneValidator getSecurityZoneValidator(ServiceStore store, SecurityZoneStore securityZoneStore) {
+	    return new RangerSecurityZoneValidator(store, securityZoneStore);
+    }
 }

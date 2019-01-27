@@ -91,6 +91,8 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 		searchFields.add(new SearchField("tags", "obj.tags", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("cluster", "obj.cluster",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("zoneName", "obj.zoneName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));
 }
 

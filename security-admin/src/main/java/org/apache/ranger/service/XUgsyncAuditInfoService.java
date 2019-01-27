@@ -141,28 +141,9 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 		returnList.setVxUgsyncAuditInfoList(xUgsyncAuditInfoList);
 		return returnList;
 	}
-	
-	public VXUgsyncAuditInfo populateViewBean(XXUgsyncAuditInfo gjXUgsyncAuditInfo) {
-		//VXUgsyncAuditInfo vxUgsyncAuditInfo = new VXUgsyncAuditInfo();
-		VXUgsyncAuditInfo vxUgsyncAuditInfo = super.populateViewBean(gjXUgsyncAuditInfo);
-		return mapEntityToViewBean(vxUgsyncAuditInfo, gjXUgsyncAuditInfo);
-	}
-
-	@Override
-	protected void validateForCreate(VXUgsyncAuditInfo viewBaseBean) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	protected void validateForUpdate(VXUgsyncAuditInfo viewBaseBean, XXUgsyncAuditInfo t) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	public VXUgsyncAuditInfo createUgsyncAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
 
-		XXUgsyncAuditInfo xxUgsyncAuditInfo = new XXUgsyncAuditInfo();
 		Long sessionId = ContextUtil.getCurrentUserSession().getSessionId();
 		if (sessionId != null) {
 			vxUgsyncAuditInfo.setSessionId("" + sessionId);
@@ -179,12 +160,6 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 			vxUgsyncAuditInfo.setSyncSourceInfo(jsonUtil.jsonToMap(vxUgsyncAuditInfo.getLdapSyncSourceInfo().toString()));
 		}
 
-		mapViewToEntityBean(vxUgsyncAuditInfo, xxUgsyncAuditInfo, 0);
-		preCreate(vxUgsyncAuditInfo);
-		xxUgsyncAuditInfo = getDao().create(xxUgsyncAuditInfo);
-		postCreate(xxUgsyncAuditInfo);
-
-		//logger.info("postCreate ugsync audit info" + vxUgsyncAuditInfo.toString());
-		return vxUgsyncAuditInfo;
+		return createResource(vxUgsyncAuditInfo);
 	}
 }

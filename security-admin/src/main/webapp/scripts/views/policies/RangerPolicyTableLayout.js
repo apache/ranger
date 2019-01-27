@@ -61,10 +61,15 @@ define(function(require){
 		},
         
     	breadCrumbs : function(){
-    		if(this.rangerService.get('type') == XAEnums.ServiceType.SERVICE_TAG.label){
-    			return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
-    		}
-    		return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+            if(this.rangerService.get('type') == XAEnums.ServiceType.SERVICE_TAG.label){
+                return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+            }
+            if(App.vZone && App.vZone.vZoneName){
+                return [XALinks.get('ServiceManager', App.vZone.vZoneName),
+                    XALinks.get('ManagePolicies',{model : this.rangerService})];
+            }else{
+                return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+            }
    		},        
 
 		/** Layout sub regions */
@@ -124,6 +129,9 @@ define(function(require){
 			if(!_.isUndefined(policyType)){
 				this.collection.queryParams['policyType'] = policyType;
 			}
+            if(!_.isUndefined(App.vZone) && App.vZone && App.vZone.vZoneName){
+                this.collection.queryParams['zoneName'] = App.vZone.vZoneName;
+            }
 			this.collection.fetch({
 				cache : false,
 			});
@@ -250,21 +258,21 @@ define(function(require){
 					label	: localization.tt("lbl.policyName"),
 					editable: false,
 					sortable : false
-                                },
-                                policyLabels: {
-                                    cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-                                    label : localization.tt("lbl.policyLabels"),
-                                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                                        fromRaw: function (rawValue, model) {
-                                            if(!_.isUndefined(rawValue) && rawValue.length != 0){
-                                                return XAUtil.showMoreAndLessButton(rawValue, model)
-                                            }else{
-                                                return '--';
-                                            }
-                                        }
-                                    }),
-                                    editable : false,
-                                    sortable : false
+                },
+                policyLabels: {
+                    cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                    label : localization.tt("lbl.policyLabels"),
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                return XAUtil.showMoreAndLessButton(rawValue, model)
+                            }else{
+                                return '--';
+                            }
+                        }
+                    }),
+                    editable : false,
+                    sortable : false
                 },
 				isEnabled:{
 					label:localization.tt('lbl.status'),

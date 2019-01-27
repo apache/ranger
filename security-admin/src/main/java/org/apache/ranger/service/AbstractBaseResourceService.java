@@ -425,8 +425,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	public V populateViewBean(T resource) {
 		V viewBean = createViewObject();
 		populateViewBean(resource, viewBean);
-		mapEntityToViewBean(viewBean, resource);
-		return viewBean;
+		return mapEntityToViewBean(viewBean, resource);
 	}
 
 	protected V populateViewBean(T resource, V viewBean) {

@@ -292,7 +292,9 @@
 		<query>select obj from XXPolicy obj, XXService svc where 
 		obj.service = svc.id and svc.type = :serviceDefId</query>
 	</named-query>
-
+	<named-query name="XXPolicy.findByServiceNameAndZoneId">
+		<query>select obj from XXPolicy obj, XXService svc where obj.zoneId = :zoneId and obj.service = svc.id and svc.name = :serviceName</query>
+	</named-query>
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
@@ -1291,5 +1293,90 @@
 			select obj from XXUgsyncAuditInfo obj where obj.syncSource = :syncSource
 		</query>
 	</named-query>
+
+	<!-- SecurityZone  -->
+    <named-query name="XXSecurityZone.findByZoneId">
+        <query>
+            select obj from XXSecurityZone obj where obj.id = :zoneId
+        </query>
+    </named-query>
+
+    <named-query name="XXSecurityZone.findByZoneName">
+        <query>
+            select obj from XXSecurityZone obj where obj.name = :zoneName
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefGroup.findByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefGroup.findByGroupId">
+        <query>
+            select obj from XXSecurityZoneRefGroup obj where obj.groupId = :groupId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefGroup.findGroupTypeByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId and obj.groupType = :groupType
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefResource.findByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefResource obj where obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefResource.findByResourceDefId">
+        <query>
+            select obj from XXSecurityZoneRefResource obj where obj.resourceDefId = :resourceDefId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefService.findByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefService obj where obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefService.findByServiceId">
+        <query>
+            select obj from XXSecurityZoneRefService obj where obj.serviceId = :serviceId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefUser.findByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefUser obj where obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefUser.findByUserId">
+        <query>
+            select obj from XXSecurityZoneRefUser obj where obj.userId = :userId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZoneRefUser.findUserTypeByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefUser obj where obj.zoneId = :zoneId and obj.userType = :userType
+        </query>
+    </named-query>
+
+    <named-query name="XXGlobalState.findByStateId">
+        <query>
+            select obj from XXGlobalState obj where obj.id = :stateId
+        </query>
+    </named-query>
+
+    <named-query name="XXGlobalState.findByStateName">
+        <query>
+            select obj from XXGlobalState obj where obj.stateName = :stateName
+        </query>
+    </named-query>
 
 </entity-mappings>

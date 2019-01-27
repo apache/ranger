@@ -58,4 +58,15 @@ public abstract class XUgsyncAuditInfoServiceBase<T extends XXUgsyncAuditInfo, V
 		return vObj;
 	}
 
+    @Override
+    protected void validateForCreate(VXUgsyncAuditInfo viewBaseBean) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void validateForUpdate(VXUgsyncAuditInfo viewBaseBean, XXUgsyncAuditInfo t) {
+        // TODO Auto-generated method stub
+
+    }
 }

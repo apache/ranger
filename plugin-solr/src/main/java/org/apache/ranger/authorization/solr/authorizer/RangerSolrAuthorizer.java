@@ -200,11 +200,13 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			List<RangerAccessRequestImpl> rangerRequests = new ArrayList<RangerAccessRequestImpl>();
 			List<CollectionRequest>   collectionRequests = context.getCollectionRequests();
 
+			String clusterName = solrPlugin.getClusterName();
+
 			if (CollectionUtils.isEmpty(collectionRequests)) {
 				// if Collection is empty we set the collection to *. This happens when LIST is done.
 				RangerAccessRequestImpl requestForCollection = createRequest(
 						userName, userGroups, ip, eventTime, context,
-						null);
+						null, clusterName);
 				if (requestForCollection != null) {
 					rangerRequests.add(requestForCollection);
 				}
@@ -217,7 +219,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 					RangerAccessRequestImpl requestForCollection = createRequest(
 							userName, userGroups, ip, eventTime, context,
-							collectionRequest);
+							collectionRequest, clusterName);
 					if (requestForCollection != null) {
 						rangerRequests.add(requestForCollection);
 					}
@@ -349,7 +351,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	 */
 	private RangerAccessRequestImpl createRequest(String userName,
 			Set<String> userGroups, String ip, Date eventTime,
-			AuthorizationContext context, CollectionRequest collectionRequest) {
+			AuthorizationContext context, CollectionRequest collectionRequest, String clusterName) {
 
 		String accessType = mapToRangerAccessType(context);
 		String action = accessType;
@@ -364,6 +366,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);
+		rangerRequest.setClusterName(clusterName);
 
 		return rangerRequest;
 	}

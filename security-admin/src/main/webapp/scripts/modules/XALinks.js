@@ -50,10 +50,13 @@ define(function(require) {
 				text : 'h.repositoryManager',
 				title: 'h.repositoryManager'
 			},
-			ServiceManager :{
-				href : '#!/policymanager/resource', 
-				text : 'h.serviceManager',
-				title: 'h.serviceManager'
+			ServiceManager : function(options){
+				var textVal = !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : 'Service Manager';
+				return {
+					href : '#!/policymanager/resource',
+					text : textVal,
+					title : textVal,
+				}
 			},
 			TagBasedServiceManager :{
 				href : '#!/policymanager/tag', 
@@ -294,7 +297,37 @@ define(function(require) {
                     text : 'h.kms',
                     title: 'h.kms'
                 };
-			}
+            },
+            SecurityZone :{
+                href : '#!/zones/zone/list',
+                text : 'h.securityZone',
+                title: 'h.securityZone'
+            },
+            ZoneCreate : {
+                href : '#!/zones/create',
+                text : 'h.zoneCreate',
+                title: 'h.zoneCreate'
+            },
+            ZoneEdit : function(options){
+                var href = "javascript:void(0);";
+                if(_.has(options,'model')){
+                    href =  '#!/zone/edit/'+options.model.get('id');
+                }
+                if(_.has(options,'id')){
+                    href =  '#!/zone/edit'+options.id;
+                }
+                return {
+                    href : href,
+                    text : 'h.zoneEdit',
+                    title: 'h.zoneEdit'
+                };
+            },
+            ZoneName: function(options) {
+                return {
+                    href: 'javascript:void(0)',
+                    text: 'Zone Name : ' + options
+                }
+            },
 	};      
        
 	

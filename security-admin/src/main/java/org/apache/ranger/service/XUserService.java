@@ -200,10 +200,10 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 	@Override
 	protected VXUser mapEntityToViewBean(VXUser vObj, XXUser mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
-		String userName = vObj.getName();
-		populateUserAttributes(userName, vObj);
-		return vObj;
+		VXUser ret = super.mapEntityToViewBean(vObj, mObj);
+		String userName = ret.getName();
+		populateUserAttributes(userName, ret);
+		return ret;
 	}
 
 	@Override

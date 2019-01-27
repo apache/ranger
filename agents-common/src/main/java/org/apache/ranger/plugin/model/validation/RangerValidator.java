@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -80,6 +81,22 @@ public abstract class RangerValidator {
 			throw new Exception(message);
 		}
 	}
+    public void validate(String name, Action action) throws Exception {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerValidator.validate(" + name + ")");
+        }
+
+        List<ValidationFailureDetails> failures = new ArrayList<>();
+        if (isValid(name, action, failures)) {
+            if(LOG.isDebugEnabled()) {
+                LOG.debug("<== RangerValidator.validate(" + name + "): valid");
+            }
+        } else {
+            String message = serializeFailures(failures);
+            LOG.debug("<== RangerValidator.validate(" + name + "): invalid, reason[" + message + "]");
+            throw new Exception(message);
+        }
+    }
 	
 	/**
 	 * This method is expected to be overridden by sub-classes.  Default implementation provided to not burden implementers from having to implement methods that they know would never be called.
@@ -95,6 +112,14 @@ public abstract class RangerValidator {
 				.build());
 		return false;
 	}
+
+    boolean isValid(String name, Action action, List<ValidationFailureDetails> failures) {
+        failures.add(new ValidationFailureDetailsBuilder()
+                .isAnInternalError()
+                .becauseOf("unimplemented method called")
+                .build());
+        return false;
+    }
 
 	public static String serializeFailures(List<ValidationFailureDetails> failures) {
 		if(LOG.isDebugEnabled()) {
@@ -284,6 +309,45 @@ public abstract class RangerValidator {
 		return policies;
 	}
 
+    RangerSecurityZone getSecurityZone(Long id) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerValidator.getSecurityZone(" + id + ")");
+        }
+        RangerSecurityZone result = null;
+
+        if (id != null) {
+            try {
+                result = _store.getSecurityZone(id);
+            } catch (Exception e) {
+                LOG.debug("Encountred exception while retrieving security zone from service store!", e);
+            }
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerValidator.getSecurityZone(" + id + "): " + result);
+        }
+        return result;
+    }
+
+	RangerSecurityZone getSecurityZone(String name) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerValidator.getSecurityZone(" + name + ")");
+        }
+        RangerSecurityZone result = null;
+
+        if (StringUtils.isNotEmpty(name)) {
+            try {
+                result = _store.getSecurityZone(name);
+            } catch (Exception e) {
+                LOG.debug("Encountred exception while retrieving security zone from service store!", e);
+            }
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerValidator.getSecurityZone(" + name + "): " + result);
+        }
+        return result;
+    }
 	Set<String> getAccessTypes(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getAccessTypes(" + serviceDef + ")");

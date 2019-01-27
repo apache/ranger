@@ -14,6 +14,7 @@
 -- limitations under the License.
 
 DROP VIEW IF EXISTS `vx_trx_log`;
+DROP TABLE IF EXISTS `x_security_zone_ref_resource`;
 DROP TABLE IF EXISTS `x_policy_ref_group`;
 DROP TABLE IF EXISTS `x_policy_ref_user`;
 DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
@@ -57,6 +58,11 @@ DROP TABLE IF EXISTS `x_access_type_def`;
 DROP TABLE IF EXISTS `x_resource_def`;
 DROP TABLE IF EXISTS `x_service_config_def`;
 DROP TABLE IF EXISTS `x_policy`;
+DROP TABLE IF EXISTS `x_security_zone_ref_group`;
+DROP TABLE IF EXISTS `x_security_zone_ref_user`;
+DROP TABLE IF EXISTS `x_security_zone_ref_service`;
+DROP TABLE IF EXISTS `x_ranger_global_state`;
+DROP TABLE IF EXISTS `x_security_zone`;
 DROP TABLE IF EXISTS `x_service`;
 DROP TABLE IF EXISTS `x_service_def`;
 DROP TABLE IF EXISTS `x_audit_map`;
@@ -354,6 +360,7 @@ CREATE TABLE `x_policy_export_audit` (
   `exported_json` text,
   `http_ret_code` int(11) NOT NULL DEFAULT '0',
   `cluster_name` varchar(255) NULL DEFAULT NULL,
+  `zone_name` varchar(255) DEFAULT NULL NULL,
   PRIMARY KEY (`id`),
   KEY `x_policy_export_audit_FK_added_by_id` (`added_by_id`),
   KEY `x_policy_export_audit_FK_upd_by_id` (`upd_by_id`),
@@ -543,6 +550,88 @@ CONSTRAINT `x_service_FK_type` FOREIGN KEY (`type`) REFERENCES `x_service_def` (
 CONSTRAINT `x_service_FK_tag_service` FOREIGN KEY (`tag_service`) REFERENCES `x_service` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_security_zone`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`version` bigint(20) NULL DEFAULT NULL,
+`name` varchar(255) NOT NULL,
+`jsonData` MEDIUMTEXT NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ UNIQUE KEY `x_security_zone_UK_name`(`name`(190)),
+ CONSTRAINT `x_security_zone_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_security_zone_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_ranger_global_state`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL  DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`version` bigint(20) NULL DEFAULT NULL,
+`state_name` varchar(255) NOT  NULL,
+`app_data` varchar(255) NULL DEFAULT NULL,
+PRIMARY KEY (`id`),
+UNIQUE  KEY `x_ranger_global_state_UK_state_name`(`state_name`),
+CONSTRAINT `x_ranger_global_state_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_ranger_global_state_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_service`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
+`service_id` bigint(20) NULL DEFAULT NULL,
+`service_name` varchar(255) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_service_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_service_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_service_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_service_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`),
+ CONSTRAINT `x_sz_ref_service_FK_service_name` FOREIGN KEY (`service_name`) REFERENCES `x_service` (`name`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_user`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
+`user_id` bigint(20) NULL DEFAULT NULL,
+`user_name` varchar(255) NULL DEFAULT NULL,
+`user_type` tinyint(3) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_user_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_user_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_user_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_user_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_user` (`id`),
+ CONSTRAINT `x_sz_ref_user_FK_user_name` FOREIGN KEY (`user_name`) REFERENCES `x_user` (`user_name`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_group`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
+`group_id` bigint(20) NULL DEFAULT NULL,
+`group_name` varchar(255) NULL DEFAULT NULL,
+`group_type` tinyint(3) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_group_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_group_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_group_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_group_FK_group_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE  `x_policy` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT ,
 `guid` varchar(1024) DEFAULT NULL,
@@ -561,6 +650,7 @@ CREATE TABLE  `x_policy` (
 `policy_options` varchar(4000) NULL DEFAULT NULL,
 `policy_priority` int NOT NULL DEFAULT '0',
 `policy_text` MEDIUMTEXT NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
 primary key (`id`),
 KEY `x_policy_added_by_id` (`added_by_id`),
 KEY `x_policy_upd_by_id` (`upd_by_id`),
@@ -571,7 +661,8 @@ KEY `x_policy_resource_signature` (`resource_signature`),
 UNIQUE KEY `x_policy_UK_name_service` (`name`(180),`service`),
 CONSTRAINT `x_policy_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
-CONSTRAINT `x_policy_FK_service` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`)
+CONSTRAINT `x_policy_FK_service` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`),
+CONSTRAINT `x_policy_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `x_service_config_def` (
@@ -1309,6 +1400,22 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_group` (
   CONSTRAINT `x_policy_ref_group_FK_group_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_resource`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NOT NULL,
+`resource_def_id` bigint(20) NOT NULL,
+`resource_name` varchar(255) DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_resource_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_resource_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_resource_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_resource_FK_resource_def_id` FOREIGN KEY (`resource_def_id`) REFERENCES `x_resource_def` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
 CREATE INDEX x_service_config_def_IDX_def_id ON x_service_config_def(def_id);
 CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
@@ -1360,8 +1467,8 @@ END $$
 
 DELIMITER ;
 
-INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (now(),now(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
-INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (now(),now(),NULL,NULL,getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1);
+INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
+INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_group (ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_SRC, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (getXportalUIdByLoginId('admin'), UTC_TIMESTAMP(), 'public group', 0, 0, 'public', 0, UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'));
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'rangerusersync','','rangerusersync','rangerusersync','70b8374d3dfe0325aaa5002a688c7e3b','rangerusersync',1,0,NULL);
 INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('rangerusersync'),'ROLE_SYS_ADMIN',1);
@@ -1374,7 +1481,8 @@ INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_na
 INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('rangertagsync'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (UTC_TIMESTAMP(), UTC_TIMESTAMP(),NULL,NULL,'rangertagsync','rangertagsync',0);
 
-INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager',''),(now(),now(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
+INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Resource Based Policies',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Users/Groups',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Reports',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Audit',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
+INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('CORE_DB_SCHEMA',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
@@ -1407,10 +1515,12 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('031',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('032',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('033',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('034',UTC_TIMESTAMP(),'Ranger 2.0.0',UTC_TIMESTAMP(),'localhost','Y');
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',UTC_TIMESTAMP(),'Ranger 2.0.0',UTC_TIMESTAMP(),'localhost','Y');
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',UTC_TIMESTAMP(),'Ranger 2.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('034',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
 VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
@@ -1451,6 +1561,11 @@ INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_
 VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Users/Groups'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
 VALUES (getXportalUIdByLoginId('keyadmin'),getModulesIdByName('Audit'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10003',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
@@ -1470,4 +1585,5 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10019',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10020',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10025',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10026',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

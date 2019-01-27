@@ -248,14 +248,12 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	
 	@Override
 	protected XXGroup mapViewToEntityBean(VXGroup vObj, XXGroup mObj, int OPERATION_CONTEXT) {
-		super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
-		return mObj;
+		return super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
 	}
 
 	@Override
 	protected VXGroup mapEntityToViewBean(VXGroup vObj, XXGroup mObj) {
-		super.mapEntityToViewBean(vObj, mObj);
-		return vObj;
+		return super.mapEntityToViewBean(vObj, mObj);
         }
 
         public Map<Long, XXGroup> getXXGroupIdXXGroupMap(){

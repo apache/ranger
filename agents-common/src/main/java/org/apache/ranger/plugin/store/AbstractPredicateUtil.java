@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -98,6 +99,8 @@ public class AbstractPredicateUtil {
 		addPredicateForPolicyType(filter.getParam(SearchFilter.POLICY_TYPE), predicates);
 		addPredicateForPolicyPriority(filter.getParam(SearchFilter.POLICY_PRIORITY), predicates);
 		addPredicateForPartialPolicyLabels(filter.getParam(SearchFilter.POLICY_LABELS_PARTIAL), predicates);
+		addPredicateForZoneName(filter.getParam(SearchFilter.ZONE_NAME), predicates);
+		// addPredicateForZoneId(filter.getParam(SearchFilter.ZONE_ID), predicates); // not supported
 	}
 
 	public Comparator<RangerBaseModelObject> getSorter(SearchFilter filter) {
@@ -214,6 +217,16 @@ public class AbstractPredicateUtil {
 		}
 	};
 
+    protected final static Comparator<RangerBaseModelObject> zoneNameComparator = new Comparator<RangerBaseModelObject>() {
+        @Override
+        public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+            String val1 = (o1 instanceof RangerSecurityZone) ? ((RangerSecurityZone)o1).getName() : null;
+            String val2 = (o2 instanceof RangerSecurityZone) ? ((RangerSecurityZone)o2).getName() : null;
+
+            return ObjectUtils.compare(val1, val2);
+        }
+    };
+
 	static {
 		sorterMap.put(SearchFilter.SERVICE_TYPE, serviceDefNameComparator);
 		sorterMap.put(SearchFilter.SERVICE_TYPE_ID, idComparator);
@@ -223,6 +236,8 @@ public class AbstractPredicateUtil {
 		sorterMap.put(SearchFilter.POLICY_ID, idComparator);
 		sorterMap.put(SearchFilter.CREATE_TIME, createTimeComparator);
 		sorterMap.put(SearchFilter.UPDATE_TIME, updateTimeComparator);
+		sorterMap.put(SearchFilter.ZONE_ID, idComparator);
+		sorterMap.put(SearchFilter.ZONE_NAME, zoneNameComparator);
 	}
 
 	private Predicate addPredicateForServiceType(final String serviceType, List<Predicate> predicates) {
@@ -935,4 +950,45 @@ public class AbstractPredicateUtil {
 			}
 		};
 	}
+    private Predicate addPredicateForZoneName(final String zoneName, List<Predicate> predicates) {
+
+    if(StringUtils.isEmpty(zoneName)) {
+    	return null;
+    }
+
+        Predicate ret = new Predicate() {
+            @Override
+            public boolean evaluate(Object object) {
+                if(object == null) {
+                    return false;
+                }
+
+                final boolean ret;
+
+                if(object instanceof RangerPolicy) {
+                    RangerPolicy policy = (RangerPolicy)object;
+
+                    if (policy.getZoneName() != null) {
+                        ret = StringUtils.equals(zoneName, policy.getZoneName());
+                    } else {
+                        ret = StringUtils.isEmpty(zoneName);
+                    }
+                } else if (object instanceof RangerSecurityZone) {
+                    RangerSecurityZone securityZone = (RangerSecurityZone)object;
+
+                    return StringUtils.equals(securityZone.getName(), zoneName);
+                } else {
+                    ret = true;
+                }
+
+                return ret;
+            }
+        };
+
+        if(predicates != null) {
+            predicates.add(ret);
+        }
+
+        return ret;
+    }
 }

@@ -68,6 +68,11 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/kms/keys/:serviceName/create"		: "kmsKeyCreateAction",
 //			"!/kms/keys/:serviceName/edit/:id"		: "kmsKeyEditAction",
 			
+            /*************** SECURITY ZONE ***********************/
+            "!/zones/zone/:listId"				: "zoneManagmentAction",
+            "!/zones/create"		: "RangerZoneCreateAction",
+            "!/zones/edit/:id"		: "RangerZoneEditAction",
+
 			/*************** ERROR PAGE ***********************/
 			"*actions"					: "pageNotFoundAction"
 			

@@ -1,0 +1,98 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+
+<div class="row-fluid security-panel">
+    <div class="security-sidebar" data-id="security-sidebar">
+        <div class="listData">
+            <div class="clearfix row-margin-bottom">
+                <h4 class="pull-left">Security Zones</h4>
+                <a href="#!/zones/create" class="btn-add-security pull-right btn btn-default btn-small" title="Create zone"><i class="icon-plus"></i></a>
+            </div>
+            <div class="clearfix">
+                <input type="text" class="security-search" data-id="zoneSearch" placeholder="Search">
+            </div>
+            <div class="zone-wrap">
+                <ul class="zone-listing" data-id="zoneUlList">
+                    {{#ifCond zoneList.length '==' "0"}}
+                        <li>
+                            <h4>No Zone Found !
+                        </li>
+                    {{/ifCond}}
+                </ul>
+                <!--
+                {{#if zoneList.length}}
+                  <ul class="zone-listing">
+                    {{#each zoneList}}
+                      {{#compare this "eq" ../this.zoneModel.attributes.name}}
+                          <li class="selected" data-action="zoneListing" data-id="{{this}}">{{this}}</li>
+                        {{else}}
+                          <li data-action="zoneListing" data-id="{{this}}">{{this}}</li>
+                      {{/compare}}
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <h4>No zones found!</h4>
+                {{/if}}
+                -->
+            </div>
+        </div><!-- listData -->
+    </div>
+    {{#if zoneList.length}}
+        <div class="security-details">
+            <div class="row-fluid">
+                <div class="span1">
+                <button class="btn btn-default btn-small btn-slide-toggle" data-id="sideBarBtn"><i class="icon-reorder"></i><span></span></button>
+                </div>
+                <div class="span7">
+                    <h2 data-id="zoneName">{{{zoneModelName}}}</h2>
+                </div>
+                <div class="span4">
+                    <div class="btn-group-zone pull-right">
+                        <!--<button class="btn btn-default" data-id="zoneAdministrationDetail"><i class="icon-info"></i> Details</button>-->
+                        <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i>Edit</a>
+                        <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i>Delete</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row-fluid">
+                <div class="span12">
+                    <div class="accordion" id="zone-admin-accordion">
+                        <div class="accordion-group">
+                          <div class="accordion-heading accordion-opened">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#zone-admin-accordion" href="#collapseOne">Zone Administration</a>
+                          </div>
+
+                          <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
+                            <div class="accordion-inner" data-id="zoneAdministrationView"></div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row-fluid">
+              <div class="span12" data-id="zoneTableLayout"></div>
+            </div>
+        </div>
+    {{else}}
+        <div class="security-details-defult">
+            <div class="defult-zone">
+                <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
+                <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+            </div>
+        </div>
+    {{/if}}
+</div>

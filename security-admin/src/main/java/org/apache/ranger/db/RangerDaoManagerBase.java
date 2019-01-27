@@ -288,5 +288,17 @@ public abstract class RangerDaoManagerBase {
 	public XXPolicyRefAccessTypeDao getXXPolicyRefAccessType() {
 		return new XXPolicyRefAccessTypeDao(this);
 	}
+
+	public XXSecurityZoneDao getXXSecurityZoneDao() { return new XXSecurityZoneDao(this); }
+
+	public XXSecurityZoneRefServiceDao getXXSecurityZoneRefService() { return new XXSecurityZoneRefServiceDao(this); }
+
+	public XXSecurityZoneRefResourceDao getXXSecurityZoneRefResource() { return new XXSecurityZoneRefResourceDao(this); }
+
+	public XXSecurityZoneRefUserDao getXXSecurityZoneRefUser() { return new XXSecurityZoneRefUserDao(this); }
+
+	public XXSecurityZoneRefGroupDao getXXSecurityZoneRefGroup() { return new XXSecurityZoneRefGroupDao(this); }
+
+	public XXGlobalStateDao getXXGlobalState() { return new XXGlobalStateDao(this); }
 }
 

@@ -100,7 +100,7 @@
           <span class="label label-info">{{PolicyDetails.isAuditEnabled}}</span>
         </td>
       </tr>
-          <tr>
+      <tr>
         <td>
           {{tt 'lbl.policyLabels'}}
         </td>
@@ -114,6 +114,18 @@
         {{/ifCond}}
         </td>
       </tr>
+        <tr>
+            {{#if PolicyDetails.zoneName}}
+                <td>{{tt 'lbl.zoneName'}}</td>
+                <td>
+                    {{#if PolicyDetails.zoneName}}
+                        <span class="label label-inverse">{{PolicyDetails.zoneName}}</span>
+                    {{else}}
+                        <span>--</span>
+                    {{/if}}
+                </td>
+            {{/if}}
+        </tr>
     </tbody>
   </table>
 </div>

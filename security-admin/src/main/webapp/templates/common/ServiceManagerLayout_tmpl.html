@@ -14,58 +14,77 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-{{#if showImportExportBtn}}
-	<button type="button" title="Export" class=" btn btn-small btn-right" data-id="exportBtn"> <i class="icon-external-link-sign"></i>
-	 Export
-	</button>
-	<button type="button" title="Import" class="btn btn-success btn btn-small btn-right" data-id="importBtn" > <i class="icon-rotate-180 icon-external-link-sign"></i>
-	 Import
-	</button>
-{{/if}}
-<h3 class="wrap-header bold">{{tt 'h.serviceManager'}}</h3>
-
+<div class="clearfix">
+    <div class="pull-left">
+        <h3 class="wrap-header bold">{{tt 'h.serviceManager'}}</h3>
+    </div>
+    <div class="pull-right">
+        {{#isZoneAdministration}}
+            <div class="inline-block">
+                <b> Security Zone : </b>
+                <span title="Create zone first" class="zoneEmptyMsg"><input type="text" data-id="selectZoneName" disabled="disabled"></span>
+            </div>
+        {{/isZoneAdministration}}
+        {{#if showImportExportBtn}}
+            <button type="button" title="Export" class=" btn btn-small btn-right btn-import-export" data-id="exportBtn"> <i class="icon-external-link-sign"></i>
+             Export
+            </button>
+            <button type="button" title="Import" class="btn btn-success btn btn-small btn-import-export" data-id="importBtn" > <i class="icon-rotate-180 icon-external-link-sign"></i>
+             Import
+            </button>
+        {{/if}}
+    </div>
+</div>
 <div class="wrap non-collapsible policy-manager">
-	<div class="row-fluid">
-	{{#each serviceDefs}}
-		<div class="span4">
-			<div class="position-relative">
-				<table class="table table-bordered table-striped">
-					<!-- table-policy -->
-					<thead>
-						<tr>
-							<th>
-								<span class="policy-title">
-                                                                <!-- Remove alt attribut from img tag -->
-                                   <span>
-                                                                                <img src="images/folder-grey.png">
-                                                                                {{./this.attributes.name}}
-                                                                        </span>
-									{{#if ../operation}} 
-                                                                        <span>
-                                                                          <a href="javascript:void(0)" title="Export" type="button" class="download  pull-right text-decoration" data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;" >
-                                          <i class="icon-external-link-sign"> </i>
-	                                   </a>
-	                                   
-                                           <a href="javascript:void(0)" title="Import"  data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right importbtn text-decoration">
-									    <i class="icon-rotate-180 icon-external-link-sign"> </i>
-									   </a>
-									   
-                                                                           <a href="#!/service/{{./this.id}}/create"class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+    <div class="css-1o3fej" style="will-change: width; width: 20px; transition: width 300ms cubic-bezier(0.2, 0, 0, 1);">
+        <div class="css-xk6jfr">
+            <div class="css-kq308b"></div>
+        </div>
+        <div class="css-1e4ii7o">
+            <div class="css-kq308b"></div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        {{#each serviceDefs}}
+            <div class="span4">
+                <div class="position-relative">
+                    <table class="table table-bordered table-striped">
+                        <!-- table-policy -->
+                        <thead>
+                            <tr>
+                                <th>
+                                    <span class="policy-title">
+                                        <!-- Remove alt attribut from img tag -->
+                                        <span>
+                                            <img src="images/folder-grey.png">
+                                            {{./this.attributes.name}}
+                                        </span>
+                                        {{#if ../operation}}
+                                            <span>
+                                                <a href="javascript:void(0)" title="Export" type="button" class="download  pull-right text-decoration" data-id="downloadBtnOnService" data-servicetype="{{./this.attributes.name}}" style="margin-right: 5px;">
+                                                    <i class="icon-external-link-sign"> </i>
+                                                </a>
+
+                                                <a href="javascript:void(0)" title="Import" data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right importbtn text-decoration">
+                                                    <i class="icon-rotate-180 icon-external-link-sign"> </i>
+                                                </a>
+
+                                                <a href="#!/service/{{./this.id}}/create" class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+                                            </span>
+
+                                        {{/if}}
                                     </span>
-									 
-									{{/if}}
-								</span>	
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{{{getServices ../services this}}}
-					</tbody>
-				</table>
-				<div data-id="r_tableSpinner" class="loading">
-				</div>
-			</div>
-		</div>
-		{{/each}}
-		</div>
-	</div>	
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{{getServices ../services this}}}
+                        </tbody>
+                    </table>
+                    <div data-id="r_tableSpinner" class="loading">
+                    </div>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>

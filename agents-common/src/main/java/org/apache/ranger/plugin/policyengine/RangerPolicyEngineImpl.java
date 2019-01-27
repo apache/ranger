@@ -30,11 +30,15 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.PolicyACLSummary;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.ArrayList;
@@ -71,6 +75,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private boolean  useForwardedIPAddress;
 	private String[] trustedProxyAddresses;
+
+	private Map<String, RangerPolicyRepository> policyRepositories = new HashMap<>();
+
+	private Map<String, RangerResourceTrie>   trieMap;
 
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
 		if (LOG.isDebugEnabled()) {
@@ -151,6 +159,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		this.allContextEnrichers = tmpList;
 
 		policyEvaluatorsMap = createPolicyEvaluatorsMap();
+
+		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
+			buildZoneTrie(servicePolicies);
+			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> zone : servicePolicies.getSecurityZones().entrySet()) {
+				RangerPolicyRepository policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, zone.getKey());
+				policyRepositories.put(zone.getKey(), policyRepository);
+			}
+		}
 
 		RangerPerfTracer.log(perf);
 
@@ -287,7 +303,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.info("RangerPolicyEngineImpl.evaluatePolicies(" + requestHashCode + ", " + request + ")");
 		}
 
-		RangerAccessResult ret = evaluatePoliciesNoAudit(request, policyType);
+		RangerAccessResult ret = zoneAwareAccessEvaluationWithNoAudit(request, policyType);
 
 		updatePolicyUsageCounts(request, ret);
 
@@ -323,7 +339,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if (requests != null) {
 			for (RangerAccessRequest request : requests) {
-				RangerAccessResult result = evaluatePoliciesNoAudit(request, policyType);
+				RangerAccessResult result = zoneAwareAccessEvaluationWithNoAudit(request, policyType);
 
 				ret.add(result);
 			}
@@ -717,7 +733,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		List<RangerPolicy> ret = new ArrayList<>();
 
-		if (hasTagPolicies()) {
+		if (hasTagPolicies(tagPolicyRepository)) {
 			Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 			if (CollectionUtils.isNotEmpty(tags)) {
@@ -738,7 +754,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if (hasResourcePolicies()) {
+		if (hasResourcePolicies(policyRepository)) {
 			List<RangerPolicyEvaluator> likelyEvaluators = policyRepository.getLikelyMatchPolicyEvaluators(request.getResource());
 
 			for (RangerPolicyEvaluator evaluator : likelyEvaluators) {
@@ -872,7 +888,43 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	private RangerAccessResult evaluatePoliciesNoAudit(RangerAccessRequest request, int policyType) {
+	private RangerAccessResult zoneAwareAccessEvaluationWithNoAudit(RangerAccessRequest request, int policyType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.zoneAwareAccessEvaluationWithNoAudit(" + request + ", policyType =" + policyType + ")");
+		}
+
+		RangerAccessResult ret = null;
+
+		RangerPolicyRepository policyRepository = this.policyRepository;
+		RangerPolicyRepository tagPolicyRepository = this.tagPolicyRepository;
+
+		// Evaluate zone-name from request
+		String zoneName = trieMap == null ? null : getMatchedZoneName(request.getResource());
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("zoneName:[" + zoneName + "]");
+		}
+
+		if (StringUtils.isNotEmpty(zoneName)) {
+			policyRepository = policyRepositories.get(zoneName);
+
+			if (policyRepository == null) {
+				LOG.error("policyRepository for zoneName:[" + zoneName + "] is null!! ERROR!");
+			}
+		}
+		if (policyRepository != null) {
+			ret = evaluatePoliciesNoAudit(request, policyType, policyRepository, tagPolicyRepository);
+			ret.setZoneName(zoneName);
+		}
+
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.zoneAwareAccessEvaluationWithNoAudit(" + request + ", policyType =" + policyType + "): " + ret);
+		}
+		return ret;
+	}
+
+	private RangerAccessResult evaluatePoliciesNoAudit(RangerAccessRequest request, int policyType, RangerPolicyRepository policyRepository, RangerPolicyRepository tagPolicyRepository) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ")");
 		}
@@ -882,7 +934,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
         if (ret != null && request != null) {
 
-			evaluateTagPolicies(request, policyType, ret);
+			evaluateTagPolicies(request, policyType, tagPolicyRepository, ret);
 
 			if (LOG.isDebugEnabled()) {
 				if (ret.getIsAccessDetermined() && ret.getIsAuditedDetermined()) {
@@ -896,7 +948,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			boolean isAllowedByTags          = ret.getIsAccessDetermined() && ret.getIsAllowed();
 			boolean isDeniedByTags           = ret.getIsAccessDetermined() && !ret.getIsAllowed();
-			boolean evaluateResourcePolicies = hasResourcePolicies();
+			boolean evaluateResourcePolicies = hasResourcePolicies(policyRepository);
 
 			if (evaluateResourcePolicies) {
 				boolean findAuditByResource = !ret.getIsAuditedDetermined();
@@ -961,7 +1013,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	private void evaluateTagPolicies(final RangerAccessRequest request, int policyType, RangerAccessResult result) {
+	private void evaluateTagPolicies(final RangerAccessRequest request, int policyType, RangerPolicyRepository tagPolicyRepository, RangerAccessResult result) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluateTagPolicies(" + request + ", policyType =" + policyType + ", " + result + ")");
 		}
@@ -1065,11 +1117,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 	}
 
-	private boolean hasTagPolicies() {
+	private boolean hasTagPolicies(RangerPolicyRepository tagPolicyRepository) {
 		return tagPolicyRepository != null && CollectionUtils.isNotEmpty(tagPolicyRepository.getPolicies());
 	}
 
-	private boolean hasResourcePolicies() {
+	private boolean hasResourcePolicies(RangerPolicyRepository policyRepository) {
 		return policyRepository != null && CollectionUtils.isNotEmpty(policyRepository.getPolicies());
 	}
 
@@ -1144,4 +1196,263 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			evaluator.incrementUsageCount(number);
 		}
 	}
+
+	private void buildZoneTrie(ServicePolicies servicePolicies) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyEngineImpl.buildZoneTrie()");
+        }
+
+        Map<String, ServicePolicies.SecurityZoneInfo> securityZones = servicePolicies.getSecurityZones();
+
+        if (MapUtils.isNotEmpty(securityZones)) {
+            RangerServiceDef                serviceDef = servicePolicies.getServiceDef();
+			List<RangerZoneResourceMatcher> matchers   = new ArrayList<>();
+
+			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> securityZone : securityZones.entrySet()) {
+                String                           zoneName    = securityZone.getKey();
+                ServicePolicies.SecurityZoneInfo zoneDetails = securityZone.getValue();
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Building matchers for zone:[" + zoneName +"]");
+                }
+
+                for (Map<String, List<String>> resource : zoneDetails.getResources()) {
+
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Building matcher for resource:[" + resource + "] in zone:[" + zoneName +"]");
+                    }
+
+                    Map<String, RangerPolicy.RangerPolicyResource> policyResources = new HashMap<>();
+
+                    for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
+                        String resourceDefName = entry.getKey();
+                        List<String> resourceValues = entry.getValue();
+
+                        RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
+
+                        policyResource.setIsExcludes(false);
+                        policyResource.setIsRecursive(StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME));
+                        policyResource.setValues(resourceValues);
+                        policyResources.put(resourceDefName, policyResource);
+                    }
+
+                    matchers.add(new RangerZoneResourceMatcher(zoneName, policyResources, serviceDef));
+
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Built matcher for resource:[" + resource +"] in zone:[" + zoneName + "]");
+                    }
+                }
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Built all matchers for zone:[" + zoneName +"]");
+                }
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Built matchers for all Zones");
+            }
+
+			trieMap = new HashMap<>();
+
+			for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
+            	trieMap.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, matchers));
+            }
+
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.buildZoneTrie()");
+        }
+    }
+
+    @Override
+    public String getMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyEngineImpl.getMatchedZoneName(" + grantRevokeRequest + ")");
+        }
+
+        String ret = null;
+
+        if (this.trieMap != null) {
+            Map<String, ? extends Object> resource             = grantRevokeRequest.getResource();
+            Map<String, List<String>>     resourceForZoneMatch = convertFromSingleResource(resource);
+            RangerAccessResource          accessResource       = convertToAccessResource(resource);
+
+            ret = getMatchedZoneName(resourceForZoneMatch, accessResource);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.getMatchedZoneName(" + grantRevokeRequest + ") : " + ret);
+        }
+
+        return ret;
+    }
+
+    private String getMatchedZoneName(RangerAccessResource accessResource) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyEngineImpl.getMatchedZoneName(" + accessResource + ")");
+        }
+
+        String ret = null;
+
+        if (this.trieMap != null) {
+            Map<String, List<String>> resource = convertFromAccessResource(accessResource);
+
+            ret = getMatchedZoneName(resource, accessResource);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.getMatchedZoneName(" + accessResource + ") : " + ret);
+        }
+
+        return ret;
+    }
+
+    private String getMatchedZoneName(Map<String, List<String>> resource, RangerAccessResource accessResource) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyEngineImpl.getMatchedZoneName(" + resource + ", " + accessResource + ")");
+        }
+
+        String ret = null;
+
+        if (this.trieMap != null) {
+
+            List<List<RangerZoneResourceMatcher>> zoneMatchersList = null;
+            List<RangerZoneResourceMatcher>       smallestList     = null;
+
+            for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
+                String       resourceDefName = entry.getKey();
+                List<String> resourceValues  = entry.getValue();
+
+                RangerResourceTrie<RangerZoneResourceMatcher> trie         = trieMap.get(resourceDefName);
+
+                if (trie == null) {
+                    continue;
+                }
+
+                List<RangerZoneResourceMatcher>               matchedZones = trie.getEvaluatorsForResource(resourceValues);
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], matched-zones:[" + matchedZones + "]");
+                }
+                if (CollectionUtils.isEmpty(matchedZones)) { // no policies for this resource, bail out
+                    zoneMatchersList = null;
+                    smallestList     = null;
+                    break;
+                }
+
+                if (smallestList == null) {
+                    smallestList = matchedZones;
+                } else {
+                    if (zoneMatchersList == null) {
+                        zoneMatchersList = new ArrayList<>();
+                        zoneMatchersList.add(smallestList);
+                    }
+                    zoneMatchersList.add(matchedZones);
+
+                    if (smallestList.size() > matchedZones.size()) {
+                        smallestList = matchedZones;
+                    }
+                }
+            }
+            if (smallestList != null) {
+
+                final List<RangerZoneResourceMatcher> intersection;
+
+                if (zoneMatchersList != null) {
+                    intersection = new ArrayList<>(smallestList);
+                    for (List<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
+                        if (zoneMatchers != smallestList) {
+                            // remove zones from intersection that are not in zoneMatchers
+                            intersection.retainAll(zoneMatchers);
+                            if (CollectionUtils.isEmpty(intersection)) { // if no zoneMatcher exists, bail out and return empty list
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    intersection = smallestList;
+                }
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Resource:[" + resource + "], matched-zones:[" + intersection + "]");
+                }
+
+                if (intersection.size() > 0) {
+                    Set<String> matchedZoneNames = new HashSet<>();
+
+                    for (RangerZoneResourceMatcher zoneMatcher : intersection) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Trying to match resource:[" + accessResource + "] using zoneMatcher:[" + zoneMatcher + "]");
+                        }
+                        // These are potential matches. Try to really match them
+                        if (zoneMatcher.getPolicyResourceMatcher().isMatch(accessResource, RangerPolicyResourceMatcher.MatchScope.ANY, null)) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Matched resource:[" + accessResource + "] using zoneMatcher:[" + zoneMatcher + "]");
+                            }
+                            // Actual match happened
+                            matchedZoneNames.add(zoneMatcher.getSecurityZoneName());
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Did not match resource:[" + accessResource + "] using zoneMatcher:[" + zoneMatcher + "]");
+                            }
+                        }
+                    }
+                    LOG.info("The following zone-names matched resource:[" + accessResource + "]: " + matchedZoneNames);
+
+                    if (matchedZoneNames.size() == 1) {
+                        String[] zones = new String[1];
+                        matchedZoneNames.toArray(zones);
+                        ret = zones[0];
+                    } else {
+                        LOG.error("Internal error, multiple zone-names are matched. The following zone-names matched resource:[" + resource + "]: " + matchedZoneNames);
+                    }
+                }
+            }
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.getMatchedZoneName(" + resource + ", " + accessResource + ") : " + ret);
+        }
+        return ret;
+    }
+
+    private static Map<String, List<String>> convertFromAccessResource(RangerAccessResource accessResource) {
+        return convertFromSingleResource(accessResource.getAsMap());
+    }
+
+    private static Map<String, List<String>> convertFromSingleResource(Map<String, ? extends Object> resource) {
+
+        Map<String, List<String>> ret = new HashMap<>();
+
+        for (Map.Entry<String, ? extends Object> entry : resource.entrySet()) {
+            List<String> value;
+
+            if (entry.getValue() instanceof Collection) {
+                value = (List<String>) entry.getValue();
+            } else if (entry.getValue() instanceof String) {
+                value = new ArrayList<>();
+                value.add((String) entry.getValue());
+            } else {
+                LOG.error("access-resource contains value of unknown type : [" + entry.getValue().getClass().getCanonicalName() + "]");
+                value = new ArrayList<>();
+            }
+
+            ret.put(entry.getKey(), value);
+        }
+
+        return ret;
+    }
+
+    private RangerAccessResource convertToAccessResource(Map<String, ? extends Object> resource) {
+
+        RangerAccessResourceImpl ret = new RangerAccessResourceImpl();
+
+        ret.setServiceDef(getServiceDef());
+
+        for (Map.Entry<String, ? extends Object> entry : resource.entrySet()) {
+            ret.setValue(entry.getKey(), entry.getValue());
+        }
+
+        return ret;
+    }
 }

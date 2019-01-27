@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -255,6 +256,34 @@ public class RangerPolicyValidator extends RangerValidator {
 							.errorCode(error.getErrorCode())
 							.build());
 					valid = false;
+				}
+
+				String existingZoneName = existingPolicy.getZoneName();
+				String newZoneName = policy.getZoneName();
+
+				if (!StringUtils.equals(existingZoneName, newZoneName)) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("zoneName")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(id, existingZoneName, newZoneName))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+			} else {
+				if (StringUtils.isNotEmpty(policy.getZoneName())) {
+					RangerSecurityZone zone = getSecurityZone(policy.getZoneName());
+					if (zone == null) {
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME;
+						failures.add(new ValidationFailureDetailsBuilder()
+								.field("zoneName")
+								.isSemanticallyIncorrect()
+								.becauseOf(error.getMessage(id, policy.getZoneName()))
+								.errorCode(error.getErrorCode())
+								.build());
+						valid = false;
+					}
 				}
 			}
 

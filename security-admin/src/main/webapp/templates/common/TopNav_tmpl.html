@@ -44,6 +44,16 @@
 				{{/hasAccessToTab}}
 			</ul>
 		</li>
+        {{#isZoneAdministration}}
+            <li>
+				<a href="#!/zones/zone/list" id="nav6">
+					<span class="icon-stack zone-icon">
+						<i class="icon-check-empty icon-stack-base"></i>
+						<i class="icon-bolt"></i>
+					</span>{{tt 'h.securityZone'}}
+				</a>
+            </li>
+        {{/isZoneAdministration}}
 		<li class="dropdown">
 			<a href="javascript:;" id="nav5"><i class="icon-gear"></i> {{tt 'h.settings'}} </a>
 			<ul class="dropdown-menu">

@@ -48,6 +48,7 @@ define(function(require){
 			Audit				: { value:3, valStr: 'Audit'},
 			Encryption 			: { value:4, valStr: 'Encryption'},
 			Settings			: { value:5, valStr: 'Settings'},
+                        SecurityZone		: { value:7, valStr: 'Security Zone'},
 			None				: { value:6, valStr: 'None'}
 		};
 

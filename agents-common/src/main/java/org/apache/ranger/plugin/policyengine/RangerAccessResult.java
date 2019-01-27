@@ -46,6 +46,7 @@ public class RangerAccessResult {
 	private long     auditPolicyId  = -1;
 	private long     policyId  = -1;
 	private int      policyPriority;
+	private String   zoneName;
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
@@ -61,6 +62,7 @@ public class RangerAccessResult {
 		this.isAudited   = false;
 		this.auditPolicyId = -1;
 		this.policyId    = -1;
+		this.zoneName    = null;
 		this.policyPriority = RangerPolicy.POLICY_PRIORITY_NORMAL;
 		this.evaluatedPoliciesCount = 0;
 		this.reason      = null;
@@ -71,6 +73,7 @@ public class RangerAccessResult {
 		this.isAllowed   = other.getIsAllowed();
 		this.policyId    = other.getPolicyId();
 		this.policyPriority = other.getPolicyPriority();
+		this.zoneName       = other.zoneName;
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
@@ -129,6 +132,10 @@ public class RangerAccessResult {
 	public int getPolicyPriority() { return policyPriority;}
 
 	public void setPolicyPriority(int policyPriority) { this.policyPriority = policyPriority; }
+
+	public String getZoneName() { return zoneName; }
+
+	public void setZoneName(String zoneName) { this.zoneName = zoneName; }
 
 	/**
 	 * @param reason the reason to set
@@ -319,6 +326,7 @@ public class RangerAccessResult {
 		sb.append("isAudited={").append(isAudited).append("} ");
 		sb.append("policyType={").append(policyType).append("} ");
 		sb.append("policyId={").append(policyId).append("} ");
+		sb.append("zoneName={").append(zoneName).append("} ");
 		sb.append("auditPolicyId={").append(auditPolicyId).append("} ");
 		sb.append("evaluatedPoliciesCount={").append(evaluatedPoliciesCount).append("} ");
 		sb.append("reason={").append(reason).append("} ");

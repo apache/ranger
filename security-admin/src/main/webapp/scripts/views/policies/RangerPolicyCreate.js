@@ -72,9 +72,23 @@ define(function(require){
     	breadCrumbs :function(){
     		var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager';
     		if(this.model.isNew()){
-    			return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyCreate')];
-    		} else {
-    			return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),XALinks.get('PolicyEdit')];
+                if(App.vZone && App.vZone.vZoneName && this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
+                   return [XALinks.get(name, App.vZone.vZoneName), 
+                        XALinks.get('ManagePolicies',{model : this.rangerService}), XALinks.get('PolicyCreate')];
+                }else{
+                    return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),
+                        XALinks.get('PolicyCreate')];
+                }
+            } else {
+                if(App.vZone && App.vZone.vZoneName && this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
+                    return [XALinks.get(name, App.vZone.vZoneName),
+                        XALinks.get('ManagePolicies',{model : this.rangerService}), XALinks.get('PolicyEdit')];
+                }else{
+                    return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),
+                        XALinks.get('PolicyEdit')];
+                }
+                /*return [XALinks.get(name),XALinks.get('ManagePolicies',{model : this.rangerService}),
+                    XALinks.get('PolicyEdit')];*/
     		}
     	} ,        
 

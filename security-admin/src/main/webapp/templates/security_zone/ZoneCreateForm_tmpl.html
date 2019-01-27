@@ -1,0 +1,80 @@
+{{!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--}}
+<form class="form-horizontal">
+    <fieldset>
+        <div class="form-horizontal">
+            <p class="formHeader"> Zone Details : </p>
+            <div class="control-group" data-id="zoneName">
+                <label class="control-label">Zone Name * </label>
+                <div class="controls">
+                    <div data-editors="name" class="display-iniline-block"></div>
+                    <div class="help-inline" data-error=""></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label"> Zone Description </label>
+                <div class="controls">
+                    <div data-editors="description"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="form-horizontal">
+                <p class="formHeader">Zone Administration : </p>
+                <div class="control-group" data-id="adminUsers">
+                    <label class="control-label">Admin Users</label>
+                    <div class="controls">
+                        <div data-editors="adminUsers" class="display-iniline-block"></div>
+                        <div class="help-inline" data-error=""></div>
+                    </div>
+                </div>
+                <div class="control-group"  data-id="adminUserGroups">
+                    <label class="control-label">Admin Usergroups</label>
+                    <div class="controls">
+                        <div data-editors="adminUserGroups" class="display-iniline-block"></div>
+                        <div class="help-inline" data-error=""></div>
+                    </div>
+                </div>
+                <div class="control-group"  data-id="auditUsers">
+                    <label class="control-label">Auditor Users</label>
+                    <div class="controls">
+                        <div data-editors="auditUsers" class="display-iniline-block"></div>
+                        <div class="help-inline" data-error=""></div>
+                    </div>
+                </div>
+                <div class="control-group"  data-id="auditUserGroups">
+                    <label class="control-label">Auditor Usergroups</label>
+                    <div class="controls">
+                        <div data-editors="auditUserGroups" class="display-iniline-block"></div>
+                        <div class="help-inline" data-error=""></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-horizontal">
+            <p class="formHeader"> Services : </p>
+            <div class="control-group" data-id="selectServicesName">
+                <label class="control-label"> Select Service Name * </label>
+                <div class="controls">
+                    <input type="text" style="width: 600px;" data-id="servicesName"/>
+                    <div class="help-inline" data-id="serviceNameHelp" style="display:none">  Required </div>
+                </div>
+            </div>
+        </div>
+        <div data-id="zoneTableLayout" style="margin-top: 20px;"></div>
+    </fieldset>
+</form>

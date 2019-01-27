@@ -345,6 +345,7 @@ public class AuthorizationSession {
 			.add(RangerHBaseResource.KEY_COLUMN, _column)
 			.add(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily)
 			.add("resource-matching-scope", _resourceMatchingScope)
+			.add("clusterName", _clusterName)
 			.toString();
 	}
 
@@ -360,7 +361,8 @@ public class AuthorizationSession {
 		String format = "Access[%s] by user[%s] belonging to groups[%s] to table[%s] for column-family[%s], column[%s] triggered by operation[%s], otherInformation[%s]";
 		String user = _userUtils.getUserAsString();
 		String message = String.format(format, getPrintableValue(_access), getPrintableValue(user), _groups, getPrintableValue(_table),
-				getPrintableValue(_columnFamily), getPrintableValue(_column), getPrintableValue(_operation), getPrintableValue(_otherInformation));
+				getPrintableValue(_columnFamily), getPrintableValue(_column), getPrintableValue(_operation), getPrintableValue(_otherInformation),
+				getPrintableValue(_clusterName));
 		return message;
 	}
 	

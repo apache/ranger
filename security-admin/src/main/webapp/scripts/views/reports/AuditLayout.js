@@ -180,6 +180,7 @@ define(function(require) {
 					<th class="renderable aip" > </th>\
 					<th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
+                                        <th class="renderable ruser"></th>\
 				</tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
@@ -315,13 +316,15 @@ define(function(require) {
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
-			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'}];
-            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name', 'Policy ID'];
+			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
+			                      {text : 'Zone Name',label : 'zoneName'}];
+            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name', 'Zone Name'];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
                                             {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
                                             {text : 'Cluster Name'  , info :localization.tt('h.clusterName')},
+                                            {text :'Zone Name'      , info :localization.tt('h.zoneName')},
                                             {text :'End Date'       , info :localization.tt('h.endDate')},
                                             {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
                                             {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
@@ -546,12 +549,12 @@ define(function(require) {
 		},
 		addSearchForAgentTab : function(){
                         var that = this , query = '';
-                        var searchOpt = ["Service Name", "Plugin ID", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
+                        var searchOpt = ["Service Name", "Plugin ID", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name", "Zone Name"];
                         var serverAttrName  = [{text : "Plugin ID", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
 			                       {text : "Service Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
 			                       {text : "Export Date", label :"createDate"},
 			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                   {text : 'Cluster Name',label :'cluster'}];
+				                   {text : 'Cluster Name',label :'cluster'},{text : 'Zone Name',label :'zoneName'}];
                         _.map(App.vsHistory.plugin, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAgent'),
@@ -746,6 +749,16 @@ define(function(require) {
 								userName :self.model.get('owner'),
 								action : action
 							});
+						} else if (self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value){
+							var view = new vOperationDiffDetail({
+								collection : fullTrxLogListForTrxId,
+								classType : self.model.get('objectClassType'),
+								objectName : self.model.get('objectName'),
+								objectId   : self.model.get('objectId'),
+								objectCreatedDate : objectCreatedDate,
+								userName :self.model.get('owner'),
+								action : action
+							});
 						} else {
 							var view = new vOperationDiffDetail({
 								collection : fullTrxLogListForTrxId,
@@ -861,6 +874,8 @@ define(function(require) {
 									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
 								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value)
 									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value)
+									 html =     'Security Zone '+action+'d '+'<b>'+name+'</b>';
 								 return html;
 						    }
 						}
@@ -1150,6 +1165,21 @@ define(function(require) {
                                                         }
                                                 }),
 					},
+                    zoneName: {
+						label : localization.tt("lbl.zoneName"),
+						cell: "html",
+						click: false,
+						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                    fromRaw: function (rawValue, model) {
+                                            rawValue = _.escape(rawValue);
+                                            return '<span class="label label-inverse" title="'+rawValue+'">'+rawValue+'</span>';
+                                    }
+                            }),
+						drag: false,
+						sortable: false,
+						editable: false,
+					},
+
                                         eventCount : {
                                                 label : 'Event Count',
 						cell: "string",
@@ -1375,6 +1405,20 @@ define(function(require) {
                                                         }
                                                 }),
                                         },
+                    zoneName: {
+                        label: localization.tt("lbl.zoneName"),
+                        cell: "html",
+                        click: false,
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function(rawValue, model) {
+                            rawValue = _.escape(rawValue);
+                                return '<span class="label label-inverse" title="' + rawValue + '">' + rawValue + '</span>';
+                            }
+                        }),
+                        drag: false,
+                        sortable: false,
+                        editable: false,
+                    },
 					httpRetCode : {
 						cell : 'html',
 						label	: localization.tt('lbl.httpResponseCode'),

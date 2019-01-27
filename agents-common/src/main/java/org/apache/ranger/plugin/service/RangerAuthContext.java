@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 import java.util.Collection;
@@ -176,6 +177,11 @@ public class RangerAuthContext implements RangerPolicyEngine {
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
 		preProcess(request);
 		return policyEngine.getResourceACLs(request);
+	}
+
+	@Override
+	public String getMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
+		return policyEngine.getMatchedZoneName(grantRevokeRequest);
 	}
 
     @Override

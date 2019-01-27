@@ -64,7 +64,9 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
+import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
@@ -133,6 +135,7 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
+import org.apache.ranger.service.RangerSecurityZoneService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceService;
@@ -274,6 +277,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
+	@Autowired
+    RangerSecurityZoneService securityZoneService;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -2527,11 +2533,78 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	void createDefaultPolicies(RangerService createdService) throws Exception {
 
-		RangerBaseService svc = serviceMgr.getRangerServiceByService(createdService, this);
+		List<RangerPolicy> defaultPolicies = populateDefaultPolicies(createdService);
+
+		if (CollectionUtils.isNotEmpty(defaultPolicies)) {
+
+			for (RangerPolicy defaultPolicy : defaultPolicies) {
+				createPolicy(defaultPolicy);
+			}
+		}
+
+	}
+
+	public void createZoneDefaultPolicies(Collection<String> serviceNames, RangerSecurityZone zone) throws Exception {
+
+		if (CollectionUtils.isNotEmpty(serviceNames)) {
+
+			for (String serviceName : serviceNames) {
+				RangerService service = getServiceByName(serviceName);
+
+				if (service != null) {
+
+					List<RangerPolicy> defaultPolicies = populateDefaultPolicies(service);
+
+					if (CollectionUtils.isNotEmpty(defaultPolicies)) {
+
+						String zoneName = zone.getName();
+						XXPolicyDao policyDao = daoMgr.getXXPolicy();
+
+						for (RangerPolicy defaultPolicy : defaultPolicies) {
+
+							String policyName;
+							String zonePolicyNamePrefix = zoneName + "-" + defaultPolicy.getName() + "-";
+							int i = -1;
+
+							do {
+								policyName = zonePolicyNamePrefix + ++i;
+							} while (policyDao.findByNameAndServiceId(policyName, service.getId()) != null);
+
+							defaultPolicy.setName(policyName);
+							defaultPolicy.setZoneName(zoneName);
+
+							createPolicy(defaultPolicy);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void deleteZonePolicies(Collection<String> serviceNames, Long zoneId) throws Exception {
+		if (CollectionUtils.isNotEmpty(serviceNames)) {
+			XXPolicyDao policyDao = daoMgr.getXXPolicy();
+
+			for (String serviceName : serviceNames) {
+				List<XXPolicy> policies = policyDao.findByServiceNameAndZoneId(serviceName, zoneId);
+				if (CollectionUtils.isNotEmpty(policies)) {
+					for (XXPolicy policy : policies) {
+						deletePolicy(policy.getId());
+					}
+				}
+			}
+		}
+	}
+
+	List<RangerPolicy> populateDefaultPolicies(RangerService service) throws Exception {
+
+		List<RangerPolicy> ret = null;
+
+		RangerBaseService svc = serviceMgr.getRangerServiceByService(service, this);
 
 		if (svc != null) {
 
-			List<String> serviceCheckUsers = getServiceCheckUsers(createdService);
+			List<String> serviceCheckUsers = getServiceCheckUsers(service);
                         List<String> users = new ArrayList<String>();
 
                         /*Need to create ambari service check user before initiating policy creation. */
@@ -2560,7 +2633,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				createDefaultPolicyUsersAndGroups(defaultPolicies);
 
 				for (RangerPolicy defaultPolicy : defaultPolicies) {
-                                        if (CollectionUtils.isNotEmpty(users) && StringUtils.equalsIgnoreCase(defaultPolicy.getService(), createdService.getName())) {
+                                        if (CollectionUtils.isNotEmpty(users) && StringUtils.equalsIgnoreCase(defaultPolicy.getService(), service.getName())) {
 						RangerPolicyItem defaultAllowPolicyItem = CollectionUtils.isNotEmpty(defaultPolicy.getPolicyItems()) ? defaultPolicy.getPolicyItems().get(0) : null;
 
 						if (defaultAllowPolicyItem == null) {
@@ -2584,13 +2657,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 							&& validatePolicyItems(defaultPolicy.getRowFilterPolicyItems());
 
 					if (isPolicyItemValid) {
-						createPolicy(defaultPolicy);
+						if (ret == null) {
+							ret = new ArrayList<>();
+						}
+						ret.add(defaultPolicy);
 					} else {
 						LOG.warn("Default policy won't be created,since policyItems not valid-either users/groups not present or access not present in policy.");
 					}
 				}
 			}
 		}
+		return ret;
 	}
 
 	void createDefaultPolicyUsersAndGroups(List<RangerPolicy> defaultPolicies) {
@@ -2925,6 +3002,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
+	@Override
+	public RangerSecurityZone getSecurityZone(Long id) throws Exception {
+		return securityZoneService.read(id);
+	}
+
+	@Override
+	public RangerSecurityZone getSecurityZone(String name) throws Exception {
+		XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(name);
+		if (xxSecurityZone != null) {
+			return getSecurityZone(xxSecurityZone.getId());
+		}
+		return null;
+	}
 
 	private String getServiceName(Long serviceId) {
 		String ret = null;

@@ -631,7 +631,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         return ret;
     }
 
-    private static boolean isHierarchyValidForResources(List<RangerResourceDef> hierarchy, Map<String, ?> resources) {
+    public static boolean isHierarchyValidForResources(List<RangerResourceDef> hierarchy, Map<String, ?> resources) {
         boolean ret = true;
 
         if (hierarchy != null) {

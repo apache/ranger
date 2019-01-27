@@ -635,7 +635,7 @@ public class TestAssetREST {
 		// Mockito.when(PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true)).thenReturn(true);
 		try {
 			Mockito.when(serviceREST.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(),
-					Mockito.anyLong(), Mockito.anyString(), Mockito.anyString() , (HttpServletRequest) Mockito.any()))
+					Mockito.anyLong(), Mockito.anyString(), Mockito.anyString() , Mockito.anyString(), (HttpServletRequest) Mockito.any()))
 					.thenReturn(servicePolicies);
 		} catch (Exception e) {
 			fail("test failed due to: " + e.getMessage());
@@ -678,7 +678,7 @@ public class TestAssetREST {
 		VXPolicyExportAuditList expectedVXPolicyExportAuditList = assetREST.searchXPolicyExportAudits(request);
 		Assert.assertEquals(vXPolicyExportAuditList, expectedVXPolicyExportAuditList);
 		Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
-		Mockito.verify(searchUtil, Mockito.times(4)).extractString((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(5)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
@@ -761,7 +761,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(12)).extractString((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(13)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
@@ -804,7 +804,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(12)).extractString((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(13)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());

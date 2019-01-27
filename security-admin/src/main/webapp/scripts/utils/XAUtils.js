@@ -406,6 +406,7 @@ define(function(require) {
 	 *            params - The params
 	 */
 	XAUtils.alertPopup = function(params) {
+		bootbox.hideAll();
 		if (params.callback == undefined) {
 			bootbox.alert(params.msg);
 		} else {
@@ -1105,6 +1106,9 @@ define(function(require) {
 	XAUtils.getRangerServiceDef = function(name) {
 		return "service/plugins/definitions/name/" + name;
 	};
+	XAUtils.getZonesURL = function(zoneId) {
+		return "service/zones/" + zoneId;
+	};
 	XAUtils.filterAllowedActions = function(controller) {
 		var SessionMgr = require('mgrs/SessionMgr');
 			var XAGlobals = require('utils/XAGlobals');
@@ -1478,7 +1482,8 @@ define(function(require) {
                         }
                     }
                 },
-            }
+            };
+
         return opts;
     }
 	return XAUtils;

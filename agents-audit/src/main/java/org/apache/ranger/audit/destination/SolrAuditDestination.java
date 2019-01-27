@@ -277,6 +277,7 @@ public class SolrAuditDestination extends AuditDestination {
 		doc.setField("event_dur_ms", auditEvent.getEventDurationMS());
 		doc.setField("tags", auditEvent.getTags());
 		doc.setField("cluster", auditEvent.getClusterName());
+		doc.setField("zoneName", auditEvent.getZoneName());
 
 		return doc;
 	}

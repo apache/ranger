@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.solr.common.StringUtils;
 
 public class RangerPolicyResourceSignature {
 
@@ -143,6 +144,9 @@ public class RangerPolicyResourceSignature {
 			if (_policy.getPolicyPriority() != null && _policy.getPolicyPriority() != RangerPolicy.POLICY_PRIORITY_NORMAL) {
 				resource += _policy.getPolicyPriority();
 			}
+			if (!StringUtils.isEmpty(_policy.getZoneName())) {
+			    resource += _policy.getZoneName();
+            }
 
 			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);
 			return result;

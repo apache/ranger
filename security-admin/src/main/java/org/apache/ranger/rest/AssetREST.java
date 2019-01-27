@@ -524,7 +524,7 @@ public class AssetREST {
 		ServicePolicies servicePolicies = null;
 
 		try {
-			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "",request);
+			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "","",request);
 		} catch(Exception excp) {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}
@@ -573,6 +573,8 @@ public class AssetREST {
                                 "End Date", null);
 		searchUtil.extractString(request, searchCriteria, "cluster",
 				"Cluster Name", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "zoneName",
+				"Zone Name", StringUtil.VALIDATION_TEXT);
 		return assetMgr.searchXPolicyExportAudits(searchCriteria);
 	}
 
@@ -648,6 +650,7 @@ public class AssetREST {
 
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
 		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "zoneName", "Zone Name", StringUtil.VALIDATION_TEXT);
 		
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
 		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();

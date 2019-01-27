@@ -79,6 +79,7 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final String MODULE_PERMISSION="Permissions";
 	public static final String MODULE_KEY_MANAGER="Key Manager";
 	public static final String MODULE_TAG_BASED_POLICIES="Tag Based Policies";
+        public static final String MODULE_SECURITY_ZONE="Security Zone";
 
 	// User create validation errors
 	public enum ValidationUserProfile {
