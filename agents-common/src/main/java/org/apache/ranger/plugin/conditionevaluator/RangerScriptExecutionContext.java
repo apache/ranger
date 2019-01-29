@@ -143,7 +143,7 @@ public final class RangerScriptExecutionContext {
 
 	public Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
 
-	public Date getAccessTime() { return accessRequest.getAccessTime(); }
+	public Date getAccessTime() { return accessRequest.getAccessTime() != null ? accessRequest.getAccessTime() : new Date(); }
 
 	public String getClientIPAddress() { return accessRequest.getClientIPAddress(); }
 
