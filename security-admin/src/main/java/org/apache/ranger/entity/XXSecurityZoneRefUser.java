@@ -37,8 +37,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializable{
 	private static final long serialVersionUID = 1L;
   	@Id
-    @SequenceGenerator(name = "x_security_zone_ref_user_SEQ", sequenceName = "x_security_zone_ref_user_SEQ", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_security_zone_ref_user_SEQ")
+    @SequenceGenerator(name = "x_sec_zone_ref_user_SEQ", sequenceName = "x_sec_zone_ref_user_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_user_SEQ")
     @Column(name = "id")
     protected Long id;
 

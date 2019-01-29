@@ -51,15 +51,13 @@ select remove_x_policy_zone_id();
 select 'delimiter end';
 
 DROP TABLE IF EXISTS x_security_zone_ref_group CASCADE;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_group_seq;
-DROP TABLE IF EXISTS x_security_zone_ref_group CASCADE;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_group_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP TABLE IF EXISTS x_security_zone_ref_user CASCADE;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
 DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_resource_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
 DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_service_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP TABLE IF EXISTS x_security_zone CASCADE;
@@ -97,9 +95,9 @@ CONSTRAINT x_ranger_global_state_FK_added_by_id FOREIGN KEY (added_by_id) REFERE
 CONSTRAINT x_ranger_global_state_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-CREATE SEQUENCE x_security_zone_ref_service_seq;
+CREATE SEQUENCE x_sec_zone_ref_service_seq;
 CREATE TABLE x_security_zone_ref_service (
-id BIGINT DEFAULT nextval('x_security_zone_ref_service_seq'::regclass),
+id BIGINT DEFAULT nextval('x_sec_zone_ref_service_seq'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
@@ -115,9 +113,9 @@ CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY (service_id) REFERENCES x_
 CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY (service_name) REFERENCES x_service (name)
 );
 
-CREATE SEQUENCE x_security_zone_ref_resource_seq;
+CREATE SEQUENCE x_sec_zone_ref_resource_seq;
 CREATE TABLE x_security_zone_ref_resource (
-id BIGINT DEFAULT nextval('x_security_zone_ref_resource_seq'::regclass),
+id BIGINT DEFAULT nextval('x_sec_zone_ref_resource_seq'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
@@ -132,9 +130,9 @@ CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_securi
 CONSTRAINT x_sz_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id)
 );
 
-CREATE SEQUENCE x_security_zone_ref_user_seq;
+CREATE SEQUENCE x_sec_zone_ref_user_seq;
 CREATE TABLE x_security_zone_ref_user (
-id BIGINT DEFAULT nextval('x_security_zone_ref_user_seq'::regclass),
+id BIGINT DEFAULT nextval('x_sec_zone_ref_user_seq'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
@@ -151,9 +149,9 @@ CONSTRAINT x_sz_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
 CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY (user_name) REFERENCES x_user (user_name)
 );
 
-CREATE SEQUENCE x_security_zone_ref_group_seq;
+CREATE SEQUENCE x_sec_zone_ref_group_seq;
 CREATE TABLE x_security_zone_ref_group (
-id BIGINT DEFAULT nextval('x_security_zone_ref_group_seq'::regclass),
+id BIGINT DEFAULT nextval('x_sec_zone_ref_group_seq'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
 update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,

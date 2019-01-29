@@ -201,7 +201,7 @@ class BaseDB(object):
 		return ret
 
 	def check_table(self, db_name, db_user, db_password, TABLE_NAME):
-		if self.XA_DB_FLAVOR == "POSTGRES":
+		if self.XA_DB_FLAVOR == "SQLA":
 			self.set_options(db_name, db_user, db_password, TABLE_NAME)
 		output = self.execute_query(self.get_check_table_query(TABLE_NAME))
 		if output.strip(TABLE_NAME + " |"):
@@ -885,28 +885,6 @@ class PostgresConf(BaseDB):
 				log("[E] LANGUAGE plpgsql creation failed", "error")
 				sys.exit(1)
 
-	def set_options(self, db_name, db_user, db_password, TABLE_NAME):
-		CT=self.commandTerminator
-		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
-		if is_unix:
-			query = get_cmd + CT + " -query \"set option public.reserved_keywords='LIMIT';\""
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"set option public.reserved_keywords='LIMIT';\" -c ;"
-		jisql_log(query, db_password)
-		ret = subprocessCallWithRetry(shlex.split(query))
-		if is_unix:
-			query = get_cmd + CT + " -query \"set option public.max_statement_count=0;\""
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"set option public.max_statement_count=0;\" -c;"
-		jisql_log(query, db_password)
-		ret = subprocessCallWithRetry(shlex.split(query))
-		if is_unix:
-			query = get_cmd + CT + " -query \"set option public.max_cursor_count=0;\""
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"set option public.max_cursor_count=0;\" -c;"
-		jisql_log(query, db_password)
-		ret = subprocessCallWithRetry(shlex.split(query))
-
 	def get_check_table_query(self, TABLE_NAME):
 		return "select * from (select table_name from information_schema.tables where table_catalog='%s' and table_name = '%s') as temp;" % (self.db_name,TABLE_NAME)
 
@@ -988,6 +966,28 @@ class SqlAnywhereConf(BaseDB):
 
 	def get_db_server_status_query(self):
 		return "select 1;"
+
+	def set_options(self, db_name, db_user, db_password, TABLE_NAME):
+		CT=self.commandTerminator
+		get_cmd = self.get_jisql_cmd(db_user, db_password, db_name)
+		if is_unix:
+			query = get_cmd + CT + " -query \"set option public.reserved_keywords='LIMIT';\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.reserved_keywords='LIMIT';\" -c ;"
+		jisql_log(query, db_password)
+		ret = subprocessCallWithRetry(shlex.split(query))
+		if is_unix:
+			query = get_cmd + CT + " -query \"set option public.max_statement_count=0;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.max_statement_count=0;\" -c;"
+		jisql_log(query, db_password)
+		ret = subprocessCallWithRetry(shlex.split(query))
+		if is_unix:
+			query = get_cmd + CT + " -query \"set option public.max_cursor_count=0;\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"set option public.max_cursor_count=0;\" -c;"
+		jisql_log(query, db_password)
+		ret = subprocessCallWithRetry(shlex.split(query))
 
 def main(argv):
 	populate_global_dict()
