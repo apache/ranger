@@ -21,8 +21,11 @@ package org.apache.ranger.solr;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -36,6 +39,7 @@ import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
@@ -86,10 +90,10 @@ public class SolrAccessAuditsService {
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("requestUser", "reqUser",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("requestData", "reqData",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("resourcePath", "resource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("requestData", "reqData", SearchField.DATA_TYPE.STRING,
+				SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField("resourcePath", "resource", SearchField.DATA_TYPE.STRING,
+				SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("clientIP", "cliIP",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
@@ -104,7 +108,9 @@ public class SolrAccessAuditsService {
 		searchFields.add(new SearchField("repoType", "repoType",
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
                 searchFields.add(new SearchField("-repoType", "-repoType",
-                                SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+                searchFields.add(new SearchField("-requestUser", "-reqUser",
+        		SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("resourceType", "resType",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("reason", "reason",
@@ -127,20 +133,29 @@ public class SolrAccessAuditsService {
 				SORT_ORDER.DESC));
 	}
 
+
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 
 		// Make call to Solr
 		SolrClient solrClient = solrMgr.getSolrClient();
-                final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
+		final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
 		if (solrClient == null) {
 			logger.warn("Solr client is null, so not running the query.");
 			throw restErrorUtil.createRESTException(
 					"Error connecting to search engine",
 					MessageEnums.ERROR_SYSTEM);
 		}
-
+		List<String> excludeUsersList = new ArrayList<String>();
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
+		String val = (String) searchCriteria.getParamList().get("excludeServiceUser");
+
+		if(val !=null && Boolean.valueOf(val.trim())) { //add param to negate requestUsers which will be added as filter query in solr
+			excludeUsersList = getExcludeUsersList();
+			if(CollectionUtils.isNotEmpty(excludeUsersList)) {
+				searchCriteria.getParamList().put("-requestUser", excludeUsersList);
+			}
+        }
 		QueryResponse response = solrUtil.searchResources(searchCriteria,
 				searchFields, sortFields, solrClient);
 		SolrDocumentList docs = response.getResults();
@@ -159,7 +174,7 @@ public class SolrAccessAuditsService {
                                         }
                                 }
                         }
-			xAccessAuditList.add(vXAccessAudit);
+                        xAccessAuditList.add(vXAccessAudit);
 		}
 
 		VXAccessAuditList returnList = new VXAccessAuditList();
@@ -169,6 +184,39 @@ public class SolrAccessAuditsService {
 		returnList.setStartIndex((int) docs.getStart());
 		returnList.setVXAccessAudits(xAccessAuditList);
 		return returnList;
+	}
+
+	private List<String> getExcludeUsersList() {
+		List<String> excludeUsersList = new ArrayList<String>();
+		//for excluding serviceUsers using existing property in ranger-admin-site
+		List<String> serviceUsersList = getServiceUserList();
+		excludeUsersList.addAll(serviceUsersList);
+
+		//for excluding additional users using new property in ranger-admin-site
+		String additionalExcludeUsers = PropertiesUtil.getProperty("ranger.accesslogs.exclude.users.list");
+		List<String> additionalExcludeUsersList = null;
+		if (StringUtils.isNotBlank(additionalExcludeUsers)) {
+			additionalExcludeUsersList = new ArrayList<>(Arrays.asList(StringUtils.split(additionalExcludeUsers, ",")));
+			for (String serviceUser : additionalExcludeUsersList) {
+				if (StringUtils.isNotBlank(serviceUser) && !excludeUsersList.contains(serviceUser.trim())) {
+					excludeUsersList.add(serviceUser);
+				}
+			}
+		}
+		return excludeUsersList;
+	}
+
+	private List<String> getServiceUserList() {
+		String components = EmbeddedServiceDefsUtil.DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
+		List<String> serviceUsersList = new ArrayList<String>();
+		List<String> componentNames =  Arrays.asList(StringUtils.split(components,","));
+		for(String componentName : componentNames) {
+			String serviceUser = PropertiesUtil.getProperty("ranger.plugins."+componentName+".serviceuser");
+			if(StringUtils.isNotBlank(serviceUser)) {
+				serviceUsersList.add(serviceUser);
+			}
+		}
+		return serviceUsersList;
 	}
 
 	/**

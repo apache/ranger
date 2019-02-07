@@ -309,6 +309,7 @@ define(function(require) {
 		addSearchForBigDataTab :function(){
             var that = this , query = '';
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
+            var serviceUser = [{'label' : 'True' , 'value' : true},{'label' : 'False' , 'value' : false}]
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
 			                      {text : 'Service Name',label :'repoName'},{text : 'Policy ID',label :'policyId'},
@@ -317,8 +318,10 @@ define(function(require) {
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
-			                      {text : 'Zone Name',label : 'zoneName'}];
-            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer','Client IP','Tags','Cluster Name', 'Zone Name'];//,'Policy ID'
+			                      {text : 'Zone Name',label : 'zoneName'},
+			                      {text : 'Exclude Service User', label : 'excludeServiceUser', 'multiple' : true, 'optionsArr' : serviceUser}];
+            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
+            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude Service User'];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
@@ -414,6 +417,9 @@ define(function(require) {
 								} 
 								XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 								break;
+                            case 'Exclude Service User' :
+                                callback(XAUtils.hackForVSLabelValuePairs(serviceUser));
+                                break;
                                                         }
 					}
 			      }
