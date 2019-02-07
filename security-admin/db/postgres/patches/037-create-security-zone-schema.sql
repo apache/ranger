@@ -13,7 +13,19 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- function add_zone_x_policy_export_audit
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val varchar(100))
+RETURNS bigint LANGUAGE SQL AS $$ SELECT x_portal_user.id FROM x_portal_user
+WHERE x_portal_user.login_id = $1; $$;
+
+CREATE OR REPLACE FUNCTION getModulesIdByName(input_val varchar(100))
+RETURNS bigint LANGUAGE SQL AS $$ SELECT x_modules_master.id FROM x_modules_master
+WHERE x_modules_master.module = $1; $$;
+
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+commit;
 
 select 'delimiter start';
 CREATE OR REPLACE FUNCTION add_zone_x_policy_export_audit()
@@ -73,6 +85,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 name varchar(255) NOT NULL,
 jsonData text DEFAULT NULL NULL,
+description VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_security_zone_UK_name UNIQUE (name),
 CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -184,15 +197,3 @@ select 'delimiter end';
 select add_x_policy_zone_id();
 select 'delimiter end';
 
-CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val varchar(100))
-RETURNS bigint LANGUAGE SQL AS $$ SELECT x_portal_user.id FROM x_portal_user
-WHERE x_portal_user.login_id = input_val; $$;
-
-CREATE OR REPLACE FUNCTION getModulesIdByName(input_val varchar(100))
-RETURNS bigint LANGUAGE SQL AS $$ SELECT x_modules_master.id FROM x_modules_master
-WHERE x_modules_master.module = input_val; $$;
-
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

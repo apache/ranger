@@ -25,11 +25,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
@@ -1425,5 +1427,29 @@ public class RangerBizUtil {
 			}
 		}
 		return true;
+	}
+
+	public void removeEmptyStrings(List<String> list) {
+		if(!CollectionUtils.isEmpty(list)) {
+			Iterator<String> i = list.iterator();
+			while (i.hasNext()){
+				String item = i.next();
+				if (item == null || StringUtils.isEmpty(StringUtils.trim(item))){
+					i.remove();
+			    }
+			}
+			trimAll(list);
+		}
+	}
+
+	public void trimAll(List<String> list) {
+		if(!CollectionUtils.isEmpty(list)) {
+			for (int i = 0; i < list.size(); i++) {
+				String item=list.get(i);
+				if(item.startsWith(" ") || item.endsWith(" ")) {
+					list.set(i, StringUtils.trim(item));
+				}
+			}
+		}
 	}
 }

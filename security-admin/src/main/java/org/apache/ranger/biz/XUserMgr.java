@@ -257,32 +257,36 @@ public class XUserMgr extends XUserMgrBase {
 
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
 					} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-                                                createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
 					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
-                                                createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-                     } else if (role.equals(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                        createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-                                                createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
-                        createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER),isCreate);
-                        createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_REPORTS),isCreate);
-                        createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),isCreate);
-                     } else if (role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_REPORTS),isCreate);
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES),isCreate);
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_AUDIT),isCreate);
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES),isCreate);
-                       createOrUpdateUserPermisson(vXPortalUser,moduleNameId.get(RangerAPIMapping.TAB_PERMISSIONS),isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+					} else if (role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerAPIMapping.TAB_PERMISSIONS), isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
 					}
 
 				}

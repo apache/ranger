@@ -44,23 +44,31 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
     private List<String>                            adminUserGroups;
     private List<String>                            auditUsers;
     private List<String>                            auditUserGroups;
+    private String                                  description;
 
     public RangerSecurityZone() {
-        this(null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null);
     }
 
-    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups) {
+    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
         setName(name);
         setServices(services);
         setAdminUsers(adminUsers);
         setAdminUserGroups(adminUserGroups);
         setAuditUsers(auditUsers);
         setAuditUserGroups(auditUserGroups);
+        setDescription(description);
     }
     public String getName() { return name; }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Map<String, RangerSecurityZoneService> getServices() { return services; }
@@ -101,7 +109,8 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
                 + ", adminUserGroups=" + adminUserGroups
                 + ", auditUsers=" + auditUsers
                 + ", auditUserGroups=" + auditUserGroups
-                + "}";
+                + ", description="+ description
+                +"}";
     }
 
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)

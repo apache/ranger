@@ -72,6 +72,7 @@ public class RangerSecurityZoneService extends RangerSecurityZoneServiceBase<XXS
 		trxLogAttrs.put("adminUserGroups", new VTrxLogAttr("adminUserGroups", "Zone Admin User Groups", false));
 		trxLogAttrs.put("auditUsers", new VTrxLogAttr("auditUsers", "Zone Audit Users", false));
 		trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups", false));
+		trxLogAttrs.put("description", new VTrxLogAttr("description", "Zone Description", false));
 	}
 
     public RangerSecurityZoneService() {

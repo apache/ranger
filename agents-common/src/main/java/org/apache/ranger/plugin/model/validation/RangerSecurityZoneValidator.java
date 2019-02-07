@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -160,24 +161,21 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
         RangerSecurityZone existingZone;
         final String zoneName = securityZone.getName();
+        if (StringUtils.isEmpty(StringUtils.trim(zoneName))) {
+            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD;
+
+            failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone name was null/missing").field("name").isMissing().errorCode(error.getErrorCode()).becauseOf(error.getMessage("name")).build());
+            ret = false;
+        }
 
         if (action == Action.CREATE) {
             securityZone.setId(-1L);
+            existingZone = getSecurityZone(zoneName);
+            if (existingZone != null) {
+                ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT;
 
-            if (StringUtils.isEmpty(zoneName)) {
-                ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD;
-
-                failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone name was null/missing").field("name").isMissing().errorCode(error.getErrorCode()).becauseOf(error.getMessage("name")).build());
+                failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone name exists").field("name").errorCode(error.getErrorCode()).becauseOf(error.getMessage(existingZone.getId())).build());
                 ret = false;
-            } else {
-                existingZone = getSecurityZone(zoneName);
-
-                if (existingZone != null) {
-                    ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT;
-
-                    failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone name exists").field("name").errorCode(error.getErrorCode()).becauseOf(error.getMessage(existingZone.getId())).build());
-                    ret = false;
-                }
             }
         } else {
             Long zoneId  = securityZone.getId();
@@ -188,7 +186,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
                 failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone with id does not exist").field("id").errorCode(error.getErrorCode()).becauseOf(error.getMessage(zoneId)).build());
                 ret = false;
-            } else if (StringUtils.isNotEmpty(zoneName) && !StringUtils.equals(zoneName, existingZone.getName())) {
+            } else if (StringUtils.isNotEmpty(StringUtils.trim(zoneName)) && !StringUtils.equals(zoneName, existingZone.getName())) {
                 existingZone = getSecurityZone(zoneName);
 
                 if (existingZone != null) {
@@ -248,6 +246,28 @@ public class RangerSecurityZoneValidator extends RangerValidator {
             failures.add(new ValidationFailureDetailsBuilder().field("security zone audit users/user-groups").isMissing().becauseOf(error.getMessage()).errorCode(error.getErrorCode()).build());
             ret = false;
         }
+
+        if (securityZone.getServices() != null) {
+			for (Map.Entry<String, RangerSecurityZoneService> serviceResouceMapEntry : securityZone.getServices()
+					.entrySet()) {
+				if (serviceResouceMapEntry.getValue().getResources() != null) {
+					for (Map<String, List<String>> resource : serviceResouceMapEntry.getValue().getResources()) {
+						if (resource != null) {
+							for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
+								if (CollectionUtils.isEmpty(entry.getValue())) {
+									ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES;
+									failures.add(new ValidationFailureDetailsBuilder().field("security zone resources")
+											.subField("resources").isMissing()
+											.becauseOf(error.getMessage(serviceResouceMapEntry.getKey()))
+											.errorCode(error.getErrorCode()).build());
+									ret = false;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
         if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("<== RangerPolicyValidator.validateWithinSecurityZone(%s, %s, %s) : %s", securityZone, action, failures, ret));
         }

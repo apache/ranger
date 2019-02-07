@@ -61,6 +61,7 @@ CREATE TABLE dbo.x_security_zone(
 	version bigint DEFAULT NULL NULL,
 	name varchar(255) NOT NULL,
 	jsonData text DEFAULT NULL NULL,
+	description varchar(1024) DEFAULT NULL NULL,
 	CONSTRAINT x_security_zone_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_security_zone_UK_name UNIQUE NONCLUSTERED(name)
 )

@@ -19,7 +19,10 @@ BEGIN
 	ALTER TABLE [dbo].[x_policy_export_audit] ADD [zone_name] [varchar](255) DEFAULT NULL NULL;
 END
 GO
-
+IF (OBJECT_ID('x_policy_FK_zone_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_policy] DROP CONSTRAINT x_policy_FK_zone_id
+END
 GO
 IF (OBJECT_ID('x_sz_ref_group_FK_added_by_id') IS NOT NULL)
 BEGIN
@@ -168,6 +171,7 @@ CREATE TABLE [dbo].[x_security_zone](
 	[version] [bigint] DEFAULT NULL NULL,
 	[name] [varchar](255) NOT NULL,
 	[jsonData] [nvarchar](max) DEFAULT NULL NULL,
+	[description] [varchar](1024) DEFAULT NULL NULL,
 	PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -314,7 +318,12 @@ ALTER TABLE [dbo].[x_ranger_global_state] WITH CHECK ADD CONSTRAINT [x_ranger_gl
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name in('zone_id'))
 BEGIN
-	ALTER TABLE [dbo].[x_policy] ADD [zone_id] [bigint] DEFAULT NULL NULL,CONSTRAINT [x_policy_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id]);
+	ALTER TABLE [dbo].[x_policy] ADD [zone_id] [bigint] DEFAULT NULL NULL;
+END
+GO
+IF (OBJECT_ID('x_policy_FK_zone_id') IS NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_policy] ADD CONSTRAINT [x_policy_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id]);
 END
 GO
 SET ANSI_NULLS ON

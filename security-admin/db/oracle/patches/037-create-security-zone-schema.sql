@@ -87,6 +87,7 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20)  DEFAULT NULL NULL,
 name varchar(255) NOT NULL,
 jsonData CLOB DEFAULT NULL NULL,
+description VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_security_zone_UK_name UNIQUE(name),
 CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -190,6 +191,30 @@ Select count(*) into v_column_exists from user_tab_cols where column_name = uppe
 	end if;
 end;/
 
+CREATE OR REPLACE FUNCTION getModulesIdByName(inputval IN VARCHAR2)
+RETURN NUMBER is
+BEGIN
+Declare
+myid Number := 0;
+begin
+   SELECT id into myid FROM x_modules_master
+   WHERE MODULE = inputval;
+   RETURN myid;
+end;
+END;/
+
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val IN VARCHAR2)
+RETURN NUMBER iS
+BEGIN
+DECLARE
+myid Number := 0;
+begin
+    SELECT x_portal_user.id into myid FROM x_portal_user
+    WHERE x_portal_user.login_id=input_val;
+    RETURN myid;
+end;
+END;/
+/
 INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

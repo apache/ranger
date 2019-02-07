@@ -38,15 +38,22 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
     @Column(name = "jsonData")
     protected String jsonData;
 
+    @Column(name = "description")
+    protected String description;
+
     public Long getVersion() { return version; }
     public String getName() { return name; }
     public String getJsonData() { return jsonData; }
+    public String getDescription() { return description; }
 
     public void setName(String name) {
         this.name = name;
     }
     public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
+    }
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
