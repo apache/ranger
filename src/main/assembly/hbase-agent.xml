@@ -55,6 +55,7 @@
             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 		   			<include>org.noggit:noggit:jar:${noggit.version}</include>
 		   			<include>org.apache.solr:solr-solrj</include>
+                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
