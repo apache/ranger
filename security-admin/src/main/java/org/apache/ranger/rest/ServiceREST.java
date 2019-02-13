@@ -1646,7 +1646,7 @@ public class ServiceREST {
 				}
 
 				String user = request.getRemoteUser();
-				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy.getService(), policy.getResources(), StringUtils.isNotBlank(user) ? user :"admin");
+				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy, StringUtils.isNotBlank(user) ? user :"admin");
 
 				if (existingPolicy == null) {
 					ret = createPolicy(policy, null);
@@ -2964,18 +2964,18 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, Map<String, RangerPolicyResource> resources, String user) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(RangerPolicy policy, String user) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resources + ", " + user + ")");
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + policy + ", " + user + ")");
 		}
 
 		RangerPolicy       ret          = null;
-		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+		RangerPolicyEngine policyEngine = getPolicyEngine(policy.getService());
 
 		Map<String, Object> evalContext = new HashMap<String, Object>();
 		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resources, evalContext) : null;
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(policy, evalContext) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -2983,7 +2983,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resources + ", " + user + "): " + ret);
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + policy + ", " + user + "): " + ret);
 		}
 
 		return ret;

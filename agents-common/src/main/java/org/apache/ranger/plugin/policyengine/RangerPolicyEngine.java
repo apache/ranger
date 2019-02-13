@@ -80,7 +80,7 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, Map<String, Object> evalContext);
 
-	List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
+	List<RangerPolicy> getExactMatchPolicies(RangerPolicy policy, Map<String, Object> evalContext);
 
 	List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource);
 

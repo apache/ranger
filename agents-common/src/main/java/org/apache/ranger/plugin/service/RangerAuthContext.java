@@ -234,7 +234,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
     }
 
     @Override
-    public List<RangerPolicy> getExactMatchPolicies(Map<String, RangerPolicy.RangerPolicyResource> resources, Map<String, Object> evalContext) {
+    public List<RangerPolicy> getExactMatchPolicies(RangerPolicy policy, Map<String, Object> evalContext) {
         return null;
     }
 
