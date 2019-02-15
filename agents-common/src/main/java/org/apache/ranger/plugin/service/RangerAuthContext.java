@@ -82,6 +82,12 @@ public class RangerAuthContext implements RangerPolicyEngine {
         requestContextEnrichers.put(enricher, database);
     }
 
+    public void cleanupRequestContextEnricher(RangerContextEnricher enricher) {
+        if (requestContextEnrichers != null) {
+            requestContextEnrichers.remove(enricher);
+        }
+    }
+
     @Override
     public void setUseForwardedIPAddress(boolean useForwardedIPAddress) {
         policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
