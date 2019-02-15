@@ -314,6 +314,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	public boolean preCleanup() {
 		boolean ret = true;
 
+		super.preCleanup();
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagEnricher.preCleanup()");
 		}
