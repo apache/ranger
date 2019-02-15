@@ -30,6 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.service.RangerAuthContext;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
@@ -65,7 +67,14 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
-
+		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
+		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
+		if (plugin != null) {
+			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
+			if (currentAuthContext != null) {
+				currentAuthContext.addOrReplaceRequestContextEnricher(this, null);
+			}
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
@@ -78,11 +87,37 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	@Override
 	public boolean preCleanup() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
+		}
+		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
+		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
+		if (plugin != null) {
+			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
+			if (currentAuthContext != null) {
+				currentAuthContext.cleanupRequestContextEnricher(this);
+			}
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
+		}
+
 		return true;
 	}
 
 	@Override
 	public void cleanup() {
+		preCleanup();
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		try {
+			cleanup();
+		}
+		finally {
+			super.finalize();
+		}
 	}
 
 	@Override
