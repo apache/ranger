@@ -1812,10 +1812,6 @@ margin-bottom: 5px;
 	margin-top: -29px;
 	width:80px;
 }
-.recursive-toggle-path {
-margin-left: 347px;
-margin-top: -29px;
-}
 .policy-form .help-inline {
 	position: relative;
 	top: 10px;
@@ -2229,16 +2225,20 @@ td.subgrid-custom-cell{
 }
 .recursive-toggle-2 {
 	margin-left: 363px;
-	margin-top: -20px;
+	margin-top: -22px;
 	width:110px;
 }
 .recursive-toggle-hdfs-1{
 	margin-left: 348px;
-	margin-top: -27px;
+	margin-top: -29px;
 }
 .recursive-toggle-hdfs-2{
-	margin-left: 388px;
-	margin-top: -27px;
+	margin-left: 443px;
+	margin-top: -22px;
+}
+.include-toggle-1{
+  margin-left: 348px;
+  margin-top: -29px;
 }
 .subgridTable{
         width : 25% !important;

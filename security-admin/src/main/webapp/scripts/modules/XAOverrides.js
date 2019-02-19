@@ -724,26 +724,29 @@
 			  }
 		  	},
 		  	getTemplate : function() {
-                                  var that = this , resourcesType , optionsHtml="" , selectTemplate = '', excludeSupportToggleDiv='', recursiveSupportToggleDiv='', klass = '';
-                                  this.preserveResourceValues = {} ;
+                var that = this , resourcesType , optionsHtml="" , selectTemplate = '', excludeSupportToggleDiv='', recursiveSupportToggleDiv='',
+                recursiveTogglePosition = '', includeTogglePosition = '';
+                this.preserveResourceValues = {} ;
 				  if(this.resourcesAtSameLevel){
 					  _.each(this.sameLevelOpts, function(option){ return optionsHtml += "<option value='"+option+"'>"+option+"</option>"; },this);
 				    	selectTemplate = '<select data-js="resourceType" class="btn dropdown-toggle sameLevelDropdown" >\
 				    						'+optionsHtml+'\
 				    					</select>';
 				  }
-				  excludeSupportToggleDiv = '<div class="toggle-xa include-toggle" data-js="include" style ="height: 20px; width: 80px;"><div  class="toggle"></div></div>';
 				  _.each(this.form.rangerServiceDefModel.get('resources') , function(m){
 				  		if(that.name === m.name){
 				  			resourcesType = m.type ;
 				  		}
 				  })
 				  if(resourcesType == "path"){
-					  klass = (!this.excludeSupport) ? "recursive-toggle-hdfs-1" : "recursive-toggle-hdfs-2";
+                    recursiveTogglePosition = (!this.excludeSupport) ? "recursive-toggle-hdfs-1" : "recursive-toggle-hdfs-2";
+                    includeTogglePosition = "include-toggle-1";
 				  }else{
-					  klass = (!this.excludeSupport) ? "recursive-toggle-1" : "recursive-toggle-2";
+                    recursiveTogglePosition = (!this.excludeSupport) ? "recursive-toggle-1" : "recursive-toggle-2";
+                    includeTogglePosition = "include-toggle";
 				  }
-				  recursiveSupportToggleDiv = '<div class="toggle-xa recursive-toggle '+klass+'"" data-js="recursive" style="height: 20px; width: 120px;"><div  class="toggle"></div></div>';
+                  excludeSupportToggleDiv = '<div class="toggle-xa '+includeTogglePosition+'" data-js="include" style ="height: 20px; width: 80px;"><div  class="toggle"></div></div>';
+                  recursiveSupportToggleDiv = '<div class="toggle-xa recursive-toggle '+recursiveTogglePosition+'"" data-js="recursive" style="height: 20px; width: 120px;"><div  class="toggle"></div></div>';
 				  
 				  return _.template(selectTemplate+'<input data-js="resource" type="text">'+
 				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);

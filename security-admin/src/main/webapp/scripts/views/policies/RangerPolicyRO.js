@@ -139,8 +139,9 @@ define(function(require) {
 					resource.label = def.label;
 					resource.values = policyResources.values;
 					if(def.recursiveSupported){
-						details.isRecursive = policyResources.isRecursive ? 'ON': 'OFF';
-					} else if(def.excludesSupported){
+						resource.Rec_Recursive = policyResources.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+					}
+					if(def.excludesSupported){
 						resource.Rec_Exc = policyResources.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
 					}
 					details.resources.push(resource);
