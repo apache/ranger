@@ -317,6 +317,8 @@
 			<include>exportKeysToJCEKS.sh</include>
 			<include>HSMMK2DB.sh</include>
 			<include>DBMK2HSM.sh</include>
+                        <include>DBMKTOKEYSECURE.sh</include>
+                        <include>KEYSECUREMKTOKMSDB.sh</include>
 		</includes>
 		<fileMode>544</fileMode>
 	</fileSet>

@@ -68,6 +68,13 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
 	private static final String HSM_PARTITION_PASSWORD_ALIAS = "ranger.ks.hsm.partition.password.alias";
 	private static final String HSM_PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
+        private static final String KEYSECURE_ENABLED = "ranger.kms.keysecure.enabled";
+
+        private static final String KEYSECURE_USERNAME = "ranger.kms.keysecure.login.username";
+        private static final String KEYSECURE_PASSWORD_ALIAS = "ranger.kms.keysecure.login.password.alias";
+    private static final String KEYSECURE_PASSWORD = "ranger.kms.keysecure.login.password";
+    private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
+
 	
 	private final RangerKeyStore dbStore;
 	private char[] masterKey;
@@ -80,37 +87,68 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	public RangerKeyStoreProvider(Configuration conf) throws Throwable {
 		super(conf);
 		conf = getDBKSConf();
-		getFromJceks(conf,CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
-		getFromJceks(conf,CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
-		getFromJceks(conf,CREDENTIAL_PATH, HSM_PARTITION_PASSWORD_ALIAS, HSM_PARTITION_PASSWORD);
+                getFromJceks(conf, CREDENTIAL_PATH, MK_CREDENTIAL_ALIAS, ENCRYPTION_KEY);
+                getFromJceks(conf, CREDENTIAL_PATH, DB_CREDENTIAL_ALIAS, DB_PASSWORD);
+                getFromJceks(conf, CREDENTIAL_PATH, HSM_PARTITION_PASSWORD_ALIAS,
+                                HSM_PARTITION_PASSWORD);
 		RangerKMSDB rangerKMSDB = new RangerKMSDB(conf);
 		daoManager = rangerKMSDB.getDaoManager();
-		
+
 		RangerKMSMKI rangerMasterKey = null;
 		String password = conf.get(ENCRYPTION_KEY);
-		if(password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")){
+                if (password == null || password.trim().equals("")
+                                || password.trim().equals("_")
+                                || password.trim().equals("crypted")) {
 			throw new IOException("Master Key Jceks does not exists");
 		}
-		if(StringUtils.isEmpty(conf.get(HSM_ENABLED)) || conf.get(HSM_ENABLED).equalsIgnoreCase("false")){
+                if (StringUtils.isEmpty(conf.get(HSM_ENABLED))
+                                || conf.get(HSM_ENABLED).equalsIgnoreCase("false")) {
 			rangerMasterKey = new RangerMasterKey(daoManager);
-		}else{
+                } else {
 			rangerMasterKey = new RangerHSM(conf);
 			String partitionPasswd = conf.get(HSM_PARTITION_PASSWORD);
-			if(partitionPasswd == null || partitionPasswd.trim().equals("") || partitionPasswd.trim().equals("_") || partitionPasswd.trim().equals("crypted")){
+                        if (partitionPasswd == null || partitionPasswd.trim().equals("")
+                                        || partitionPasswd.trim().equals("_")
+                                        || partitionPasswd.trim().equals("crypted")) {
 				throw new IOException("Partition Password doesn't exists");
 			}
 		}
-		dbStore = new RangerKeyStore(daoManager);
-		rangerMasterKey.generateMasterKey(password);		
-		//code to retrieve rangerMasterKey password		
-		masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
-		if(masterKey == null){
-			// Master Key does not exists
-	        throw new IOException("Ranger MasterKey does not exists");
+
+
+                if (conf != null && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED))
+                                && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
+                        getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
+                        String keySecureLoginCred = conf.get(KEYSECURE_USERNAME).trim() + ":" + conf.get(KEYSECURE_PASSWORD);
+                        conf.set(KEYSECURE_LOGIN, keySecureLoginCred);
+                        rangerMasterKey = new RangerSafenetKeySecure(conf);
+
+                        dbStore = new RangerKeyStore(daoManager);
+                        // generate master key on key secure server
+                        rangerMasterKey.generateMasterKey(password);
+                        try {
+                                masterKey = rangerMasterKey.getMasterKey(password)
+                                                .toCharArray();
+                        } catch (Exception ex) {
+                                throw new Exception("Error while getting Safenet KeySecure master key " + ex);
+                        }
+
+                }  else {
+                        dbStore = new RangerKeyStore(daoManager);
+                        rangerMasterKey.generateMasterKey(password);
+                        // code to retrieve rangerMasterKey password
+                        try {
+                                masterKey = rangerMasterKey.getMasterKey(password)
+                                                .toCharArray();
+                        } catch (Exception ex) {
+                                throw new Exception("Error while getting Ranger Master key " + ex);
+                        }
+
 		}
-        reloadKeys();
+
+                reloadKeys();
 		ReadWriteLock lock = new ReentrantReadWriteLock(true);
-	    readLock = lock.readLock();
+                readLock = lock.readLock();
+
 	}
 
 	public static Configuration getDBKSConf() {
@@ -164,7 +202,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	        throw new IOException("Wrong key length. Required " +
 	            options.getBitLength() + ", but got " + (8 * material.length));
 	      }
-	      cache.put(name, meta);
+		  cache.put(name, meta);
 	      String versionName = buildVersionName(name, 0);
 	      return innerSetKeyVersion(name, versionName, material, meta.getCipher(), meta.getBitLength(), meta.getDescription(), meta.getVersions(), meta.getAttributes());
 	}
@@ -205,7 +243,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	      } catch (KeyStoreException e) {
 	        throw new IOException("Problem removing " + name + " from " + this, e);
 	      }
-	      cache.remove(name);
+		  cache.remove(name);
+
 	      changed = true;	
 	}
 
@@ -236,7 +275,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	        }	
 	      changed = false;
 		 }catch (IOException ioe) {
-			  cache.clear();
+                                 cache.clear();
+
 			  reloadKeys();
 	          throw ioe;
 	     }		
@@ -245,37 +285,40 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	@Override
 	public KeyVersion getKeyVersion(String versionName) throws IOException {
 		readLock.lock();
-	    try {
-	    	SecretKeySpec key = null;
-	    	try {
-	    		if (!dbStore.engineContainsAlias(versionName)) {
-  	    		        dbStore.engineLoad(null, masterKey);
-	    			if (!dbStore.engineContainsAlias(versionName)) {
-	    				return null;
-	    			}
+                try {
+                        SecretKeySpec key = null;
+                        try {
+                                if (!dbStore.engineContainsAlias(versionName)) {
+                                        dbStore.engineLoad(null, masterKey);
+                                        if (!dbStore.engineContainsAlias(versionName)) {
+                                                return null;
+                                        }
+                                }
+                                key = (SecretKeySpec) dbStore.engineGetKey(versionName,
+                                                masterKey);
+                        } catch (NoSuchAlgorithmException e) {
+
+                                throw new IOException("Can't get algorithm for key " + key, e);
+                        } catch (UnrecoverableKeyException e) {
+                                throw new IOException("Can't recover key " + key, e);
+                        } catch (CertificateException e) {
+                                throw new IOException("Certificate exception storing key", e);
 			}
-	    		key = (SecretKeySpec) dbStore.engineGetKey(versionName, masterKey);
-	    	} catch (NoSuchAlgorithmException e) {
-	    		throw new IOException("Can't get algorithm for key " + key, e);
-	    	} catch (UnrecoverableKeyException e) {
-	    		throw new IOException("Can't recover key " + key, e);
-	    	}
-		catch (CertificateException e) {
-	    		throw new IOException("Certificate exception storing key", e);
+                        if (key == null) {
+                                return null;
+                        } else {
+                                return new KeyVersion(getBaseName(versionName), versionName,
+                                                key.getEncoded());
+                        }
+                } finally {
+                        readLock.unlock();
 		}
-	    	if (key == null) {
-	    		return null;
-	    	} else {
-	    		return new KeyVersion(getBaseName(versionName), versionName, key.getEncoded());
-	    	}
-	    } finally {
-	        readLock.unlock();
-	    }
 	}
 
 	@Override
 	public List<KeyVersion> getKeyVersions(String name) throws IOException {
 		List<KeyVersion> list = new ArrayList<KeyVersion>();
+
 	    Metadata km = getMetadata(name);
 	    if (km != null) {
 	       int latestVersion = km.getVersions();
@@ -294,18 +337,18 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
 	@Override
 	public List<String> getKeys() throws IOException {
-		ArrayList<String> list = new ArrayList<String>();
-		String alias = null;
-		reloadKeys();
-	    Enumeration<String> e = dbStore.engineAliases();
-		while (e.hasMoreElements()) {
-		   alias = e.nextElement();
-		   // only include the metadata key names in the list of names
-		   if (!alias.contains("@")) {
-		       list.add(alias);
-		   }
-		}
-	    return list;
+                        ArrayList<String> list = new ArrayList<String>();
+                        String alias = null;
+                        reloadKeys();
+                        Enumeration<String> e = dbStore.engineAliases();
+                        while (e.hasMoreElements()) {
+                                alias = e.nextElement();
+                                // only include the metadata key names in the list of names
+                                if (!alias.contains("@")) {
+                                        list.add(alias);
+                                }
+                        }
+                        return list;
 	}
 
 	@Override
@@ -326,7 +369,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	    		Key key = dbStore.engineGetKey(name, masterKey);
 	    		if(key != null){
 	    			Metadata meta = ((KeyMetadata) key).metadata;
-	    			cache.put(name, meta);
+					cache.put(name, meta);
 	    			return meta;
 	    		}
 	    	} catch (NoSuchAlgorithmException e) {
@@ -347,6 +390,7 @@ public class RangerKeyStoreProvider extends KeyProvider{
 	@Override
 	public KeyVersion rollNewVersion(String name, byte[] material)throws IOException {
 		reloadKeys();
+
 		Metadata meta = getMetadata(name);
         if (meta == null) {
 	        throw new IOException("Key " + name + " not found");
@@ -378,8 +422,8 @@ public class RangerKeyStoreProvider extends KeyProvider{
 
     private void reloadKeys() throws IOException {
         try {
-        	cache.clear();
-            loadKeys(masterKey);
+                                cache.clear();
+                                loadKeys(masterKey);
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Can't load Keys");
         }catch(CertificateException e){

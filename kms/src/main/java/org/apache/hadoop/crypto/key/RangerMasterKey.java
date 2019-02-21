@@ -131,6 +131,17 @@ public class RangerMasterKey implements RangerKMSMKI{
 		return getMasterKeyFromBytes(masterKeyFromDBDecrypted);		
 	}
 
+        public boolean generateMKFromKeySecureMK(String password, byte[] key) throws Throwable{
+                logger.info("Generating Master Key");
+                String encryptedMasterKey = encryptMasterKey(password, key);
+                String savedKey = saveEncryptedMK(encryptedMasterKey, daoManager);
+                if(savedKey != null && !savedKey.trim().equals("")){
+                        logger.debug("Master Key Created with id = "+savedKey);
+                        return true;
+                }
+                return false;
+        }
+
 	private byte[] getEncryptedMK() throws Base64DecodingException {
 		logger.debug("Retrieving Encrypted Master Key from database");
 		try{
