@@ -2537,14 +2537,14 @@ textarea:read-only{
   margin-bottom: 15px;
   margin-top: 10px;
 }
-.security-details-defult {
+.security-details-default {
   padding: 15px;
   width: 70%;
   float: left;
   min-height: 500px;
   border-left: 1px #CCC solid;
 }
-.defult-zone {
+.default-zone {
   position: absolute;
   top: 50%;
   left: 60%;

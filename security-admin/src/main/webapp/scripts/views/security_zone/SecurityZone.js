@@ -33,6 +33,7 @@ define(function(require) {
     var App = require('App');
     var RangerZone = require('models/RangerZone');
     var vzoneAdministrationDetail = require('views/security_zone/ZoneAdministration');
+    var SessionMgr = require('mgrs/SessionMgr');
 
     var SecurityZone = Backbone.Marionette.Layout.extend({
         template: SecurityZoneTmpl,
@@ -42,10 +43,12 @@ define(function(require) {
             var zoneList = this.collection.pluck('name');
             this.zoneModel = this.getZoneModel();
             var zoneModelName = (this.zoneModel && this.zoneModel.get('name')) ? _.escape(this.zoneModel.get('name')) : '';
+            var isZoneAdministration = (SessionMgr.isSystemAdmin()) ? true : false;
             return {
                 zoneList: zoneList,
                 zoneModel: this.zoneModel,
                 zoneModelName: zoneModelName,
+                isZoneAdministration:isZoneAdministration,
             };
         },
 

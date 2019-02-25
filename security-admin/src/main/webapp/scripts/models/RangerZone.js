@@ -163,7 +163,8 @@ define(function(require) {
                         dataType: 'json',
                         data: function(term, page) {
                             return {
-                                name: term
+                                name: term,
+                                isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
                             };
                         },
                         results: function(data, page) {

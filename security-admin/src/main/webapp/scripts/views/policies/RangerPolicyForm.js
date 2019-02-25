@@ -495,7 +495,8 @@ define(function(require){
                 policyLabel= this.model.get('policyLabels').split(',');
                 this.model.set('policyLabels', policyLabel);
             }
-            if(!_.isUndefined(App.vZone) && App.vZone && App.vZone.vZoneName){
+            if(!_.isUndefined(App.vZone) && App.vZone.vZoneName
+                    && this.rangerService.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
                 this.model.set('zoneName', App.vZone.vZoneName);
             }
 			this.model.set('resources',resources);

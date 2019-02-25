@@ -48,7 +48,7 @@ define(function(require){
                 serviceDefs : this.componentCollectionModels(App.vZone.vZoneName),
                 services    : this.componentServicesModels(App.vZone.vZoneName),
                 showImportExportBtn : (SessionMgr.isUser() || XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
-                isZoneAdministration : (SessionMgr.isSystemAdmin() && this.type !== XAEnums.ServiceType.SERVICE_TAG.label) ? true : false,
+                isZoneAdministration : ((SessionMgr.isSystemAdmin()|| SessionMgr.isUser() || SessionMgr.isAuditor()) && this.type !== XAEnums.ServiceType.SERVICE_TAG.label) ? true : false,
 			};
 			
 		},

@@ -247,7 +247,7 @@ public class SecurityZoneREST {
 	private void ensureAdminAccess(){
 		if(!bizUtil.isAdmin()){
 			String userName = bizUtil.getCurrentUserLoginId();
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Ranger Securtiy Zone is not accessible for user '" + userName + "'.", true);
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Ranger Security Zone is not accessible for user '" + userName + "'.", true);
 		}
 	}
 

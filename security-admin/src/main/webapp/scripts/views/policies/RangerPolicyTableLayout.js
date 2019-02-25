@@ -129,7 +129,8 @@ define(function(require){
 			if(!_.isUndefined(policyType)){
 				this.collection.queryParams['policyType'] = policyType;
 			}
-            if(!_.isUndefined(App.vZone) && App.vZone && App.vZone.vZoneName){
+            if(!_.isUndefined(App.vZone) && App.vZone.vZoneName
+                    && this.rangerService.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
                 this.collection.queryParams['zoneName'] = App.vZone.vZoneName;
             }
 			this.collection.fetch({

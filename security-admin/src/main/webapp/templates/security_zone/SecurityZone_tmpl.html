@@ -20,7 +20,9 @@
         <div class="listData">
             <div class="clearfix row-margin-bottom">
                 <h4 class="pull-left">Security Zones</h4>
-                <a href="#!/zones/create" class="btn-add-security pull-right btn btn-default btn-small" title="Create zone"><i class="icon-plus"></i></a>
+                {{#if isZoneAdministration}}
+                    <a href="#!/zones/create" class="btn-add-security pull-right btn btn-default btn-small" title="Create zone"><i class="icon-plus"></i></a>
+                {{/if}}
             </div>
             <div class="clearfix">
                 <input type="text" class="security-search" data-id="zoneSearch" placeholder="Search">
@@ -60,13 +62,15 @@
                 <div class="span7">
                     <h2 data-id="zoneName">{{{zoneModelName}}}</h2>
                 </div>
-                <div class="span4">
-                    <div class="btn-group-zone pull-right">
-                        <!--<button class="btn btn-default" data-id="zoneAdministrationDetail"><i class="icon-info"></i> Details</button>-->
-                        <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i>Edit</a>
-                        <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i>Delete</button>
+                {{#if isZoneAdministration}}
+                    <div class="span4">
+                        <div class="btn-group-zone pull-right">
+                            <!--<button class="btn btn-default" data-id="zoneAdministrationDetail"><i class="icon-info"></i> Details</button>-->
+                            <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i>Edit</a>
+                            <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i>Delete</button>
+                        </div>
                     </div>
-                </div>
+                {{/if}}
             </div>
             <div class="row-fluid">
                 <div class="span12">
@@ -88,11 +92,13 @@
             </div>
         </div>
     {{else}}
-        <div class="security-details-defult">
-            <div class="defult-zone">
-                <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
-                <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+        {{#if isZoneAdministration}}
+            <div class="security-details-default">
+                <div class="default-zone">
+                    <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
+                    <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+                </div>
             </div>
-        </div>
+        {{/if}}
     {{/if}}
 </div>

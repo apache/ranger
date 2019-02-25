@@ -37,7 +37,7 @@ define(function(require){
     	templateHelpers : function(){
         return{
                 showPermissionTab : XAUtil.isAuditorOrSystemAdmin(SessionMgr),
-                isZoneAdministration : (SessionMgr.isSystemAdmin()) ? true : false,
+                hideSecurityZoneTab : (SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()) ? true : false,
 		}
     	},
         
