@@ -277,6 +277,24 @@ public class RangerMasterKey implements RangerKMSMKI {
         }
     }
 
+        public boolean generateMKFromKeySecureMK(String password, byte[] key)
+                        throws Throwable {
+                if (logger.isDebugEnabled()) {
+            logger.debug("==> RangerMasterKey.generateMKFromKeySecureMK()");
+        }
+                init();
+                String encryptedMasterKey = encryptMasterKey(password, key);
+                String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
+                if (savedKey != null && !savedKey.trim().equals("")) {
+                        logger.debug("Master Key Created with id = " + savedKey);
+                        return true;
+                }
+                if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerMasterKey.generateMKFromKeySecureMK()");
+        }
+                return false;
+        }
+
     private SecretKey decryptMasterKeySK(byte masterKey[], String password, String encryptedPassString)
             throws Throwable {
         if (logger.isDebugEnabled()) {

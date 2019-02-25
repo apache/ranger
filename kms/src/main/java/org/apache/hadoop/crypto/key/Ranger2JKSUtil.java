@@ -23,14 +23,21 @@ import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.Arrays;
-
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
 
 public class Ranger2JKSUtil {
 
 	private static final String DEFAULT_KEYSTORE_TYPE = "jceks";
 	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+        private static final String KEYSECURE_ENABLED = "ranger.kms.keysecure.enabled";
+        private static final String KEYSECURE_USERNAME = "ranger.kms.keysecure.login.username";
+    private static final String KEYSECURE_PASSWORD = "ranger.kms.keysecure.login.password";
+    private static final String KEYSECURE_PASSWORD_ALIAS = "ranger.kms.keysecure.login.password.alias";
+    private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
+    private static final String CREDENTIAL_PATH = "ranger.ks.jpa.jdbc.credential.provider.path";
 	
 	public static void showUsage() {
 		System.err.println("USAGE: java " + Ranger2JKSUtil.class.getName() + " <KMS_FileName> [KeyStoreType]");
@@ -82,9 +89,27 @@ public class Ranger2JKSUtil {
 			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);		
 			DaoManager daoManager = rangerkmsDb.getDaoManager();
 			RangerKeyStore dbStore = new RangerKeyStore(daoManager);
+                        char[] masterKey;
 			String password = conf.get(ENCRYPTION_KEY);
-			RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
-			char[] masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
+                        if (conf != null
+                                        && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED))
+                                        && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
+
+                                getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
+                                String keySecureLoginCred = conf.get(KEYSECURE_USERNAME).trim() + ":" + conf.get(KEYSECURE_PASSWORD);
+                                conf.set(KEYSECURE_LOGIN, keySecureLoginCred);
+
+                                RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(
+                                                conf);
+                                masterKey = rangerSafenetKeySecure.getMasterKey(password)
+                                                .toCharArray();
+
+                        } else {
+                                RangerMasterKey rangerMasterKey = new RangerMasterKey(
+                                                daoManager);
+                                masterKey = rangerMasterKey.getMasterKey(password)
+                                                .toCharArray();
+                        }
 			OutputStream out = null;
 			try {
 				out = new FileOutputStream(new File(keyStoreFileName));
@@ -109,5 +134,21 @@ public class Ranger2JKSUtil {
 		}
 	}
 	
+        private static void getFromJceks(Configuration conf, String path, String alias, String key) {
+
+        //update credential from keystore
+        if (conf != null) {
+            String pathValue = conf.get(path);
+            String aliasValue = conf.get(alias);
+            if (pathValue != null && aliasValue != null) {
+                String xaDBPassword = CredentialReader.getDecryptedString(pathValue.trim(), aliasValue.trim());
+                if (xaDBPassword != null && !xaDBPassword.trim().isEmpty() &&
+                        !xaDBPassword.trim().equalsIgnoreCase("none")) {
+                    conf.set(key, xaDBPassword);
+                }
+            }
+        }
+    }
+
 
 }

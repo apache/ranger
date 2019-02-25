@@ -68,6 +68,12 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
     private static final String HSM_PARTITION_PASSWORD_ALIAS = "ranger.ks.hsm.partition.password.alias";
     private static final String HSM_PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
+    private static final String KEYSECURE_ENABLED = "ranger.kms.keysecure.enabled";
+
+        private static final String KEYSECURE_USERNAME = "ranger.kms.keysecure.login.username";
+        private static final String KEYSECURE_PASSWORD_ALIAS = "ranger.kms.keysecure.login.password.alias";
+    private static final String KEYSECURE_PASSWORD = "ranger.kms.keysecure.login.password";
+    private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
 
     private final RangerKeyStore dbStore;
     private char[] masterKey;
@@ -105,14 +111,36 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 throw new IOException("Partition Password doesn't exists");
             }
         }
-        dbStore = new RangerKeyStore(daoManager);
-        rangerMasterKey.generateMasterKey(password);
-        //code to retrieve rangerMasterKey password
-        masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
-        if (masterKey == null) {
-            // Master Key does not exists
-            throw new IOException("Ranger MasterKey does not exists");
-        }
+
+                if (conf != null && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED))
+                                && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
+                        getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
+                        String keySecureLoginCred = conf.get(KEYSECURE_USERNAME).trim() + ":" + conf.get(KEYSECURE_PASSWORD);
+                        conf.set(KEYSECURE_LOGIN, keySecureLoginCred);
+
+                        rangerMasterKey = new RangerSafenetKeySecure(conf);
+
+                        dbStore = new RangerKeyStore(daoManager);
+                        // generate master key on key secure server
+                        rangerMasterKey.generateMasterKey(password);
+                        try {
+                                masterKey = rangerMasterKey.getMasterKey(password)
+                                                .toCharArray();
+                        } catch (Exception ex) {
+                                throw new Exception("Error while getting Safenet KeySecure master key " + ex);
+                        }
+
+                } else {
+                        dbStore = new RangerKeyStore(daoManager);
+                        rangerMasterKey.generateMasterKey(password);
+                        // code to retrieve rangerMasterKey password
+                        try {
+                                masterKey = rangerMasterKey.getMasterKey(password)
+                                                .toCharArray();
+                        } catch (Exception ex) {
+                                throw new Exception("Error while getting Ranger Master key " + ex);
+                        }
+                }
         reloadKeys();
         ReadWriteLock lock = new ReentrantReadWriteLock(true);
         readLock = lock.readLock();

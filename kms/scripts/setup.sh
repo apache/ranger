@@ -91,6 +91,15 @@ HSM_ENABLED=$(get_prop 'HSM_ENABLED' $PROPFILE)
 HSM_PARTITION_NAME=$(get_prop 'HSM_PARTITION_NAME' $PROPFILE)
 HSM_PARTITION_PASSWORD=$(get_prop 'HSM_PARTITION_PASSWORD' $PROPFILE)
 
+KEYSECURE_ENABLED=$(get_prop 'KEYSECURE_ENABLED' $PROPFILE)
+KEYSECURE_USER_PASSWORD_AUTHENTICATION=$(get_prop 'KEYSECURE_USER_PASSWORD_AUTHENTICATION' $PROPFILE)
+KEYSECURE_MASTERKEY_NAME=$(get_prop 'KEYSECURE_MASTERKEY_NAME' $PROPFILE)
+KEYSECURE_USERNAME=$(get_prop 'KEYSECURE_USERNAME' $PROPFILE)
+KEYSECURE_PASSWORD=$(get_prop 'KEYSECURE_PASSWORD' $PROPFILE)
+KEYSECURE_HOSTNAME=$(get_prop 'KEYSECURE_HOSTNAME' $PROPFILE)
+KEYSECURE_MASTER_KEY_SIZE=$(get_prop 'KEYSECURE_MASTER_KEY_SIZE' $PROPFILE)
+KEYSECURE_LIB_CONFIG_PATH=$(get_prop 'KEYSECURE_LIB_CONFIG_PATH' $PROPFILE)
+
 kms_principal=$(get_prop 'kms_principal' $PROPFILE)
 kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
@@ -204,6 +213,17 @@ password_validation(){
                 fi
         fi
 }
+
+password_validation_safenet_keysecure(){
+        if [ -z "$1" ]
+        then
+                log "[I] Blank password is not allowed for" $2". Please enter valid password."
+                exit 1
+        else
+                log "[I]" $2 "password validated."
+        fi
+}
+
 init_variables(){
 	curDt=`date '+%Y%m%d%H%M%S'`
 
@@ -546,9 +566,14 @@ update_properties() {
 	DB_CREDENTIAL_ALIAS="ranger.ks.jpa.jdbc.credential.alias"
 
 	HSM_PARTITION_PASSWD="ranger.ks.hsm.partition.password"
-	HSM_PARTITION_PASSWORD_ALIAS="ranger.kms.hsm.partition.password"
+        HSM_PARTITION_PASSWORD_ALIAS="ranger.kms.hsm.partition.password"
+
+        KEYSECURE_PASSWD="ranger.kms.keysecure.login.password"
+        KEYSECURE_PASSWORD_ALIAS="ranger.ks.login.password"
+
 
         HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
+        KEYSECURE_ENABLED=`echo $KEYSECURE_ENABLED | tr '[:lower:]' '[:upper:]'`
 
 	if [ "${keystore}" != "" ]
 	then
@@ -573,6 +598,21 @@ update_properties() {
                         newPropertyValue="_"
                         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
                 fi
+
+                if [ "${KEYSECURE_ENABLED}" == "TRUE" ]
+                then
+                        password_validation_safenet_keysecure "$KEYSECURE_PASSWORD" "KEYSECURE User Password"
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${KEYSECURE_PASSWORD_ALIAS}" -v "${KEYSECURE_PASSWORD}" -c 1
+
+                        propertyName=ranger.kms.keysecure.login.password.alias
+                        newPropertyValue="${KEYSECURE_PASSWORD_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                        propertyName=ranger.kms.keysecure.login.password
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+                fi
+
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -605,6 +645,11 @@ update_properties() {
 		propertyName="${HSM_PARTITION_PASSWD}"
                 newPropertyValue="${HSM_PARTITION_PASSWORD}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName="${KEYSECURE_PASSWD}"
+                newPropertyValue="${KEYSECURE_PASSWORD}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
 	fi
 
 	if test -f $keystore; then
@@ -667,6 +712,45 @@ update_properties() {
                 propertyName=ranger.ks.hsm.partition.name
                 newPropertyValue="${HSM_PARTITION_NAME}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file         
+        fi
+
+                ########### SAFENET KEYSECURE CONFIG #################
+
+
+        if [ "${KEYSECURE_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.kms.keysecure.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.kms.keysecure.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.UserPassword.Authentication
+                newPropertyValue="${KEYSECURE_USER_PASSWORD_AUTHENTICATION}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.masterkey.name
+                newPropertyValue="${KEYSECURE_MASTERKEY_NAME}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.login.username
+                newPropertyValue="${KEYSECURE_USERNAME}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.hostname
+                newPropertyValue="${KEYSECURE_HOSTNAME}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.masterkey.size
+                newPropertyValue="${KEYSECURE_MASTER_KEY_SIZE}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.keysecure.sunpkcs11.cfg.filepath
+                newPropertyValue="${KEYSECURE_LIB_CONFIG_PATH}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
         fi
 
 	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml

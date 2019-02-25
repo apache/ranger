@@ -320,6 +320,8 @@
                 <include>DBMK2HSM.sh</include>
                 <include>VerifyIsDBMasterkeyCorrect.sh</include>
                 <include>VerifyIsHSMMasterkeyCorrect.sh</include>
+                <include>DBMKTOKEYSECURE.sh</include>
+                                <include>KEYSECUREMKTOKMSDB.sh</include>
             </includes>
             <fileMode>544</fileMode>
         </fileSet>

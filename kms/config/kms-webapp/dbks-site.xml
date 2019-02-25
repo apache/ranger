@@ -180,6 +180,57 @@
   	<name>ranger.ks.kerberos.keytab</name>
   	<value></value>
   </property>
+
+  <!-- Key-Secure Config START-->
+
+  <property>
+        <name>ranger.kms.keysecure.enabled</name>
+        <value>false</value>
+        <description></description>
+  </property>
+
+  <property>
+        <name>ranger.kms.keysecure.UserPassword.Authentication</name>
+        <value>true</value>
+        <description></description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.masterkey.name</name>
+        <value>safenetmasterkey</value>
+        <description>Safenet key secure master key name</description>
+  </property>
+    <property>
+        <name>ranger.kms.keysecure.login.username</name>
+        <value>user1</value>
+        <description>Safenet key secure username</description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.login.password</name>
+        <value>t1e2s3t4</value>
+        <description>Safenet key secure user password</description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.login.password.alias</name>
+        <value>ranger.ks.login.password</value>
+        <description>Safenet key secure user password</description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.hostname</name>
+        <value>SunPKCS11-keysecurehn</value>
+        <description>Safenet key secure hostname</description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.masterkey.size</name>
+        <value>256</value>
+        <description>key size</description>
+  </property>
+  <property>
+        <name>ranger.kms.keysecure.sunpkcs11.cfg.filepath</name>
+        <value>/opt/safenetConf/64/8.3.1/sunpkcs11.cfg</value>
+        <description>Location of Safenet key secure library configuration file</description>
+  </property>
+
+  <!-- Key-Secure Config END-->
     
   <!-- HSM Config -->
   <property>
