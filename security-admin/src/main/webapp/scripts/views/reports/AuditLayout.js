@@ -64,7 +64,7 @@ define(function(require) {
 			
 			return {
 				repositoryList	: repositoryList,
-				currentDate 	: Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt")	
+				currentDate 	: Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"),
 			};
 		},
 		breadCrumbs : [],
@@ -95,6 +95,8 @@ define(function(require) {
             hidePopup : '[data-id="hide-popup"]',
             syncDetailes : '[data-id="syncDetailes"]',
             viewSession : '[data-name="viewSession"]',
+            excludeServiceUser : '[data-id="excludeServiceUser"]',
+            serviceUsersExclude:'[data-id="serviceUsersExclude"]'
 		},
 
 		/** ui events hash */
@@ -110,6 +112,7 @@ define(function(require) {
             }
             events['click '+this.ui.syncDetailes] = 'onSyncDetailes';
             events['click ' + this.ui.viewSession]  = 'onViewSession';
+            events['click ' + this.ui.serviceUsersExclude]  = 'onExcludeServiceUsers';
             return events;
 		},
 
@@ -221,6 +224,7 @@ define(function(require) {
                     this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
                     this.showTagsAttributes();
+                    this.ui.excludeServiceUser.show();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -236,6 +240,7 @@ define(function(require) {
 					this.listenTo(this.trxLogList, "request", that.updateLastRefresh)
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
+                    this.ui.excludeServiceUser.hide();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
@@ -253,6 +258,7 @@ define(function(require) {
 					this.listenTo(this.authSessionList, "request", that.updateLastRefresh)
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
+                    this.ui.excludeServiceUser.hide();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
@@ -271,6 +277,7 @@ define(function(require) {
 					this.listenTo(this.policyExportAuditList, "request", that.updateLastRefresh)
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
+                    this.ui.excludeServiceUser.hide();
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
@@ -288,6 +295,7 @@ define(function(require) {
 					 this.addSearchForPluginStatusTab();
 					 this.ui.iconSearchInfo.hide();
                      $('.popover').remove();
+                     this.ui.excludeServiceUser.hide();
 					 break;
                 case "#userSync":
                      this.currentTab = '#userSync';
@@ -301,6 +309,7 @@ define(function(require) {
                      this.userSyncAuditList.setSorting('id',1);
                      this.addSearchForUserSyncTab();
                      this.ui.iconSearchInfo.hide();
+                     this.ui.excludeServiceUser.hide();
                      break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -318,10 +327,9 @@ define(function(require) {
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
-			                      {text : 'Zone Name',label : 'zoneName'},
-			                      {text : 'Exclude Service User', label : 'excludeServiceUser', 'multiple' : true, 'optionsArr' : serviceUser}];
+                                  {text : 'Zone Name',label : 'zoneName'}];
             var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude Service User'];//,'Policy ID'
+            'Client IP','Tags','Cluster Name', 'Zone Name'];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
@@ -417,13 +425,14 @@ define(function(require) {
 								} 
 								XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 								break;
-                            case 'Exclude Service User' :
-                                callback(XAUtils.hackForVSLabelValuePairs(serviceUser));
-                                break;
-                                                        }
+                        }
 					}
-			      }
+                }
 			};
+            if(App.excludeServiceUser){
+                this.accessAuditList.queryParams.excludeServiceUser = true;
+                this.ui.serviceUsersExclude.prop('checked', true);
+            }
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
                         this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
 		},
@@ -1874,6 +1883,32 @@ define(function(require) {
                         $('[data-id="showMore"][audit-log-id="'+id+'"]').show();
                         $('[data-id="showMore"][audit-log-id="'+id+'"]').parents('div[data-id="tagDiv"]').removeClass('set-height-groups')
                 },
+
+        onExcludeServiceUsers : function(e) {
+            if(this.currentTab === "#bigData"){
+                this.accessAuditList.queryParams.excludeServiceUser = e.currentTarget.checked;
+                App.excludeServiceUser = e.currentTarget.checked;
+                this.accessAuditList.state.currentPage = this.accessAuditList.state.firstPage;
+                XAUtils.blockUI();
+                this.accessAuditList.fetch({
+                    reset : true,
+                    cache : false,
+                    error : function(coll, response, options) {
+                        XAUtils.blockUI('unblock');
+                        if(response && response.responseJSON && response.responseJSON.msgDesc){
+                            XAUtils.notifyError('Error', response.responseJSON.msgDesc);
+                        }else{
+                            XAUtils.notifyError('Error', localization.tt('msg.errorLoadingAuditLogs'));
+                        }
+
+                    },
+                    success: function(){
+                       XAUtils.blockUI('unblock');
+                    },
+                });
+            }
+        },
+
 		/** on close */
 		onClose : function() {
 			clearInterval(this.timerId);
