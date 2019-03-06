@@ -152,6 +152,14 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 
 
 	/**
+	 * Name of the policyVersion
+	 * <ul>
+	 * </ul>
+	 */
+	@Column(name="POLICY_VERSION")
+	protected Long policyVersion;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXPolicyExportAudit ( ) {
@@ -316,6 +324,22 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b>policyVersion</b>.
+	 * @param policyVersion Value to set member attribute <b>policyVersion</b>
+	 */
+	public void setPolicyVersion(Long policyVersion) {
+		this.policyVersion = policyVersion;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>policyVersion</b>
+	 * @return String - value of member attribute <b>policyVersion</b>.
+	 */
+	public Long getPolicyVersion() {
+		return policyVersion;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -332,6 +356,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 		str += "httpRetCode={" + httpRetCode + "} ";
 		str += "clusterName={" + clusterName + "} ";
 		str += "zoneName={" + zoneName + "} ";
+		str += "policyVersion={" + policyVersion + "} ";
 		str += "}";
 		return str;
 	}
@@ -369,6 +394,9 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
 	    		return false;
 			}
 			if ((this.zoneName == null && other.zoneName != null) || (this.zoneName != null && !this.zoneName.equals(other.zoneName))) {
+				return false;
+			}
+			if ((this.policyVersion == null && other.policyVersion != null) || (this.policyVersion != null && !this.policyVersion.equals(other.policyVersion))) {
 				return false;
 			}
 		return true;

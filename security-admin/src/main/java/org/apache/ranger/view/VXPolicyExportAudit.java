@@ -79,6 +79,8 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 
 	protected String zoneName;
 
+	protected Long policyVersion;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -229,6 +231,14 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		this.zoneName = zoneName;
 	}
 
+	public Long getPolicyVersion() {
+		return policyVersion;
+	}
+
+	public void setPolicyVersion(Long policyVersion) {
+		this.policyVersion = policyVersion;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT;
@@ -251,6 +261,7 @@ public class VXPolicyExportAudit extends VXDataObject implements java.io.Seriali
 		str += "syncStatus={" + syncStatus + "} ";
 		str += "clusterName={" + clusterName + "} ";
 		str += "zoneName={" + zoneName + "}";
+		str += "policyVersion={" + policyVersion + "}";
 		str += "}";
 		return str;
 	}

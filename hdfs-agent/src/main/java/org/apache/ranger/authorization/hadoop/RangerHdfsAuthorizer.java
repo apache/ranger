@@ -914,6 +914,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 			auditEvent.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
 			auditEvent.setPolicyId(result.getPolicyId());
+			auditEvent.setPolicyVersion(result.getPolicyVersion());
 
 			Set<String> tags = getTags(request);
 			if (tags != null) {

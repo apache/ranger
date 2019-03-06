@@ -172,6 +172,7 @@ define(function(require) {
 		modifyTableForSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
 					<th class="renderable pid"></th>\
+					<th class="renderable cip"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable cip">Service</th>\
@@ -1004,8 +1005,11 @@ define(function(require) {
 					}
                     var eventTime = this.model.get('eventTime');
 
+                    var policyVersion = this.model.get('policyVersion');
+
 					var policy = new RangerPolicy({
-						id: policyId
+						id: policyId,
+						version:policyVersion
 					});
 					var policyVersionList = policy.fetchVersions();
 					var view = new RangerPolicyRO({
@@ -1071,6 +1075,20 @@ define(function(require) {
 						editable: false,
 						sortable : false
 					},
+                    policyVersion: {
+                          label : localization.tt("lbl.policyVersion"),
+                          cell: "html",
+                          click: false,
+                          formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                      fromRaw: function (rawValue, model) {
+                                              rawValue = _.escape(rawValue);
+                                              return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                      }
+                              }),
+                          drag: false,
+                          sortable: false,
+                          editable: false,
+                    },
 					eventTime : {
 						label : 'Event Time',
 						cell: "String",

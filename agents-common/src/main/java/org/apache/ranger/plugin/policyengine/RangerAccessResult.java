@@ -47,6 +47,7 @@ public class RangerAccessResult {
 	private long     policyId  = -1;
 	private int      policyPriority;
 	private String   zoneName;
+	private Long   policyVersion;
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
@@ -63,6 +64,7 @@ public class RangerAccessResult {
 		this.auditPolicyId = -1;
 		this.policyId    = -1;
 		this.zoneName    = null;
+		this.policyVersion = null;
 		this.policyPriority = RangerPolicy.POLICY_PRIORITY_NORMAL;
 		this.evaluatedPoliciesCount = 0;
 		this.reason      = null;
@@ -74,6 +76,7 @@ public class RangerAccessResult {
 		this.policyId    = other.getPolicyId();
 		this.policyPriority = other.getPolicyPriority();
 		this.zoneName       = other.zoneName;
+		this.policyVersion  = other.policyVersion;
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
@@ -83,6 +86,7 @@ public class RangerAccessResult {
 		this.isAuditedDetermined = other.getIsAuditedDetermined();
 		this.isAudited = other.getIsAudited();
 		this.auditPolicyId = other.getAuditPolicyId();
+		this.policyVersion = other.policyVersion;
 	}
 
 	/**
@@ -136,6 +140,10 @@ public class RangerAccessResult {
 	public String getZoneName() { return zoneName; }
 
 	public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+
+	public Long getPolicyVersion() { return policyVersion; }
+
+	public void setPolicyVersion(Long policyVersion) { this.policyVersion = policyVersion; }
 
 	/**
 	 * @param reason the reason to set
@@ -328,6 +336,7 @@ public class RangerAccessResult {
 		sb.append("policyId={").append(policyId).append("} ");
 		sb.append("zoneName={").append(zoneName).append("} ");
 		sb.append("auditPolicyId={").append(auditPolicyId).append("} ");
+		sb.append("policyVersion={").append(policyVersion).append("} ");
 		sb.append("evaluatedPoliciesCount={").append(evaluatedPoliciesCount).append("} ");
 		sb.append("reason={").append(reason).append("} ");
 		sb.append("additionalInfo={");

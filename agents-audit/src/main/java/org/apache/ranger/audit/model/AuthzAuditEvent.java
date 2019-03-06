@@ -121,6 +121,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 	@SerializedName("zone_name")
 	protected String zoneName;
 
+	@SerializedName("policy_version")
+	protected Long policyVersion;
+
 	public AuthzAuditEvent() {
 		super();
 
@@ -143,6 +146,17 @@ public class AuthzAuditEvent extends AuditEventBase {
 			short accessResult, String agentId, long policyId,
 			String resultReason, String aclEnforcer, String sessionId,
 			String clientType, String clientIP, String requestData, String clusterName, String zoneName) {
+		this(repositoryType, repositoryName, user, eventTime, accessType, resourcePath, resourceType, action, accessResult, agentId,
+				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null);
+
+	}
+
+	public AuthzAuditEvent(int repositoryType, String repositoryName,
+						   String user, Date eventTime, String accessType,
+						   String resourcePath, String resourceType, String action,
+						   short accessResult, String agentId, long policyId,
+						   String resultReason, String aclEnforcer, String sessionId,
+						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, Long policyVersion) {
 		this.repositoryType = repositoryType;
 		this.repositoryName = repositoryName;
 		this.user = user;
@@ -162,6 +176,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.requestData = requestData;
 		this.clusterName = clusterName;
 		this.zoneName = zoneName;
+		this.policyVersion = policyVersion;
 	}
 
 	/**
@@ -483,6 +498,14 @@ public class AuthzAuditEvent extends AuditEventBase {
 		return zoneName;
 	}
 
+	public void setPolicyVersion(Long policyVersion) {
+		this.policyVersion = policyVersion;
+	}
+
+	public Long getPolicyVersion() {
+		return policyVersion;
+	}
+
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
 	}
@@ -546,6 +569,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 				.append("]")
 				.append(FIELD_SEPARATOR).append("clusterName=").append(clusterName)
 				.append(FIELD_SEPARATOR).append("zoneName=").append(zoneName)
+				.append(FIELD_SEPARATOR).append("policyVersion=").append(policyVersion)
 				.append(FIELD_SEPARATOR).append("additionalInfo=").append(additionalInfo);
 
 		return sb;

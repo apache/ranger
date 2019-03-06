@@ -3029,6 +3029,7 @@ public class ServiceREST {
 
 		String eventTimeStr = request.getParameter("eventTime");
 		String policyIdStr = request.getParameter("policyId");
+		String versionNoStr = request.getParameter("versionNo");
 
 		if (StringUtils.isEmpty(eventTimeStr) || StringUtils.isEmpty(policyIdStr)) {
 			throw restErrorUtil.createRESTException("EventTime or policyId cannot be null or empty string.",
@@ -3038,17 +3039,34 @@ public class ServiceREST {
 		Long policyId = Long.parseLong(policyIdStr);
 
 		RangerPolicy policy=null;
-		try {
-			policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
-			if(policy != null) {
-                                ensureAdminAndAuditAccess(policy);
-			}
-		} catch(WebApplicationException excp) {
-			throw excp;
-		} catch(Throwable excp) {
-			LOG.error("getPolicy(" + policyId + ") failed", excp);
 
-			throw restErrorUtil.createRESTException(excp.getMessage());
+		if (!StringUtil.isEmpty(versionNoStr)) {
+			int policyVersion = Integer.parseInt(versionNoStr);
+			try {
+				policy = svcStore.getPolicyForVersionNumber(policyId, policyVersion);
+				if (policy != null) {
+					ensureAdminAndAuditAccess(policy);
+				}
+			} catch (WebApplicationException excp) {
+				throw excp;
+			} catch (Throwable excp) {
+				// Ignore any other exception and go for fetching the policy by eventTime
+			}
+		}
+
+		if (policy == null) {
+			try {
+				policy = svcStore.getPolicyFromEventTime(eventTimeStr, policyId);
+				if (policy != null) {
+					ensureAdminAndAuditAccess(policy);
+				}
+			} catch (WebApplicationException excp) {
+				throw excp;
+			} catch (Throwable excp) {
+				LOG.error("getPolicy(" + policyId + ") failed", excp);
+
+				throw restErrorUtil.createRESTException(excp.getMessage());
+			}
 		}
 
 		if(policy == null) {

@@ -124,6 +124,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setAdditionalInfo(getAdditionalInfo(request));
 			ret.setClusterName(request.getClusterName());
 			ret.setZoneName(result.getZoneName());
+			ret.setPolicyVersion(result.getPolicyVersion());
 			populateDefaults(ret);
 		}
 

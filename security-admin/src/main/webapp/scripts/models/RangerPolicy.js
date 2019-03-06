@@ -111,6 +111,7 @@ define(function(require){
 		fetchByEventTime : function(opt){
 			var queryParams = opt.data;
 			queryParams.policyId = this.get('id');
+			queryParams.versionNo = this.get('version');
 			if(_.isUndefined(queryParams.eventTime)){
 				throw('eventTime can not be undefined');
 			}

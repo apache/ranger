@@ -138,6 +138,10 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	// Security Zone
 	protected String zoneName;
 
+	// Policy Version
+
+	protected Long policyVersion;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -538,6 +542,21 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	}
 
 	/**
+	 * @return the policyVersion
+	 */
+	public Long getPolicyVersion() {
+		return policyVersion;
+	}
+	/**
+	 * @param policyVersion
+	 *            the policyVersion to set
+	 */
+	public void setPolicyVersion(Long policyVersion) {
+		this.policyVersion = policyVersion;
+	}
+
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -552,6 +571,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "clientIP={" + clientIP + "} ";
 		str += "clientType={" + clientType + "} ";
 		str += "policyId={" + policyId + "} ";
+		str += "policyVersion={" + policyVersion + "} ";
 		str += "repoName={" + repoName + "} ";
 		str += "repoType={" + repoType + "} ";
 		str += "serviceType={" + serviceType + "} ";

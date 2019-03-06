@@ -246,6 +246,11 @@ public class SolrAccessAuditsService {
 			accessAudit.setZoneName(value.toString());
 		}
 
+		value = doc.getFieldValue("policyVersion");
+		if (value != null) {
+			accessAudit.setPolicyVersion(solrUtil.toLong(value));
+		}
+
 		value = doc.getFieldValue("access");
 		if (value != null) {
 			accessAudit.setAccessType(value.toString());

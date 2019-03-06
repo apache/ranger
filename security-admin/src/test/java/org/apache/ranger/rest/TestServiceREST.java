@@ -1088,6 +1088,7 @@ public class TestServiceREST {
 		userGroupsList.add("group2");
 		Mockito.when(request.getParameter("eventTime")).thenReturn(strdt);
 		Mockito.when(request.getParameter("policyId")).thenReturn("1");
+		Mockito.when(request.getParameter("versionNo")).thenReturn("1");
 		RangerPolicy policy=new RangerPolicy();
 		Map<String, RangerPolicyResource> resources=new HashMap<String, RangerPolicy.RangerPolicyResource>();
 		policy.setService("services");
@@ -1105,6 +1106,7 @@ public class TestServiceREST {
 		Assert.assertNull(dbRangerPolicy);
 		Mockito.verify(request).getParameter("eventTime");
 		Mockito.verify(request).getParameter("policyId");
+		Mockito.verify(request).getParameter("versionNo");
 	}
 
 	@Test
@@ -1912,6 +1914,7 @@ public class TestServiceREST {
 		userGroupsList.add("group2");
 		Mockito.when(request.getParameter("eventTime")).thenReturn(strdt);
 		Mockito.when(request.getParameter("policyId")).thenReturn("1");
+		Mockito.when(request.getParameter("versionNo")).thenReturn("1");
 		RangerPolicy policy = new RangerPolicy();
 		Map<String, RangerPolicyResource> resources = new HashMap<String, RangerPolicy.RangerPolicyResource>();
 		policy.setService("services");

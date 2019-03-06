@@ -114,6 +114,7 @@ define(function(require) {
 			var self = this , resourceDef;
 			var details = this.policyDetails = {};
 			details.id = this.policy.get('id');
+			details.version = this.policy.get('version');
 			details.name = this.policy.get('name');
 			details.isEnabled = this.policy.get('isEnabled') ? localization.tt('lbl.ActiveStatus_STATUS_ENABLED') : localization.tt('lbl.ActiveStatus_STATUS_DISABLED');
                         details.policyPriority = this.policy.get('policyPriority') == 1 ? localization.tt('lbl.override') : localization.tt('lbl.normal');
