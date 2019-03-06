@@ -89,11 +89,13 @@ public interface ServiceStore {
 
 	PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception;
 
-	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
+	ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception;
 
 	Long getServicePolicyVersion(String serviceName);
 
-	ServicePolicies getServicePolicies(String serviceName) throws Exception;
+	ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception;
+
+	ServicePolicies getOnlyServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
 
 	RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId);
 

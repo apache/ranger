@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyengine;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -42,13 +43,13 @@ class RangerPolicyEngineCache {
 
 			if(svcStore != null) {
 				try {
-					ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion);
+					ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion, false);
 
 					if(policies != null) {
 						if(ret == null) {
 							ret = addPolicyEngine(policies, options);
 						} else if(policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
-							ret = addPolicyEngine(policies, options);
+							ret = updatePolicyEngine(ret, policies, options);
 						}
 					}
 				} catch(Exception excp) {
@@ -65,6 +66,27 @@ class RangerPolicyEngineCache {
 		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options);
 
 		policyEngineCache.put(policies.getServiceName(), ret);
+
+		return ret;
+	}
+
+	private RangerPolicyEngine updatePolicyEngine(RangerPolicyEngine policyEngine, ServicePolicies policies, RangerPolicyEngineOptions options) {
+		final RangerPolicyEngine ret;
+
+
+		if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
+			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies);
+			if (updatedEngine != null) {
+				policyEngineCache.put(policies.getServiceName(), updatedEngine);
+				ret = updatedEngine;
+			} else {
+				LOG.warn("Could not cloneWithDelta policyEngine to policyVersion:[" + policies.getPolicyVersion() + "]");
+				LOG.warn("Retaining old policyEngine with policyVersion:[" + policyEngine.getPolicyVersion() + "]");
+				ret = policyEngine;
+			}
+		} else {
+			ret = addPolicyEngine(policies, options);
+		}
 
 		return ret;
 	}

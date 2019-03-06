@@ -37,6 +37,21 @@ public class RangerPolicyEngineOptions {
 
 	private RangerServiceDefHelper serviceDefHelper;
 
+	public RangerPolicyEngineOptions() {}
+
+	public RangerPolicyEngineOptions(final RangerPolicyEngineOptions other) {
+		this.disableContextEnrichers = other.disableContextEnrichers;
+		this.disableCustomConditions = other.disableCustomConditions;
+		this.disableTagPolicyEvaluation = other.disableTagPolicyEvaluation;
+		this.disableTrieLookupPrefilter = other.disableTrieLookupPrefilter;
+		this.cacheAuditResults = other.cacheAuditResults;
+		this.evaluateDelegateAdminOnly = other.evaluateDelegateAdminOnly;
+		this.enableTagEnricherWithLocalRefresher = other.enableTagEnricherWithLocalRefresher;
+		this.disableAccessEvaluationWithPolicyACLSummary = other.disableAccessEvaluationWithPolicyACLSummary;
+		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
+		this.serviceDefHelper = null;
+	}
+
 	public void configureForPlugin(Configuration conf, String propertyPrefix) {
 		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
 		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);
@@ -152,11 +167,14 @@ public class RangerPolicyEngineOptions {
 	public String toString() {
 		return "PolicyEngineOptions: {" +
 				" evaluatorType: " + evaluatorType +
-				", cacheAuditResult: " + cacheAuditResults +
+				", evaluateDelegateAdminOnly: " + evaluateDelegateAdminOnly +
 				", disableContextEnrichers: " + disableContextEnrichers +
 				", disableCustomConditions: " + disableContextEnrichers +
+				", disableTagPolicyEvaluation: " + disableTagPolicyEvaluation +
+				", enableTagEnricherWithLocalRefresher: " + enableTagEnricherWithLocalRefresher +
 				", disableTrieLookupPrefilter: " + disableTrieLookupPrefilter +
 				", optimizeTrieForRetrieval: " + optimizeTrieForRetrieval +
+				", cacheAuditResult: " + cacheAuditResults +
 				" }";
 
 	}

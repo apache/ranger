@@ -63,6 +63,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	String _sslConfigFileName = null;
 	String _serviceName = null;
 	String _clusterName = null;
+	String _supportsPolicyDeltas = null;
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
@@ -81,8 +82,12 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
+		_supportsPolicyDeltas = RangerConfiguration.getInstance().get(configPropertyPrefix + ".policy.rest.supports.policy.deltas", "false");
+		if (!"true".equalsIgnoreCase(_supportsPolicyDeltas)) {
+			_supportsPolicyDeltas = "false";
+		}
 
-		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s]", _baseUrl, _sslConfigFileName, _serviceName));
+		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s]", _baseUrl, _sslConfigFileName, _serviceName, _supportsPolicyDeltas));
 		
 		_client = getClient();
 		_client.property(ClientProperties.CONNECT_TIMEOUT, _restClientConnTimeOutMs);
@@ -119,6 +124,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 							.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName)
+							.queryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, _supportsPolicyDeltas)
 							.request(MediaType.APPLICATION_JSON_TYPE)
 							.get();
 				}
@@ -134,6 +140,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId)
 					.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName)
+					.queryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, _supportsPolicyDeltas)
 					.request(MediaType.APPLICATION_JSON_TYPE)
 					.get();
 		}

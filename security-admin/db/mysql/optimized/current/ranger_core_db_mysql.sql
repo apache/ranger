@@ -15,6 +15,7 @@
 
 DROP VIEW IF EXISTS `vx_trx_log`;
 DROP TABLE IF EXISTS `x_security_zone_ref_resource`;
+DROP TABLE IF EXISTS `x_policy_change_log`;
 DROP TABLE IF EXISTS `x_policy_ref_group`;
 DROP TABLE IF EXISTS `x_policy_ref_user`;
 DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
@@ -1415,8 +1416,23 @@ CREATE TABLE IF NOT EXISTS `x_security_zone_ref_resource`(
  CONSTRAINT `x_sz_ref_resource_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
  CONSTRAINT `x_sz_ref_resource_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
  CONSTRAINT `x_sz_ref_resource_FK_resource_def_id` FOREIGN KEY (`resource_def_id`) REFERENCES `x_resource_def` (`id`)
-)ROW_FORMAT=DYNAMIC;
+) ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_policy_change_log` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`service_id` bigint(20) NOT NULL,
+`change_type` int(11) NOT NULL,
+`policy_version` bigint(20) NOT NULL DEFAULT '0',
+`service_type` varchar(256) NULL DEFAULT NULL,
+`policy_type` int(11) NULL DEFAULT NULL,
+`zone_name` varchar(256) NULL DEFAULT NULL,
+`policy_id` bigint(20) NULL DEFAULT NULL,
+primary key (`id`)
+) ROW_FORMAT=DYNAMIC;
+
+CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
+CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
 CREATE INDEX x_service_config_def_IDX_def_id ON x_service_config_def(def_id);
 CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
@@ -1520,6 +1536,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)

@@ -53,6 +53,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	private String clusterName;
 	private RangerRESTClient restClient;
 	private RangerRESTUtils restUtils   = new RangerRESTUtils();
+	private String 		 supportsPolicyDeltas = "true";
 
 	public static <T> GenericType<List<T>> getGenericType(final T clazz) {
 
@@ -84,26 +85,32 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		clusterName       				= RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+		supportsPolicyDeltas                    = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.supports.policy.deltas", "false");
         if (!StringUtil.isEmpty(tmpUrl)) {
             url = tmpUrl.trim();
         }
         if (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
         }
+		if (!"true".equalsIgnoreCase(supportsPolicyDeltas)) {
+			supportsPolicyDeltas = "false";
+		}
 
 		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs);
 	}
 
 	@Override
 	public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
 		}
 
-		ServicePolicies ret = null;
-		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
-		ClientResponse response = null;
+		final ServicePolicies ret;
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final ClientResponse response;
+
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking Service policy if updated as user : " + user);
@@ -114,7 +121,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 							.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 							.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId)
-							.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+							.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName)
+							.queryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, supportsPolicyDeltas);
 					return secureWebResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 				}
 			};
@@ -127,7 +135,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion))
 					.queryParam(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis))
 					.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId)
-					.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+					.queryParam(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName)
+					.queryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, supportsPolicyDeltas);
 			response = webResource.accept(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 		}
 
@@ -148,6 +157,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
 					+ ", " + "lastKnownVersion=" + lastKnownVersion
 					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			ret = null;
 			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
 
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
@@ -159,7 +169,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 			ret = null;
 		}
 
-		if(LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminRESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
 		}
 

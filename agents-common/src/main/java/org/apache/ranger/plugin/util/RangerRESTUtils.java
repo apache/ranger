@@ -62,6 +62,7 @@ public class RangerRESTUtils {
 	private static final int MAX_PLUGIN_ID_LEN = 255;
 	
 	public static final String REST_PARAM_CLUSTER_NAME   = "clusterName";
+	public static final String REST_PARAM_SUPPORTS_POLICY_DELTAS   = "supportsPolicyDeltas";
 
 	public static final String REST_PARAM_ZONE_NAME		 = "zoneName";
 

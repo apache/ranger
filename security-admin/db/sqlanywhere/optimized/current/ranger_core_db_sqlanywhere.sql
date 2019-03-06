@@ -36,6 +36,7 @@ BEGIN
 END
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
@@ -1176,6 +1177,20 @@ CREATE TABLE dbo.x_security_zone_ref_group(
         CONSTRAINT x_sz_ref_agroup_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
+CREATE TABLE dbo.x_policy_change_log(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        service_id bigint NOT NULL,
+        change_type int NOT NULL,
+        policy_version bigint DEFAULT 0 NOT NULL,
+        service_type varchar(256) DEFAULT NULL NULL,
+        policy_type int DEFAULT NULL NULL,
+        zone_name varchar(256) DEFAULT NULL NULL,
+		    policy_id bigint DEFAULT NULL NULL,
+        CONSTRAINT x_policy_change_log_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user(id)
 GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
@@ -1863,6 +1878,10 @@ BEGIN
   RETURN (myid);
 END;
 
+CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_service_id ON dbo.x_policy_change_log(service_id ASC)
+GO
+CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_policy_version ON dbo.x_policy_change_log(policy_version ASC)
+GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1)
@@ -1946,6 +1965,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

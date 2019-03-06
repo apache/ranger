@@ -300,5 +300,8 @@ public abstract class RangerDaoManagerBase {
 	public XXSecurityZoneRefGroupDao getXXSecurityZoneRefGroup() { return new XXSecurityZoneRefGroupDao(this); }
 
 	public XXGlobalStateDao getXXGlobalState() { return new XXGlobalStateDao(this); }
+
+	public XXPolicyChangeLogDao getXXPolicyChangeLog() { return new XXPolicyChangeLogDao(this); }
+
 }
 

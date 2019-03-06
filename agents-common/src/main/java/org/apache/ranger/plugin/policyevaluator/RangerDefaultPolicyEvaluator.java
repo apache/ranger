@@ -173,6 +173,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		RangerPerfTracer.log(perf);
 
+		if (useAclSummaryForEvaluation && (policy.getPolicyType() == null || policy.getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS)) {
+			LOG.info("PolicyEvaluator for policy:[" + policy.getId() + "] is set up to use ACL Summary to evaluate access");
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.init()");
 		}
@@ -777,14 +781,18 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		if (useAclSummaryForEvaluation && (getPolicy().getPolicyType() == null || getPolicy().getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS)) {
-			LOG.info("Using ACL Summary for checking if access is allowed. PolicyId=[" + getId() +"]");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using ACL Summary for checking if access is allowed. PolicyId=[" + getId() +"]");
+			}
 
 			Integer accessResult = lookupPolicyACLSummary(user, userGroups, accessType);
 			if (accessResult != null && accessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED)) {
 				ret = true;
 			}
 		} else {
-			LOG.info("Using policyItemEvaluators for checking if access is allowed. PolicyId=[" + getId() +"]");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using policyItemEvaluators for checking if access is allowed. PolicyId=[" + getId() +"]");
+			}
 
 			RangerPolicyItemEvaluator item = this.getDeterminingPolicyItem(user, userGroups, accessType);
 

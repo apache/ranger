@@ -196,6 +196,9 @@ public class RangerServiceDefHelper {
 	}
 
 	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType, Collection<String> keys) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> getResourceHierarchies(policyType=" + policyType + ", keys=" + StringUtils.join(keys, ",") + ")");
+		}
 
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
 
@@ -205,10 +208,16 @@ public class RangerServiceDefHelper {
 			}
 		}
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== getResourceHierarchies(policyType=" + policyType + ", keys=" + StringUtils.join(keys, ",") + ") : " + StringUtils.join(ret, ","));
+		}
 		return ret;
 	}
 
 	public boolean hierarchyHasAllResources(List<RangerResourceDef> hierarchy, Collection<String> resourceNames) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> hierarchyHasAllResources(hierarchy=" + StringUtils.join(hierarchy, ",") + ", resourceNames=" + StringUtils.join(resourceNames, ",") + ")");
+		}
 		boolean foundAllResourceKeys = true;
 
 		for (String resourceKey : resourceNames) {
@@ -226,7 +235,9 @@ public class RangerServiceDefHelper {
 				break;
 			}
 		}
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== hierarchyHasAllResources(hierarchy=" + StringUtils.join(hierarchy, ",") + ", resourceNames=" + StringUtils.join(resourceNames, ",") + "): " + foundAllResourceKeys);
+		}
 		return foundAllResourceKeys;
 	}
 

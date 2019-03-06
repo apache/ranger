@@ -35,6 +35,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
@@ -67,6 +68,7 @@ import static org.junit.Assert.*;
 
 public class TestPolicyEngine {
 	static Gson gsonBuilder;
+	long requestCount = 0L;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -213,6 +215,27 @@ public class TestPolicyEngine {
 	@Test
 	public void testPolicyEngine_hive() {
 		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_hive.json" };
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hive_incremental_add() {
+		String[] hiveTestResourceFiles = {"/policyengine/test_policyengine_hive_incremental_add.json"};
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hive_incremental_delete() {
+		String[] hiveTestResourceFiles = {"/policyengine/test_policyengine_hive_incremental_delete.json"};
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_hive_incremental_update() {
+		String[] hiveTestResourceFiles = {"/policyengine/test_policyengine_hive_incremental_update.json"};
 
 		runTestsFromResourceFiles(hiveTestResourceFiles);
 	}
@@ -395,11 +418,23 @@ public class TestPolicyEngine {
 		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);
 
-		long requestCount = 0L;
+		runTestCaseTests(policyEngine, policyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.tests);
 
-		RangerAccessRequest request = null;
+		if (CollectionUtils.isNotEmpty(testCase.updatedPolicies)) {
+			servicePolicies.setPolicyDeltas(testCase.updatedPolicies);
+			servicePolicies.setPolicyVersion(-1L);
+			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies);
+			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies);
+			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
 
-		for(TestData test : testCase.tests) {
+		}
+	}
+
+    private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForResourceAccessInfo, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
+
+        RangerAccessRequest request = null;
+
+        for(TestData test : tests) {
 			request = test.request;
 			if ((requestCount++ % 10) == 1) {
 				policyEngine.reorderPolicyEvaluators();
@@ -464,7 +499,7 @@ public class TestPolicyEngine {
 
 				// Safe cast
 				RangerAccessResourceImpl accessResource = (RangerAccessResourceImpl) request.getResource();
-				accessResource.setServiceDef(testCase.serviceDef);
+				accessResource.setServiceDef(serviceDef);
 
 				request = newRequest;
 
@@ -517,6 +552,7 @@ public class TestPolicyEngine {
 				assertEquals("deniedGroups mismatched! - " + test.name, expected.getDeniedGroups(), result.getDeniedGroups());
 			}
 		}
+
 	}
 
 	static class PolicyEngineTestCase {
@@ -526,6 +562,9 @@ public class TestPolicyEngine {
 		public TagPolicyInfo	  tagPolicyInfo;
 		public String             auditMode;
 		public List<TestData>     tests;
+
+		public List<RangerPolicyDelta> updatedPolicies;
+		public List<TestData>     updatedTests;
 		
 		class TestData {
 			public String              name;

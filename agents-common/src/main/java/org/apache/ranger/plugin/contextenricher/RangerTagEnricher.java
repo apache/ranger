@@ -178,6 +178,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("<== RangerTagEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]): tags count=" + (matchedTags == null ? 0 : matchedTags.size()));
 		}
 	}
+
 	/*
 	 * This class implements a cache of result of look-up of keyset of policy-resources for each of the collections of hierarchies
 	 * for policy types: access, datamask and rowfilter. If a keyset is examined for validity in a hierarchy of a policy-type,
@@ -314,11 +315,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	public boolean preCleanup() {
 		boolean ret = true;
 
-		super.preCleanup();
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagEnricher.preCleanup()");
 		}
+
+		super.preCleanup();
 
 		if (tagRefresher != null) {
 			tagRefresher.cleanup();
@@ -548,7 +549,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			this.cacheFile = cacheFile;
 			this.pollingIntervalMs = pollingIntervalMs;
 			try {
-				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 			} catch(Throwable excp) {
 				LOG.fatal("failed to create GsonBuilder object", excp);
 			}

@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface RangerPolicyEngine {
 	String GROUP_PUBLIC   = "public";
@@ -89,5 +90,7 @@ public interface RangerPolicyEngine {
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
+
+	RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies);
 
 }

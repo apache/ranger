@@ -80,7 +80,7 @@ public class PolicyRefresher extends Thread {
 
 		Gson gson = null;
 		try {
-			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 		} catch(Throwable excp) {
 			LOG.fatal("PolicyRefresher(): failed to create GsonBuilder object", excp);
 		}
@@ -206,11 +206,7 @@ public class PolicyRefresher extends Thread {
 				if (!policiesSetInPlugin) {
 					svcPolicies = loadFromCache();
 				}
-			} else {
-				saveToCache(svcPolicies);
 			}
-
-			RangerPerfTracer.log(perf);
 
 			if (PERF_POLICYENGINE_INIT_LOG.isDebugEnabled()) {
 				long freeMemory = Runtime.getRuntime().freeMemory();
@@ -240,6 +236,8 @@ public class PolicyRefresher extends Thread {
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);
 		}
+
+		RangerPerfTracer.log(perf);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadPolicy()");
@@ -356,7 +354,7 @@ public class PolicyRefresher extends Thread {
 		return policies;
 	}
 	
-	private void saveToCache(ServicePolicies policies) {
+	public void saveToCache(ServicePolicies policies) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
 		}

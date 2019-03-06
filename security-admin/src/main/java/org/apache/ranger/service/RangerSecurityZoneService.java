@@ -39,6 +39,7 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,7 +203,7 @@ public class RangerSecurityZoneService extends RangerSecurityZoneServiceBase<XXS
             final Long 		       finalServiceId  		  = serviceVersionInfo.getServiceId();
             final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.POLICY_VERSION;
 
-            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType);
+            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType, null, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null);
 
             daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
         }

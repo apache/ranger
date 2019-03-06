@@ -632,6 +632,9 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     }
 
     public static boolean isHierarchyValidForResources(List<RangerResourceDef> hierarchy, Map<String, ?> resources) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> isHierarchyValidForResources(" + StringUtils.join(hierarchy, ",") + ")");
+        }
         boolean ret = true;
 
         if (hierarchy != null) {
@@ -655,7 +658,9 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         } else {
             ret = false;
          }
-
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== isHierarchyValidForResources(" + StringUtils.join(hierarchy, ",") + ") : " + ret);
+        }
         return ret;
     }
 

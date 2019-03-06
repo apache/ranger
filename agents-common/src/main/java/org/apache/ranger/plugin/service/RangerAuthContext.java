@@ -35,6 +35,7 @@ import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -252,6 +253,11 @@ public class RangerAuthContext implements RangerPolicyEngine {
     @Override
     public List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType) {
         return null;
+    }
+
+    @Override
+    public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies) {
+        return policyEngine.cloneWithDelta(servicePolicies);
     }
 
 }

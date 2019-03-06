@@ -14,6 +14,7 @@
 -- limitations under the License.
 
 DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
+DROP TABLE IF EXISTS x_policy_change_log;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
@@ -82,12 +83,13 @@ DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
 
-DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
-DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
-DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
-DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
+DROP SEQUENCE IF EXISTS x_security_zone_ref_group_seq;
+DROP SEQUENCE IF EXISTS x_security_zone_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_security_zone_ref_resource_seq;
+DROP SEQUENCE IF EXISTS x_security_zone_ref_service_seq;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP SEQUENCE IF EXISTS x_security_zone_seq;
+DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
@@ -1406,6 +1408,23 @@ CONSTRAINT x_sz_ref_group_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security
 CONSTRAINT x_sz_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
 commit;
+CREATE SEQUENCE x_policy_change_log_seq;
+CREATE TABLE x_policy_change_log (
+id BIGINT DEFAULT nextval('x_policy_change_log_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+service_id bigint NOT NULL,
+change_type int NOT NULL,
+policy_version bigint DEFAULT '0' NOT NULL,
+service_type varchar(256) DEFAULT NULL NULL,
+policy_type int DEFAULT NULL NULL,
+zone_name varchar(256) DEFAULT NULL NULL,
+policy_id bigint DEFAULT NULL NULL,
+primary key (id)
+);
+commit;
+CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
+CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
+commit;
 
 CREATE INDEX xa_access_audit_added_by_id ON xa_access_audit(added_by_id);
 CREATE INDEX xa_access_audit_upd_by_id ON xa_access_audit(upd_by_id);
@@ -1610,6 +1629,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('035',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

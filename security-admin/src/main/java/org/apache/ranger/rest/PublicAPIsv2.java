@@ -460,4 +460,19 @@ public class PublicAPIsv2 {
 		}
 		return pluginInfoList.getPluginInfoList();
 	}
+
+	@DELETE
+	@Path("/api/server/policydeltas")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+		}
+
+		serviceREST.deletePolicyDeltas(olderThan, reloadServicePoliciesCache, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+		}
+	}
 }

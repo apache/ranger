@@ -48,12 +48,14 @@ public class JPABeanCallbacks {
 						entity.setAddedByUserId(userSession.getUserId());
 						entity.setUpdatedByUserId(userSession
 								.getUserId());
+					} else {
+						if (logger.isDebugEnabled()) {
+							logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
+						}
 					}
 				} else {
 					if (logger.isDebugEnabled()) {
-						logger.debug(
-								"Security context not found for this request. obj="
-										+ o, new Throwable());
+						logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
 					}
 				}
 			}

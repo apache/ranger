@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,6 +61,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 	public static final String POLICY_PRIORITY_NAME_NORMAL   = "NORMAL";
 	public static final String POLICY_PRIORITY_NAME_OVERRIDE = "OVERRIDE";
+
+	public static final Comparator<RangerPolicy> POLICY_ID_COMPARATOR = new PolicyIdComparator();
 
 	// For future use
 	private static final long serialVersionUID = 1L;
@@ -616,6 +619,12 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		return sb;
 	}
 
+	static class PolicyIdComparator implements Comparator<RangerPolicy>, java.io.Serializable {
+		@Override
+		public int compare(RangerPolicy me, RangerPolicy other) {
+			return Long.compare(me.getId(), other.getId());
+		}
+	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)

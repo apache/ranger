@@ -20,13 +20,16 @@
 package org.apache.ranger.plugin.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -252,27 +255,95 @@ public class RangerBasePlugin {
 		// guard against catastrophic failure during policy engine Initialization or
 		try {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
+			ServicePolicies    servicePolicies = null;
+			boolean            isValid         = true;
+			boolean            usePolicyDeltas = false;
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
-			}
-			if (policies == null) {
-				this.policyEngine = null;
-				readOnlyAuthContext = null;
+				if (policies == null) {
+					LOG.error("Could not get default Service Policies");
+					isValid = false;
+				}
 			} else {
-				currentAuthContext = new RangerAuthContext();
-				RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
-				policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-				policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
-				this.policyEngine = policyEngine;
-				currentAuthContext.setPolicyEngine(this.policyEngine);
-				readOnlyAuthContext = new RangerAuthContext(currentAuthContext);
+				if ((policies.getPolicies() == null && policies.getPolicyDeltas() == null) || (policies.getPolicies() != null && policies.getPolicyDeltas() != null)) {
+					LOG.error("Invalid servicePolicies: Both policies and policy-deltas cannot be null OR both of them cannot be non-null");
+					isValid = false;
+				} else if (policies.getPolicies() != null) {
+					usePolicyDeltas = false;
+				} else if (policies.getPolicyDeltas() != null) {
+					// Rebuild policies from deltas
+					RangerPolicyEngineImpl policyEngineImpl = (RangerPolicyEngineImpl) oldPolicyEngine;
+					List<RangerPolicy> oldResourcePolicies = policyEngineImpl.getResourcePolicies();
+					List<RangerPolicy> oldTagPolicies = policyEngineImpl.getTagPolicies();
+					servicePolicies = ServicePolicies.applyDelta(policies, oldResourcePolicies, oldTagPolicies);
+					if (servicePolicies != null) {
+						usePolicyDeltas = true;
+					} else {
+						isValid = false;
+						LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
+					}
+				} else {
+					LOG.error("Should not get here!!");
+					isValid = false;
+				}
 			}
-			contextChanged();
 
-			if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
-				LOG.error("preCleanup() failed on the previous policy engine instance !!");
+			if (isValid) {
+				RangerPolicyEngine newPolicyEngine = null;
+
+				if (!usePolicyDeltas) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("policies are not null. Creating engine from policies");
+					}
+					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("policy-deltas are not null");
+					}
+					if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Non empty policy-deltas found. Cloning engine using policy-deltas");
+						}
+						newPolicyEngine = oldPolicyEngine.cloneWithDelta(policies);
+						if (newPolicyEngine != null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Applied policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + ")");
+							}
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
+								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
+							}
+							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions);
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Empty policy-deltas. No need to change policy engine");
+						}
+					}
+				}
+
+				if (newPolicyEngine != null) {
+					currentAuthContext = new RangerAuthContext();
+
+					newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+					newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+					this.policyEngine = newPolicyEngine;
+					currentAuthContext.setPolicyEngine(this.policyEngine);
+					readOnlyAuthContext = new RangerAuthContext(currentAuthContext);
+
+					contextChanged();
+
+					if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
+						LOG.error("preCleanup() failed on the previous policy engine instance !!");
+					}
+					this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
+				}
+			} else {
+				LOG.error("Returning without saving policies to cache. Leaving current policy engine as-is");
 			}
+
 		} catch (Exception e) {
 			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is. Exception : ", e);
 		}

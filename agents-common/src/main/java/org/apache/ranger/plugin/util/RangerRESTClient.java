@@ -228,7 +228,7 @@ public class RangerRESTClient {
 
 	private void init() {
 		try {
-			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").setPrettyPrinting().create();
+			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
 		} catch(Throwable excp) {
 			LOG.fatal("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
 		}

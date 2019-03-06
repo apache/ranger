@@ -2081,7 +2081,7 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(xServiceVersionInfo);
 
 		ServicePolicies dbServicePolicies = serviceDBStore
-				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, true);
 		Assert.assertNull(dbServicePolicies);
 	}
 

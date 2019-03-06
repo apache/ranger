@@ -90,6 +90,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -102,7 +103,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCacheForEngineOptions;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -2734,11 +2734,13 @@ public class ServiceREST {
 			@QueryParam("pluginId") String pluginId,
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
 			@DefaultValue("") @QueryParam("zoneName") String zoneName,
+			@DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas,
 			@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated("
 					+ serviceName + ", " + lastKnownVersion + ", "
-					+ lastActivationTime + ")");
+					+ lastActivationTime + ", " + pluginId + ", "
+					+ clusterName + ", " + supportsPolicyDeltas + ")");
 		}
 
 		ServicePolicies ret      = null;
@@ -2766,7 +2768,7 @@ public class ServiceREST {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ",lastActivationTime=" + lastActivationTime + ")");
 				}
-				ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+				ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
 
 				if (servicePolicies == null) {
 					downloadedVersion = lastKnownVersion;
@@ -2776,12 +2778,17 @@ public class ServiceREST {
 					Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
 					ServicePolicies updatedServicePolicies = getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
 					downloadedVersion = updatedServicePolicies.getPolicyVersion();
-					ret = filterServicePolicies(updatedServicePolicies);
+					if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
+						ret = filterServicePolicies(updatedServicePolicies);
+					} else {
+						ret = updatedServicePolicies;
+					}
+
 					httpCode = HttpServletResponse.SC_OK;
-					logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+					logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
 			} catch (Throwable excp) {
-				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed");
+				LOG.error("getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed", excp);
 
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg = excp.getMessage();
@@ -2798,7 +2805,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== ServiceREST.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + clusterName + ", " + supportsPolicyDeltas + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 
 		return ret;
@@ -2814,10 +2821,13 @@ public class ServiceREST {
 			@QueryParam("pluginId") String pluginId,
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
 			@DefaultValue("") @QueryParam("zoneName") String zoneName,
+			@DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas,
 			@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("
-					+ serviceName + ", " + lastKnownVersion + ")");
+					+ serviceName + ", " + lastKnownVersion + ", " 
+					+ lastActivationTime + ", " + pluginId + ", "
+					+ clusterName + ", " + supportsPolicyDeltas + ")");
 		}
 		ServicePolicies ret = null;
 		int httpCode = HttpServletResponse.SC_OK;
@@ -2876,7 +2886,7 @@ public class ServiceREST {
 					}
 				}
 				if (isAllowed) {
-					ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion);
+					ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
 					if (servicePolicies == null) {
 						downloadedVersion = lastKnownVersion;
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
@@ -2885,9 +2895,13 @@ public class ServiceREST {
 						Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
 						ServicePolicies updatedServicePolicies = getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
 						downloadedVersion = updatedServicePolicies.getPolicyVersion();
-						ret = filterServicePolicies(updatedServicePolicies);
+						if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
+							ret = filterServicePolicies(updatedServicePolicies);
+						} else {
+							ret = updatedServicePolicies;
+						}
 						httpCode = HttpServletResponse.SC_OK;
-						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : 0) + " policies. Policy version=" + ret.getPolicyVersion();
+						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
 					}
 
 				} else {
@@ -2896,7 +2910,7 @@ public class ServiceREST {
 					logMsg = "User doesn't have permission to download policy";
 				}
 			} catch (Throwable excp) {
-				LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed");
+				LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed", excp);
 				httpCode = HttpServletResponse.SC_BAD_REQUEST;
 				logMsg = excp.getMessage();
 			} finally {
@@ -2911,10 +2925,25 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + clusterName + ", " + supportsPolicyDeltas + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 		return ret;
-	}		
+	}
+
+	@DELETE
+	@Path("/server/policydeltas")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+		}
+
+		svcStore.resetPolicyUpdateLog(olderThan, reloadServicePoliciesCache);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+		}
+	}
 
 	private void createPolicyDownloadAudit(String serviceName, Long lastKnownVersion, String pluginId, int httpRespCode, String clusterName, String zoneName, HttpServletRequest request) {
 		try {
@@ -3369,12 +3398,7 @@ public class ServiceREST {
 	}
 
 	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
-
-		ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, -1L);
-
-		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, defaultAdminOptions);
-
-		return ret;
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, defaultAdminOptions);
 	}
 
 	@GET
@@ -3651,37 +3675,63 @@ public class ServiceREST {
 
 			final ServicePolicies ret;
 
-			if (CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) && MapUtils.isNotEmpty(securityZones)) {
+			if (MapUtils.isNotEmpty(securityZones)) {
 
-				List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
-
-				Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
-
-				for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
-
-					List<RangerPolicy> zonePolicies = extractZonePolicies(allPolicies, entry.getKey());
-
-					if (CollectionUtils.isNotEmpty(zonePolicies)) {
-						allPolicies.removeAll(zonePolicies);
-					}
-
-					ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
-					securityZoneInfo.setPolicies(zonePolicies);
-					securityZoneInfo.setResources(entry.getValue().getResources());
-
-					securityZonesInfo.put(entry.getKey(), securityZoneInfo);
-				}
 				ret = new ServicePolicies();
 				ret.setServiceDef(servicePolicies.getServiceDef());
 				ret.setServiceId(servicePolicies.getServiceId());
 				ret.setServiceName(servicePolicies.getServiceName());
-				ret.setPolicies(allPolicies);
-				ret.setTagPolicies(servicePolicies.getTagPolicies());
 				ret.setAuditMode(servicePolicies.getAuditMode());
 				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
-				ret.setSecurityZones(securityZonesInfo);
 
+				Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
+
+				if (CollectionUtils.isEmpty(servicePolicies.getPolicyDeltas())) {
+					List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
+
+
+					for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
+
+						List<RangerPolicy> zonePolicies = extractZonePolicies(allPolicies, entry.getKey());
+
+						if (CollectionUtils.isNotEmpty(zonePolicies)) {
+							allPolicies.removeAll(zonePolicies);
+						}
+
+						ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
+						securityZoneInfo.setZoneName(entry.getKey());
+						securityZoneInfo.setPolicies(zonePolicies);
+						securityZoneInfo.setResources(entry.getValue().getResources());
+
+						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
+					}
+
+					ret.setPolicies(allPolicies);
+					ret.setTagPolicies(servicePolicies.getTagPolicies());
+					ret.setSecurityZones(securityZonesInfo);
+				} else {
+					List<RangerPolicyDelta> allPolicyDeltas = new ArrayList<>(servicePolicies.getPolicyDeltas());
+
+					for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
+
+						List<RangerPolicyDelta> zonePolicyDeltas = extractZonePolicyDeltas(allPolicyDeltas, entry.getKey());
+
+						if (CollectionUtils.isNotEmpty(zonePolicyDeltas)) {
+							allPolicyDeltas.removeAll(zonePolicyDeltas);
+						}
+
+						ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
+						securityZoneInfo.setZoneName(entry.getKey());
+						securityZoneInfo.setPolicyDeltas(zonePolicyDeltas);
+						securityZoneInfo.setResources(entry.getValue().getResources());
+
+						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
+					}
+					ret.setPolicyDeltas(allPolicyDeltas);
+
+				}
+				ret.setSecurityZones(securityZonesInfo);
 			} else {
 				ret = servicePolicies;
 			}
@@ -3695,6 +3745,19 @@ public class ServiceREST {
 			for (RangerPolicy policy : allPolicies) {
 				if (policy.getIsEnabled() && StringUtils.equals(policy.getZoneName(), zoneName)) {
 					ret.add(policy);
+				}
+			}
+
+			return ret;
+		}
+
+		private static List<RangerPolicyDelta> extractZonePolicyDeltas(final List<RangerPolicyDelta> allPolicyDeltas, final String zoneName) {
+
+			final List<RangerPolicyDelta> ret = new ArrayList<>();
+
+			for (RangerPolicyDelta delta : allPolicyDeltas) {
+				if (StringUtils.equals(delta.getZoneName(), zoneName)) {
+					ret.add(delta);
 				}
 			}
 

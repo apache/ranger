@@ -450,7 +450,9 @@
 			and exists (select tagService from XXService tagService where obj.tagService = tagService.id and tagService.isEnabled = TRUE)
 		</query>
 	</named-query>
-
+	<named-query name="XXService.getAllServiceIds">
+		<query>select obj.id from XXService obj</query>
+	</named-query>
 	<!-- XXServiceVersionInfo -->
 	<named-query name="XXServiceVersionInfo.findByServiceName">
 		<query>
@@ -1374,9 +1376,35 @@
     </named-query>
 
     <named-query name="XXGlobalState.findByStateName">
-        <query>
+	<query>
             select obj from XXGlobalState obj where obj.stateName = :stateName
+	</query>
+	</named-query>
+
+	<!-- XXPolicyChangeLog -->
+
+    <named-query name="XXPolicyChangeLog.findByServiceId">
+        <query>
+            select obj from XXPolicyChangeLog obj where obj.serviceId = :serviceId
         </query>
     </named-query>
+    <named-query name="XXPolicyChangeLog.findSinceVersion">
+        <query>
+            select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.policyVersion >= :version order by
+            obj.policyVersion
+        </query>
+    </named-query>
+
+    <named-query name="XXPolicyChangeLog.findGreaterThan">
+        <query>
+            select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.id > :id order by obj.id
+        </query>
+    </named-query>
+
+	<named-query name="XXPolicyChangeLog.deleteOlderThan">
+		<query>delete from XXPolicyChangeLog obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
 
 </entity-mappings>
