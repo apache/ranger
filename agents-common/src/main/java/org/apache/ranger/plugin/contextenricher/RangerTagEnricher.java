@@ -36,6 +36,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.DownloadTrigger;
+import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -57,6 +59,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
@@ -74,6 +79,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private boolean                            disableTrieLookupPrefilter;
 	private EnrichedServiceTags                enrichedServiceTags;
 	private boolean                            disableCacheIfServiceNotFound = true;
+
+	private final BlockingQueue<DownloadTrigger> tagDownloadQueue = new LinkedBlockingQueue<>();
+	private Timer                              tagDownloadTimer;
 
 	@Override
 	public void init() {
@@ -121,7 +129,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.setAppId(appId);
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
-				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, cacheFile, pollingIntervalMs);
+				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile);
 
 				try {
 					tagRefresher.populateTags();
@@ -130,6 +138,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				}
 				tagRefresher.setDaemon(true);
 				tagRefresher.startRefresher();
+
+				tagDownloadTimer = new Timer("policyDownloadTimer", true);
+
+				try {
+					tagDownloadTimer.schedule(new DownloaderTask(tagDownloadQueue), pollingIntervalMs, pollingIntervalMs);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Scheduled tagDownloadRefresher to download tags every " + pollingIntervalMs + " milliseconds");
+					}
+				} catch (IllegalStateException exception) {
+					LOG.error("Error scheduling tagDownloadTimer:", exception);
+					LOG.error("*** Tags will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
+					tagDownloadTimer = null;
+				}
 			}
 		} else {
 			LOG.error("No value specified for " + TAG_RETRIEVER_CLASSNAME_OPTION + " in the RangerTagEnricher options");
@@ -178,7 +199,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("<== RangerTagEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]): tags count=" + (matchedTags == null ? 0 : matchedTags.size()));
 		}
 	}
-
 	/*
 	 * This class implements a cache of result of look-up of keyset of policy-resources for each of the collections of hierarchies
 	 * for policy types: access, datamask and rowfilter. If a keyset is examined for validity in a hierarchy of a policy-type,
@@ -321,6 +341,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		super.preCleanup();
 
+		if (tagDownloadTimer != null) {
+			tagDownloadTimer.cancel();
+			tagDownloadTimer = null;
+		}
+
 		if (tagRefresher != null) {
 			tagRefresher.cleanup();
 			tagRefresher = null;
@@ -331,6 +356,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 		return ret;
 	}
+
+	public void syncTagsWithAdmin(final DownloadTrigger token) throws InterruptedException {
+		tagDownloadQueue.put(token);
+		token.waitForCompletion();
+	}
+
 
 	private Set<RangerTagForEval> findMatchingTags(final RangerAccessRequest request, EnrichedServiceTags dataStore) {
 		if (LOG.isDebugEnabled()) {
@@ -530,24 +561,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private final RangerTagRetriever tagRetriever;
 		private final RangerTagEnricher tagEnricher;
 		private long lastKnownVersion = -1L;
+		private final BlockingQueue<DownloadTrigger> tagDownloadQueue;
 		private long lastActivationTimeInMillis;
 
-		private final long pollingIntervalMs;
 		private final String cacheFile;
 		private boolean hasProvidedTagsToReceiver;
 		private Gson gson;
 
-
-		final long getPollingIntervalMs() {
-			return pollingIntervalMs;
-		}
-
-		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, String cacheFile, long pollingIntervalMs) {
+		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, String cacheFile) {
 			this.tagRetriever = tagRetriever;
 			this.tagEnricher = tagEnricher;
 			this.lastKnownVersion = lastKnownVersion;
+			this.tagDownloadQueue = tagDownloadQueue;
 			this.cacheFile = cacheFile;
-			this.pollingIntervalMs = pollingIntervalMs;
 			try {
 				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 			} catch(Throwable excp) {
@@ -567,30 +593,25 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		public void run() {
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerTagRefresher(pollingIntervalMs=" + pollingIntervalMs + ").run()");
+				LOG.debug("==> RangerTagRefresher().run()");
 			}
 
 			while (true) {
 
 				try {
-
-					// Sleep first and then fetch tags
-					if (pollingIntervalMs > 0) {
-						Thread.sleep(pollingIntervalMs);
-					} else {
-						break;
-					}
 					RangerPerfTracer perf = null;
 
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerTagRefresher.populateTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + lastKnownVersion + ")");
 					}
+					DownloadTrigger trigger = tagDownloadQueue.take();
 					populateTags();
+					trigger.signalCompletion();
 
 					RangerPerfTracer.log(perf);
 
 				} catch (InterruptedException excp) {
-					LOG.debug("RangerTagRefresher(pollingIntervalMs=" + pollingIntervalMs + ").run() : interrupted! Exiting thread", excp);
+					LOG.debug("RangerTagRefresher().run() : interrupted! Exiting thread", excp);
 					break;
 				}
 			}

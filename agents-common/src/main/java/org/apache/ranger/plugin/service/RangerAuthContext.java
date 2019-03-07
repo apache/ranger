@@ -38,10 +38,10 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RangerAuthContext implements RangerPolicyEngine {
     private RangerPolicyEngine policyEngine;
@@ -61,7 +61,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
 		    this.policyEngine = other.getPolicyEngine();
 		    Map<RangerContextEnricher, Object> localReference = other.requestContextEnrichers;
 		    if (MapUtils.isNotEmpty(localReference)) {
-			    this.requestContextEnrichers = new HashMap<>(localReference);
+			    this.requestContextEnrichers = new ConcurrentHashMap<>(localReference);
 		    }
 	    }
     }
@@ -77,7 +77,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
 
     public void addOrReplaceRequestContextEnricher(RangerContextEnricher enricher, Object database) {
         if (requestContextEnrichers == null) {
-            requestContextEnrichers = new HashMap<>();
+            requestContextEnrichers = new ConcurrentHashMap<>();
         }
 
         requestContextEnrichers.put(enricher, database);

@@ -25,11 +25,14 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +43,8 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -52,6 +57,8 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.DownloadTrigger;
+import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -76,13 +83,17 @@ public class RangerBasePlugin {
 	private RangerAccessResultProcessor resultProcessor;
 	private boolean                   useForwardedIPAddress;
 	private String[]                  trustedProxyAddresses;
+	private Timer                     policyDownloadTimer;
 	private Timer                     policyEngineRefreshTimer;
 	private RangerAuthContextListener authContextListener;
 	private AuditProviderFactory      auditProviderFactory;
 
+	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
+	private final DownloadTrigger                accessTrigger       = new DownloadTrigger();
+
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
-	int logInterval = 30000; // 30 seconds
+	int                     logInterval    = 30000; // 30 seconds
 
 	public static Map<String, RangerBasePlugin> getServicePluginMap() {
 		return servicePluginMap;
@@ -183,7 +194,6 @@ public class RangerBasePlugin {
 		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
 		serviceName = configuration.get(propertyPrefix + ".service.name");
 		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
-
 		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
@@ -220,9 +230,22 @@ public class RangerBasePlugin {
 
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
-		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, pollingIntervalMs, cacheDir);
+		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir);
 		refresher.setDaemon(true);
 		refresher.startRefresher();
+
+		policyDownloadTimer = new Timer("policyDownloadTimer", true);
+
+		try {
+			policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Scheduled policyDownloadRefresher to download policies every " + pollingIntervalMs + " milliseconds");
+			}
+		} catch (IllegalStateException exception) {
+			LOG.error("Error scheduling policyDownloadTimer:", exception);
+			LOG.error("*** Policies will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
+			policyDownloadTimer = null;
+		}
 
 		long policyReorderIntervalMs = configuration.getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
 		if (policyReorderIntervalMs >= 0 && policyReorderIntervalMs < 15 * 1000) {
@@ -365,15 +388,22 @@ public class RangerBasePlugin {
 
 		Timer policyEngineRefreshTimer = this.policyEngineRefreshTimer;
 
+		Timer policyDownloadTimer = this.policyDownloadTimer;
+
 		String serviceName = this.serviceName;
 
 		this.serviceName  = null;
 		this.policyEngine = null;
 		this.refresher    = null;
 		this.policyEngineRefreshTimer = null;
+		this.policyDownloadTimer = null;
 
 		if (refresher != null) {
 			refresher.stopRefresher();
+		}
+
+		if (policyDownloadTimer != null) {
+			policyDownloadTimer.cancel();
 		}
 
 		if (policyEngineRefreshTimer != null) {
@@ -528,6 +558,7 @@ public class RangerBasePlugin {
 	public void registerAuthContextEventListener(RangerAuthContextListener authContextListener) {
 		this.authContextListener = authContextListener;
 	}
+
 	public void unregisterAuthContextEventListener(RangerAuthContextListener authContextListener) {
 		this.authContextListener = null;
 	}
@@ -572,6 +603,31 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
+	public void refreshPoliciesAndTags() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> refreshPoliciesAndTags()");
+		}
+		try {
+			// Synch-up policies
+			long oldPolicyVersion = this.policyEngine.getPolicyVersion();
+			syncPoliciesWithAdmin(accessTrigger);
+			long newPolicyVersion = this.policyEngine.getPolicyVersion();
+
+			if (oldPolicyVersion == newPolicyVersion) {
+				// Synch-up tags
+				RangerTagEnricher tagEnricher = getTagEnricher();
+				if (tagEnricher != null) {
+					tagEnricher.syncTagsWithAdmin(accessTrigger);
+				}
+			}
+		} catch (InterruptedException exception) {
+			LOG.error("Failed to update policy-engine, continuing to use old policy-engine and/or tags", exception);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.info("<== refreshPoliciesAndTags()");
+		}
+	}
+
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
 		if(request != null && resultProcessor != null) {
 			RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
@@ -602,7 +658,7 @@ public class RangerBasePlugin {
 		}
 	}
 
-	public RangerServiceDef getDefaultServiceDef() {
+	private RangerServiceDef getDefaultServiceDef() {
 		RangerServiceDef ret = null;
 
 		if (StringUtils.isNotBlank(serviceType)) {
@@ -652,7 +708,7 @@ public class RangerBasePlugin {
 		return false;
 	}
 
-	static class LogHistory {
+	static private final class LogHistory {
 		long lastLogTime;
 		int counter;
 	}
@@ -672,4 +728,29 @@ public class RangerBasePlugin {
 			}
 		}
 	}
+
+	private void syncPoliciesWithAdmin(final DownloadTrigger token) throws InterruptedException{
+		policyDownloadQueue.put(token);
+		token.waitForCompletion();
+	}
+
+	private RangerTagEnricher getTagEnricher() {
+		RangerTagEnricher ret = null;
+		RangerAuthContext authContext = getCurrentRangerAuthContext();
+		if (authContext != null) {
+			Map<RangerContextEnricher, Object> contextEnricherMap = authContext.getRequestContextEnrichers();
+			if (MapUtils.isNotEmpty(contextEnricherMap)) {
+				Set<RangerContextEnricher> contextEnrichers = contextEnricherMap.keySet();
+
+				for (RangerContextEnricher enricher : contextEnrichers) {
+					if (enricher instanceof RangerTagEnricher) {
+						ret = (RangerTagEnricher) enricher;
+						break;
+					}
+				}
+			}
+		}
+		return ret;
+	}
+
 }

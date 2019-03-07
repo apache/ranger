@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -45,18 +46,19 @@ public class PolicyRefresher extends Thread {
 	private final String            serviceType;
 	private final String            serviceName;
 	private final RangerAdminClient rangerAdmin;
+	private final BlockingQueue<DownloadTrigger> policyDownloadQueue;
+
 	private final String            cacheFileName;
 	private final String            cacheDir;
 	private final Gson              gson;
 	private final boolean           disableCacheIfServiceNotFound;
 
-	private long 	pollingIntervalMs   = 30 * 1000;
 	private long 	lastKnownVersion    = -1L;
 	private long	lastActivationTimeInMillis;
 	private boolean policiesSetInPlugin;
 	private boolean serviceDefSetInPlugin;
 
-	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, long pollingIntervalMs, String cacheDir) {
+	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, BlockingQueue<DownloadTrigger> policyDownloadQueue, String cacheDir) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
@@ -65,7 +67,7 @@ public class PolicyRefresher extends Thread {
 		this.serviceType       = serviceType;
 		this.serviceName       = serviceName;
 		this.rangerAdmin       = rangerAdmin;
-		this.pollingIntervalMs = pollingIntervalMs;
+		this.policyDownloadQueue = policyDownloadQueue;
 
 		if(StringUtils.isEmpty(appId)) {
 			appId = serviceType;
@@ -122,20 +124,6 @@ public class PolicyRefresher extends Thread {
 		return rangerAdmin;
 	}
 
-	/**
-	 * @return the pollingIntervalMilliSeconds
-	 */
-	public long getPollingIntervalMs() {
-		return pollingIntervalMs;
-	}
-
-	/**
-	 * @param pollingIntervalMilliSeconds the pollingIntervalMilliSeconds to set
-	 */
-	public void setPollingIntervalMilliSeconds(long pollingIntervalMilliSeconds) {
-		this.pollingIntervalMs = pollingIntervalMilliSeconds;
-	}
-
 	public long getLastActivationTimeInMillis() {
 		return lastActivationTimeInMillis;
 	}
@@ -168,9 +156,10 @@ public class PolicyRefresher extends Thread {
 		}
 
 		while(true) {
-			loadPolicy();
 			try {
-				Thread.sleep(pollingIntervalMs);
+				DownloadTrigger trigger = policyDownloadQueue.take();
+				loadPolicy();
+				trigger.signalCompletion();
 			} catch(InterruptedException excp) {
 				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
