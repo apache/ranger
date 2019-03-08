@@ -571,7 +571,7 @@
 		_.each(zoneServiceResources, function(resourceGroup){
 			resourceStr += '<div class="zone-resource">';
 			_.map(resourceGroup,function(res, resType){ 
-				resourceStr +=  '<strong>' + resType + '</strong> : ' + res + '<br>' ;
+				resourceStr +=  '<strong>' + _.escape(resType) + '</strong> : ' + _.escape(res) + '<br>' ;
 			});
 			resourceStr += '</div>';
 		});

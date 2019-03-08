@@ -309,15 +309,8 @@ define(function(require) {
                 title: 'h.zoneCreate'
             },
             ZoneEdit : function(options){
-                var href = "javascript:void(0);";
-                if(_.has(options,'model')){
-                    href =  '#!/zone/edit/'+options.model.get('id');
-                }
-                if(_.has(options,'id')){
-                    href =  '#!/zone/edit'+options.id;
-                }
                 return {
-                    href : href,
+                    href : 'javascript:void(0);',
                     text : 'h.zoneEdit',
                     title: 'h.zoneEdit'
                 };

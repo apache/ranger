@@ -980,7 +980,7 @@ public class AppConstants extends RangerCommonEnums {
 			return "Usersync Audit Info"; //CLASS_TYPE_UGYNC_AUDIT_INFO
 		}
 		if( elementValue == 1056 ) {
-			return "Ranger Secuity Zone"; //CLASS_TYPE_RANGER_SECURITY_ZONE
+			return "Ranger Security Zone"; //CLASS_TYPE_RANGER_SECURITY_ZONE
 		}
 		return null;
 	}

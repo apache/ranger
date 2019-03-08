@@ -35,14 +35,14 @@ define(function(require) {
             && model.get('requestData')){
             if(resourcePath && !_.isEmpty(model.get('requestData'))) {
                 return '<div class="clearfix">\
-                            <div class="pull-left resourceText" title="'+ resourcePath+'">'+resourcePath+'</div>\
+                            <div class="pull-left resourceText" title="'+ _.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
                             <div class="pull-right">\
                                 <div class="queryInfo btn btn-mini link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
                                     <i class="icon-table" ></i>\
                                 </div>\
                             </div>\
                         </div>\
-                        <div title="'+resourceType+'" class="border-top-1">'+resourceType+'</div>';
+                        <div title="'+_.escape(resourceType)+'" class="border-top-1">'+_.escape(resourceType)+'</div>';
             }else{
                 return '<div class="clearfix">\
                             <div class="pull-left">--</div>\
@@ -55,8 +55,8 @@ define(function(require) {
             }
         }else{
             if(resourcePath){
-                return '<div class ="resourceText" title="'+resourcePath+'">'+resourcePath+'</div>\
-                        <div title="'+resourceType+'" class="border-top-1">'+resourceType+'</div>';
+                return '<div class ="resourceText" title="'+_.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
+                        <div title="'+_.escape(resourceType)+'" class="border-top-1">'+_.escape(resourceType)+'</div>';
             }else{
                 return '--';
             }
