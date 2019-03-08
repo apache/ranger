@@ -161,7 +161,7 @@
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
-        <solr.version>5.5.4</solr.version>
+        <solr.version>7.7.1</solr.version>
         <spring-ldap-core.version>2.3.2.RELEASE</spring-ldap-core.version>
         <springframework.security.version>4.2.7.RELEASE</springframework.security.version>
         <springframework.test.version>4.3.18.RELEASE</springframework.test.version>

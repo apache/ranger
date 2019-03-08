@@ -97,18 +97,16 @@ public class SolrAuditProvider extends AuditDestination {
 						solrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<SolrClient>() {
 							@Override
 							public SolrClient run()  throws Exception {
-								SolrClient solrClient = new HttpSolrClient(solrURL);
-								return solrClient;
+								HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+								builder.withBaseSolrUrl(solrURL);
+								builder.allowCompression(true);
+								builder.withConnectionTimeout(1000);
+								HttpSolrClient httpSolrClient = builder.build();
+								return httpSolrClient;
 							};
 						});
 
 						me = solrClient;
-						if (solrClient instanceof HttpSolrClient) {
-							HttpSolrClient httpSolrClient = (HttpSolrClient) solrClient;
-							httpSolrClient.setAllowCompression(true);
-							httpSolrClient.setConnectionTimeout(1000);
-							// solrClient.setSoTimeout(10000);
-						}
 					} catch (Throwable t) {
 						LOG.fatal("Can't connect to Solr server. URL="
 								+ solrURL, t);

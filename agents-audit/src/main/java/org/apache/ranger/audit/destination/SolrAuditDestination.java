@@ -29,7 +29,8 @@ import org.apache.ranger.audit.utils.SolrAppUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpClientUtil;
-import org.apache.solr.client.solrj.impl.Krb5HttpClientConfigurer;
+import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
+import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
@@ -42,6 +43,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Arrays;
+import java.util.Optional;
 
 
 public class SolrAuditDestination extends AuditDestination {
@@ -112,13 +115,15 @@ public class SolrAuditDestination extends AuditDestination {
 								+ zkHosts);
 						try {
 							// Instantiate
-							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
-							final String zkhosts =zkHosts;
+							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+							SolrHttpClientBuilder kb = krbBuild.getBuilder();
+							HttpClientUtil.setHttpClientBuilder(kb);
+
+							final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
 							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
 								@Override
 								public CloudSolrClient run()  throws Exception {
-									CloudSolrClient solrCloudClient = new CloudSolrClient(
-											zkhosts);
+									CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
 									return solrCloudClient;
 								};
 							});
@@ -135,18 +140,20 @@ public class SolrAuditDestination extends AuditDestination {
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
 						try {
 							LOG.info("Connecting to Solr using URLs=" + solrURLs);
-							HttpClientUtil.setConfigurer(new Krb5HttpClientConfigurer());
+							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+							SolrHttpClientBuilder kb = krbBuild.getBuilder();
+							HttpClientUtil.setHttpClientBuilder(kb);
 							final List<String> solrUrls = solrURLs;
 							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
 								@Override
 								public LBHttpSolrClient run()  throws Exception {
-									LBHttpSolrClient lbSolrClient = new LBHttpSolrClient(
-											solrUrls.get(0));
+									LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
+									builder.withBaseSolrUrl(solrUrls.get(0));
+									builder.withConnectionTimeout(1000);
+									LBHttpSolrClient lbSolrClient = builder.build();
 									return lbSolrClient;
 								};
 							});
-
-							lbSolrClient.setConnectionTimeout(1000);
 
 							for (int i = 1; i < solrURLs.size(); i++) {
 								lbSolrClient.addSolrServer(solrURLs.get(i));

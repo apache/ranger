@@ -32,7 +32,9 @@ public class ServiceSolrConnectionMgr {
 		if (url != null) {
 			//TODO: Determine whether the instance is SolrCloud
 			boolean isSolrCloud = true;
-			SolrClient solrClient = new HttpSolrClient(url);
+			HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+			builder.withBaseSolrUrl(url);
+			SolrClient solrClient = builder.build();
 			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(
 					solrClient, isSolrCloud, configs);
 			return serviceSolrClient;
