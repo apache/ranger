@@ -120,6 +120,8 @@
         <hamcrest.all.version>1.3</hamcrest.all.version>
         <hbase.version>2.0.0</hbase.version>
         <hive.version>3.0.0</hive.version>
+        <libfb303.version>0.9.3</libfb303.version>
+        <libthrift.version>0.12.0</libthrift.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpclient.version>4.5.3</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.6</httpcomponents.httpcore.version>
