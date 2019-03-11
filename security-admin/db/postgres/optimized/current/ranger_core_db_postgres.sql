@@ -83,10 +83,10 @@ DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
 
-DROP SEQUENCE IF EXISTS x_security_zone_ref_group_seq;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_user_seq;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_resource_seq;
-DROP SEQUENCE IF EXISTS x_security_zone_ref_service_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP SEQUENCE IF EXISTS x_security_zone_seq;
 DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
@@ -382,6 +382,7 @@ exported_json TEXT NULL,
 http_ret_code INT DEFAULT '0' NOT NULL,
 cluster_name VARCHAR(255) DEFAULT NULL NULL,
 zone_name VARCHAR(255) DEFAULT NULL NULL,
+policy_version BIGINT DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_policy_export_audit_FK_added FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_policy_export_audit_FK_upd FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
@@ -1630,6 +1631,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('036',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('039',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

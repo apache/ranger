@@ -24,9 +24,10 @@ create_time TIMESTAMP DEFAULT NULL NULL,
 service_id bigint NOT NULL,
 change_type int NOT NULL,
 policy_version bigint DEFAULT '0' NOT NULL,
-zone_name varchar(256) DEFAULT NULL NULL,
+service_type varchar(256) DEFAULT NULL NULL,
 policy_type int DEFAULT NULL NULL,
-
+zone_name varchar(256) DEFAULT NULL NULL,
+policy_id bigint DEFAULT NULL NULL,
 primary key (id)
 );
 commit;
