@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,19 +17,19 @@
  * under the License.
  */
 
- 
+
 define(function(require){
     'use strict';
 
 	var Backbone		= require('backbone');
 	var SessionMgr		= require('mgrs/SessionMgr');
-	
+
 	var VXGroupList		= require('collections/VXGroupList');
 	var localization	= require('utils/XALangSupport');
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtils			= require('utils/XAUtils');
 	var AddGroup 		= require('views/common/AddGroup');
-	
+
 	require('backbone-forms');
 	require('backbone-forms.templates');
 	require('bootbox');
@@ -37,9 +37,9 @@ define(function(require){
 	/** @lends UserForm */
 	{
 		_viewName : 'UserForm',
-         
+
 		/**
-		* intialize a new UserForm Form View 
+		* intialize a new UserForm Form View
 		* @constructs
 		*/
 		initialize: function(options) {
@@ -60,7 +60,7 @@ define(function(require){
 				}
     		});
 		},
-		
+
 	    /** fields for the form
 		*/
 		fields: ['name', 'description'],
@@ -69,7 +69,7 @@ define(function(require){
 				name : {
 					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.userName") +' *',
-					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i, 
+					validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid user name'}],
 					editorAttrs : {'maxlength': 255},
 			        errorMsg    :localization.tt('validationMessages.userNameValidationMsg')
@@ -90,14 +90,14 @@ define(function(require){
 					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
-				firstName : { 
+				firstName : {
 					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.firstName")+' *',
                                         validators  : ['required',{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
 						            message :' Invalid first name'}],
 					errorMsg    :localization.tt('validationMessages.firstNameValidationMsg'),
 				},
-				lastName : { 
+				lastName : {
 					type		: 'TextFieldWithIcon',
 					title		: localization.tt("lbl.lastName"),
                                         validators  : [{type:'regexp',regexp:/^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
@@ -128,7 +128,7 @@ define(function(require){
 					},
 					title : localization.tt('lbl.selectRole')+' *'
 				}
-			};	
+			};
 		},
 		/** on render callback */
 		render: function(options) {
@@ -160,13 +160,13 @@ define(function(require){
 					this.fields.passwordConfirm.editor.$el.find('input').attr('disabled',true);
 					this.fields.firstName.editor.$el.find('input').attr('disabled',true);
 					this.fields.lastName.editor.$el.find('input').attr('disabled',true);
-					this.fields.emailAddress.editor.$el.attr('disabled',true);
+					this.fields.emailAddress.editor.$el.find('input').attr('disabled',true);
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
-				
+
 				if(SessionMgr.getUserProfile().get('loginId') != "admin"){
 					if(this.model.get('name') != "admin"){
-						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN') 
+						if(_.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_SYS_ADMIN')
 								|| _.contains(SessionMgr.getUserProfile().get('userRoleList'),'ROLE_KEY_ADMIN')){
 							this.fields.userRoleList.editor.$el.attr('disabled',false);
 						} else {
@@ -184,7 +184,7 @@ define(function(require){
 				if(this.model.get('name') == SessionMgr.getUserProfile().get('loginId')){
 					this.fields.userRoleList.editor.$el.attr('disabled',true);
 				}
-			}	
+			}
 		},
 		renderCustomFields: function(){
 			var that = this;
@@ -202,7 +202,7 @@ define(function(require){
 				this.fields.lastName.$el.hide();
 				this.fields.emailAddress.$el.hide();
 				this.fields.userRoleList.$el.hide();
-				
+
 				this.fields.name.editor.validators = this.removeElementFromArr(this.fields.name.editor.validators , 'required');
 				this.fields.firstName.editor.validators = this.removeElementFromArr(this.fields.firstName.editor.validators , 'required');
 				this.fields.emailAddress.editor.validators = this.removeElementFromArr(this.fields.emailAddress.editor.validators , 'required');
@@ -213,14 +213,14 @@ define(function(require){
 			if(	(!this.model.isNew() && (this.showBasicFields))){
 				this.fields.password.$el.hide();
 				this.fields.passwordConfirm.$el.hide();
-				
+
 				this.fields.password.editor.validators = [];
 				this.fields.passwordConfirm.editor.validators = [];
 				//Remove validation checks for external users
 				if(this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 					this.fields.firstName.editor.validators = [];
 					var labelStr = this.fields.firstName.$el.find('label').html().replace('*','');
-					this.fields.firstName.$el.find('label').html(labelStr);	
+					this.fields.firstName.$el.find('label').html(labelStr);
 				}
 			}
 		},
@@ -274,7 +274,7 @@ define(function(require){
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		}
-		
+
 	});
 
 	return UserForm;
