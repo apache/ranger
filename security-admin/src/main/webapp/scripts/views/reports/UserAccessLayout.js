@@ -29,13 +29,12 @@ define(function(require) {'use strict';
 	var localization		= require('utils/XALangSupport');
 	var XAGlobals			= require('utils/XAGlobals');
 	var CustomSubgrid 		= require('views/common/CustomSubgrid');
-	
 	var RangerService		= require('models/RangerService');
 	var RangerServiceDefList= require('collections/RangerServiceDefList');
 	var RangerPolicyList	= require('collections/RangerPolicyList');
 	var UseraccesslayoutTmpl= require('hbs!tmpl/reports/UserAccessLayout_tmpl');
-        var SessionMgr  	= require('mgrs/SessionMgr');
-
+	var SessionMgr  	= require('mgrs/SessionMgr');
+	var RangerZoneList = require('collections/RangerZoneList');
 	var UserAccessLayout 	= Backbone.Marionette.Layout.extend(
 	/** @lends UserAccessLayout */
 	{
@@ -46,8 +45,8 @@ define(function(require) {'use strict';
 		templateHelpers :function(){
 			return {
 				groupList : this.groupList,
-                                policyHeaderList : this.policyCollList,
-                                showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
+				policyHeaderList : this.policyCollList,
+				showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
 			};
 		},
 
@@ -81,9 +80,10 @@ define(function(require) {'use strict';
 			downloadReport      : '[data-id="downloadReport"]',
 			policyType          : '[data-id="policyType"]',
 			btnShowMoreAccess 	: '[data-id="showMoreAccess"]',
-                        btnShowLessAccess 	: '[data-id="showLessAccess"]',
-                        iconSearchInfo      : '[data-id="searchInfo"]',
-                        policyLabels		: '[data-id="policyLabels"]'
+			btnShowLessAccess 	: '[data-id="showLessAccess"]',
+			iconSearchInfo      : '[data-id="searchInfo"]',
+			policyLabels		: '[data-id="policyLabels"]',
+			zoneName			: '[data-id="zoneName"]',
 		},
 
 		/** ui events hash */
@@ -131,12 +131,21 @@ define(function(require) {'use strict';
 			
 		},
 		initializeServiceDef : function() {
-		   this.serviceDefList = new RangerServiceDefList();
-		   this.serviceDefList.fetch({
-			   cache : false,
-			   async:false
-		   });
-		},	   
+			var that = this;
+			this.serviceDefList = new RangerServiceDefList();
+			this.serviceDefList.fetch({
+				cache : false,
+				async:false
+			});
+			this.rangerZoneList = new RangerZoneList();
+			this.rangerZoneList.fetch({
+				cache : false,
+				async:false,
+				success: function(coll, resp) {
+                    that.rangerZoneList.set(resp);
+                }
+			})
+		},
 
 		/** all events binding here */
 		bindEvents : function() {
@@ -149,11 +158,11 @@ define(function(require) {'use strict';
 			this.initializePlugins();
 			this.setupGroupAutoComplete();
 			this.renderComponentAndPolicyTypeSelect();
-                        var policyType = this.ui.policyType.val();
+			var policyType = this.ui.policyType.val();
 //			Show policies listing for each service and GET policies for each service
 			_.each(this.policyCollList, function(obj,i){
 				this.renderTable(obj.collName, obj.serviceDefName);
-                                this.getResourceLists(obj.collName,obj.serviceDefName,policyType);
+				this.getResourceLists(obj.collName,obj.serviceDefName,policyType);
 			},this);
 			this.$el.find('[data-js="policyName"]').focus()
 			var urlString = XAUtil.getBaseUrl();
@@ -161,25 +170,25 @@ define(function(require) {'use strict';
 				urlString = urlString.slice(0,-1);
 			}
 			this.previousSearchUrl = urlString+"/service/plugins/policies/downloadExcel?";
-            XAUtil.searchInfoPopover(this.getSearchInfoArray() , this.ui.iconSearchInfo , 'left');
-        },
-         getSearchInfoArray: function(){
-	         return [{text :'Policy Name' , info :localization.tt('msg.policyNameMsg')},
-	                 {text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
-	                 {text :'Component'   , info :localization.tt('msg.componentMsg')},
-	                 {text :'Search By'   , info :localization.tt('msg.searchBy')},
-                         {text :'Resource'    , info :localization.tt('msg.resourceMsg')},
-                         {text :'Policy Label', info :localization.tt('msg.policyLabelsinfo')}]
-         },
-         getResourceLists: function(collName, serviceDefName , policyType){
-
+			XAUtil.searchInfoPopover(this.getSearchInfoArray() , this.ui.iconSearchInfo , 'left');
+		},
+		getSearchInfoArray: function(){
+			return [{text :'Policy Name' , info :localization.tt('msg.policyNameMsg')},
+					{text :'Policy Type' , info :localization.tt('msg.policyTypeMsg')},
+					{text :'Component'   , info :localization.tt('msg.componentMsg')},
+					{text :'Search By'   , info :localization.tt('msg.searchBy')},
+					{text :'Resource'    , info :localization.tt('msg.resourceMsg')},
+					{text :'Policy Label', info :localization.tt('msg.policyLabelsinfo')},
+					{text :'Zone Name', info :localization.tt('lbl.zoneName')}]
+		},
+		getResourceLists: function(collName, serviceDefName , policyType){
 			var that = this, coll = this[collName];
 			that.allowDownload = false;
 			coll.queryParams.serviceType = serviceDefName;
-                        if(policyType){
+			if(policyType){
 //				to set default value access type in policy type
-                                coll.queryParams.policyType = policyType;
-                        }
+				coll.queryParams.policyType = policyType;
+			}
 			coll.fetch({
 				cache : false,
 				reset: true,
@@ -192,7 +201,6 @@ define(function(require) {'use strict';
 				_.each(that[collName].models,function(model,ind){
 					that.setSubgridCollForPolicyItems(model);
 				});
-
 			});
 		},
 		renderTable : function(collName,serviceDefName){
@@ -225,9 +233,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('groups'),function(group,index){
 									if(index < 4) {
-                                                                                group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
 									} else {
-                                                                                group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
 									}
 								});
 								if(model.get('groups').length > 4) {
@@ -256,9 +264,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('users'),function(user,index){
 									if(index < 4) {
-                                                                                user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
 									} else {
-                                                                                user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
 									}
 								});
 								if(model.get('users').length > 4) {
@@ -382,21 +390,21 @@ define(function(require) {'use strict';
 					editable: false,
 					sortable : false
 				},
-                                policyLabels: {
-                                    cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-                                    label : localization.tt("lbl.policyLabels"),
-                                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                                        fromRaw: function (rawValue, model) {
-                                            var labels ="";
-                                            if(!_.isUndefined(rawValue) && rawValue.length != 0){
-                                                return XAUtil.showMoreAndLessButton(rawValue, model)
-                                            }else{
-                                                return '--';
-                                            }
-                                        }
-                                    }),
-                                    editable : false,
-                                },
+				policyLabels: {
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					label : localization.tt("lbl.policyLabels"),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							var labels ="";
+							if(!_.isUndefined(rawValue) && rawValue.length != 0){
+								return XAUtil.showMoreAndLessButton(rawValue, model)
+							}else{
+								return '--';
+							}
+						}
+					}),
+					editable : false,
+				},
 				resources: {
 					label: 'Resources',
 					cell: 'Html',
@@ -454,7 +462,22 @@ define(function(require) {'use strict';
 					click : false,
 					drag : false,
 					sortable : false
-				}
+				},
+				zoneName: {
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					label : localization.tt("lbl.zoneName"),
+					editable : false,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							var labels ="";
+							if(!_.isUndefined(rawValue) && rawValue.length != 0){
+								return '<span class="label label-inverse" style="float:inherit;">'+rawValue+'</span>'
+							}else{
+								return '<span style="float:inherit;">'+"--"+'</span>';
+							}
+						}
+					}),
+				},
 			};
 			var permissions = this.getPermissionColumns(this[collName],collName,serviceDefName,subcolumns);
 			_.extend(columns,permissions);
@@ -552,44 +575,54 @@ define(function(require) {'use strict';
 			var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
 				return {'id': m.value,'text': m.label};
 			});
+			var zoneListOptions = _.map(this.rangerZoneList.models, function(m){
+				return { 'id':m.get('name'), 'text':m.get('name')}
+			});
 			this.ui.componentType.select2({
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Component',
-			    //maximumSelectionSize : 1,
-			    width: '220px',
-			    allowClear: true,
-			    data: options
+				//maximumSelectionSize : 1,
+				width: '220px',
+				allowClear: true,
+				data: options
 			});
 			this.ui.policyType.select2({
-                                closeOnSelect: false,
+				closeOnSelect: false,
 				maximumSelectionSize : 1,
 				width: '220px',
-                                value : this.ui.policyType.val("0"),
-                                allowClear: false,
+				value : this.ui.policyType.val("0"),
+				allowClear: false,
 				data: policyTypes
-	
 			});
-                        this.ui.policyLabels.select2({
-                            multiple: false,
-                            closeOnSelect: true,
-                            placeholder: 'Select Policy Label',
-                            allowClear: true,
-                            width: '220px',
-                            ajax :{
-                                url: "service/plugins/policyLabels",
-                                async : false,
-                                dataType : 'JSON',
-                                data: function (term, page) {
-                                    return {policyLabel : term};
-                                },
-                                results: function (data, page) {
-                                    var results = [];
-                                    results = data.map(function(m, i){return {id : _.escape(m), text: _.escape(m) };});
-                                    return {results : results};
-                                }
-                            }
-                        });
+			this.ui.policyLabels.select2({
+				multiple: false,
+				closeOnSelect: true,
+				placeholder: 'Select Policy Label',
+				allowClear: true,
+				width: '220px',
+				ajax :{
+					url: "service/plugins/policyLabels",
+					async : false,
+					dataType : 'JSON',
+					data: function (term, page) {
+						return {policyLabel : term};
+					},
+					results: function (data, page) {
+						var results = [];
+						results = data.map(function(m, i){return {id : _.escape(m), text: _.escape(m) };});
+						return {results : results};
+					}
+				}
+			});
+			this.ui.zoneName.select2({
+				closeOnSelect: false,
+				maximumSelectionSize : 1,
+				width: '220px',
+				allowClear: true,
+				data: zoneListOptions,
+				placeholder: 'Select Zone Name',
+			});
 		},
 		onDownload: function(e){
 			var that = this, url = '';
@@ -785,9 +818,10 @@ define(function(require) {'use strict';
 			//Get search values
 			var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
 			var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
-                        var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val(),
-                        policyLabel = this.ui.policyLabels.val()
-                        var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel };
+			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val(),
+			policyLabel = this.ui.policyLabels.val(), zoneName = this.ui.zoneName.val()
+			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel,
+				zoneName : zoneName};
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
             that.initializeRequiredData();
             _.each(this.policyCollList, function(obj,i){
@@ -842,8 +876,9 @@ define(function(require) {'use strict';
 				user : users,
 				polResource : rxName,
 				policyNamePartial : policyName,
-                                policyType: policyType,
-                                policyLabelsPartial:policyLabel
+				policyType: policyType,
+				policyLabelsPartial:policyLabel,
+				zoneName : zoneName
 			};
 
 			this.setDownloadReportUrl(this,component,params);
