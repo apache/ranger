@@ -48,20 +48,25 @@ define(function(require){
                 serviceDefs : this.componentCollectionModels(App.vZone.vZoneName),
                 services    : this.componentServicesModels(App.vZone.vZoneName),
                 showImportExportBtn : (SessionMgr.isUser() || XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
-                isZoneAdministration : ((SessionMgr.isSystemAdmin()|| SessionMgr.isUser() || SessionMgr.isAuditor()) && this.type !== XAEnums.ServiceType.SERVICE_TAG.label) ? true : false,
+                isZoneAdministration : (SessionMgr.isSystemAdmin()|| SessionMgr.isUser() || SessionMgr.isAuditor()) ? true : false,
 			};
 			
 		},
     	breadCrumbs :function(){
-    		if(this.type == "tag"){
-    			return [XALinks.get('TagBasedServiceManager')];
-    		}
-    		if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName)){
-    			return [XALinks.get('ServiceManager', App.vZone.vZoneName)];
-    		}else{
-				return [XALinks.get('ServiceManager')];
-    		}
-    	},
+            if(this.type == "tag"){
+                if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName)){
+                    return [XALinks.get('TagBasedServiceManager', App.vZone.vZoneName)];
+                }else{
+                    return [XALinks.get('TagBasedServiceManager')];
+                }
+            }else{
+                if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName)){
+                    return [XALinks.get('ServiceManager', App.vZone.vZoneName)];
+                }else{
+                    return [XALinks.get('ServiceManager')];
+                }
+            }
+        },
 
 		/** Layout sub regions */
     	regions: {},
@@ -332,19 +337,46 @@ define(function(require){
                     return zoneName === m.get('name');
                 });
             }
-            if (this.type !== XAEnums.ServiceType.SERVICE_TAG.label && selectedZone && !_.isEmpty(selectedZone)) {
+            if (selectedZone && !_.isEmpty(selectedZone)) {
                 var selectedZoneServices = [];
-                _.each(selectedZone.get('services'), function(value, key) {
-                    var model = that.services.find(function(m) {
-                        return m.get('name') == key
+                if(this.type !== XAEnums.ServiceType.SERVICE_TAG.label){
+                    _.each(selectedZone.get('services'), function(value, key) {
+                        var model = that.services.find(function(m) {
+                            return m.get('name') == key
+                        })
+                        if (model) {
+                            selectedZoneServices.push(model);
+                        }
+                    });
+                    return _.groupBy(selectedZoneServices, function(m) {
+                        return m.get('type')
+                    });
+                }else{
+                    var tagAssociatedServices = _.filter(this.services.models, function(m, key){
+                        return m.get('tagService') && !_.isEmpty(m.get('tagService'))
+                    }),
+                    zoneServiceList = _.keys (selectedZone.get('services')),
+                    tagServiceGrp = _.groupBy(tagAssociatedServices, function(m){return m.get('tagService')});
+                    //Compare tag associate service with zone services and return tag name that services match to zone services.
+                    _.each(tagServiceGrp, function(m, key){
+                        var hasTag = _.some(m, function(model){
+                            return zoneServiceList.indexOf(model.get("name")) !== -1;
+                        })
+                        if (hasTag) {
+                            var models = that.services.models.filter(function(obj){
+                                return obj.get("name") === key
+                            })
+                            if (models.length > 0) {
+                                selectedZoneServices = _.union(selectedZoneServices,models);
+                            }
+                        }
+                    });
+                    //Tag services listed by create time of that services
+                    selectedZoneServices = _.sortBy(selectedZoneServices,function(service){return service.get('createTime')});
+                    return _.groupBy(selectedZoneServices, function(obj){
+                        return obj.get("type");
                     })
-                    if (model) {
-                        selectedZoneServices.push(model);
-                    }
-                });
-                return _.groupBy(selectedZoneServices, function(m) {
-                    return m.get('type')
-                });
+                }
             } else {
                 return that.services.groupBy("type")
             }

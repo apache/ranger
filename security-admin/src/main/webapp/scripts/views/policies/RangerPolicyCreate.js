@@ -72,7 +72,7 @@ define(function(require){
     	breadCrumbs :function(){
     		var name  = this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? 'ServiceManager' : 'TagBasedServiceManager';
     		if(this.model.isNew()){
-                if(App.vZone && App.vZone.vZoneName && this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
+                if(App.vZone && App.vZone.vZoneName){
                    return [XALinks.get(name, App.vZone.vZoneName), 
                         XALinks.get('ManagePolicies',{model : this.rangerService}), XALinks.get('PolicyCreate')];
                 }else{
@@ -80,7 +80,7 @@ define(function(require){
                         XALinks.get('PolicyCreate')];
                 }
             } else {
-                if(App.vZone && App.vZone.vZoneName && this.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label){
+                if(App.vZone && App.vZone.vZoneName){
                     return [XALinks.get(name, App.vZone.vZoneName),
                         XALinks.get('ManagePolicies',{model : this.rangerService}), XALinks.get('PolicyEdit')];
                 }else{

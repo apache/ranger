@@ -51,17 +51,20 @@ define(function(require) {
 				title: 'h.repositoryManager'
 			},
 			ServiceManager : function(options){
-				var textVal = !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : 'Service Manager';
+				var textVal = 'h.serviceManager';
 				return {
 					href : '#!/policymanager/resource',
-					text : textVal,
-					title : textVal,
+					text :  !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : textVal,
+					title : !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : textVal,
 				}
 			},
-			TagBasedServiceManager :{
-				href : '#!/policymanager/tag', 
-				text : 'h.serviceManager',
-				title: 'h.serviceManager'
+			TagBasedServiceManager : function(options){
+				var textVal = 'h.serviceManager';
+				return{
+					href : '#!/policymanager/tag',
+					text : !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : textVal,
+					title: !_.isEmpty(options) ? 'Service Manager : ' + options + ' zone' : textVal,
+				}
 			},
 			Users : { 
 				href : '#!/users/usertab',

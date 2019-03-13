@@ -60,17 +60,22 @@ define(function(require){
 			};
 		},
         
-    	breadCrumbs : function(){
+        breadCrumbs : function(){
             if(this.rangerService.get('type') == XAEnums.ServiceType.SERVICE_TAG.label){
-                return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
-            }
-            if(App.vZone && App.vZone.vZoneName){
-                return [XALinks.get('ServiceManager', App.vZone.vZoneName),
-                    XALinks.get('ManagePolicies',{model : this.rangerService})];
+                if(App.vZone && App.vZone.vZoneName){
+                    return [XALinks.get('TagBasedServiceManager', App.vZone.vZoneName),XALinks.get('ManagePolicies',{model : this.rangerService})];
+                }else{
+                    return [XALinks.get('TagBasedServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+                }
             }else{
-                return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+                if(App.vZone && App.vZone.vZoneName){
+                    return [XALinks.get('ServiceManager', App.vZone.vZoneName),
+                        XALinks.get('ManagePolicies',{model : this.rangerService})];
+                }else{
+                    return [XALinks.get('ServiceManager'),XALinks.get('ManagePolicies',{model : this.rangerService})];
+                }
             }
-   		},        
+        },
 
 		/** Layout sub regions */
     	regions: {
@@ -129,8 +134,7 @@ define(function(require){
 			if(!_.isUndefined(policyType)){
 				this.collection.queryParams['policyType'] = policyType;
 			}
-            if(!_.isUndefined(App.vZone) && App.vZone.vZoneName
-                    && this.rangerService.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
+            if(!_.isUndefined(App.vZone) && App.vZone.vZoneName){
                 this.collection.queryParams['zoneName'] = App.vZone.vZoneName;
             }
 			this.collection.fetch({
