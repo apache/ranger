@@ -54,7 +54,7 @@
                             <include>org.mortbay.jetty:jetty-util</include>
                             <include>commons-collections:commons-collections</include>
                             <include>commons-lang:commons-lang</include>
-                            <include>org.apache.zookeeper:zookeeper</include>
+                            <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                             <include>org.apache.curator:curator-framework</include>
                             <include>org.apache.curator:curator-client</include>
                             <include>org.apache.curator:curator-test</include>
@@ -70,13 +70,13 @@
                             <include>org.apache.avro:avro</include>
                             <include>commons-beanutils:commons-beanutils</include>
                             <include>commons-cli:commons-cli</include>
-                            <include>commons-codec:commons-codec</include>
+                            <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
                             <include>org.apache.commons:commons-compress</include>
                             <include>org.apache.commons:commons-configuration2</include>
                             <include>commons-digester:commons-digester</include>
                             <include>commons-io:commons-io</include>
                             <include>org.apache.commons:commons-math3</include>
-                            <include>commons-net:commons-net</include>
+                            <include>commons-net:commons-net:jar:${commons.net.version}</include>
                             <include>org.apache.curator:curator-recipes</include>
                             <include>com.google.code.gson:gson</include>
                             <include>org.apache.hadoop:hadoop-annotations</include>

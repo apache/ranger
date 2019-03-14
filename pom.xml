@@ -93,17 +93,17 @@
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
-        <commons.codec.version>1.9</commons.codec.version>
+        <commons.codec.version>1.11</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.8.1</commons.compress.version>
         <commons.configuration.version>2.1.1</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
-        <commons.io.version>2.4</commons.io.version>
+        <commons.io.version>2.5</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.logging.version>1.2</commons.logging.version>
         <commons.math.version>2.2</commons.math.version>
-        <commons.net.version>3.3</commons.net.version>
+        <commons.net.version>3.6</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
         <curator.test.version>2.12.0</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
@@ -152,6 +152,7 @@
         <mockito.version>2.23.4</mockito.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.10.5.Final</netty.version>
+        <netty-all.version>4.1.34.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
@@ -174,11 +175,10 @@
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <tomcat.embed.version>7.0.91</tomcat.embed.version>
         <velocity.version>1.7</velocity.version>
-        <zookeeper.version>3.4.6</zookeeper.version>
+        <zookeeper.version>3.4.13</zookeeper.version>
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
 		<fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
 		<fasterxml.jackson.version>2.9.8</fasterxml.jackson.version>
-		<fasterxml.jackson.databind.version>2.9.8</fasterxml.jackson.databind.version>
     </properties>
     <profiles>
         <profile>

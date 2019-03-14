@@ -46,7 +46,6 @@
                     <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.storm.version}</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.storm.version}</include>
                     <include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.storm.version}</include>
-                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.slf4j:slf4j-api</include>
                     <include>log4j:log4j</include>
                     <include>com.sun.jersey:jersey-bundle</include>
