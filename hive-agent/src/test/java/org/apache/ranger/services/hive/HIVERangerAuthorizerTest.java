@@ -940,7 +940,7 @@ public class HIVERangerAuthorizerTest {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
-        Assert.assertTrue(statement.execute("show grant user admin"));
+        Assert.assertTrue(statement.execute("show grant user admin on table words"));
         statement.close();
         connection.close();
     }

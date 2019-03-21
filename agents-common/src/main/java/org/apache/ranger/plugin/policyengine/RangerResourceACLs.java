@@ -20,6 +20,8 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
+
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -38,7 +40,6 @@ import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACC
 public class RangerResourceACLs {
 	final private Map<String, Map<String, AccessResult>> userACLs  = new HashMap<>();
 	final private Map<String, Map<String, AccessResult>> groupACLs = new HashMap<>();
-
 	public RangerResourceACLs() {
 	}
 
@@ -84,7 +85,7 @@ public class RangerResourceACLs {
 		finalizeAcls(groupACLs);
 	}
 
-	public void setUserAccessInfo(String userName, String accessType, Integer access) {
+	public void setUserAccessInfo(String userName, String accessType, Integer access, RangerPolicy policy) {
 		Map<String, AccessResult> userAccessInfo = userACLs.get(userName);
 
 		if (userAccessInfo == null) {
@@ -96,15 +97,16 @@ public class RangerResourceACLs {
 		AccessResult accessResult = userAccessInfo.get(accessType);
 
 		if (accessResult == null) {
-			accessResult = new AccessResult(access);
+			accessResult = new AccessResult(access, policy);
 
 			userAccessInfo.put(accessType, accessResult);
 		} else {
 			accessResult.setResult(access);
+			accessResult.setPolicy(policy);
 		}
 	}
 
-	public void setGroupAccessInfo(String groupName, String accessType, Integer access) {
+	public void setGroupAccessInfo(String groupName, String accessType, Integer access, RangerPolicy policy) {
 		Map<String, AccessResult> groupAccessInfo = groupACLs.get(groupName);
 
 		if (groupAccessInfo == null) {
@@ -116,11 +118,12 @@ public class RangerResourceACLs {
 		AccessResult accessResult = groupAccessInfo.get(accessType);
 
 		if (accessResult == null) {
-			accessResult = new AccessResult(access);
+			accessResult = new AccessResult(access, policy);
 
 			groupAccessInfo.put(accessType, accessResult);
 		} else {
 			accessResult.setResult(access);
+			accessResult.setPolicy(policy);
 		}
 	}
 
@@ -135,6 +138,7 @@ public class RangerResourceACLs {
 			sb.append("permissions={");
 			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
 				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("},");
+				sb.append("{RangerPolicyID=").append(permission.getValue().getPolicy().getId()).append("},");
 			}
 			sb.append("},");
 		}
@@ -145,6 +149,7 @@ public class RangerResourceACLs {
 			sb.append("permissions={");
 			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
 				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("}, ");
+				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy().getId()).append("},");
 			}
 			sb.append("},");
 		}
@@ -179,19 +184,20 @@ public class RangerResourceACLs {
 	public static class AccessResult {
 		private int     result;
 		private boolean isFinal;
-
+		private RangerPolicy  policy;
 
 		public AccessResult() {
-			this(-1);
+			this(-1, null);
 		}
 
-		public AccessResult(int result) {
-			this(result, false);
+		public AccessResult(int result, RangerPolicy policy) {
+			this(result, false, policy);
 		}
 
-		public AccessResult(int result, boolean isFinal) {
+		public AccessResult(int result, boolean isFinal, RangerPolicy policy) {
 			setIsFinal(isFinal);
 			setResult(result);
+			setPolicy(policy);
 		}
 
 		public int getResult() { return result; }
@@ -209,6 +215,14 @@ public class RangerResourceACLs {
 		public boolean getIsFinal() { return isFinal; }
 
 		public void setIsFinal(boolean isFinal) { this.isFinal = isFinal; }
+
+		public RangerPolicy getPolicy() {
+			return policy;
+		}
+
+		public void setPolicy(RangerPolicy policy){
+			this.policy = policy;
+		}
 
 		@Override
 		public boolean equals(Object other) {

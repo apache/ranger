@@ -83,7 +83,7 @@ public class RangerSampleProjectProvider extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerSampleProjectProvider.enrich(" + request + ")");
 		}
 		
-		if(request != null && userProjectMap != null) {
+		if(request != null && userProjectMap != null && request.getUser() != null) {
 			Map<String, Object> context = request.getContext();
 			String              project = userProjectMap.getProperty(request.getUser());
 	

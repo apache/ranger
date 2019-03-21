@@ -628,7 +628,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 									accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
 								}
 							}
-							ret.setUserAccessInfo(userName, accessInfo.getKey(), accessResult);
+							RangerPolicy policy = evaluator.getPolicy();
+							ret.setUserAccessInfo(userName, accessInfo.getKey(), accessResult, policy);
 						}
 					}
 
@@ -644,7 +645,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 									accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
 								}
 							}
-							ret.setGroupAccessInfo(groupName, accessInfo.getKey(), accessResult);
+							RangerPolicy policy = evaluator.getPolicy();
+							ret.setGroupAccessInfo(groupName, accessInfo.getKey(), accessResult, policy);
 						}
 					}
 				}
