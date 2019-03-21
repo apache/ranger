@@ -19,8 +19,12 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
@@ -198,26 +202,55 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public Properties readProperties(String fileName) {
-		Properties ret = null;
-		
-		InputStream inStr = null;
+		Properties  ret     = null;
 
-		try {
-			inStr = new FileInputStream(fileName);
+		InputStream inStr   = null;
+		URL         fileURL = null;
 
-			Properties prop = new Properties();
+		File f = new File(fileName);
 
-			prop.load(inStr);
+		if (f.exists() && f.isFile() && f.canRead()) {
+			try {
+				inStr = new FileInputStream(f);
+				fileURL = f.toURI().toURL();
+			} catch (FileNotFoundException exception) {
+				LOG.error("Error processing input file:" + fileName + " or no privilege for reading file " + fileName, exception);
+			} catch (MalformedURLException malformedException) {
+				LOG.error("Error processing input file:" + fileName + " cannot be converted to URL " + fileName, malformedException);
+			}
+		} else {
+			fileURL = getClass().getResource(fileName);
 
-			ret = prop;
-		} catch(Exception excp) {
-			LOG.error("failed to load properties from file '" + fileName + "'", excp);
-		} finally {
-			if(inStr != null) {
-				try {
-					inStr.close();
-				} catch(Exception excp) {
-					// ignore
+			if (fileURL == null && !fileName.startsWith("/")) {
+				fileURL = getClass().getResource("/" + fileName);
+			}
+
+			if (fileURL == null) {
+				fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
+				if (fileURL == null && !fileName.startsWith("/")) {
+					fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
+				}
+			}
+		}
+
+		if (fileURL != null) {
+			try {
+				inStr = fileURL.openStream();
+
+				Properties prop = new Properties();
+
+				prop.load(inStr);
+
+				ret = prop;
+			} catch (Exception excp) {
+				LOG.error("failed to load properties from file '" + fileName + "'", excp);
+			} finally {
+				if (inStr != null) {
+					try {
+						inStr.close();
+					} catch (Exception excp) {
+						// ignore
+					}
 				}
 			}
 		}

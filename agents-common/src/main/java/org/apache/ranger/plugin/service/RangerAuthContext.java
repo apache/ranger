@@ -79,8 +79,9 @@ public class RangerAuthContext implements RangerPolicyEngine {
         if (requestContextEnrichers == null) {
             requestContextEnrichers = new ConcurrentHashMap<>();
         }
-
-        requestContextEnrichers.put(enricher, database);
+        // concurrentHashMap does not allow null to be inserted into it, so insert a dummy which is checked
+        // when enrich() is called
+        requestContextEnrichers.put(enricher, database != null ? database : enricher);
     }
 
     public void cleanupRequestContextEnricher(RangerContextEnricher enricher) {
@@ -156,7 +157,12 @@ public class RangerAuthContext implements RangerPolicyEngine {
 	    RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 	    if (MapUtils.isNotEmpty(requestContextEnrichers)) {
             for (Map.Entry<RangerContextEnricher, Object> entry : requestContextEnrichers.entrySet()) {
-                entry.getKey().enrich(request);
+                if (entry.getValue() instanceof RangerContextEnricher && entry.getKey().equals(entry.getValue())) {
+                    // This entry was a result of addOrReplaceRequestContextEnricher() API called with null database value
+                    entry.getKey().enrich(request, null);
+                } else {
+                    entry.getKey().enrich(request, entry.getValue());
+                }
             }
         }
     }

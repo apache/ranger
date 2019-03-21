@@ -274,6 +274,9 @@ public class RangerBasePlugin {
 	}
 
 	public void setPolicies(ServicePolicies policies) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> setPolicies(" + policies + ")");
+		}
 
 		// guard against catastrophic failure during policy engine Initialization or
 		try {
@@ -319,6 +322,7 @@ public class RangerBasePlugin {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
+					currentAuthContext = new RangerAuthContext();
 					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
 				} else {
 					if (LOG.isDebugEnabled()) {
@@ -338,6 +342,7 @@ public class RangerBasePlugin {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
+							currentAuthContext = new RangerAuthContext();
 							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions);
 						}
 					} else {
@@ -348,7 +353,6 @@ public class RangerBasePlugin {
 				}
 
 				if (newPolicyEngine != null) {
-					currentAuthContext = new RangerAuthContext();
 
 					newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 					newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -361,7 +365,9 @@ public class RangerBasePlugin {
 					if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
 						LOG.error("preCleanup() failed on the previous policy engine instance !!");
 					}
-					this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
+					if (this.refresher != null) {
+						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
+					}
 				}
 			} else {
 				LOG.error("Returning without saving policies to cache. Leaving current policy engine as-is");
@@ -369,6 +375,9 @@ public class RangerBasePlugin {
 
 		} catch (Exception e) {
 			LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is. Exception : ", e);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== setPolicies(" + policies + ")");
 		}
 	}
 
