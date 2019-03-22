@@ -222,7 +222,7 @@ public class XUserMgr extends XUserMgrBase {
 
 		String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		createdXUser.setPassword(hiddenPassword);
-
+		Collection<String> groupNamesList = new ArrayList<String>();
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
 		List<VXGroupUser> vXGroupUsers = new ArrayList<VXGroupUser>();
 		if (groupIdList != null) {
@@ -232,8 +232,11 @@ public class XUserMgr extends XUserMgrBase {
 				// trxLogList.addAll(xGroupUserService.getTransactionLog(
 				// vXGroupUser, "create"));
 				vXGroupUsers.add(vXGroupUser);
+				groupNamesList.add(vXGroupUser.getName());
 			}
 		}
+		createdXUser.setGroupIdList(groupIdList);
+		createdXUser.setGroupNameList(groupNamesList);
 		for (VXGroupUser vXGroupUser : vXGroupUsers) {
 			trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser,
 					"create"));
@@ -474,13 +477,22 @@ public class XUserMgr extends XUserMgrBase {
 
 		Long userId = vXUser.getId();
 		List<Long> groupUsersToRemove = new ArrayList<Long>();
+		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
+		xaBizUtil.createTrxLog(trxLogList);
 
+		return vXUser;
+	}
+	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
+		Collection<String> groupNamesSet = new HashSet<String>();
+		List<XXTrxLog> trxLogList = new ArrayList<>();
 		if (groupIdList != null) {
 			SearchCriteria searchCriteria = new SearchCriteria();
 			searchCriteria.addParam("xUserId", userId);
-			VXGroupUserList vXGroupUserList = xGroupUserService
-					.searchXGroupUsers(searchCriteria);
+			VXGroupUserList vXGroupUserList = xGroupUserService.searchXGroupUsers(searchCriteria);
 			List<VXGroupUser> vXGroupUsers = vXGroupUserList.getList();
+			for(VXGroupUser eachVXGrpUser : vXGroupUsers) {
+				groupNamesSet.add(eachVXGrpUser.getName());
+			}
 
 			if (vXGroupUsers != null) {
 
@@ -494,10 +506,9 @@ public class XUserMgr extends XUserMgrBase {
 						}
 					}
 					if (!found) {
-						VXGroupUser vXGroupUser = createXGroupUser(userId,
-								groupId);
-						trxLogList.addAll(xGroupUserService.getTransactionLog(
-								vXGroupUser, "create"));
+						VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
+						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+						groupNamesSet.add(vXGroupUser.getName());
 					}
 				}
 
@@ -506,41 +517,37 @@ public class XUserMgr extends XUserMgrBase {
 					boolean found = false;
 					for (Long groupId : groupIdList) {
 						if (groupId.equals(vXGroupUser.getParentGroupId())) {
-							trxLogList.addAll(xGroupUserService
-									.getTransactionLog(vXGroupUser, "update"));
+							trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "update"));
 							found = true;
 							break;
 						}
 					}
 					if (!found) {
 						// TODO I've to get the transaction log from here.
-						trxLogList.addAll(xGroupUserService.getTransactionLog(
-								vXGroupUser, "delete"));
+						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "delete"));
 						groupUsersToRemove.add(vXGroupUser.getId());
 						// xGroupUserService.deleteResource(vXGroupUser.getId());
+						groupNamesSet.remove(vXGroupUser.getName());
 					}
 				}
 
 			} else {
 				for (Long groupId : groupIdList) {
 					VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-					trxLogList.addAll(xGroupUserService.getTransactionLog(
-							vXGroupUser, "create"));
+					trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+					groupNamesSet.add(vXGroupUser.getName());
 				}
 			}
 			vXUser.setGroupIdList(groupIdList);
+			vXUser.setGroupNameList(new ArrayList<>(groupNamesSet));
 		} else {
-			logger.debug("Group id list can't be null for user. Group user "
-					+ "mapping not updated for user : " + userId);
+			logger.debug(
+					"Group id list can't be null for user. Group user " + "mapping not updated for user : " + userId);
 		}
-
-		xaBizUtil.createTrxLog(trxLogList);
-
 		for (Long groupUserId : groupUsersToRemove) {
 			xGroupUserService.deleteResource(groupUserId);
 		}
-
-		return vXUser;
+		return trxLogList;
 	}
 
         public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {

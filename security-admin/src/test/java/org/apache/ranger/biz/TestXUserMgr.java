@@ -571,7 +571,13 @@ public class TestXUserMgr {
 		groupIdList.add(userId);
 		vxUser.setGroupIdList(groupIdList);
 		VXGroup vxGroup = vxGroup();
+		vxGroup.setName("user12Grp");
+		VXGroupUser vXGroupUser = new VXGroupUser();
+		vXGroupUser.setParentGroupId(userId);
+		vXGroupUser.setUserId(userId);
+		vXGroupUser.setName(vxGroup.getName());
 		Mockito.when(xGroupService.readResource(userId)).thenReturn(vxGroup);
+		Mockito.when(xGroupUserService.createResource((VXGroupUser) Mockito.any())).thenReturn(vXGroupUser);
 		ArrayList<String> userRoleListVXPortaUser = getRoleList();
 		VXPortalUser vXPortalUser = new VXPortalUser();
 		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
@@ -607,6 +613,7 @@ public class TestXUserMgr {
 		Assert.assertEquals(dbvxUser.getDescription(), vxUser.getDescription());
 		Assert.assertEquals(dbvxUser.getName(), vxUser.getName());
 		Assert.assertEquals(dbvxUser.getUserRoleList(),vxUser.getUserRoleList());
+		Assert.assertEquals(dbvxUser.getGroupIdList(),vxUser.getGroupIdList());
 		Assert.assertEquals(dbvxUser.getGroupNameList(),vxUser.getGroupNameList());
 		Mockito.verify(xUserService).readResourceWithOutLogin(userId);
 	}
