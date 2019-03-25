@@ -1486,5 +1486,16 @@ define(function(require) {
 
         return opts;
     }
+
+    //get policy conditions details
+    XAUtils.getPolicyConditionDetails = function(policyCondtions, serviceDef){
+        var condtionsDetails = [];
+        _.each(policyCondtions, function(val){
+        var conditionsVal = serviceDef.get('policyConditions').find(function(m){return m.name == val.type});
+            condtionsDetails.push({'name' : conditionsVal.label, 'values' : val.values});
+        })
+        return condtionsDetails;
+    }
+
 	return XAUtils;
 });

@@ -160,7 +160,21 @@
         </table>
 </div>
 {{/if}}
-
+{{#if PolicyDetails.conditions}}
+  <div class="row-fluid">
+    <p class="formHeader">Policy Conditions :</p>
+    <table class="table table-bordered condition-group-table" style="width: 100%">
+      <tbody>
+        {{#each PolicyDetails.conditions}}
+          <tr colspan="2">
+            <td width="40%">{{this.name}}</td>
+            <td width="60%">{{this.values}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{/if}}
 {{#each PolicyDetails.policyItemsCond}}
 	<div id="policyItems" class="row-fluid">
 	  <p class="formHeader">

@@ -33,10 +33,11 @@ define(function(require){
 	var VXAuditMapList	= require('collections/VXAuditMapList');
 	var VXUserList		= require('collections/VXUserList');
 	var PermissionList 	= require('views/policies/PermissionList');
-  var vPolicyTimeList 	= require('views/policies/PolicyTimeList');
+    var vPolicyTimeList 	= require('views/policies/PolicyTimeList');
 	var RangerPolicyResource		= require('models/RangerPolicyResource');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
     var App             = require('App');
+    var vPolicyCondition = require('views/policies/RangerPolicyConditions');
 
 	require('backbone-forms.list');
 	require('backbone-forms.templates');
@@ -65,9 +66,14 @@ define(function(require){
 			}
 			return { 'id' : this.model.id,
 					'policyType' : policyType.label,
-                                        'conditionType' : conditionType,
-          'policyTimeBtnLabel': (this.model.has('validitySchedules') && this.model.get('validitySchedules').length > 0) ? localization.tt('lbl.editValidityPeriod')
-                  : localization.tt('lbl.addValidityPeriod')
+					'conditionType' : conditionType,
+					'policyTimeBtnLabel': (this.model.has('validitySchedules') && this.model.get('validitySchedules').length > 0) ? localization.tt('lbl.editValidityPeriod')
+						: localization.tt('lbl.addValidityPeriod'),
+					'policyConditionHideShow' : (this.rangerServiceDefModel.has('policyConditions') && !_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))) ?
+					true : false,
+					'policyConditionIconClass': (this.model.has('conditions') && this.model.get('conditions').length > 0) ? 'icon-pencil' : 'icon-plus',
+					'conditionsData': (this.model.has('conditions') && this.model.get('conditions').length > 0) ?
+						XAUtil.getPolicyConditionDetails(this.model.get('conditions'), this.rangerServiceDefModel) : [],
 				};
 		},
 		initialize: function(options) {
@@ -105,7 +111,9 @@ define(function(require){
 		ui : {
 			'denyConditionItems' : '[data-js="denyConditionItems"]',
 			'allowExcludePerm' : '[data-js="allowExcludePerm"]',
-      		'policyTimeBtn'      : '[data-js="policyTimeBtn"]'
+      		'policyTimeBtn'      : '[data-js="policyTimeBtn"]',
+			'policyConditions' : '[data-js="customPolicyConditions"]',
+            'conditionData' : '[data-id="conditionData"]'
 		},
 		/** fields for the form
 		*/
@@ -142,15 +150,16 @@ define(function(require){
 			this.renderParentChildHideShow();
 
 			//to show error msg on below the field(only for policy name)
-                        if(this.fields.isEnabled){
-                                this.fields.isEnabled.$el.find('.control-label').removeClass();
-                        }
-                        if(this.fields.name){
-                                this.fields.name.$el.find('.help-inline').removeClass('help-inline').addClass('help-block margin-left-5');
-                        }
-			this.initializePlugins();
-                        this.setPolicyValidityTime();
-			},
+            if(this.fields.isEnabled){
+                    this.fields.isEnabled.$el.find('.control-label').removeClass();
+            }
+            if(this.fields.name){
+                    this.fields.name.$el.find('.help-inline').removeClass('help-inline').addClass('help-block margin-left-5');
+            }
+            this.initializePlugins();
+            this.setPolicyValidityTime();
+            this.setPolicyCondition();
+        },
             setPolicyValidityTime : function(){
               var that = this;
               this.$el.find(this.ui.policyTimeBtn).on('click', function(e){
@@ -193,6 +202,68 @@ define(function(require){
                 });
               });
             },
+
+        setPolicyCondition : function(){
+            var that = this;
+            this.$el.find(this.ui.policyConditions).on('click', function(e){
+                var view = new vPolicyCondition({
+                    rangerServiceDefModel : that.rangerServiceDefModel,
+                    model : that.model
+                });
+                var modal = new Backbone.BootstrapModal({
+                  content   : view,
+                    title : 'Policy Conditions',
+                    okText  :"Save",
+                    animate : true,
+                    focusOk:false,
+                    escape:false,
+                    modalOptions:{
+                        backdrop: 'static',
+                    },
+                }).open();
+                modal.$el.addClass('modal-policy-conditions');
+                $('body').addClass('hideBodyScroll')
+                //To prevent modal being close by click out of modal
+                modal.$el.find('.cancel, .close').on('click', function(e){
+                  modal._preventClose = false;
+                  $('body').removeClass('hideBodyScroll');
+                  $('[data-js="customPolicyConditions"]').addClass('dirtyField');
+                });
+                modal.$el.find('.ok').on('click', function(e){
+                    modal._preventClose = false;
+                    $('body').removeClass('hideBodyScroll');
+                    $('[data-js="customPolicyConditions"]').addClass('dirtyField');
+                    var conditions = [], $data = [];
+                    _.each(modal.$el.find('[data-id="inputField"],[data-id="textAreaContainer"]'), function(m, context){
+                        var inputFieldName = m.name;
+                        if(m.value !== " " && !_.isEmpty(m.value)){
+                            conditions.push({type : inputFieldName, values : (m.value.split(',')).filter(Boolean)});
+                        }
+                    });
+                    that.model.set('conditions',conditions);
+                    if(conditions.length > 0){
+                        that.$el.find('[data-id="policyCondIcon"]').removeClass('icon-plus').addClass('icon-pencil');
+                    } else {
+                        that.$el.find('[data-id="policyCondIcon"]').removeClass('icon-pencil').addClass('icon-plus');
+                    }
+                    _.each(that.model.get('conditions'), function(val){
+                        console.log(that);
+                        var conditionName = that.rangerServiceDefModel.get('policyConditions').find(function(m){return m.name == val.type});
+                        $data.push('<tr><td width="40%">'+_.escape(conditionName.label)+'</td><td width="60%">'+(val.values).toString()+'</td></tr>')
+                    });
+                    if($data.length > 0){
+                        that.$el.find(that.ui.conditionData).html($data);
+                    }else{
+                        that.$el.find(that.ui.conditionData).html('<tr><td> No Conditions </td></tr>');
+                    }
+                });
+                modal.on('shown', function(a){
+                  this.preventClose();
+                });
+
+            })
+        },
+
 		initializePlugins : function() {
 			var that = this;
 			this.$(".wrap-header").each(function(i, ele) {

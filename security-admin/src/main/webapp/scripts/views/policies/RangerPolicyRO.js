@@ -174,6 +174,9 @@ define(function(require) {
                         if(this.policy.has('validitySchedules')){
                                 details.validitySchedules = this.policy.get('validitySchedules');
                         }
+            if(this.policy.has('conditions') && this.policy.get('conditions').length > 0){
+                details.conditions = XAUtils.getPolicyConditionDetails(this.policy.get('conditions'), self.rangerService);
+            }
 			//get policyItems
 			this.createPolicyItems();
 			

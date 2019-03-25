@@ -2435,6 +2435,14 @@ textarea:read-only{
   margin-top:5px;
 }
 
+.m-r-xs{
+  margin-right:5px;
+}
+
+.m-b-md{
+  margin-bottom:15px;
+}
+
 .w3-bar-item {
   width: 100%;
   display: block;
@@ -2660,4 +2668,29 @@ textarea:read-only{
 }
 .select2-container.select2-container-disabled .select2-choice {
   cursor: not-allowed;
+}
+.modal-policy-conditions{
+  width: 500px;
+}
+.multiline-condition{
+    width: 437px;
+    height: 170px;
+}
+.display-block{
+  display:block !important;
+}
+
+.condition-group-table th{
+  background-color: #eeeeef;
+}
+
+.condition-group-table.table th,
+.condition-group-table.table td{
+  word-break: break-all;
+}
+
+.condition-group-table.table tbody{
+  max-height: 400px;
+  overflow: auto;
+  display: block;
 }

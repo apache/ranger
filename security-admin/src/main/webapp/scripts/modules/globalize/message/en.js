@@ -261,10 +261,12 @@ define(function(require) {
                 groupSearchFilter               : 'Group search filter',
                 startDate                       : 'Start Date',
                 endDate                         : 'End Date',
-                                addValidityPeriod				: 'Add Validity Period',
-                                editValidityPeriod				: 'Edit Validity Period',
+                addValidityPeriod               : ' Add Validity Period',
+                editValidityPeriod              : ' Edit Validity Period',
                 totalUsersSynced                : 'Total number of users synced',
                 totalGroupsSynced               : 'Total number of groups synced',
+                addPolicyCondition              : 'Add Policy Condition',
+                editPolicyCondition              : 'Edit Policy Condition'
 
 			},
 			btn : {

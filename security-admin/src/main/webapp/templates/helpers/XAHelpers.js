@@ -582,5 +582,18 @@
                 return _.isUndefined(context) || _.isEmpty(context) ? '--' : context;
         });
 
+    Handlebars.registerHelper('getPolicyConditionTmpl', function(obj) {
+        if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
+            return '<div class="margin-bottom-5">\
+                        <label class="display-block">\
+                            <span>'+obj.label+' : </span>\
+                            <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="icon-info-sign pull-right margin-top-6"></i>\
+                        </label>\
+                        <textarea class="multiline-condition" data-id="textAreaContainer" name="'+obj.name+'" placeholder="Please enter condition.."></textarea>\
+                   </div>'
+            }
+            return '<div class="margin-bottom-5 display-block"><label><span>'+obj.label+' : </span></label><input type="input" data-id="inputField" name="'+obj.name+'" ></div>'
+    });
+
 	return HHelpers;
 });
