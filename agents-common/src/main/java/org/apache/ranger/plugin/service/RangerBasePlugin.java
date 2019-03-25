@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -299,10 +298,8 @@ public class RangerBasePlugin {
 					usePolicyDeltas = false;
 				} else if (policies.getPolicyDeltas() != null) {
 					// Rebuild policies from deltas
-					RangerPolicyEngineImpl policyEngineImpl = (RangerPolicyEngineImpl) oldPolicyEngine;
-					List<RangerPolicy> oldResourcePolicies = policyEngineImpl.getResourcePolicies();
-					List<RangerPolicy> oldTagPolicies = policyEngineImpl.getTagPolicies();
-					servicePolicies = ServicePolicies.applyDelta(policies, oldResourcePolicies, oldTagPolicies);
+					RangerPolicyEngineImpl policyEngine = (RangerPolicyEngineImpl) oldPolicyEngine;
+					servicePolicies = ServicePolicies.applyDelta(policies, policyEngine);
 					if (servicePolicies != null) {
 						usePolicyDeltas = true;
 					} else {

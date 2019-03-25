@@ -211,6 +211,12 @@ public class TestPolicyEngine {
 
 		runTestsFromResourceFiles(hdfsTestResourceFiles);
 	}
+	@Test
+	public void testPolicyEngine_hdfsForZones() {
+		String[] hdfsTestResourceFiles = { "/policyengine/test_policyengine_hdfs_zones.json" };
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
 
 	@Test
 	public void testPolicyEngine_hive() {
@@ -374,6 +380,7 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceName(testCase.serviceName);
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
+		servicePolicies.setSecurityZones(testCase.securityZones);
 
 		if (StringUtils.isNotBlank(testCase.auditMode)) {
 			servicePolicies.setAuditMode(testCase.auditMode);
@@ -560,6 +567,7 @@ public class TestPolicyEngine {
 		public RangerServiceDef   serviceDef;
 		public List<RangerPolicy> policies;
 		public TagPolicyInfo	  tagPolicyInfo;
+		public Map<String, ServicePolicies.SecurityZoneInfo> securityZones;
 		public String             auditMode;
 		public List<TestData>     tests;
 

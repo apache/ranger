@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -281,14 +282,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		this.allContextEnrichers = tmpList;
-
-		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
-			buildZoneTrie(servicePolicies);
-			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> zone : servicePolicies.getSecurityZones().entrySet()) {
-				RangerPolicyRepository policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, zone.getKey());
-				policyRepositories.put(zone.getKey(), policyRepository);
-			}
-		}
 
 		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
 			buildZoneTrie(servicePolicies);
@@ -1217,9 +1210,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	public List<RangerPolicy> getResourcePolicies() { return policyRepository == null ? null : policyRepository.getPolicies(); }
+	public List<RangerPolicy> getResourcePolicies(String zoneName) {
+		RangerPolicyRepository zoneResourceRepository = policyRepositories.get(zoneName);
+		return zoneResourceRepository == null ? ListUtils.EMPTY_LIST : zoneResourceRepository.getPolicies();
+	}
 
-	public List<RangerPolicy> getTagPolicies() { return tagPolicyRepository == null ? null : tagPolicyRepository.getPolicies(); }
+	public List<RangerPolicy> getResourcePolicies() { return policyRepository == null ? ListUtils.EMPTY_LIST : policyRepository.getPolicies(); }
+
+	public List<RangerPolicy> getTagPolicies() { return tagPolicyRepository == null ? ListUtils.EMPTY_LIST : tagPolicyRepository.getPolicies(); }
 
 	private RangerAccessResult zoneAwareAccessEvaluationWithNoAudit(RangerAccessRequest request, int policyType) {
 		if (LOG.isDebugEnabled()) {

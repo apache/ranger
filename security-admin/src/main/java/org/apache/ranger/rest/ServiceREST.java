@@ -3694,7 +3694,6 @@ public class ServiceREST {
 			final ServicePolicies ret;
 
 			if (MapUtils.isNotEmpty(securityZones)) {
-
 				ret = new ServicePolicies();
 				ret.setServiceDef(servicePolicies.getServiceDef());
 				ret.setServiceId(servicePolicies.getServiceId());
@@ -3706,8 +3705,8 @@ public class ServiceREST {
 				Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 
 				if (CollectionUtils.isEmpty(servicePolicies.getPolicyDeltas())) {
-					List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
 
+					List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
 
 					for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
 
@@ -3727,7 +3726,6 @@ public class ServiceREST {
 
 					ret.setPolicies(allPolicies);
 					ret.setTagPolicies(servicePolicies.getTagPolicies());
-					ret.setSecurityZones(securityZonesInfo);
 				} else {
 					List<RangerPolicyDelta> allPolicyDeltas = new ArrayList<>(servicePolicies.getPolicyDeltas());
 
@@ -3746,13 +3744,14 @@ public class ServiceREST {
 
 						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
 					}
-					ret.setPolicyDeltas(allPolicyDeltas);
 
+					ret.setPolicyDeltas(allPolicyDeltas);
 				}
 				ret.setSecurityZones(securityZonesInfo);
 			} else {
 				ret = servicePolicies;
 			}
+
 			return ret;
 		}
 

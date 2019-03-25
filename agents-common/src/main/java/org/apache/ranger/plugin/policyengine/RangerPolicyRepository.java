@@ -229,19 +229,23 @@ class RangerPolicyRepository {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(other.getPolicies())) {
-            if (CollectionUtils.isNotEmpty(this.getPolicies())) {
-                this.contextEnrichers = other.contextEnrichers;
-                other.isContextEnrichersShared = true;
+        if (StringUtils.isEmpty(zoneName)) {
+            if (CollectionUtils.isNotEmpty(other.getPolicies())) {
+                if (CollectionUtils.isNotEmpty(this.getPolicies())) {
+                    this.contextEnrichers = other.contextEnrichers;
+                    other.isContextEnrichersShared = true;
+                } else {
+                    this.contextEnrichers = null;
+                }
             } else {
-                this.contextEnrichers = null;
+                if (CollectionUtils.isNotEmpty(this.policies)) {
+                    this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
+                } else {
+                    this.contextEnrichers = null;
+                }
             }
         } else {
-            if (CollectionUtils.isNotEmpty(this.policies)) {
-                this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
-            } else {
-                this.contextEnrichers = null;
-            }
+            this.contextEnrichers = null;
         }
 
         this.policyVersion = policyVersion;
@@ -301,7 +305,11 @@ class RangerPolicyRepository {
 
         init(options);
 
-        this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
+        if (StringUtils.isEmpty(zoneName)) {
+            this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
+        } else {
+            this.contextEnrichers = null;
+        }
 
         if(options.disableTrieLookupPrefilter) {
             policyResourceTrie    = null;
@@ -350,7 +358,11 @@ class RangerPolicyRepository {
 
         init(options);
 
-        this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
+        if (StringUtils.isEmpty(zoneName)) {
+            this.contextEnrichers = Collections.unmodifiableList(buildContextEnrichers(options));
+        } else {
+            this.contextEnrichers = null;
+        }
 
         if(options.disableTrieLookupPrefilter) {
             policyResourceTrie    = null;
@@ -1122,7 +1134,7 @@ class RangerPolicyRepository {
         return ret;
     }
 
-    private void updateTrie(Map<String, RangerResourceTrie> currentMap, Integer policyDeltaType, RangerPolicyEvaluator oldEvaluator, RangerPolicyEvaluator newEvaluator) {
+    private void updateTrie(Map<String, RangerResourceTrie> trieMap, Integer policyDeltaType, RangerPolicyEvaluator oldEvaluator, RangerPolicyEvaluator newEvaluator) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyRepository.updateTrie(policyDeltaType=" + policyDeltaType + "): ");
         }
@@ -1130,42 +1142,39 @@ class RangerPolicyRepository {
 
             String resourceDefName = resourceDef.getName();
 
-            RangerResourceTrie trie = currentMap.get(resourceDefName);
+            RangerResourceTrie<RangerPolicyEvaluator> trie = trieMap.get(resourceDefName);
 
             if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
-                if (newEvaluator != null) {
-                    RangerPolicy.RangerPolicyResource resource = newEvaluator.getPolicyResource().get(resourceDefName);
-                    if (resource != null) {
-                        trie.add(resource, newEvaluator);
-                    }
-                }
+                addEvaluatorToTrie(newEvaluator, trie, resourceDefName);
             } else if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
-                if (oldEvaluator != null) {
-                    RangerPolicy.RangerPolicyResource resource = oldEvaluator.getPolicyResource().get(resourceDefName);
-                    if (resource != null) {
-                        trie.delete(resource, oldEvaluator);
-                    }
-                }
+                removeEvaluatorFromTrie(oldEvaluator, trie, resourceDefName);
             } else if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
-                if (oldEvaluator != null) {
-                    RangerPolicy.RangerPolicyResource oldResource = oldEvaluator.getPolicyResource().get(resourceDefName);
-                    if (oldResource != null) {
-                        trie.delete(oldResource, oldEvaluator);
-                    }
-                }
-                if (newEvaluator != null) {
-                    RangerPolicy.RangerPolicyResource newResource = newEvaluator.getPolicyResource().get(resourceDefName);
-
-                    if (newResource != null) {
-                        trie.add(newResource, newEvaluator);
-                    }
-                }
+                removeEvaluatorFromTrie(oldEvaluator, trie, resourceDefName);
+                addEvaluatorToTrie(newEvaluator, trie, resourceDefName);
             } else {
                 LOG.error("policyDeltaType:" + policyDeltaType + " is currently not handled, policy-id:[" + oldEvaluator.getPolicy().getId() +"]");
             }
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.updateTrie(policyDeltaType=" + policyDeltaType + "): ");
+        }
+    }
+
+    private void addEvaluatorToTrie(RangerPolicyEvaluator newEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
+        if (newEvaluator != null) {
+            RangerPolicy.RangerPolicyResource resource = newEvaluator.getPolicyResource().get(resourceDefName);
+            if (resource != null) {
+                trie.add(resource, newEvaluator);
+            }
+        }
+    }
+
+    private void removeEvaluatorFromTrie(RangerPolicyEvaluator oldEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
+        if (oldEvaluator != null) {
+            RangerPolicy.RangerPolicyResource resource = oldEvaluator.getPolicyResource().get(resourceDefName);
+            if (resource != null) {
+                trie.delete(resource, oldEvaluator);
+            }
         }
     }
 
@@ -1209,6 +1218,8 @@ class RangerPolicyRepository {
                     } else {
                         LOG.warn("RangerPolicyEngine: ignoring policy id=" + policy.getId() + " - invalid policyType '" + policy.getPolicyType() + "'");
                     }
+
+                    policyEvaluatorsMap.put(policy.getId(), ret);
                 }
             }
         }
@@ -1230,6 +1241,9 @@ class RangerPolicyRepository {
                 break;
             }
         }
+
+        policyEvaluatorsMap.remove(id);
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.removePolicy(" + id +")");
         }
@@ -1255,6 +1269,7 @@ class RangerPolicyRepository {
         if (evaluators != null) {
             evaluators.remove(evaluator);
         }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.deletePolicyEvaluator(" + evaluator.getPolicy() + ")");
         }
@@ -1294,10 +1309,10 @@ class RangerPolicyRepository {
             break;
         }
 
-        Map<String, RangerResourceTrie> trie = getTrie(policyType);
+        Map<String, RangerResourceTrie> trieMap = getTrie(policyType);
 
-        if (trie != null) {
-            updateTrie(trie, changeType, currentEvaluator, newEvaluator);
+        if (trieMap != null) {
+            updateTrie(trieMap, changeType, currentEvaluator, newEvaluator);
         }
 
         if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {

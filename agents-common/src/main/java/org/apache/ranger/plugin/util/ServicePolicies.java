@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.util;
 
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,10 +30,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -334,7 +335,7 @@ public class ServicePolicies implements java.io.Serializable {
 					;
 		}
 	}
-	public static ServicePolicies copyHeader(ServicePolicies source) {
+	private static ServicePolicies copyHeader(ServicePolicies source) {
 		ServicePolicies ret = new ServicePolicies();
 
 		ret.setServiceName(source.getServiceName());
@@ -353,7 +354,7 @@ public class ServicePolicies implements java.io.Serializable {
 		return ret;
 	}
 
-	public static TagPolicies copyHeader(TagPolicies source) {
+	private static TagPolicies copyHeader(TagPolicies source) {
 		TagPolicies ret = new TagPolicies();
 
 		ret.setServiceName(source.getServiceName());
@@ -367,24 +368,51 @@ public class ServicePolicies implements java.io.Serializable {
 		return ret;
 	}
 
-	public static ServicePolicies applyDelta(final ServicePolicies servicePolicies, final List<RangerPolicy> oldResourcePolicies, final List<RangerPolicy> oldTagPolicies) {
+	public static ServicePolicies applyDelta(final ServicePolicies servicePolicies, RangerPolicyEngineImpl policyEngine) {
 		ServicePolicies ret = copyHeader(servicePolicies);
+
+		List<RangerPolicy> oldResourcePolicies = policyEngine.getResourcePolicies();
+		List<RangerPolicy> oldTagPolicies      = policyEngine.getTagPolicies();
 
 		List<RangerPolicy> newResourcePolicies = RangerPolicyDeltaUtil.applyDeltas(oldResourcePolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
 
+		ret.setPolicies(newResourcePolicies);
+
 		final List<RangerPolicy> newTagPolicies;
 		if (servicePolicies.getTagPolicies() != null) {
-			final List<RangerPolicy> policies = oldTagPolicies == null ? new ArrayList<>() : oldTagPolicies;
-			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(policies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
+			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
 		} else {
 			newTagPolicies = null;
 		}
 
-		ret.setPolicies(newResourcePolicies);
-
 		if (ret.getTagPolicies() != null) {
 			ret.getTagPolicies().setPolicies(newTagPolicies);
 		}
+
+		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
+			Map<String, SecurityZoneInfo> newSecurityZones = new HashMap<>();
+
+			for (Map.Entry<String, SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
+				String 			 zoneName = entry.getKey();
+				SecurityZoneInfo zoneInfo = entry.getValue();
+
+				List<RangerPolicy> zoneResourcePolicies = policyEngine.getResourcePolicies(zoneName);
+				// There are no separate tag-policy-repositories for each zone
+
+				final List<RangerPolicy> newZonePolicies = RangerPolicyDeltaUtil.applyDeltas(zoneResourcePolicies, zoneInfo.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
+
+				SecurityZoneInfo newZoneInfo = new SecurityZoneInfo();
+
+				newZoneInfo.setZoneName(zoneName);
+				newZoneInfo.setResources(zoneInfo.getResources());
+				newZoneInfo.setPolicies(newZonePolicies);
+
+				newSecurityZones.put(zoneName, newZoneInfo);
+			}
+
+			ret.setSecurityZones(newSecurityZones);
+		}
+
 		return ret;
 	}
 }
