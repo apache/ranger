@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.plugin.conditionevaluator;
 
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -26,6 +27,7 @@ public abstract class RangerAbstractConditionEvaluator implements RangerConditio
 	protected RangerServiceDef serviceDef;
 	protected RangerPolicyConditionDef  conditionDef;
 	protected RangerPolicyItemCondition condition;
+	protected RangerPolicyCondition policyCondition;
 
 	@Override
 	public void setServiceDef(RangerServiceDef serviceDef) {
@@ -47,5 +49,12 @@ public abstract class RangerAbstractConditionEvaluator implements RangerConditio
 	}
 
 	public RangerPolicyItemCondition getPolicyItemCondition() { return condition; }
+
+	@Override
+	public void setPolicyCondition(RangerPolicyCondition policyCondition) {
+		this.policyCondition = policyCondition;
+	}
+
+	public RangerPolicyCondition getPolicyCondition() { return policyCondition; }
 
 }

@@ -75,6 +75,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private String							  resourceSignature;
 	private Boolean                           isAuditEnabled;
 	private Map<String, RangerPolicyResource> resources;
+	private List<RangerPolicyCondition>   	  conditions;
 	private List<RangerPolicyItem>            policyItems;
 	private List<RangerPolicyItem>            denyPolicyItems;
 	private List<RangerPolicyItem>            allowExceptions;
@@ -88,11 +89,15 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private String                            zoneName;
 
 	public RangerPolicy() {
-		this(null, null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null);
 	}
 
 	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables) {
 		this(service, name, policyType, policyPriority, description, resources, policyItems, resourceSignature, options, validitySchedules, policyLables, null);
+	}
+
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName) {
+		this(service, name, policyType, policyPriority, description, resources, policyItems, resourceSignature, options, validitySchedules, policyLables, zoneName, null);
 	}
 
 	/**
@@ -104,7 +109,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems
 	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName) {
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyCondition> conditions) {
 		super();
 
 		setService(service);
@@ -125,6 +130,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setValiditySchedules(validitySchedules);
 		setPolicyLabels(policyLables);
 		setZoneName(zoneName);
+		setConditions(conditions);
 
 	}
 
@@ -152,6 +158,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setValiditySchedules(other.getValiditySchedules());
 		setPolicyLabels(other.getPolicyLabels());
 		setZoneName(other.getZoneName());
+		setConditions(other.getConditions());
 	}
 
 	/**
@@ -491,6 +498,17 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	    this.zoneName = zoneName;
     }
 
+	/**
+	 * @return the conditions
+	 */
+	public List<RangerPolicyCondition> getConditions() { return conditions; }
+	/**
+	 * @param conditions the conditions to set
+	 */
+	public void setConditions(List<RangerPolicyCondition> conditions) {
+		this.conditions = conditions;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -532,6 +550,17 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
                         }
                 }
                 sb.append("} ");
+
+		sb.append("policyConditions={");
+		if(conditions != null) {
+			for(RangerPolicyCondition condition : conditions) {
+				if(condition != null) {
+					condition.toString(sb);
+				}
+			}
+		}
+		sb.append("} ");
+
 		sb.append("policyItems={");
 		if(policyItems != null) {
 			for(RangerPolicyItem policyItem : policyItems) {
@@ -1322,22 +1351,38 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		
 	}
 
+	// Shell class for backward compatibility
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerPolicyItemCondition implements java.io.Serializable {
-		private static final long serialVersionUID = 1L;
-
-		private String type;
-		private List<String> values;
-
+	public static class RangerPolicyItemCondition extends RangerPolicyCondition implements java.io.Serializable {
 		public RangerPolicyItemCondition() {
 			this(null, null);
 		}
 
 		public RangerPolicyItemCondition(String type, List<String> values) {
+			super(type,values);
+		}
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class RangerPolicyCondition implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private String type;
+		private List<String> values;
+
+		public RangerPolicyCondition() {
+			this(null, null);
+		}
+
+		public RangerPolicyCondition(String type, List<String> values) {
 			setType(type);
 			setValues(values);
 		}
@@ -1392,7 +1437,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 
 		public StringBuilder toString(StringBuilder sb) {
-			sb.append("RangerPolicyItemCondition={");
+			sb.append("RangerPolicyCondition={");
 			sb.append("type={").append(type).append("} ");
 			sb.append("values={");
 			if(values != null) {
@@ -1424,7 +1469,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			RangerPolicyItemCondition other = (RangerPolicyItemCondition) obj;
+			RangerPolicyCondition other = (RangerPolicyCondition) obj;
 			if (type == null) {
 				if (other.type != null)
 					return false;

@@ -28,9 +28,11 @@ import java.util.TreeMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyCondition;
 import org.apache.solr.common.StringUtils;
 
 public class RangerPolicyResourceSignature {
@@ -148,6 +150,11 @@ public class RangerPolicyResourceSignature {
 			    resource += _policy.getZoneName();
             }
 
+			if (_policy.getConditions() != null) {
+				CustomConditionSerialiser customConditionSerialiser = new CustomConditionSerialiser(_policy.getConditions());
+				resource += customConditionSerialiser.toString();
+			}
+
 			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);
 			return result;
 		}
@@ -186,6 +193,41 @@ public class RangerPolicyResourceSignature {
 				}
 			}
 			builder.append("}");
+			return builder.toString();
+		}
+	}
+
+	static class CustomConditionSerialiser {
+		final List<RangerPolicyCondition> rangerPolicyConditions;
+
+		CustomConditionSerialiser(List<RangerPolicyCondition> rangerPolicyConditions) {
+			this.rangerPolicyConditions = rangerPolicyConditions;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			Map<String, List<String>> conditionMap = new TreeMap<>();
+
+			for(RangerPolicyCondition rangerPolicyCondition : rangerPolicyConditions) {
+				if (rangerPolicyCondition.getType() != null) {
+					String type = rangerPolicyCondition.getType();
+					List<String> values = new ArrayList<>();
+					if (rangerPolicyCondition.getValues() != null) {
+						values.addAll(rangerPolicyCondition.getValues());
+						Collections.sort(values);
+					}
+					conditionMap.put(type, values);
+				}
+			}
+
+			if (MapUtils.isNotEmpty(conditionMap)) {
+				builder.append("{");
+				builder.append("RangerPolicyConditions=");
+				builder.append(conditionMap);
+				builder.append("}");
+			}
+
 			return builder.toString();
 		}
 	}

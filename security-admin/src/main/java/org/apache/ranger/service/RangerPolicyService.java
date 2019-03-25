@@ -72,6 +72,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
         public static final String POLICY_LABELS_CLASS_FIELD_NAME="policyLabels";
         public static final String POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME="validitySchedules";
         public static final String POLICY_PRIORITY_CLASS_FIELD_NAME="policyPriority";
+	public static final String POLICY_CONDITION_CLASS_FIELD_NAME="policyConditions";
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
@@ -83,6 +84,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Policy Description", false));
 		trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Policy Status", false));
 		trxLogAttrs.put("resources", new VTrxLogAttr("resources", "Policy Resources", false));
+		trxLogAttrs.put("policyConditions", new VTrxLogAttr("policyConditions", "Policy Conditions", false));
 		trxLogAttrs.put("policyItems", new VTrxLogAttr("policyItems", "Policy Items", false));
 		trxLogAttrs.put("denyPolicyItems", new VTrxLogAttr("denyPolicyItems", "DenyPolicy Items", false));
 		trxLogAttrs.put("allowExceptions", new VTrxLogAttr("allowExceptions", "Allow Exceptions", false));
@@ -203,6 +205,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			if (!isEnum) {
 			    if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processPolicyResourcesForTrxLog(field.get(vObj));
+				} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					value = processPolicyItemsForTrxLog(field.get(vObj));
     			} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processPolicyItemsForTrxLog(field.get(vObj));
     			} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {

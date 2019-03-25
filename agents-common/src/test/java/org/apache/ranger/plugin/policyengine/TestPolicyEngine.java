@@ -362,6 +362,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_policylevel_conditions() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_policylevel_conditions.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -524,7 +531,6 @@ public class TestPolicyEngine {
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 			}
 
 			if(test.dataMaskResult != null) {
