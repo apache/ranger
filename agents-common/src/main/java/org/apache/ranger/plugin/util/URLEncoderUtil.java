@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.ranger.usersync.util;
+package org.apache.ranger.plugin.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-public class UserSyncUtil {
+public class URLEncoderUtil {
 
 	public static String encodeURIParam(String s) throws UnsupportedEncodingException {
 

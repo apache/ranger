@@ -53,6 +53,7 @@ import javax.ws.rs.core.NewCookie;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.util.URLEncoderUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
 import org.apache.ranger.unixusersync.model.GetXUserGroupListResponse;
@@ -64,7 +65,6 @@ import org.apache.ranger.unixusersync.model.XGroupInfo;
 import org.apache.ranger.unixusersync.model.XUserGroupInfo;
 import org.apache.ranger.unixusersync.model.XUserInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.apache.ranger.usersync.util.UserSyncUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -1086,7 +1086,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		try {
 			ClientResponse response = null;
 			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
-					   UserSyncUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), UserSyncUtil.encodeURIParam(userName));
+					   URLEncoderUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), URLEncoderUtil.encodeURIParam(userName));
 			if (isRangerCookieEnabled) {
 				if (sessionId != null && isValidRangerCookie) {
 					WebResource webResource = createWebResourceForCookieAuth(uri);

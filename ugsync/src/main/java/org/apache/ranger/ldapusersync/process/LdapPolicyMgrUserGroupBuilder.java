@@ -49,10 +49,10 @@ import javax.ws.rs.core.MediaType;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.util.URLEncoderUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.*;
 import org.apache.ranger.usergroupsync.UserGroupSink;
-import org.apache.ranger.usersync.util.UserSyncUtil;
 
 import com.google.common.collect.Table;
 import com.google.gson.Gson;
@@ -564,7 +564,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			Client c = getClient();
 
 			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
-					   UserSyncUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), UserSyncUtil.encodeURIParam(userName));
+					   URLEncoderUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), URLEncoderUtil.encodeURIParam(userName));
 
 			WebResource r = c.resource(getURL(uri));
 
@@ -748,7 +748,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			Client c = getClient();
 
 			String uri = PM_GET_GROUP_USER_MAP_LIST_URI.replaceAll(Pattern.quote("${groupName}"),
-					   UserSyncUtil.encodeURIParam(groupName));
+					   URLEncoderUtil.encodeURIParam(groupName));
 
 			WebResource r = c.resource(getURL(uri));
 
