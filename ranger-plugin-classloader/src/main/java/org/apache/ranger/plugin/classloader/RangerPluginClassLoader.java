@@ -32,10 +32,12 @@ import org.slf4j.LoggerFactory;
 
 public class RangerPluginClassLoader extends URLClassLoader {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
-	
-	private static volatile RangerPluginClassLoader me 	             = null;
+
+    ThreadLocal<ClassLoader> preActivateClassLoader = new ThreadLocal<>();
+
+	private static volatile RangerPluginClassLoader me               = null;
 	private static  MyClassLoader				componentClassLoader = null;
-		
+
 	public RangerPluginClassLoader(String pluginType, Class<?> pluginClass ) throws Exception {
 		super(RangerPluginClassLoaderUtil.getInstance().getPluginFilesForServiceTypeAndPluginclass(pluginType, pluginClass), null);
 		componentClassLoader = AccessController.doPrivileged(
@@ -231,6 +233,8 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
         //componentClassLoader.set(new MyClassLoader(Thread.currentThread().getContextClassLoader()));
 
+        preActivateClassLoader.set(Thread.currentThread().getContextClassLoader());
+
         Thread.currentThread().setContextClassLoader(this);
 
         if(LOG.isDebugEnabled()) {
@@ -244,12 +248,21 @@ public class RangerPluginClassLoader extends URLClassLoader {
           LOG.debug("==> RangerPluginClassLoader.deactivate()");
        }
 
-       MyClassLoader savedClassLoader = getComponentClassLoader();
+       ClassLoader classLoader = preActivateClassLoader.get();
 
-       if(savedClassLoader != null && savedClassLoader.getParent() != null) {
-          Thread.currentThread().setContextClassLoader(savedClassLoader.getParent());
+       if (classLoader != null) {
+           preActivateClassLoader.remove();
        } else {
-    	   LOG.warn("RangerPluginClassLoader.deactivate() was not successful.Couldn't not get the saved componentClassLoader...");
+           MyClassLoader savedClassLoader = getComponentClassLoader();
+           if (savedClassLoader != null && savedClassLoader.getParent() != null) {
+               classLoader = savedClassLoader.getParent();
+           }
+       }
+
+       if (classLoader != null) {
+           Thread.currentThread().setContextClassLoader(classLoader);
+       } else {
+           LOG.warn("RangerPluginClassLoader.deactivate() was not successful. Couldn't not get the saved classLoader...");
        }
 
        if(LOG.isDebugEnabled()) {
