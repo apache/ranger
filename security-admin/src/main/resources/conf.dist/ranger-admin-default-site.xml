@@ -436,6 +436,11 @@
 		<description></description>
 	</property>
 	<property>
+		<name>ranger.audit.solr.time.interval</name>
+		<value>60000</value>
+		<description>Time in milliseconds</description>
+	</property>
+	<property>
 		<name>ranger.sha256Password.update.disable</name>
 		<value>true</value>
 		<description></description>

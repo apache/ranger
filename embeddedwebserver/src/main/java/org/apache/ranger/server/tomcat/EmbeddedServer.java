@@ -268,6 +268,17 @@ public class EmbeddedServer {
 
 	private void startServer(final Tomcat server) {
 		try {
+
+                        try {
+                                String servername = getConfig("servername");
+                                LOG.info("Server Name : " + servername);
+                                if (servername.equalsIgnoreCase(ADMIN_SERVER_NAME)) {
+                                        SolrCollectionBoostrapper solrSetup = new SolrCollectionBoostrapper();
+                                        solrSetup.start();
+                                }
+                        } catch (Exception e) {
+                                LOG.severe("Error while setting solr " + e);
+                        }
 			server.start();
 			server.getServer().await();
 			shutdownServer();

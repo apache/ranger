@@ -294,4 +294,29 @@
 		<name>ranger.tomcat.ciphers</name>
 		<value></value>
 	</property>
+                <!-- Solr related porps -->
+        <property>
+                <name>ranger.audit.solr.collection.name</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.config.name</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.no.shards</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.max.shards.per.node</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.no.replica</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.acl.user.list.sasl</name>
+                <value></value>
+        </property>
 </configuration>

@@ -144,6 +144,13 @@ admin_keytab=$(get_prop 'admin_keytab' $PROPFILE)
 lookup_principal=$(get_prop 'lookup_principal' $PROPFILE)
 lookup_keytab=$(get_prop 'lookup_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
+audit_solr_collection_name=$(get_prop 'audit_solr_collection_name' $PROPFILE)
+audit_solr_config_name=$(get_prop 'audit_solr_config_name' $PROPFILE)
+audit_solr_no_shards=$(get_prop 'audit_solr_no_shards' $PROPFILE)
+audit_solr_no_replica=$(get_prop 'audit_solr_no_replica' $PROPFILE)
+audit_solr_max_shards_per_node=$(get_prop 'audit_solr_max_shards_per_node' $PROPFILE)
+audit_solr_acl_user_list_sasl=$(get_prop 'audit_solr_acl_user_list_sasl' $PROPFILE)
+
 
 DB_HOST="${db_host}"
 
@@ -422,6 +429,50 @@ update_properties() {
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 	
+        if [ "${audit_solr_collection_name}" != "" ]
+        then
+               propertyName=ranger.audit.solr.collection.name
+               newPropertyValue="${audit_solr_collection_name}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+        if [ "${audit_solr_config_name}" != "" ]
+        then
+               propertyName=ranger.audit.solr.config.name
+               newPropertyValue="${audit_solr_config_name}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+        if [ "${audit_solr_no_shards}" != "" ]
+        then
+               propertyName=ranger.audit.solr.no.shards
+               newPropertyValue="${audit_solr_no_shards}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+
+        if [ "${audit_solr_max_shards_per_node}" != "" ]
+        then
+               propertyName=ranger.audit.solr.max.shards.per.node
+               newPropertyValue="${audit_solr_max_shards_per_node}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+        if [ "${audit_solr_no_replica}" != "" ]
+        then
+               propertyName=ranger.audit.solr.no.replica
+               newPropertyValue="${audit_solr_no_replica}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+	
+	if [ "${audit_solr_acl_user_list_sasl}" != "" ]
+        then
+               propertyName=ranger.audit.solr.acl.user.list.sasl
+               newPropertyValue="${audit_solr_acl_user_list_sasl}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+
 	if [ "${spnego_keytab}" != "" ]
 	then
                 propertyName=ranger.spnego.kerberos.keytab
