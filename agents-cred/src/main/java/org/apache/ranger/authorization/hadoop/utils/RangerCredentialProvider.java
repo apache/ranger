@@ -42,7 +42,7 @@ public final class RangerCredentialProvider {
 		return CRED_PROVIDER;
 	}
 
-	public char[] getCredentialString(String url, String alias) {
+	public String getCredentialString(String url, String alias) {
 		List<CredentialProvider> providers = getCredentialProviders(url);
 
 		if (providers != null) {
@@ -50,8 +50,8 @@ public final class RangerCredentialProvider {
 				try {
 					CredentialProvider.CredentialEntry credEntry = provider.getCredentialEntry(alias);
 
-					if (credEntry != null) {
-						return credEntry.getCredential();
+					if (credEntry != null && credEntry.getCredential() != null) {
+						return new String(credEntry.getCredential());
 					}
 				} catch(Exception ie) {
 					LOG.error("Unable to get the Credential Provider from the Configuration", ie);	

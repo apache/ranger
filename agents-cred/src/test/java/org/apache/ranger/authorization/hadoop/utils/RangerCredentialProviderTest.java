@@ -119,7 +119,7 @@ public class RangerCredentialProviderTest {
 		cp = new RangerCredentialProvider();
 		providers = cp.getCredentialProviders(url);
 		if (providers != null) {
-			assertTrue("PassworD123".equals(new String(cp.getCredentialString(url, "TestCredential001"))));
+			assertTrue("PassworD123".equals(cp.getCredentialString(url, "TestCredential001")));
 		}
 		System.out.println("(3) Number of active Threads : " + Thread.activeCount());
 		listThreads();

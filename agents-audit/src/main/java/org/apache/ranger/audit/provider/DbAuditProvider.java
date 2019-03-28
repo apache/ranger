@@ -362,16 +362,9 @@ public class DbAuditProvider extends AuditDestination {
 	}
 
 	private String getCredentialString(String url,String alias) {
-		String ret = null;
-
 		if(url != null && alias != null) {
-			char[] cred = RangerCredentialProvider.getInstance().getCredentialString(url,alias);
-
-			if ( cred != null ) {
-				ret = new String(cred);	
-			}
+			return RangerCredentialProvider.getInstance().getCredentialString(url,alias);
 		}
-		
-		return ret;
+		return null;
 	}
 }

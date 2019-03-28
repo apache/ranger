@@ -423,18 +423,11 @@ public class MiscUtil {
 	}
 
 	public static String getCredentialString(String url, String alias) {
-		String ret = null;
-
 		if (url != null && alias != null) {
-			char[] cred = RangerCredentialProvider.getInstance()
+			return RangerCredentialProvider.getInstance()
 					.getCredentialString(url, alias);
-
-			if (cred != null) {
-				ret = new String(cred);
-			}
 		}
-
-		return ret;
+		return null;
 	}
 
 	public static UserGroupInformation createUGIFromSubject(Subject subject)

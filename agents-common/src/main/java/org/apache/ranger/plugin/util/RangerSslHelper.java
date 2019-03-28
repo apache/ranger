@@ -255,9 +255,7 @@ public class RangerSslHelper {
 	}
 
 	private String getCredential(String url, String alias) {
-		char[] credStr = RangerCredentialProvider.getInstance().getCredentialString(url, alias);
-
-		return credStr == null ? null : new String(credStr);
+		return RangerCredentialProvider.getInstance().getCredentialString(url, alias);
 	}
 
 	private InputStream getFileInputStream(String fileName)  throws IOException {
