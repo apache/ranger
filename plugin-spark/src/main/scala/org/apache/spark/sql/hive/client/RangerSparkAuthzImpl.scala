@@ -18,13 +18,12 @@
 package org.apache.spark.sql.hive.client
 
 import java.util.{List => JList}
-
 import org.apache.commons.logging.LogFactory
 import org.apache.hadoop.hive.ql.security.authorization.plugin._
 import org.apache.hadoop.hive.ql.session.SessionState
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.hive.{AuthzUtils, HiveExternalCatalog}
+import org.apache.spark.sql.{AuthzUtils, SparkSession}
+import org.apache.spark.sql.hive.HiveExternalCatalog
 import org.apache.spark.sql.internal.NonClosableMutableURLClassLoader
 
 /**
@@ -42,7 +41,7 @@ import org.apache.spark.sql.internal.NonClosableMutableURLClassLoader
  * generated, will be reused then.
  *
  */
-object AuthzImpl {
+private[sql] object RangerSparkAuthzImpl {
 
   private val logger = LogFactory.getLog(getClass.getSimpleName.stripSuffix("$"))
 
@@ -90,7 +89,7 @@ object AuthzImpl {
           authz.checkPrivileges(hiveOpType, inputObjs, outputObjs, context)
         } catch {
           case hae: HiveAccessControlException =>
-            error(
+            logger.error(
               s"""
                  |+===============================+
                  ||Spark SQL Authorization Failure|

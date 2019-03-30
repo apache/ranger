@@ -1,0 +1,67 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.ranger.authorization.spark.authorizer
+
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration
+import org.apache.ranger.plugin.service.RangerBasePlugin
+
+class RangerSparkPlugin(appType: String) extends RangerBasePlugin("spark", appType) {
+  lazy val fsScheme: Array[String] = RangerConfiguration.getInstance()
+    .get("ranger.plugin.spark.urlauth.filesystem.schemes", "hdfs:,file:")
+    .split(",")
+    .map(_.trim)
+}
+
+object RangerSparkPlugin {
+
+  private val rangerConf: RangerConfiguration = RangerConfiguration.getInstance
+
+  val showColumnsOption: String = rangerConf.get(
+    "xasecure.spark.describetable.showcolumns.authorization.option", "NONE")
+
+  def build(): Builder = new Builder
+
+  class Builder {
+
+    @volatile private var appType: String = "unknown"
+    @volatile private var sparkPlugin: RangerSparkPlugin = _
+
+    def sessionContext(sessionContext: HiveAuthzSessionContext): Builder = {
+      appType = Option(sessionContext).map(_.getClientType) match {
+        case Some(v) => v match {
+          case CLIENT_TYPE.HIVECLI => "hiveCLI"
+          case CLIENT_TYPE.HIVESERVER2 => "hiveServer2"
+        }
+        case _ => "unknown"
+      }
+      this
+    }
+
+    def getOrCreate(): RangerSparkPlugin = RangerSparkPlugin.synchronized {
+      if (sparkPlugin == null) {
+        sparkPlugin = new RangerSparkPlugin(appType)
+        sparkPlugin.init()
+        sparkPlugin
+      } else {
+        sparkPlugin
+      }
+    }
+  }
+}

@@ -15,18 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark
+package org.apache.ranger.authorization.spark.authorizer
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
-import org.apache.spark.sql.SparkSessionExtensions
+object SparkObjectType extends Enumeration {
+  type SparkObjectType = Value
 
-package object authorizer {
-
-  type Extensions = SparkSessionExtensions => Unit
-
-  type SparkPrivilegeObject = HivePrivilegeObject
-
-  type SparkPrivilegeObjectType = HivePrivilegeObjectType
-
+  val NONE, DATABASE, TABLE, VIEW, PARTITION, COLUMN, FUNCTION, URI = Value
 }

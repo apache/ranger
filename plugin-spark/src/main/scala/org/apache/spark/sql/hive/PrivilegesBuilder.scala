@@ -29,16 +29,16 @@ import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.expressions.NamedExpression
-import org.apache.spark.sql.catalyst.optimizer.HivePrivilegeObject
+import org.apache.spark.sql.catalyst.optimizer.SparkPrivilegeObject
 import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.datasources._
-import org.apache.spark.sql.hive.AuthzUtils._
+import org.apache.spark.sql.AuthzUtils._
 import org.apache.spark.sql.hive.execution.CreateHiveTableAsSelectCommand
 import org.apache.spark.sql.types.StructField
 
 /**
- * [[LogicalPlan]] -> list of [[HivePrivilegeObject]]s
+ * [[LogicalPlan]] -> list of [[SparkPrivilegeObject]]s
  */
 private[sql] object PrivilegesBuilder {
 
@@ -368,7 +368,7 @@ private[sql] object PrivilegesBuilder {
       dbName: String,
       hivePrivilegeObjects: JList[HPO]): Unit = {
     hivePrivilegeObjects.add(
-      HivePrivilegeObject(HivePrivilegeObjectType.DATABASE, dbName, dbName))
+      SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, dbName, dbName))
   }
 
   /**
@@ -382,7 +382,7 @@ private[sql] object PrivilegesBuilder {
     dbOption match {
       case Some(db) =>
         hivePrivilegeObjects.add(
-          HivePrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
+          SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
       case _ =>
     }
   }
@@ -398,7 +398,7 @@ private[sql] object PrivilegesBuilder {
     tableIdentifier.database match {
       case Some(db) =>
         hivePrivilegeObjects.add(
-          HivePrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
+          SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
       case _ =>
     }
   }
@@ -422,7 +422,7 @@ private[sql] object PrivilegesBuilder {
         val tbName = tableIdentifier.table
         val hivePrivObjectActionType = getHivePrivObjActionType(mode)
         hivePrivilegeObjects.add(
-          HivePrivilegeObject(
+          SparkPrivilegeObject(
             HivePrivilegeObjectType.TABLE_OR_VIEW,
             db,
             tbName,
@@ -447,7 +447,7 @@ private[sql] object PrivilegesBuilder {
     databaseName match {
       case Some(db) =>
         hivePrivilegeObjects.add(
-          HivePrivilegeObject(HivePrivilegeObjectType.FUNCTION, db, functionName))
+          SparkPrivilegeObject(HivePrivilegeObjectType.FUNCTION, db, functionName))
       case _ =>
     }
   }

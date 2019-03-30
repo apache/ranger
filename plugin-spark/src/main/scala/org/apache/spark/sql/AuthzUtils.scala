@@ -15,18 +15,31 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark
+package org.apache.spark.sql
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
-import org.apache.spark.sql.SparkSessionExtensions
+import scala.util.{Failure, Success, Try}
 
-package object authorizer {
+private[sql] object AuthzUtils {
 
-  type Extensions = SparkSessionExtensions => Unit
+  def getFieldVal(o: Any, name: String): Any = {
+    Try {
+      val field = o.getClass.getDeclaredField(name)
+      field.setAccessible(true)
+      field.get(o)
+    } match {
+      case Success(value) => value
+      case Failure(exception) => throw exception
+    }
+  }
 
-  type SparkPrivilegeObject = HivePrivilegeObject
-
-  type SparkPrivilegeObjectType = HivePrivilegeObjectType
-
+  def setFieldVal(o: Any, name: String, value: Any): Unit = {
+    Try {
+      val field = o.getClass.getDeclaredField(name)
+      field.setAccessible(true)
+      field.set(o, value.asInstanceOf[AnyRef])
+    } match {
+      case Failure(exception) => throw exception
+      case _ =>
+    }
+  }
 }

@@ -29,6 +29,7 @@
         <spark.version>2.2.3</spark.version>
         <spark.scope>provided</spark.scope>
         <spark.hive.version>1.2.1.spark2</spark.hive.version>
+        <ranger.spark.package>ranger_spark_project</ranger.spark.package>
     </properties>
     <parent>
         <artifactId>ranger</artifactId>
@@ -56,35 +57,13 @@
             <scope>${spark.scope}</scope>
         </dependency>
 
-        <!-- ranger hive plugin for spark sql plugin assembly -->
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-plugin</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hive</groupId>-->
+            <!--<artifactId>hive-exec</artifactId>-->
+            <!--<version>1.2.1.spark2</version>-->
+            <!--<scope>provided</scope>-->
+        <!--</dependency>-->
 
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-plugin-shim</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugin-classloader</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
@@ -217,6 +196,25 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- unit tests-->
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.binary.version}</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <type>test-jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -269,6 +267,48 @@
                         <javacArg>-Xlint:all,-serial,-path,-try</javacArg>
                     </javacArgs>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <shadedArtifactAttached>false</shadedArtifactAttached>
+                    <artifactSet>
+                        <includes>
+                            <include>com.google.code.gson:gson</include>
+                            <include>com.sun.jersey:jersey-bundle</include>
+                            <include>org.apache.httpcomponents:httpclient</include>
+                            <include>org.apache.httpcomponents:httpcore</include>
+                            <include>org.apache.httpcomponents:httpmime</include>
+                            <include>org.apache.ranger:ranger-plugins-common</include>
+                            <include>org.apache.ranger:ranger-plugins-cred</include>
+                            <include>org.apache.ranger:ranger-plugins-audit</include>
+                            <include>org.apache.solr:solr-solrj</include>
+                            <include>org.codehaus.jackson:jackson-core-asl</include>
+                            <include>org.codehaus.jackson:jackson-jaxrs</include>
+                            <include>org.codehaus.jackson:jackson-mapper-asl</include>
+                            <include>org.codehaus.jackson:jackson-xc</include>
+                            <include>org.eclipse.persistence:eclipselink</include>
+                            <include>org.eclipse.persistence:javax.persistence</include>
+                            <include>org.noggit:noggit</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.sun.jersey</pattern>
+                            <shadedPattern>${ranger.spark.package}.jersey</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

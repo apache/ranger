@@ -15,18 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark
+package org.apache.ranger.authorization.spark.authorizer
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
-import org.apache.spark.sql.SparkSessionExtensions
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler
 
-package object authorizer {
+class RangerSparkAuditHandler extends RangerDefaultAuditHandler {
 
-  type Extensions = SparkSessionExtensions => Unit
-
-  type SparkPrivilegeObject = HivePrivilegeObject
-
-  type SparkPrivilegeObjectType = HivePrivilegeObjectType
+  // TODO(Kent Yao): Implementing meaningfully audit functions
 
 }

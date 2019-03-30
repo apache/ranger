@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark
+package org.apache.ranger.authorization.spark.authorizer
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
-import org.apache.spark.sql.SparkSessionExtensions
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthorizer, HiveAuthorizerFactory, HiveAuthzSessionContext, HiveMetastoreClientFactory}
+import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider
 
-package object authorizer {
-
-  type Extensions = SparkSessionExtensions => Unit
-
-  type SparkPrivilegeObject = HivePrivilegeObject
-
-  type SparkPrivilegeObjectType = HivePrivilegeObjectType
-
+class RangerSparkAuthorizerFactory extends HiveAuthorizerFactory {
+  override def createHiveAuthorizer(
+      metastoreClientFactory: HiveMetastoreClientFactory,
+      conf: HiveConf,
+      hiveAuthenticator: HiveAuthenticationProvider,
+      ctx: HiveAuthzSessionContext): HiveAuthorizer = {
+    new RangerSparkAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, ctx)
+  }
 }

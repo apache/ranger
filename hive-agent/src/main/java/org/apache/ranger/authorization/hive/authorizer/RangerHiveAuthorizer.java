@@ -88,8 +88,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private static volatile RangerHivePlugin hivePlugin = null;
 
-	private boolean isForwardedAddressesMethodAvailable = true;
-
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
 								  HiveConf                   hiveConf,
 								  HiveAuthenticationProvider hiveAuthenticator,
@@ -520,7 +518,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					if (result == null) {
 						LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
 					} else if (!result.getIsAllowed()) {
-						if (!LOG.isDebugEnabled()) {
+						if (LOG.isDebugEnabled()) {
 							String path = resource.getAsString();
 							LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]. resource[%s], request[%s], result[%s]",
 									user, request.getHiveAccessType().name(), path, resource, request, result));
@@ -1664,7 +1662,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append("'clientType':").append(sessionContext == null ? null : sessionContext.getClientType());
 		sb.append(", 'commandString':").append(context == null ? "null" : context.getCommandString());
 		sb.append(", 'ipAddress':").append(context == null ? "null" : context.getIpAddress());
-		sb.append(", 'forwardedAddresses':").append(context == null ? "null" : StringUtils.join(getForwardedAddresses(context), ", "));
+		sb.append(", 'forwardedAddresses':").append(context == null ? "null" : StringUtils.join(context.getForwardedAddresses(), ", "));
 		sb.append(", 'sessionString':").append(sessionContext == null ? "null" : sessionContext.getSessionString());
 		sb.append("}");
 
@@ -1674,19 +1672,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append("}");
 
 		return sb.toString();
-	}
-
-	protected List<String> getForwardedAddresses(HiveAuthzContext context) {
-		if (isForwardedAddressesMethodAvailable) {
-			try {
-				return context.getForwardedAddresses();
-			} catch (NoSuchMethodError ex) {
-				LOG.warn("Method getForwardedAddresses() not found in HiveAuthzContext class. Possibily Hive is older version. We will ignore this and not call this method again",
-						ex);
-				isForwardedAddressesMethodAvailable = false;
-			}
-		}
-		return new ArrayList<String>();
 	}
 
 	private StringBuilder toString(List<HivePrivilegeObject> privObjs, StringBuilder sb) {

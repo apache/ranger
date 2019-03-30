@@ -22,15 +22,14 @@ import java.io.File
 import org.apache.commons.logging.LogFactory
 import org.apache.hadoop.hive.ql.plan.HiveOperation
 import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthzContext, HiveOperationType}
-
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.plans.logical.{Command, LogicalPlan}
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.datasources.{CreateTempViewUsing, InsertIntoDataSourceCommand, InsertIntoHadoopFsRelationCommand}
-import org.apache.spark.sql.hive.{HiveExternalCatalog, PrivilegesBuilder}
-import org.apache.spark.sql.hive.client.AuthzImpl
+import org.apache.spark.sql.hive.client.RangerSparkAuthzImpl
 import org.apache.spark.sql.hive.execution.CreateHiveTableAsSelectCommand
+import org.apache.spark.sql.hive.{HiveExternalCatalog, PrivilegesBuilder}
 import org.apache.spark.util.Utils
 
 trait Authorizable extends Rule[LogicalPlan] {
@@ -54,12 +53,13 @@ trait Authorizable extends Rule[LogicalPlan] {
     val (in, out) = PrivilegesBuilder.build(plan)
     spark.sharedState.externalCatalog match {
       case _: HiveExternalCatalog =>
-        AuthzImpl.checkPrivileges(spark, operationType, in, out, authzContext)
+        RangerSparkAuthzImpl.checkPrivileges(spark, operationType, in, out, authzContext)
       case _ =>
     }
-    // iff no exception.
-    // We just return the original plan here, so this rule will be executed only once.
-    plan
+
+    // Row level filtering
+    new RangerSparkRowFilter(spark).build(plan)
+    // TODO(Kent Yao) applying column masking
   }
 
   def policyCacheDir: Option[String] = {
