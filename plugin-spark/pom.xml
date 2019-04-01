@@ -56,14 +56,6 @@
             <version>${spark.version}</version>
             <scope>${spark.scope}</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.spark-project.hive</groupId>
-            <artifactId>hive-exec</artifactId>
-            <version>1.2.1.spark2</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>

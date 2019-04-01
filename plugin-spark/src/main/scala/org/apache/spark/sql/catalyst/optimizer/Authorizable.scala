@@ -66,7 +66,6 @@ trait Authorizable extends Rule[LogicalPlan] {
     Option(spark.sparkContext.hadoopConfiguration.get("ranger.plugin.hive.policy.cache.dir"))
   }
 
-
   def createCacheDirIfNonExists(dir: String): Unit = {
     val file = new File(dir)
     if (!file.exists()) {
