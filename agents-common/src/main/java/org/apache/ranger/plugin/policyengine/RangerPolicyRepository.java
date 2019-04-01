@@ -489,6 +489,19 @@ class RangerPolicyRepository {
 
     List<RangerContextEnricher> getContextEnrichers() { return contextEnrichers; }
 
+    List<RangerPolicyEvaluator> getPolicyEvaluators(int policyType) {
+        switch(policyType) {
+            case RangerPolicy.POLICY_TYPE_ACCESS:
+                return getPolicyEvaluators();
+            case RangerPolicy.POLICY_TYPE_DATAMASK:
+                return getDataMaskPolicyEvaluators();
+            case RangerPolicy.POLICY_TYPE_ROWFILTER:
+                return getRowFilterPolicyEvaluators();
+            default:
+                return getPolicyEvaluators();
+        }
+    }
+
     List<RangerPolicyEvaluator> getPolicyEvaluators() {
         return policyEvaluators;
     }

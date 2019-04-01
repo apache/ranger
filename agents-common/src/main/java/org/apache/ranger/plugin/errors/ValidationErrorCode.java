@@ -113,6 +113,7 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_MISSING_SERVICES(3044, "No services specified for security-zone:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
+    SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
 
     ;
 

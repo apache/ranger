@@ -23,6 +23,8 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
@@ -58,6 +60,17 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return xxRangerSecurityZone;
         } catch (NoResultException e) {
             return null;
+        }
+    }
+    public List<String> findZonesByServiceName(String serviceName) {
+        if (serviceName == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZone.findByServiceName", String.class)
+                    .setParameter("serviceName", serviceName).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
         }
     }
 }

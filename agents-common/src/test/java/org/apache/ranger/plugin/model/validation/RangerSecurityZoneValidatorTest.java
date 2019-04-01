@@ -170,12 +170,18 @@ public class RangerSecurityZoneValidatorTest {
 	@Test
         public void testValidateSecurityZoneWitoutResourcesForCreateThrowsError() throws Exception{
 		RangerSecurityZoneService rangerSecurityZoneService = new RangerSecurityZoneService();
+		RangerService rangerSvc = getRangerService();
+		RangerServiceDef rangerSvcDef = rangerServiceDef();
+		Mockito.when(_store.getServiceDefByName("1")).thenReturn(rangerSvcDef);
+
 		Map<String, RangerSecurityZone.RangerSecurityZoneService> map = new HashMap<String, RangerSecurityZone.RangerSecurityZoneService>();
 		map.put("hdfsSvc", rangerSecurityZoneService);
                 RangerSecurityZone suppliedSecurityZone = getRangerSecurityZone();
 		suppliedSecurityZone.setServices(map);
 		
 		Mockito.when(_store.getSecurityZone("MyZone")).thenReturn(null);
+		Mockito.when(_store.getServiceByName("hdfsSvc")).thenReturn(rangerSvc);
+
 		try {
 			rangerSecurityZoneValidator.validate(suppliedSecurityZone,
 					RangerValidator.Action.CREATE);

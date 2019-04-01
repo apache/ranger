@@ -3689,7 +3689,7 @@ public class ServiceREST {
                         }
                 }
         }
-        private static ServicePolicies getUpdatedServicePoliciesForZones(ServicePolicies servicePolicies, Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones) {
+        private ServicePolicies getUpdatedServicePoliciesForZones(ServicePolicies servicePolicies, Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones) {
 
 			final ServicePolicies ret;
 
@@ -3701,6 +3701,21 @@ public class ServiceREST {
 				ret.setAuditMode(servicePolicies.getAuditMode());
 				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
+
+				// Get list of zones that associated tag-service (if any) is associated with
+				List<String> zonesInAssociatedTagService = new ArrayList<>();
+
+				String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
+				if (StringUtils.isNotEmpty(tagServiceName)) {
+					try {
+						RangerService tagService = svcStore.getServiceByName(tagServiceName);
+						if (tagService != null && tagService.getIsEnabled()) {
+							zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByServiceName(tagServiceName);
+						}
+					} catch (Exception exception) {
+						LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
+					}
+				}
 
 				Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 
@@ -3720,6 +3735,8 @@ public class ServiceREST {
 						securityZoneInfo.setZoneName(entry.getKey());
 						securityZoneInfo.setPolicies(zonePolicies);
 						securityZoneInfo.setResources(entry.getValue().getResources());
+
+						securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(entry.getKey()));
 
 						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
 					}

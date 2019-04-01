@@ -33,7 +33,6 @@ import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneServi
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -523,60 +522,70 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
         boolean ret = true;
 
-        if (CollectionUtils.isEmpty(securityZoneService.getResources())) {
-            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES;
+        // Verify service with serviceName exists - get the service-type
+        RangerService service = getService(serviceName);
 
-            failures.add(new ValidationFailureDetailsBuilder().field("security zone resources").isMissing().becauseOf(error.getMessage(serviceName)).errorCode(error.getErrorCode()).build());
+        if (service == null) {
+            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME;
+
+            failures.add(new ValidationFailureDetailsBuilder().field("security zone resource service-name").becauseOf(error.getMessage(serviceName)).errorCode(error.getErrorCode()).build());
             ret = false;
         } else {
-            // Verify service with serviceName exists - get the service-type
-            RangerService service = getService(serviceName);
+            RangerServiceDef serviceDef = getServiceDef(service.getType());
 
-            if (service == null) {
-                ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME;
-
-                failures.add(new ValidationFailureDetailsBuilder().field("security zone resource service-name").becauseOf(error.getMessage(serviceName)).errorCode(error.getErrorCode()).build());
+            if (serviceDef == null) {
+                ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE;
+                failures.add(new ValidationFailureDetailsBuilder().field("security zone resource service-type").becauseOf(error.getMessage(service.getType())).errorCode(error.getErrorCode()).build());
                 ret = false;
             } else {
-                RangerServiceDef serviceDef = getServiceDef(service.getType());
+                String serviceType = serviceDef.getName();
 
-                if (serviceDef == null || serviceDef.getName().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-                    ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE;
-
-                    failures.add(new ValidationFailureDetailsBuilder().field("security zone resource service-type").becauseOf(error.getMessage(service.getType())).errorCode(error.getErrorCode()).build());
-                    ret = false;
+                if (StringUtils.equals(serviceType, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                    if (CollectionUtils.isNotEmpty(securityZoneService.getResources())) {
+                        ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES;
+                        failures.add(new ValidationFailureDetailsBuilder().field("security zone resources").becauseOf(error.getMessage(serviceName)).errorCode(error.getErrorCode()).build());
+                        ret = false;
+                    }
                 } else {
-                    // For each resource-spec, verify that it forms valid hierarchy for some policy-type
-                    for (Map<String, List<String>> resource : securityZoneService.getResources()) {
-                        Set<String>            resourceDefNames = resource.keySet();
-                        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-                        boolean                isValidHierarchy = false;
+                    if (CollectionUtils.isEmpty(securityZoneService.getResources())) {
+                        ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES;
+                        failures.add(new ValidationFailureDetailsBuilder().field("security zone resources").isMissing().becauseOf(error.getMessage(serviceName)).errorCode(error.getErrorCode()).build());
+                        ret = false;
+                    } else {
+                        // For each resource-spec, verify that it forms valid hierarchy for some policy-type
+                        for (Map<String, List<String>> resource : securityZoneService.getResources()) {
+                            Set<String> resourceDefNames = resource.keySet();
+                            RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+                            boolean isValidHierarchy = false;
 
-                        for (int policyType : RangerPolicy.POLICY_TYPES) {
-                            Set<List<RangerServiceDef.RangerResourceDef>> resourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType, resourceDefNames);
+                            for (int policyType : RangerPolicy.POLICY_TYPES) {
+                                Set<List<RangerServiceDef.RangerResourceDef>> resourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType, resourceDefNames);
 
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Size of resourceHierarchies for resourceDefNames:[" + resourceDefNames +", policyType=" + policyType + "] = " + resourceHierarchies.size());
-                            }
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Size of resourceHierarchies for resourceDefNames:[" + resourceDefNames + ", policyType=" + policyType + "] = " + resourceHierarchies.size());
+                                }
 
-                            for (List<RangerServiceDef.RangerResourceDef> resourceHierarchy : resourceHierarchies) {
+                                for (List<RangerServiceDef.RangerResourceDef> resourceHierarchy : resourceHierarchies) {
 
-                                if (RangerDefaultPolicyResourceMatcher.isHierarchyValidForResources(resourceHierarchy, resource)) {
-                                    isValidHierarchy = true;
-                                    break;
-                                } else {
-                                    LOG.info("gaps found in resource, skipping hierarchy:[" + resourceHierarchies + "]");
+                                    if (RangerDefaultPolicyResourceMatcher.isHierarchyValidForResources(resourceHierarchy, resource)) {
+                                        isValidHierarchy = true;
+                                        break;
+                                    } else {
+                                        LOG.info("gaps found in resource, skipping hierarchy:[" + resourceHierarchies + "]");
+                                    }
                                 }
                             }
-                        }
 
-                        if (!isValidHierarchy) {
-                            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_RESOURCE_HIERARCHY;
+                            if (!isValidHierarchy) {
+                                ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_INVALID_RESOURCE_HIERARCHY;
 
-                            failures.add(new ValidationFailureDetailsBuilder().field("security zone resource hierarchy").becauseOf(error.getMessage(serviceName, resourceDefNames)).errorCode(error.getErrorCode()).build());
-                            ret = false;
-                        }
+                                failures.add(new ValidationFailureDetailsBuilder().field("security zone resource hierarchy").becauseOf(error.getMessage(serviceName, resourceDefNames)).errorCode(error.getErrorCode()).build());
+                                ret = false;
+                            }
 
+                        /*
+                         * Ignore this check. It should be possible to have all wildcard resource in a zone if zone-admin so desires
+                         *
                         boolean isValidResourceSpec = isAnyNonWildcardResource(resource, failures);
 
                         if (!isValidResourceSpec) {
@@ -586,7 +595,9 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                             ret = false;
                             LOG.warn("RangerPolicyValidator.validateSecurityZoneService() : All wildcard resource-values specified for service :[" + serviceName + "]");
                         }
+                        */
 
+                        }
                     }
                 }
             }
@@ -599,6 +610,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
         return ret;
     }
 
+    /*
     private boolean isAnyNonWildcardResource(Map<String, List<String>> resource, List<ValidationFailureDetails> failures) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("==> RangerPolicyValidator.isAnyNonWildcardResource(%s, %s)", resource, failures));
@@ -628,4 +640,5 @@ public class RangerSecurityZoneValidator extends RangerValidator {
         }
         return ret;
     }
+    */
 }

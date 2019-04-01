@@ -1309,6 +1309,12 @@
         </query>
     </named-query>
 
+	<named-query name="XXSecurityZone.findByServiceName">
+		<query>
+			select obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefService ref where ref.serviceName = :serviceName)
+		</query>
+	</named-query>
+
 	<named-query name="XXSecurityZoneRefGroup.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId

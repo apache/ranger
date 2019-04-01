@@ -83,6 +83,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private Map<String, RangerPolicyRepository> policyRepositories = new HashMap<>();
 
 	private Map<String, RangerResourceTrie>   trieMap;
+	private Map<String, String>               zoneTagServiceMap;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
 
@@ -1352,6 +1353,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluateTagPolicies(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ", " + result + ")");
 		}
 
+		if (StringUtils.isNotEmpty(zoneName) && tagPolicyRepository != null && (zoneTagServiceMap == null || zoneTagServiceMap.get(zoneName) == null)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Accessed resource is in a zone:[" + zoneName + "] which is not associated with the tag-service:[" + tagPolicyRepository.getServiceName() + "]. Evaluating unzoned tag policies of this service");
+			}
+			zoneName = null;
+		}
+
 		Date accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
 
 		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
@@ -1527,6 +1535,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
             RangerServiceDef                serviceDef = servicePolicies.getServiceDef();
 			List<RangerZoneResourceMatcher> matchers   = new ArrayList<>();
 
+			zoneTagServiceMap = new HashMap<>();
+
 			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> securityZone : securityZones.entrySet()) {
                 String                           zoneName    = securityZone.getKey();
                 ServicePolicies.SecurityZoneInfo zoneDetails = securityZone.getValue();
@@ -1564,6 +1574,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Built all matchers for zone:[" + zoneName +"]");
+                }
+
+                if (zoneDetails.getContainsAssociatedTagService()) {
+                    zoneTagServiceMap.put(zoneName, zoneName);
                 }
             }
 

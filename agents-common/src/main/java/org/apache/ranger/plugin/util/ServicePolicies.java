@@ -297,6 +297,7 @@ public class ServicePolicies implements java.io.Serializable {
 		private List<HashMap<String, List<String>>> resources;
 		private List<RangerPolicy>              policies;
 		private List<RangerPolicyDelta>         policyDeltas;
+		private Boolean                         containsAssociatedTagService;
 
 		public String getZoneName() {
 			return zoneName;
@@ -312,6 +313,8 @@ public class ServicePolicies implements java.io.Serializable {
 
 		public List<RangerPolicyDelta> getPolicyDeltas() { return policyDeltas; }
 
+		public Boolean getContainsAssociatedTagService() { return containsAssociatedTagService; }
+
 		public void setZoneName(String zoneName) {
 			this.zoneName = zoneName;
 		}
@@ -326,12 +329,15 @@ public class ServicePolicies implements java.io.Serializable {
 
 		public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
+		public void setContainsAssociatedTagService(Boolean containsAssociatedTagService) { this.containsAssociatedTagService = containsAssociatedTagService; }
+
 		@Override
 		public String toString() {
 			return "zoneName=" + zoneName + ", "
 					+ "resources=" + resources + ", "
 					+ "policies=" + policies + ", "
-					+ "policyDeltas=" + policyDeltas
+					+ "policyDeltas=" + policyDeltas + ", "
+					+ "containsAssociatedTagService=" + containsAssociatedTagService
 					;
 		}
 	}

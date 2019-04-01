@@ -461,7 +461,8 @@
                     ]
                 }
             ],
-            "zoneName": "finance"
+            "zoneName": "finance",
+            "containsAssociatedTagService": false
         }
     },
   "tests":[
