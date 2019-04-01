@@ -100,6 +100,25 @@
 			"uiHint":"",
 			"label": "URL",
 			"description": "URL"
+		},
+
+		{
+			"itemId": 6,
+			"name": "hiveservice",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": false,
+			"recursiveSupported": false,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": { "wildCard":true, "ignoreCase":false },
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Hive Service",
+			"description": "Hive Service"
 		}
 	],
 
@@ -161,7 +180,9 @@
 				"index",
 				"lock",
 				"read",
-				"write"
+				"write",
+				"repladmin",
+				"serviceadmin"
 			]
 		},
 
@@ -175,6 +196,18 @@
 			"itemId": 10,
 			"name": "write",
 			"label": "Write"
+		},
+
+		{
+			"itemId": 11,
+			"name": "repladmin",
+			"label": "ReplAdmin"
+		},
+
+		{
+			"itemId": 12,
+			"name": "serviceadmin",
+			"label": "Service Admin"
 		}
 	],
 

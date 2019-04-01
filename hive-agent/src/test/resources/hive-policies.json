@@ -716,7 +716,216 @@
 	"id": 15,
 	"isEnabled": true,
 	"version": 2
-	}
+	},
+    {
+      "service": "HIVETest",
+      "name": "Test Admin permission REPL DUMP command",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "database": {
+          "values": [
+            "rangerauthz"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            },
+            {
+              "type": "update",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "drop",
+              "isAllowed": true
+            },
+            {
+              "type": "alter",
+              "isAllowed": true
+            },
+            {
+              "type": "index",
+              "isAllowed": true
+            },
+            {
+              "type": "lock",
+              "isAllowed": true
+            },
+            {
+              "type": "repladmin",
+              "isAllowed": true
+            },
+            {
+              "type": "all",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "da_test_user"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 16,
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "HIVETest",
+      "name": "Test KILL QUERY command",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "hiveservice": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "serviceadmin",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "da_test_user"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 16,
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "HIVETest",
+      "name": "Test Admin permission REPL DUMP command on table",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "database": {
+          "values": [
+            "rangerauthz"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "column": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "table": {
+          "values": [
+            "words"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            },
+            {
+              "type": "update",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "drop",
+              "isAllowed": true
+            },
+            {
+              "type": "alter",
+              "isAllowed": true
+            },
+            {
+              "type": "index",
+              "isAllowed": true
+            },
+            {
+              "type": "lock",
+              "isAllowed": true
+            },
+            {
+              "type": "repladmin",
+              "isAllowed": true
+            },
+            {
+              "type": "all",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "da_test_user"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 16,
+      "isEnabled": true,
+      "version": 1
+    }
   ],
   "serviceDef": {
     "name": "hive",
@@ -877,6 +1086,28 @@
         "uiHint":"",
         "label": "URL",
         "description": "URL"
+      },
+      {
+        "itemId": 6,
+        "name": "hiveservice",
+        "type": "string",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": false,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Hive Service",
+        "description": "Hive Service",
+        "accessTypeRestrictions": [],
+        "isValidLeaf": true
       }
     ],
     "accessTypes": [
@@ -933,7 +1164,9 @@
           "drop",
           "alter",
           "index",
-          "lock"
+          "lock",
+          "repladmin",
+          "serviceadmin"
         ]
       },
       {
@@ -946,6 +1179,18 @@
         "itemId": 10,
         "name": "write",
         "label": "Write",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 11,
+        "name": "repladmin",
+        "label": "ReplAdmin",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 12,
+        "name": "serviceadmin",
+        "label": "Service Admin",
         "impliedGrants": []
       }
     ],

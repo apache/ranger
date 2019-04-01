@@ -6,6 +6,8 @@
     "id":3,
     "resources":[
       {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
+      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
+      {"name":"hiveservice","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HiveService","description":"HiveService"},
       {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
       {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
       {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Column","description":"Hive Column"}
@@ -18,7 +20,25 @@
       {"name":"alter","label":"Alter"},
       {"name":"index","label":"Index"},
       {"name":"lock","label":"Lock"},
-      {"name":"all","label":"All"}
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"repladmin","label":"ReplAdmin"},
+      {"name":"serviceadmin","label":"ServiceAdmin"},
+      {"name":"all","label":"All",
+        "impliedGrants": [
+        "select",
+        "update",
+        "create",
+        "drop",
+        "alter",
+        "index",
+        "lock",
+        "read",
+        "write",
+        "repladmin",
+        "serviceadmin"
+      ]
+      }
     ]
   },
 
@@ -50,6 +70,13 @@
       "resources":{"database":{"values":["db1"]},"table":{"values":["tmp"]},"column":{"values":["tmp*"], "isExcludes":true}},
       "policyItems":[
         {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+      ]
+    }
+    ,
+    {"id":5,"name":"hiveservice=*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"hiveservice":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"serviceadmin","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
       ]
     }
   ],
@@ -326,6 +353,14 @@
       "accessType":"","user":"user1","userGroups":["users"],"requestData":"fictional case: request for any match today happens only at a higher levels"
      },
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+    ,
+    {"name":"ALLOW 'kill_query' for user1 on any cluster",
+      "request":{
+        "resource":{"elements":{"hiveservice":"testcluster"}},
+        "accessType":"serviceadmin","user":"user1","userGroups":["users"],"requestData":"kill query 'dummyqueryid'"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
     }
   ]
 }

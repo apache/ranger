@@ -126,6 +126,8 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("getUserTopology", 29);
 		mapAccessTypeToPermType.put("getTopologyInfo", 30);
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
+		mapAccessTypeToPermType.put("repladmin",32);
+		mapAccessTypeToPermType.put("serviceadmin",33);
 
 		version = "0";
 	}
@@ -245,6 +247,7 @@ public class ServiceUtil {
 		toRangerResourceList(resource.getUdfs(), "udf", Boolean.FALSE, Boolean.FALSE, ret.getResources());
 		toRangerResourceList(resource.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, ret.getResources());
 		toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getHiveServices(), "hiveservice", Boolean.FALSE, Boolean.FALSE, ret.getResources());
 
 		HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<String, List<VXPermMap>>();
 		
@@ -371,6 +374,8 @@ public class ServiceUtil {
 				ret.setTopologies(resString);
 			} else if("service".equalsIgnoreCase(resType)) {
 				ret.setServices(resString);
+			} else if(resType.equalsIgnoreCase("hiveservice")) {
+				ret.setHiveServices(resString);
 			}
 		}
 		updateResourceName(ret);
@@ -833,6 +838,8 @@ public class ServiceUtil {
 				ret.setTopologies(resString);
 			} else if("service".equalsIgnoreCase(resType)) {
 				ret.setServices(resString);
+			} else if(resType.equalsIgnoreCase("hiveservice")) {
+				ret.setHiveServices(resString);
 			}
 		}
 		updateResourceName(ret);
@@ -1057,7 +1064,11 @@ public class ServiceUtil {
 		if (vXPolicy.getServices() != null) {
 			toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret.getResources());
 		}
-		
+
+		if (vXPolicy.getHiveServices() != null) {
+			toRangerResourceList(vXPolicy.getHiveServices(), "hiveservice", Boolean.FALSE, isRecursive, ret.getResources());
+		}
+
 		if ( vXPolicy.getPermMapList() != null) {
 			List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
 

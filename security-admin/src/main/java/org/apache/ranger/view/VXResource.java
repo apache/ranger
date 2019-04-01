@@ -146,6 +146,11 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	protected String services;
 
 	/**
+	 * Hive Services
+	 */
+	protected String hiveServices;
+
+	/**
 	 * guid
 	 */
 	protected String guid;
@@ -563,6 +568,27 @@ public class VXResource extends VXDataObject implements java.io.Serializable {
 	 */
 	public void setServices(String services) {
 		this.services = services;
+	}
+
+
+	/**
+	 * This method sets the value to the member attribute <b>hiveservices</b>. You
+	 * cannot set null to the attribute.
+	 *
+	 * @param hiveServices
+	 *            Value to set member attribute <b>hiveservices</b>
+	 */
+	public void setHiveServices(String hiveServices) {
+		this.hiveServices = hiveServices;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>hiveservices</b>
+	 *
+	 * @return String - value of member attribute <b>hiveservices</b>.
+	 */
+	public String getHiveServices() {
+		return hiveServices;
 	}
 
 	/**

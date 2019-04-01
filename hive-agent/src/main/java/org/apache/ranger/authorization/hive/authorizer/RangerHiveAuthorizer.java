@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -302,6 +303,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.USE, context, sessionContext, clusterName);
 					requests.add(request);
+				} else if ( hiveOpType ==  HiveOperationType.REPLDUMP) {
+					// This happens when REPL DUMP command with null inputHObjs is sent in checkPrivileges()
+					// following parsing is done for Audit info
+					RangerHiveResource resource  = null;
+					HiveObj hiveObj  = new HiveObj(context);
+					String dbName    = hiveObj.getDatabaseName();
+					String tableName = hiveObj.getTableName();
+					LOG.debug("Database: " + dbName + " Table: " + tableName);
+					if (!StringUtil.isEmpty(tableName)) {
+						resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
+					} else {
+						resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName, null);
+					}
+					//
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext, clusterName);
+					requests.add(request);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerHiveAuthorizer.checkPrivileges: Unexpected operation type[" + hiveOpType + "] received with empty input objects list!");
@@ -341,6 +358,23 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 						requests.add(request);
 					}
+				}
+			} else {
+				if (hiveOpType == HiveOperationType.REPLLOAD) {
+					// This happens when REPL LOAD command with null inputHObjs is sent in checkPrivileges()
+					// following parsing is done for Audit info
+					RangerHiveResource resource = null;
+					HiveObj hiveObj = new HiveObj(context);
+					String dbName = hiveObj.getDatabaseName();
+					String tableName = hiveObj.getTableName();
+					LOG.debug("Database: " + dbName + " Table: " + tableName);
+					if (!StringUtil.isEmpty(tableName)) {
+						resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
+					} else {
+						resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName, null);
+					}
+					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext, clusterName);
+					requests.add(request);
 				}
 			}
 
@@ -828,6 +862,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			break;
 
             case URI:
+			case SERVICE_NAME:
 				ret = new RangerHiveResource(objectType, hiveObj.getObjectName());
             break;
 
@@ -883,6 +918,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case GLOBAL:
 			break;
 
+			case SERVICE_NAME:
+				objType = HiveObjectType.SERVICE_NAME;
+			break;
+
 			case COLUMN:
 				// Thejas: this value is unused in Hive; the case should not be hit.
 			break;
@@ -930,12 +969,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case CREATETABLE:
 				case CREATEVIEW:
 				case CREATETABLE_AS_SELECT:
+				case CREATE_MATERIALIZED_VIEW:
 					if(hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
 						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
 					}
 				break;
 
 				case ALTERDATABASE:
+				case ALTERDATABASE_LOCATION:
 				case ALTERDATABASE_OWNER:
 				case ALTERINDEX_PROPS:
 				case ALTERINDEX_REBUILD:
@@ -985,6 +1026,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case DROPINDEX:
 				case DROPTABLE:
 				case DROPVIEW:
+				case DROP_MATERIALIZED_VIEW:
 				case DROPDATABASE:
 					accessType = HiveAccessType.DROP;
 				break;
@@ -1054,6 +1096,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case SWITCHDATABASE:
 				case DESCDATABASE:
 				case SHOWTABLES:
+				case SHOWVIEWS:
 					accessType = HiveAccessType.USE;
 				break;
 
@@ -1064,6 +1107,16 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case GRANT_PRIVILEGE:
 				case REVOKE_PRIVILEGE:
 					accessType = HiveAccessType.NONE; // access check will be performed at the ranger-admin side
+				break;
+
+				case REPLDUMP:
+				case REPLLOAD:
+				case REPLSTATUS:
+					accessType = HiveAccessType.REPLADMIN;
+				break;
+
+				case KILL_QUERY:
+					accessType = HiveAccessType.SERVICEADMIN;
 				break;
 
 				case ADD:
@@ -1114,6 +1167,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case CREATETABLE:
 			case CREATETABLE_AS_SELECT:
 			case ALTERDATABASE:
+			case ALTERDATABASE_LOCATION:
 			case ALTERDATABASE_OWNER:
 			case ALTERTABLE_ADDCOLS:
 			case ALTERTABLE_REPLACECOLS:
@@ -1174,6 +1228,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_CREATEDATABASE:
 			case SHOW_CREATETABLE:
 			case SHOWFUNCTIONS:
+			case SHOWVIEWS:
 			case SHOWINDEXES:
 			case SHOWPARTITIONS:
 			case SHOWLOCKS:
@@ -1185,11 +1240,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case DROPMACRO:
 			case CREATEVIEW:
 			case DROPVIEW:
+			case CREATE_MATERIALIZED_VIEW:
 			case CREATEINDEX:
 			case DROPINDEX:
 			case ALTERINDEX_REBUILD:
 			case ALTERVIEW_PROPERTIES:
 			case DROPVIEW_PROPERTIES:
+			case DROP_MATERIALIZED_VIEW:
 			case LOCKTABLE:
 			case UNLOCKTABLE:
 			case CREATEROLE:
@@ -1226,6 +1283,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case GET_TABLES:
 			case GET_TABLETYPES:
 			case GET_TYPEINFO:
+			case REPLDUMP:
+			case REPLLOAD:
+			case REPLSTATUS:
+			case KILL_QUERY:
 				break;
 		}
 
@@ -1913,8 +1974,51 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 }
 
-enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI };
-enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, ADMIN };
+enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI, SERVICE_NAME };
+enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN };
+
+class HiveObj {
+	String databaseName;
+	String tableName;
+
+	HiveObj(HiveAuthzContext context) {
+	 fetchHiveObj(context);
+	}
+
+	public String getDatabaseName() {
+		return databaseName;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	private void fetchHiveObj(HiveAuthzContext context) {
+		if (context != null) {
+			String cmdString = context.getCommandString();
+			if (cmdString != null) {
+				String[] cmd = cmdString.trim().split("\\s+");
+				if (!ArrayUtils.isEmpty(cmd) && cmd.length > 2) {
+					String dbName = cmd[2];
+					if (dbName.contains(".")) {
+						String[] result = splitDBName(dbName);
+						databaseName = result[0];
+						tableName = result[1];
+					} else {
+						databaseName = dbName;
+						tableName = null;
+					}
+				}
+			}
+		}
+	}
+
+	private String[] splitDBName(String dbName) {
+		String[] ret = null;
+		ret = dbName.split("\\.");
+		return ret;
+	}
+}
 
 class RangerHivePlugin extends RangerBasePlugin {
 	public static boolean UpdateXaPoliciesOnGrantRevoke = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;

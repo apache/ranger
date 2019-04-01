@@ -102,6 +102,11 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	protected String services;
 	/**
+	 * Hive Services
+	 */
+	protected String hiveservices;
+
+	/**
 	 * Resource/Policy Status, boolean values : true/false
 	 *
 	 */
@@ -430,6 +435,26 @@ public class VXPolicy extends VXDataObject implements java.io.Serializable {
 	 */
 	public void setServices(String services) {
 		this.services = services;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>hiveservices</b>
+	 *
+	 * @return String - value of member attribute <b>hiveservices</b>.
+	 */
+	public String getHiveServices() {
+		return hiveservices;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b>hiveservices</b>. You
+	 * cannot set null to the attribute.
+	 *
+	 * @param hiveservices
+	 *            Value to set member attribute <b>hiveservices</b>
+	 */
+	public void setHiveServices(String hiveservices) {
+		this.hiveservices = hiveservices;
 	}
 
 	/**
