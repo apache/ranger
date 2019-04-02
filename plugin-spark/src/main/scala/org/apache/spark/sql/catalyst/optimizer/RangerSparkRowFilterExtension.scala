@@ -17,21 +17,20 @@
 
 package org.apache.spark.sql.catalyst.optimizer
 
-import scala.collection.JavaConverters._
-
 import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.ranger.authorization.spark.authorizer._
 import org.apache.ranger.plugin.policyengine.RangerAccessResult
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.AuthzUtils.getFieldVal
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.datasources.LogicalRelation
-import org.apache.spark.sql.{Dataset, SparkSession}
 
-class RangerSparkRowFilter(spark: SparkSession) {
+import scala.collection.JavaConverters._
 
-  import RangerSparkRowFilter._
+case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[LogicalPlan] {
 
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
 
@@ -64,12 +63,16 @@ class RangerSparkRowFilter(spark: SparkSession) {
     }
   }
 
+  private def isRowFilterEnabled(result: RangerAccessResult): Boolean = {
+    result != null && result.isRowFilterEnabled && StringUtils.isNotEmpty(result.getFilterExpr)
+  }
+
   /**
     * Transform a spark logical plan to another plan with the row filer expressions
     * @param plan the original [[LogicalPlan]]
     * @return the logical plan with row filer expressions applied
     */
-  def build(plan: LogicalPlan): LogicalPlan = {
+  override def apply(plan: LogicalPlan): LogicalPlan = {
     var newPlan = plan
     newPlan = plan transform {
       case h if h.nodeName == "HiveTableRelation" =>
@@ -81,12 +84,7 @@ class RangerSparkRowFilter(spark: SparkSession) {
       case l: LogicalRelation if l.catalogTable.isDefined =>
         applyingRowFilterExpr(l, l.catalogTable.get)
     }
-    Dataset.ofRows(spark, newPlan).queryExecution.optimizedPlan
-  }
-}
-
-object RangerSparkRowFilter {
-  def isRowFilterEnabled(result: RangerAccessResult): Boolean = {
-    result != null && result.isRowFilterEnabled && StringUtils.isNotEmpty(result.getFilterExpr)
+    newPlan.withNewChildren()
+    Dataset.ofRows(spark, newPlan).queryExecution.analyzed
   }
 }

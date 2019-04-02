@@ -17,7 +17,6 @@
 
 package org.apache.spark.sql.catalyst.optimizer
 
-import org.apache.commons.logging.LogFactory
 import org.apache.hadoop.hive.ql.plan.HiveOperation
 import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthzContext, HiveOperationType}
 import org.apache.spark.sql.SparkSession
@@ -30,8 +29,6 @@ import org.apache.spark.sql.hive.client.RangerSparkAuthzImpl
 import org.apache.spark.sql.hive.execution.CreateHiveTableAsSelectCommand
 
 trait Authorizable extends Rule[LogicalPlan] {
-
-  private val logger = LogFactory.getLog(classOf[Authorizable])
 
   def spark: SparkSession
 
@@ -53,10 +50,7 @@ trait Authorizable extends Rule[LogicalPlan] {
         RangerSparkAuthzImpl.checkPrivileges(spark, operationType, in, out, authzContext)
       case _ =>
     }
-
-    // Row level filtering
-    new RangerSparkRowFilter(spark).build(plan)
-    // TODO(Kent Yao) applying column masking
+    plan
   }
 
   /**

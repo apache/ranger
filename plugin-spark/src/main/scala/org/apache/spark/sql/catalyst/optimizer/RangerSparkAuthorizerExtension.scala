@@ -26,4 +26,5 @@ import org.apache.spark.sql.catalyst.rules.Rule
  *
  * For Apache Spark 2.2.x and later
  */
-case class AuthorizerExtension(spark: SparkSession) extends Rule[LogicalPlan] with Authorizable
+case class RangerSparkAuthorizerExtension(spark: SparkSession)
+  extends Rule[LogicalPlan] with Authorizable
