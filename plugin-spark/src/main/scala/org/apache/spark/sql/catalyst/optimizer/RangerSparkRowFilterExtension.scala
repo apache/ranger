@@ -86,8 +86,7 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
         case l: LogicalRelation if l.catalogTable.isDefined =>
           applyingRowFilterExpr(l, l.catalogTable.get)
       }
-      val analyzed = spark.sessionState.analyzer.execute(lp)
-      spark.sessionState.optimizer.execute(analyzed)
+      spark.sessionState.analyzer.execute(lp)
     }
   }
 }
