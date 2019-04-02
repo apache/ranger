@@ -636,7 +636,7 @@
 	"resources": {
 		"database": {
 			"values": [
-				"test1"
+				"test1" , "tmp"
 			],
 			"isExcludes": false,
 			"isRecursive": false
@@ -925,6 +925,45 @@
       "id": 16,
       "isEnabled": true,
       "version": 1
+    },
+    {
+      "service": "HIVETest",
+      "name": "Create Temp UDF test",
+      "policyType": 0,
+      "isAuditEnabled": true,
+      "resources": {
+        "global": {
+          "values": [
+            "*"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "tempudfadmin",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "tom"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "id": 17,
+      "isEnabled": true,
+      "version": 1
     }
   ],
   "serviceDef": {
@@ -1108,6 +1147,28 @@
         "description": "Hive Service",
         "accessTypeRestrictions": [],
         "isValidLeaf": true
+      },
+      {
+        "itemId": 7,
+        "name": "global",
+        "type": "string",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": false,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": "true",
+          "ignoreCase": "false"
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Global",
+        "description": "Global",
+        "accessTypeRestrictions": [],
+        "isValidLeaf": true
       }
     ],
     "accessTypes": [
@@ -1168,7 +1229,8 @@
           "read",
           "write",
           "repladmin",
-          "serviceadmin"
+          "serviceadmin",
+          "tempudfadmin"
         ]
       },
       {
@@ -1193,6 +1255,12 @@
         "itemId": 12,
         "name": "serviceadmin",
         "label": "Service Admin",
+        "impliedGrants": []
+      },
+      {
+        "itemId": 13,
+        "name": "tempudfadmin",
+        "label": "Temporary UDF Admin",
         "impliedGrants": []
       }
     ],

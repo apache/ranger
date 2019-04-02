@@ -290,6 +290,7 @@ define(function(require) {
 		RESOURCE_VIEW_COL:{value:8, label:'View Column', rbkey:'xa.enum.ResourceType.RESOURCE_VIEW_COL', tt: 'lbl.ResourceType_RESOURCE_VIEW_COL'},
 		RESOURCE_TOPOLOGY:{value:9, label:'Topology', rbkey:'xa.enum.ResourceType.RESOURCE_TOPOLOGY', tt: 'lbl.RESOURCE_TOPOLOGY'},
 		RESOURCE_SERVICE:{value:10, label:'Service', rbkey:'xa.enum.ResourceType.RESOURCE_SERVICE', tt: 'lbl.RESOURCE_SERVICE'},
+		RESOURCE_GLOBAL:{value:11, label:'Global', rbkey:'xa.enum.ResourceType.RESOURCE_GLOBAL', tt: 'lbl.RESOURCE_GLOBAL'}
 	});
 
 	XAEnums.ResponseStatus = mergeParams(XAEnums.ResponseStatus, {

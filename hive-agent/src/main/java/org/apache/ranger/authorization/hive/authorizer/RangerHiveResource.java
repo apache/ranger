@@ -31,10 +31,12 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 	public static final String KEY_COLUMN   = "column";
 	public static final String KEY_URL		= "url";
 	public static final String KEY_HIVESERVICE = "hiveservice";
+	public static final String KEY_GLOBAL	 = "global";
+
 
 	private HiveObjectType objectType = null;
 
-	//FirstLevelResource => Database or URL or Hive Service
+	//FirstLevelResource => Database or URL or Hive Service or Global
 	//SecondLevelResource => Table or UDF
 	//ThirdLevelResource => column
 	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource) {
@@ -84,6 +86,14 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 					firstLevelResource = "";
 				}
 				setValue(KEY_HIVESERVICE,firstLevelResource);
+			break;
+
+			case GLOBAL:
+				if (firstLevelResource == null) {
+					firstLevelResource = KEY_GLOBAL;
+					//There is no resource name associated to global operations
+				}
+				setValue(KEY_GLOBAL,firstLevelResource);
 			break;
 
 			case NONE:

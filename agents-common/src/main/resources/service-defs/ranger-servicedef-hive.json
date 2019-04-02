@@ -119,6 +119,26 @@
 			"uiHint":"",
 			"label": "Hive Service",
 			"description": "Hive Service"
+		},
+		{
+			"itemId": 7,
+			"name": "global",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"lookupSupported": false,
+			"recursiveSupported": false,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": false
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Global",
+			"description": "Global"
 		}
 	],
 
@@ -208,6 +228,12 @@
 			"itemId": 12,
 			"name": "serviceadmin",
 			"label": "Service Admin"
+		},
+
+		{
+			"itemId": 13,
+			"name": "tempudfadmin",
+			"label": "Temporary UDF Admin"
 		}
 	],
 

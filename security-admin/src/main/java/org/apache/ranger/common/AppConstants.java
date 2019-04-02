@@ -351,11 +351,15 @@ public class AppConstants extends RangerCommonEnums {
 	 * XA_PERM_TYPE_SERVICEADMIN is an element of enum XAPermType. Its value is "XA_PERM_TYPE_HIVE_SERVICE".
 	 */
 	public static final int XA_PERM_TYPE_SERVICEADMIN = 33;
+	/**
+	 * XA_PERM_TYPE_TEMPUDFADMIN is an element of enum XAPermType. Its value is "XA_PERM_TYPE_TEMPUDFADMIN".
+	 */
+	public static final int XA_PERM_TYPE_TEMPUDFADMIN = 34;
 
 	/**
 	 * Max value for enum XAPermType_MAX
 	 */
-	public static final int XAPermType_MAX = 33;
+	public static final int XAPermType_MAX = 34;
 
 	/***************************************************************
 	 * Enum values for DatabaseFavor
@@ -877,6 +881,10 @@ public class AppConstants extends RangerCommonEnums {
 			// return "serviceadmin"; //XA_PERM_TYPE_SERVICEADMIN
 			return "serviceadmin";
 		}
+		if( elementValue == 34 ) {
+			// return "tempudfadmin"; //XA_PERM_TYPE_TEMPUDFADMIN
+			return "tempudfadmin";
+		}
 		return null;
 	}
 
@@ -1190,7 +1198,9 @@ public class AppConstants extends RangerCommonEnums {
 		if(label.equalsIgnoreCase("serviceadmin")) {
 			return AppConstants.XA_PERM_TYPE_SERVICEADMIN; //XA_PERM_TYPE_SERVICEADMIN
 		}
-
+		if("tempudfadmin".equalsIgnoreCase(label)) {
+			return AppConstants.XA_PERM_TYPE_TEMPUDFADMIN; //XA_PERM_TYPE_TEMPUDFADMIN
+		}
 		return 0;
 	}
 

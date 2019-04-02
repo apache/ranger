@@ -649,6 +649,10 @@
                             && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_UDF.label) ){
 							XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
 						}
+                        if(!_.isUndefined(this.value)
+                            && ( XAUtil.capitaliseFirstLetter(this.value) === XAEnums.ResourceType.RESOURCE_GLOBAL.label) ){
+                            XAUtil.alertPopup({ msg :localization.tt('msg.udfPolicyViolation') });
+                        }
 //                      if value is "none" hide recursive/exclude toggles
 						if(this.value == "none"){
                         	that.recursiveSupport = false;

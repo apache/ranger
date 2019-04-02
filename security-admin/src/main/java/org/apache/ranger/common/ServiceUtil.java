@@ -128,6 +128,7 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
 		mapAccessTypeToPermType.put("repladmin",32);
 		mapAccessTypeToPermType.put("serviceadmin",33);
+		mapAccessTypeToPermType.put("tempudfadmin",34);
 
 		version = "0";
 	}

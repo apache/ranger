@@ -1236,7 +1236,14 @@ public class RangerEnumUtil {
 
 	vEnum.getElementList().add(vElement);
 
+	vElement = new VEnumElement();
+	vElement.setElementName("RESOURCE_GLOBAL");
+	vElement.setElementValue(11);
+	vElement.setElementLabel("Global");
+	vElement.setRbKey("xa.enum.ResourceType.RESOURCE_GLOBAL");
+	vElement.setEnumName(vEnum.getEnumName());
 
+	vEnum.getElementList().add(vElement);
 	///////////////////////////////////
 	// CommonEnums::XAGroupType
 	///////////////////////////////////
