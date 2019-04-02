@@ -17,8 +17,6 @@
 
 package org.apache.spark.sql.catalyst.optimizer
 
-import java.io.File
-
 import org.apache.commons.logging.LogFactory
 import org.apache.hadoop.hive.ql.plan.HiveOperation
 import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthzContext, HiveOperationType}
@@ -27,10 +25,9 @@ import org.apache.spark.sql.catalyst.plans.logical.{Command, LogicalPlan}
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.datasources.{CreateTempViewUsing, InsertIntoDataSourceCommand, InsertIntoHadoopFsRelationCommand}
+import org.apache.spark.sql.hive.{HiveExternalCatalog, PrivilegesBuilder}
 import org.apache.spark.sql.hive.client.RangerSparkAuthzImpl
 import org.apache.spark.sql.hive.execution.CreateHiveTableAsSelectCommand
-import org.apache.spark.sql.hive.{HiveExternalCatalog, PrivilegesBuilder}
-import org.apache.spark.util.Utils
 
 trait Authorizable extends Rule[LogicalPlan] {
 
@@ -60,37 +57,6 @@ trait Authorizable extends Rule[LogicalPlan] {
     // Row level filtering
     new RangerSparkRowFilter(spark).build(plan)
     // TODO(Kent Yao) applying column masking
-  }
-
-  def policyCacheDir: Option[String] = {
-    Option(spark.sparkContext.hadoopConfiguration.get("ranger.plugin.hive.policy.cache.dir"))
-  }
-
-  def createCacheDirIfNonExists(dir: String): Unit = {
-    val file = new File(dir)
-    if (!file.exists()) {
-      if (file.mkdirs()) {
-        logger.info("Creating ranger policy cache directory at " + file.getAbsolutePath)
-        file.deleteOnExit()
-      } else {
-        logger.warn("Unable to create ranger policy cache directory at " + file.getAbsolutePath)
-      }
-    }
-  }
-
-  policyCacheDir match {
-    case Some(dir) => createCacheDirIfNonExists(dir)
-    case _ =>
-      // load resources from ranger configuration files
-      Option(Utils.getContextOrSparkClassLoader.getResource("ranger-hive-security.xml")) match {
-        case Some(url) =>
-          spark.sparkContext.hadoopConfiguration.addResource(url)
-          policyCacheDir match {
-            case Some(dir) => createCacheDirIfNonExists(dir)
-            case _ =>
-          }
-        case _ =>
-      }
   }
 
   /**
