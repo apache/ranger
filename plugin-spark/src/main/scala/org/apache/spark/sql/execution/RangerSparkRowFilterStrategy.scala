@@ -15,16 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark.authorizer
+package org.apache.spark.sql.execution
 
-import org.apache.spark.sql.SparkSessionExtensions
-import org.apache.spark.sql.catalyst.optimizer.{RangerSparkAuthorizerExtension, RangerSparkRowFilterExtension}
-import org.apache.spark.sql.execution.RangerSparkRowFilterStrategy
+import org.apache.spark.sql.{SparkSession, Strategy}
+import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, RangerSparkRowFilter}
 
-class RangerSparkSQLExtension extends Extensions {
-  override def apply(ext: SparkSessionExtensions): Unit = {
-    ext.injectOptimizerRule(RangerSparkAuthorizerExtension)
-    ext.injectOptimizerRule(RangerSparkRowFilterExtension)
-    ext.injectPlannerStrategy(RangerSparkRowFilterStrategy)
+case class RangerSparkRowFilterStrategy(spark: SparkSession) extends Strategy {
+  override def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
+    case RangerSparkRowFilter(child) => planLater(child) :: Nil
+    case _ => Nil
   }
 }

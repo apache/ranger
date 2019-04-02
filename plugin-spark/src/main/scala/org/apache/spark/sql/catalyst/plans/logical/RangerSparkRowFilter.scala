@@ -15,16 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.spark.authorizer
+package org.apache.spark.sql.catalyst.plans.logical
+import org.apache.spark.sql.catalyst.expressions.Attribute
 
-import org.apache.spark.sql.SparkSessionExtensions
-import org.apache.spark.sql.catalyst.optimizer.{RangerSparkAuthorizerExtension, RangerSparkRowFilterExtension}
-import org.apache.spark.sql.execution.RangerSparkRowFilterStrategy
-
-class RangerSparkSQLExtension extends Extensions {
-  override def apply(ext: SparkSessionExtensions): Unit = {
-    ext.injectOptimizerRule(RangerSparkAuthorizerExtension)
-    ext.injectOptimizerRule(RangerSparkRowFilterExtension)
-    ext.injectPlannerStrategy(RangerSparkRowFilterStrategy)
-  }
+/**
+ * A wrapper for a transformed plan with row level filter applied, which will be removed during
+ * LogicalPlan -> PhysicalPlan
+ *
+ */
+case class RangerSparkRowFilter(child: LogicalPlan) extends UnaryNode {
+  override def output: Seq[Attribute] = child.output
 }

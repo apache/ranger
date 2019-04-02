@@ -21,10 +21,10 @@ import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.ranger.authorization.spark.authorizer._
 import org.apache.ranger.plugin.policyengine.RangerAccessResult
-import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.AuthzUtils.getFieldVal
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, RangerSparkRowFilter}
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 
@@ -54,7 +54,7 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
       if (isRowFilterEnabled(result)) {
         val sql = s"select ${plan.output.map(_.name).mkString(",")} from ${table.qualifiedName}" +
           s" where ${result.getFilterExpr}"
-        spark.sessionState.sqlParser.parsePlan(sql)
+        RangerSparkRowFilter(spark.sessionState.sqlParser.parsePlan(sql))
       } else {
         plan
       }
@@ -73,17 +73,21 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
     * @return the logical plan with row filer expressions applied
     */
   override def apply(plan: LogicalPlan): LogicalPlan = {
-    var newPlan = plan
-    newPlan = plan transform {
-      case h if h.nodeName == "HiveTableRelation" =>
-        val ct = getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable]
-        applyingRowFilterExpr(h, ct)
-      case m if m.nodeName == "MetastoreRelation" =>
-        val ct = getFieldVal(m, "catalogTable").asInstanceOf[CatalogTable]
-        applyingRowFilterExpr(m, ct)
-      case l: LogicalRelation if l.catalogTable.isDefined =>
-        applyingRowFilterExpr(l, l.catalogTable.get)
+    if (plan.find(_.isInstanceOf[RangerSparkRowFilter]).nonEmpty) {
+      plan
+    } else {
+      val lp = plan transform {
+        case h if h.nodeName == "HiveTableRelation" =>
+          val ct = getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable]
+          applyingRowFilterExpr(h, ct)
+        case m if m.nodeName == "MetastoreRelation" =>
+          val ct = getFieldVal(m, "catalogTable").asInstanceOf[CatalogTable]
+          applyingRowFilterExpr(m, ct)
+        case l: LogicalRelation if l.catalogTable.isDefined =>
+          applyingRowFilterExpr(l, l.catalogTable.get)
+      }
+      val analyzed = spark.sessionState.analyzer.execute(lp)
+      spark.sessionState.optimizer.execute(analyzed)
     }
-    Dataset.ofRows(spark, newPlan).queryExecution.analyzed
   }
 }
