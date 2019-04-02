@@ -84,7 +84,6 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
       case l: LogicalRelation if l.catalogTable.isDefined =>
         applyingRowFilterExpr(l, l.catalogTable.get)
     }
-    newPlan.withNewChildren()
     Dataset.ofRows(spark, newPlan).queryExecution.analyzed
   }
 }
