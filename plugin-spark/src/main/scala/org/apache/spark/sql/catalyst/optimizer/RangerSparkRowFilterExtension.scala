@@ -34,6 +34,8 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
 
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
 
+  private lazy val rangerSparkOptimizer = new RangerSparkOptimizer(spark)
+
   /**
     * Transform a Relation to a parsed [[LogicalPlan]] with specified row filter expressions
     * @param plan the original [[LogicalPlan]]
@@ -86,7 +88,8 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
         case l: LogicalRelation if l.catalogTable.isDefined =>
           applyingRowFilterExpr(l, l.catalogTable.get)
       }
-      spark.sessionState.analyzer.execute(lp)
+      val analyzed = spark.sessionState.analyzer.execute(lp)
+      rangerSparkOptimizer.execute(analyzed)
     }
   }
 }
