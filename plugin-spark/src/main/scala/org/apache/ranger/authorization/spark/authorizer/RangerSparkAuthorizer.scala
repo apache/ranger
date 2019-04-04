@@ -131,7 +131,7 @@ class RangerSparkAuthorizer(
           }
         } else {
           val result = sparkPlugin.isAccessAllowed(request, auditHandler)
-          if (result != null && result.getIsAllowed) {
+          if (result != null && !result.getIsAllowed) {
             throw new HiveAccessControlException(s"Permission denied: user [$user] does not" +
               s" have [${request.getSparkAccessType}] privilege on [${resource.getAsString}]")
           }
