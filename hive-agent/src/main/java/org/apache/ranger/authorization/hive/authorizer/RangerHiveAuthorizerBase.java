@@ -26,9 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.AbstractHiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.DisallowTransformHook;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
@@ -41,7 +41,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.SettableConfigUpd
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.utils.StringUtil;
 
-public abstract class RangerHiveAuthorizerBase implements HiveAuthorizer {
+public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizerBase.class);
 
@@ -217,12 +217,8 @@ public abstract class RangerHiveAuthorizerBase implements HiveAuthorizer {
 		throwNotImplementedException("setCurrentRole");
 	}
 
-	public Object getHiveAuthorizationTranslator() throws HiveAuthzPluginException {
-		return null;
-	}
-
 	private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
-		throw new HiveAuthzPluginException(method + "() not implemented in Ranger HiveAuthorizer");
+		throw new HiveAuthzPluginException(method + "() not implemented in Ranger AbstractHiveAuthorizer");
 	}
 
 }
