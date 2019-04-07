@@ -2435,13 +2435,42 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret = RangerServicePoliciesCache.getInstance().getServicePolicies(serviceName, serviceDbObj.getId(), lastKnownVersion, needsBackwardCompatibility, this);
 		}
 
+		if (LOG.isDebugEnabled()) {
+			RangerServicePoliciesCache.getInstance().dump();
+		}
+
 		if (ret != null && lastKnownVersion != null && lastKnownVersion.equals(ret.getPolicyVersion())) {
 			// ServicePolicies are not changed
 			ret = null;
 		}
 
-		if (LOG.isDebugEnabled()) {
-			RangerServicePoliciesCache.getInstance().dump();
+		if (ret != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking if resource-service:[" + ret.getServiceName() +"] is disabled");
+			}
+			if (!serviceDbObj.getIsenabled()) {
+				ret = ServicePolicies.copyHeader(ret);
+			} else if (ret.getTagPolicies() != null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Checking if tag-service:[" + ret.getTagPolicies().getServiceName() +"] is disabled");
+				}
+				String tagServiceName = ret.getTagPolicies().getServiceName();
+				if (StringUtils.isNotEmpty(tagServiceName)) {
+					XXService tagService = daoMgr.getXXService().findByName(tagServiceName);
+					if (tagService == null || !tagService.getIsenabled()) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("tag-service:[" + tagServiceName +"] is disabled");
+						}
+						ServicePolicies copy = ServicePolicies.copyHeader(ret);
+						copy.setTagPolicies(null);
+						List<RangerPolicy> copyPolicies = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
+						List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
+						copy.setPolicies(copyPolicies);
+						copy.setPolicyDeltas(copyPolicyDeltas);
+						ret = copy;
+					}
+				}
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -2499,78 +2528,72 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		String auditMode = getAuditMode(serviceType, serviceName);
 
-		if (serviceDbObj.getIsenabled()) {
+		XXService tagServiceDbObj = null;
+		RangerServiceDef tagServiceDef = null;
+		XXServiceVersionInfo tagServiceVersionInfoDbObj= null;
 
-			XXService tagServiceDbObj = null;
-			RangerServiceDef tagServiceDef = null;
-			XXServiceVersionInfo tagServiceVersionInfoDbObj= null;
+		if (serviceDbObj.getTagService() != null) {
+			tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
+		}
 
-			if (serviceDbObj.getTagService() != null) {
-				tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
-				if (tagServiceDbObj != null && !tagServiceDbObj.getIsenabled()) {
-					tagServiceDbObj = null;
-				}
+		if (tagServiceDbObj != null) {
+			tagServiceDef = getServiceDef(tagServiceDbObj.getType());
+
+			if (tagServiceDef == null) {
+				throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
 			}
+
+			tagServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getTagService());
+
+			if (tagServiceVersionInfoDbObj == null) {
+				LOG.warn("serviceVersionInfo does not exist. name=" + tagServiceDbObj.getName());
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+		}
+
+		if (SUPPORTS_POLICY_DELTAS) {
+			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion);
+		}
+
+		if (ret != null) {
+			ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
+			ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
+			ret.setAuditMode(auditMode);
+			if (ret.getTagPolicies() != null) {
+				ret.getTagPolicies().setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
+				ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
+				ret.getTagPolicies().setAuditMode(auditMode);
+			}
+		} else if (!getOnlyDeltas) {
+			ServicePolicies.TagPolicies tagPolicies = null;
 
 			if (tagServiceDbObj != null) {
-				tagServiceDef = getServiceDef(tagServiceDbObj.getType());
 
-				if (tagServiceDef == null) {
-					throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
-				}
+				tagPolicies = new ServicePolicies.TagPolicies();
 
-				tagServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getTagService());
-
-				if (tagServiceVersionInfoDbObj == null) {
-					LOG.warn("serviceVersionInfo does not exist. name=" + tagServiceDbObj.getName());
-				}
+				tagPolicies.setServiceId(tagServiceDbObj.getId());
+				tagPolicies.setServiceName(tagServiceDbObj.getName());
+				tagPolicies.setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
+				tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
+				tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
+				tagPolicies.setServiceDef(tagServiceDef);
+				tagPolicies.setAuditMode(auditMode);
 			}
+			List<RangerPolicy> policies = getServicePoliciesFromDb(serviceDbObj);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
-			}
+			ret = new ServicePolicies();
 
-			if (SUPPORTS_POLICY_DELTAS) {
-				ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion);
-			}
-
-			if (ret != null) {
-				ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
-				ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
-				ret.setAuditMode(auditMode);
-				if (ret.getTagPolicies() != null) {
-					ret.getTagPolicies().setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
-					ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
-					ret.getTagPolicies().setAuditMode(auditMode);
-				}
-			} else if (!getOnlyDeltas) {
-				ServicePolicies.TagPolicies tagPolicies = null;
-
-				if (tagServiceDbObj != null) {
-
-					tagPolicies = new ServicePolicies.TagPolicies();
-
-					tagPolicies.setServiceId(tagServiceDbObj.getId());
-					tagPolicies.setServiceName(tagServiceDbObj.getName());
-					tagPolicies.setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
-					tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
-					tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
-					tagPolicies.setServiceDef(tagServiceDef);
-					tagPolicies.setAuditMode(auditMode);
-				}
-				List<RangerPolicy> policies = getServicePoliciesFromDb(serviceDbObj);
-
-				ret = new ServicePolicies();
-
-				ret.setServiceId(serviceDbObj.getId());
-				ret.setServiceName(serviceDbObj.getName());
-				ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
-				ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
-				ret.setPolicies(policies);
-				ret.setServiceDef(serviceDef);
-				ret.setAuditMode(auditMode);
-				ret.setTagPolicies(tagPolicies);
-			}
+			ret.setServiceId(serviceDbObj.getId());
+			ret.setServiceName(serviceDbObj.getName());
+			ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
+			ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
+			ret.setPolicies(policies);
+			ret.setServiceDef(serviceDef);
+			ret.setAuditMode(auditMode);
+			ret.setTagPolicies(tagPolicies);
 		}
 
 		if (LOG.isDebugEnabled()) {

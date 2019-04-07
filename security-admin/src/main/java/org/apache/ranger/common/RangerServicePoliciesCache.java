@@ -65,25 +65,22 @@ public class RangerServicePoliciesCache {
 	}
 
 	public void dump() {
-		if (LOG.isDebugEnabled()) {
+		final Set<String> serviceNames;
 
-			final Set<String> serviceNames;
+		synchronized (this) {
+			serviceNames = servicePoliciesMap.keySet();
+		}
 
-			synchronized (this) {
-				serviceNames = servicePoliciesMap.keySet();
-			}
+		if (CollectionUtils.isNotEmpty(serviceNames)) {
 
-			if (CollectionUtils.isNotEmpty(serviceNames)) {
+			for (String serviceName : serviceNames) {
+				final ServicePoliciesWrapper cachedServicePoliciesWrapper;
 
-				for (String serviceName : serviceNames) {
-					final ServicePoliciesWrapper cachedServicePoliciesWrapper;
-
-					synchronized (this) {
-						cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
-					}
-					LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServicePoliciesWrapper);
-
+				synchronized (this) {
+					cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
 				}
+				LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServicePoliciesWrapper);
+
 			}
 		}
 	}

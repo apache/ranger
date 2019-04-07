@@ -165,26 +165,32 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			this.policyRepository = other.policyRepository;
 			other.isPolicyRepositoryShared = true;
 		}
-		if (CollectionUtils.isNotEmpty(defaultZoneDeltasForTagPolicies)) {
+		if (servicePolicies.getTagPolicies() == null) {
+			this.tagPolicyRepository = null;
 			if (other.tagPolicyRepository != null) {
-				this.tagPolicyRepository = new RangerPolicyRepository(other.tagPolicyRepository, defaultZoneDeltasForTagPolicies, policyVersion);
-			} else {
-				// Only creates are expected
-				List<RangerPolicy> tagPolicies = new ArrayList<>();
-				for (RangerPolicyDelta delta : defaultZoneDeltasForTagPolicies) {
-					if (delta.getChangeType() == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
-						tagPolicies.add(delta.getPolicy());
-					} else {
-						LOG.warn("Expected changeType:[" + RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE + "], found policy-change-delta:[" + delta +"]");
-					}
-				}
-				servicePolicies.getTagPolicies().setPolicies(tagPolicies);
-				this.tagPolicyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies.getTagPolicies(), other.policyRepository.getOptions(), servicePolicies.getServiceDef(), servicePolicies.getServiceName());
-
+				other.isTagPolicyRepositoryShared = false;
 			}
 		} else {
-			this.tagPolicyRepository = other.tagPolicyRepository;
-			other.isTagPolicyRepositoryShared = true;
+			if (CollectionUtils.isNotEmpty(defaultZoneDeltasForTagPolicies)) {
+				if (other.tagPolicyRepository != null) {
+					this.tagPolicyRepository = new RangerPolicyRepository(other.tagPolicyRepository, defaultZoneDeltasForTagPolicies, policyVersion);
+				} else {
+					// Only creates are expected
+					List<RangerPolicy> tagPolicies = new ArrayList<>();
+					for (RangerPolicyDelta delta : defaultZoneDeltasForTagPolicies) {
+						if (delta.getChangeType() == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
+							tagPolicies.add(delta.getPolicy());
+						} else {
+							LOG.warn("Expected changeType:[" + RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE + "], found policy-change-delta:[" + delta + "]");
+						}
+					}
+					servicePolicies.getTagPolicies().setPolicies(tagPolicies);
+					this.tagPolicyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies.getTagPolicies(), other.policyRepository.getOptions(), servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+				}
+			} else {
+				this.tagPolicyRepository = other.tagPolicyRepository;
+				other.isTagPolicyRepositoryShared = true;
+			}
 		}
 
 		List<RangerContextEnricher> tmpList;

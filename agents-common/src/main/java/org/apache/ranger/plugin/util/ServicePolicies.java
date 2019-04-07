@@ -341,7 +341,7 @@ public class ServicePolicies implements java.io.Serializable {
 					;
 		}
 	}
-	private static ServicePolicies copyHeader(ServicePolicies source) {
+	static public ServicePolicies copyHeader(ServicePolicies source) {
 		ServicePolicies ret = new ServicePolicies();
 
 		ret.setServiceName(source.getServiceName());
@@ -350,8 +350,9 @@ public class ServicePolicies implements java.io.Serializable {
 		ret.setAuditMode(source.getAuditMode());
 		ret.setServiceDef(source.getServiceDef());
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
-		ret.setPolicyDeltas(Collections.emptyList());
+		ret.setSecurityZones(source.getSecurityZones());
 		ret.setPolicies(Collections.emptyList());
+		ret.setPolicyDeltas(null);
 		if (source.getTagPolicies() != null) {
 			TagPolicies tagPolicies = copyHeader(source.getTagPolicies());
 			ret.setTagPolicies(tagPolicies);
@@ -360,7 +361,7 @@ public class ServicePolicies implements java.io.Serializable {
 		return ret;
 	}
 
-	private static TagPolicies copyHeader(TagPolicies source) {
+	static public TagPolicies copyHeader(TagPolicies source) {
 		TagPolicies ret = new TagPolicies();
 
 		ret.setServiceName(source.getServiceName());
