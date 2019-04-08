@@ -319,4 +319,13 @@
                 <name>ranger.audit.solr.acl.user.list.sasl</name>
                 <value></value>
         </property>
+        <property>
+                <name>ranger.audit.solr.bootstrap.enabled</name>
+                <value></value>
+        </property>
+        <property>
+				<name>ranger.audit.solr.max.retry</name>
+				<value></value>
+				<description>Maximum no. of retry to setup solr</description>
+		</property>
 </configuration>

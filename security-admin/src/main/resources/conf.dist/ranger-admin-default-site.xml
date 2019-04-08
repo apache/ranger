@@ -441,6 +441,15 @@
 		<description>Time in milliseconds</description>
 	</property>
 	<property>
+        <name>ranger.audit.solr.bootstrap.enabled</name>
+        <value>true</value>
+    </property>
+	<property>
+		<name>ranger.audit.solr.max.retry</name>
+		<value>30</value>
+		<description>Maximum no. of retry to setup solr</description>
+	</property>
+	<property>
 		<name>ranger.sha256Password.update.disable</name>
 		<value>true</value>
 		<description></description>

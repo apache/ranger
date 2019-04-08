@@ -68,12 +68,14 @@ public class SolrCollectionBoostrapper extends Thread {
 	final static String SOLR_MAX_SHARD_PER_NODE = "ranger.audit.solr.max.shards.per.node";
 	final static String SOLR_NO_REPLICA = "ranger.audit.solr.no.replica";
 	final static String SOLR_TIME_INTERVAL = "ranger.audit.solr.time.interval";
+	final static String SOLR_BOOTSTRP_MAX_RETRY = "ranger.audit.solr.max.retry";
 	final static String SOLR_ACL_USER_LIST_SASL = "ranger.audit.solr.acl.user.list.sasl";
 	final static String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String DEFAULT_CONFIG_NAME = "ranger_audits";
 	public static final String DEFAULT_SERVICE_NAME = "rangeradmin";
 	public static final long DEFAULT_SOLR_TIME_INTERVAL_MS = 60000L;
+	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = 30;
 	private static final String CONFIG_FILE = "ranger-admin-site.xml";
 	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-default-site.xml";
@@ -101,6 +103,8 @@ public class SolrCollectionBoostrapper extends Thread {
 	int no_of_replicas;
 	int no_of_shards;
 	int max_node_per_shards;
+	int max_retry;
+	int retry_counter = 0;
 	Long time_interval;
 	SolrClient solrClient = null;
 	CloudSolrClient solrCloudClient = null;
@@ -148,6 +152,8 @@ public class SolrCollectionBoostrapper extends Thread {
 		time_interval = getLongConfig(SOLR_TIME_INTERVAL,
 				DEFAULT_SOLR_TIME_INTERVAL_MS);
 		logger.info("Solr time interval provided is : " + time_interval);
+		
+		max_retry = getIntConfig(SOLR_BOOTSTRP_MAX_RETRY, DEFAULT_SOLR_BOOTSTRP_MAX_RETRY);
 		if (System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null) {
 			System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG,
 					"/dev/null");
@@ -178,7 +184,7 @@ public class SolrCollectionBoostrapper extends Thread {
 						h -> h.equalsIgnoreCase("none"))) {
 			logger.info("Solr zkHosts=" + zkHosts + ", collectionName="
 					+ solr_collection_name);
-			while (!is_completed) {
+			while (!is_completed && retry_counter < max_retry) {
 				try {
 					if (connect(zookeeperHosts)) {
 						if (solr_cloud_mode) {
@@ -356,13 +362,19 @@ public class SolrCollectionBoostrapper extends Thread {
 	}
 
 	private void logErrorMessageAndWait(String msg, Exception exception) {
+		retry_counter++;
+		String attempMessage = (retry_counter == max_retry) ? ("Maximum attempts reached for setting up Solr.")
+				: ("[retrying after " + time_interval
+						+ " ms]. No. of attempts left : "
+						+ (max_retry - retry_counter)
+						+ " . Maximum attempts : " + max_retry);
+		StringBuilder errorBuilder = new StringBuilder();
+		errorBuilder.append(msg);
 		if (exception != null) {
-			logger.severe(msg + " [retrying after " + time_interval
-					+ " ms]. Error : " + exception);
-		} else {
-			logger.severe(msg + " [retrying after " + time_interval + " ms]");
+			errorBuilder.append("Error : ".concat(exception.getMessage() + ". "));
 		}
-
+		errorBuilder.append(attempMessage);
+		logger.severe(errorBuilder.toString());
 		try {
 			Thread.sleep(time_interval);
 		} catch (InterruptedException ex) {
