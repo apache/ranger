@@ -161,35 +161,9 @@ define(function(require){
 						App.appRouter.navigate("#!/users/usertab",{trigger: true});
 						return;
 					}
+					App.usersGroupsListing = {'showLastPage' : true}
 					App.appRouter.navigate("#!/users/usertab",{trigger: true});
-					
-					var userList = new VXUserList();
-					_.extend(userList.queryParams, XAUtil.getUserDataParams())
-					userList.fetch({
-					   cache:false
-					}).done(function(){
-						var newColl = userList;
-						userList.getLastPage({
-							cache : false,
-							success : function(collection, response, options){
-								App.rContent.show(new UserTableLayout({
-									collection : collection,
-									tab : 'usertab'
-								}));
-								newColl = collection;
-							}
-						}).done(function(){
-							var model = newColl.get(that.model.id);
-							if(model){
-								model.trigger("model:highlightBackgridRow");
-							}
-						});
-						
-						App.rContent.show(new UserTableLayout({
-							collection : userList
-						}));
-				   });
-				}   ,
+				},
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
 					if(!_.isUndefined(resp.responseJSON) && !_.isUndefined(resp.responseJSON.msgDesc)){

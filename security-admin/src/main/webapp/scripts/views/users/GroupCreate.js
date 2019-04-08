@@ -129,30 +129,8 @@ define(function(require){
 						App.appRouter.navigate("#!/users/grouptab",{trigger: true});
 						return;
 					}
+					App.usersGroupsListing = {'showLastPage' : true}
 					App.appRouter.navigate("#!/users/grouptab",{trigger: true});
-					
-					var groupList = new VXGroupList();
-					 _.extend(groupList.queryParams, XAUtil.getUserDataParams());   
-					groupList.fetch({
-						   cache:false
-					   }).done(function(){
-							var newColl;
-							groupList.getLastPage({
-								cache : false,
-								success : function(collection, response, options){
-									App.rContent.show(new UserTableLayout({
-										groupList : collection,
-										tab : 'grouptab'
-									}));
-									newColl = collection;
-								}
-							}).done(function(){
-								var model = newColl.get(that.model.id);
-								if(model){
-									model.trigger("model:highlightBackgridRow1");
-								}
-							});
-					   });
 				},
 				error : function (model, response, options) {
 					XAUtil.blockUI('unblock');

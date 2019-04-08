@@ -2694,3 +2694,9 @@ textarea:read-only{
   overflow: auto;
   display: block;
 }
+.trim-containt-breadcrumb {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}

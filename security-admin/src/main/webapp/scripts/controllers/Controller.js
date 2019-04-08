@@ -108,24 +108,19 @@ define(function(require) {
 	   },
 	   
 	   /************** UserORGroups Related *********************/
-	   userManagerAction :function(tab){
-		   MAppState.set({
+		userManagerAction :function(tab){
+			MAppState.set({
 				'currentTab' : XAGlobals.AppTabs.Settings.value
 			});
-		   var XAUtil		= require('utils/XAUtils');
-		   var view 		= require('views/users/UserTableLayout');
-		   var VXUserList	= require('collections/VXUserList');
-		   var userList 	= new VXUserList();
-		   
-		   App.rContent.show(new view({
-			   collection : userList,
-			   tab :tab
-		   }));
-		   _.extend(userList.queryParams, XAUtil.getUserDataParams())
-		   userList.fetch({
-			   cache:false,
-		   });
-	   },
+			var XAUtil		= require('utils/XAUtils');
+			var view 		= require('views/users/UserTableLayout');
+			var VXUserList	= require('collections/VXUserList');
+			var userList 	= new VXUserList();
+			App.rContent.show(new view({
+				collection : userList,
+				tab :tab
+			}));
+		},
 	   userCreateAction : function(){
 		   MAppState.set({
 				'currentTab' : XAGlobals.AppTabs.Settings.value

@@ -28,6 +28,7 @@ define(function(require){
 	var XABackgrid		= require('views/common/XABackgrid');
 	var localization	= require('utils/XALangSupport');
 	var SessionMgr  	= require('mgrs/SessionMgr');
+	var App				= require('App');
 
 	var VXGroupList		= require('collections/VXGroupList');
 	var VXGroup			= require('models/VXGroup');
@@ -127,6 +128,14 @@ define(function(require){
 					coll.deselect(model);
 				}, this);
 			}, this);
+			this.listenTo(coll, 'model:highlightUserGroupTableRow', function(){
+				this.$el.find('.table tr:last').addClass("alert");
+				var self = this;
+				setTimeout(function () {
+					self.$el.find('.table tr:last').removeClass("alert");
+				}, 6000);
+				XAUtil.scrollToField(this.$el.find('.table tr:last'));
+			})
 		},
 		onTabChange : function(e){
 			var that = this;
@@ -219,11 +228,21 @@ define(function(require){
 			this.renderUserListTable();
 			_.extend(this.collection.queryParams, XAUtil.getUserDataParams())
 			this.collection.fetch({
-				//cache:true,
 				reset: true,
 				cache: false
-//				data : XAUtil.getUserDataParams(),
-			}).done(function(){
+			}).done(function(userList){
+				if(App.usersGroupsListing && !_.isEmpty(App.usersGroupsListing) && App.usersGroupsListing.showLastPage){
+					if(userList.state.totalRecords > userList.state.pageSize){
+						that.collection.getLastPage({
+							cache : false,
+						}).done(function(m){
+							App.usersGroupsListing={};
+							(_.last(m.models)).trigger("model:highlightUserGroupTableRow");
+						});
+					}else{
+						_.last(userList.models).trigger("model:highlightUserGroupTableRow");
+					}
+				}
 				if(!_.isString(that.ui.addNewGroup)){
 					that.ui.addNewGroup.hide();
 					that.ui.addNewUser.show();
@@ -240,10 +259,21 @@ define(function(require){
 			this.groupList.selectNone();
 			this.renderGroupListTable();
 			this.groupList.fetch({
-				//cache:true,
 				reset:true,
-				cache: false
-			}).done(function(){
+				cache: false,
+			}).done(function(groupList){
+				if(App.usersGroupsListing && !_.isEmpty(App.usersGroupsListing) && App.usersGroupsListing.showLastPage){
+					if(groupList.state.totalRecords > groupList.state.pageSize){
+						that.groupList.getLastPage({
+							cache : false,
+						}).done(function(m){
+							(_.last(m.models)).trigger("model:highlightUserGroupTableRow");
+						});
+					}else{
+						(_.last(groupList.models)).trigger("model:highlightUserGroupTableRow");
+					}
+					App.usersGroupsListing={};
+				}
 				that.ui.addNewUser.hide();
 				that.ui.addNewGroup.show();
 				that.$('.wrap-header').text('Group List');
@@ -667,6 +697,7 @@ define(function(require){
                             		error:function(response,options){
                             			count += 1;
                             			notDeletedUserName += m.value + ", ";
+                            			that.collection.find(function(model){return model.get('name') === m.value}).selected = false
                             			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
                             		}
                             	});
@@ -683,6 +714,7 @@ define(function(require){
                             		error:function(response,options){
                             			count += 1;
                             			notDeletedGroupName += m.value + ", ";
+                            			that.groupList.find(function(model){return model.get('name') === m.value}).selected = false
                             			that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName)
                             		}
                             	})

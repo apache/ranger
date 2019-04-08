@@ -132,7 +132,7 @@ define(function(require) {
                 that.zoneResourcesColl.reset(resources);
                 that.renderTable();
                 that.zoneAdministrationView();
-                that.ui.zoneName.html(_.escape(that.zoneModel.get('name')));
+                that.ui.zoneName.html(_.escape(that.zoneModel.get('name'))).attr('title', _.escape(that.zoneModel.get('name')));
                 App.appRouter.navigate("#!/zones/zone/"+zoneModel.id);
                 that.ui.editZone.attr('href', '#!/zones/edit/' + zoneModel.get('id'));
             }else{
@@ -147,9 +147,11 @@ define(function(require) {
                 _.each(zoneArray,
                     function(zone) {
                         if(that.zoneModel.attributes.name == zone) {
-                            that.ui.zoneUlList.append('<li class="selected" data-action="zoneListing" data-id="' + _.escape(zone) + '">' + _.escape(zone) + '</li>');
+                            that.ui.zoneUlList.append('<li class="selected trim-containt" title="'+_.escape(zone)+
+                                '" data-action="zoneListing" data-id="' + _.escape(zone) + '">' + _.escape(zone) + '</li>');
                         } else {
-                            that.ui.zoneUlList.append('<li data-action="zoneListing" data-id="' + _.escape(zone) + '">' + _.escape(zone) + '</li>');
+                            that.ui.zoneUlList.append('<li class="trim-containt" data-action="zoneListing" title="'
+                                +_.escape(zone)+'" data-id="' + _.escape(zone) + '">' + _.escape(zone) + '</li>');
                         }
                     }
                 );

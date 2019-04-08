@@ -20,11 +20,10 @@
 }
 }}
 
- <ul class="breadcrumb-flat">
-	{{#each breadcrumb}}
-	<li>
-		<a href="{{./this.href}}"> {{tt ./this.text}} </a>
-	</li>
-	{{/each}}
+<ul class="breadcrumb-flat">
+    {{#each breadcrumb}}
+        <li>
+            <a href="{{./this.href}}"><p class="trim-containt-breadcrumb" title="{{tt ./this.text}}"> {{tt ./this.text}}</p></a>
+        </li>
+    {{/each}}
 </ul>
- 
