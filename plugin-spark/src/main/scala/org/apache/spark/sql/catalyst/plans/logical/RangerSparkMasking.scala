@@ -15,23 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.catalyst.optimizer
+package org.apache.spark.sql.catalyst.plans.logical
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.catalyst.rules.RuleExecutor
+import org.apache.spark.sql.catalyst.expressions.Attribute
 
 /**
- * An Optimizer without all `spark.sql.extensions`
+ * A marker [[LogicalPlan]] for column data masking
  */
-class RangerSparkOptimizer(spark: SparkSession) extends RuleExecutor[LogicalPlan] {
-
-  override def batches: Seq[Batch] = {
-    val optimizer = spark.sessionState.optimizer
-    val extRules = optimizer.extendedOperatorOptimizationRules
-    optimizer.batches.map { batch =>
-      val ruleSet = batch.rules.toSet -- extRules
-      Batch(batch.name, FixedPoint(batch.strategy.maxIterations), ruleSet.toSeq: _*)
-    }
-  }
+case class RangerSparkMasking(child: LogicalPlan) extends UnaryNode {
+  override def output: Seq[Attribute] = child.output
 }

@@ -90,6 +90,17 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>2.3.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>eclipselink</artifactId>
             <version>${eclipse.jpa.version}</version>
@@ -283,9 +294,20 @@
                             <include>org.codehaus.jackson:jackson-xc</include>
                             <include>org.eclipse.persistence:eclipselink</include>
                             <include>org.eclipse.persistence:javax.persistence</include>
+                            <include>org.apache.hive:hive-exec</include>
                             <include>org.noggit:noggit</include>
                         </includes>
                     </artifactSet>
+                    <filters>
+                        <filter>
+                            <artifact>org.apache.hive:hive-exec</artifact>
+                            <includes>
+                                <!-- Extract masking functions from higher version Apache Hive-->
+                                <include>org/apache/hadoop/hive/ql/udf/generic/**Mask**</include>
+                                <include>org/apache/hadoop/hive/ql/udf/generic/**Transform**</include>
+                            </includes>
+                        </filter>
+                    </filters>
                     <relocations>
                         <relocation>
                             <pattern>com.sun.jersey</pattern>

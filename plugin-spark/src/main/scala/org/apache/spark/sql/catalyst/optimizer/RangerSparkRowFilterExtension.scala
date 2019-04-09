@@ -24,12 +24,16 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult
 import org.apache.spark.sql.AuthzUtils.getFieldVal
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
-import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, RangerSparkRowFilter}
+import org.apache.spark.sql.catalyst.expressions.SubqueryExpression
+import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan, RangerSparkRowFilter, Subquery}
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 
 import scala.collection.JavaConverters._
 
+/**
+ * An Apache Spark's [[Optimizer]] extension for row level filtering.
+ */
 case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[LogicalPlan] {
 
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
@@ -56,9 +60,20 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
       if (isRowFilterEnabled(result)) {
         val sql = s"select ${plan.output.map(_.name).mkString(",")} from ${table.qualifiedName}" +
           s" where ${result.getFilterExpr}"
-        RangerSparkRowFilter(spark.sessionState.sqlParser.parsePlan(sql))
+        val parsed = spark.sessionState.sqlParser.parsePlan(sql)
+
+        val parsedNew = parsed transform {
+          case Filter(condition, child) if !child.fastEquals(plan) => Filter(condition, plan)
+        }
+        val analyzed = spark.sessionState.analyzer.execute(parsedNew)
+        val optimized = analyzed transformAllExpressions {
+          case s: SubqueryExpression =>
+            val Subquery(newPlan) = rangerSparkOptimizer.execute(Subquery(s.plan))
+            s.withNewPlan(newPlan)
+        }
+        RangerSparkRowFilter(optimized)
       } else {
-        plan
+        RangerSparkRowFilter(plan)
       }
     } catch {
       case e: Exception => throw e
@@ -74,22 +89,22 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
     * @param plan the original [[LogicalPlan]]
     * @return the logical plan with row filer expressions applied
     */
-  override def apply(plan: LogicalPlan): LogicalPlan = {
-    if (plan.find(_.isInstanceOf[RangerSparkRowFilter]).nonEmpty) {
-      plan
-    } else {
-      val lp = plan transform {
+  override def apply(plan: LogicalPlan): LogicalPlan = plan match {
+    case rf: RangerSparkRowFilter => rf
+    case fixed if fixed.find(_.isInstanceOf[RangerSparkRowFilter]).nonEmpty => fixed
+    case _ =>
+      val plansWithTables = plan.collectLeaves().map {
         case h if h.nodeName == "HiveTableRelation" =>
-          val ct = getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable]
-          applyingRowFilterExpr(h, ct)
+          (h, getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable])
         case m if m.nodeName == "MetastoreRelation" =>
-          val ct = getFieldVal(m, "catalogTable").asInstanceOf[CatalogTable]
-          applyingRowFilterExpr(m, ct)
+          (m, getFieldVal(m, "catalogTable").asInstanceOf[CatalogTable])
         case l: LogicalRelation if l.catalogTable.isDefined =>
-          applyingRowFilterExpr(l, l.catalogTable.get)
+          (l, l.catalogTable.get)
+        case _ => null
+      }.filter(_ != null).map(lt => (lt._1, applyingRowFilterExpr(lt._1, lt._2))).toMap
+
+      plan transformUp {
+        case p => plansWithTables.getOrElse(p, p)
       }
-      val analyzed = spark.sessionState.analyzer.execute(lp)
-      rangerSparkOptimizer.execute(analyzed)
-    }
   }
 }

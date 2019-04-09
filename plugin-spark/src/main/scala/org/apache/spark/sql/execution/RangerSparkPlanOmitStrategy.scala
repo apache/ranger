@@ -18,11 +18,16 @@
 package org.apache.spark.sql.execution
 
 import org.apache.spark.sql.{SparkSession, Strategy}
-import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, RangerSparkRowFilter}
+import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, RangerSparkMasking, RangerSparkRowFilter}
 
-case class RangerSparkRowFilterStrategy(spark: SparkSession) extends Strategy {
+/**
+ * An Apache Spark's [[Strategy]] extension for omitting marker for row level filtering and data
+ * masking.
+ */
+case class RangerSparkPlanOmitStrategy(spark: SparkSession) extends Strategy {
   override def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
     case RangerSparkRowFilter(child) => planLater(child) :: Nil
+    case RangerSparkMasking(child) => planLater(child) :: Nil
     case _ => Nil
   }
 }

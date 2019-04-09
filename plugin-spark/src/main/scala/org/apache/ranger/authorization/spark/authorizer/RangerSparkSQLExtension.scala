@@ -18,13 +18,14 @@
 package org.apache.ranger.authorization.spark.authorizer
 
 import org.apache.spark.sql.SparkSessionExtensions
-import org.apache.spark.sql.catalyst.optimizer.{RangerSparkAuthorizerExtension, RangerSparkRowFilterExtension}
-import org.apache.spark.sql.execution.RangerSparkRowFilterStrategy
+import org.apache.spark.sql.catalyst.optimizer.{RangerSparkAuthorizerExtension, RangerSparkMaskingExtension, RangerSparkRowFilterExtension}
+import org.apache.spark.sql.execution.RangerSparkPlanOmitStrategy
 
 class RangerSparkSQLExtension extends Extensions {
   override def apply(ext: SparkSessionExtensions): Unit = {
     ext.injectOptimizerRule(RangerSparkAuthorizerExtension)
     ext.injectOptimizerRule(RangerSparkRowFilterExtension)
-    ext.injectPlannerStrategy(RangerSparkRowFilterStrategy)
+    ext.injectOptimizerRule(RangerSparkMaskingExtension)
+    ext.injectPlannerStrategy(RangerSparkPlanOmitStrategy)
   }
 }
