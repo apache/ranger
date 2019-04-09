@@ -447,11 +447,11 @@ define(function(require) {
 			
                         var auditList = [],query = '', actionTypeList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
-				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_ASSET.value) 
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_RESOURCE.value) 
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value) 
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value) 
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)  
+				if((obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_POLICY.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SERVICE.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 					auditList.push({label :obj.label, value :obj.label+''});
 			});
@@ -477,7 +477,7 @@ define(function(require) {
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Audit Type':
-										callback(auditList);
+										callback(_.sortBy(auditList, 'label'));
 										break;
 									case 'Actions':
 										callback(actionTypeList);
