@@ -39,7 +39,7 @@ define(function(require){
                  */
                 initialize : function() {
                         this.modelName = 'RangerZone';
-                        this.modelAttrName = 'zones';
+                        this.modelAttrName = 'securityZones';
                         this.bindErrorEvents();
                 }
         },{

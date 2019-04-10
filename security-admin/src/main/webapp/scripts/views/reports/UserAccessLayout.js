@@ -141,9 +141,6 @@ define(function(require) {'use strict';
 			this.rangerZoneList.fetch({
 				cache : false,
 				async:false,
-				success: function(coll, resp) {
-                    that.rangerZoneList.set(resp);
-                }
 			})
 		},
 

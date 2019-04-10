@@ -37,7 +37,7 @@ import org.apache.ranger.plugin.store.AbstractPredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.service.RangerSecurityZoneService;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,7 +50,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     private static final String RANGER_GLOBAL_STATE_NAME = "RangerSecurityZone";
 
     @Autowired
-    RangerSecurityZoneService securityZoneService;
+    RangerSecurityZoneServiceService securityZoneService;
 
     @Autowired
     RangerDaoManager daoMgr;

@@ -51,7 +51,7 @@ import com.google.gson.GsonBuilder;
 
 @Service
 @Scope("singleton")
-public class RangerSecurityZoneService extends RangerSecurityZoneServiceBase<XXSecurityZone, RangerSecurityZone> {
+public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceBase<XXSecurityZone, RangerSecurityZone> {
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
@@ -59,7 +59,7 @@ public class RangerSecurityZoneService extends RangerSecurityZoneServiceBase<XXS
 	@Autowired
 	ServiceDBStore serviceDBStore;
 
-    private static final Log logger = LogFactory.getLog(RangerSecurityZoneService.class);
+    private static final Log logger = LogFactory.getLog(RangerSecurityZoneServiceService.class);
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 
     private Map<Long, Set<String>> serviceNamesInZones = new HashMap<>();
@@ -76,7 +76,7 @@ public class RangerSecurityZoneService extends RangerSecurityZoneServiceBase<XXS
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Zone Description", false));
 	}
 
-    public RangerSecurityZoneService() {
+    public RangerSecurityZoneServiceService() {
         super();
     }
 

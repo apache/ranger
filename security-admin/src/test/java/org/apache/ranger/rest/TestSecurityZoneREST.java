@@ -29,17 +29,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
+import org.apache.ranger.view.RangerSecurityZoneList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -63,6 +68,10 @@ public class TestSecurityZoneREST {
 	RangerBizUtil rangerBizUtil;
 	@Mock
 	ServiceDBStore svcStore;
+	@Mock
+	RangerSearchUtil searchUtil;
+	@Mock
+    RangerSecurityZoneServiceService securityZoneService;
 	@Mock
 	RESTErrorUtil restErrorUtil;
 	@Rule
@@ -165,16 +174,22 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testGetAllSecurityZone() throws Exception {
 		RangerSecurityZone securityZone = createRangerSecurityZone();
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		SearchFilter filter = new SearchFilter();
+		when(
+				searchUtil.getSearchFilter(request, securityZoneService.sortFields))
+				.thenReturn(filter);
 		Long securityZoneId = 1L;
 		securityZone.setId(securityZoneId);
-
 		List<RangerSecurityZone> zonesList = new ArrayList<>();
 		zonesList.add(securityZone);
+		RangerSecurityZoneList rangerZoneList = new RangerSecurityZoneList();
+		rangerZoneList.setSecurityZoneList(zonesList);
 
-		when(securityZoneStore.getSecurityZones(null)).thenReturn(zonesList);
-		List<RangerSecurityZone> returnedZonesList = securityZoneREST.getAllZones();
-		assertEquals(returnedZonesList.size(), zonesList.size());
-		verify(securityZoneStore, times(1)).getSecurityZones(null);
+		when(securityZoneStore.getSecurityZones(filter)).thenReturn(zonesList);
+		RangerSecurityZoneList returnedZonesList = securityZoneREST.getAllZones(request);
+		assertEquals(returnedZonesList.getResultSize(), rangerZoneList.getList().size());
+		verify(securityZoneStore, times(1)).getSecurityZones(filter);
 	}
 
 	@Test

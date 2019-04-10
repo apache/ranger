@@ -35,7 +35,7 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.service.RangerSecurityZoneService;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -57,7 +57,7 @@ public class TestSecurityZoneDBStore {
 	SecurityZoneDBStore securityZoneDBStore = new SecurityZoneDBStore();
 
 	@Mock
-	RangerSecurityZoneService securityZoneService;
+	RangerSecurityZoneServiceService securityZoneService;
 
 	@Mock
 	SecurityZoneRefUpdater securityZoneRefUpdater;

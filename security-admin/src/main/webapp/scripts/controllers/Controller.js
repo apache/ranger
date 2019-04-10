@@ -226,9 +226,6 @@ define(function(require) {
                    rangerZoneList.fetch({
                                 cache : false,
                                 async:false,
-                                success: function(coll, resp) {
-                                        rangerZoneList.set(resp);
-                                }
                         })
 //		   if(App.rContent.currentView) App.rContent.currentView.close();
 		   App.rContent.show(new view({
@@ -410,15 +407,12 @@ define(function(require) {
             rangerZoneList.fetch({
                 cache: false,
                 async: false,
-                success: function(coll, resp) {
-                    rangerZoneList.set(resp);
-                    App.rContent.show(new vSecurityZone({
-                        rangerService: rangerServiceList,
-                        collection: rangerZoneList,
-                        zoneId: listId
-                    }));
-                }
             });
+            App.rContent.show(new vSecurityZone({
+                rangerService: rangerServiceList,
+                collection: rangerZoneList,
+                zoneId: listId
+            }));
         },
 
         RangerZoneCreateAction: function() {

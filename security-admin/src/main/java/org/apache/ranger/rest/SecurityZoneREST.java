@@ -19,6 +19,13 @@
 
 package org.apache.ranger.rest;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -27,6 +34,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,22 +42,20 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
-import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Path("zones")
 @Component
@@ -65,7 +71,13 @@ public class SecurityZoneREST {
     SecurityZoneDBStore securityZoneStore;
 
     @Autowired
+    RangerSecurityZoneServiceService securityZoneService;
+
+    @Autowired
     ServiceDBStore svcStore;
+
+    @Autowired
+	RangerSearchUtil searchUtil;
 
     @Autowired
     RangerValidatorFactory validatorFactory;
@@ -79,6 +91,7 @@ public class SecurityZoneREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> createSecurityZone("+ securityZone + ")");
         }
+
         RangerSecurityZone ret;
         try {
         	ensureAdminAccess();
@@ -224,13 +237,22 @@ public class SecurityZoneREST {
 
     @GET
     @Path("/zones")
-    public List<RangerSecurityZone> getAllZones() {
-        if (LOG.isDebugEnabled()) {
+    public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request) {
+		RangerSecurityZoneList ret = new RangerSecurityZoneList();
+	      if (LOG.isDebugEnabled()) {
             LOG.debug("==> getAllZones()");
         }
-        List<RangerSecurityZone> ret;
-        try {
-            ret = securityZoneStore.getSecurityZones(null);
+        SearchFilter filter = searchUtil.getSearchFilter(request, securityZoneService.sortFields);
+        List<RangerSecurityZone> securityZones;
+		try {
+			securityZones = securityZoneStore.getSecurityZones(filter);
+			ret.setSecurityZoneList(securityZones);
+			if (securityZones != null) {
+				ret.setTotalCount(securityZones.size());
+				ret.setSortBy(filter.getSortBy());
+				ret.setSortType(filter.getSortType());
+				ret.setResultSize(securityZones.size());
+			}
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {

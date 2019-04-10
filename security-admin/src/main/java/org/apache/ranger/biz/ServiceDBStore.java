@@ -137,7 +137,7 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
-import org.apache.ranger.service.RangerSecurityZoneService;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
 import org.apache.ranger.service.RangerServiceService;
@@ -283,7 +283,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
-    RangerSecurityZoneService securityZoneService;
+    RangerSecurityZoneServiceService securityZoneService;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
