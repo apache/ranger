@@ -23,7 +23,7 @@ import org.apache.ranger.authorization.spark.authorizer._
 import org.apache.ranger.plugin.model.RangerPolicy
 import org.apache.ranger.plugin.policyengine.RangerAccessResult
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Project, RangerSparkMasking}
+import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Project, RangerSparkMasking, Subquery}
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.AuthzUtils.getFieldVal
 import org.apache.spark.sql.catalyst.catalog.{CatalogFunction, CatalogTable}
@@ -134,7 +134,10 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
       }.toMap
       val newOutput = plan.output.map(attr => transformers.getOrElse(attr, attr))
       if (newOutput.isEmpty) {
-        RangerSparkMasking(plan)
+        plan match {
+          case Subquery(child) => Subquery(RangerSparkMasking(child))
+          case _ => RangerSparkMasking(plan)
+        }
       } else {
         val analyzed = spark.sessionState.analyzer.execute(Project(newOutput, plan))
         RangerSparkMasking(analyzed)
