@@ -687,35 +687,43 @@ define(function(require){
 						XAUtil.blockUI();
 						if(that.showUsers){
 							var model = new VXUser();
-                            var count = 0 , notDeletedUserName = "";
+                            var count = 0 , notDeletedUserName = "", errorMsgForNotDeletedUsers = "";
                             _.map(jsonUsers.vXStrings , function(m){
                             	model.deleteUsers(m.id,{
                             		success: function(response,options){
                             			count += 1;
-                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName, errorMsgForNotDeletedUsers)
                             		},
                             		error:function(response,options){
                             			count += 1;
-                            			notDeletedUserName += m.value + ", ";
+                            			if(response.responseJSON && response.responseJSON.msgDesc){
+                            				errorMsgForNotDeletedUsers += _.escape(response.responseJSON.msgDesc) +".<br>"
+                            			}else{
+                            				notDeletedUserName += _.escape(m.value) + ", ";
+                            			}
                             			that.collection.find(function(model){return model.get('name') === m.value}).selected = false
-                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName)
+                            			that.userCollection(jsonUsers.vXStrings.length, count, notDeletedUserName, errorMsgForNotDeletedUsers)
                             		}
                             	});
                             });
                         }else {
 							var model = new VXGroup();
-                            var count = 0, notDeletedGroupName ="";
+                            var count = 0, notDeletedGroupName ="", errorMsgForNotDeletedGroups = "";
                             _.map(jsonUsers.vXStrings, function(m){
                             	model.deleteGroups(m.id,{
                             		success: function(response){
                             			count += 1;
-                            			that.groupCollection(jsonUsers.vXStrings.length,count,notDeletedGroupName)
+                            			that.groupCollection(jsonUsers.vXStrings.length,count,notDeletedGroupName, errorMsgForNotDeletedGroups)
                             		},
                             		error:function(response,options){
                             			count += 1;
-                            			notDeletedGroupName += m.value + ", ";
+                                        if(response.responseJSON && response.responseJSON.msgDesc){
+                                            errorMsgForNotDeletedGroups += _.escape(response.responseJSON.msgDesc) +"<br>"
+                                        }else{
+                                            notDeletedGroupName += _.escape(m.value) + ", ";
+                                        }
                             			that.groupList.find(function(model){return model.get('name') === m.value}).selected = false
-                            			that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName)
+                            			that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName, errorMsgForNotDeletedGroups)
                             		}
                             	})
                             });
@@ -724,27 +732,35 @@ define(function(require){
 				});
 			}
 		},
-        userCollection : function(numberOfUser, count, notDeletedUserName){
+        userCollection : function(numberOfUser, count, notDeletedUserName, errorMsgForNotDeletedUsers){
                 if(count == numberOfUser){
                         this.collection.getFirstPage({fetch:true});
                         this.collection.selected = {};
                         XAUtil.blockUI('unblock');
-                        if(notDeletedUserName === ""){
+                        if(notDeletedUserName === "" && _.isEmpty(errorMsgForNotDeletedUsers)){
                                 XAUtil.notifySuccess('Success','User deleted successfully!');
                         }else{
-                                XAUtil.notifyError('Error', 'Error occurred during deleting Users: '+ notDeletedUserName.slice(0 , -2));
+                            var msg = "";
+                            if(!_.isEmpty(notDeletedUserName)){
+                                msg = 'Error occurred during deleting Users: '+ notDeletedUserName.slice(0 , -2);
+                            }
+                            XAUtil.notifyError('Error', errorMsgForNotDeletedUsers + msg);
                         }
                 }
         },
-        groupCollection : function(numberOfGroup, count ,notDeletedGroupName){
+        groupCollection : function(numberOfGroup, count ,notDeletedGroupName, errorMsgForNotDeletedGroups){
                 if(count == numberOfGroup){
                         this.groupList.getFirstPage({fetch:true});
                         this.groupList.selected  = {};
                         XAUtil.blockUI('unblock');
-                        if(notDeletedGroupName === ""){
+                        if(notDeletedGroupName === "" && _.isEmpty(errorMsgForNotDeletedGroups)){
                                 XAUtil.notifySuccess('Success','Group deleted successfully!');
                         } else {
-                                XAUtil.notifyError('Error', 'Error occurred during deleting Groups: '+ notDeletedGroupName.slice(0 , -2));
+                            var msg = "";
+                            if(!_.isEmpty(notDeletedGroupName)){
+                                msg = 'Error occurred during deleting Users: '+ notDeletedGroupName.slice(0 , -2);
+                            }
+                            XAUtil.notifyError('Error', errorMsgForNotDeletedGroups + msg);
                         }
                 }
         },

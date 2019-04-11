@@ -76,6 +76,9 @@ import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXSecurityZoneRefGroup;
+import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1996,6 +1999,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public void deleteXGroup(Long id, boolean force) {
 		checkAdminAccess();
+		blockIfZoneGroup(id);
                 xaBizUtil.blockAuditorRoleUser();
 		XXGroupDao xXGroupDao = daoManager.getXXGroup();
 		XXGroup xXGroup = xXGroupDao.getById(id);
@@ -2163,7 +2167,25 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-        public synchronized void deleteXUser(Long id, boolean force) {
+        private void blockIfZoneGroup(Long grpId) {
+		List<XXSecurityZoneRefGroup> zoneRefGrpList = daoManager.getXXSecurityZoneRefGroup().findByGroupId(grpId);
+		if (CollectionUtils.isNotEmpty(zoneRefGrpList)) {
+			StringBuilder zones = new StringBuilder();
+			for(XXSecurityZoneRefGroup zoneRefGrp : zoneRefGrpList) {
+				XXSecurityZone xSecZone=daoManager.getXXSecurityZoneDao().getById(zoneRefGrp.getZoneId());
+				if(zones.indexOf(xSecZone.getName())<0)
+				zones.append(", " + xSecZone.getName());
+			}
+			logger.info("Can Not Delete Group :" + zoneRefGrpList.get(0).getGroupName() + "' as its already present in Zone " +zones);
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+			vXResponse.setMsgDesc(
+					"Can Not Delete Group '" + zoneRefGrpList.get(0).getGroupName() + "' as its already present in Zone " +zones);
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
+		}
+
+		public synchronized void deleteXUser(Long id, boolean force) {
 		checkAdminAccess();
                 xaBizUtil.blockAuditorRoleUser();
 		XXUserDao xXUserDao = daoManager.getXXUser();
@@ -2185,6 +2207,7 @@ public class XUserMgr extends XUserMgrBase {
 			logger.debug("Force delete status="+force+" for user="+vXUser.getName());
 		}
 		restrictSelfAccountDeletion(vXUser.getName().trim());
+		blockIfZoneUser(id);
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchCriteria.addParam("xUserId", id);
 		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
@@ -2349,6 +2372,24 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
+	private void blockIfZoneUser(Long id) {
+		List<XXSecurityZoneRefUser> zoneRefUserList = daoManager.getXXSecurityZoneRefUser().findByUserId(id);
+		if (CollectionUtils.isNotEmpty(zoneRefUserList)) {
+			StringBuilder zones = new StringBuilder();
+			for(XXSecurityZoneRefUser zoneRefUser :zoneRefUserList ) {
+				XXSecurityZone xSecZone = daoManager.getXXSecurityZoneDao().getById(zoneRefUser.getZoneId());
+				if(zones.indexOf(xSecZone.getName())<0)
+				zones.append(", " + xSecZone.getName());
+			}
+			logger.info("Can Not Delete User :" + zoneRefUserList.get(0).getUserName());
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+			vXResponse.setMsgDesc(
+					"Can Not Delete User '"+ zoneRefUserList.get(0).getUserName() +"' as its already present in Zone" + zones);
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
+		}
+
 	private <T extends RangerPolicyItem> void removeUserGroupReferences(List<T> policyItems, String user, String group) {
 		List<T> itemsToRemove = null;
 		for(T policyItem : policyItems) {
@@ -2374,10 +2415,16 @@ public class XUserMgr extends XUserMgrBase {
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session != null) {
 			if (!session.isUserAdmin()) {
-				throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to perform the action.");
+				VXResponse vXRes = new VXResponse();
+				vXRes.setStatusCode(HttpServletResponse.SC_FORBIDDEN );
+				vXRes.setMsgDesc("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to perform the action.");
+				throw restErrorUtil.generateRESTException(vXRes);
 			}else{
 				if(StringUtils.isNotEmpty(loginID) && loginID.equals(session.getLoginId())){
-					throw restErrorUtil.create403RESTException("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to delete his own profile.");
+					VXResponse vXResponse = new VXResponse();
+					vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN );
+					vXResponse.setMsgDesc("Operation denied. LoggedInUser= "+session.getXXPortalUser().getLoginId() + " isn't permitted to delete his own profile.");
+					throw restErrorUtil.generateRESTException(vXResponse);
 				}
 			}
 		} else {
