@@ -23,6 +23,9 @@ import java.util.*;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -33,6 +36,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import com.google.common.collect.Lists;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
+
+	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
 	Collection<AuthzAuditEvent> auditEvents  = null;
@@ -71,14 +76,17 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			}
 
 			if (hiveAccessType == HiveAccessType.SERVICEADMIN) {
+				String hiveOperationType = request.getAction();
 				String commandStr = request.getRequestData();
-				String queryId	  = getServiceAdminQueryId(commandStr);
-				if (!StringUtils.isEmpty(queryId)) {
-					auditEvent.setRequestData(queryId);
-				}
-				commandStr = getServiceAdminCmd(commandStr);
-				if (StringUtils.isEmpty(commandStr)) {
-					commandStr = hiveAccessType.name();
+				if (HiveOperationType.KILL_QUERY.name().equalsIgnoreCase(hiveOperationType)) {
+					String queryId = getServiceAdminQueryId(commandStr);
+					if (!StringUtils.isEmpty(queryId)) {
+						auditEvent.setRequestData(queryId);
+					}
+					commandStr = getServiceAdminCmd(commandStr);
+					if (StringUtils.isEmpty(commandStr)) {
+						commandStr = hiveAccessType.name();
+					}
 				}
 				auditEvent.setAccessType(commandStr);
 			}
@@ -200,6 +208,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		auditEvent.setRequestData(dfsCommand);
 
 		auditEvent.setResourcePath(dfsCommand);
+
+		if(LOG.isDebugEnabled()){
+			LOG.debug("Logging DFS event " + auditEvent.toString());
+		}
 
 		addAuthzAuditEvent(auditEvent);
     }

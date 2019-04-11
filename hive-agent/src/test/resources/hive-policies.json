@@ -1165,6 +1165,8 @@
           "alter",
           "index",
           "lock",
+          "read",
+          "write",
           "repladmin",
           "serviceadmin"
         ]

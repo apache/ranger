@@ -93,6 +93,7 @@ public class HIVERangerAuthorizerTest {
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, "" + port);
         conf.set(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_WEBUI_PORT.varname, "0");
+        conf.set(HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname,"mr");
 
         hiveServer = new HiveServer2();
         hiveServer.init(conf);
@@ -617,6 +618,7 @@ public class HIVERangerAuthorizerTest {
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
         	Assert.assertNotEquals("Mr.", resultSet.getString(1));
+            Assert.assertEquals("1a24b7688c199c24d87b5984d152b37d1d528911ec852d9cdf98c3ef29b916ea", resultSet.getString(1));
         	Assert.assertEquals(100, resultSet.getInt(2));
         } else {
         	Assert.fail("No ResultSet found");
@@ -1025,6 +1027,43 @@ public class HIVERangerAuthorizerTest {
         statement = connection.createStatement();
         try {
             statement.execute("kill query 'dummyQueryId'");
+            Assert.fail("Failure expected on an unauthorized call");
+        } catch (SQLException ex) {
+            //Excepted
+        }
+        statement.close();
+        connection.close();
+    }
+
+    @Test
+    public void testWorkLoadManagementCommands() throws Exception {
+
+        String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
+        Connection connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
+
+        Statement statement = connection.createStatement();
+        try {
+            statement.execute("show resource plans");
+        } catch (SQLException ex) {
+            Assert.fail("access should have been granted to da_test_user");
+        }
+        statement.close();
+        connection.close();
+
+        connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
+        statement = connection.createStatement();
+        try {
+            statement.execute("create resource plan myplan1");
+        } catch (SQLException ex) {
+            Assert.fail("access should have been granted to da_test_user");
+        }
+        statement.close();
+        connection.close();
+
+        connection = DriverManager.getConnection(url, "bob", "bob");
+        statement = connection.createStatement();
+        try {
+            statement.execute("create resource plan myplan1");
             Assert.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             //Excepted
