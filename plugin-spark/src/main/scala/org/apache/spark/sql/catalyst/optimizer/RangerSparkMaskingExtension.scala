@@ -133,14 +133,10 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
         case _ => Seq.empty
       }.toMap
       val newOutput = plan.output.map(attr => transformers.getOrElse(attr, attr))
-      if (newOutput.isEmpty) {
-        plan match {
-          case Subquery(child) => Subquery(RangerSparkMasking(child))
-          case _ => RangerSparkMasking(plan)
-        }
-      } else {
-        val analyzed = spark.sessionState.analyzer.execute(Project(newOutput, plan))
-        RangerSparkMasking(analyzed)
+      val masked = plan match {
+        case Subquery(child) => Subquery(Project(newOutput, RangerSparkMasking(child)))
+        case _ => Project(newOutput, RangerSparkMasking(plan))
       }
+      spark.sessionState.analyzer.execute(masked)
   }
 }
