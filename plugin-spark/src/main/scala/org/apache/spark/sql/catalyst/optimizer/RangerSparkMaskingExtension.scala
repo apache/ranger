@@ -29,7 +29,9 @@ import org.apache.spark.sql.AuthzUtils.getFieldVal
 import org.apache.spark.sql.catalyst.catalog.{CatalogFunction, CatalogTable}
 import org.apache.spark.sql.catalyst.expressions.{Attribute, NamedExpression}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.execution.datasources.LogicalRelation
+import org.apache.spark.sql.execution.command.{CreateDataSourceTableAsSelectCommand, CreateViewCommand, InsertIntoDataSourceDirCommand}
+import org.apache.spark.sql.execution.datasources.{InsertIntoDataSourceCommand, InsertIntoHadoopFsRelationCommand, LogicalRelation, SaveIntoDataSourceCommand}
+import org.apache.spark.sql.hive.execution.{CreateHiveTableAsSelectCommand, InsertIntoHiveDirCommand, InsertIntoHiveTable}
 
 import scala.collection.JavaConverters._
 
@@ -47,7 +49,7 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
     "mask_show_first_n" -> "org.apache.hadoop.hive.ql.udf.generic.GenericUDFMaskShowFirstN",
     "mask_show_last_n" -> "org.apache.hadoop.hive.ql.udf.generic.GenericUDFMaskShowLastN")
     .map(x => CatalogFunction(FunctionIdentifier(x._1), x._2, Seq.empty))
-    .foreach(spark.sessionState.catalog.registerFunction(_, ignoreIfExists = true))
+    .foreach(spark.sessionState.catalog.registerFunction(_, true))
 
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
 
@@ -117,7 +119,7 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
     result != null && result.isMaskEnabled
   }
 
-  override def apply(plan: LogicalPlan): LogicalPlan = plan match {
+  private def doMasking(plan: LogicalPlan): LogicalPlan = plan match {
     case m: RangerSparkMasking => m // escape the optimize iteration if already masked
     case fixed if fixed.find(_.isInstanceOf[RangerSparkMasking]).nonEmpty => fixed
     case _ =>
@@ -138,9 +140,25 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
         case _ => Project(newOutput, plan)
       }
 
-      val masked = planWithMasking transform {
+      val masked = planWithMasking transformUp {
         case l: LeafNode => RangerSparkMasking(l)
       }
       spark.sessionState.analyzer.execute(masked)
+  }
+
+  override def apply(plan: LogicalPlan): LogicalPlan = plan match {
+    case c: Command => c match {
+      case c: CreateDataSourceTableAsSelectCommand => c.copy(query = doMasking(c.query))
+      case c: CreateHiveTableAsSelectCommand => c.copy(query = doMasking(c.query))
+      case c: CreateViewCommand => c.copy(child = doMasking(c.child))
+      case i: InsertIntoDataSourceCommand => i.copy(query = doMasking(i.query))
+      case i: InsertIntoDataSourceDirCommand => i.copy(query = doMasking(i.query))
+      case i: InsertIntoHadoopFsRelationCommand => i.copy(query = doMasking(i.query))
+      case i: InsertIntoHiveDirCommand => i.copy(query = doMasking(i.query))
+      case i: InsertIntoHiveTable => i.copy(query = doMasking(i.query))
+      case s: SaveIntoDataSourceCommand => s.copy(query = doMasking(s.query))
+      case cmd => cmd
+    }
+    case other => doMasking(other)
   }
 }

@@ -25,9 +25,11 @@ import org.apache.spark.sql.AuthzUtils.getFieldVal
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.expressions.SubqueryExpression
-import org.apache.spark.sql.catalyst.plans.logical.{Filter, LogicalPlan, RangerSparkRowFilter, Subquery}
+import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.catalyst.rules.Rule
-import org.apache.spark.sql.execution.datasources.LogicalRelation
+import org.apache.spark.sql.execution.command.{CreateDataSourceTableAsSelectCommand, CreateViewCommand, InsertIntoDataSourceDirCommand}
+import org.apache.spark.sql.execution.datasources.{InsertIntoDataSourceCommand, InsertIntoHadoopFsRelationCommand, LogicalRelation, SaveIntoDataSourceCommand}
+import org.apache.spark.sql.hive.execution.{CreateHiveTableAsSelectCommand, InsertIntoHiveDirCommand, InsertIntoHiveTable}
 
 import scala.collection.JavaConverters._
 
@@ -84,12 +86,7 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
     result != null && result.isRowFilterEnabled && StringUtils.isNotEmpty(result.getFilterExpr)
   }
 
-  /**
-    * Transform a spark logical plan to another plan with the row filer expressions
-    * @param plan the original [[LogicalPlan]]
-    * @return the logical plan with row filer expressions applied
-    */
-  override def apply(plan: LogicalPlan): LogicalPlan = plan match {
+  private def doFiltering(plan: LogicalPlan): LogicalPlan = plan match {
     case rf: RangerSparkRowFilter => rf
     case fixed if fixed.find(_.isInstanceOf[RangerSparkRowFilter]).nonEmpty => fixed
     case _ =>
@@ -106,5 +103,26 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
       plan transformUp {
         case p => plansWithTables.getOrElse(p, p)
       }
+  }
+
+  /**
+   * Transform a spark logical plan to another plan with the row filer expressions
+   * @param plan the original [[LogicalPlan]]
+   * @return the logical plan with row filer expressions applied
+   */
+  override def apply(plan: LogicalPlan): LogicalPlan = plan match {
+    case c: Command => c match {
+      case c: CreateDataSourceTableAsSelectCommand => c.copy(query = doFiltering(c.query))
+      case c: CreateHiveTableAsSelectCommand => c.copy(query = doFiltering(c.query))
+      case c: CreateViewCommand => c.copy(child = doFiltering(c.child))
+      case i: InsertIntoDataSourceCommand => i.copy(query = doFiltering(i.query))
+      case i: InsertIntoDataSourceDirCommand => i.copy(query = doFiltering(i.query))
+      case i: InsertIntoHadoopFsRelationCommand => i.copy(query = doFiltering(i.query))
+      case i: InsertIntoHiveDirCommand => i.copy(query = doFiltering(i.query))
+      case i: InsertIntoHiveTable => i.copy(query = doFiltering(i.query))
+      case s: SaveIntoDataSourceCommand => s.copy(query = doFiltering(s.query))
+      case cmd => cmd
+    }
+    case other => doFiltering(other)
   }
 }

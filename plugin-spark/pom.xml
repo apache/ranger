@@ -26,7 +26,7 @@
         <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <scalatest.version>2.2.6</scalatest.version>
-        <spark.version>2.2.1</spark.version>
+        <spark.version>2.3.2</spark.version>
         <spark.scope>provided</spark.scope>
         <spark.hive.version>1.2.1.spark2</spark.hive.version>
         <ranger.spark.package>ranger_spark_project</ranger.spark.package>
