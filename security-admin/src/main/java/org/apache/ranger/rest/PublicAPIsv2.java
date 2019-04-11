@@ -25,10 +25,12 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerPluginInfoList;
+import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +58,61 @@ public class PublicAPIsv2 {
 	ServiceREST serviceREST;
 
 	@Autowired
+	SecurityZoneREST securityZoneRest;
+
+	@Autowired
 	RESTErrorUtil restErrorUtil;
+
+	/*
+	 * SecurityZone Creation API
+	 */
+	@POST
+	@Path("/api/zones")
+	public RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) {
+		return securityZoneRest.createSecurityZone(securityZone);
+	}
+
+	/*
+	 * SecurityZone Manipulation API
+	 */
+	@PUT
+	@Path("/api/zones/{id}")
+	public RangerSecurityZone updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZone securityZone) {
+		return securityZoneRest.updateSecurityZone(zoneId, securityZone);
+	}
+
+	@DELETE
+	@Path("/api/zones/name/{name}")
+	public void deleteSecurityZone(@PathParam("name") String zoneName) {
+		securityZoneRest.deleteSecurityZone(zoneName);
+	}
+
+	 @DELETE
+	 @Path("/api/zones/{id}")
+	 public void deleteSecurityZone(@PathParam("id") Long zoneId) {
+		 securityZoneRest.deleteSecurityZone(zoneId);
+	 }
+
+	/*
+	 *  API's to Access SecurityZones
+	 */
+	@GET
+	@Path("/api/zones/name/{name}")
+	public RangerSecurityZone getSecurityZone(@PathParam("name") String zoneName) {
+		return securityZoneRest.getSecurityZone(zoneName);
+	}
+
+	@GET
+	@Path("/api/zones/{id}")
+	public RangerSecurityZone getSecurityZone(@PathParam("id") Long id) {
+		return securityZoneRest.getSecurityZone(id);
+	}
+
+	@GET
+    @Path("/api/zones")
+    public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZones(request);
+	}
 
 	/*
 	* ServiceDef Manipulation APIs
