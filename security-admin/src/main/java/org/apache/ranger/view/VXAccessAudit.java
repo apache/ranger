@@ -137,6 +137,8 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 
 	// Security Zone
 	protected String zoneName;
+	// Host Name
+	protected String agentHost;
 
 	// Policy Version
 
@@ -541,6 +543,14 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		this.zoneName = zoneName;
 	}
 
+	public String getAgentHost() {
+		return agentHost;
+	}
+
+	public void setAgentHost(String agentHost) {
+		this.agentHost = agentHost;
+	}
+
 	/**
 	 * @return the policyVersion
 	 */
@@ -589,6 +599,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "tags={" + tags + "}";
 		str += "clusterName={" + clusterName + "}";
 		str += "zoneName={" + zoneName + "}";
+		str += "agentHost={" + agentHost + "}";
 		str += "}";
 		return str;
 	}

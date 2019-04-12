@@ -83,6 +83,9 @@
                     <include>org.codehaus.jackson:jackson-xc</include>
                     <include>org.apache.solr:solr-solrj</include>
                     <include>commons-codec:commons-codec</include>
+                    <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+                    <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+                    <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>

@@ -62,6 +62,9 @@
 		    <include>org.noggit:noggit:jar:${noggit.version}</include>
 		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 		    <include>org.apache.solr:solr-solrj</include>
+		    <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+		    <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+            <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                 </includes>
             </dependencySet>
             <dependencySet>

@@ -181,6 +181,9 @@
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
 		<fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
 		<fasterxml.jackson.version>2.9.8</fasterxml.jackson.version>
+		<kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
+		<jna.version>5.2.0</jna.version>
+		<jna-platform.version>5.2.0</jna-platform.version>
     </properties>
     <profiles>
         <profile>

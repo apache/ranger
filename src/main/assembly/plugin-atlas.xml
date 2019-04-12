@@ -59,6 +59,9 @@
                     <include>org.apache.ranger:ranger-plugins-audit</include>
                     <include>org.apache.ranger:ranger-plugins-cred</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
+                    <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+                    <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+                    <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
 		    	</includes>
                 <unpack>false</unpack>
             </dependencySet>

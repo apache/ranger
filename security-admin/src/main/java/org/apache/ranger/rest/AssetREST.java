@@ -652,6 +652,7 @@ public class AssetREST {
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
 		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "zoneName", "Zone Name", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "agentHost", "Agent Host Name", StringUtil.VALIDATION_TEXT);
 		
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
 		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();

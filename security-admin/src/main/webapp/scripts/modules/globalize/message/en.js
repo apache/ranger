@@ -266,7 +266,8 @@ define(function(require) {
                 totalUsersSynced                : 'Total number of users synced',
                 totalGroupsSynced               : 'Total number of groups synced',
                 addPolicyCondition              : 'Add Policy Condition',
-                editPolicyCondition              : 'Edit Policy Condition'
+                editPolicyCondition             : 'Edit Policy Condition',
+                agentHost	                    :'Agent Host Name',
 
 			},
 			btn : {

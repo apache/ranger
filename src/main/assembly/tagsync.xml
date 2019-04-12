@@ -81,6 +81,9 @@
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
 					<include>org.apache.htrace:htrace-core4</include>
+					<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+					<include>net.java.dev.jna:jna:jar:${jna.version}</include>
+					<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
 				</includes>
 				<unpack>false</unpack>
   			</dependencySet>

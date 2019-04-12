@@ -182,6 +182,7 @@ define(function(require) {
 					<th class="renderable cip"> </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
+					<th class="renderable aip" > </th>\
 					<th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
@@ -328,9 +329,9 @@ define(function(require) {
 			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
-                                  {text : 'Zone Name',label : 'zoneName'}];
+                                  {text : 'Zone Name',label : 'zoneName'},{text : localization.tt("lbl.agentHost"), label :"agentHost"}];
             var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name'];//,'Policy ID'
+            'Client IP','Tags','Cluster Name', 'Zone Name', localization.tt("lbl.agentHost")];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
@@ -1175,6 +1176,22 @@ define(function(require) {
 						drag : false,
 						sortable:false,
 						editable:false
+					},
+					agentHost : {
+						cell : 'html',
+						label : localization.tt("lbl.agentHost"),
+						editable : false,
+						sortable : false,
+						formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
+							fromRaw : function (rawValue, model) {
+								rawValue = _.escape(rawValue);
+								if(_.isUndefined(rawValue)){
+									return '<center>--</center>';
+								}else{
+									return '<span title="'+rawValue+'">'+rawValue+'</span>';
+								}
+							}
+						}),
 					},
 					clientIP : {
 						label : 'Client IP',

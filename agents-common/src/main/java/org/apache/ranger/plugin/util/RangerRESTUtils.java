@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import com.kstruct.gethostname4j.Hostname;
 
 /**
  * Since this class does not retain any state.  It isn't a singleton for testability.
@@ -65,6 +66,18 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_SUPPORTS_POLICY_DELTAS   = "supportsPolicyDeltas";
 
 	public static final String REST_PARAM_ZONE_NAME		 = "zoneName";
+
+	public static String hostname;
+
+	static {
+		try {
+			hostname = Hostname.getHostname();
+		}
+		catch(Exception e) {
+			LOG.error("ERROR: Unable to find hostname for the agent ", e);
+			hostname = "unknownHost";
+		}
+	}
 
 	public String getPolicyRestUrl(String propertyPrefix) {
 		String url = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
@@ -123,7 +136,6 @@ public class RangerRESTUtils {
 		
 		return url;
 	}
-
     public String getPluginId(String serviceName, String appId) {
         String hostName = null;
 
@@ -145,6 +157,12 @@ public class RangerRESTUtils {
         }
 
         return ret ;
+    }
+    /*
+     * This method returns the hostname of agents.
+     */
+    public String getAgentHostname() {
+        return hostname;
     }
 
     public String getHostnameFromPluginId(String pluginId, String serviceName) {

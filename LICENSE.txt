@@ -246,8 +246,8 @@ This product includes Sizzle (http://sizzlejs.com/ ), Copyright 2005, 2013 jQuer
 This product includes ES5 15.5.4.20 (https://github.com/kriskowal/es5-shim ), Copyright 2009, 2010 Kristopher Michael Kowal.
 This product includes PURE CSS GUI ICONS 1.0.1(http://nicolasgallagher.com/pure-css-gui-icons/ - Dual licensed under MIT and GNU GPLv2), by Nicolas Gallagher
 This product includes libpam4j 1.8 (https://github.com/kohsuke/libpam4j ), Copyright Kohsuke Kawaguchi.
-This product bundles VisualSearch.js 0.4.0 (http://documentcloud.github.io/visualsearch/docs/visualsearch.html ), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.  
- 
+This product bundles VisualSearch.js 0.4.0 (http://documentcloud.github.io/visualsearch/docs/visualsearch.html ), © 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.
+This product bundles gethostname4j 0.0.2 (https://github.com/mattsheppard/gethostname4j ), Copyright (c) 2017 Matt Sheppard.
 
 
 All rights reserved.

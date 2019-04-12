@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
 
@@ -48,6 +49,8 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
 	private static String UUID 	= MiscUtil.generateUniqueId();
 	private static AtomicInteger  counter =  new AtomicInteger(0);
+
+	RangerRESTUtils restUtils = new RangerRESTUtils();
 
 	public RangerDefaultAuditHandler() {
 	}
@@ -124,6 +127,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setAdditionalInfo(getAdditionalInfo(request));
 			ret.setClusterName(request.getClusterName());
 			ret.setZoneName(result.getZoneName());
+			ret.setAgentHostname(restUtils.getAgentHostname());
 			ret.setPolicyVersion(result.getPolicyVersion());
 			populateDefaults(ret);
 		}

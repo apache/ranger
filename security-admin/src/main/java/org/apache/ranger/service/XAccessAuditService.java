@@ -93,6 +93,8 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("zoneName", "obj.zoneName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("agentHost", "obj.agentHost",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));
 }
 

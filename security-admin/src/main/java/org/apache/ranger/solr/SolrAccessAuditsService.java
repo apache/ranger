@@ -128,6 +128,8 @@ public class SolrAccessAuditsService {
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("zoneName", "zoneName",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("agentHost", "agentHost",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
 		sortFields.add(new SortField("eventTime", "evtTime", true,
 				SORT_ORDER.DESC));
@@ -225,6 +227,7 @@ public class SolrAccessAuditsService {
 	 */
 	private VXAccessAudit populateViewBean(SolrDocument doc) {
 		VXAccessAudit accessAudit = new VXAccessAudit();
+
 		Object value = null;
 		if(logger.isDebugEnabled()) {
 			logger.debug("doc=" + doc.toString());
@@ -244,6 +247,11 @@ public class SolrAccessAuditsService {
 		value = doc.getFieldValue("zoneName");
 		if (value != null) {
 			accessAudit.setZoneName(value.toString());
+		}
+
+		value = doc.getFieldValue("agentHost");
+		if (value != null) {
+			accessAudit.setAgentHost(value.toString());
 		}
 
 		value = doc.getFieldValue("policyVersion");
