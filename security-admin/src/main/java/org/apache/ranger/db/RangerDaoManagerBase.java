@@ -293,6 +293,8 @@ public abstract class RangerDaoManagerBase {
 
 	public XXSecurityZoneRefServiceDao getXXSecurityZoneRefService() { return new XXSecurityZoneRefServiceDao(this); }
 
+        public XXSecurityZoneRefTagServiceDao getXXSecurityZoneRefTagService() { return new XXSecurityZoneRefTagServiceDao(this); }
+
 	public XXSecurityZoneRefResourceDao getXXSecurityZoneRefResource() { return new XXSecurityZoneRefResourceDao(this); }
 
 	public XXSecurityZoneRefUserDao getXXSecurityZoneRefUser() { return new XXSecurityZoneRefUserDao(this); }

@@ -56,11 +56,8 @@
     {{#if zoneList.length}}
         <div class="security-details">
             <div class="row-fluid">
-                <div class="span1">
-                <button class="btn btn-default btn-small btn-slide-toggle" data-id="sideBarBtn"><i class="icon-reorder"></i><span></span></button>
-                </div>
-                <div class="span7">
-                    <h2 data-id="zoneName" class="trim-containt" title="{{{zoneModelName}}}">{{{zoneModelName}}}</h2>
+                <div class="span8">
+                    <button class="btn btn-default btn-small btn-slide-toggle pull-left m-r-sm" data-id="sideBarBtn"><i class="icon-reorder"></i><span></span></button><h2 data-id="zoneName">{{{zoneModelName}}}</h2>
                 </div>
                 {{#if isZoneAdministration}}
                     <div class="span4">
@@ -72,23 +69,18 @@
                     </div>
                 {{/if}}
             </div>
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="accordion" id="zone-admin-accordion">
-                        <div class="accordion-group">
-                          <div class="accordion-heading accordion-opened">
-                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#zone-admin-accordion" href="#collapseOne">Zone Administration</a>
-                          </div>
-
-                          <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
-                            <div class="accordion-inner" data-id="zoneAdministrationView"></div>
-                          </div>
+            <div class="row-fluid" data-id="zoneAdministrationView"></div>
+            <div class="accordion zone-accordion" id="zoneServiceAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading accordion-opened">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#zoneServiceAccordion" href="#collapseZoneService">Services</a>
+                    </div>
+                    <div id="collapseZoneService" class="accordion-body in collapse" style="height: auto;">
+                        <div class="accordion-inner">
+                            <div class="span12" data-id="zoneTableLayout"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row-fluid">
-              <div class="span12" data-id="zoneTableLayout"></div>
             </div>
         </div>
     {{else}}

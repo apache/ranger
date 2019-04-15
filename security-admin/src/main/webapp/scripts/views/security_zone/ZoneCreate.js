@@ -165,6 +165,7 @@ define(function(require) {
                 this.model.set('adminUserGroups', this.model.get('adminUserGroups').split(','));
                 this.model.set('auditUsers', this.model.get('auditUsers').split(','));
                 this.model.set('auditUserGroups', this.model.get('auditUserGroups').split(','));
+                this.model.set('tagServices', this.model.get('tagServices').split(','));
                 this.model.unset('policyType');
                 XAUtil.blockUI();
                 this.model.save({}, {

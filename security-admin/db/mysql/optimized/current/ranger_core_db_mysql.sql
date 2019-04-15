@@ -62,6 +62,7 @@ DROP TABLE IF EXISTS `x_policy`;
 DROP TABLE IF EXISTS `x_security_zone_ref_group`;
 DROP TABLE IF EXISTS `x_security_zone_ref_user`;
 DROP TABLE IF EXISTS `x_security_zone_ref_service`;
+DROP TABLE IF EXISTS `x_security_zone_ref_tag_srvc`;
 DROP TABLE IF EXISTS `x_ranger_global_state`;
 DROP TABLE IF EXISTS `x_security_zone`;
 DROP TABLE IF EXISTS `x_service`;
@@ -598,6 +599,23 @@ CREATE TABLE IF NOT EXISTS `x_security_zone_ref_service`(
  CONSTRAINT `x_sz_ref_service_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
  CONSTRAINT `x_sz_ref_service_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`),
  CONSTRAINT `x_sz_ref_service_FK_service_name` FOREIGN KEY (`service_name`) REFERENCES `x_service` (`name`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_tag_srvc`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
+`tag_srvc_id` bigint(20) NULL DEFAULT NULL,
+`tag_srvc_name` varchar(255) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_tag_service_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_tag_service_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_tag_service_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_tag_service_FK_tag_srvc_id` FOREIGN KEY (`tag_srvc_id`) REFERENCES `x_service` (`id`),
+ CONSTRAINT `x_sz_ref_tag_service_FK_tag_srvc_name` FOREIGN KEY (`tag_srvc_name`) REFERENCES `x_service` (`name`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE IF NOT EXISTS `x_security_zone_ref_user`(

@@ -174,6 +174,9 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final int EMAIL_TYPE_USER_ROLE_UPDATED = 9;
 	public static final int EMAIL_TYPE_USER_GRP_ADD = 10;
 
+        //Constant for Tag_Service Type.
+        public final static int TAG_SERVICE_TYPE = 100;
+
 	public static final List<String> VALID_USER_ROLE_LIST = new ArrayList<String>(Arrays.asList(RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_ADMIN_AUDITOR,
 			RangerConstants.ROLE_KEY_ADMIN_AUDITOR));

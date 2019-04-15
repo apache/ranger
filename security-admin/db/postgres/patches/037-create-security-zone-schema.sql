@@ -70,6 +70,8 @@ DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
 DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
+DROP TABLE IF EXISTS x_security_zone_ref_tag_srvc CASCADE;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_tag_srvc_seq;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP TABLE IF EXISTS x_security_zone CASCADE;
@@ -124,6 +126,24 @@ CONSTRAINT x_sz_ref_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_po
 CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY (service_name) REFERENCES x_service (name)
+);
+
+CREATE SEQUENCE x_sec_zone_ref_tag_srvc_seq;
+CREATE TABLE x_security_zone_ref_tag_srvc (
+id BIGINT DEFAULT nextval('x_sec_zone_ref_tag_srvc_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+zone_id BIGINT DEFAULT NULL NULL,
+tag_srvc_id BIGINT DEFAULT NULL NULL,
+tag_srvc_name varchar(255) NULL DEFAULT NULL::character varying,
+primary key (id),
+CONSTRAINT x_sz_refTagSrvc_FK_aded_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_refTagSrvc_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_refTagSrvc_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
+CONSTRAINT x_sz_refTagSrvc_FK_tag_srvc_id FOREIGN KEY (tag_srvc_id) REFERENCES x_service (id),
+CONSTRAINT x_sz_refTagSrvc_FK_tag_srvc_name FOREIGN KEY (tag_srvc_name) REFERENCES x_service (name)
 );
 
 CREATE SEQUENCE x_sec_zone_ref_resource_seq;

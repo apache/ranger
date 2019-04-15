@@ -36,6 +36,7 @@ BEGIN
 END
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
@@ -129,6 +130,8 @@ GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_user')
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_tag_srvc')
 GO
 call dbo.removeForeignKeysAndTable('x_ranger_global_state')
 GO
@@ -1140,6 +1143,18 @@ CREATE TABLE dbo.x_security_zone_ref_service(
         CONSTRAINT x_sz_ref_service_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
+CREATE TABLE dbo.x_security_zone_ref_tag_srvc(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        tag_srvc_id bigint DEFAULT NULL NULL,
+        tag_srvc_name varchar(255) DEFAULT NULL NULL,
+        CONSTRAINT x_sz_ref_tag_service_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
 CREATE TABLE dbo.x_security_zone_ref_resource(
         id bigint IDENTITY NOT NULL,
         create_time datetime DEFAULT NULL NULL,
@@ -1541,6 +1556,16 @@ GO
 ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY(service_id) REFERENCES dbo.x_service (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY(service_name) REFERENCES dbo.x_service (name)
+GO
+ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_tag_service_id FOREIGN KEY(tag_service_id) REFERENCES dbo.x_service (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_tag_service_name FOREIGN KEY(tag_service_name) REFERENCES dbo.x_service (name)
 GO
 ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
 GO

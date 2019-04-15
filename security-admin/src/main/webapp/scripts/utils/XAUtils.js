@@ -1496,5 +1496,59 @@ define(function(require) {
         return condtionsDetails;
     }
 
+    //get list of all tag base services
+    XAUtils.getTagBaseServices = function(){
+        return {
+            closeOnSelect : true,
+            placeholder : 'Select Tag Services',
+            width :'600px',
+            allowClear: true,
+            multiple: true,
+            tokenSeparators: ["," , " "],
+            initSelection : function (element, callback) {
+                var tags = [];
+                _.each(element.val().split(','), function(name) {
+                    tags.push({
+                        'id': _.escape(name),
+                        'text': _.escape(name)
+                    });
+                });
+                callback(tags)
+            },
+            ajax: {
+                url: "service/plugins/services",
+                dataType: 'json',
+                data: function (term, page) {
+                    return { serviceNamePartial : term, serviceType : 'tag' };
+                },
+                results: function (data, page) {
+                    var results = [];
+                    if(data.resultSize != "0"){
+                        results = data.services.map(function(m, i){ return {id : _.escape(m.name), text: _.escape(m.name) };    });
+                        return {results : results};
+                    }
+                    return {results : results};
+                },
+                transport : function (options) {
+                                            $.ajax(options).fail(function(respones) {
+                        XAUtils.defaultErrorHandler('error',respones);
+                        this.success({
+                            resultSize : 0
+                        });
+                    });
+                }
+            },
+            formatResult : function(result){
+                return result.text;
+            },
+            formatSelection : function(result){
+                return result.text;
+            },
+            formatNoMatches: function(result){
+                return 'No tag service found.';
+            }
+        };
+    }
+
 	return XAUtils;
 });

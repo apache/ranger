@@ -1357,6 +1357,12 @@
         </query>
     </named-query>
 
+    <named-query name="XXSecurityZoneRefTagService.findByZoneId">
+        <query>
+            select obj from XXSecurityZoneRefTagService obj where obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
 	<named-query name="XXSecurityZoneRefUser.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefUser obj where obj.zoneId = :zoneId

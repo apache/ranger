@@ -35,8 +35,12 @@ define(function(require) {
             template: ZoneAdministrationTmpl,
 
             templateHelpers: function() {
+                var tagServices = this.zoneModel && this.zoneModel.get('tagServices') ? this.zoneModel.get('tagServices') : '';
                 return {
-                    zoneModel: this.zoneModel
+                    zoneModel: this.zoneModel,
+                    tagServices : tagServices,
+                    description : (this.zoneModel && this.zoneModel.get('description') && !_.isEmpty(this.zoneModel.get('description')))
+                        ? this.zoneModel.get('description') : false,
                 }
             },
 

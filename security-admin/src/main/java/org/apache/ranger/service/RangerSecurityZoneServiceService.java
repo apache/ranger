@@ -74,6 +74,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 		trxLogAttrs.put("auditUsers", new VTrxLogAttr("auditUsers", "Zone Audit Users", false));
 		trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups", false));
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Zone Description", false));
+                trxLogAttrs.put("tagServices", new VTrxLogAttr("tagServices", "Zone Tag Services", false));
 	}
 
     public RangerSecurityZoneServiceService() {
@@ -116,6 +117,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
                 ret.setAdminUserGroups(zoneFromJsonData.getAdminUserGroups());
                 ret.setAuditUsers(zoneFromJsonData.getAuditUsers());
                 ret.setAuditUserGroups(zoneFromJsonData.getAuditUserGroups());
+                ret.setTagServices(zoneFromJsonData.getTagServices());
             }
         } else {
             logger.info("Empty string representing jsonData in [" + xxSecurityZone + "]!!");
@@ -143,7 +145,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         return ret;
     }
 
-    @Override
+        @Override
     public RangerSecurityZone postUpdate(XXSecurityZone xObj) {
         // Update ServiceVersionInfo for all affected services
         RangerSecurityZone ret = super.postUpdate(xObj);

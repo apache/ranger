@@ -40,6 +40,7 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 	private static final long serialVersionUID = 1L;
     private String                                  name;
     private Map<String, RangerSecurityZoneService>  services;
+    private List<String>  							tagServices;
     private List<String>                            adminUsers;
     private List<String>                            adminUserGroups;
     private List<String>                            auditUsers;
@@ -47,10 +48,10 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
     private String                                  description;
 
     public RangerSecurityZone() {
-        this(null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null,null);
     }
 
-    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
+    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
         setName(name);
         setServices(services);
         setAdminUsers(adminUsers);
@@ -58,6 +59,7 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         setAuditUsers(auditUsers);
         setAuditUserGroups(auditUserGroups);
         setDescription(description);
+        setTagServices(tagServices);
     }
     public String getName() { return name; }
 
@@ -101,10 +103,19 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         this.auditUserGroups = auditUserGroups == null ? new ArrayList<>() : auditUserGroups;
     }
 
-    @Override
+    public List<String> getTagServices() {
+                return tagServices;
+        }
+
+        public void setTagServices(List<String> tagServices) {
+                this.tagServices = tagServices;
+        }
+
+        @Override
     public String toString() {
         return    "{name=" + name
                 + ", services=" + services
+                + ", tagServices=" + tagServices
                 + ", adminUsers=" + adminUsers
                 + ", adminUserGroups=" + adminUserGroups
                 + ", auditUsers=" + auditUsers

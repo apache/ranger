@@ -274,6 +274,7 @@ public class SecurityZoneREST {
 	}
 
 	private void removeEmptyEntries(RangerSecurityZone securityZone) {
+                bizUtil.removeEmptyStrings(securityZone.getTagServices());
 		bizUtil.removeEmptyStrings(securityZone.getAdminUsers());
 		bizUtil.removeEmptyStrings(securityZone.getAdminUserGroups());
 		bizUtil.removeEmptyStrings(securityZone.getAuditUsers());

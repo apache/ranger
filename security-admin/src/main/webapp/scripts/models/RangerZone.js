@@ -59,6 +59,15 @@ define(function(require) {
                         title: 'Description',
                         validators: []
                     },
+                    tagServices : {
+                        type : 'Select2Remote',
+                        title : 'Select Tag Services',
+                        pluginAttr : XAUtil.getTagBaseServices(),
+                        options    : function(callback, editor){
+                            callback();
+                        },
+                        onFocusOpen : false
+                    },
                     adminUsers: {
                         type: 'Select2Remote',
                         title: 'Admin Users',

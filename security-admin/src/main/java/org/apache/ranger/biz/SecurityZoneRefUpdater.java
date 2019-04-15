@@ -28,16 +28,19 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXSecurityZoneRefGroupDao;
 import org.apache.ranger.db.XXSecurityZoneRefResourceDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
+import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefUserDao;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefResource;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
+import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
@@ -80,13 +83,14 @@ public class SecurityZoneRefUpdater {
 		final Set<String> adminUserGroups = new HashSet<>();
 		final Set<String> auditUsers = new HashSet<>();
 		final Set<String> auditUserGroups = new HashSet<>();
-
+                final Set<String> tagServices = new HashSet<>();
 		XXServiceDef xServiceDef = new XXServiceDef();
 
 		adminUsers.addAll(rangerSecurityZone.getAdminUsers());
 		adminUserGroups.addAll(rangerSecurityZone.getAdminUserGroups());
 		auditUsers.addAll(rangerSecurityZone.getAuditUsers());
 		auditUserGroups.addAll(rangerSecurityZone.getAuditUserGroups());
+                tagServices.addAll(rangerSecurityZone.getTagServices());
 		for(Map.Entry<String, RangerSecurityZoneService> service : zoneServices.entrySet()) {
 			String serviceName = service.getKey();
 
@@ -125,6 +129,29 @@ public class SecurityZoneRefUpdater {
 				}
 			}
 		}
+
+                if(CollectionUtils.isNotEmpty(tagServices)) {
+                        for(String tagService : tagServices) {
+
+                                if (StringUtils.isBlank(tagService)) {
+                                        continue;
+                                }
+
+                                XXService xService = daoMgr.getXXService().findByName(tagService);
+                                if (xService == null || xService.getType() != RangerConstants.TAG_SERVICE_TYPE) {
+                                        throw restErrorUtil.createRESTException("Tag Service named: " + tagService + " does not exist ",
+                                                        MessageEnums.INVALID_INPUT_DATA);
+                                }
+
+                                XXSecurityZoneRefTagService xZoneTagService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefTagService());
+
+                                xZoneTagService.setZoneId(zoneId);
+                                xZoneTagService.setTagServiceId(xService.getId());
+                                xZoneTagService.setTagServiceName(xService.getName());
+
+                                daoMgr.getXXSecurityZoneRefTagService().create(xZoneTagService);
+                        }
+                }
 
 		if(CollectionUtils.isNotEmpty(adminUsers)) {
 			for(String adminUser : adminUsers) {
@@ -235,6 +262,7 @@ public class SecurityZoneRefUpdater {
 		}
 
 		XXSecurityZoneRefServiceDao     xZoneServiceDao      = daoMgr.getXXSecurityZoneRefService();
+                XXSecurityZoneRefTagServiceDao     xZoneTagServiceDao      = daoMgr.getXXSecurityZoneRefTagService();
 		XXSecurityZoneRefResourceDao        xZoneResourceDao    = daoMgr.getXXSecurityZoneRefResource();
 		XXSecurityZoneRefUserDao         xZoneUserDao     = daoMgr.getXXSecurityZoneRefUser();
 		XXSecurityZoneRefGroupDao   xZoneGroupDao   = daoMgr.getXXSecurityZoneRefGroup();
@@ -242,6 +270,10 @@ public class SecurityZoneRefUpdater {
 		for (XXSecurityZoneRefService service : xZoneServiceDao.findByZoneId(zoneId)) {
 			xZoneServiceDao.remove(service);
 		}
+
+                for (XXSecurityZoneRefTagService service : xZoneTagServiceDao.findByZoneId(zoneId)) {
+                        xZoneTagServiceDao.remove(service);
+                }
 
 		for(XXSecurityZoneRefResource resource : xZoneResourceDao.findByZoneId(zoneId)) {
 			xZoneResourceDao.remove(resource);

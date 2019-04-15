@@ -338,45 +338,29 @@ define(function(require){
                 });
             }
             if (selectedZone && !_.isEmpty(selectedZone)) {
-                var selectedZoneServices = [];
+                var selectedZoneServices = [], model;
                 if(this.type !== XAEnums.ServiceType.SERVICE_TAG.label){
                     _.each(selectedZone.get('services'), function(value, key) {
-                        var model = that.services.find(function(m) {
+                        model = that.services.find(function(m) {
                             return m.get('name') == key
-                        })
+                        });
                         if (model) {
                             selectedZoneServices.push(model);
                         }
                     });
-                    return _.groupBy(selectedZoneServices, function(m) {
-                        return m.get('type')
-                    });
                 }else{
-                    var tagAssociatedServices = _.filter(this.services.models, function(m, key){
-                        return m.get('tagService') && !_.isEmpty(m.get('tagService'))
-                    }),
-                    zoneServiceList = _.keys (selectedZone.get('services')),
-                    tagServiceGrp = _.groupBy(tagAssociatedServices, function(m){return m.get('tagService')});
-                    //Compare tag associate service with zone services and return tag name that services match to zone services.
-                    _.each(tagServiceGrp, function(m, key){
-                        var hasTag = _.some(m, function(model){
-                            return zoneServiceList.indexOf(model.get("name")) !== -1;
-                        })
-                        if (hasTag) {
-                            var models = that.services.models.filter(function(obj){
-                                return obj.get("name") === key
-                            })
-                            if (models.length > 0) {
-                                selectedZoneServices = _.union(selectedZoneServices,models);
-                            }
+                    _.each(selectedZone.get('tagServices'), function(value){
+                        model = that.services.find(function(m) {
+                            return m.get('name') == value
+                        });
+                        if (model) {
+                            selectedZoneServices.push(model);
                         }
-                    });
-                    //Tag services listed by create time of that services
-                    selectedZoneServices = _.sortBy(selectedZoneServices,function(service){return service.get('createTime')});
-                    return _.groupBy(selectedZoneServices, function(obj){
-                        return obj.get("type");
                     })
                 }
+                return _.groupBy(selectedZoneServices, function(m) {
+                        return m.get('type')
+                });
             } else {
                 return that.services.groupBy("type")
             }

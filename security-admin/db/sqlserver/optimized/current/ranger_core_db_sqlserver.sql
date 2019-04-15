@@ -581,6 +581,26 @@ IF (OBJECT_ID('x_sz_ref_service_FK_service_name') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_security_zone_ref_service] DROP CONSTRAINT x_sz_ref_service_FK_service_name
 END
+IF (OBJECT_ID('x_sz_ref_tag_service_FK_added_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] DROP CONSTRAINT x_sz_ref_tag_service_FK_added_by_id
+END
+IF (OBJECT_ID('x_sz_ref_tag_service_FK_upd_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] DROP CONSTRAINT x_sz_ref_tag_service_FK_upd_by_id
+END
+IF (OBJECT_ID('x_sz_ref_tag_service_FK_zone_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] DROP CONSTRAINT x_sz_ref_tag_service_FK_zone_id
+END
+IF (OBJECT_ID('x_sz_ref_tag_service_FK_tag_service_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] DROP CONSTRAINT x_sz_ref_tag_service_FK_tag_service_id
+END
+IF (OBJECT_ID('x_sz_ref_tag_service_FK_tag_service_name') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] DROP CONSTRAINT x_sz_ref_tag_service_FK_tag_service_name
+END
 IF (OBJECT_ID('x_ranger_global_state_FK_upd_by_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_ranger_global_state] DROP CONSTRAINT x_ranger_global_state_FK_upd_by_id
@@ -788,6 +808,10 @@ END
 IF (OBJECT_ID('x_security_zone_ref_service') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_security_zone_ref_service]
+END
+IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_tag_srvc]
 END
 IF (OBJECT_ID('x_security_zone_ref_resource') IS NOT NULL)
 BEGIN
@@ -2237,6 +2261,31 @@ GO
 ALTER TABLE [dbo].[x_security_zone_ref_service] WITH CHECK ADD CONSTRAINT [x_sz_ref_service_FK_service_id] FOREIGN KEY([service_id]) REFERENCES [dbo].[x_service] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_service] WITH CHECK ADD CONSTRAINT [x_sz_ref_service_FK_service_name] FOREIGN KEY([service_name]) REFERENCES [dbo].[x_service] ([name])
+GO
+CREATE TABLE [dbo].[x_security_zone_ref_tag_srvc](
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [zone_id] [bigint] DEFAULT NULL NULL,
+        [tag_srvc_id] [bigint] DEFAULT NULL NULL,
+        [tag_srvc_name] [varchar](255) DEFAULT NULL NULL,
+        PRIMARY KEY CLUSTERED
+(
+        [id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_tag_srvc_id] FOREIGN KEY([tag_srvc_id]) REFERENCES [dbo].[x_service] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_tag_srvc_name] FOREIGN KEY([tag_srvc_name]) REFERENCES [dbo].[x_service] ([name])
 GO
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON

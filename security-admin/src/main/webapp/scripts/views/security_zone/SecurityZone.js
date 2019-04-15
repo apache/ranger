@@ -78,7 +78,6 @@ define(function(require) {
             'zoneName': '[data-id="zoneName"]',
             'deleteZone': '[data-id="deleteZone"]',
             'editZone': '[data-id="editZone"]',
-            'zoneAdministrationDetail': '[data-id="zoneAdministrationDetail"]',
             'zoneSearch' : '[data-id="zoneSearch"]',
             'zoneUlList' : '[data-id="zoneUlList"]'
         },
@@ -91,7 +90,6 @@ define(function(require) {
             events['click ' + this.ui.sideBar] = 'onSidebar';
             events['click ' + this.ui.zoneTable] = 'renderTable';
             events['click ' + this.ui.deleteZone] = 'onDelete';
-            events['click ' + this.ui.zoneAdministrationDetail] = 'zoneAdministrationDetail';
             events['keyup ' + this.ui.zoneSearch] = 'zoneSearch';
 
             return events;

@@ -88,6 +88,7 @@ call spdropsequence('X_SEC_ZONE_REF_GROUP_SEQ');
 call spdropsequence('X_SEC_ZONE_REF_USER_SEQ');
 call spdropsequence('X_SEC_ZONE_REF_RESOURCE_SEQ');
 call spdropsequence('X_SEC_ZONE_REF_SERVICE_SEQ');
+call spdropsequence('X_SEC_ZONE_REF_TAG_SRVC_SEQ');
 call spdropsequence('X_RANGER_GLOBAL_STATE_SEQ');
 call spdropsequence('X_SECURITY_ZONE_SEQ');
 call spdropsequence('X_POLICY_CHANGE_LOG_SEQ');
@@ -154,6 +155,7 @@ CREATE SEQUENCE X_UGSYNC_AUDIT_INFO_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCY
 CREATE SEQUENCE X_SECURITY_ZONE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RANGER_GLOBAL_STATE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_SERVICE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_SEC_ZONE_REF_TAG_SRVC_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -234,6 +236,7 @@ call spdroptable('x_policy');
 call spdroptable('x_security_zone_ref_group');
 call spdroptable('x_security_zone_ref_user');
 call spdroptable('x_security_zone_ref_service');
+call spdroptable('x_security_zone_ref_tag_srvc');
 call spdroptable('x_ranger_global_state');
 call spdroptable('x_security_zone');
 call spdroptable('x_service');
@@ -682,6 +685,24 @@ CONSTRAINT x_sz_ref_ser_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal
 CONSTRAINT x_sz_ref_ser_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_ser_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_ref_ser_FK_service_name FOREIGN KEY (service_name) REFERENCES x_service (name)
+);
+commit;
+
+CREATE TABLE x_security_zone_ref_tag_srvc (
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+zone_id NUMBER(20)  DEFAULT NULL NULL,
+tag_srvc_id NUMBER(20)  DEFAULT NULL NULL,
+tag_srvc_name VARCHAR(255) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_sz_refTagTser_FK_aded_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_refTagTser_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_refTagTser_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
+CONSTRAINT x_sz_refTagTser_FK_srvc_id FOREIGN KEY (tag_srvc_id) REFERENCES x_service (id),
+CONSTRAINT x_sz_refTagTser_FK_srvc_name FOREIGN KEY (tag_srvc_name) REFERENCES x_service (name)
 );
 commit;
 
