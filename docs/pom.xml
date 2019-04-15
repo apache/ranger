@@ -405,6 +405,7 @@
             <email>zhangqiang@apache.org</email>
             <timezone>+8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
