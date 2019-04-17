@@ -98,9 +98,6 @@ CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_por
 );
 commit;
 
-INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
-commit;
-
 CREATE TABLE x_ranger_global_state(
 id NUMBER(20) NOT NULL,
 create_time DATE DEFAULT NULL NULL,
@@ -205,16 +202,6 @@ CONSTRAINT x_sz_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group 
 );
 commit;
 
-DECLARE
-	v_column_exists number := 0;
-BEGIN
-Select count(*) into v_column_exists from user_tab_cols where column_name = upper('zone_id') and table_name = upper('x_policy');
-	if (v_column_exists = 0) then
-		execute immediate 'ALTER TABLE x_policy ADD (zone_id NUMBER(20) DEFAULT 1 NOT NULL) ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id)';
-		commit;
-	end if;
-end;/
-
 CREATE OR REPLACE FUNCTION getModulesIdByName(inputval IN VARCHAR2)
 RETURN NUMBER is
 BEGIN
@@ -238,8 +225,49 @@ begin
     RETURN myid;
 end;
 END;/
-/
-INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
-INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+
+DECLARE
+	v_column_exists number := 0;
+BEGIN
+Select count(*) into v_column_exists from x_security_zone where id = 1 and name = ' ';
+	if (v_column_exists = 0) then
+		INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '','Unzoned zone');
+		commit;
+	end if;
+end;/
+
+DECLARE
+	v_column_exists number := 0;
+BEGIN
+Select count(*) into v_column_exists from user_tab_cols where column_name = upper('zone_id') and table_name = upper('x_policy');
+	if (v_column_exists = 0) then
+		execute immediate 'ALTER TABLE x_policy ADD (zone_id NUMBER(20) DEFAULT 1 NOT NULL) ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id)';
+		commit;
+	end if;
+end;/
+
+DECLARE
+        v_count number:=0;
+BEGIN   
+        select count(*) into v_count from x_modules_master where module='Security Zone';
+        if (v_count = 0) then 
+			INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');        
+		end if;
+		v_count:=0;
+		select count(*) into v_count from x_user_module_perm where user_id=getXportalUIdByLoginId('admin') and module_id=getModulesIdByName('Security Zone');
+        if (v_count = 0) then
+			INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+        end if;
+        v_count:=0;
+        select count(*) into v_count from x_user_module_perm where user_id=getXportalUIdByLoginId('rangerusersync') and module_id=getModulesIdByName('Security Zone');
+        if (v_count = 0) then
+			INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+        end if;
+        v_count:=0;
+        select count(*) into v_count from x_user_module_perm where user_id=getXportalUIdByLoginId('rangertagsync') and module_id=getModulesIdByName('Security Zone');
+        if (v_count = 0) then
+			INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+        end if;
+        commit;
+END;/
+

@@ -206,11 +206,6 @@ ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_agrp_FK_zone_i
 GO
 ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_agrp_FK_group_id FOREIGN KEY(group_id) REFERENCES dbo.x_group (id)
 GO
-IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
-	ALTER TABLE dbo.x_policy ADD (zone_id bigint DEFAULT 1 NOT NULL), ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
-END IF;
-GO
-
 CREATE OR REPLACE FUNCTION dbo.getXportalUIdByLoginId (input_val CHAR(60))
 RETURNS INTEGER
 BEGIN
@@ -218,7 +213,7 @@ BEGIN
   SELECT x_portal_user.id into myid FROM x_portal_user WHERE x_portal_user.login_id=input_val;
   RETURN (myid);
 END;
-
+GO
 CREATE OR REPLACE FUNCTION dbo.getModulesIdByName (input_val CHAR(60))
 RETURNS INTEGER
 BEGIN
@@ -226,14 +221,30 @@ BEGIN
   SELECT x_modules_master.id into myid FROM x_modules_master WHERE x_modules_master.module=input_val;
   RETURN (myid);
 END;
-
-INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),'Security Zone','')
 GO
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+IF NOT EXISTS(select * from x_security_zone where id = 1 and name=' ') THEN
+	INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+END IF;
 GO
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangerusersync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
+	ALTER TABLE dbo.x_policy ADD (zone_id bigint DEFAULT 1 NOT NULL), ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
+END IF;
 GO
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangertagsync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+IF NOT EXISTS(select * from x_modules_master where module = 'Security Zone') THEN
+	INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),'Security Zone','')
+END IF;
+GO
+IF NOT EXISTS(select * from x_user_module_perm where user_id=dbo.getXportalUIdByLoginId('admin') and module_id=dbo.getModulesIdByName('Security Zone')) THEN
+	INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+END IF;
+GO
+IF NOT EXISTS(select * from x_user_module_perm where user_id=dbo.getXportalUIdByLoginId('rangerusersync') and module_id=dbo.getModulesIdByName('Security Zone')) THEN
+	INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangerusersync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+END IF;
+GO
+IF NOT EXISTS(select * from x_user_module_perm where user_id=dbo.getXportalUIdByLoginId('rangertagsync') and module_id=dbo.getModulesIdByName('Security Zone')) THEN
+	INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('rangertagsync'),dbo.getModulesIdByName('Security Zone'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
+END IF;
 GO
 
 exit

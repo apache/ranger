@@ -78,8 +78,6 @@ CREATE TABLE IF NOT EXISTS `x_security_zone`(
  CONSTRAINT `x_security_zone_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
-
 CREATE TABLE IF NOT EXISTS `x_ranger_global_state`(
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `create_time` datetime NULL DEFAULT NULL,
@@ -180,21 +178,6 @@ CREATE TABLE IF NOT EXISTS `x_security_zone_ref_group`(
  CONSTRAINT `x_sz_ref_group_FK_group_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-drop procedure if exists add_x_policy_zone_id;
-delimiter ;;
-create procedure add_x_policy_zone_id() begin
-
-if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy') then
-  if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name = 'zone_id') then
-    ALTER TABLE `x_policy` ADD COLUMN `zone_id` bigint(20) DEFAULT 1 NOT NULL,ADD CONSTRAINT `x_policy_FK_zone_id` FOREIGN KEY(`zone_id`) REFERENCES `x_security_zone`(`id`);
-  end if;
- end if;
-end;;
-
-delimiter ;
-call add_x_policy_zone_id();
-drop procedure if exists add_x_policy_zone_id;
-
 DELIMITER $$
 DROP FUNCTION if exists getXportalUIdByLoginId$$
 CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
@@ -215,8 +198,48 @@ END $$
 
 DELIMITER ;
 
-INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
-INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+drop procedure if exists add_unzone_entry;
+delimiter ;;
+create procedure add_unzone_entry() begin
+if not exists (select * from x_security_zone where id=1 and name=' ') then
+	INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, UTC_TIMESTAMP(),UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+end if;
+end;;
+delimiter ;
+call add_unzone_entry();
+drop procedure if exists add_unzone_entry;
+
+drop procedure if exists add_x_policy_zone_id;
+delimiter ;;
+create procedure add_x_policy_zone_id() begin
+if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy') then
+  if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name = 'zone_id') then
+    ALTER TABLE `x_policy` ADD COLUMN `zone_id` bigint(20) DEFAULT 1 NOT NULL,ADD CONSTRAINT `x_policy_FK_zone_id` FOREIGN KEY(`zone_id`) REFERENCES `x_security_zone`(`id`);
+  end if;
+ end if;
+end;;
+delimiter ;
+call add_x_policy_zone_id();
+drop procedure if exists add_x_policy_zone_id;
+
+
+drop procedure if exists add_security_zone_permissions;
+delimiter ;;
+create procedure add_security_zone_permissions() begin
+	if not exists (select * from x_modules_master where module='Security Zone') then
+		INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
+	end if;
+	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('admin') and module_id=getModulesIdByName('Security Zone')) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	end if;
+	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('rangerusersync') and module_id=getModulesIdByName('Security Zone')) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	end if;
+	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('rangertagsync') and module_id=getModulesIdByName('Security Zone')) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	end if;
+end;;
+delimiter ;
+call add_security_zone_permissions();
+drop procedure if exists add_security_zone_permissions;
 
