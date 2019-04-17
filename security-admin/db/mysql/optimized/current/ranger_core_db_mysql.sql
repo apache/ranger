@@ -569,6 +569,8 @@ CREATE TABLE IF NOT EXISTS `x_security_zone`(
  CONSTRAINT `x_security_zone_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+
 CREATE TABLE IF NOT EXISTS `x_ranger_global_state`(
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `create_time` datetime NULL DEFAULT NULL,
@@ -671,7 +673,7 @@ CREATE TABLE  `x_policy` (
 `policy_options` varchar(4000) NULL DEFAULT NULL,
 `policy_priority` int NOT NULL DEFAULT '0',
 `policy_text` MEDIUMTEXT NULL DEFAULT NULL,
-`zone_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NOT NULL DEFAULT '1',
 primary key (`id`),
 KEY `x_policy_added_by_id` (`added_by_id`),
 KEY `x_policy_upd_by_id` (`upd_by_id`),
@@ -679,7 +681,7 @@ KEY `x_policy_cr_time` (`create_time`),
 KEY `x_policy_up_time` (`update_time`),
 KEY `x_policy_service` (`service`),
 KEY `x_policy_resource_signature` (`resource_signature`),
-UNIQUE KEY `x_policy_UK_name_service` (`name`(180),`service`),
+UNIQUE KEY `x_policy_UK_name_service_zone` (`name`(180),`service`, `zone_id`),
 CONSTRAINT `x_policy_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_policy_FK_service` FOREIGN KEY (`service`) REFERENCES `x_service` (`id`),
@@ -1557,6 +1559,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('037',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('039',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)

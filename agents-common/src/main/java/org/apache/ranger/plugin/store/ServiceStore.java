@@ -75,7 +75,7 @@ public interface ServiceStore {
 
 	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;
 
-	Long getPolicyId(final Long serviceId, final String policyName);
+	Long getPolicyId(final Long serviceId, final String policyName, final Long zoneId);
 
 	PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception;
 

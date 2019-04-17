@@ -212,6 +212,8 @@ CONSTRAINT [x_security_zone$x_security_zone_UK_name] UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+GO
 CREATE TABLE [dbo].[x_ranger_global_state](
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[create_time] [datetime2] DEFAULT NULL NULL,
@@ -373,7 +375,7 @@ ALTER TABLE [dbo].[x_ranger_global_state] WITH CHECK ADD CONSTRAINT [x_ranger_gl
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name in('zone_id'))
 BEGIN
-	ALTER TABLE [dbo].[x_policy] ADD [zone_id] [bigint] DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_policy] ADD [zone_id] [bigint] DEFAULT 1 NOT NULL;
 END
 GO
 IF (OBJECT_ID('x_policy_FK_zone_id') IS NULL)

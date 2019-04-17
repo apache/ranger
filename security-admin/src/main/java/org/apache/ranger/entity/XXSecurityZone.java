@@ -35,7 +35,7 @@ import java.util.Objects;
 public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-    @SequenceGenerator(name = "x_security_zone_SEQ", sequenceName = "x_security_zone_SEQ", allocationSize = 1)
+    @SequenceGenerator(name = "x_security_zone_SEQ", sequenceName = "x_security_zone_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_security_zone_SEQ")
     @Column(name = "id")
     protected Long id;

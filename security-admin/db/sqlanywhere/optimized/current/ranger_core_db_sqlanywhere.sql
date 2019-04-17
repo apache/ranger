@@ -517,6 +517,9 @@ CREATE TABLE dbo.x_security_zone(
 	CONSTRAINT x_security_zone_UK_name UNIQUE NONCLUSTERED(name)
 )
 GO
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+GO
+
 CREATE TABLE dbo.x_ranger_global_state(
 	id bigint IDENTITY NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
@@ -548,9 +551,9 @@ create table dbo.x_policy (
 	policy_options varchar(4000) DEFAULT NULL NULL,
 	policy_priority int DEFAULT 0 NOT NULL,
 	policy_text text DEFAULT NULL NULL,
-	zone_id bigint DEFAULT NULL NULL,
+	zone_id bigint DEFAULT '1' NOT NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
-	CONSTRAINT x_policy_UK_name_service UNIQUE NONCLUSTERED (name,service)
+	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id)
 )
 GO
 create table dbo.x_service_config_def (
@@ -1995,6 +1998,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('039',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

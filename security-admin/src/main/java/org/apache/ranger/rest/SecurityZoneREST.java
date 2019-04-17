@@ -120,6 +120,10 @@ public class SecurityZoneREST {
             LOG.debug("==> updateSecurityZone(id=" + zoneId +", " + securityZone + ")");
         }
 
+        if (zoneId != null && zoneId.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+            throw restErrorUtil.createRESTException("Cannot update unzoned zone");
+        }
+
         ensureAdminAccess();
         removeEmptyEntries(securityZone);
         if (securityZone.getId() != null && !zoneId.equals(securityZone.getId())) {
@@ -174,6 +178,9 @@ public class SecurityZoneREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> deleteSecurityZone(id=" + zoneId + ")");
         }
+        if (zoneId != null && zoneId.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+            throw restErrorUtil.createRESTException("Cannot delete unzoned zone");
+        }
         try {
         	ensureAdminAccess();
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
@@ -218,6 +225,9 @@ public class SecurityZoneREST {
     public RangerSecurityZone getSecurityZone(@PathParam("id") Long id) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getSecurityZone(id=" + id + ")");
+        }
+        if (id != null && id.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+            throw restErrorUtil.createRESTException("Cannot delete unzoned zone");
         }
         RangerSecurityZone ret;
         try {

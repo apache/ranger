@@ -72,6 +72,8 @@ ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_added_by_id FO
 GO
 ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+GO
 CREATE TABLE dbo.x_ranger_global_state(
 	id bigint IDENTITY NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
@@ -205,7 +207,7 @@ GO
 ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_agrp_FK_group_id FOREIGN KEY(group_id) REFERENCES dbo.x_group (id)
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
-	ALTER TABLE dbo.x_policy ADD (zone_id bigint DEFAULT NULL NULL), ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
+	ALTER TABLE dbo.x_policy ADD (zone_id bigint DEFAULT 1 NOT NULL), ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
 END IF;
 GO
 

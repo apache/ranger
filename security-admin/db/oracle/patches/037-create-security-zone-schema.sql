@@ -96,8 +96,11 @@ CONSTRAINT x_security_zone_UK_name UNIQUE(name),
 CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
-
 commit;
+
+INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+commit;
+
 CREATE TABLE x_ranger_global_state(
 id NUMBER(20) NOT NULL,
 create_time DATE DEFAULT NULL NULL,
@@ -207,7 +210,7 @@ DECLARE
 BEGIN
 Select count(*) into v_column_exists from user_tab_cols where column_name = upper('zone_id') and table_name = upper('x_policy');
 	if (v_column_exists = 0) then
-		execute immediate 'ALTER TABLE x_policy ADD (zone_id NUMBER(20) DEFAULT NULL NULL) ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id)';
+		execute immediate 'ALTER TABLE x_policy ADD (zone_id NUMBER(20) DEFAULT 1 NOT NULL) ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id)';
 		commit;
 	end if;
 end;/

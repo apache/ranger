@@ -37,6 +37,7 @@ import java.util.Map;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerSecurityZone extends RangerBaseModelObject implements java.io.Serializable {
+    public static final long RANGER_UNZONED_SECURITY_ZONE_ID = 1L;
 	private static final long serialVersionUID = 1L;
     private String                                  name;
     private Map<String, RangerSecurityZoneService>  services;

@@ -30,6 +30,7 @@ import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -109,7 +110,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
 		xObj.setIsEnabled(vObj.getIsEnabled());
-		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName());
+		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
 
 		xObj.setZoneId(zoneId);
 
@@ -146,7 +147,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setResourceSignature(xObj.getResourceSignature());
 		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
-		String zoneName = convertZoneIdToZoneName(xObj.getZoneId());
+		String zoneName = convertZoneIdToZoneName(xObj.getZoneId(), vObj);
 		vObj.setZoneName(zoneName);
 
 		String policyText = xObj.getPolicyText();
@@ -162,15 +163,29 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		return vObj;
 	}
 
-	private Long convertZoneNameToZoneId(String zoneName) {
-	    if (StringUtils.isEmpty(zoneName)) return null;
-	    XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
-	    return zone == null ? null : zone.getId();
-    }
+	private Long convertZoneNameToZoneId(String zoneName, V vObj) {
+		if (StringUtils.isEmpty(zoneName)) return RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
+		XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+		if (zone == null) {
+			throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName()
+					+ "Zone Not Found : " + zoneName, MessageEnums.INVALID_INPUT_DATA);
+		}
+		return zone.getId();
+	}
 
-    private String convertZoneIdToZoneName(Long zoneId) {
-        if (zoneId == null) return null;
-        XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneId(zoneId);
-        return zone == null ? null : zone.getName();
-    }
+	private String convertZoneIdToZoneName(Long zoneId, V vObj) {
+		if (zoneId == null) {
+			throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName()
+					+ "Zone Not Found : " + zoneId, MessageEnums.INVALID_INPUT_DATA);
+		}
+		if (zoneId.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+			return StringUtils.EMPTY;
+		}
+		XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneId(zoneId);
+		if (zone == null) {
+			throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName()
+					+ "Zone Not Found : " + zoneId, MessageEnums.INVALID_INPUT_DATA);
+		}
+		return zone.getName();
+	}
 }

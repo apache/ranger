@@ -265,8 +265,9 @@
 	</named-query>
 
 	<!-- XXPolicy -->
-	<named-query name="XXPolicy.findByNameAndServiceId">
-		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId order by obj.id</query>
+
+	<named-query name="XXPolicy.findByNameAndServiceIdAndZoneId">
+		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId and obj.zoneId = :zoneId order by obj.id</query>
 	</named-query>
 
 	<named-query name="XXPolicy.findByServiceId">

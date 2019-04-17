@@ -335,6 +335,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 								getServiceUpgraded();
 								createGenericUsers();
 								resetPolicyUpdateLog(RETENTION_PERIOD_IN_DAYS, false);
+								//createUnzonedSecurityZone();
 								return null;
 							}
 						});
@@ -1846,7 +1847,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw new Exception("service-def does not exist - name=" + service.getType());
 		}
 
-		XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
+		Long   zoneId   = RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
+		String zoneName = policy.getZoneName();
+		if (StringUtils.isNotEmpty(zoneName)) {
+			RangerSecurityZone zone = getSecurityZone(zoneName);
+			if (zone == null) {
+				throw new Exception("zone does not exist - name=" + zoneName);
+			} else {
+				zoneId = zone.getId();
+			}
+		}
+		XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceIdAndZoneId(policy.getName(), service.getId(), zoneId);
 
 		if(existing != null) {
 			throw new Exception("policy already exists: ServiceName=" + policy.getService() + "; PolicyName=" + policy.getName() + ". ID=" + existing.getId());
@@ -1950,7 +1961,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
 
 		if(renamed) {
-			XXPolicy newNamePolicy = daoMgr.getXXPolicy().findByNameAndServiceId(policy.getName(), service.getId());
+			XXPolicy newNamePolicy = daoMgr.getXXPolicy().findByNameAndServiceIdAndZoneId(policy.getName(), service.getId(), xxExisting.getZoneId());
 
 			if(newNamePolicy != null) {
 				throw new Exception("another policy already exists with name '" + policy.getName() + "'. ID=" + newNamePolicy.getId());
@@ -2046,12 +2057,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public Long getPolicyId(final Long serviceId, final String policyName) {
+	public Long getPolicyId(final Long serviceId, final String policyName, final Long zoneId) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPolicyId()");
 		}
 		Long ret = null;
-		XXPolicy xxPolicy = daoMgr.getXXPolicy().findByNameAndServiceId(policyName, serviceId);
+		XXPolicy xxPolicy = daoMgr.getXXPolicy().findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId);
 		if (xxPolicy != null) {
 			ret = xxPolicy.getId();
 		}
@@ -2840,19 +2851,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 					if (CollectionUtils.isNotEmpty(defaultPolicies)) {
 
 						String zoneName = zone.getName();
-						XXPolicyDao policyDao = daoMgr.getXXPolicy();
 
 						for (RangerPolicy defaultPolicy : defaultPolicies) {
 
-							String policyName;
-							String zonePolicyNamePrefix = zoneName + "-" + defaultPolicy.getName() + "-";
-							int i = -1;
-
-							do {
-								policyName = zonePolicyNamePrefix + ++i;
-							} while (policyDao.findByNameAndServiceId(policyName, service.getId()) != null);
-
-							defaultPolicy.setName(policyName);
 							defaultPolicy.setZoneName(zoneName);
 
 							createPolicy(defaultPolicy);

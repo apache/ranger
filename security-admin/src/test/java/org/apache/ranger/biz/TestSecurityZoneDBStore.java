@@ -80,7 +80,7 @@ public class TestSecurityZoneDBStore {
 		XXSecurityZone xxSecurityZone = null;
 		RangerSecurityZone securityZone = new RangerSecurityZone();
 		RangerSecurityZone createdSecurityZone = new RangerSecurityZone();
-		createdSecurityZone.setId(1L);
+		createdSecurityZone.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
@@ -108,11 +108,11 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test2updateSecurityZoneById() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		RangerSecurityZone updateSecurityZone = new RangerSecurityZone();
-		updateSecurityZone.setId(1L);
+		updateSecurityZone.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
@@ -140,9 +140,9 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test3deleteSecurityZoneByName() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		securityZone.setName("sz1");
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
@@ -166,9 +166,9 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test4deleteSecurityZoneById() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		securityZone.setName("sz1");
 
 		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
@@ -186,13 +186,13 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test5getSecurityZoneByName() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		xxSecurityZone.setName("sz1");
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		securityZone.setName("sz1");
 		RangerSecurityZone createdSecurityZone = new RangerSecurityZone();
-		createdSecurityZone.setId(1L);
+		createdSecurityZone.setId(2L);
 		createdSecurityZone.setName("sz1");
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 
@@ -215,12 +215,12 @@ public class TestSecurityZoneDBStore {
 		List<RangerSecurityZone> ret = new ArrayList<>();
 		List<XXSecurityZone> xxSecurityZones = new ArrayList<XXSecurityZone>();
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		xxSecurityZone.setName("sz1");
 		xxSecurityZones.add(xxSecurityZone);
 
 		RangerSecurityZone rangerSecurityZone = new RangerSecurityZone();
-		rangerSecurityZone.setId(2L);
+		rangerSecurityZone.setId(3L);
 		ret.add(rangerSecurityZone);
 		List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
@@ -251,12 +251,12 @@ public class TestSecurityZoneDBStore {
 		List<XXSecurityZone> xxSecurityZones = new ArrayList<XXSecurityZone>();
 
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		xxSecurityZone.setName("sz1");
 		xxSecurityZones.add(xxSecurityZone);
 
 		RangerSecurityZone rangerSecurityZone = new RangerSecurityZone();
-		rangerSecurityZone.setId(2L);
+		rangerSecurityZone.setId(3L);
 		ret.add(rangerSecurityZone);
 //		List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
@@ -279,10 +279,10 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test8createSecurityZoneWithExistingName() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		RangerSecurityZone securityZone = new RangerSecurityZone();
 		RangerSecurityZone createdSecurityZone = new RangerSecurityZone();
-		createdSecurityZone.setId(1L);
+		createdSecurityZone.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 
@@ -301,7 +301,7 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test9updateSecurityZoneByUnknownId() throws Exception {
 		RangerSecurityZone securityZoneToUpdate = new RangerSecurityZone();
-		securityZoneToUpdate.setId(1L);
+		securityZoneToUpdate.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
@@ -317,9 +317,9 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test10deleteSecurityZoneByWrongName() throws Exception {
 		XXSecurityZone xxSecurityZone = new XXSecurityZone();
-		xxSecurityZone.setId(1L);
+		xxSecurityZone.setId(2L);
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		securityZone.setName("sz1");
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
@@ -336,7 +336,7 @@ public class TestSecurityZoneDBStore {
 	@Test
 	public void test11getSecurityZoneByWrongName() throws Exception {
 		RangerSecurityZone securityZone = new RangerSecurityZone();
-		securityZone.setId(1L);
+		securityZone.setId(2L);
 		securityZone.setName("sz1");
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);

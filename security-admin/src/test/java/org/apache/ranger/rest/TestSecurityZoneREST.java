@@ -117,7 +117,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testUpdateSecurityZone() throws Exception {
 		RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		rangerSecurityZoneToUpdate.setId(securityZoneId);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
@@ -133,7 +133,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testUpdateSecurityZoneWithMisMatchId() throws Exception {
 		RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		rangerSecurityZoneToUpdate.setId(securityZoneId);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
@@ -151,7 +151,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testGetSecurityZoneById() throws Exception {
 		RangerSecurityZone securityZone = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		securityZone.setId(securityZoneId);
 		when(securityZoneStore.getSecurityZone(securityZoneId)).thenReturn(securityZone);
 		RangerSecurityZone rangerSecurityZone = securityZoneREST.getSecurityZone(securityZoneId);
@@ -162,7 +162,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testGetSecurityZoneByName() throws Exception {
 		RangerSecurityZone securityZone = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		String securityZoneName = securityZone.getName();
 		securityZone.setId(securityZoneId);
 		when(securityZoneStore.getSecurityZoneByName(securityZoneName)).thenReturn(securityZone);
@@ -179,7 +179,7 @@ public class TestSecurityZoneREST {
 		when(
 				searchUtil.getSearchFilter(request, securityZoneService.sortFields))
 				.thenReturn(filter);
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		securityZone.setId(securityZoneId);
 		List<RangerSecurityZone> zonesList = new ArrayList<>();
 		zonesList.add(securityZone);
@@ -195,7 +195,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testDeleteSecurityZoneById() throws Exception {
 		RangerSecurityZone securityZone = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		securityZone.setId(securityZoneId);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
@@ -208,7 +208,7 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testDeleteSecurityZoneByName() throws Exception {
 		RangerSecurityZone securityZone = createRangerSecurityZone();
-		Long securityZoneId = 1L;
+		Long securityZoneId = 2L;
 		securityZone.setId(securityZoneId);
 		String securityZoneName = securityZone.getName();
 		when(rangerBizUtil.isAdmin()).thenReturn(true);

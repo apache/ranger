@@ -178,7 +178,9 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         List<XXSecurityZone> xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
 
         for (XXSecurityZone xxSecurityZone : xxSecurityZones) {
-            ret.add(securityZoneService.read(xxSecurityZone.getId()));
+            if (!xxSecurityZone.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+                ret.add(securityZoneService.read(xxSecurityZone.getId()));
+            }
         }
 
         if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {

@@ -121,6 +121,7 @@ public class TestRangerPolicyServiceBase {
 		policy.setIsAuditEnabled(true);
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
+		policy.setZoneName("");
 
 		return policy;
 	}
@@ -137,6 +138,7 @@ public class TestRangerPolicyServiceBase {
 		xxPolicy.setService(1L);
 		xxPolicy.setUpdatedByUserId(Id);
 		xxPolicy.setUpdateTime(new Date());
+		xxPolicy.setZoneId(1L);
 		return xxPolicy;
 	}
 

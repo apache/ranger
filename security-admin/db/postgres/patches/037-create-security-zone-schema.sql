@@ -93,6 +93,7 @@ CONSTRAINT x_security_zone_UK_name UNIQUE (name),
 CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
 
 CREATE SEQUENCE x_ranger_global_state_seq;
 CREATE TABLE x_ranger_global_state (
@@ -208,7 +209,7 @@ DECLARE
 BEGIN
   select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname='zone_id';
    IF v_column_exists = 0 THEN
-     ALTER TABLE x_policy ADD COLUMN zone_id BIGINT DEFAULT NULL NULL,ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES x_security_zone(id);
+     ALTER TABLE x_policy ADD COLUMN zone_id BIGINT DEFAULT 1 NOT NULL,ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES x_security_zone(id);
    END IF;
 END;
 $$ LANGUAGE plpgsql;

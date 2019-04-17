@@ -166,10 +166,12 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				}
 			}
-			String policyName = policy.getName();
+			String policyName  = policy.getName();
 			String serviceName = policy.getService();
+			String zoneName    = policy.getZoneName();
 
 			RangerService service = null;
+			RangerSecurityZone zone = null;
 			boolean serviceNameValid = false;
 			if (StringUtils.isBlank(serviceName)) {
 				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
@@ -196,6 +198,20 @@ public class RangerPolicyValidator extends RangerValidator {
 				}
 			}
 
+			if (StringUtils.isNotEmpty(zoneName)) {
+				zone = getSecurityZone(zoneName);
+				if (zone == null) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("zoneName")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(id, zoneName))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+			}
+
 			if (StringUtils.isBlank(policyName)) {
 				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_FIELD;
 				failures.add(new ValidationFailureDetailsBuilder()
@@ -206,8 +222,10 @@ public class RangerPolicyValidator extends RangerValidator {
 					.build());
 				valid = false;
 			} else {
-				if (service != null) {
-					Long policyId = getPolicyId(service.getId(), policyName);
+				if (service != null && (StringUtils.isEmpty(zoneName) || zone != null)) {
+					Long zoneId = zone != null ? zone.getId() : RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
+					Long policyId = getPolicyId(service.getId(), policyName, zoneId);
+
 					if (policyId != null) {
 						if (action == Action.CREATE) {
 							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_NAME_CONFLICT;
@@ -259,31 +277,16 @@ public class RangerPolicyValidator extends RangerValidator {
 				}
 
 				String existingZoneName = existingPolicy.getZoneName();
-				String newZoneName = policy.getZoneName();
 
-				if (!StringUtils.equals(existingZoneName, newZoneName)) {
+				if (!StringUtils.equals(existingZoneName, zoneName)) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("zoneName")
 							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(id, existingZoneName, newZoneName))
+							.becauseOf(error.getMessage(id, existingZoneName, zoneName))
 							.errorCode(error.getErrorCode())
 							.build());
 					valid = false;
-				}
-			} else {
-				if (StringUtils.isNotEmpty(policy.getZoneName())) {
-					RangerSecurityZone zone = getSecurityZone(policy.getZoneName());
-					if (zone == null) {
-						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME;
-						failures.add(new ValidationFailureDetailsBuilder()
-								.field("zoneName")
-								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(id, policy.getZoneName()))
-								.errorCode(error.getErrorCode())
-								.build());
-						valid = false;
-					}
 				}
 			}
 

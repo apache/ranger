@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS `x_security_zone`(
  CONSTRAINT `x_security_zone_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+
 CREATE TABLE IF NOT EXISTS `x_ranger_global_state`(
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `create_time` datetime NULL DEFAULT NULL,
@@ -184,7 +186,7 @@ create procedure add_x_policy_zone_id() begin
 
 if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy') then
   if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name = 'zone_id') then
-    ALTER TABLE `x_policy` ADD COLUMN `zone_id` bigint(20) DEFAULT NULL NULL,ADD CONSTRAINT `x_policy_FK_zone_id` FOREIGN KEY(`zone_id`) REFERENCES `x_security_zone`(`id`);
+    ALTER TABLE `x_policy` ADD COLUMN `zone_id` bigint(20) DEFAULT 1 NOT NULL,ADD CONSTRAINT `x_policy_FK_zone_id` FOREIGN KEY(`zone_id`) REFERENCES `x_security_zone`(`id`);
   end if;
  end if;
 end;;

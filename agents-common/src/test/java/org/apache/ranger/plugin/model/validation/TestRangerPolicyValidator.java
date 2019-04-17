@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -252,7 +253,7 @@ public class TestRangerPolicyValidator {
 					if (action == Action.CREATE) {
 						when(_policy.getId()).thenReturn(7L);
 						when(_policy.getName()).thenReturn("policy-name-1");
-						when(_store.getPolicyId(service.getId(), _policy.getName())).thenReturn(null);
+						when(_store.getPolicyId(service.getId(), _policy.getName(), _zoneId)).thenReturn(null);
 						Assert.assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
 						Assert.assertTrue(_failures.isEmpty());
 					} else {
@@ -263,7 +264,7 @@ public class TestRangerPolicyValidator {
 						Assert.assertTrue(_failures.isEmpty());
 	
 						when(_policy.getName()).thenReturn("policy-name-2");
-						when(_store.getPolicyId(service.getId(), _policy.getName())).thenReturn(null);
+						when(_store.getPolicyId(service.getId(), _policy.getName(), _zoneId)).thenReturn(null);
 						Assert.assertTrue("" + action + ", " + auditEnabled, _validator.isValid(_policy, action, isAdmin, _failures));
 						Assert.assertTrue(_failures.isEmpty());
 					}
@@ -377,7 +378,7 @@ public class TestRangerPolicyValidator {
 		when(existingPolicy.getService()).thenReturn("service-name");
 		List<RangerPolicy> existingPolicies = new ArrayList<>();
 
-		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(7L);
+		when(_store.getPolicyId(service.getId(), "policy-name", _zoneId)).thenReturn(7L);
 		checkFailure_isValid(Action.CREATE, "semantic", "policy name");
 		
 		// update : does not exist for id
@@ -392,7 +393,7 @@ public class TestRangerPolicyValidator {
 		when(anotherExistingPolicy.getService()).thenReturn("service-name");
 
 		existingPolicies.add(anotherExistingPolicy);
-		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(8L);
+		when(_store.getPolicyId(service.getId(), "policy-name", _zoneId)).thenReturn(8L);
 		checkFailure_isValid(Action.UPDATE, "semantic", "id/name");
 		
 		// policy must have service name on it and it should be valid
@@ -474,7 +475,7 @@ public class TestRangerPolicyValidator {
 		
 		// create the right service def with right resource defs - this is the same as in the happypath test above.
 		_serviceDef = _utils.createServiceDefWithAccessTypes(accessTypes, "service-type");
-		when(_store.getPolicyId(service.getId(), "policy-name")).thenReturn(null);
+		when(_store.getPolicyId(service.getId(), "policy-name", _zoneId)).thenReturn(null);
 		List<RangerResourceDef> resourceDefs = _utils.createResourceDefs(resourceDefData);
 		when(_serviceDef.getResources()).thenReturn(resourceDefs);
 		when(_store.getServiceDefByName("service-type")).thenReturn(_serviceDef);
@@ -813,4 +814,5 @@ public class TestRangerPolicyValidator {
 	private RangerPolicyValidator _validator;
 	private RangerServiceDef _serviceDef;
 	private RangerObjectFactory _factory;
+	private Long _zoneId = RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
 }

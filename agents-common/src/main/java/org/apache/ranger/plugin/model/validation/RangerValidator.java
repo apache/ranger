@@ -271,21 +271,15 @@ public abstract class RangerValidator {
 		return result;
 	}
 
-	Long getPolicyId(final Long serviceId, final String policyName) {
+	Long getPolicyId(final Long serviceId, final String policyName, final Long zoneId) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerValidator.getPolicyId(" + serviceId + ", " + policyName + ")");
+			LOG.debug("==> RangerValidator.getPolicyId(" + serviceId + ", " + policyName + ", " + zoneId + ")");
 		}
 
-		Long policyId = null;
-		try {
-			policyId = _store.getPolicyId(serviceId, policyName);
-
-		} catch (Exception e) {
-			LOG.debug("Encountred exception while retrieving service from service store!", e);
-		}
+		Long policyId = _store.getPolicyId(serviceId, policyName, zoneId);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerValidator.getPolicyId(" + serviceId + ", " + policyName + "): policy-id[" + policyId + "]");
+			LOG.debug("<== RangerValidator.getPolicyId(" + serviceId + ", " + policyName + ", " + zoneId + "): policy-id[" + policyId + "]");
 		}
 		return policyId;
 	}
