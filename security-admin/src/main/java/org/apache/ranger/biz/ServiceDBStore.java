@@ -159,6 +159,7 @@ import org.apache.ranger.view.VXMetricServiceCount;
 import org.apache.ranger.view.VXMetricServiceNameCount;
 import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXPolicyLabelList;
+import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
@@ -1689,7 +1690,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(service == null) {
 			throw new Exception("no service exists with ID=" + id);
 		}
-
+		restrictIfZoneService(service);
 		List<XXPolicy> policies = daoMgr.getXXPolicy().findByServiceId(service.getId());
 		//RangerPolicy rangerPolicy =null;
 		for(XXPolicy policy : policies) {
@@ -1719,6 +1720,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
+	}
+
+	private void restrictIfZoneService(RangerService service)
+	{
+		String serviceName = service.getName();
+		List<String> zonesNameList = daoMgr.getXXSecurityZoneDao().findZonesByServiceName(serviceName);
+		if (CollectionUtils.isNotEmpty(zonesNameList)) {
+			LOG.info("Can not delete service : " + serviceName
+					+ ", as it is already associated with " + zonesNameList.size() + " zones : " + zonesNameList);
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+			vXResponse.setMsgDesc("Can not delete service : " + serviceName
+					+ ", as it is already associated with " + zonesNameList.size() + " zones : " + zonesNameList);
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
 	}
 
 	@Override

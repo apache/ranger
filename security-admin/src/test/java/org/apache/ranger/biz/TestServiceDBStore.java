@@ -1222,7 +1222,7 @@ public class TestServiceDBStore {
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
 		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
-
+		XXSecurityZoneDao xSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 
         RangerService rangerService = rangerService();
 		RangerPolicy rangerPolicy = rangerPolicy();
@@ -1239,6 +1239,8 @@ public class TestServiceDBStore {
 		policy.setName("HDFS_1-1-20150316062453");
 		policy.setService(rangerService.getId());
 		policiesList.add(policy);
+
+		List<String> zonesNameList =new ArrayList<String>();
 
 		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 		XXTrxLog xTrxLogObj = new XXTrxLog();
@@ -1353,6 +1355,9 @@ public class TestServiceDBStore {
 		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
 		serviceConfigDefObj.setId(Id);
 		xServiceConfigDefList.add(serviceConfigDefObj);
+
+		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xSecurityZoneDao);
+		Mockito.when(xSecurityZoneDao.findZonesByServiceName(rangerService.getName())).thenReturn(zonesNameList);
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
 		Mockito.when(xPolicyDao.findByServiceId(rangerService.getId()))
