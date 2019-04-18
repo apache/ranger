@@ -251,7 +251,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 
 			if(existingPolicy != null) {
-				if(! StringUtils.equalsIgnoreCase(existingPolicy.getService(), policy.getService())) {
+				if (!StringUtils.equalsIgnoreCase(existingPolicy.getService(), policy.getService())) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_UPDATE_MOVE_SERVICE_NOT_ALLOWED;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("service name")
@@ -265,7 +265,7 @@ public class RangerPolicyValidator extends RangerValidator {
 				int existingPolicyType = existingPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : existingPolicy.getPolicyType();
 				int policyType         = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 
-				if(existingPolicyType != policyType) {
+				if (existingPolicyType != policyType) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_POLICY_TYPE_CHANGE_NOT_ALLOWED;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("policy type")
@@ -278,15 +278,17 @@ public class RangerPolicyValidator extends RangerValidator {
 
 				String existingZoneName = existingPolicy.getZoneName();
 
-				if (!StringUtils.equals(existingZoneName, zoneName)) {
-					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED;
-					failures.add(new ValidationFailureDetailsBuilder()
-							.field("zoneName")
-							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(id, existingZoneName, zoneName))
-							.errorCode(error.getErrorCode())
-							.build());
-					valid = false;
+				if (StringUtils.isNotEmpty(zoneName) || StringUtils.isNotEmpty(existingZoneName)) {
+					if (!StringUtils.equals(existingZoneName, zoneName)) {
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED;
+						failures.add(new ValidationFailureDetailsBuilder()
+								.field("zoneName")
+								.isSemanticallyIncorrect()
+								.becauseOf(error.getMessage(id, existingZoneName, zoneName))
+								.errorCode(error.getErrorCode())
+								.build());
+						valid = false;
+					}
 				}
 			}
 
