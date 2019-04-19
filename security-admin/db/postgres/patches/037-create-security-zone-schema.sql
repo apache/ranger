@@ -239,7 +239,7 @@ DECLARE
 BEGIN
   select count(*) into v_column_exists from x_security_zone where id=1 and name=' ';
    IF v_column_exists = 0 THEN
-   		INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (current_timestamp, current_timestamp, getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+   		INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (current_timestamp, current_timestamp, getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, '', '', 'Unzoned zone');
    	END IF;
 END;
 $$ LANGUAGE plpgsql;

@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -44,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -366,27 +368,32 @@ public class RangerPolicyRetriever {
 			return ret;
 		}
 
-        String getSecurityZoneName(Long zoneId) {
-            String ret = null;
+		String getSecurityZoneName(Long zoneId) {
+			String ret = null;
 
-            if(zoneId != null) {
-                ret = zoneNames.get(zoneId);
+			if(zoneId != null) {
+				if (zoneId == RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID) {
+					ret = StringUtils.EMPTY;
+				} else {
+					ret = zoneNames.get(zoneId);
 
-                if(ret == null) {
-                    XXSecurityZone securityZone = daoMgr.getXXSecurityZoneDao().getById(zoneId);
+					if (ret == null) {
+						XXSecurityZone securityZone = daoMgr.getXXSecurityZoneDao().getById(zoneId);
 
-                    if(securityZone != null) {
-                        ret = securityZone.getName();
+						if (securityZone != null) {
+							ret = securityZone.getName();
 
-                        if(ret != null) {
-                            zoneNames.put(zoneId, ret);
-                        }
-                    }
-                }
-            }
+							if (ret != null) {
+								zoneNames.put(zoneId, ret);
+							}
+						}
+					}
+				}
+			}
 
-            return ret;
-        }
+			return ret;
+		}
+
 		void setNameMapping(Map<Long, Map<String, String>> nameMappingContainer, List<PolicyTextNameMap> nameMappings) {
 			nameMappingContainer.clear();
 

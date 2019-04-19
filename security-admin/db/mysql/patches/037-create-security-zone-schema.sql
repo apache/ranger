@@ -202,7 +202,7 @@ drop procedure if exists add_unzone_entry;
 delimiter ;;
 create procedure add_unzone_entry() begin
 if not exists (select * from x_security_zone where id=1 and name=' ') then
-	INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, UTC_TIMESTAMP(),UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+	INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, UTC_TIMESTAMP(),UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, '', '', 'Unzoned zone');
 end if;
 end;;
 delimiter ;

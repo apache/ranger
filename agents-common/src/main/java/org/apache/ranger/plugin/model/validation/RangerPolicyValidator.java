@@ -284,7 +284,7 @@ public class RangerPolicyValidator extends RangerValidator {
 						failures.add(new ValidationFailureDetailsBuilder()
 								.field("zoneName")
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(id, existingZoneName, zoneName))
+								.becauseOf(error.getMessage(existingZoneName, zoneName))
 								.errorCode(error.getErrorCode())
 								.build());
 						valid = false;

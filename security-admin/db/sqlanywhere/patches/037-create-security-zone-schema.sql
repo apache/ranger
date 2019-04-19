@@ -223,7 +223,7 @@ BEGIN
 END;
 GO
 IF NOT EXISTS(select * from x_security_zone where id = 1 and name=' ') THEN
-	INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+	INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, '', '', 'Unzoned zone');
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
