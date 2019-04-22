@@ -231,7 +231,7 @@ DECLARE
 BEGIN
 Select count(*) into v_column_exists from x_security_zone where id = 1 and name = ' ';
 	if (v_column_exists = 0) then
-		INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, '', '','Unzoned zone');
+		INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '','Unzoned zone');
 		commit;
 	end if;
 end;/

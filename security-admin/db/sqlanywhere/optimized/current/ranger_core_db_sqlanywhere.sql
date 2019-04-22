@@ -1949,7 +1949,7 @@ INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,use
 GO
 INSERT INTO x_user(create_time,update_time,added_by_id,upd_by_id,user_name,descr,status) values (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,NULL,NULL,'rangertagsync','rangertagsync',0);
 GO
-INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, '', '', 'Unzoned zone');
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('CORE_DB_SCHEMA',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

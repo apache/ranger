@@ -17,6 +17,7 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXSecurityZone;
@@ -45,7 +46,11 @@ public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V 
 
 	@Override
 	protected V mapEntityToViewBean(V vObj, T xObj) {
-		vObj.setName(xObj.getName());
+		if (xObj.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+			vObj.setName(StringUtils.EMPTY);
+		} else {
+			vObj.setName(xObj.getName());
+		}
 		vObj.setDescription(xObj.getDescription());
 		return vObj;
 	}

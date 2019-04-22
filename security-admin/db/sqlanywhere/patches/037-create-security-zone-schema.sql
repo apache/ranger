@@ -72,7 +72,7 @@ ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_added_by_id FO
 GO
 ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
-INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, "", "", "Unzoned zone");
+INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (NULL, NULL, 1, 1, 1, ' ', '', 'Unzoned zone');
 GO
 CREATE TABLE dbo.x_ranger_global_state(
 	id bigint IDENTITY NOT NULL,
@@ -223,7 +223,7 @@ BEGIN
 END;
 GO
 IF NOT EXISTS(select * from x_security_zone where id = 1 and name=' ') THEN
-	INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, '', '', 'Unzoned zone');
+	INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, dbo.getXportalUIdByLoginId('admin'), dbo.getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
