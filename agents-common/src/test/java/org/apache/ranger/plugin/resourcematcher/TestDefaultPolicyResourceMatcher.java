@@ -145,6 +145,8 @@ public class TestDefaultPolicyResourceMatcher {
 				scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorMatch")) {
 				scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
+			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorWithWildcardsMatch")) {
+				scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR_WITH_WILDCARDS;
 			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "anyMatch")) {
 				scope = RangerPolicyResourceMatcher.MatchScope.ANY;
 			} else {

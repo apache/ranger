@@ -143,8 +143,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -287,8 +287,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -450,8 +450,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance:tax'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance:tax'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -460,8 +460,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -616,8 +616,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance:tax'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance:tax'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -626,8 +626,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -657,8 +657,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance:tax'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance:tax'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -777,8 +777,8 @@
         }
       ,
         {
-          "name": "MATCH for parent 'finance:tax'",
-          "type": "ancestorMatch",
+          "name": "MATCH for parent with wildcards 'finance:tax'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },

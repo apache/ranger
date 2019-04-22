@@ -309,8 +309,8 @@
           "result" : true
         },
         {
-          "name": "Ancestor match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
-          "type": "ancestorMatch",
+          "name": "Ancestor with wildcards match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
+          "type": "ancestorWithWildcardsMatch",
           "policy" : {
             "service" : "any",
             "name" : "test",
@@ -382,8 +382,8 @@
           "result" : false
         },
         {
-          "name": "Ancestor match for 'finance,hr,tmp*::' policy",
-          "type": "ancestorMatch",
+          "name": "Ancestor with wildcards match for 'finance,hr,tmp*::' policy",
+          "type": "ancestorWithWildcardsMatch",
           "policy" : {
             "service" : "any",
             "name" : "test",

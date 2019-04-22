@@ -234,6 +234,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 				if (RangerTagAccessRequest.class.isInstance(request)) {
 					matchType = ((RangerTagAccessRequest) request).getMatchType();
+					if (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
+						matchType = RangerPolicyResourceMatcher.MatchType.SELF;
+					}
 				} else {
 					matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 				}
@@ -245,7 +248,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
 					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 				} else {
-					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR_WITH_WILDCARDS;
 				}
 
 				if (isMatched) {

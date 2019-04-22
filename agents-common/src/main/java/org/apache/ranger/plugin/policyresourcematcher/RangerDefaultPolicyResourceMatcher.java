@@ -599,14 +599,16 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                                 }
                             } else {
                                 // More matchers than resource-values
-                                ret = MatchType.DESCENDANT;
-
                                 if (lastMatchedMatcherIndex >= lastNonAnyMatcherIndex) {
-                                    ret = MatchType.ANCESTOR;
-                                    if (lastMatchedMatcherIndex == lastNonAnyMatcherIndex && lastMatchedMatcherIndex == -1) {
-                                        // For degenerate case : resourceKeysSize == 0 and all matchers are of type Any
+                                    // all remaining matchers are of type Any
+                                    if (lastMatchedMatcherIndex == -1) {
+                                        // For degenerate case: empty resource
                                         ret = MatchType.SELF;
+                                    } else {
+                                        ret = MatchType.ANCESTOR_WITH_WILDCARDS;
                                     }
+                                } else {
+                                    ret = MatchType.DESCENDANT;
                                 }
                                 break;
                             }

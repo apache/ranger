@@ -219,6 +219,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hive_with_partial_resource_policies() {
+		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_hive_with_partial_resource_policies.json" };
+
+		runTestsFromResourceFiles(hiveTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hive() {
 		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_hive.json" };
 
