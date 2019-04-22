@@ -48,7 +48,7 @@ DECLARE transId varchar(50);
 DECLARE assetTypeInt int;
 DECLARE assetType varchar(30);
 set updatedResName='';
-set noOfCommas = (LENGTH(resName)-LENGTH(REPLACE (resName, ",", "")));
+set noOfCommas = (LENGTH(resName)-LENGTH(REPLACE (resName, ',', '')));
 set assetTypeInt = (select asset_type from x_asset where id = assetId);
 
 	if (assetTypeInt = 1) then
@@ -107,7 +107,7 @@ set act = 'update';
 set sessType = 'DB Script';
 
 set parentObjName = (select asset_name from x_asset where id = assetId);
-set transId = concat(DATE_FORMAT(utc_timestamp(), "%Y%m%d%H%i%s"), '_', rand());
+set transId = concat(DATE_FORMAT(utc_timestamp(), '%Y%m%d%H%i%s'), '_', rand());
 
 insert into x_trx_log (create_time, update_time, added_by_id, upd_by_id, 
 	class_type, object_id, parent_object_id, parent_object_class_type, 

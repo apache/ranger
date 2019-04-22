@@ -125,7 +125,7 @@ OPEN policyList;
 	set assetName = (select asset_name from x_asset asset where asset.id = assetId);
 	
 	call getTempPolicyCount(assetId, resId, tempPolicyCount);
-	set currentTime = DATE_FORMAT(utc_timestamp(), "%Y%m%d%H%i%s");
+	set currentTime = DATE_FORMAT(utc_timestamp(), '%Y%m%d%H%i%s');
 
 	set genPolicyName = concat(assetName, '-', tempPolicyCount, '-', currentTime);
 	set existPolId = (select id from x_resource where policy_name = genPolicyName);
@@ -155,7 +155,7 @@ OPEN policyList;
 	set sessType = 'DB Script';
 	set parentObjName = assetName;
 
-	set transId = concat(DATE_FORMAT(utc_timestamp(), "%Y%m%d%H%i%s"), '_', rand());
+	set transId = concat(DATE_FORMAT(utc_timestamp(), '%Y%m%d%H%i%s'), '_', rand());
 
 	insert into x_trx_log (create_time, update_time, added_by_id, upd_by_id, 
 		class_type, object_id, parent_object_id, parent_object_class_type, 
