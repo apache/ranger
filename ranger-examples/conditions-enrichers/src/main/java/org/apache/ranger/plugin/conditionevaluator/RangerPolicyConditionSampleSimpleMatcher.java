@@ -80,7 +80,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 	@Override
 	public void init() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSampleSimpleMatcher.init(" + policyCondition + ")");
+			LOG.debug("==> RangerPolicyConditionSampleSimpleMatcher.init(" + policyCondition + ")");
 		}
 
 		super.init();
@@ -91,7 +91,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 		} else if (conditionDef == null) {
 			LOG.debug("init: null policy condition definition! Will match always!");
 			_allowAny = true;
-		} else if (CollectionUtils.isEmpty(condition.getValues())) {
+		} else if (CollectionUtils.isEmpty(policyCondition.getValues())) {
 			LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
 			_allowAny = true;
 		} else if (MapUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
@@ -108,7 +108,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSampleSimpleMatcher.init(" + policyCondition + "): values[" + _values + "]");
+			LOG.debug("<== RangerPolicyConditionSampleSimpleMatcher.init(" + policyCondition + "): values[" + _values + "]");
 		}
 	}
 
@@ -116,7 +116,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 	public boolean isMatched(RangerAccessRequest request) {
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSampleSimpleMatcher.isMatched(" + request + ")");
+			LOG.debug("==> RangerPolicyConditionSampleSimpleMatcher.isMatched(" + request + ")");
 		}
 
 		boolean matched = false;
@@ -136,7 +136,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSampleSimpleMatcher.isMatched(" + request+ "): " + matched);
+			LOG.debug("<== RangerPolicyConditionSampleSimpleMatcher.isMatched(" + request+ "): " + matched);
 		}
 
 		return matched;
@@ -144,7 +144,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 
 	String extractValue(final RangerAccessRequest request, String key) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSampleSimpleMatcher.extractValue(" + request+ ")");
+			LOG.debug("==> RangerPolicyConditionSampleSimpleMatcher.extractValue(" + request+ ")");
 		}
 
 		String value = null;
@@ -163,7 +163,7 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSampleSimpleMatcher.extractValue(" + request+ "): " + value);
+			LOG.debug("<== RangerPolicyConditionSampleSimpleMatcher.extractValue(" + request+ "): " + value);
 		}
 		return value;
 	}
