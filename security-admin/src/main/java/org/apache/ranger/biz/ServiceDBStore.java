@@ -1906,7 +1906,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
-		List<XXTrxLog> trxLogList = policyService.getTransactionLog(createdPolicy, RangerPolicyService.OPERATION_CREATE_CONTEXT);
+		List<XXTrxLog> trxLogList = getTransactionLogList(createdPolicy,
+				RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
 
 		return createdPolicy;
@@ -2039,7 +2040,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		
 		policy.setVersion(version);
 		
-		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+		List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT,
+				RangerPolicyService.OPERATION_DELETE_CONTEXT);
 
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
@@ -2052,6 +2054,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 		bizUtil.createTrxLog(trxLogList);
 		
 		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
+	}
+
+	List<XXTrxLog> getTransactionLogList(RangerPolicy policy, int operationImportContext, int operationContext) {
+		List<XXTrxLog> trxLogList;
+		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+		if (trace.length > 3 && (StringUtils.contains(trace[4].getMethodName(), "import") ||
+    StringUtils.contains(trace[5].getMethodName(), "import"))) {
+      trxLogList = policyService.getTransactionLog(policy, operationImportContext);
+		} else {
+			trxLogList = policyService.getTransactionLog(policy, operationContext);
+		}
+		return trxLogList;
 	}
 
 	@Override
@@ -2165,7 +2179,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceId + ")");
 		}
-
+		String zoneName = filter.getParam("zoneName");
 		XXService service = daoMgr.getXXService().getById(serviceId);
 
 		if (service == null) {
@@ -2173,12 +2187,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		List<RangerPolicy> ret = getServicePolicies(service, filter);
-
+		if(StringUtils.isBlank(zoneName)) {
+			ret = noZoneFilter(ret);
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceId + ") : policy-count=" + (ret == null ? 0 : ret.size()));
 		}
 		return ret;
 
+	}
+
+	public List<RangerPolicy> noZoneFilter(List<RangerPolicy> servicePolicies) {
+		List<RangerPolicy> noZonePolicies = new ArrayList<RangerPolicy>();
+		for (RangerPolicy policy : servicePolicies) {
+			if (StringUtils.isBlank(policy.getZoneName())) {
+				noZonePolicies.add(policy);
+			}
+		}
+		return noZonePolicies;
 	}
 
 	public PList<RangerPolicy> getPaginatedServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
@@ -2207,7 +2233,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		List<RangerPolicy> ret = null;
-
+		String zoneName = filter.getParam("zoneName");
 		XXService service = daoMgr.getXXService().findByName(serviceName);
 
 		if (service == null) {
@@ -2215,7 +2241,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		ret = getServicePolicies(service, filter);
-
+		if(StringUtils.isBlank(zoneName)) {
+			ret = noZoneFilter(ret);
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + "): count=" + ((ret == null) ? 0 : ret.size()));
 		}
@@ -3850,25 +3878,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 	}
-	
-	public Map<String, String> getServiceMap(InputStream serviceMapStream)
-			throws IOException {
+
+	public Map<String, String> getMapFromInputStream(InputStream mapStream) throws IOException {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getServiceMap()");
+			LOG.debug("==> ServiceDBStore.getMapFromInputStream()");
 		}
-		Map<String, String> serviceMap = new LinkedHashMap<String, String>();
-		String serviceMapString = IOUtils.toString(serviceMapStream);
-		if (StringUtils.isNotEmpty(serviceMapString)) {
-			serviceMap = jsonUtil.jsonToMap(serviceMapString);
+		Map<String, String> inputMap = new LinkedHashMap<String, String>();
+		String inputMapString = IOUtils.toString(mapStream);
+		if (StringUtils.isNotEmpty(inputMapString)) {
+			inputMap = jsonUtil.jsonToMap(inputMapString);
 		}
-		if(!CollectionUtils.sizeIsEmpty(serviceMap)){
+		if (!CollectionUtils.sizeIsEmpty(inputMap)) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== ServiceDBStore.getServiceMap()");
+				LOG.debug("<== ServiceDBStore.getMapFromInputStream()");
 			}
-			return serviceMap;
-		}else{
-			LOG.error("Provided service map is empty!!");
-			throw restErrorUtil.createRESTException("Provided service map is empty!!");
+			return inputMap;
+		} else {
+			LOG.error("Provided zone/service input map is empty!!");
+			throw restErrorUtil.createRESTException("Provided zone/service map is empty!!");
 		}
 	}
 	
@@ -3876,7 +3903,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (StringUtils.isNotEmpty(policy.getName().trim())
 				&& StringUtils.isNotEmpty(policy.getService().trim())
 				&& StringUtils.isNotEmpty(policy.getResources().toString().trim())) {
-			policiesMap.put(policy.getName().trim() + " " + policy.getService().trim() + " " + policy.getResources().toString().trim(), policy);
+			policiesMap.put(policy.getName().trim() + " " + policy.getService().trim() + " "
+					+ policy.getResources().toString().trim() + " " + policy.getZoneName(), policy);
 		}else if (StringUtils.isEmpty(policy.getName().trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
 			LOG.error("Policy Name is not provided for service : " + policy.getService().trim());
 			throw restErrorUtil.createRESTException("Policy Name is not provided for service : " + policy.getService().trim());
@@ -3890,10 +3918,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return policiesMap;
 	}
 	
-	public Map<String, RangerPolicy> createPolicyMap(
-			Map<String, String> servicesMappingMap,
-			List<String> sourceServices, List<String> destinationServices,
-			RangerPolicy policy, Map<String, RangerPolicy> policiesMap) {
+	public Map<String, RangerPolicy> createPolicyMap(Map<String, String> zoneMappingMap, List<String> sourceZones,
+			String destinationZoneName, Map<String, String> servicesMappingMap, List<String> sourceServices,
+			List<String> destinationServices, RangerPolicy policy, Map<String, RangerPolicy> policiesMap) {
+
+		if (!CollectionUtils.sizeIsEmpty(zoneMappingMap)) {
+			policy.setZoneName(destinationZoneName);// set destination zone name in policy.
+		}
 		if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
 			if (!StringUtils.isEmpty(policy.getService().trim())){
 				if (sourceServices.contains(policy.getService().trim())) {

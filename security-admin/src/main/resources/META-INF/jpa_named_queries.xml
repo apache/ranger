@@ -266,6 +266,10 @@
 
 	<!-- XXPolicy -->
 
+	<named-query name="XXPolicy.findByPolicyName">
+		<query>select obj from XXPolicy obj where obj.name = :polName order by obj.id</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByNameAndServiceIdAndZoneId">
 		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId and obj.zoneId = :zoneId order by obj.id</query>
 	</named-query>
@@ -1357,6 +1361,18 @@
             select obj from XXSecurityZoneRefService obj where obj.serviceId = :serviceId
         </query>
     </named-query>
+
+	<named-query name="XXSecurityZoneRefService.findByServiceName">
+	     <query>
+	         select obj from XXSecurityZoneRefService obj where obj.serviceName = :serviceName
+	     </query>
+	 </named-query>
+
+	<named-query name="XXSecurityZoneRefService.findByServiceNameAndZoneId">
+	     <query>
+	         select obj from XXSecurityZoneRefService obj where obj.serviceName = :serviceName and obj.zoneId = :zoneId
+	     </query>
+	 </named-query>
 
     <named-query name="XXSecurityZoneRefTagService.findByZoneId">
         <query>

@@ -526,6 +526,7 @@ public class RangerPolicyRetriever {
 						ret.setVersion(xPolicy.getVersion());
 						ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
 						ret.setService(service.getName());
+						ret.setServiceType(service.getType().toString());
 						ret.setZoneName(lookupCache.getSecurityZoneName(xPolicy.getZoneId()));
 						updatePolicyReferenceFields(ret);
 						getPolicyLabels(ret);

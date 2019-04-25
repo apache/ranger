@@ -59,4 +59,28 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
 			return Collections.emptyList();
 		}
 	}
+
+	public List<XXSecurityZoneRefService> findByServiceName(String serviceName) {
+		if (serviceName == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXSecurityZoneRefService.findByServiceName", tClass)
+					.setParameter("serviceName", serviceName).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
+
+	public List<XXSecurityZoneRefService> findByServiceNameAndZoneId(String serviceName, Long zoneId) {
+		if (serviceName == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXSecurityZoneRefService.findByServiceNameAndZoneId", tClass)
+					.setParameter("serviceName", serviceName).setParameter("zoneId", zoneId).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
 }

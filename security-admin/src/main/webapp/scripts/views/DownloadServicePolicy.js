@@ -75,14 +75,19 @@ define(function(require){
 			if(urlString.slice(-1) == "/") {
 				urlString = urlString.slice(0,-1);
 			};
+                        if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName)){
+                                var exportUrl = urlString +urls+ '?serviceName='+serviceName+'&zoneName='+App.vZone.vZoneName;
+                        }else{
+                                var exportUrl = urlString +urls+ '?serviceName='+serviceName;
+                        }
 			XAUtil.blockUI();
 			$.ajax({
 		        type: "GET",
-		        url:urlString +urls+ '?serviceName='+serviceName+'&checkPoliciesExists=true',
+                        url:exportUrl+'&checkPoliciesExists=true',
 		        success:function(data,status,response){
 		        	XAUtil.blockUI('unblock');
 		        	if(response.status == 200 || response.statusText == "ok"){
-				    var downloadUrl = urlString + urls+'?serviceName='+serviceName+'&checkPoliciesExists=false';
+                                    var downloadUrl = exportUrl+'&checkPoliciesExists=false';
 				    var downloadReport = $('<a href ="'+downloadUrl+'"></a>');
 				    downloadReport.appendTo('body');
 				    downloadReport[0].click();

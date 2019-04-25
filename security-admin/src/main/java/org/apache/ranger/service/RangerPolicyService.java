@@ -76,8 +76,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
+	String actionImportCreate;
 	String actionUpdate;
 	String actionDelete;
+	String actionImportDelete;
 
 	static {
 		trxLogAttrs.put("name", new VTrxLogAttr("name", "Policy Name", false));
@@ -101,6 +103,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	public RangerPolicyService() {
 		super();
 		actionCreate = "create";
+		actionImportCreate = "Import Create";
+		actionImportDelete = "Import Delete";
 		actionUpdate = "update";
 		actionDelete = "delete";
 	}
@@ -421,6 +425,16 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 
 				xTrxLog.setPreviousValue(oldValue);
 				xTrxLog.setNewValue(value);
+			}
+			else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
+				if (stringUtil.isEmpty(value)) {
+					return null;
+				}
+				xTrxLog.setNewValue(value);
+				actionString = actionImportCreate;
+			} else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
+				xTrxLog.setPreviousValue(value);
+				actionString = actionImportDelete;
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			logger.error("Process field to create trx log failure.", e);

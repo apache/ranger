@@ -18,13 +18,14 @@
  */
 
 define(function(require){
-    'use strict';
+	'use strict';
 
 	var Backbone		= require('backbone');
 	var App				= require('App');
 	var XAUtil			= require('utils/XAUtils');
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
+	var localization	= require('utils/XALangSupport');
 	var UploadservicepolicyTmpl = require('hbs!tmpl/common/uploadservicepolicy_tmpl');
 	
 	var ServiceMappingItem = Backbone.Marionette.ItemView.extend({
@@ -45,7 +46,7 @@ define(function(require){
 		},
 
 		initialize : function(options) {
-			_.extend(this, _.pick(options, 'collection','serviceNames','services'));
+			_.extend(this, _.pick(options, 'collection','serviceNames','services','sourceData','zoneDestination','serviceType'));
 			
 		},
 		onSourceChange : function(e){
@@ -53,31 +54,54 @@ define(function(require){
 			this.model.set('source', _.isEmpty(sourceValue) ? undefined : sourceValue);
 		},
 		onDestinationSelect : function(e) {
-		   this.model.set('destination', _.isEmpty(e.currentTarget.value) ? undefined : e.currentTarget.value);
-		   var serviceTypes = _.find( this.services.models , function(m){
-			   return m.get('name') == e.currentTarget.value
-		   });
-		   if(!_.isUndefined(serviceTypes)){
-			   this.model.set('serviceType' , serviceTypes.get('type') );
-		   }else{
-			   this.model.set('serviceType' , " " );
-		   }
+			this.model.set('destination', _.isEmpty(e.currentTarget.value) ? undefined : e.currentTarget.value);
+			var serviceTypes = _.find( this.services.models , function(m){
+				return m.get('name') == e.currentTarget.value
+			});
+			if(!_.isUndefined(serviceTypes)){
+				this.model.set('serviceType' , serviceTypes.get('type') );
+			}else{
+				this.model.set('serviceType' , " " );
+			}
 		},
 		onDeleteMapClick : function(){
 			this.collection.remove(this.model)	
 		},
- 
+
 		onRender : function() {
 			var that = this;
-			var options = _.map(this.serviceNames, function(m, key){ return { 'id' : m.name, 'text' : m.name}; });
+			// source services
 			this.ui.sourceInput.val(this.model.get('source'));
-			this.ui.destinationSelect.val(this.model.get('destination'));
+			var sourceOptions = _.map(_.groupBy(this.sourceData.policies , function(m){return m.service}), function(m, key){ return { 'id' : key, 'text' : key}; });
+			this.ui.sourceInput.select2({
+				closeOnSelect: true,
+				placeholder: 'Select source name',
+				width: '220px',
+				allowClear: true,
+				data:sourceOptions,
+			});
+			// destination services
+			var serviceNameList = [], options;
+			if(that.model && that.model.has('sourceServiceType')){
+				serviceNameList = _.filter(this.serviceNames, function(m){
+					return m.get('type') == that.model.get('sourceServiceType')
+				})
+				options = _.map(serviceNameList, function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
+			}else{
+				options = _.map(this.serviceNames, function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
+			}
+			if(_.some(options,function(m){return m.id === that.model.get('source')})){
+				this.ui.destinationSelect.val(that.model.get('source'));
+				this.model.set('destination', that.model.get('source'))
+			}else{
+				this.ui.destinationSelect.val();
+			}
 			this.ui.destinationSelect.select2({
 				closeOnSelect: true,
 				placeholder: 'Select service name',
-			    width: '220px',
-			    allowClear: true,
-			    data:options,
+				width: '220px',
+				allowClear: true,
+				data:options,
 			});
 		}
 	});
@@ -99,30 +123,26 @@ define(function(require){
 			return {
 				'collection' 	: this.collection,
 				'serviceNames' 	: this.serviceNames,
-				'services': this.services,
+				'services'      : this.services,
+				'sourceData'    : this.importFileData,
+				'zoneDestination': this.ui.zoneDestination.val(),
+				'serviceType'   : this.serviceType
 			};
 		},
 		initialize: function(options) {
-                        this.bind("ok", this.okClicked);
-                        _.extend(this, _.pick(options, 'collection','serviceNames','serviceDefList','serviceType','services',
-                                'zoneServiceDefList','zoneServices'));
-                        var that =this, componentServices=[];
-                        if(!_.isEmpty(that.zoneServices) && !_.isUndefined(that.zoneServices)){
-                                _.each(that.zoneServices, function(value, key){
-                                        if(key === that.serviceType){
-                                                componentServices = componentServices.concat(value);
-                                        }
-                                });
-                        }else{
-                                componentServices = this.services.where({'type' : this.serviceType });
-                        }
-                  this.serviceNames = componentServices.map(function(m){ return { 'name' : m.get('name') } });
+			this.bind("ok", this.okClicked);
+			_.extend(this, _.pick(options, 'collection','serviceNames','serviceDefList','serviceType','services',
+				'rangerZoneList'));
 		},
 		ui:{
 			'importFilePolicy'  : '[data-id="uploadPolicyFile"]',
 			'addServiceMaping'	: '[data-id="addServiceMaping"]',
-			'componentType'		: '[data-id="componentType"]',
-			'fileNameClosebtn' 	: '[data-id="fileNameClosebtn"]'
+			'fileNameClosebtn' 	: '[data-id="fileNameClosebtn"]',
+			'zoneSource'        : '[data-id="zoneSource"]',
+			'zoneDestination'   : '[data-id="zoneDestination"]',
+			'selectFileValidationMsg' : '[data-id="selectFileValidationMsg"]',
+			'selectServicesMapping': '[data-id="selectServicesMapping"]',
+			'selectZoneMapping' : '[data-id="selectZoneMapping"]'
 		},
 		events: function() {
 			var events = {};
@@ -132,24 +152,13 @@ define(function(require){
 			return events;
 		},
 		okClicked: function (modal) {
-			if( _.isUndefined(this.targetFileObj) || (_.isEmpty(this.ui.componentType.val()) && this.ui.componentType.is(":visible"))){
-				if(_.isUndefined(this.targetFileObj)){
-					this.$el.find('.selectFileValidationMsg').show();
-				}else{
-					this.$el.find('.selectFileValidationMsg').hide();
-				}
-				if (_.isEmpty(this.ui.componentType.val())){
-					this.$el.find('.seviceFiledValidationFile').show();
-				}else{
-					this.$el.find('.seviceFiledValidationFile').hide();
-				}
+			if( _.isUndefined(this.targetFileObj)){
+				this.ui.selectFileValidationMsg.show();
 				return modal.preventClose();
 			}
-			var that = this, serviceMapping = {}, fileObj = this.targetFileObj, preventModal = false , url ="";
-			if(this.$el.find('input[data-name="override"]').is(':checked')){
-        	    url = "service/plugins/policies/importPoliciesFromFile?isOverride=true";
-			}else{
-        	    url = "service/plugins/policies/importPoliciesFromFile?isOverride=false";
+			var that = this, serviceMapping = {}, fileObj = this.targetFileObj, preventModal = false , url ="", zoneMapping = {};;
+			if(!_.isEmpty(this.ui.zoneDestination.val()) || !_.isEmpty(this.ui.zoneSource.val())){
+				zoneMapping[this.ui.zoneSource.val()] = this.ui.zoneDestination.val();
 			}
 			this.collection.each(function(m){
 				if( m.get('source') !== undefined && m.get('destination') == undefined 
@@ -159,7 +168,7 @@ define(function(require){
 					preventModal = true;
 				}
 				if(!_.isUndefined(m.get('source'))){
-					serviceMapping[m.get('source')] = m.get('destination') 
+					serviceMapping[m.get('source')] = m.get('destination');
 				}
 			});
 			if(preventModal){
@@ -168,19 +177,19 @@ define(function(require){
 			}
 			if(this.collection.length>1){
 				that.collection.models.some(function(m){
-					   if (!_.isEmpty(m.attributes)) {
-	                        if (m.has('source') && m.get('source') != '') {
-	                            var model = that.collection.where({
-	                                'source': m.get('source')
-	                            });
-	                            if (model.length > 1) {
-	                            	that.$el.find('.serviceMapTextError').show();
-	                            	that.$el.find('.serviceMapErrorMsg').hide();
-	                            	preventModal = true;
-	                                return true;
-	                            }
-	                        }
-					   }
+					if (!_.isEmpty(m.attributes)) {
+						if (m.has('source') && m.get('source') != '') {
+							var model = that.collection.where({
+								'source': m.get('source')
+							});
+							if (model.length > 1) {
+								that.$el.find('.serviceMapTextError').show();
+								that.$el.find('.serviceMapErrorMsg').hide();
+								preventModal = true;
+								return true;
+							}
+						}
+					}
 				})
 			}
 			if(preventModal){
@@ -188,129 +197,203 @@ define(function(require){
 				return;
 			}
 			this.formData = new FormData();
-	        this.formData.append('file', fileObj);
-	        if(!_.isEmpty(serviceMapping)){ 
-	        	this.formData.append('servicesMapJson', new Blob([JSON.stringify(serviceMapping)],{type:'application/json'}));
-	        }
-		var compString = ''
-	        if(!_.isUndefined(that.serviceType)){
-	        	compString=that.serviceType
-	        }else{
-	        	compString = this.ui.componentType.val()
-	        }
-	        XAUtil.blockUI();
-		   	$.ajax({
-		        type: 'POST',
-		        url: url+"&serviceType="+compString,
-		        enctype: 'multipart/form-data',
-		        data: this.formData,
-		        cache: false,
-		        dataType:'Json',
-		        contentType: false,
-		        processData: false,
-		        success: function () {
-		        	XAUtil.blockUI('unblock');
-		        	var msg =  'File import successfully.' ;
+			this.formData.append('file', fileObj);
+			//service mapping details
+			if(!_.isEmpty(serviceMapping)){
+				this.formData.append('servicesMapJson', new Blob([JSON.stringify(serviceMapping)],{type:'application/json'}));
+			}
+			//zone mapping details
+			if(!_.isEmpty(zoneMapping)){
+				this.formData.append('zoneMapJson', new Blob([JSON.stringify(zoneMapping)],{type:'application/json'}));
+			}
+			//override flag
+			if(this.$el.find('input[data-name="override"]').is(':checked')){
+				url = "service/plugins/policies/importPoliciesFromFile?isOverride=true";
+			}else{
+				url = "service/plugins/policies/importPoliciesFromFile?isOverride=false";
+			}
+			var compString = ''
+			if(!_.isUndefined(that.serviceType)){
+				compString=that.serviceType
+			}else{
+				var selectedZoneServices = [], selectedZone;
+				if(!_.isUndefined( that.ui.zoneDestination.val()) && !_.isEmpty( that.ui.zoneDestination.val())){
+					selectedZone = this.rangerZoneList.find(function(m) {
+						return that.ui.zoneDestination.val() === m.get('name');
+					});
+					_.each(selectedZone.get('services'), function(value, key) {
+						var model = that.services.find(function(m) {
+							return m.get('name') == key
+						})
+						if (model) {
+							selectedZoneServices.push(model);
+						}
+					})
+				}else{
+					selectedZoneServices = this.serviceNames;
+				}
+				compString = _.map(_.groupBy(selectedZoneServices, function(m){return m.get('type')}), function(m, key){return key}).toString();
+			}
+			XAUtil.blockUI();
+			$.ajax({
+				type: 'POST',
+				url: url+"&serviceType="+compString,
+				enctype: 'multipart/form-data',
+				data: this.formData,
+				cache: false,
+				dataType:'Json',
+				contentType: false,
+				processData: false,
+				success: function () {
+					XAUtil.blockUI('unblock');
+					var msg =  'File import successfully.' ;
 					XAUtil.notifySuccess('Success', msg);
 	
-		        },
-		   	      error : function(response,model){
-		   	    	XAUtil.blockUI('unblock');
-		   	 	if ( response && response.responseJSON && response.responseJSON.msgDesc){
-					if(response.status == '419'){
-						XAUtil.defaultErrorHandler(model,response);
-					}else{
-						XAUtil.notifyError('Error', response.responseJSON.msgDesc);
-					}
-				} else {
-			       	XAUtil.notifyError('Error', 'File import failed.');
-				}
-			      }
-		    });
-	    },
-	    onAddClick : function(){
-	    	this.collection.add(new Backbone.Model());
-	    },
-	 	onRender: function() {
-	 		this.$el.find('.fileValidation').hide();
-        	this.$el.find('.selectFileValidationMsg').hide();
-        	if(this.serviceType==undefined){
-			   this.$el.find('.seviceFiled').show();
-			   this.renderComponentSelect();
-        	}else{
-			   this.$el.find('.seviceFiled').hide();
-        	}
-		},
-		/* add 'component' and 'policy type' select */
-		renderComponentSelect: function(){
-			var that = this;
-                        if(!_.isEmpty(this.zoneServiceDefList) && !_.isUndefined(this.zoneServiceDefList)){
-                                var options = this.zoneServiceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
-                        }else{
-                                var options = this.serviceDefList.map(function(m){ return { 'id' : m.get('name'), 'text' : m.get('name')}});
-                        }
-			var optionVal = options.map(function(m){return m.text})
-            this.ui.componentType.val(optionVal);
-			this.ui.componentType.select2({
-				multiple: true,
-				closeOnSelect: true,
-				placeholder: 'Select Component',
-			    width: '530px',
-			    allowClear: true,
-			    data: options
-			}).on('change', function(e){
-				var selectedComp  = e.currentTarget.value, componentServices = [];
-				_.each(selectedComp.split(","), function(type){
-                                        if(!_.isEmpty(that.zoneServices) && !_.isUndefined(that.zoneServices)){
-                                                _.each(that.zoneServices, function(value, key){
-                                                        if(key === type){
-                                                                componentServices = componentServices.concat(value);
-                                                        }
-                                                });
-                                        }else{
-                                                that.serviceNam = that.services.where({'type' : type });
-                                                componentServices = componentServices.concat(that.serviceNam);
-                                        }
-				});
-				var names = componentServices.map(function(m){ return { 'name' : m.get('name') } });
-				that.serviceNames = names;
-				if(!_.isUndefined(e.removed)){
-					_.each(that.collection.models , function(m){
-						if(m.get('serviceType') == e.removed.id){
-							var mapModels = that.collection.filter(function(m){
-								return m.get('serviceType') == e.removed.id;
-							})
-							if(!_.isUndefined(mapModels)){
-								that.collection.remove(mapModels);
-							}
+				},
+				error : function(response,model){
+					XAUtil.blockUI('unblock');
+					if ( response && response.responseJSON && response.responseJSON.msgDesc){
+						if(response.status == '419'){
+							XAUtil.defaultErrorHandler(model,response);
+						}else{
+							XAUtil.notifyError('Error', response.responseJSON.msgDesc);
 						}
-					});
+					} else {
+						XAUtil.notifyError('Error', 'File import failed.');
+					}
 				}
-				that.collection.trigger('reset');
-			}).trigger('change');
+			});
+		},
+		onAddClick : function(){
+			this.collection.add(new Backbone.Model());
+		},
+		onRender: function() {
+			this.$el.find('.fileValidation').hide();
+			this.ui.selectFileValidationMsg.hide();
+			this.ui.selectZoneMapping.hide();
+			this.ui.selectServicesMapping.hide();
 		},
 		importPolicy : function(e){
 			var that =this;
 			console.log("uploading....");
 			this.$el.find('.selectFile').hide(); 
-			this.$el.find('.selectFileValidationMsg').hide(); 
+			this.ui.selectFileValidationMsg.hide(); 
 			this.$el.find('.fileValidation').hide();
+			this.selectedFileValidation(e)
 			this.targetFileObj = e.target.files[0];
 			if(!_.isUndefined(this.targetFileObj)){
-                                this.$el.find('.selectFile').html('<i>'+this.targetFileObj.name+
-                                        '</i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>').show();
-			}else{
+				this.$el.find('.selectFile').html('<i>'+this.targetFileObj.name+
+					'</i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>').removeClass('text-color-red').show();
+			} else {
 				this.$el.find('.selectFile').html("No file chosen").show();
 			}
 		},
+		selectedFileValidation : function(file){
+			var that = this,
+			fileReader = new FileReader();
+			fileReader.onload =	function(e){
+				try {
+					that.importFileData = JSON.parse(e.target.result);
+				} catch(e) {
+					// error in the above string (in this case, yes)!
+					that.$el.find(that.ui.selectFileValidationMsg).html(e).show();
+					return
+				}
+				var sourceZonePolicy = _.filter(that.importFileData.policies, function(m){
+					if(m.zoneName){ return m.zoneName }
+				});
+				that.selectZoneMappingData(_.groupBy(sourceZonePolicy, function(m){ return m.zoneName }));
+			}
+			fileReader.readAsText(file.target.files[0]);
+		},
+		selectZoneMappingData: function(sourceZoneName){
+			var that = this;
+			//souece zone value
+			this.ui.selectZoneMapping.show();
+			this.ui.selectServicesMapping.show();
+			if(sourceZoneName){
+				this.ui.zoneSource.val(_.escape(_.keys(sourceZoneName)[0]));
+			}else{
+				this.ui.zoneSource.val('');
+			}
+			//Destination zone value
+			this.setServiceDestination();
+			//Destination service values
+			if(this.serviceType && ! _.isEmpty(this.serviceType)){
+				this.serviceNames = this.services.models.filter(function(m){return that.serviceType == m.get('type')});
+			}else{
+				this.serviceNames = this.services.models
+			}
+			this.setServiceSourceData();
+ 		},
+
+		setServiceSourceData: function(){
+			var that = this,
+			serviceSources = _.groupBy(that.importFileData.policies , function(m){
+				return m.service
+			})
+			_.map(serviceSources, function(m , key){
+				var sourceServiceDef = that.serviceDefList.find(function(model){
+					return model.get('id') == m[0].serviceType
+				});
+				if(sourceServiceDef){
+					that.collection.add(new Backbone.Model({'source' : key, 'sourceServiceType' : sourceServiceDef.get('name')}));
+				}else{
+					that.collection.add(new Backbone.Model({'source' : key}));
+				}
+			})
+		},
+		setServiceDestination : function(){
+			var that =this,
+			zoneNameOption = _.map(this.rangerZoneList.models, function(m){
+				return { 'id':m.get('name'), 'text':m.get('name')}
+			});
+			this.ui.zoneDestination.attr('disabled',false);
+			this.ui.zoneDestination.select2({
+				closeOnSelect: true,
+				placeholder: 'Select service name',
+				width: '220px',
+				allowClear: true,
+				data:zoneNameOption,
+			}).on('change', function(e){
+				that.collection.reset();
+				if(e.added && !_.isEmpty(e.val)){
+					var  zoneServiceList = [];
+					that.ui.selectServicesMapping.show();
+					that.serviceNames = that.services.models;
+					var selectedZone = that.rangerZoneList.find(function(m) {return e.val === m.get('name')});
+					_.filter(selectedZone.get('services'), function(m, key){
+						var zoneServiceModel = that.serviceNames.find(function(serviceModel){
+							return serviceModel.get('name') === key
+						})
+						if(zoneServiceModel){
+							zoneServiceList.push(zoneServiceModel);
+						}
+					});
+					that.serviceNames = zoneServiceList;
+					that.setServiceSourceData();
+				}else{
+					if(that.serviceType && ! _.isEmpty(that.serviceType)){
+						that.serviceNames = that.services.models.filter(function(m){return that.serviceType == m.get('type')});
+					}else{
+						that.serviceNames = that.services.models;
+					}
+					that.setServiceSourceData();
+				}
+			});
+		},
 		fileNameClosebtn : function(){
-            this.$el.find('.selectFile').hide()
-	     	this.$el.find('.selectFile').html("No file chosen").show()
+			this.$el.find('.selectFile').hide()
+			this.$el.find('.selectFile').html("No file chosen").removeClass('text-color-red').show()
 			this.$el.find('.fileValidation').hide();
-			this.$el.find('.selectFileValidationMsg').hide();
+			this.ui.selectFileValidationMsg.hide();
 			this.targetFileObj = undefined;
 			this.ui.importFilePolicy.val('');
- 		}
+			this.ui.selectServicesMapping.hide();
+			this.ui.selectZoneMapping.hide();
+			this.collection.reset();
+			this.ui.zoneDestination.val('');
+		}
 		
 	});
 	return UploadServicePolicy; 

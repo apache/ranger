@@ -82,6 +82,8 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXSecurityZoneRefService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
@@ -1992,10 +1994,10 @@ public class ServiceREST {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPoliciesInJson()");
 		}
-		
+
 		RangerPerfTracer perf = null;
 		SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
-
+		String zoneName = filter.getParam("zoneName");
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getPoliciesInJson()");
@@ -2007,6 +2009,9 @@ public class ServiceREST {
 			List<RangerPolicy> policyLists = new ArrayList<RangerPolicy>();
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
+			if (StringUtils.isBlank(zoneName)) {// if zoneName not provided in search parameter, return only policies which are not in any zone.
+				policyLists = svcStore.noZoneFilter(policyLists);
+			}
 			if (CollectionUtils.isNotEmpty(policyLists)) {
 				for (RangerPolicy rangerPolicy : policyLists) {
 					if (rangerPolicy != null) {
@@ -2052,10 +2057,11 @@ public class ServiceREST {
 	public void importPoliciesFromFile(
 			@Context HttpServletRequest request,
 			@FormDataParam("servicesMapJson") InputStream serviceMapStream,
+			@FormDataParam("zoneMapJson") InputStream zoneMapStream,
 			@FormDataParam("file") InputStream uploadedInputStream,
 			@FormDataParam("file") FormDataContentDisposition fileDetail,
-			@QueryParam("isOverride") Boolean isOverride) {
-		
+			@QueryParam("isOverride") Boolean isOverride,
+			@QueryParam("importType") String importType) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.importPoliciesFromFile()");
 		}
@@ -2081,98 +2087,57 @@ public class ServiceREST {
 				isOverride = false;
 			}
 			List<String> serviceNameList = new ArrayList<String>();
-			String serviceType = null;
-			List<String> serviceTypeList = null;
-			SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
-			if (StringUtils.isNotEmpty(request.getParameter(PARAM_SERVICE_TYPE))){
-				serviceType = request.getParameter(PARAM_SERVICE_TYPE);
-			}
-			if(StringUtils.isNotEmpty(serviceType)){
-				serviceTypeList = new ArrayList<String>(Arrays.asList(serviceType.split(",")));
-			}
-			List<RangerService> rangerServiceList = null;
-			List<RangerService> rangerServiceLists = new ArrayList<RangerService>();
-			if (CollectionUtils.isNotEmpty(serviceTypeList)){
-				for (String s : serviceTypeList) {
-					filter.removeParam(PARAM_SERVICE_TYPE);
-					filter.setParam(PARAM_SERVICE_TYPE, s.trim());
-					rangerServiceList = getServices(filter);
-					rangerServiceLists.addAll(rangerServiceList);
-				}
-			}
-			if(!CollectionUtils.sizeIsEmpty(rangerServiceLists)){
-				for(RangerService rService : rangerServiceLists){
-					if (StringUtils.isNotEmpty(rService.getName())){
-						serviceNameList.add(rService.getName());
-					}
-				}
-			}
 
+			getServiceNameList(request,serviceNameList);
 			Map<String, String> servicesMappingMap = new LinkedHashMap<String, String>();
 			List<String> sourceServices = new ArrayList<String>();
 			List<String> destinationServices = new ArrayList<String>();
-			if (serviceMapStream != null){
-				servicesMappingMap = svcStore.getServiceMap(serviceMapStream);
+			Map<String, String> zoneMappingMap = new LinkedHashMap<String, String>();
+			List<String> sourceZones = new ArrayList<String>();
+			List<String> destinationZones = new ArrayList<String>();
+			if (zoneMapStream != null) {
+				zoneMappingMap = svcStore.getMapFromInputStream(zoneMapStream);
+				processZoneMapping(zoneMappingMap, sourceZones, destinationZones);
 			}
-			if(!CollectionUtils.sizeIsEmpty(servicesMappingMap)){
-				for (Entry<String, String> map : servicesMappingMap.entrySet()) {
-					String sourceServiceName = null;
-					String destinationServiceName = null;
-					if (StringUtils.isNotEmpty(map.getKey().trim()) && StringUtils.isNotEmpty(map.getValue().trim())){
-						sourceServiceName = map.getKey().trim();
-						destinationServiceName = map.getValue().trim();
-					}else{
-						LOG.error("Source service or destonation service name is not provided!!");
-						throw restErrorUtil.createRESTException("Source service or destonation service name is not provided!!");
-					}
-					if (StringUtils.isNotEmpty(sourceServiceName)
-							&& StringUtils.isNotEmpty(destinationServiceName)) {
-						sourceServices.add(sourceServiceName);
-						destinationServices.add(destinationServiceName);
-					}
-				}
-			}	
-			
+
+			if (serviceMapStream != null){
+				servicesMappingMap = svcStore.getMapFromInputStream(serviceMapStream);
+				processServiceMapping(servicesMappingMap, sourceServices, destinationServices);
+			}
+
 			String fileName = fileDetail.getFileName();
 			int totalPolicyCreate = 0;
+			String zoneNameInJson = null;
 			Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
 			List<String> dataFileSourceServices = new ArrayList<String>();
 			if (fileName.endsWith("json")) {
 				try {
 					RangerExportPolicyList rangerExportPolicyList = null;
 					List<RangerPolicy> policies = null;
-					Gson gson = new Gson();
-					
-					String policiesString = IOUtils.toString(uploadedInputStream);
-					policiesString = policiesString.trim();
-					if (StringUtils.isNotEmpty(policiesString)){
-						gson.fromJson(policiesString, RangerExportPolicyList.class);
-						rangerExportPolicyList = new ObjectMapper().readValue(policiesString, RangerExportPolicyList.class);
-					} else {
-						LOG.error("Provided json file is empty!!");
-						throw restErrorUtil.createRESTException("Provided json file is empty!!");
-					}
-					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())){
+					rangerExportPolicyList = processPolicyInputJsonForMetaData(uploadedInputStream,rangerExportPolicyList);
+					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())) {
 						metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
 					} else {
 						LOG.info("metadata info is not provided!!");
 					}
-					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getPolicies())){
-						policies = rangerExportPolicyList.getPolicies();
-					} else {
-						LOG.error("Provided json file does not contain any policy!!");
-						throw restErrorUtil.createRESTException("Provided json file does not contain any policy!!");
-					}
+					policies = getPoliciesFromProvidedJson(rangerExportPolicyList);
+
+					int i = 0;
 					if (CollectionUtils.sizeIsEmpty(servicesMappingMap) && isOverride){
 						if(policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 							for (RangerPolicy policyInJson: policies){
-								if (policyInJson != null) {
+								if (policyInJson != null ) {
+									if (i == 0 && StringUtils.isNotBlank(policyInJson.getZoneName())) {
+										zoneNameInJson = policyInJson.getZoneName().trim();
+									}
 									if (StringUtils.isNotEmpty(policyInJson.getService().trim())) {
 										String serviceName = policyInJson.getService().trim();
 										if (CollectionUtils.isNotEmpty(serviceNameList) && serviceNameList.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
-										} else if (CollectionUtils.isEmpty(serviceNameList)) {
+										} else if (CollectionUtils.isEmpty(serviceNameList)
+												&& !sourceServices.contains(serviceName)
+												&& !destinationServices.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
 										}
@@ -2181,18 +2146,24 @@ public class ServiceREST {
 										throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
 									}
 								}
+								i++;
 							}
 						}
 					}else if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
 						if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
+							i = 0;
 							for (RangerPolicy policyInJson: policies){
 								if (policyInJson != null){
+									if (i == 0 && StringUtils.isNotBlank(policyInJson.getZoneName())) {
+										zoneNameInJson = policyInJson.getZoneName().trim();
+									}
 									if (StringUtils.isNotEmpty(policyInJson.getService().trim())) {
 										dataFileSourceServices.add(policyInJson.getService().trim());
 									}else{
 										LOG.error("Service Name or Policy Name is not provided!!");
 										throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
 									}
+									i++;
 								}
 							}
 							if(!dataFileSourceServices.containsAll(sourceServices)){
@@ -2208,12 +2179,13 @@ public class ServiceREST {
 					} else if (updateIfExists.equalsIgnoreCase("true")) {
 						isOverride = false;
 					}
+					String destinationZoneName = getDestinationZoneName(destinationZones,zoneNameInJson);
 					if (isOverride && "false".equalsIgnoreCase(updateIfExists) && StringUtils.isEmpty(polResource)) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file...");
 						}
 						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)) {
-							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices);
+							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices,destinationZoneName);//In order to delete Zone specific policies from service
 						}
 					}
 
@@ -2222,61 +2194,32 @@ public class ServiceREST {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file for specific resource...");
 						}
 						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)){
-							deletePoliciesForResource(sourceServices, destinationServices, request, policies);
+							deletePoliciesForResource(sourceServices, destinationServices, request, policies,destinationZoneName);//In order to delete Zone specific policies from service
 						}
 					}
 					if (policies != null && !CollectionUtils.sizeIsEmpty(policies)){
 						for (RangerPolicy policyInJson: policies){
 							if (policyInJson != null){
-								policiesMap = svcStore.createPolicyMap(servicesMappingMap, sourceServices, destinationServices, policyInJson, policiesMap);
-							}
-						}
-					}
-					if (!CollectionUtils.sizeIsEmpty(policiesMap.entrySet())) {
-						for (Entry<String, RangerPolicy> entry : policiesMap.entrySet()) {
-							RangerPolicy policy = entry.getValue();
-							if (policy != null){
-								if (!CollectionUtils.isEmpty(serviceNameList)) {
-									for (String service : serviceNameList) {
-										if (StringUtils.isNotEmpty(service.trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
-											if (policy.getService().trim().equalsIgnoreCase(service.trim())) {
-												if (updateIfExists != null && !updateIfExists.isEmpty()){
-													request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
-													request.setAttribute(PARAM_POLICY_NAME, policy.getName());
-												}
-												createPolicy(policy, request);
-												totalPolicyCreate = totalPolicyCreate + 1;
-												if (LOG.isDebugEnabled()) {
-													LOG.debug("Policy " + policy.getName() + " created successfully.");
-												}
-												break;
-											}
-										} else {
-											LOG.error("Service Name or Policy Name is not provided!!");
-											throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
-										}
-									}
-								} else {
-									if (updateIfExists != null && !updateIfExists.isEmpty()){
-										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
-										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
-									}
-									createPolicy(policy, request);
-									totalPolicyCreate = totalPolicyCreate + 1;
-									if (LOG.isDebugEnabled()) {
-										LOG.debug("Policy " + policy.getName() + " created successfully.");
+								if (StringUtils.isNotBlank(destinationZoneName)) {
+									boolean isZoneServiceExistAtDestination = validateDestZoneServiceMapping(destinationZoneName, policyInJson, servicesMappingMap);
+									if(!isZoneServiceExistAtDestination) {
+										LOG.warn("provided service of policy in File is not associated with zone");
+										continue;
 									}
 								}
+								policiesMap = svcStore.createPolicyMap(zoneMappingMap, sourceZones, destinationZoneName,
+										servicesMappingMap, sourceServices, destinationServices, policyInJson,
+										policiesMap);// zone Info is also sent for creating policy map
 							}
 						}
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Total Policy Created From Json file : " + totalPolicyCreate);
-						}
-						if(!(totalPolicyCreate > 0)){
-							LOG.error("zero policy is created from provided data file!!");
-							throw restErrorUtil.createRESTException("zero policy is created from provided data file!!");
-						}
 					}
+
+					totalPolicyCreate = createPolicesBasedOnPolicyMap(request,policiesMap, serviceNameList, updateIfExists, totalPolicyCreate);
+					if(!(totalPolicyCreate > 0)){
+						LOG.error("zero policy is created from provided data file!!");
+						throw restErrorUtil.createRESTException("zero policy is created from provided data file!!");
+					}
+
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
 					throw restErrorUtil.createRESTException(e.getMessage());
@@ -2332,6 +2275,193 @@ public class ServiceREST {
 		}
 	}
 	
+	private int createPolicesBasedOnPolicyMap(HttpServletRequest request, Map<String, RangerPolicy> policiesMap,
+			List<String> serviceNameList, String updateIfExists, int totalPolicyCreate) {
+		if (!CollectionUtils.sizeIsEmpty(policiesMap.entrySet())) {
+			for (Entry<String, RangerPolicy> entry : policiesMap.entrySet()) {
+				RangerPolicy policy = entry.getValue();
+				if (policy != null){
+					if (!CollectionUtils.isEmpty(serviceNameList)) {
+						for (String service : serviceNameList) {
+							if (StringUtils.isNotEmpty(service.trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
+								if (policy.getService().trim().equalsIgnoreCase(service.trim())) {
+									if (updateIfExists != null && !updateIfExists.isEmpty()){
+										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
+										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+									}
+									createPolicy(policy, request);
+									totalPolicyCreate = totalPolicyCreate + 1;
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Policy " + policy.getName() + " created successfully.");
+									}
+									break;
+								}
+							} else {
+								LOG.error("Service Name or Policy Name is not provided!!");
+								throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
+							}
+						}
+					} else {
+						if (updateIfExists != null && !updateIfExists.isEmpty()){
+							request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
+							request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+						}
+						createPolicy(policy, request);
+						totalPolicyCreate = totalPolicyCreate + 1;
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Policy " + policy.getName() + " created successfully.");
+						}
+					}
+				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Total Policy Created From Json file : " + totalPolicyCreate);
+			}
+		}
+		return totalPolicyCreate;
+	}
+
+	private List<RangerPolicy> getPoliciesFromProvidedJson(RangerExportPolicyList rangerExportPolicyList) {
+		List<RangerPolicy> policies = null;
+		if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getPolicies())) {
+			policies = rangerExportPolicyList.getPolicies();
+		} else {
+			LOG.error("Provided json file does not contain any policy!!");
+			throw restErrorUtil.createRESTException("Provided json file does not contain any policy!!");
+		}
+		return policies;
+	}
+
+	private RangerExportPolicyList processPolicyInputJsonForMetaData(InputStream uploadedInputStream,
+			RangerExportPolicyList rangerExportPolicyList) throws IOException, WebApplicationException {
+		Gson gson = new Gson();
+		String policiesString = IOUtils.toString(uploadedInputStream);
+		policiesString = policiesString.trim();
+		if (StringUtils.isNotEmpty(policiesString)) {
+			gson.fromJson(policiesString, RangerExportPolicyList.class);
+			rangerExportPolicyList = new ObjectMapper().readValue(policiesString, RangerExportPolicyList.class);
+		} else {
+			LOG.error("Provided json file is empty!!");
+			throw restErrorUtil.createRESTException("Provided json file is empty!!");
+		}
+		return rangerExportPolicyList;
+	}
+
+	private void getServiceNameList(HttpServletRequest request, List<String> serviceNameList) {
+		SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
+		String serviceType = null;
+		List<String> serviceTypeList = null;
+		if (StringUtils.isNotEmpty(request.getParameter(PARAM_SERVICE_TYPE))){
+			serviceType = request.getParameter(PARAM_SERVICE_TYPE);
+		}
+		if(StringUtils.isNotEmpty(serviceType)){
+			serviceTypeList = new ArrayList<String>(Arrays.asList(serviceType.split(",")));
+		}
+		List<RangerService> rangerServiceList = null;
+		List<RangerService> rangerServiceLists = new ArrayList<RangerService>();
+		if (CollectionUtils.isNotEmpty(serviceTypeList)){
+			for (String s : serviceTypeList) {
+				filter.removeParam(PARAM_SERVICE_TYPE);
+				filter.setParam(PARAM_SERVICE_TYPE, s.trim());
+				rangerServiceList = getServices(filter);
+				rangerServiceLists.addAll(rangerServiceList);
+			}
+		}
+		if(!CollectionUtils.sizeIsEmpty(rangerServiceLists)){
+			for(RangerService rService : rangerServiceLists){
+				if (StringUtils.isNotEmpty(rService.getName())){
+					serviceNameList.add(rService.getName());
+				}
+			}
+		}
+	}
+
+	private boolean validateDestZoneServiceMapping(String destinationZoneName, RangerPolicy policyInJson,
+			Map<String, String> servicesMappingMap) {
+		boolean isZoneServiceExistAtDestination = false;
+		XXSecurityZone xdestZone = daoManager.getXXSecurityZoneDao().findByZoneName(destinationZoneName);
+		if (xdestZone == null) {
+			LOG.error("destination zone provided does not exist");
+			throw restErrorUtil.createRESTException("destination zone provided does not exist");
+		}
+		// CHECK IF json policies service is there on destination and asscioated with
+		// destination zone.
+
+		String serviceNameToCheck = policyInJson.getService();
+
+		if (StringUtils.isNotBlank(serviceNameToCheck) && servicesMappingMap.containsKey(serviceNameToCheck)) {
+			serviceNameToCheck = servicesMappingMap.get(policyInJson.getService());
+		}
+		List<XXSecurityZoneRefService> serviceZoneMapping = daoManager.getXXSecurityZoneRefService()
+				.findByServiceNameAndZoneId(serviceNameToCheck, xdestZone.getId());
+
+		if (!CollectionUtils.isEmpty(serviceZoneMapping)) {
+			isZoneServiceExistAtDestination = true;
+		}
+
+		return isZoneServiceExistAtDestination;
+	}
+
+	private String getDestinationZoneName(List<String> destinationZones, String zoneNameInJson) {
+		String destinationZoneName = null;
+		if (CollectionUtils.isNotEmpty(destinationZones)) {
+			destinationZoneName = destinationZones.get(0);
+		} else {
+			destinationZoneName = zoneNameInJson;
+		}
+		return destinationZoneName;
+	}
+
+	private void processServiceMapping(Map<String, String> servicesMappingMap, List<String> sourceServices,
+			List<String> destinationServices) {
+		if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
+			for (Entry<String, String> map : servicesMappingMap.entrySet()) {
+				String sourceServiceName = null;
+				String destinationServiceName = null;
+				if (StringUtils.isNotEmpty(map.getKey().trim()) && StringUtils.isNotEmpty(map.getValue().trim())) {
+					sourceServiceName = map.getKey().trim();
+					destinationServiceName = map.getValue().trim();
+				} else {
+					LOG.error("Source service or destination service name is not provided!!");
+					throw restErrorUtil
+							.createRESTException("Source service or destonation service name is not provided!!");
+				}
+				if (StringUtils.isNotEmpty(sourceServiceName) && StringUtils.isNotEmpty(destinationServiceName)) {
+					sourceServices.add(sourceServiceName);
+					destinationServices.add(destinationServiceName);
+				}
+			}
+		}
+	}
+
+	private void processZoneMapping(Map<String, String> zoneMappingMap, List<String> sourceZones,
+			List<String> destinationZones) {
+
+		if (!CollectionUtils.sizeIsEmpty(zoneMappingMap)) {
+			for (Entry<String, String> map : zoneMappingMap.entrySet()) {
+				String sourceZoneName = null;
+				String destinationZoneName = null;
+				if (StringUtils.isNotEmpty(map.getKey().trim()) || StringUtils.isNotEmpty(map.getValue().trim())) {
+					// zone to zone
+					// zone to unzone
+					// unzone to zone
+					sourceZoneName = map.getKey().trim();
+					destinationZoneName = map.getValue().trim();
+					LOG.info("sourceZoneName =" + sourceZoneName + "destinationZoneName = " + destinationZoneName);
+				} else if (StringUtils.isEmpty(map.getKey().trim()) && StringUtils.isEmpty(map.getValue().trim())) {
+					LOG.info("Unzone to unzone policies import");
+				} else {
+					LOG.error("Source zone or destination zone name is not provided!!");
+					throw restErrorUtil.createRESTException("Source zone or destination zone name is not provided!!");
+				}
+				if (StringUtils.isNotEmpty(sourceZoneName) || StringUtils.isNotEmpty(destinationZoneName)) {
+					sourceZones.add(sourceZoneName);
+					destinationZones.add(destinationZoneName);
+				}
+			}
+		}
+	}
+
 	private List<RangerPolicy> getAllFilteredPolicyList(SearchFilter filter,
 			HttpServletRequest request, List<RangerPolicy> policyLists) {
 		String serviceNames = null;
@@ -2426,15 +2556,16 @@ public class ServiceREST {
 		return policyLists;
 	}
 	
-	private void deletePoliciesProvidedInServiceMap(
-			List<String> sourceServices, List<String> destinationServices) {
+	private void deletePoliciesProvidedInServiceMap(List<String> sourceServices, List<String> destinationServices, String zoneName) {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			for (int i = 0; i < sourceServices.size(); i++) {
-				if (!destinationServices.get(i).isEmpty()) {
-					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i), new SearchFilter());
+				if (!destinationServices.get(i).isEmpty() ) {
+					SearchFilter filter = new SearchFilter();
+					filter.setParam("zoneName",zoneName);
+					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i),filter);
 					if (servicePolicies != null) {
 						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
@@ -2465,7 +2596,7 @@ public class ServiceREST {
 		}
 	}
 
-	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies) {
+	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies, String zoneName) {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
@@ -2480,7 +2611,9 @@ public class ServiceREST {
 			for (int i = 0; i < sourceServices.size(); i++) {
 				if (!destinationServices.get(i).isEmpty()) {
 					RangerPolicyList servicePolicies = null;
-					servicePolicies = getServicePoliciesByName(destinationServices.get(i), request);
+					SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
+					filter.setParam("zoneName", zoneName);
+					servicePolicies = getServicePolicies(destinationServices.get(i), filter);
 					if (servicePolicies != null) {
 						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
@@ -2600,7 +2733,7 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-		String zoneName = filter.getParam("zoneName");
+
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
@@ -2628,9 +2761,7 @@ public class ServiceREST {
 				}
 
 				servicePolicies = applyAdminAccessFilter(servicePolicies);
-				if(StringUtils.isBlank(zoneName)) { //if zoneName not provided in search parameter, return only policies which are not in any zone.
-					servicePolicies = applyZoneFilter(servicePolicies);
-				}
+
 				ret = toRangerPolicyList(servicePolicies, filter);
 			}
 		} catch(WebApplicationException excp) {
@@ -2650,15 +2781,6 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private List<RangerPolicy> applyZoneFilter(List<RangerPolicy> servicePolicies) {
-		List<RangerPolicy> noZonePolicies = new ArrayList<RangerPolicy>();
-		for(RangerPolicy policy : servicePolicies){
-			if(StringUtils.isBlank(policy.getZoneName())) {
-				noZonePolicies.add(policy);
-			}
-		}
-		return noZonePolicies;
-	}
 
 	@GET
 	@Path("/policies/service/name/{name}")

@@ -140,6 +140,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setService(xService.getName());
+		vObj.setServiceType(xService.getType().toString());
 		vObj.setName(StringUtils.trim(xObj.getName()));
 		vObj.setPolicyType(xObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xObj.getPolicyType());
 		vObj.setPolicyPriority(xObj.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : xObj.getPolicyPriority());

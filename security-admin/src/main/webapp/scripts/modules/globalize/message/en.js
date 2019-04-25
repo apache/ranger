@@ -455,6 +455,8 @@ define(function(require) {
                 zoneServiceNameValidation: 'Please select Service Name for selected zone.',
                 adminUserGroupValidation: 'Please select atleast one Admin Users/Usergroups to Zone else Zone will not be added.',
                 auditorUserGroupValidation: 'Please select atleast one Auditor Users/Usergroups to Zone else Zone will not be added.',
+                selectZoneFile          : 'Selected file does not contain zone details, Please select appropriate file containing zone details',
+                selectOtherFile         : 'Selected file contains zone details, Please select appropriate file without zone details'
 
 			},
 			plcHldr : {

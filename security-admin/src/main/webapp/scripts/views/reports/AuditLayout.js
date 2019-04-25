@@ -950,7 +950,11 @@ define(function(require) {
 								html = 	'<label class="label label-yellow capitalize">'+rawValue+'</label>';
 							}else if(rawValue == 'delete'){
 								html = 	'<label class="label label-important capitalize">'+rawValue+'</label>';
-							} else {
+							}else if(rawValue =='IMPORT START'){
+								html = 	'<label class="label label-info capitalize">'+rawValue+'</label>';
+							}else if(rawValue =='IMPORT END'){
+								html = 	'<label class="label label-info capitalize">'+rawValue+'</label>';
+							}							else {
 								rawValue = rawValue.toLowerCase() 
 								html = 	'<label class="label capitalize ">'+rawValue+'</label>';
 							}

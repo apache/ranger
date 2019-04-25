@@ -230,17 +230,16 @@ define(function(require){
 				
 			}
 			var view = new vUploadServicePolicy({
-                serviceType		: serviceType,
-				collection 		: new Backbone.Collection([""]),
+				serviceType		: serviceType,
+				collection 		: new Backbone.Collection(),
 				serviceDefList	: this.collection,
-                                services		: this.services,
-                zoneServiceDefList : this.componentCollectionModels(this.ui.selectZoneName.val()),
-                zoneServices    : this.componentServicesModels(this.ui.selectZoneName.val()),
+				services		: this.services,
+				rangerZoneList  : this.rangerZoneList,
             });
 			var modal = new Backbone.BootstrapModal({
 				content	: view,	
 				okText 	:"Import",
-				title	: 'Import Policy',
+                                title	: App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName) ? 'Import Policy For Zone' : 'Import Policy',
 				animate : true
 			}).open();
 

@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
@@ -52,9 +53,13 @@ import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXSecurityZoneDao;
+import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXSecurityZoneRefService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -1536,7 +1541,7 @@ public class TestServiceREST {
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
 		HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 		SearchFilter filter = new SearchFilter();
-
+		filter.setParam("zoneName", "zone1");
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
@@ -1547,7 +1552,6 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
 		serviceREST.getPoliciesInJson(request, response, false);
@@ -1644,36 +1648,45 @@ public class TestServiceREST {
 		Mockito.verify(svcStore).getPoliciesInExcel(rangerPolicyList, response);
 	}
 
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test49importPoliciesFromFileAllowingOverride() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
+		RangerPolicyValidator policyValidator = Mockito.mock(RangerPolicyValidator.class) ;
 		Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
-
 		RangerPolicy rangerPolicy = rangerPolicy();
-
 		XXService xService = xService();
 		policiesMap.put("Name", rangerPolicy);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXServiceDef xServiceDef = serviceDef();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXSecurityZoneRefServiceDao xSecZoneRefServiceDao = Mockito.mock(XXSecurityZoneRefServiceDao.class);
+		XXSecurityZoneRefService xSecZoneRefService = Mockito.mock(XXSecurityZoneRefService.class);
+		XXSecurityZoneDao xSecZoneDao = Mockito.mock(XXSecurityZoneDao.class);
+		XXSecurityZone xSecZone = Mockito.mock(XXSecurityZone.class);
+		List<XXSecurityZoneRefService> zoneServiceList = new ArrayList<>();
+		zoneServiceList.add(xSecZoneRefService);
+		Map<String, String> zoneMappingMap = new LinkedHashMap<String, String>();
+		zoneMappingMap.put("ZoneSource", "ZoneDestination");
 
 		String PARAM_SERVICE_TYPE = "serviceType";
 		String serviceTypeList = "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop";
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
 		SearchFilter filter = new SearchFilter();
 		filter.setParam("serviceType", "value");
-		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 
-		Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
 		File jsonPolicyFile = new File(importPoliceTestFilePath);
 		InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
 		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file")
 				.fileName(jsonPolicyFile.getName()).size(uploadedInputStream.toString().length()).build();
 		boolean isOverride = true;
 
-		Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class),
+		InputStream zoneInputStream =IOUtils.toInputStream("ZoneSource=ZoneDestination", "UTF-8");
+
+		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+		Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
+		Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class),Mockito.anyString(),Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class),
 				Mockito.any(RangerPolicy.class), Mockito.any(Map.class))).thenReturn(policiesMap);
 		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
@@ -1683,8 +1696,15 @@ public class TestServiceREST {
 
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
+		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
+		Mockito.when(svcStore.getMapFromInputStream(zoneInputStream)).thenReturn(zoneMappingMap);
+		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xSecZoneDao);
+		Mockito.when(xSecZoneDao.findByZoneName(Mockito.anyString())).thenReturn(xSecZone);
+		Mockito.when(daoManager.getXXSecurityZoneRefService()).thenReturn(xSecZoneRefServiceDao);
+		Mockito.when(xSecZoneRefServiceDao.findByServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneServiceList);
 
-		serviceREST.importPoliciesFromFile(request, null, uploadedInputStream, fileDetail, isOverride);
+		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride , "unzoneToZone");
+
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);
 
 	}
@@ -1693,32 +1713,39 @@ public class TestServiceREST {
 	@Test
 	public void test50importPoliciesFromFileNotAllowingOverride() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
 		Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
-
 		RangerPolicy rangerPolicy = rangerPolicy();
-
 		XXService xService = xService();
 		policiesMap.put("Name", rangerPolicy);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXServiceDef xServiceDef = serviceDef();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXSecurityZoneRefServiceDao xSecZoneRefServiceDao = Mockito.mock(XXSecurityZoneRefServiceDao.class);
+		XXSecurityZoneRefService xSecZoneRefService = Mockito.mock(XXSecurityZoneRefService.class);
+		XXSecurityZoneDao xSecZoneDao = Mockito.mock(XXSecurityZoneDao.class);
+		XXSecurityZone xSecZone = Mockito.mock(XXSecurityZone.class);
+		List<XXSecurityZoneRefService> zoneServiceList = new ArrayList<>();
+		zoneServiceList.add(xSecZoneRefService);
+		Map<String, String> zoneMappingMap = new LinkedHashMap<String, String>();
+		zoneMappingMap.put("ZoneSource", "ZoneDestination");
 
 		String PARAM_SERVICE_TYPE = "serviceType";
 		String serviceTypeList = "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop";
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
 		SearchFilter filter = new SearchFilter();
 		filter.setParam("serviceType", "value");
-		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 
-		Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
 		File jsonPolicyFile = new File(importPoliceTestFilePath);
 		InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
 		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file")
 				.fileName(jsonPolicyFile.getName()).size(uploadedInputStream.toString().length()).build();
 		boolean isOverride = false;
 
-		Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class),
+		InputStream zoneInputStream = IOUtils.toInputStream("ZoneSource=ZoneDestination", "UTF-8");
+
+		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+		Mockito.when(request.getParameter(PARAM_SERVICE_TYPE)).thenReturn(serviceTypeList);
+		Mockito.when(svcStore.createPolicyMap(Mockito.any(Map.class), Mockito.any(List.class),Mockito.anyString(),Mockito.any(Map.class), Mockito.any(List.class), Mockito.any(List.class),
 				Mockito.any(RangerPolicy.class), Mockito.any(Map.class))).thenReturn(policiesMap);
 		Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
@@ -1729,7 +1756,13 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
 
-		serviceREST.importPoliciesFromFile(request, null, uploadedInputStream, fileDetail, isOverride);
+		Mockito.when(svcStore.getMapFromInputStream(zoneInputStream)).thenReturn(zoneMappingMap);
+		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xSecZoneDao);
+		Mockito.when(xSecZoneDao.findByZoneName(Mockito.anyString())).thenReturn(xSecZone);
+		Mockito.when(daoManager.getXXSecurityZoneRefService()).thenReturn(xSecZoneRefServiceDao);
+		Mockito.when(xSecZoneRefServiceDao.findByServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneServiceList);
+
+		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride, "unzoneToUnZone");
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);
 
 	}

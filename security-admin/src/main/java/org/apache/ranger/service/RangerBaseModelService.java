@@ -73,7 +73,8 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	public static final int OPERATION_CREATE_CONTEXT = 1;
 	public static final int OPERATION_UPDATE_CONTEXT = 2;
 	public static final int OPERATION_DELETE_CONTEXT = 3;
-
+	public static final int OPERATION_IMPORT_CREATE_CONTEXT = 4;
+	public static final int OPERATION_IMPORT_DELETE_CONTEXT = 5;
 	protected Class<T> tEntityClass;
 	protected Class<V> tViewClass;
 	private Boolean populateExistingBaseFields;

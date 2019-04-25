@@ -100,7 +100,7 @@ define(function(require){
 		},
 		initializeServiceDef : function(){
 			var url, policyName = this.collection.findWhere({'attributeName':'Policy Name'});
-			if(this.action == 'create'){
+			if(this.action == 'create' || this.action == 'Import Create'){
 				this.policyName = policyName.get('newValue');
 			} else if(this.action == 'delete'){
 				this.policyName = policyName.get('previousValue');
@@ -177,7 +177,7 @@ define(function(require){
 			return difference;
 		},
 		getTemplateForView : function(){
-			if(this.action == 'create'){
+			if(this.action == 'create' || this.action == 'Import Create'){
 				this.template = PolicyOperationDiff_tmpl;
 			}else if(this.action == 'update'){
 				this.template = PolicyUpdateOperationDiff_tmpl;
@@ -320,7 +320,7 @@ define(function(require){
 				if(val != oldResources[key])
 					this.collection.add({'attributeName':key, 'newValue':val.toString(),'previousValue': oldResources[key],type : "Policy Resources"});
 			}, this);
-			} else if(this.action == "create"){
+			} else if(this.action == "create" || this.action == "Import Create"){
 				_.each(resources,function(val, key){ this.collection.add({'attributeName':key, 'newValue':val.toString()}); }, this);
 			} else{
 				_.each(oldResources,function(val, key){ this.collection.add({'attributeName':key, 'previousValue':val.toString()}); }, this);
