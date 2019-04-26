@@ -43,9 +43,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
@@ -53,6 +57,7 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.view.RangerSecurityZoneList;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -92,6 +97,10 @@ public class SecurityZoneREST {
     @Autowired
     ServiceREST serviceRest;
 
+    @Autowired
+    RangerDaoManager daoManager;
+
+
     @POST
     @Path("/zones")
     public RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) {
@@ -101,7 +110,7 @@ public class SecurityZoneREST {
 
         RangerSecurityZone ret;
         try {
-        	ensureAdminAccess();
+            ensureAdminAccess(securityZone);
             removeEmptyEntries(securityZone);
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(securityZone, RangerValidator.Action.CREATE);
@@ -437,6 +446,33 @@ public class SecurityZoneREST {
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, message, true);
 	}
 
+
+	private void ensureAdminAccess(RangerSecurityZone securityZone) {
+		if (!bizUtil.isAdmin()) {
+			String userName = bizUtil.getCurrentUserLoginId();
+			throw restErrorUtil.createRESTException(
+					"Ranger Securtiy Zone is not accessible for user '" + userName + "'.",
+					MessageEnums.OPER_NO_PERMISSION);
+		}
+		else {
+			blockAdminFromKMSService(securityZone);
+		}
+	}
+
+	private void blockAdminFromKMSService(RangerSecurityZone securityZone) {
+		if(securityZone != null) {
+			Map<String, RangerSecurityZoneService> serviceMap = securityZone.getServices();
+			for (String serviceName : serviceMap.keySet()) {
+				XXService xService = daoManager.getXXService().findByName(serviceName);
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+					throw restErrorUtil.createRESTException(
+							"KMS Services/Service-Defs are not accessible for Zone operations",
+							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+				}
+			}
+		}
+	}
 
 	private void removeEmptyEntries(RangerSecurityZone securityZone) {
                 bizUtil.removeEmptyStrings(securityZone.getTagServices());

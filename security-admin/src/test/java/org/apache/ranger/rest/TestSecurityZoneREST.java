@@ -38,6 +38,11 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXServiceDao;
+import org.apache.ranger.db.XXServiceDefDao;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
@@ -74,6 +79,11 @@ public class TestSecurityZoneREST {
     RangerSecurityZoneServiceService securityZoneService;
 	@Mock
 	RESTErrorUtil restErrorUtil;
+	@Mock
+	RangerDaoManager daoManager;
+	@Mock
+	XXServiceDef xServiceDef;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -105,7 +115,16 @@ public class TestSecurityZoneREST {
 	@Test
 	public void testCreateSecurityZone() throws Exception {
 		RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXService xService = Mockito.mock(XXService.class);
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
+		when(daoManager.getXXService()).thenReturn(xServiceDao);
+		when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
+
+		when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
 		doNothing().when(validator).validate(rangerSecurityZone, RangerValidator.Action.CREATE);
 		when(securityZoneStore.createSecurityZone(rangerSecurityZone)).thenReturn(rangerSecurityZone);
@@ -118,9 +137,19 @@ public class TestSecurityZoneREST {
 	public void testUpdateSecurityZone() throws Exception {
 		RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
 		Long securityZoneId = 2L;
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXService xService = Mockito.mock(XXService.class);
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		rangerSecurityZoneToUpdate.setId(securityZoneId);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
+
+		when(daoManager.getXXService()).thenReturn(xServiceDao);
+		when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
+
+		when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+
 		doNothing().when(validator).validate(rangerSecurityZoneToUpdate, RangerValidator.Action.UPDATE);
 		when(securityZoneStore.updateSecurityZoneById(rangerSecurityZoneToUpdate))
 				.thenReturn(rangerSecurityZoneToUpdate);
@@ -134,8 +163,19 @@ public class TestSecurityZoneREST {
 	public void testUpdateSecurityZoneWithMisMatchId() throws Exception {
 		RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
 		Long securityZoneId = 2L;
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXService xService = Mockito.mock(XXService.class);
+
 		rangerSecurityZoneToUpdate.setId(securityZoneId);
 		when(rangerBizUtil.isAdmin()).thenReturn(true);
+
+		when(daoManager.getXXService()).thenReturn(xServiceDao);
+		when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
+
+		when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+
 		when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
 		doNothing().when(validator).validate(rangerSecurityZoneToUpdate, RangerValidator.Action.UPDATE);
 		when(securityZoneStore.updateSecurityZoneById(rangerSecurityZoneToUpdate))
