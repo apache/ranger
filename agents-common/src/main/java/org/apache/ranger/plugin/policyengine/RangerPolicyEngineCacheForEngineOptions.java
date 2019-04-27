@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 
 import java.util.Collections;
@@ -46,6 +47,10 @@ public class RangerPolicyEngineCacheForEngineOptions {
     }
 
     public final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RangerPolicyEngineOptions options) {
+        return getPolicyEngine(serviceName, svcStore, null, options);
+    }
+
+    public final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
 
         RangerPolicyEngineCache policyEngineCache;
 
@@ -56,7 +61,7 @@ public class RangerPolicyEngineCacheForEngineOptions {
                 policyEngineCacheForEngineOptions.put(options, policyEngineCache);
             }
         }
-        return policyEngineCache.getPolicyEngine(serviceName, svcStore, options);
+        return policyEngineCache.getPolicyEngine(serviceName, svcStore, zoneStore, options);
     }
 }
 

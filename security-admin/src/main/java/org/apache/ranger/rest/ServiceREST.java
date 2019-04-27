@@ -92,7 +92,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -104,6 +103,7 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCacheForEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -2898,7 +2898,11 @@ public class ServiceREST {
 					logMsg = "No change since last update";
 				} else {
 					Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
-					ServicePolicies updatedServicePolicies = getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+					ServicePolicies updatedServicePolicies = servicePolicies;
+					if (MapUtils.isNotEmpty(securityZones)) {
+						updatedServicePolicies = RangerPolicyEngineCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+						patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
+					}
 					downloadedVersion = updatedServicePolicies.getPolicyVersion();
 					if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
 						ret = filterServicePolicies(updatedServicePolicies);
@@ -3015,7 +3019,11 @@ public class ServiceREST {
 						logMsg = "No change since last update";
 					} else {
 						Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
-						ServicePolicies updatedServicePolicies = getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+						ServicePolicies updatedServicePolicies = servicePolicies;
+						if (MapUtils.isNotEmpty(securityZones)) {
+							updatedServicePolicies = RangerPolicyEngineCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+							patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
+						}
 						downloadedVersion = updatedServicePolicies.getPolicyVersion();
 						if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
 							ret = filterServicePolicies(updatedServicePolicies);
@@ -3530,7 +3538,7 @@ public class ServiceREST {
 	}
 
 	private RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, delegateAdminOptions);
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, zoneStore, delegateAdminOptions);
 	}
 
 	private RangerPolicyEngine getPolicySearchPolicyEngine(String serviceName) throws Exception {
@@ -3811,19 +3819,9 @@ public class ServiceREST {
                         }
                 }
         }
-        private ServicePolicies getUpdatedServicePoliciesForZones(ServicePolicies servicePolicies, Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones) {
 
-			final ServicePolicies ret;
-
-			if (MapUtils.isNotEmpty(securityZones)) {
-				ret = new ServicePolicies();
-				ret.setServiceDef(servicePolicies.getServiceDef());
-				ret.setServiceId(servicePolicies.getServiceId());
-				ret.setServiceName(servicePolicies.getServiceName());
-				ret.setAuditMode(servicePolicies.getAuditMode());
-				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
-				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
-
+		private void patchAssociatedTagServiceInSecurityZoneInfos(ServicePolicies servicePolicies) {
+			if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
 				// Get list of zones that associated tag-service (if any) is associated with
 				List<String> zonesInAssociatedTagService = new ArrayList<>();
 
@@ -3838,86 +3836,15 @@ public class ServiceREST {
 						LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
 					}
 				}
+				if (CollectionUtils.isNotEmpty(zonesInAssociatedTagService)) {
+					for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
+						String zoneName = entry.getKey();
+						ServicePolicies.SecurityZoneInfo securityZoneInfo = entry.getValue();
 
-				Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
-
-				if (CollectionUtils.isEmpty(servicePolicies.getPolicyDeltas())) {
-
-					List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
-
-					for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
-
-						List<RangerPolicy> zonePolicies = extractZonePolicies(allPolicies, entry.getKey());
-
-						if (CollectionUtils.isNotEmpty(zonePolicies)) {
-							allPolicies.removeAll(zonePolicies);
-						}
-
-						ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
-						securityZoneInfo.setZoneName(entry.getKey());
-						securityZoneInfo.setPolicies(zonePolicies);
-						securityZoneInfo.setResources(entry.getValue().getResources());
-
-						securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(entry.getKey()));
-
-						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
+						securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(zoneName));
 					}
-
-					ret.setPolicies(allPolicies);
-					ret.setTagPolicies(servicePolicies.getTagPolicies());
-				} else {
-					List<RangerPolicyDelta> allPolicyDeltas = new ArrayList<>(servicePolicies.getPolicyDeltas());
-
-					for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
-
-						List<RangerPolicyDelta> zonePolicyDeltas = extractZonePolicyDeltas(allPolicyDeltas, entry.getKey());
-
-						if (CollectionUtils.isNotEmpty(zonePolicyDeltas)) {
-							allPolicyDeltas.removeAll(zonePolicyDeltas);
-						}
-
-						ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
-						securityZoneInfo.setZoneName(entry.getKey());
-						securityZoneInfo.setPolicyDeltas(zonePolicyDeltas);
-						securityZoneInfo.setResources(entry.getValue().getResources());
-
-						securityZonesInfo.put(entry.getKey(), securityZoneInfo);
-					}
-
-					ret.setPolicyDeltas(allPolicyDeltas);
-				}
-				ret.setSecurityZones(securityZonesInfo);
-			} else {
-				ret = servicePolicies;
-			}
-
-			return ret;
-		}
-
-		private static List<RangerPolicy> extractZonePolicies(final List<RangerPolicy> allPolicies, final String zoneName) {
-
-			final List<RangerPolicy> ret = new ArrayList<>();
-
-			for (RangerPolicy policy : allPolicies) {
-				if (policy.getIsEnabled() && StringUtils.equals(policy.getZoneName(), zoneName)) {
-					ret.add(policy);
 				}
 			}
-
-			return ret;
-		}
-
-		private static List<RangerPolicyDelta> extractZonePolicyDeltas(final List<RangerPolicyDelta> allPolicyDeltas, final String zoneName) {
-
-			final List<RangerPolicyDelta> ret = new ArrayList<>();
-
-			for (RangerPolicyDelta delta : allPolicyDeltas) {
-				if (StringUtils.equals(delta.getZoneName(), zoneName)) {
-					ret.add(delta);
-				}
-			}
-
-			return ret;
 		}
 }
 

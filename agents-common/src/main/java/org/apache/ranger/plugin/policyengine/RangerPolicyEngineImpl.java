@@ -800,9 +800,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				matchedRepositories.add(policyRepository);
 			}
 		} else {
-			// Search all security zones
+			// Search unzoned security zone
 			matchedRepositories.add(this.policyRepository);
-			matchedRepositories.addAll(this.policyRepositories.values());
 		}
 
 		for (RangerPolicyRepository policyRepository : matchedRepositories) {
@@ -862,9 +861,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				matchedRepositories.add(policyRepository);
 			}
 		} else {
-			// Search all security zones
+			// Search unzoned security zone
 			matchedRepositories.add(this.policyRepository);
-			matchedRepositories.addAll(this.policyRepositories.values());
 		}
 
 		for (RangerPolicyRepository policyRepository : matchedRepositories) {
