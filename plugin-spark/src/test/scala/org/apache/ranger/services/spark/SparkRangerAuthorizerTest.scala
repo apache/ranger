@@ -439,6 +439,7 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
       withUser("bob") {
         val queryExecution = sql(queryString).queryExecution
         val optimized = queryExecution.optimizedPlan
+        // println(optimized)
         assert(optimized.find(_.isInstanceOf[RangerSparkRowFilter]).nonEmpty)
         assert(optimized.find(_.isInstanceOf[RangerSparkMasking]).nonEmpty)
         val plan = queryExecution.executedPlan
@@ -449,16 +450,18 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
 
   /**
    * Check whether the Modified queries can be properly compiled
-   * @param plan
    */
   def checkGeneratedCode(plan: SparkPlan): Unit = {
     val codegenSubtrees = new collection.mutable.HashSet[WholeStageCodegenExec]()
     plan foreach {
-      case s: WholeStageCodegenExec => codegenSubtrees += s
+      case s: WholeStageCodegenExec =>
+        codegenSubtrees += s
+      case s => s
     }
     codegenSubtrees.toSeq.foreach { subtree =>
       val code = subtree.doCodeGen()._2
       try {
+        // Just check the generated code can be properly compiled
         CodeGenerator.compile(code)
       } catch {
         case e: Exception =>
