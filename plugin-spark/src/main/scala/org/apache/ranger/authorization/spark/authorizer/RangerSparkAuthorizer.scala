@@ -51,7 +51,7 @@ class RangerSparkAuthorizer(
     Option(hiveAuthenticator.getUserName).map(UserGroupInformation.createRemoteUser).orNull
   }
 
-  private val sparkPlugin = RangerSparkPlugin.build().sessionContext(sessionContext).getOrCreate()
+  private val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
 
   override def getVersion: HiveAuthorizer.VERSION = HiveAuthorizer.VERSION.V1
 

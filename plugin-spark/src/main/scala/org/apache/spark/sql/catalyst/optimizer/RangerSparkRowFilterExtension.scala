@@ -37,9 +37,7 @@ import scala.collection.JavaConverters._
  * An Apache Spark's [[Optimizer]] extension for row level filtering.
  */
 case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[LogicalPlan] {
-
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
-
   private lazy val rangerSparkOptimizer = new RangerSparkOptimizer(spark)
 
   /**
@@ -70,7 +68,8 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
         val analyzed = spark.sessionState.analyzer.execute(parsedNew)
         val optimized = analyzed transformAllExpressions {
           case s: SubqueryExpression =>
-            val Subquery(newPlan) = rangerSparkOptimizer.execute(Subquery(s.plan))
+            val Subquery(newPlan) =
+              rangerSparkOptimizer.execute(Subquery(RangerSparkRowFilter(s.plan)))
             s.withNewPlan(newPlan)
         }
         RangerSparkRowFilter(optimized)

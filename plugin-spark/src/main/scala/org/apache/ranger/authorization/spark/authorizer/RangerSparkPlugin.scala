@@ -25,7 +25,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionC
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration
 import org.apache.ranger.plugin.service.RangerBasePlugin
 
-class RangerSparkPlugin(appType: String) extends RangerBasePlugin("spark", appType) {
+class RangerSparkPlugin private extends RangerBasePlugin("spark", "sparkSql") {
   import RangerSparkPlugin._
 
   private val LOG = LogFactory.getLog(classOf[RangerSparkPlugin])
@@ -63,23 +63,11 @@ object RangerSparkPlugin {
 
   class Builder {
 
-    @volatile private var appType: String = "unknown"
     @volatile private var sparkPlugin: RangerSparkPlugin = _
-
-    def sessionContext(sessionContext: HiveAuthzSessionContext): Builder = {
-      appType = Option(sessionContext).map(_.getClientType) match {
-        case Some(v) => v match {
-          case CLIENT_TYPE.HIVECLI => "hiveCLI"
-          case CLIENT_TYPE.HIVESERVER2 => "hiveServer2"
-        }
-        case _ => "unknown"
-      }
-      this
-    }
 
     def getOrCreate(): RangerSparkPlugin = RangerSparkPlugin.synchronized {
       if (sparkPlugin == null) {
-        sparkPlugin = new RangerSparkPlugin(appType)
+        sparkPlugin = new RangerSparkPlugin
         sparkPlugin.init()
         sparkPlugin
       } else {

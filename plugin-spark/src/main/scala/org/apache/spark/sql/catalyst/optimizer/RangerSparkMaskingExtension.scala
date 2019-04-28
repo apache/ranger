@@ -23,17 +23,17 @@ import org.apache.ranger.authorization.spark.authorizer._
 import org.apache.ranger.plugin.model.RangerPolicy
 import org.apache.ranger.plugin.policyengine.RangerAccessResult
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.catalog.{CatalogFunction, CatalogTable, HiveTableRelation}
+import org.apache.spark.sql.catalyst.expressions.{Alias, Attribute, AttributeReference, ExprId, NamedExpression, SubqueryExpression}
 import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.catalyst.rules.Rule
-import org.apache.spark.sql.AuthzUtils.getFieldVal
-import org.apache.spark.sql.catalyst.catalog.{CatalogFunction, CatalogTable}
-import org.apache.spark.sql.catalyst.expressions.{Attribute, NamedExpression}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.execution.command.{CreateDataSourceTableAsSelectCommand, CreateViewCommand, InsertIntoDataSourceDirCommand}
 import org.apache.spark.sql.execution.datasources.{InsertIntoDataSourceCommand, InsertIntoHadoopFsRelationCommand, LogicalRelation, SaveIntoDataSourceCommand}
 import org.apache.spark.sql.hive.execution.{CreateHiveTableAsSelectCommand, InsertIntoHiveDirCommand, InsertIntoHiveTable}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
  * An Apache Spark's [[Optimizer]] extension for column data masking.
@@ -52,6 +52,9 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
     .foreach(spark.sessionState.catalog.registerFunction(_, true))
 
   private lazy val sparkPlugin = RangerSparkPlugin.build().getOrCreate()
+  private lazy val sqlParser = spark.sessionState.sqlParser
+  private lazy val analyzer = spark.sessionState.analyzer
+  private lazy val rangerSparkOptimizer = new RangerSparkOptimizer(spark)
 
   /**
    * Collecting transformers from Ranger data masking policies, and mapping the to the
@@ -62,7 +65,9 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
    * @return a list of key-value pairs of original expression with its masking representation
    */
   private def collectTransformers(
-      plan: LogicalPlan, table: CatalogTable): Seq[(Attribute, NamedExpression)] = {
+      plan: LogicalPlan,
+      table: CatalogTable,
+      aliases: mutable.Map[Alias, ExprId]): Map[ExprId, NamedExpression] = {
     val auditHandler = new RangerSparkAuditHandler()
     val ugi = UserGroupInformation.getCurrentUser
     val userName = ugi.getShortUserName
@@ -71,45 +76,71 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
       val identifier = table.identifier
       import SparkObjectType._
 
-      plan.output.map { expr =>
+      val maskEnableResults = plan.output.map { expr =>
         val resource = RangerSparkResource(COLUMN, identifier.database, identifier.table, expr.name)
         val req = new RangerSparkAccessRequest(resource, userName, groups, COLUMN.toString,
           SparkAccessType.SELECT, null, null, sparkPlugin.getClusterName)
         (expr, sparkPlugin.evalDataMaskPolicies(req, auditHandler))
-      }.filter(x => isMaskEnabled(x._2)).map { x =>
-        val expr = x._1
-        val result = x._2
+      }.filter(x => isMaskEnabled(x._2))
+
+      val originMaskers = maskEnableResults.map { case (expr, result) =>
         if (StringUtils.equalsIgnoreCase(result.getMaskType, MASK_TYPE_NULL)) {
           val sql = s"SELECT NULL AS ${expr.name} FROM ${table.qualifiedName}"
-          (expr, spark.sessionState.sqlParser.parsePlan(sql))
+          val plan = analyzer.execute(sqlParser.parsePlan(sql))
+          (expr, plan)
         } else if (StringUtils.equalsIgnoreCase(result.getMaskType, MASK_TYPE_CUSTOM)) {
           val maskVal = result.getMaskedValue
           if (maskVal == null) {
             val sql = s"SELECT NULL AS ${expr.name} FROM ${table.qualifiedName}"
-            (expr, spark.sessionState.sqlParser.parsePlan(sql))
+            val plan = analyzer.execute(sqlParser.parsePlan(sql))
+            (expr, plan)
           } else {
             val sql = s"SELECT ${maskVal.replace("{col}", expr.name)} AS ${expr.name} FROM" +
               s" ${table.qualifiedName}"
-            (expr, spark.sessionState.sqlParser.parsePlan(sql))
+            val plan = analyzer.execute(sqlParser.parsePlan(sql))
+            (expr, plan)
           }
         } else if (result.getMaskTypeDef != null) {
           val transformer = result.getMaskTypeDef.getTransformer
           if (StringUtils.isNotEmpty(transformer)) {
             val trans = transformer.replace("{col}", expr.name)
             val sql = s"SELECT $trans AS ${expr.name} FROM ${table.qualifiedName}"
-            (expr, spark.sessionState.sqlParser.parsePlan(sql))
+            val plan = analyzer.execute(sqlParser.parsePlan(sql))
+            (expr, plan)
           } else {
             (expr, null)
           }
         } else {
           (expr, null)
         }
-      }.filter(_._2 != null).map { kv =>
-        kv._2 match {
-          case p: Project => (kv._1, p.projectList.head)
-          case _ => (kv._1, kv._2.output.head)
+      }.filter(_._2 != null)
+
+      val formedMaskers: Map[ExprId, Alias] =
+        originMaskers.map { case (expr, p) => (expr, p.asInstanceOf[Project].projectList.head) }
+          .map { case (expr, attr) =>
+            val originalAlias = attr.asInstanceOf[Alias]
+            val newChild = originalAlias.child mapChildren {
+              case _: AttributeReference => expr
+              case o => o
+            }
+            val newAlias = originalAlias.copy(child = newChild)(
+              originalAlias.exprId, originalAlias.qualifier, originalAlias.explicitMetadata)
+            (expr.exprId, newAlias)
+          }.toMap
+
+      val aliasedMaskers = new mutable.HashMap[ExprId, Alias]()
+      for ((alias, id) <- aliases if formedMaskers.contains(id)) {
+        val originalAlias = formedMaskers(id)
+        val newChild = originalAlias.child mapChildren {
+          case ar: AttributeReference =>
+            ar.copy(name = alias.name)(alias.exprId, alias.qualifier)
+          case o => o
         }
+        val newAlias = originalAlias.copy(child = newChild, alias.name)(
+          originalAlias.exprId, originalAlias.qualifier, originalAlias.explicitMetadata)
+        aliasedMaskers.put(alias.exprId, newAlias)
       }
+      formedMaskers ++ aliasedMaskers
     } catch {
       case e: Exception => throw e
     }
@@ -119,31 +150,62 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
     result != null && result.isMaskEnabled
   }
 
+  private def hasCatalogTable(plan: LogicalPlan): Boolean = plan match {
+    case _: HiveTableRelation => true
+    case l: LogicalRelation if l.catalogTable.isDefined => true
+    case _ => false
+  }
+
+  private def collectAllAliases(plan: LogicalPlan): mutable.HashMap[Alias, ExprId] = {
+    val aliases = new mutable.HashMap[Alias, ExprId]()
+    plan.transformAllExpressions {
+      case a: Alias =>
+        a.child match {
+          case ne: NamedExpression =>
+            aliases.put(a, ne.exprId)
+          case _ =>
+        }
+        a
+    }
+    aliases
+  }
+
+  private def collectAllTransformers(
+      plan: LogicalPlan, aliases: mutable.Map[Alias, ExprId]): Map[ExprId, NamedExpression] = {
+    plan.collectLeaves().flatMap {
+      case h: HiveTableRelation =>
+        collectTransformers(h, h.tableMeta, aliases)
+      case l: LogicalRelation if l.catalogTable.isDefined =>
+        collectTransformers(l, l.catalogTable.get, aliases)
+      case _ => Seq.empty
+    }.toMap
+  }
+
   private def doMasking(plan: LogicalPlan): LogicalPlan = plan match {
+    case s: Subquery => s
     case m: RangerSparkMasking => m // escape the optimize iteration if already masked
     case fixed if fixed.find(_.isInstanceOf[RangerSparkMasking]).nonEmpty => fixed
     case _ =>
-      val transformers = plan.collectLeaves().flatMap {
-        case h if h.nodeName == "HiveTableRelation" =>
-          val ct = getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable]
-          collectTransformers(h, ct)
-        case m if m.nodeName == "MetastoreRelation" =>
-          val ct = getFieldVal(m, "catalogTable").asInstanceOf[CatalogTable]
-          collectTransformers(m, ct)
-        case l: LogicalRelation if l.catalogTable.isDefined =>
-          collectTransformers(l, l.catalogTable.get)
-        case _ => Seq.empty
-      }.toMap
-      val newOutput = plan.output.map(attr => transformers.getOrElse(attr, attr))
-      val planWithMasking = plan match {
-        case Subquery(child) => Subquery(Project(newOutput, child))
-        case _ => Project(newOutput, plan)
+      val aliases = collectAllAliases(plan)
+      val transformers = collectAllTransformers(plan, aliases)
+      val newPlan =
+        if (transformers.nonEmpty && plan.output.exists(o => transformers.get(o.exprId).nonEmpty)) {
+          val newOutput = plan.output.map(attr => transformers.getOrElse(attr.exprId, attr))
+          Project(newOutput, plan)
+        } else {
+          plan
+        }
+
+      val marked = newPlan transformUp {
+        case p if hasCatalogTable(p) => RangerSparkMasking(p)
       }
 
-      val masked = planWithMasking transformUp {
-        case l: LeafNode => RangerSparkMasking(l)
+      marked transformAllExpressions {
+        case s: SubqueryExpression =>
+          val Subquery(newPlan) =
+            rangerSparkOptimizer.execute(Subquery(RangerSparkMasking(s.plan)))
+          s.withNewPlan(newPlan)
       }
-      spark.sessionState.analyzer.execute(masked)
   }
 
   override def apply(plan: LogicalPlan): LogicalPlan = plan match {
