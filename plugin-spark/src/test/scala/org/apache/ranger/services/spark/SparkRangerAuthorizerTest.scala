@@ -321,6 +321,36 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
         |`wp_image_count` INT, `wp_max_ad_count` INT)
         |USING parquet
       """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl1 AS SELECT * FROM default.src
+      """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl2 AS SELECT * FROM default.src
+      """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl3 AS SELECT * FROM default.src
+      """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl4 AS SELECT * FROM default.src
+      """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl5 AS SELECT * FROM default.src
+      """.stripMargin)
+
+    sql(
+      """
+        |CREATE TABLE default.rangertbl6 AS SELECT * FROM default.src
+      """.stripMargin)
   }
 
   test("simple query") {
@@ -340,7 +370,7 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
       assert(df.count() === 20, "keys above 20 should be filtered automatically")
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       assert(df.count() === 500)
     }
   }
@@ -348,12 +378,12 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
   test("projection with ranger filter key") {
     val statement = "select key from default.src"
     withUser("bob") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       val row = df.take(1)(0)
       assert(row.getInt(0) < 20)
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       assert(df.count() === 500)
     }
   }
@@ -361,12 +391,12 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
   test("projection without ranger filter key") {
     val statement = "select value from default.src"
     withUser("bob") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       val row = df.take(1)(0)
       assert(row.getString(0).split("_")(1).toInt < 20)
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       assert(df.count() === 500)
     }
   }
@@ -375,16 +405,16 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
     val statement = "select key from default.src where key = 0"
     val statement2 = "select key from default.src where key >= 20"
     withUser("bob") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       val row = df.take(1)(0)
       assert(row.getInt(0) === 0)
-      val df2 = spark.sql(statement2)
+      val df2 = sql(statement2)
       assert(df2.count() === 0, "all keys should be filtered")
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       assert(df.count() === 3)
-      val df2 = spark.sql(statement2)
+      val df2 = sql(statement2)
       assert(df2.count() === 480)
     }
   }
@@ -392,14 +422,14 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
   test("alias") {
     val statement = "select key as k1, value v1 from default.src"
     withUser("bob") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       val row = df.take(1)(0)
       assert(row.getInt(0) < 20, "keys above 20 should be filtered automatically")
       assert(row.getString(1).startsWith("x"), "values should be masked")
       assert(df.count() === 20, "keys above 20 should be filtered automatically")
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       assert(df.count() === 500)
     }
   }
@@ -407,16 +437,80 @@ class SparkRangerAuthorizerTest extends FunSuite with BeforeAndAfterAll {
   test("agg") {
     val statement = "select sum(key) as k1, value v1 from default.src group by v1"
     withUser("bob") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       println(df.queryExecution.optimizedPlan)
       val row = df.take(1)(0)
       assert(row.getString(1).startsWith("x"), "values should be masked")
       assert(row.getString(1).split("_")(1).toInt < 20)
     }
     withUser("alice") {
-      val df = spark.sql(statement)
+      val df = sql(statement)
       val row = df.take(1)(0)
       assert(row.getString(1).startsWith("val"), "values should not be masked")
+    }
+  }
+
+  test("with equal expression") {
+    val statement = "select * from default.rangertbl1"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val row = df.take(1)(0)
+      assert(row.getInt(0) === 0, "rangertbl1 has an internal expression key=0")
+      assert(row.getString(1).startsWith("x"), "values should be masked")
+    }
+  }
+
+  test("with in set") {
+    val statement = "select * from default.rangertbl2"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val row = df.take(1)(0)
+      assert(row.getInt(0) === 0, "rangertbl2 has an internal expression key in (0, 1, 2)")
+      assert(row.getString(1).startsWith("val_x"), "values should show first 4 characters")
+    }
+  }
+
+  test("with in subquery") {
+    val statement = "select * from default.rangertbl3"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val rows = df.collect()
+      assert(rows.forall(_.getInt(0) < 100), "rangertbl3 has an internal expression key in (query)")
+      assert(rows.forall(_.getString(1).length > 10), "values should be hashed")
+    }
+  }
+
+  test("with in subquery self joined") {
+    val statement = "select * from default.rangertbl4"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val rows = df.collect()
+      assert(rows.length === 500)
+      assert(rows.forall(_.getString(1) === null), "values should be hashed")
+    }
+  }
+
+  test("with udf") {
+    val statement = "select * from default.rangertbl5"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val rows = df.collect()
+      assert(rows.length === 0)
+    }
+  }
+
+  test("with multiple expressions") {
+    val statement = "select * from default.rangertbl6"
+    withUser("bob") {
+      val df = sql(statement)
+      println(df.queryExecution.optimizedPlan)
+      val rows = df.collect()
+      assert(rows.forall { r => val x = r.getInt(0); x > 1 && x < 10 || x == 500 })
     }
   }
 

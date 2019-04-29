@@ -17,7 +17,6 @@
 
 package org.apache.ranger.services.spark
 
-import java.io.File
 import java.nio.file.{Files, FileSystems}
 import java.util
 
