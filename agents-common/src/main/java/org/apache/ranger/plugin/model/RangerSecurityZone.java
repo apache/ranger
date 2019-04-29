@@ -109,7 +109,7 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         }
 
         public void setTagServices(List<String> tagServices) {
-                this.tagServices = tagServices;
+                this.tagServices = (tagServices != null) ? tagServices : new ArrayList<String>(); 
         }
 
         @Override

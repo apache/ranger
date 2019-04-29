@@ -19,7 +19,9 @@
 
 package org.apache.ranger.rest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.common.collect.Sets;
+
 @Path("zones")
 @Component
 @Scope("request")
@@ -84,6 +88,9 @@ public class SecurityZoneREST {
     
     @Autowired
     RangerBizUtil bizUtil;
+    
+    @Autowired
+    ServiceREST serviceRest;
 
     @POST
     @Path("/zones")
@@ -124,7 +131,7 @@ public class SecurityZoneREST {
             throw restErrorUtil.createRESTException("Cannot update unzoned zone");
         }
 
-        ensureAdminAccess();
+        ensureUserAllowOperationOnServiceForZone(securityZone);
         removeEmptyEntries(securityZone);
         if (securityZone.getId() != null && !zoneId.equals(securityZone.getId())) {
             throw restErrorUtil.createRESTException("zoneId mismatch!!");
@@ -282,6 +289,154 @@ public class SecurityZoneREST {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Ranger Security Zone is not accessible for user '" + userName + "'.", true);
 		}
 	}
+	
+	private void ensureUserAllowOperationOnServiceForZone(
+			RangerSecurityZone securityZone){
+		if (!bizUtil.isAdmin()) {
+			String userName = bizUtil.getCurrentUserLoginId();
+			RangerSecurityZone existingSecurityZone = null;
+			try {
+				existingSecurityZone = svcStore
+						.getSecurityZone(securityZone.getId());
+			} catch (Exception ex) {
+				LOG.error("Unable to get Security Zone with id : " + securityZone.getId(), ex);
+				throw restErrorUtil.createRESTException(ex.getMessage());
+			}
+			if (existingSecurityZone != null) {
+				/* Validation for non service related fields of security zone */
+				
+				
+				if (!securityZone.getName().equals(
+						existingSecurityZone.getName())) {
+					throwRestError("User : " + userName
+							+ " is not allowed to edit zone name of zone : " + existingSecurityZone.getName());
+				} else if (!securityZone.getDescription().equals(
+						existingSecurityZone.getDescription())) {
+					throwRestError("User : " + userName
+							+ " is not allowed to edit zone description of zone : " + existingSecurityZone.getName());
+				}
+				if (!serviceRest.isZoneAdmin(existingSecurityZone.getName())) {
+					if (!securityZone.getAdminUserGroups().equals(
+							existingSecurityZone.getAdminUserGroups())) {
+						throwRestError("User : "
+								+ userName
+								+ " is not allowed to edit zone Admin User Group of zone : " + existingSecurityZone.getName());
+					} else if (!securityZone.getAdminUsers().equals(
+							existingSecurityZone.getAdminUsers())) {
+						throwRestError("User : " + userName
+								+ " is not allowed to edit zone Admin User of zone : " + existingSecurityZone.getName());
+					} else if (!securityZone.getAuditUsers().equals(
+							existingSecurityZone.getAuditUsers())) {
+						throwRestError("User : " + userName
+								+ " is not allowed to edit zone Audit User of zone : " + existingSecurityZone.getName());
+					} else if (!securityZone.getAuditUserGroups().equals(
+							existingSecurityZone.getAuditUserGroups())) {
+						throwRestError("User : "
+								+ userName
+								+ " is not allowed to edit zone Audit User Group of zone : " + existingSecurityZone.getName());
+					}
+				}
+				
+				/*
+				 * Validation on tag service association / disassociation with
+				 * security zone
+				 * */
+				
+				List<String> dbTagServices = existingSecurityZone
+						.getTagServices();
+				List<String> uiTagServices = securityZone.getTagServices();
+				List<String> addRmvTagSvc = new ArrayList<String>();
+				if (!dbTagServices.equals(uiTagServices)) {
+					for (String svc : dbTagServices) {
+						if (!uiTagServices.contains(svc)) {
+							addRmvTagSvc.add(svc);
+						}
+					}
+
+					for (String svc : uiTagServices) {
+						if (!dbTagServices.contains(svc)) {
+							addRmvTagSvc.add(svc);
+						}
+					}
+				}
+				if (!addRmvTagSvc.isEmpty()) {
+					for (String svc : addRmvTagSvc) {
+						/*
+						 * if user is neither svc admin nor admin then
+						 * add/remove of svc in zone is not allowed
+						 */
+						if (!svcStore.isServiceAdminUser(svc, userName)) {
+							throwRestError("User : "
+									+ userName
+									+ " is not allowed to add/remove tag service : "
+									+ svc + " in Ranger Security zone : " + existingSecurityZone.getName());
+
+						}
+					}
+				}
+				
+				
+				/*
+				 * Validation on service association / disassociation with
+				 * security zone
+				 */
+				Set<String> existingRangerSecurityZoneService = existingSecurityZone
+						.getServices().keySet();
+				Set<String> newRangerSecurityZoneService = securityZone.getServices()
+						.keySet();
+				Set<String> diffServiceSet = new HashSet<>(Sets.difference(
+							newRangerSecurityZoneService,
+							existingRangerSecurityZoneService));
+					diffServiceSet.addAll(Sets.difference(
+							existingRangerSecurityZoneService,
+							newRangerSecurityZoneService));
+
+				if (diffServiceSet != null && diffServiceSet.size() > 0) {
+					for (String svc : diffServiceSet) {
+						/*
+						 * if user is neither svc admin nor admin then
+						 * add/remove of svc in zone is not allowed
+						 */
+						if (!svcStore.isServiceAdminUser(svc, userName)) {
+							throwRestError("User : "
+									+ userName
+									+ " is not allowed to add/remove service : "
+									+ svc + " in Ranger Security zone : " + existingSecurityZone.getName());
+
+						}
+					}
+				}
+
+				/* Validation for resources on existing svc in security zone */
+				for (String svc : existingRangerSecurityZoneService) {
+					RangerSecurityZoneService rangerSecurityZnSvcFromDB = existingSecurityZone
+							.getServices().get(svc);
+
+					RangerSecurityZoneService rangerSecurityZnSvcFromUI = securityZone
+							.getServices().get(svc);
+
+					if (rangerSecurityZnSvcFromUI != null) {
+						if (!rangerSecurityZnSvcFromDB.getResources().equals(
+								rangerSecurityZnSvcFromUI.getResources())) {
+							if (!svcStore.isServiceAdminUser(svc, userName)) {
+								throwRestError("User : "
+										+ userName
+										+ " is not allowed to edit resource in service : "
+										+ svc + " in Ranger Security zone : " + existingSecurityZone.getName());
+							}
+						}
+					}
+
+				}
+			}
+
+		}
+	}
+	
+	private void throwRestError(String message){
+		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, message, true);
+	}
+
 
 	private void removeEmptyEntries(RangerSecurityZone securityZone) {
                 bizUtil.removeEmptyStrings(securityZone.getTagServices());

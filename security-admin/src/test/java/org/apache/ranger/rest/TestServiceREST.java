@@ -55,6 +55,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
+import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
@@ -79,6 +80,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -221,7 +223,11 @@ public class TestServiceREST {
 
 	@Mock
 	RangerPolicyEngineImpl rpImpl;
+	
+	@Mock
+	RangerPolicyEngine policyEngine;
 
+	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -1058,8 +1064,12 @@ public class TestServiceREST {
 		SearchFilter filter = new SearchFilter();
 		XXService xs = Mockito.mock(XXService.class);
 		xs.setType(3L);
-		XXServiceDao xSDao = Mockito.mock(XXServiceDao.class);
+		XXGroupUserDao xGroupDao = Mockito.mock(XXGroupUserDao.class);
+		ServiceREST spySVCRest = Mockito.spy(serviceREST);
 		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		ServicePolicies svcPolicies = new ServicePolicies();
+		svcPolicies.setPolicies(policies);
+		svcPolicies.setServiceName("HDFS_1-1-20150316062453");
 		RangerPolicy rPol=rangerPolicy();
 		policies.add(rPol);
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
@@ -1067,18 +1077,16 @@ public class TestServiceREST {
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(policies);
 		/*here we are setting serviceAdminRole, so we will get the required policy with serviceAdmi role*/
-		Mockito.when(daoManager.getXXService()).thenReturn(xSDao);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupDao);
 		Mockito.when(svcStore.isServiceAdminUser(rPol.getService(), null)).thenReturn(true);
-		Mockito.when(xSDao.findByName(rPol.getName())).thenReturn(xs);
-		RangerPolicyList dbRangerPolicy = serviceREST.getPolicies(request);
+		Mockito.doReturn(policyEngine).when(spySVCRest).getDelegatedAdminPolicyEngine("HDFS_1-1-20150316062453");
+		RangerPolicyList dbRangerPolicy = spySVCRest.getPolicies(request);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getListSize(), 1);
 		Mockito.verify(searchUtil).getSearchFilter(request,
 				policyService.sortFields);
 		Mockito.verify(svcStore).getPolicies(filter);
 		Mockito.verify(svcStore).isServiceAdminUser(rPol.getService(), null);
-		Mockito.verify(daoManager).getXXService();
-		Mockito.verify(xSDao).findByName(rPol.getName());
 	}
 
 
