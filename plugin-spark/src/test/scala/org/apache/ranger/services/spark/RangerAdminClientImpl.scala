@@ -37,8 +37,8 @@ class RangerAdminClientImpl extends RangerAdminClient {
   override def getServicePoliciesIfUpdated(
       lastKnownVersion: Long,
       lastActivationTimeInMillis: Long): ServicePolicies = {
-    val basedir = Option(System.getProperty("baseDir")).getOrElse(new File(".").getCanonicalPath)
-    val cachePath = FileSystems.getDefault.getPath(basedir, "/src/test/resources/" + cacheFilename)
+    val basedir = this.getClass.getProtectionDomain.getCodeSource.getLocation.getPath
+    val cachePath = FileSystems.getDefault.getPath(basedir, cacheFilename)
     LOG.info("Reading policies from " + cachePath)
     val bytes = Files.readAllBytes(cachePath)
     gson.fromJson(new String(bytes), classOf[ServicePolicies])

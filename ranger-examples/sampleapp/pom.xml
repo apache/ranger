@@ -38,4 +38,9 @@
             <version>${log4j.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
+    </build>
 </project>

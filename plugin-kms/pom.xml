@@ -64,6 +64,8 @@
 
     </dependencies>
     <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>

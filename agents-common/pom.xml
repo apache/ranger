@@ -21,6 +21,8 @@
     <name>Common library for Plugins</name>
     <description>Plugins Common</description>
     <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -86,4 +88,5 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
     </dependencies>
+
 </project>

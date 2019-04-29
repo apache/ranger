@@ -9,3 +9,4 @@
 winpkg/target
 .DS_Store
 .idea
+/derby.log

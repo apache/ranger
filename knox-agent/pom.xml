@@ -155,6 +155,8 @@
         </dependency>
     </dependencies>
     <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
         <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
         <resources>

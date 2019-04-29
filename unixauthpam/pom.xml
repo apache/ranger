@@ -28,6 +28,8 @@
     <name>PAM Authenticator</name>
     <description>PAM authentication service</description>
     <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
