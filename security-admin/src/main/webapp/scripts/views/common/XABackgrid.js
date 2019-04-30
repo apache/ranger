@@ -359,10 +359,17 @@ define(function(require){
 		  Renders this table head with a single row of header cells.
 		  */
 		render: function () {
+			var that = this;
 			var args = Array.prototype.slice.apply(arguments);
 			Backgrid.Header.prototype.render.apply(this, args);
 
 			this.$el.append(this.searchRow.render().$el);
+			//Add title to table header cell
+			this.columns.models.filter(function(m){
+				if(m.has('fullDescription')){
+					that.$el.find('.'+m.get('name')).attr('title', m.get("fullDescription"))
+				}
+			})
 			return this;
 		},
 

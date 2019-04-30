@@ -456,8 +456,11 @@ define(function(require) {
                 adminUserGroupValidation: 'Please select atleast one Admin Users/Usergroups to Zone else Zone will not be added.',
                 auditorUserGroupValidation: 'Please select atleast one Auditor Users/Usergroups to Zone else Zone will not be added.',
                 selectZoneFile          : 'Selected file does not contain zone details, Please select appropriate file containing zone details',
-                selectOtherFile         : 'Selected file contains zone details, Please select appropriate file without zone details'
-
+                selectOtherFile         : 'Selected file contains zone details, Please select appropriate file without zone details',
+                policyTimeDetails       : '<b>Last Update: </b>Last updated time of policy.<br><b>Download: </b>Time when policy actually downloaded(sync-up with Ranger).<br>\
+                                            <b>Active: </b>Time when policy actually in use for enforcement.',
+                tagPolicyTimeDetails    : '<b>Last Update: </b> Last updated time of Tag-service.<br><b>Download: </b>Time when tag-based policies sync-up with Ranger.<br>\
+                                            <b>Active: </b>Time when tag-based policies in use for enforcement.'
 			},
 			plcHldr : {
 				search 						:'Search',
