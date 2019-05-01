@@ -75,7 +75,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private String							  resourceSignature;
 	private Boolean                           isAuditEnabled;
 	private Map<String, RangerPolicyResource> resources;
-	private List<RangerPolicyCondition>   	  conditions;
+	private List<RangerPolicyItemCondition>   conditions;
 	private List<RangerPolicyItem>            policyItems;
 	private List<RangerPolicyItem>            denyPolicyItems;
 	private List<RangerPolicyItem>            allowExceptions;
@@ -109,7 +109,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems
 	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyCondition> conditions) {
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyItemCondition> conditions) {
 		super();
 
 		setService(service);
@@ -501,11 +501,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	/**
 	 * @return the conditions
 	 */
-	public List<RangerPolicyCondition> getConditions() { return conditions; }
+	public List<RangerPolicyItemCondition> getConditions() { return conditions; }
 	/**
 	 * @param conditions the conditions to set
 	 */
-	public void setConditions(List<RangerPolicyCondition> conditions) {
+	public void setConditions(List<RangerPolicyItemCondition> conditions) {
 		this.conditions = conditions;
 	}
 
@@ -553,7 +553,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		sb.append("policyConditions={");
 		if(conditions != null) {
-			for(RangerPolicyCondition condition : conditions) {
+			for(RangerPolicyItemCondition condition : conditions) {
 				if(condition != null) {
 					condition.toString(sb);
 				}
@@ -1351,38 +1351,22 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		
 	}
 
-	// Shell class for backward compatibility
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerPolicyItemCondition extends RangerPolicyCondition implements java.io.Serializable {
-		public RangerPolicyItemCondition() {
-			this(null, null);
-		}
-
-		public RangerPolicyItemCondition(String type, List<String> values) {
-			super(type,values);
-		}
-	}
-
-	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerPolicyCondition implements java.io.Serializable {
+	public static class RangerPolicyItemCondition implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private String type;
 		private List<String> values;
 
-		public RangerPolicyCondition() {
+		public RangerPolicyItemCondition() {
 			this(null, null);
 		}
 
-		public RangerPolicyCondition(String type, List<String> values) {
+		public RangerPolicyItemCondition(String type, List<String> values) {
 			setType(type);
 			setValues(values);
 		}
@@ -1469,7 +1453,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			RangerPolicyCondition other = (RangerPolicyCondition) obj;
+			RangerPolicyItemCondition other = (RangerPolicyItemCondition) obj;
 			if (type == null) {
 				if (other.type != null)
 					return false;

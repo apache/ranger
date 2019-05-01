@@ -80,18 +80,18 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 	@Override
 	public void init() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyConditionSampleSimpleMatcher.init(" + policyCondition + ")");
+			LOG.debug("==> RangerPolicyConditionSampleSimpleMatcher.init(" + condition + ")");
 		}
 
 		super.init();
 
-		if (policyCondition == null) {
+		if (condition == null) {
 			LOG.debug("init: null policy condition! Will match always!");
 			_allowAny = true;
 		} else if (conditionDef == null) {
 			LOG.debug("init: null policy condition definition! Will match always!");
 			_allowAny = true;
-		} else if (CollectionUtils.isEmpty(policyCondition.getValues())) {
+		} else if (CollectionUtils.isEmpty(condition.getValues())) {
 			LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
 			_allowAny = true;
 		} else if (MapUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
@@ -102,13 +102,13 @@ public class RangerPolicyConditionSampleSimpleMatcher extends RangerAbstractCond
 			_allowAny = true;
 		} else {
 			_contextName = conditionDef.getEvaluatorOptions().get(CONTEXT_NAME);
-			for (String value : policyCondition.getValues()) {
+			for (String value : condition.getValues()) {
 				_values.add(value);
 			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyConditionSampleSimpleMatcher.init(" + policyCondition + "): values[" + _values + "]");
+			LOG.debug("<== RangerPolicyConditionSampleSimpleMatcher.init(" + condition + "): values[" + _values + "]");
 		}
 	}
 

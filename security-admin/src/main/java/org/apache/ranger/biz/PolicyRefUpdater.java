@@ -79,9 +79,9 @@ public class PolicyRefUpdater {
 		final Set<String> conditionTypes  = new HashSet<>();
 		final Set<String> dataMaskTypes   = new HashSet<>();
 
-		List<RangerPolicy.RangerPolicyCondition> rangerPolicyConditions = policy.getConditions();
+		List<RangerPolicy.RangerPolicyItemCondition> rangerPolicyConditions = policy.getConditions();
 		if (CollectionUtils.isNotEmpty(rangerPolicyConditions)) {
-			for (RangerPolicy.RangerPolicyCondition condition : rangerPolicyConditions) {
+			for (RangerPolicy.RangerPolicyItemCondition condition : rangerPolicyConditions) {
 				conditionTypes.add(condition.getType());
 			}
 		}

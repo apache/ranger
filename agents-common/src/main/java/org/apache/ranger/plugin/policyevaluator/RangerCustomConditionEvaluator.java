@@ -57,7 +57,7 @@ public class RangerCustomConditionEvaluator {
                 perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_INIT_LOG, "RangerCustomConditionEvaluator.init(policyId=" + policyId + ")");
             }
 
-            for (RangerPolicy.RangerPolicyCondition condition : policy.getConditions()) {
+            for (RangerPolicy.RangerPolicyItemCondition condition : policy.getConditions()) {
                 RangerServiceDef.RangerPolicyConditionDef conditionDef = getConditionDef(condition.getType(),serviceDef);
 
                 if (conditionDef == null) {
@@ -71,7 +71,7 @@ public class RangerCustomConditionEvaluator {
                 if (conditionEvaluator != null) {
                     conditionEvaluator.setServiceDef(serviceDef);
                     conditionEvaluator.setConditionDef(conditionDef);
-                    conditionEvaluator.setPolicyCondition(condition);
+                    conditionEvaluator.setPolicyItemCondition(condition);
 
                     RangerPerfTracer perfConditionInit = null;
 

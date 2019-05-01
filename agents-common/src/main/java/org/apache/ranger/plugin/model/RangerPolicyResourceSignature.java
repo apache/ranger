@@ -32,7 +32,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.solr.common.StringUtils;
 
 public class RangerPolicyResourceSignature {
@@ -198,9 +198,9 @@ public class RangerPolicyResourceSignature {
 	}
 
 	static class CustomConditionSerialiser {
-		final List<RangerPolicyCondition> rangerPolicyConditions;
+		final List<RangerPolicy.RangerPolicyItemCondition> rangerPolicyConditions;
 
-		CustomConditionSerialiser(List<RangerPolicyCondition> rangerPolicyConditions) {
+		CustomConditionSerialiser(List<RangerPolicyItemCondition> rangerPolicyConditions) {
 			this.rangerPolicyConditions = rangerPolicyConditions;
 		}
 
@@ -209,7 +209,7 @@ public class RangerPolicyResourceSignature {
 			StringBuilder builder = new StringBuilder();
 			Map<String, List<String>> conditionMap = new TreeMap<>();
 
-			for(RangerPolicyCondition rangerPolicyCondition : rangerPolicyConditions) {
+			for(RangerPolicyItemCondition rangerPolicyCondition : rangerPolicyConditions) {
 				if (rangerPolicyCondition.getType() != null) {
 					String type = rangerPolicyCondition.getType();
 					List<String> values = new ArrayList<>();

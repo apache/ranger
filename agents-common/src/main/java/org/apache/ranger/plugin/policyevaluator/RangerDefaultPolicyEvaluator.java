@@ -1204,7 +1204,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 					String conditionType = null;
 					if (conditionEvaluator instanceof RangerAbstractConditionEvaluator) {
-						conditionType = ((RangerAbstractConditionEvaluator)conditionEvaluator).getPolicyCondition().getType();
+						conditionType = ((RangerAbstractConditionEvaluator)conditionEvaluator).getPolicyItemCondition().getType();
 					}
 
 					perf = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_REQUEST_LOG, "RangerConditionEvaluator.matchPolicyCustomConditions(policyId=" + getId() +  ",policyConditionType=" + conditionType + ")");
