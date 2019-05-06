@@ -48,7 +48,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -69,6 +69,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_KYLIN_NAME  = "kylin";
 	public static final String EMBEDDED_SERVICEDEF_ABFS_NAME  = "abfs";
 	public static final String EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME = "elasticsearch";
+	public static final String EMBEDDED_SERVICEDEF_PRESTO_NAME  = "presto";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -83,6 +84,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String SOLR_IMPL_CLASS_NAME  = "org.apache.ranger.services.solr.RangerServiceSolr";
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
+	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
@@ -104,6 +106,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef kylinServiceDef;
 	private RangerServiceDef abfsServiceDef;
 	private RangerServiceDef elasticsearchServiceDef;
+	private RangerServiceDef prestoServiceDef;
 
 	private RangerServiceDef tagServiceDef;
 
@@ -148,6 +151,7 @@ public class EmbeddedServiceDefsUtil {
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
 			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 			elasticsearchServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME);
+			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -222,6 +226,8 @@ public class EmbeddedServiceDefsUtil {
 	public long getWasbServiceDefId() { return getId(wasbServiceDef); }
 
 	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
+
+	public long getPrestoServiceDefId() { return getId(prestoServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;

@@ -158,6 +158,7 @@
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
+        <presto.version>310</presto.version>
         <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -184,6 +185,12 @@
 		<kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
 		<jna.version>5.2.0</jna.version>
 		<jna-platform.version>5.2.0</jna-platform.version>
+        <!-- presto plugin deps -->
+        <presto.airlift.version>0.178</presto.airlift.version>
+        <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
+        <presto.guice.version>4.2.2</presto.guice.version>
+        <presto.guava.version>26.0-jre</presto.guava.version>
+        <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
     </properties>
     <profiles>
         <profile>
@@ -211,6 +218,7 @@
                 <module>plugin-solr</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
+                <module>plugin-presto</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -229,6 +237,7 @@
                 <module>ranger-solr-plugin-shim</module>
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
+                <module>ranger-presto-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
@@ -265,6 +274,7 @@
                                 <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>
@@ -623,6 +633,33 @@
             </build>
         </profile>
         <profile>
+            <id>ranger-presto-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+                <module>plugin-presto</module>
+                <module>ranger-presto-plugin-shim</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.2-beta-5</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>linux</id>
             <activation>
                 <os>
@@ -676,6 +713,8 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>plugin-presto</module>
+                <module>ranger-presto-plugin-shim</module>
                 <module>unixauthnative</module>
             </modules>
             <build>
@@ -704,6 +743,7 @@
                                 <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>
