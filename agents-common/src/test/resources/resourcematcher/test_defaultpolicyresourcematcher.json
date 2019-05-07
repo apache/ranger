@@ -14,7 +14,8 @@
           "ignoreCase": true
         },
         "label": "Hive Database",
-        "description": "Hive Database"
+        "description": "Hive Database",
+        "isExcludes": true
       },
       {
         "name": "table",
@@ -28,7 +29,8 @@
           "ignoreCase": true
         },
         "label": "Hive Table",
-        "description": "Hive Table"
+        "description": "Hive Table",
+        "isExcludes": true
       },
       {
         "name": "udf",
@@ -56,7 +58,8 @@
           "ignoreCase": true
         },
         "label": "Hive Column",
-        "description": "Hive Column"
+        "description": "Hive Column",
+        "isExcludes": true
       }
     ],
     "accessTypes": [
@@ -95,6 +98,142 @@
     ]
   },
   "testCases": [
+    {
+      "name": "database=*, isExclude=true:table=*, isExcludes=true",
+      "policyResources": {
+        "database": {"values": ["*"], "isExcludes": true},
+        "table": {"values": ["*"], "isExcludes": true}
+      },
+      "tests": [
+        {
+          "name": "NO MATCH for invalid resource level",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "invalid-resource-name":"any"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
+          "name": "NO MATCH for resource from different hierarchy 'finance:udf=some_udf",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "udf":"some_udf"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
+          "name": "No MATCH for parent 'finance.tax.ssn'",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax", "column":"ssn"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "No MATCH for exact 'finance:tax'",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {"database": "finance","table": "tax"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "No MATCH for parent with wildcards 'finance'",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {"database": "finance"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "No MATCH for any ''",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ]
+    },
+    {
+      "name": "database=*:table=tax, isExcludes=true",
+      "policyResources": {
+        "database": {"values": ["*"]},
+        "table": {"values": ["tax"], "isExcludes": true}
+      },
+      "tests": [
+        {
+          "name": "NO MATCH for invalid resource level",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "invalid-resource-name":"any"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
+          "name": "NO MATCH for resource from different hierarchy 'finance:udf=some_udf",
+          "type": "anyMatch",
+          "resource" : {
+            "elements" : { "database":"finance", "udf":"some_udf"}
+          },
+          "evalContext": {},
+          "result" : false
+        }
+      ,
+        {
+          "name": "No MATCH for parent 'finance.tax.ssn'",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax", "column":"ssn"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "No MATCH for exact 'finance:tax'",
+          "type": "anyMatch",
+          "resource": {
+            "elements": {"database": "finance","table": "tax"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
+          "resource": {
+            "elements": {"database": "finance"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ,
+        {
+          "name": "MATCH for child ''",
+          "type": "descendantMatch",
+          "resource": {
+            "elements": {}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ]
+    },
     {
       "name": "database=*:table=*",
       "policyResources": {
@@ -153,8 +292,8 @@
         }
         ,
         {
-          "name": "MATCH for exact ''",
-          "type": "exactMatch",
+          "name": "MATCH for parent with wildcards ''",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {}
           },
@@ -421,8 +560,8 @@
         }
       ,
         {
-          "name": "MATCH for exact ''",
-          "type": "exactMatch",
+          "name": "MATCH for parent with wildcards ''",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {}
           },
@@ -470,8 +609,8 @@
         }
       ,
         {
-          "name": "MATCH for exact ''",
-          "type": "exactMatch",
+          "name": "MATCH for parent with wildcards ''",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {}
           },
@@ -667,8 +806,8 @@
         }
       ,
         {
-          "name": "MATCH for child 'finance'",
-          "type": "descendantMatch",
+          "name": "MATCH for parent with wildcards 'finance'",
+          "type": "ancestorWithWildcardsMatch",
           "resource": {
             "elements": {"database": "finance"}
           },

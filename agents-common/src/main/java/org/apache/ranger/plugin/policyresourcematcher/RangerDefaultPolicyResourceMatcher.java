@@ -581,7 +581,9 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                         }
                     }
 
-                    int lastMatchedMatcherIndex = -1;
+                    if (resourceKeysSize == 0) {
+                        ret = MatchType.SELF;
+                    }
 
                     for (RangerResourceDef resourceDef : hierarchy) {
 
@@ -589,28 +591,13 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                         Object resourceValue = resource.getValue(resourceDef.getName());
 
                         if (matcher != null) {
-                            if (resourceValue != null) {
+                            if (resourceValue != null || matcher.isMatchAny()) {
                                 if (matcher.isMatch(resourceValue, evalContext)) {
                                     ret = MatchType.SELF;
-                                    lastMatchedMatcherIndex++;
                                 } else {
                                     ret = MatchType.NONE;
                                     break;
                                 }
-                            } else {
-                                // More matchers than resource-values
-                                if (lastMatchedMatcherIndex >= lastNonAnyMatcherIndex) {
-                                    // all remaining matchers are of type Any
-                                    if (lastMatchedMatcherIndex == -1) {
-                                        // For degenerate case: empty resource
-                                        ret = MatchType.SELF;
-                                    } else {
-                                        ret = MatchType.ANCESTOR_WITH_WILDCARDS;
-                                    }
-                                } else {
-                                    ret = MatchType.DESCENDANT;
-                                }
-                                break;
                             }
                         } else {
                             if (resourceValue != null) {
@@ -618,6 +605,16 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                                 ret = MatchType.ANCESTOR;
                             }
                             break;
+                        }
+                    }
+
+                    if (ret == MatchType.SELF && resourceKeysSize < policyResources.size()) {
+                        // More matchers than resource-values
+                        if (resourceKeysSize > lastNonAnyMatcherIndex) {
+                            // all remaining matchers which matched resource value of null are of type Any
+                            ret = MatchType.ANCESTOR_WITH_WILDCARDS;
+                        } else {
+                            ret = MatchType.DESCENDANT;
                         }
                     }
                 }
