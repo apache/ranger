@@ -227,7 +227,8 @@ IF NOT EXISTS(select * from x_security_zone where id = 1 and name=' ') THEN
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname='zone_id') THEN
-	ALTER TABLE dbo.x_policy ADD (zone_id bigint DEFAULT 1 NOT NULL), ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
+	ALTER TABLE dbo.x_policy ADD zone_id bigint DEFAULT 1 NOT NULL;
+	ALTER TABLE dbo.x_policy ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id);
 END IF;
 GO
 IF NOT EXISTS(select * from x_modules_master where module = 'Security Zone') THEN
