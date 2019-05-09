@@ -205,7 +205,10 @@ DECLARE
 BEGIN
 select count(*) into v_record_exists from x_db_version_h where version = 'J10013';
 	if (v_record_exists = 1) then
-		select name into new_atlas_def_name from x_service_def where name like 'atlas.%';
+		select count(*) into v_record_exists from x_service_def where name like 'atlas.%';
+		if (v_record_exists > 0) then
+			select name into new_atlas_def_name from x_service_def where name like 'atlas.%';
+		end if;
 		select count(*) into v_record_exists from x_access_type_def where def_id in(select id from x_service_def where name='tag') and name in('atlas:read','atlas:create','atlas:update','atlas:delete','atlas:all');
 		if (v_record_exists > 0) then
 			sql_stmt := 'UPDATE x_access_type_def set name=concat(:1,:2) where def_id=100 and name=:3';
