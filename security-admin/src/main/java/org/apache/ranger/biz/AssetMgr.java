@@ -52,6 +52,9 @@ import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXSecurityZoneRefGroup;
+import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -118,6 +121,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	XUgsyncAuditInfoService xUgsyncAuditInfoService;
+
+	@Autowired
+	ServiceMgr serviceMgr;
 
 	private static final Logger logger = Logger.getLogger(AssetMgr.class);
 
@@ -966,13 +972,61 @@ public class AssetMgr extends AssetMgrBase {
         } else if (!"asc".equalsIgnoreCase(searchCriteria.getSortType()) && !"desc".equalsIgnoreCase(searchCriteria.getSortType())) {
             searchCriteria.setSortType("desc");
         }
+
+		Set<String> zoneNameSet = new HashSet<String>();
+		Long userId = xaBizUtil.getXUserId();
+		VXGroupList groupList = xUserMgr.getXUserGroups(userId);
+		List<XXSecurityZoneRefUser> zoneRefUserList = rangerDaoManager
+				.getXXSecurityZoneRefUser().findByUserId(userId);
+		for (XXSecurityZoneRefUser zoneRefUser : zoneRefUserList) {
+			XXSecurityZone securityZone = rangerDaoManager
+					.getXXSecurityZoneDao().findByZoneId(
+							zoneRefUser.getZoneId());
+			if (securityZone != null) {
+				zoneNameSet.add(securityZone.getName());
+			}
+		}
+
+		for (VXGroup group : groupList.getList()) {
+			List<XXSecurityZoneRefGroup> zoneRefGroupList = rangerDaoManager
+					.getXXSecurityZoneRefGroup().findByGroupId(group.getId());
+			for (XXSecurityZoneRefGroup zoneRefGroup : zoneRefGroupList) {
+				XXSecurityZone securityZone = rangerDaoManager
+						.getXXSecurityZoneDao().findByZoneId(
+								zoneRefGroup.getZoneId());
+				if (securityZone != null) {
+					zoneNameSet.add(securityZone.getName());
+				}
+			}
+		}
+		List<String> zoneNameList = (List<String>) searchCriteria.getParamValue("zoneName");
+
+		if (!xaBizUtil.isAdmin()
+				&& (zoneNameList == null || zoneNameList.isEmpty())) {
+			if (!zoneNameSet.isEmpty()) {
+				searchCriteria.getParamList().put("zoneName",
+						new ArrayList<String>(zoneNameSet));
+			} else {
+				searchCriteria.getParamList().put("zoneName", null);
+			}
+		} else if (!xaBizUtil.isAdmin() && !zoneNameList.isEmpty()
+				&& !zoneNameSet.isEmpty()) {
+			for (String znName : zoneNameList) {
+				if (!serviceMgr.isZoneAdmin(znName)
+						&& !serviceMgr.isZoneAuditor(znName)) {
+					throw restErrorUtil.createRESTException(
+							HttpServletResponse.SC_FORBIDDEN,
+							"User is not the zone admin or zone auditor of zone "
+									+ znName, true);
+				}
+			}
+		}
         if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
         }
     }
-
 
 	public VXTrxLogList getTransactionReport(String transactionId) {
 		List<XXTrxLog> xTrxLogList = rangerDaoManager.getXXTrxLog()

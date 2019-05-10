@@ -80,7 +80,6 @@ import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupUserDao;
-import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
@@ -3390,7 +3389,7 @@ public class ServiceREST {
 
 						for (RangerPolicy policy : listToFilter) {
 							if (policyEngine.isAccessAllowed(policy, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS) 
-									|| (!StringUtils.isEmpty(policy.getZoneName()) && (isZoneAdmin(policy.getZoneName()) || isZoneAuditor(policy.getZoneName())))
+									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
 									|| isServiceAdminUser) {
 								ret.add(policy);
 							}
@@ -3405,79 +3404,6 @@ public class ServiceREST {
 
 		return ret;
 	}
-
-	public boolean isZoneAdmin(String zoneName) {
-		boolean isZoneAdmin = false;
-		RangerSecurityZone securityZone = null;
-		try {
-			securityZone = zoneStore.getSecurityZoneByName(zoneName);
-		} catch (Exception e) {
-			LOG.error("Unexpected error when fetching security zone with name:[" + zoneName + "] from database", e);
-		}
-
-		if (securityZone != null) {
-			String userId = bizUtil.getCurrentUserLoginId();
-
-			List<XXGroupUser> groupUsers = groupUserDao.findByUserId(bizUtil
-					.getXUserId());
-			List<String> loggedInUsersGroups = new ArrayList<>();
-			for (XXGroupUser groupUser : groupUsers) {
-				loggedInUsersGroups.add(groupUser.getName());
-			}
-			for (String loggedInUsersGroup : loggedInUsersGroups) {
-				if (securityZone != null
-						&& securityZone.getAdminUserGroups() != null
-						&& securityZone.getAdminUserGroups().contains(
-								loggedInUsersGroup)) {
-					isZoneAdmin = true;
-					break;
-				}
-			}
-			if ((securityZone != null && securityZone.getAdminUsers() != null && securityZone
-					.getAdminUsers().contains(userId))) {
-				isZoneAdmin = true;
-			}
-		}
-
-		return isZoneAdmin;
-	}
-	
-	
-	public boolean isZoneAuditor(String zoneName) {
-		boolean isZoneAuditor = false;
-		RangerSecurityZone securityZone = null;
-		try {
-			securityZone = zoneStore.getSecurityZoneByName(zoneName);
-		} catch (Exception e) {
-			LOG.error("Unexpected error when fetching security zone with name:[" + zoneName + "] from database", e);
-		}
-
-		if (securityZone != null) {
-			String userId = bizUtil.getCurrentUserLoginId();
-
-			List<XXGroupUser> groupUsers = groupUserDao.findByUserId(bizUtil
-					.getXUserId());
-			List<String> loggedInUsersGroups = new ArrayList<>();
-			for (XXGroupUser groupUser : groupUsers) {
-				loggedInUsersGroups.add(groupUser.getName());
-			}
-			for (String loggedInUsersGroup : loggedInUsersGroups) {
-				if (securityZone != null
-						&& securityZone.getAuditUserGroups() != null
-						&& securityZone.getAuditUserGroups().contains(
-								loggedInUsersGroup)) {
-					isZoneAuditor = true;
-					break;
-				}
-			}
-			if ((securityZone != null && securityZone.getAuditUsers() != null && securityZone
-					.getAuditUsers().contains(userId))) {
-				isZoneAuditor = true;
-			}
-		}
-
-		return isZoneAuditor;
-	}
 	
 	void ensureAdminAccess(RangerPolicy policy) {
 		boolean isAdmin = bizUtil.isAdmin();
@@ -3491,7 +3417,7 @@ public class ServiceREST {
 			Set<String> userGroups = userMgr.getGroupsForUser(userName);
 			
 			//for zone policy create /update / delete
-			if(!StringUtils.isEmpty(policy.getZoneName()) && isZoneAdmin(policy.getZoneName())){
+			if(!StringUtils.isEmpty(policy.getZoneName()) && serviceMgr.isZoneAdmin(policy.getZoneName())){
 				isAllowed = true;
 			}else{
 				isAllowed = hasAdminAccess(policy, userName, userGroups);
@@ -3827,7 +3753,7 @@ public class ServiceREST {
                 String userName = bizUtil.getCurrentUserLoginId();
                 boolean isAuditAdmin = bizUtil.isAuditAdmin();
                 boolean isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
-                boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName) || (!StringUtils.isEmpty(policy.getZoneName()) && (isZoneAdmin(policy.getZoneName()) || isZoneAuditor(policy.getZoneName())));
+                boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName) || (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())));
                 if (!isAdmin && !isKeyAdmin && !isSvcAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
                         boolean isAllowed = false;
 

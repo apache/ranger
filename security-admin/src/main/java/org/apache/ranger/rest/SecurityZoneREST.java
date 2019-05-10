@@ -43,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -94,11 +95,14 @@ public class SecurityZoneREST {
     @Autowired
     RangerBizUtil bizUtil;
     
-    @Autowired
-    ServiceREST serviceRest;
+	@Autowired
+	ServiceREST serviceRest;
 
-    @Autowired
-    RangerDaoManager daoManager;
+	@Autowired
+	RangerDaoManager daoManager;
+
+	@Autowired
+	ServiceMgr serviceMgr;
 
 
     @POST
@@ -324,7 +328,7 @@ public class SecurityZoneREST {
 					throwRestError("User : " + userName
 							+ " is not allowed to edit zone description of zone : " + existingSecurityZone.getName());
 				}
-				if (!serviceRest.isZoneAdmin(existingSecurityZone.getName())) {
+				if (!serviceMgr.isZoneAdmin(existingSecurityZone.getName())) {
 					if (!securityZone.getAdminUserGroups().equals(
 							existingSecurityZone.getAdminUserGroups())) {
 						throwRestError("User : "
