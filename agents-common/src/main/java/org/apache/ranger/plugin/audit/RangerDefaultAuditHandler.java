@@ -206,6 +206,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			auditEvent.setEventId(generateNextAuditEventId());
 		}
 
+		if (auditEvent.getAgentId() == null) {
+			auditEvent.setAgentId(MiscUtil.getApplicationType());
+		}
+
 		auditEvent.setSeqNum(sequenceNumber++);
 	}
 

@@ -178,6 +178,7 @@ define(function(require) {
 					<th class="renderable cip"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
+					<th class="renderable cip"></th>\
 					<th class="renderable cip">Service</th>\
 					<th class="renderable name">Resource</th>\
 					<th class="renderable cip"></th>\
@@ -335,6 +336,7 @@ define(function(require) {
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
             var serviceUser = [{'label' : 'True' , 'value' : true},{'label' : 'False' , 'value' : false}]
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
+				                  {text : 'Application',label : 'agentId'},
 			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
 			                      {text : 'Service Name',label :'repoName'},{text : 'Policy ID',label :'policyId'},
 			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
@@ -343,7 +345,7 @@ define(function(require) {
 			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
                                   {text : 'Zone Name',label : 'zoneName'},{text : localization.tt("lbl.agentHost"), label :"agentHost"}];
-            var searchOpt = ['Resource Type','Start Date','End Date','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
+            var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
             'Client IP','Tags','Cluster Name', 'Zone Name', localization.tt("lbl.agentHost")];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
@@ -359,6 +361,7 @@ define(function(require) {
                                         {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
                                             {text :'Start Date'     , info :localization.tt('h.startDate')},
                                             {text :'User' 			, info :localization.tt('h.userMsg')},
+                                            {text :'Application' 	, info :localization.tt('h.application')},
                                             {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
                         //initilize info popover
                         XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
@@ -1036,6 +1039,8 @@ define(function(require) {
 
                     var policyVersion = this.model.get('policyVersion');
 
+                    var application = this.model.get('agentId');
+
 					var policy = new RangerPolicy({
 						id: policyId,
 						version:policyVersion
@@ -1132,6 +1137,13 @@ define(function(require) {
 							}
 						})
 					},
+				    agentId : {
+					label : 'Application',
+					cell: "String",
+					click : false,
+					drag : false,
+					editable:false
+				},
 					requestUser : {
 						label : 'User',
 						cell: "String",
