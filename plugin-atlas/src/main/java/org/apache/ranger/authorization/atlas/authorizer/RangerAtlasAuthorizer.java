@@ -340,10 +340,11 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             final String                   classification = request.getClassification() != null ? request.getClassification().getTypeName() : null;
             final RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl();
             final RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            final String                   ownerUser      = request.getEntity() != null ? (String) request.getEntity().getAttribute(RESOURCE_ENTITY_OWNER) : null;
 
             rangerResource.setValue(RESOURCE_ENTITY_TYPE, entityTypes);
             rangerResource.setValue(RESOURCE_ENTITY_ID, entityId);
-
+            rangerResource.setOwnerUser(ownerUser);
             rangerRequest.setAccessType(action);
             rangerRequest.setAction(action);
             rangerRequest.setUser(request.getUser());
