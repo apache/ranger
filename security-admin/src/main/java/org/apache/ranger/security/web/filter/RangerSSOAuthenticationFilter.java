@@ -235,45 +235,46 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		}
 	}
 
-        private String constructForwardableURL(HttpServletRequest httpRequest){
-                String xForwardedProto = "";
-                String xForwardedHost = "";
-                String xForwardedContext = "";
-                Enumeration<?> names = httpRequest.getHeaderNames();
-                while (names.hasMoreElements()) {
-                        String name = (String) names.nextElement();
-                        Enumeration<?> values = httpRequest.getHeaders(name);
-                        String value = "";
-                        if (values != null) {
-                                while (values.hasMoreElements()) {
-                                        value = (String) values.nextElement();
-                                }
-                        }
-                        if (StringUtils.trimToNull(name) != null
-                                        && StringUtils.trimToNull(value) != null) {
-                                if (name.equalsIgnoreCase("x-forwarded-proto")) {
-                                        xForwardedProto = value;
-                                } else if (name.equalsIgnoreCase("x-forwarded-host")) {
-                                        xForwardedHost = value;
-                                } else if (name.equalsIgnoreCase("x-forwarded-context")) {
-                                        xForwardedContext = value;
-                                }
-                        }
-                }
-                if (xForwardedHost.contains(",")) {
-                    if(LOG.isDebugEnabled()) {
-                        LOG.debug("xForwardedHost value is " + xForwardedHost + " it contains multiple hosts, selecting the first host.");
-                    }
-                    xForwardedHost = xForwardedHost.split(",")[0].trim();
-                }
-                String xForwardedURL = "";
-                if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
-                        xForwardedURL = xForwardedProto + "://" + xForwardedHost
-                                        + xForwardedContext + PROXY_RANGER_URL_PATH
-                                        + httpRequest.getRequestURI();
-                }
-                return xForwardedURL;
-        }
+	private String constructForwardableURL(HttpServletRequest httpRequest) {
+		String xForwardedProto = "";
+		String xForwardedHost = "";
+		String xForwardedContext = "";
+		Enumeration<?> names = httpRequest.getHeaderNames();
+		while (names.hasMoreElements()) {
+			String name = (String) names.nextElement();
+			Enumeration<?> values = httpRequest.getHeaders(name);
+			String value = "";
+			if (values != null) {
+				while (values.hasMoreElements()) {
+					value = (String) values.nextElement();
+				}
+			}
+			if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
+				if (name.equalsIgnoreCase("x-forwarded-proto")) {
+					xForwardedProto = value;
+				} else if (name.equalsIgnoreCase("x-forwarded-host")) {
+					xForwardedHost = value;
+				} else if (name.equalsIgnoreCase("x-forwarded-context")) {
+					xForwardedContext = value;
+				}
+			}
+		}
+		if (xForwardedHost.contains(",")) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("xForwardedHost value is " + xForwardedHost + " it contains multiple hosts, selecting the first host.");
+			}
+			xForwardedHost = xForwardedHost.split(",")[0].trim();
+		}
+		String xForwardedURL = "";
+		if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null) {
+			if (StringUtils.trimToNull(xForwardedContext) != null) {
+				xForwardedURL = xForwardedProto + "://" + xForwardedHost + xForwardedContext + PROXY_RANGER_URL_PATH + httpRequest.getRequestURI();
+			} else {
+				xForwardedURL = xForwardedProto + "://" + xForwardedHost + httpRequest.getRequestURI();
+			}
+		}
+		return xForwardedURL;
+	}
 
 	private Authentication getGrantedAuthority(Authentication authentication) {
 		UsernamePasswordAuthenticationToken result=null;
