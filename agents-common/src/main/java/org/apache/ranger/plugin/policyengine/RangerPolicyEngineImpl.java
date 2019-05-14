@@ -1375,9 +1375,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				RangerPolicyEvaluator evaluator = policyEvaluator.getEvaluator();
 
 				String policyZoneName = evaluator.getPolicy().getZoneName();
-				if (!StringUtils.equals(zoneName, policyZoneName)) {
+				if (!(StringUtils.isEmpty(policyZoneName) && StringUtils.isEmpty(zoneName)) && !StringUtils.equals(zoneName, policyZoneName)) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Tag policy does not belong to the zone:[" + zoneName + "] of the accessed resource. Not evaluating this policy:[" + evaluator.getPolicy() + "]");
+						LOG.debug("Tag policy [zone:" + policyZoneName + "] does not belong to the zone:[" + zoneName + "] of the accessed resource. Not evaluating this policy:[" + evaluator.getPolicy() + "]");
 					}
 					continue;
 				}
