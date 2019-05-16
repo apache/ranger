@@ -485,7 +485,7 @@ public class ServiceUtil {
 			}
 		}
 
-		return ret;
+		return ret == null ? 0 : ret;
 	}
 	
 	private RangerBaseModelObject dataObjectToRangerObject(VXDataObject dataObject,RangerBaseModelObject rangerObject) {
