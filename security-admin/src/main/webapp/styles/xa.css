@@ -267,7 +267,7 @@ body {
 }
 .toggle-slide .toggle-blob {
   position: relative;
-  z-index: 99;
+  z-index: 3;
   cursor: hand;
   cursor: grab;
   cursor: -moz-grab;
@@ -2700,6 +2700,16 @@ textarea:read-only{
   text-overflow: ellipsis;
   max-width: 300px;
 }
+.r_breadcrumbs {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 40px;
+  padding-right: 2px;
+  z-index: 10;
+  background: #eeeeee;
+  padding-top: 9px;
+}
+
 #zoneServiceAccordion .accordion-inner{
   padding:0px;
   border: 0px;
