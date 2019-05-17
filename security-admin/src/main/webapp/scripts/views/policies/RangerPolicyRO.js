@@ -174,8 +174,8 @@ define(function(require) {
                         if(this.policy.has('validitySchedules')){
                                 details.validitySchedules = this.policy.get('validitySchedules');
                         }
-            if(this.policy.has('conditions') && this.policy.get('conditions').length > 0){
-                details.conditions = XAUtils.getPolicyConditionDetails(this.policy.get('conditions'), self.rangerService);
+            if(this.policy.has('conditions') && this.policy.get('conditions').length > 0 && self.serviceDef){
+                details.conditions = XAUtils.getPolicyConditionDetails(this.policy.get('conditions'), self.serviceDef);
             }
 			//get policyItems
 			this.createPolicyItems();
@@ -267,6 +267,9 @@ define(function(require) {
 		getPolicyByVersion : function(ver, e){
 			//to support old policy log after updating that policy.
 			this.policy.set('serviceType',undefined);
+			if(this.policy.has('conditions')){
+				this.policy.set('conditions', '');
+			}
 			this.policy.fetchByVersion(ver, {
 				cache : false,
 				async : false
