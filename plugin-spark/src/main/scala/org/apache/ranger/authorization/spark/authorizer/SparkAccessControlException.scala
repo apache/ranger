@@ -17,16 +17,4 @@
 
 package org.apache.ranger.authorization.spark.authorizer
 
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthorizer, HiveAuthorizerFactory, HiveAuthzSessionContext, HiveMetastoreClientFactory}
-import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider
-
-class RangerSparkAuthorizerFactory extends HiveAuthorizerFactory {
-  override def createHiveAuthorizer(
-      metastoreClientFactory: HiveMetastoreClientFactory,
-      conf: HiveConf,
-      hiveAuthenticator: HiveAuthenticationProvider,
-      ctx: HiveAuthzSessionContext): HiveAuthorizer = {
-    new RangerSparkAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, ctx)
-  }
-}
+class SparkAccessControlException(msg: String) extends Exception(msg)

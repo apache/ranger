@@ -518,7 +518,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					if (result == null) {
 						LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
 					} else if (!result.getIsAllowed()) {
-						if (LOG.isDebugEnabled()) {
+						if (!LOG.isDebugEnabled()) {
 							String path = resource.getAsString();
 							LOG.debug(String.format("filterListCmdObjects: Permission denied: user [%s] does not have [%s] privilege on [%s]. resource[%s], request[%s], result[%s]",
 									user, request.getHiveAccessType().name(), path, resource, request, result));

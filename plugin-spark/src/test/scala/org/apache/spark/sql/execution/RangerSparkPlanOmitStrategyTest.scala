@@ -39,6 +39,4 @@ class RangerSparkPlanOmitStrategyTest extends FunSuite {
     val plan5 = RangerSparkRowFilter(plan3)
     assert(strategy.apply(plan5) === PlanLater(plan3) :: Nil)
   }
-
-
 }

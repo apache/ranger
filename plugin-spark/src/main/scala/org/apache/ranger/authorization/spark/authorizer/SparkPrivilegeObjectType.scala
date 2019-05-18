@@ -17,8 +17,7 @@
 
 package org.apache.ranger.authorization.spark.authorizer
 
-object SparkObjectType extends Enumeration {
-  type SparkObjectType = Value
-
-  val NONE, DATABASE, TABLE, VIEW, COLUMN, FUNCTION, URI = Value
+object SparkPrivilegeObjectType extends Enumeration {
+  type SparkPrivilegeObjectType = Value
+  val DATABASE, TABLE_OR_VIEW, FUNCTION, DFS_URI = Value
 }

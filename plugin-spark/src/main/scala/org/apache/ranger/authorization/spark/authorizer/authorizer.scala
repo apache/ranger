@@ -17,16 +17,10 @@
 
 package org.apache.ranger.authorization.spark
 
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
 import org.apache.spark.sql.SparkSessionExtensions
 
 package object authorizer {
 
   type Extensions = SparkSessionExtensions => Unit
-
-  type SparkPrivilegeObject = HivePrivilegeObject
-
-  type SparkPrivilegeObjectType = HivePrivilegeObjectType
 
 }

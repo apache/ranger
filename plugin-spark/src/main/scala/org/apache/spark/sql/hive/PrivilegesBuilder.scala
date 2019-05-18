@@ -17,25 +17,22 @@
 
 package org.apache.spark.sql.hive
 
-import java.util.{ArrayList => JAList, List => JList}
 
-import scala.collection.JavaConverters._
-
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HivePrivilegeObject => HPO}
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.{HivePrivilegeObjectType, HivePrivObjectActionType}
-
+import org.apache.ranger.authorization.spark.authorizer.{SparkPrivilegeObject, SparkPrivilegeObjectType, SparkPrivObjectActionType}
+import org.apache.ranger.authorization.spark.authorizer.SparkPrivObjectActionType.SparkPrivObjectActionType
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.expressions.NamedExpression
-import org.apache.spark.sql.catalyst.optimizer.SparkPrivilegeObject
 import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.AuthzUtils._
 import org.apache.spark.sql.hive.execution.CreateHiveTableAsSelectCommand
 import org.apache.spark.sql.types.StructField
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * [[LogicalPlan]] -> list of [[SparkPrivilegeObject]]s
@@ -53,11 +50,11 @@ private[sql] object PrivilegesBuilder {
    *
    * @param plan A Spark [[LogicalPlan]]
    */
-  def build(plan: LogicalPlan): (JList[HPO], JList[HPO]) = {
+  def build(plan: LogicalPlan): (Seq[SparkPrivilegeObject], Seq[SparkPrivilegeObject]) = {
 
-    def doBuild(plan: LogicalPlan): (JList[HPO], JList[HPO]) = {
-      val inputObjs = new JAList[HPO]
-      val outputObjs = new JAList[HPO]
+    def doBuild(plan: LogicalPlan): (Seq[SparkPrivilegeObject], Seq[SparkPrivilegeObject]) = {
+      val inputObjs = new ArrayBuffer[SparkPrivilegeObject]
+      val outputObjs = new ArrayBuffer[SparkPrivilegeObject]
       plan match {
         // RunnableCommand
         case cmd: Command => buildCommand(cmd, inputObjs, outputObjs)
@@ -74,14 +71,14 @@ private[sql] object PrivilegesBuilder {
   }
 
   /**
-   * Build HivePrivilegeObjects from Spark LogicalPlan
-   * @param plan a Spark LogicalPlan used to generate HivePrivilegeObjects
-   * @param hivePrivilegeObjects input or output hive privilege object list
+   * Build SparkPrivilegeObjects from Spark LogicalPlan
+   * @param plan a Spark LogicalPlan used to generate SparkPrivilegeObjects
+   * @param privilegeObjects input or output spark privilege object list
    * @param projectionList Projection list after pruning
    */
   private def buildQuery(
       plan: LogicalPlan,
-      hivePrivilegeObjects: JList[HPO],
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject],
       projectionList: Seq[NamedExpression] = Nil): Unit = {
 
     /**
@@ -92,20 +89,20 @@ private[sql] object PrivilegesBuilder {
       if (projectionList.isEmpty) {
         addTableOrViewLevelObjs(
           table.identifier,
-          hivePrivilegeObjects,
+          privilegeObjects,
           table.partitionColumnNames,
           table.schema.fieldNames)
       } else {
         addTableOrViewLevelObjs(
           table.identifier,
-          hivePrivilegeObjects,
+          privilegeObjects,
           table.partitionColumnNames.filter(projectionList.map(_.name).contains(_)),
           projectionList.map(_.name))
       }
     }
 
     plan match {
-      case p: Project => buildQuery(p.child, hivePrivilegeObjects, p.projectList)
+      case p: Project => buildQuery(p.child, privilegeObjects, p.projectList)
 
       case h if h.nodeName == "HiveTableRelation" =>
         mergeProjection(getFieldVal(h, "tableMeta").asInstanceOf[CatalogTable])
@@ -120,25 +117,25 @@ private[sql] object PrivilegesBuilder {
         // Unfortunately, the real world is always a place where miracles happen.
         // We check the privileges directly without resolving the plan and leave everything
         // to spark to do.
-        addTableOrViewLevelObjs(u.tableIdentifier, hivePrivilegeObjects)
+        addTableOrViewLevelObjs(u.tableIdentifier, privilegeObjects)
 
       case p =>
         for (child <- p.children) {
-          buildQuery(child, hivePrivilegeObjects, projectionList)
+          buildQuery(child, privilegeObjects, projectionList)
         }
     }
   }
 
   /**
-   * Build HivePrivilegeObjects from Spark LogicalPlan
-   * @param plan a Spark LogicalPlan used to generate HivePrivilegeObjects
-   * @param inputObjs input hive privilege object list
-   * @param outputObjs output hive privilege object list
+   * Build SparkPrivilegeObjects from Spark LogicalPlan
+   * @param plan a Spark LogicalPlan used to generate SparkPrivilegeObjects
+   * @param inputObjs input spark privilege object list
+   * @param outputObjs output spark privilege object list
    */
   private def buildCommand(
       plan: LogicalPlan,
-      inputObjs: JList[HPO],
-      outputObjs: JList[HPO]): Unit = {
+      inputObjs: ArrayBuffer[SparkPrivilegeObject],
+      outputObjs: ArrayBuffer[SparkPrivilegeObject]): Unit = {
     plan match {
       case a: AlterDatabasePropertiesCommand => addDbLevelObjs(a.databaseName, outputObjs)
 
@@ -320,7 +317,11 @@ private[sql] object PrivilegesBuilder {
           getFieldVal(i, "table").asInstanceOf[CatalogTable].identifier, outputObjs)
         buildQuery(getFieldVal(i, "query").asInstanceOf[LogicalPlan], inputObjs)
 
-      case l: LoadDataCommand => addTableOrViewLevelObjs(l.table, outputObjs)
+      case l: LoadDataCommand =>
+        addTableOrViewLevelObjs(l.table, outputObjs)
+        if (!l.isLocal) {
+          inputObjs += new SparkPrivilegeObject(SparkPrivilegeObjectType.DFS_URI, l.path, l.path)
+        }
 
       case s if s.nodeName == "SaveIntoDataSourceCommand" =>
         buildQuery(getFieldVal(s, "query").asInstanceOf[LogicalPlan], outputObjs)
@@ -360,109 +361,99 @@ private[sql] object PrivilegesBuilder {
   }
 
   /**
-   * Add database level hive privilege objects to input or output list
-   * @param dbName database name as hive privilege object
-   * @param hivePrivilegeObjects input or output list
+   * Add database level spark privilege objects to input or output list
+   * @param dbName database name as spark privilege object
+   * @param privilegeObjects input or output list
    */
   private def addDbLevelObjs(
       dbName: String,
-      hivePrivilegeObjects: JList[HPO]): Unit = {
-    hivePrivilegeObjects.add(
-      SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, dbName, dbName))
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject]): Unit = {
+    privilegeObjects += new SparkPrivilegeObject(SparkPrivilegeObjectType.DATABASE, dbName, dbName)
   }
 
   /**
-   * Add database level hive privilege objects to input or output list
-   * @param dbOption an option of database name as hive privilege object
-   * @param hivePrivilegeObjects input or output hive privilege object list
+   * Add database level spark privilege objects to input or output list
+   * @param dbOption an option of database name as spark privilege object
+   * @param privilegeObjects input or output spark privilege object list
    */
   private def addDbLevelObjs(
       dbOption: Option[String],
-      hivePrivilegeObjects: JList[HPO]): Unit = {
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject]): Unit = {
     dbOption match {
       case Some(db) =>
-        hivePrivilegeObjects.add(
-          SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
+        privilegeObjects += new SparkPrivilegeObject(SparkPrivilegeObjectType.DATABASE, db, db)
       case _ =>
     }
   }
 
   /**
-   * Add database level hive privilege objects to input or output list
-   * @param tableIdentifier table identifier contains database name as hive privilege object
-   * @param hivePrivilegeObjects input or output hive privilege object list
+   * Add database level spark privilege objects to input or output list
+   * @param identifier table identifier contains database name as hive privilege object
+   * @param privilegeObjects input or output spark privilege object list
    */
   private def addDbLevelObjs(
-      tableIdentifier: TableIdentifier,
-      hivePrivilegeObjects: JList[HPO]): Unit = {
-    tableIdentifier.database match {
+      identifier: TableIdentifier,
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject]): Unit = {
+    identifier.database match {
       case Some(db) =>
-        hivePrivilegeObjects.add(
-          SparkPrivilegeObject(HivePrivilegeObjectType.DATABASE, db, db))
+        privilegeObjects += new SparkPrivilegeObject(SparkPrivilegeObjectType.DATABASE, db, db)
       case _ =>
     }
   }
 
   /**
-   * Add table level hive privilege objects to input or output list
-   * @param tableIdentifier table identifier contains database name, and table name as hive
-   *                        privilege object
-   * @param hivePrivilegeObjects input or output list
-   * @param mode Append or overwrite
-   */
-  private def addTableOrViewLevelObjs(
-      tableIdentifier: TableIdentifier,
-      hivePrivilegeObjects: JList[HPO],
-      partKeys: Seq[String] = Nil,
-      columns: Seq[String] = Nil,
-      mode: SaveMode = SaveMode.ErrorIfExists,
-      cmdParams: Seq[String] = Nil): Unit = {
-    tableIdentifier.database match {
-      case Some(db) =>
-        val tbName = tableIdentifier.table
-        val hivePrivObjectActionType = getHivePrivObjActionType(mode)
-        hivePrivilegeObjects.add(
-          SparkPrivilegeObject(
-            HivePrivilegeObjectType.TABLE_OR_VIEW,
-            db,
-            tbName,
-            partKeys.asJava,
-            columns.asJava,
-            hivePrivObjectActionType,
-            cmdParams.asJava))
-      case _ =>
-    }
-  }
-
-  /**
-   * Add function level hive privilege objects to input or output list
+   * Add function level spark privilege objects to input or output list
    * @param databaseName database name
-   * @param functionName function name as hive privilege object
-   * @param hivePrivilegeObjects input or output list
+   * @param functionName function name as spark privilege object
+   * @param privilegeObjects input or output list
    */
   private def addFunctionLevelObjs(
       databaseName: Option[String],
       functionName: String,
-      hivePrivilegeObjects: JList[HPO]): Unit = {
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject]): Unit = {
     databaseName match {
       case Some(db) =>
-        hivePrivilegeObjects.add(
-          SparkPrivilegeObject(HivePrivilegeObjectType.FUNCTION, db, functionName))
+        privilegeObjects += new SparkPrivilegeObject(
+          SparkPrivilegeObjectType.FUNCTION, db, functionName)
       case _ =>
     }
   }
 
   /**
-   * HivePrivObjectActionType INSERT or INSERT_OVERWRITE
+   * Add table level spark privilege objects to input or output list
+   * @param identifier table identifier contains database name, and table name as hive
+   *                        privilege object
+   * @param privilegeObjects input or output list
+   * @param mode Append or overwrite
+   */
+  private def addTableOrViewLevelObjs(identifier: TableIdentifier,
+      privilegeObjects: ArrayBuffer[SparkPrivilegeObject], partKeys: Seq[String] = Nil,
+      columns: Seq[String] = Nil, mode: SaveMode = SaveMode.ErrorIfExists): Unit = {
+    identifier.database match {
+      case Some(db) =>
+        val tbName = identifier.table
+        val actionType = toActionType(mode)
+        privilegeObjects += new SparkPrivilegeObject(
+          SparkPrivilegeObjectType.TABLE_OR_VIEW,
+          db,
+          tbName,
+          partKeys,
+          columns,
+          actionType)
+      case _ =>
+    }
+  }
+
+  /**
+   * SparkPrivObjectActionType INSERT or INSERT_OVERWRITE
    *
    * @param mode Append or Overwrite
-   * @return
    */
-  private def getHivePrivObjActionType(mode: SaveMode): HivePrivObjectActionType = {
+  private def toActionType(mode: SaveMode): SparkPrivObjectActionType = {
     mode match {
-      case SaveMode.Append => HivePrivObjectActionType.INSERT
-      case SaveMode.Overwrite => HivePrivObjectActionType.INSERT_OVERWRITE
-      case _ => HivePrivObjectActionType.OTHER
+      case SaveMode.Append => SparkPrivObjectActionType.INSERT
+      case SaveMode.Overwrite => SparkPrivObjectActionType.INSERT_OVERWRITE
+      case _ => SparkPrivObjectActionType.OTHER
     }
   }
 }

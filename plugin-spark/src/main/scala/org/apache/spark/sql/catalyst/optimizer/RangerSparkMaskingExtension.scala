@@ -71,7 +71,7 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
     val auditHandler = new RangerSparkAuditHandler()
     val ugi = UserGroupInformation.getCurrentUser
     val userName = ugi.getShortUserName
-    val groups = ugi.getGroupNames.toSet.asJava
+    val groups = ugi.getGroupNames.toSet
     try {
       val identifier = table.identifier
       import SparkObjectType._
@@ -79,7 +79,7 @@ case class RangerSparkMaskingExtension(spark: SparkSession) extends Rule[Logical
       val maskEnableResults = plan.output.map { expr =>
         val resource = RangerSparkResource(COLUMN, identifier.database, identifier.table, expr.name)
         val req = new RangerSparkAccessRequest(resource, userName, groups, COLUMN.toString,
-          SparkAccessType.SELECT, null, null, sparkPlugin.getClusterName)
+          SparkAccessType.SELECT, sparkPlugin.getClusterName)
         (expr, sparkPlugin.evalDataMaskPolicies(req, auditHandler))
       }.filter(x => isMaskEnabled(x._2))
 

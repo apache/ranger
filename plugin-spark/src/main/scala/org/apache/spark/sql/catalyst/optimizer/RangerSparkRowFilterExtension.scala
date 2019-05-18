@@ -54,8 +54,8 @@ case class RangerSparkRowFilterExtension(spark: SparkSession) extends Rule[Logic
         RangerSparkResource(SparkObjectType.TABLE, identifier.database, identifier.table)
       val ugi = UserGroupInformation.getCurrentUser
       val request = new RangerSparkAccessRequest(resource, ugi.getShortUserName,
-        ugi.getGroupNames.toSet.asJava, SparkObjectType.TABLE.toString, SparkAccessType.SELECT,
-        null, null, sparkPlugin.getClusterName)
+        ugi.getGroupNames.toSet, SparkObjectType.TABLE.toString, SparkAccessType.SELECT,
+        sparkPlugin.getClusterName)
       val result = sparkPlugin.evalRowFilterPolicies(request, auditHandler)
       if (isRowFilterEnabled(result)) {
         val sql = s"select ${plan.output.map(_.name).mkString(",")} from ${table.qualifiedName}" +

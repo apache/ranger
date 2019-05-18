@@ -19,12 +19,11 @@ package org.apache.ranger.authorization.spark.authorizer
 
 import java.util.Date
 
-import java.util.{Set => JSet}
-
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveAuthzContext, HiveAuthzSessionContext, HiveOperationType}
 import org.apache.ranger.authorization.spark.authorizer.SparkAccessType.SparkAccessType
 import org.apache.ranger.plugin.policyengine.{RangerAccessRequestImpl, RangerPolicyEngine}
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil
+
+import scala.collection.JavaConverters._
 
 class RangerSparkAccessRequest private extends RangerAccessRequestImpl {
 
@@ -33,53 +32,24 @@ class RangerSparkAccessRequest private extends RangerAccessRequestImpl {
   def this(
       resource: RangerSparkResource,
       user: String,
-      userGroups: JSet[String],
-      hiveOpTypeName: String,
+      groups: Set[String],
+      opType: String,
       accessType: SparkAccessType,
-      context: HiveAuthzContext,
-      sessionContext: HiveAuthzSessionContext,
       clusterName: String) {
     this()
     this.setResource(resource)
     this.setUser(user)
-    this.setUserGroups(userGroups)
+    this.setUserGroups(groups.asJava)
     this.setAccessTime(new Date)
-    this.setAction(hiveOpTypeName)
+    this.setAction(opType)
     this.setSparkAccessType(accessType)
     this.setUser(user)
-    if (context != null) {
-      this.setRequestData(context.getCommandString)
-      this.setRemoteIPAddress(context.getIpAddress)
-    }
-    if (sessionContext != null) {
-      this.setClientType(Option(sessionContext.getClientType).map(_.toString).orNull)
-      this.setSessionId(sessionContext.getSessionString)
-    }
     this.setClusterName(clusterName)
   }
 
-  def this(
-      resource: RangerSparkResource,
-      user: String,
-      userGroups: JSet[String],
-      hiveOpType: HiveOperationType,
-      accessType: SparkAccessType,
-      context: HiveAuthzContext,
-      sessionContext: HiveAuthzSessionContext,
+  def this(resource: RangerSparkResource, user: String, groups: Set[String],
       clusterName: String) = {
-    this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext,
-      clusterName)
-  }
-
-  def this(
-      resource: RangerSparkResource,
-      user: String,
-      userGroups: JSet[String],
-      context: HiveAuthzContext,
-      sessionContext: HiveAuthzSessionContext,
-      clusterName: String) = {
-    this(resource, user, userGroups, "METADATA OPERATION", SparkAccessType.USE, context,
-      sessionContext, clusterName)
+    this(resource, user, groups, "METADATA OPERATION", SparkAccessType.USE, clusterName)
   }
 
   def getSparkAccessType: SparkAccessType = accessType

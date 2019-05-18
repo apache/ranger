@@ -15,19 +15,22 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.catalyst.optimizer
-
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.catalyst.rules.Rule
+package org.apache.ranger.authorization.spark.authorizer
 
 /**
- * An Optimizer Rule to do Hive Authorization V2 for Spark SQL.
+ * Subset of HiveOperationTypes supported by Apache Spark.
  *
- * For Apache Spark 2.1.x
  */
-object Authorizer extends Rule[LogicalPlan] with Authorizable {
-  override def spark: SparkSession = {
-    SparkSession.getActiveSession.getOrElse(SparkSession.getDefaultSession.get)
-  }
+object SparkOperationType extends Enumeration {
+  type SparkOperationType = Value
+
+  val
+  ALTERDATABASE, ALTERTABLE_ADDCOLS, ALTERTABLE_ADDPARTS, ALTERTABLE_RENAMECOL,
+  ALTERTABLE_DROPPARTS, MSCK, ALTERTABLE_RENAMEPART, ALTERTABLE_RENAME,
+  ALTERVIEW_RENAME, ALTERTABLE_PROPERTIES, ALTERTABLE_SERDEPROPERTIES,
+  ALTERTABLE_LOCATION, QUERY, CREATEDATABASE, CREATETABLE_AS_SELECT, CREATEFUNCTION, CREATETABLE,
+  CREATEVIEW, DESCTABLE, DESCDATABASE, DESCFUNCTION, DROPDATABASE, DROPTABLE, DROPFUNCTION, LOAD,
+  SHOWCONF, SWITCHDATABASE, SHOW_CREATETABLE, SHOWCOLUMNS, SHOWDATABASES, SHOWFUNCTIONS,
+  SHOWPARTITIONS, SHOWTABLES, SHOW_TBLPROPERTIES, TRUNCATETABLE, DROPVIEW, EXPLAIN = Value
+
 }

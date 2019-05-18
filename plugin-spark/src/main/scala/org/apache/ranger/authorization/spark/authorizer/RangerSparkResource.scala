@@ -45,7 +45,7 @@ class RangerSparkResource(
       setValue(KEY_DATABASE, databaseOrUrl.getOrElse("*"))
       setValue(KEY_TABLE, tableOrUdf)
       setValue(KEY_COLUMN, column)
-    case TABLE | VIEW | PARTITION =>
+    case TABLE | VIEW =>
       setValue(KEY_DATABASE, databaseOrUrl.getOrElse("*"))
       setValue(KEY_TABLE, tableOrUdf)
     case URI => setValue(KEY_URL, databaseOrUrl.getOrElse("*"))
