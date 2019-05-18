@@ -46,8 +46,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.StringUtil;
 
-import com.google.common.base.Objects;
-
 public class RangerSslHelper {
 	private static final Log LOG = LogFactory.getLog(RangerSslHelper.class);
 
@@ -130,16 +128,7 @@ public class RangerSslHelper {
 			mTrustStoreFile  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(Objects.toStringHelper("RangerSslHelper")
-					.add("keyStoreAlias", mKeyStoreAlias)
-					.add("keyStoreFile", mKeyStoreFile)
-					.add("keyStoreType", mKeyStoreType)
-					.add("keyStoreURL", mKeyStoreURL)
-					.add("trustStoreAlias", mTrustStoreAlias)
-					.add("trustStoreFile", mTrustStoreFile)
-					.add("trustStoreType", mTrustStoreType)
-					.add("trustStoreURL", mTrustStoreURL)
-					.toString());
+				LOG.debug(toString());
 			}
 		}
 		catch(IOException ioe) {
@@ -283,5 +272,18 @@ public class RangerSslHelper {
 				LOG.error("Error while closing file: [" + filename + "]", excp);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "keyStoreAlias=" + mKeyStoreAlias + ", "
+				+ "keyStoreFile=" + mKeyStoreFile + ", "
+				+ "keyStoreType="+ mKeyStoreType + ", "
+				+ "keyStoreURL=" + mKeyStoreURL + ", "
+				+ "trustStoreAlias=" + mTrustStoreAlias + ", "
+				+ "trustStoreFile=" + mTrustStoreFile + ", "
+				+ "trustStoreType=" + mTrustStoreType + ", "
+				+ "trustStoreURL=" + mTrustStoreURL
+				;
 	}
 }
