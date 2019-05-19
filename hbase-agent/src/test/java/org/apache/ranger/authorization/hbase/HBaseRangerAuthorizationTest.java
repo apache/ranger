@@ -69,6 +69,7 @@ import org.junit.Test;
  * 
  * http://localhost:6080/service/plugins/policies/download/cl1_hbase
  */
+@org.junit.Ignore
 public class HBaseRangerAuthorizationTest {
 
     private static final Log LOG = LogFactory.getLog(HBaseRangerAuthorizationTest.class.getName());

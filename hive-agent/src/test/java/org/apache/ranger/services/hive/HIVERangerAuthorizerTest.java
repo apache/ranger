@@ -106,7 +106,7 @@ public class HIVERangerAuthorizerTest {
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
 
-        statement.execute("CREATE DATABASE IF NOT EXISTS rangerauthz");
+        statement.execute("CREATE DATABASE IF NOT EXISTS rangerauthz with dbproperties ('repl.source.for'='1,2,3')");
         statement.execute("CREATE DATABASE IF NOT EXISTS demo");
 
         statement.close();

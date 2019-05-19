@@ -546,6 +546,21 @@
             <version>${fasterxml.jackson.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+            <groupId>org.apache.hbase.thirdparty</groupId>
+            <artifactId>hbase-shaded-protobuf</artifactId>
+            <version>${hbase-shaded-protobuf}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase.thirdparty</groupId>
+            <artifactId>hbase-shaded-netty</artifactId>
+            <version>${hbase-shaded-netty}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase.thirdparty</groupId>
+            <artifactId>hbase-shaded-miscellaneous</artifactId>
+            <version>${hbase-shaded-miscellaneous}</version>
+        </dependency>
 	</dependencies>
     <build>
         <pluginManagement>
