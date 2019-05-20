@@ -98,6 +98,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_POLICY_INVALID_PRIORITY(3030, "Invalid priority value"),
     POLICY_VALIDATION_ERR_UPDATE_ZONE_NAME_NOT_ALLOWED(3032, "Update of Zone name from={0} to={1} in policy is not supported"),
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
+    POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
 
     // SECURITY_ZONE Validations
     SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),

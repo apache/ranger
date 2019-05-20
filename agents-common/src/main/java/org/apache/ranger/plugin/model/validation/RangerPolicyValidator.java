@@ -210,6 +210,18 @@ public class RangerPolicyValidator extends RangerValidator {
 							.build());
 					valid = false;
 				}
+				List<String> tagSvcList = zone.getTagServices();
+				Set<String> svcNameSet = zone.getServices().keySet();
+				if(!svcNameSet.contains(serviceName) && !tagSvcList.contains(serviceName)){
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("zoneName")
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(serviceName, zoneName))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
 			}
 
 			if (StringUtils.isBlank(policyName)) {

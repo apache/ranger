@@ -806,6 +806,70 @@ public class TestRangerPolicyValidator {
 		_utils.checkFailureForSemanticError(_failures, "policy resources", "missing mandatory");
 	}
 	
+	@Test
+	public final void test_isValidServiceWithZone_happyPath() throws Exception{
+		boolean isAdmin = true;
+		when(_policy.getId()).thenReturn(1L);
+		when(_policy.getName()).thenReturn("my-all");
+		when(_policy.getService()).thenReturn("hdfssvc");
+		when(_policy.getZoneName()).thenReturn("zone1");
+		when(_policy.getResources()).thenReturn(null);
+		when(_policy.getIsAuditEnabled()).thenReturn(Boolean.TRUE);
+		when(_policy.getIsEnabled()).thenReturn(Boolean.FALSE);
+		RangerService service = new RangerService();
+		service.setType("service-type");
+		service.setId(2L);
+		Action action = Action.CREATE;
+		List<String> tagSvcList = new ArrayList<String>();
+		tagSvcList.add("hdfssvc");
+		when(_store.getServiceByName("hdfssvc")).thenReturn(service);
+		RangerSecurityZone securityZone = new RangerSecurityZone();
+		securityZone.setName("zone1");
+		securityZone.setId(1L);
+		securityZone.setTagServices(tagSvcList);
+		when(_store.getSecurityZone("zone1")).thenReturn(securityZone);
+		when(_store.getPolicyId(2L, "my-all", 1L)).thenReturn(null);
+		RangerServiceDef svcDef = new RangerServiceDef();
+		svcDef.setName("my-svc-def");
+		when(_store.getServiceDefByName("service-type")).thenReturn(svcDef);
+		RangerPolicyResourceSignature policySignature = mock(RangerPolicyResourceSignature.class);
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(policySignature);
+		Assert.assertTrue(_validator.isValid(_policy, action, isAdmin, _failures));
+	}
+
+	@Test
+	public final void test_isValidServiceWithZone_failurePath() throws Exception{
+		boolean isAdmin = true;
+		when(_policy.getId()).thenReturn(1L);
+		when(_policy.getName()).thenReturn("my-all");
+		when(_policy.getService()).thenReturn("hdfssvc1");
+		when(_policy.getZoneName()).thenReturn("zone1");
+		when(_policy.getResources()).thenReturn(null);
+		when(_policy.getIsAuditEnabled()).thenReturn(Boolean.TRUE);
+		when(_policy.getIsEnabled()).thenReturn(Boolean.FALSE);
+		RangerService service = new RangerService();
+		service.setType("service-type");
+		service.setId(2L);
+		Action action = Action.CREATE;
+		List<String> tagSvcList = new ArrayList<String>();
+		tagSvcList.add("hdfssvc");
+		when(_store.getServiceByName("hdfssvc1")).thenReturn(service);
+		RangerSecurityZone securityZone = new RangerSecurityZone();
+		securityZone.setName("zone1");
+		securityZone.setId(1L);
+		securityZone.setTagServices(tagSvcList);
+		when(_store.getSecurityZone("zone1")).thenReturn(securityZone);
+		when(_store.getPolicyId(2L, "my-all", 1L)).thenReturn(null);
+		RangerServiceDef svcDef = new RangerServiceDef();
+		svcDef.setName("my-svc-def");
+		when(_store.getServiceDefByName("service-type")).thenReturn(svcDef);
+		RangerPolicyResourceSignature policySignature = mock(RangerPolicyResourceSignature.class);
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(policySignature);
+		boolean isValid = _validator.isValid(_policy, action, isAdmin, _failures);
+		Assert.assertFalse(isValid);
+		Assert.assertEquals(_failures.get(0)._errorCode, 3048);
+		Assert.assertEquals(_failures.get(0)._reason,"Service name = hdfssvc1 is not associated to Zone name = zone1");
+	}
 	
 	private ValidationTestUtils _utils = new ValidationTestUtils();
 	private List<ValidationFailureDetails> _failures = new ArrayList<ValidationFailureDetails>();
