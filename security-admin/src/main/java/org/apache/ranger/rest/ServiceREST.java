@@ -129,6 +129,7 @@ import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
@@ -3710,22 +3711,57 @@ public class ServiceREST {
 
 	private void validateGrantRevokeRequest(GrantRevokeRequest request){
 		if( request!=null){
-			if(CollectionUtils.isEmpty(request.getUsers()) && CollectionUtils.isEmpty(request.getGroups())){
-				throw restErrorUtil.createGrantRevokeRESTException( "Grantee users/groups list is empty");
-			}
-			String grantor=request.getGrantor();
-			if(grantor==null || userMgr.getXUserByUserName(grantor) == null) {
-				throw restErrorUtil.createGrantRevokeRESTException( "Grantor user "+grantor+" doesn't exist");
-			}
-			for(String userName:request.getUsers()){
-				if(userMgr.getXUserByUserName(userName) == null) {
-					throw restErrorUtil.createGrantRevokeRESTException( "Grantee user "+userName+" doesn't exist");
+			validateUsersAndGroups(request.getUsers(),request.getGroups());
+			validateGrantor(request.getGrantor());
+			validateGrantees(request.getUsers());
+			validateGroups(request.getGroups());
+		}
+	}
+
+	private void validateUsersAndGroups(Set<String> users, Set<String> groups){
+		if(CollectionUtils.isEmpty(users) && CollectionUtils.isEmpty(groups)){
+			throw restErrorUtil.createGrantRevokeRESTException( "Grantee users/groups list is empty");
+		}
+	}
+
+	private void validateGrantor(String grantor)  {
+		VXUser   vxUser = null;
+		if (grantor != null) {
+			try {
+				vxUser = userMgr.getXUserByUserName(grantor);
+				if (vxUser == null) {
+					throw restErrorUtil.createGrantRevokeRESTException("Grantor user " + grantor + " doesn't exist");
 				}
+			} catch (Exception e) {
+				throw restErrorUtil.createGrantRevokeRESTException("Grantor user " + grantor + " doesn't exist");
 			}
-			for(String groupName:request.getGroups()){
-				if(userMgr.getGroupByGroupName(groupName)== null) {
-					throw restErrorUtil.createGrantRevokeRESTException( "Grantee group "+groupName+" doesn't exist");
+		}
+	}
+
+	private void validateGrantees(Set<String> grantees) {
+		VXUser   vxUser = null;
+		for (String userName : grantees) {
+			try {
+				vxUser = userMgr.getXUserByUserName(userName);
+				if (vxUser == null) {
+					throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
 				}
+			} catch (Exception e) {
+				throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
+			}
+		}
+	}
+
+	private void validateGroups(Set<String> groups) {
+		VXGroup   vxGroup = null;
+		for (String groupName : groups) {
+			try {
+				vxGroup = userMgr.getGroupByGroupName(groupName);
+				if (vxGroup == null) {
+					throw restErrorUtil.createGrantRevokeRESTException( "Grantee group "+ groupName +" doesn't exist");
+				}
+			} catch (Exception e) {
+				throw restErrorUtil.createGrantRevokeRESTException( "Grantee group "+ groupName +" doesn't exist");
 			}
 		}
 	}
