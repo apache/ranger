@@ -300,6 +300,18 @@
             </organization>
         </developer>
         <developer>
+            <id>nikhil</id>
+            <name>Nikhil Purbhe</name>
+            <email>nikhil@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>ni3galave</id>
             <name>Nitin Galave</name>
             <email>ni3galave@apache.org</email>
@@ -541,10 +553,6 @@
         <contributor>
           	<name>Nigel Jones</name>
           	<organization></organization>
-        </contributor>
-        <contributor>
-          	<name>Nikhil Purbhe</name>
-          	<organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
           	<name>Nixon Rodrigues</name>
