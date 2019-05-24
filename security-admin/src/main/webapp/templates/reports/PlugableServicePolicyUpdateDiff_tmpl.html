@@ -19,6 +19,9 @@
 		<div class="span6">
 			<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 			<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+            {{#if zoneName}}
+                <label class="no-margin label-size13-weightbold" > Zone Name  &nbsp;&nbsp;:  {{zoneName}}</label>
+            {{/if}}
 			{{#if repositoryType}}
 				<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
 			{{/if}}
@@ -67,6 +70,36 @@
 			</ol>
 		</div>
 	</div>
+{{/if}}
+
+{{#if oldPolicyCondition}}
+    <h5>Policy Conditions :</h5>
+    <div class="diff validityPeriod" >
+        <div class="diff-left diff-list" data-id="diff">
+            <h3>Old Value</h3>
+            {{#each oldPolicyCondition}}
+                {{#if this.type}}
+                <li class="change-row">
+                    {{this.type}} : [{{this.values}}]
+                </li>
+                {{else}}
+                    <li style="text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
+                {{/if}}
+            {{/each}}
+        </div>
+        <div class="diff-right diff-list" data-id="diff">
+            <h3>New Value</h3>
+            {{#each newPolicyConditions}}
+                {{#if this.type}}
+                <li class="change-row">
+                    {{this.type}} : [{{this.values}}]
+                </li>
+                {{else}}
+                    <li style="text-align: center; font-weight: bold; font-style: italic;">&lt;empty&gt;</li>
+                {{/if}}
+            {{/each}}
+        </div>
+    </div>
 {{/if}}
 
 {{#if oldPolicyValidityPeriod}}

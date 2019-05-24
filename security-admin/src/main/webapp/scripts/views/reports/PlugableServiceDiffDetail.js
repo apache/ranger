@@ -40,6 +40,7 @@ define(function(require){
 		
     	template: PolicyOperationDiff_tmpl,
         templateHelpers :function(){
+                var zoneName = !_.isEmpty(this.zoneName) && !_.isUndefined(this.zoneName) ? this.zoneName : false;
         	return {
         			collection : this.collection.models,
         			action	   : this.action,
@@ -64,7 +65,10 @@ define(function(require){
 					oldRowFilterPolicyItems: this.oldRowFilterPolicyItems,
 					userName   : this.userName,
 					newPolicyValidityPeriod: this.newValidityPeriod,
-					oldPolicyValidityPeriod: this.oldValidityPeriod
+					oldPolicyValidityPeriod: this.oldValidityPeriod,
+					zoneName: zoneName,
+					newPolicyConditions: this.newConditions,
+					oldPolicyCondition: this.oldConditions,
 
         		};
         },
@@ -99,7 +103,15 @@ define(function(require){
 			
 		},
 		initializeServiceDef : function(){
-			var url, policyName = this.collection.findWhere({'attributeName':'Policy Name'});
+                        var url, policyName = this.collection.findWhere({'attributeName':'Policy Name'}),
+                        zoneName = this.collection.findWhere({'attributeName':'Zone Name'});
+                        if((this.action == 'create' || this.action == 'Import Create') && zoneName && !_.isEmpty(zoneName)){
+                                this.zoneName = zoneName.get('newValue');
+                                this.collection.remove(zoneName);
+                        } else if((this.action == 'delete' || this.action == 'update' || this.action == 'Import Delete') && zoneName && !_.isEmpty(zoneName)){
+                                this.zoneName = zoneName.get('previousValue');
+                                this.collection.remove(zoneName);
+                        }
 			if(this.action == 'create' || this.action == 'Import Create'){
 				this.policyName = policyName.get('newValue');
 			} else if(this.action == 'delete'){
@@ -273,6 +285,14 @@ define(function(require){
 					this.oldRowFilterPolicyItems = perms.oldPerms;
 				}
 			}
+            var policyConditions = this.collection.findWhere({'attributeName':'Policy Conditions'});
+            if(!_.isUndefined(policyConditions)){
+                var conditions = this.getPolicyCondition(policyConditions);
+                if(!_.isEmpty(conditions)){
+                    this.newConditions = conditions.newPerms;
+                    this.oldConditions = conditions.oldPerms;
+                }
+            }
 		},
 		getPolicyResources : function() {
 			var policyResources = this.collection.findWhere({'attributeName':'Policy Resources'});
@@ -344,6 +364,23 @@ define(function(require){
                 return {'oldPerms' : validityTimePreviousValue, 'newPerms' : validityTimeNewValues};
             }
         },
+
+        getPolicyCondition : function(policyConditions) {
+            var conditionNewValues = [], conditionOldValues = [] ;
+            this.collection.remove(policyConditions);
+        	if(!_.isUndefined(policyConditions.get('newValue')) && !_.isEmpty(policyConditions.get('newValue'))){
+                conditionNewValues = JSON.parse(policyConditions.get('newValue'));
+            }
+            if(!_.isUndefined(policyConditions.get('previousValue')) && !_.isEmpty(policyConditions.get('previousValue'))){
+                var conditionOldValues = JSON.parse(policyConditions.get('previousValue'));
+            }
+            if(this.action == "update"){
+                return this.setOldNewPermDiff(conditionNewValues, conditionOldValues);
+            } else {
+                return {'oldPerms' : conditionOldValues, 'newPerms' : conditionNewValues};
+            }
+        },
+
 		getPolicyItems : function(itemType) {
 			var items = {},that = this;
 			var newPolicyItems=[], oldPolicyItems =[];

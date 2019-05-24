@@ -173,6 +173,10 @@ define(function(require) {
                     success: function(model) {
                         XAUtil.blockUI('unblock');
                         XAUtil.allowNavigation();
+                        if(that.editZone && App.vZone && !_.isNull(App.vZone.vZoneId) && App.vZone.vZoneId == model.id &&
+                            App.vZone.vZoneName !== model.get('name')){
+                            App.vZone.vZoneName = model.get('name');
+                        }
                         var msg = that.editZone ? 'Service zone updated successfully' : 'Service zone created successfully';
                         XAUtil.notifySuccess('Success', msg);
                         App.appRouter.navigate("#!/zones/zone/"+model.id, {

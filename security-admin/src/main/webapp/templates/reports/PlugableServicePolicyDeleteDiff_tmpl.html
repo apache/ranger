@@ -17,6 +17,9 @@
 <div class="diff-content">
 	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+    {{#if zoneName}}
+        <label class="no-margin label-size13-weightbold" > Zone Name  &nbsp;&nbsp;:  {{zoneName}}</label>
+    {{/if}}
 	<label class="no-margin label-size13-weightbold"> Deleted Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
 	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
 
@@ -71,6 +74,24 @@
                         {{/if}}
                     </li>
                 </ol><br/>
+            {{/each}}
+        </div>
+    </div>
+{{/if}}
+
+{{#if oldPolicyCondition}}
+    <h5>Policy Conditions :</h5>
+    <div class="diff diff-perms" >
+        <div class="diff-right diff-list" data-id="diff">
+            <h3>Old Value</h3>
+            {{#each oldPolicyCondition}}
+                <li class="change-row">
+                    {{#if this.type}}
+                        {{this.type}} : [{{this.values}}]
+                    {{else}}
+                        --
+                    {{/if}}
+                </li>
             {{/each}}
         </div>
     </div>

@@ -294,7 +294,7 @@ define(function(require){
         selectZoneName : function(){
             var that = this;
             var zoneName = _.map(this.rangerZoneList.models, function(m){
-                return { 'id':m.get('name'), 'text':m.get('name')}
+                return { 'id':m.get('name'), 'text':m.get('name'), 'zoneId' : m.get('id')}
             });
             if(!_.isEmpty(App.vZone.vZoneName) && !_.isUndefined(App.vZone.vZoneName)){
                 this.ui.selectZoneName.val(App.vZone.vZoneName);
@@ -309,6 +309,11 @@ define(function(require){
                 placeholder: 'Select Zone Name',
             }).on('change', function(e){
                 App.vZone.vZoneName = e.val;
+                if(e.added){
+                    App.vZone.vZoneId = e.added.zoneId;
+                } else {
+                    App.vZone.vZoneId = null;
+                }
                 var rBreadcrumbsText = !_.isEmpty(App.vZone.vZoneName) ? 'Service Manager : ' + App.vZone.vZoneName + ' zone' : 'Service Manager';
                 App.rBreadcrumbs.currentView.breadcrumb[0].text = rBreadcrumbsText;
                 App.rBreadcrumbs.currentView.render()

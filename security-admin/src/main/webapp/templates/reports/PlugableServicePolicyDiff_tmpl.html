@@ -17,12 +17,14 @@
 <div class="diff-content">
 	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
 	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+    {{#if zoneName}}
+        <label class="no-margin label-size13-weightbold" > Zone Name  &nbsp;&nbsp;:  {{zoneName}}</label>
+    {{/if}}
 	{{#if repositoryType}}
 	<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
 	{{/if}}
 	<label class="no-margin label-size13-weightbold"> Created Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
 	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
-
 {{#if collection.length}}
 	<h5>Policy Details :</h5>
 	<div class="diff">
@@ -38,7 +40,7 @@
 			<h3>New Value</h3>
 			<ol class="unstyled data">
 			{{#each collection}}
-						<li class="change-row">{{./this.attributes.newValue}}</li>
+				<li class="change-row">{{./this.attributes.newValue}}</li>
 			{{/each}}	
 			</ol>
 		</div>
@@ -73,6 +75,23 @@
                         {{/if}}
                     </li>
                 </ol><br/>
+            {{/each}}
+        </div>
+    </div>
+{{/if}}
+{{#if newPolicyConditions}}
+    <h5>Policy Conditions :</h5>
+    <div class="diff diff-perms" >
+        <div class="diff-right diff-list" data-id="diff">
+            <h3>New Value</h3>
+            {{#each newPolicyConditions}}
+                <li class="change-row">
+                    {{#if this.type}}
+                        {{this.type}} : [{{this.values}}]
+                    {{else}}
+                        --
+                    {{/if}}
+                </li>
             {{/each}}
         </div>
     </div>
