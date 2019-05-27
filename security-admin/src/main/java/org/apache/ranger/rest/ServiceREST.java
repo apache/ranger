@@ -83,6 +83,7 @@ import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
+import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
@@ -2403,8 +2404,10 @@ public class ServiceREST {
 		}
 		List<XXSecurityZoneRefService> serviceZoneMapping = daoManager.getXXSecurityZoneRefService()
 				.findByServiceNameAndZoneId(serviceNameToCheck, xdestZone.getId());
+		List<XXSecurityZoneRefTagService> tagServiceZoneMapping = daoManager.getXXSecurityZoneRefTagService()
+				.findByTagServiceNameAndZoneId(serviceNameToCheck, xdestZone.getId());
 
-		if (!CollectionUtils.isEmpty(serviceZoneMapping)) {
+		if (!CollectionUtils.isEmpty(serviceZoneMapping) || !CollectionUtils.isEmpty(tagServiceZoneMapping)) {
 			isZoneServiceExistAtDestination = true;
 		}
 

@@ -55,12 +55,14 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
+import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
+import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -1670,11 +1672,15 @@ public class TestServiceREST {
 		XXServiceDef xServiceDef = serviceDef();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXSecurityZoneRefServiceDao xSecZoneRefServiceDao = Mockito.mock(XXSecurityZoneRefServiceDao.class);
+		XXSecurityZoneRefTagServiceDao xSecZoneRefTagServiceDao = Mockito.mock(XXSecurityZoneRefTagServiceDao.class);
 		XXSecurityZoneRefService xSecZoneRefService = Mockito.mock(XXSecurityZoneRefService.class);
+		XXSecurityZoneRefTagService xSecZoneRefTagService = Mockito.mock(XXSecurityZoneRefTagService.class);
 		XXSecurityZoneDao xSecZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXSecurityZone xSecZone = Mockito.mock(XXSecurityZone.class);
 		List<XXSecurityZoneRefService> zoneServiceList = new ArrayList<>();
+		List<XXSecurityZoneRefTagService> zoneTagServiceList = new ArrayList<>();
 		zoneServiceList.add(xSecZoneRefService);
+		zoneTagServiceList.add(xSecZoneRefTagService);
 		Map<String, String> zoneMappingMap = new LinkedHashMap<String, String>();
 		zoneMappingMap.put("ZoneSource", "ZoneDestination");
 
@@ -1710,7 +1716,8 @@ public class TestServiceREST {
 		Mockito.when(xSecZoneDao.findByZoneName(Mockito.anyString())).thenReturn(xSecZone);
 		Mockito.when(daoManager.getXXSecurityZoneRefService()).thenReturn(xSecZoneRefServiceDao);
 		Mockito.when(xSecZoneRefServiceDao.findByServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneServiceList);
-
+		Mockito.when(daoManager.getXXSecurityZoneRefTagService()).thenReturn(xSecZoneRefTagServiceDao);
+		Mockito.when(xSecZoneRefTagServiceDao.findByTagServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneTagServiceList);
 		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride , "unzoneToZone");
 
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);
@@ -1729,11 +1736,15 @@ public class TestServiceREST {
 		XXServiceDef xServiceDef = serviceDef();
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXSecurityZoneRefServiceDao xSecZoneRefServiceDao = Mockito.mock(XXSecurityZoneRefServiceDao.class);
+		XXSecurityZoneRefTagServiceDao xSecZoneRefTagServiceDao = Mockito.mock(XXSecurityZoneRefTagServiceDao.class);
 		XXSecurityZoneRefService xSecZoneRefService = Mockito.mock(XXSecurityZoneRefService.class);
+		XXSecurityZoneRefTagService xSecZoneRefTagService = Mockito.mock(XXSecurityZoneRefTagService.class);
 		XXSecurityZoneDao xSecZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXSecurityZone xSecZone = Mockito.mock(XXSecurityZone.class);
 		List<XXSecurityZoneRefService> zoneServiceList = new ArrayList<>();
+		List<XXSecurityZoneRefTagService> zoneTagServiceList = new ArrayList<>();
 		zoneServiceList.add(xSecZoneRefService);
+		zoneTagServiceList.add(xSecZoneRefTagService);
 		Map<String, String> zoneMappingMap = new LinkedHashMap<String, String>();
 		zoneMappingMap.put("ZoneSource", "ZoneDestination");
 
@@ -1769,7 +1780,8 @@ public class TestServiceREST {
 		Mockito.when(xSecZoneDao.findByZoneName(Mockito.anyString())).thenReturn(xSecZone);
 		Mockito.when(daoManager.getXXSecurityZoneRefService()).thenReturn(xSecZoneRefServiceDao);
 		Mockito.when(xSecZoneRefServiceDao.findByServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneServiceList);
-
+		Mockito.when(daoManager.getXXSecurityZoneRefTagService()).thenReturn(xSecZoneRefTagServiceDao);
+		Mockito.when(xSecZoneRefTagServiceDao.findByTagServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneTagServiceList);
 		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride, "unzoneToUnZone");
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);
 

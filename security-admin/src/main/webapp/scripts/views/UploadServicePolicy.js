@@ -229,6 +229,16 @@ define(function(require){
 							selectedZoneServices.push(model);
 						}
 					})
+					if(selectedZone.has('tagServices') && !_.isEmpty(selectedZone.get('tagServices'))){
+						_.filter(selectedZone.get('tagServices'), function(tag){
+							var zoneServiceModelTags = that.serviceNames.find(function(serviceModel){
+								return serviceModel.get('name') === tag
+							})
+							if(zoneServiceModelTags){
+								selectedZoneServices.push(zoneServiceModelTags);
+							}
+						})
+					}
 				}else{
 					selectedZoneServices = this.serviceNames;
 				}
@@ -370,6 +380,16 @@ define(function(require){
 							zoneServiceList.push(zoneServiceModel);
 						}
 					});
+					if(selectedZone.has('tagServices') && !_.isEmpty(selectedZone.get('tagServices'))){
+						_.filter(selectedZone.get('tagServices'), function(tag){
+							var zoneServiceModelTags = that.serviceNames.find(function(serviceModel){
+								return serviceModel.get('name') === tag
+							})
+							if(zoneServiceModelTags){
+								zoneServiceList.push(zoneServiceModelTags);
+							}
+						})
+					}
 					that.serviceNames = zoneServiceList;
 					that.setServiceSourceData();
 				}else{

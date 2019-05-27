@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.db;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -45,4 +46,16 @@ public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTag
             return null;
         }
     }
+
+	public List<XXSecurityZoneRefTagService> findByTagServiceNameAndZoneId(String tagServiceName, Long zoneId) {
+		if (tagServiceName == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findByTagServiceNameAndZoneId", tClass)
+					.setParameter("tagServiceName", tagServiceName).setParameter("zoneId", zoneId).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
 }
