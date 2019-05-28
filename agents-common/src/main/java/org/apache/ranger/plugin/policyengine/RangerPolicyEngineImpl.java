@@ -1764,8 +1764,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
         for (Map.Entry<String, ? extends Object> entry : resource.entrySet()) {
             List<String> value;
 
-            if (entry.getValue() instanceof Collection) {
-                value = (List<String>) entry.getValue();
+            if (entry.getValue() instanceof Collection && CollectionUtils.isNotEmpty((Collection) entry.getValue())) {
+                value = new ArrayList((Collection) entry.getValue());
             } else if (entry.getValue() instanceof String) {
                 value = new ArrayList<>();
                 value.add((String) entry.getValue());
