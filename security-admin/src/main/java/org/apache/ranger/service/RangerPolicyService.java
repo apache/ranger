@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -471,7 +472,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
                 if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
                         return false;
                 }
-                ObjectMapper mapper = new ObjectMapper();
+                ObjectMapper mapper = JsonUtilsV2.getMapper();
                 try {
                         List<String> obj = mapper.readValue(value, new TypeReference<List<String>>() {
                         });
@@ -511,7 +512,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return false;
 		}
 
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = JsonUtilsV2.getMapper();
 		try {
 			List<RangerPolicyItem> obj = mapper.readValue(value,
 					new TypeReference<List<RangerPolicyItem>>() {
@@ -558,7 +559,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return false;
 		}
 
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = JsonUtilsV2.getMapper();
 		try {
 			Map<String, RangerPolicyResource> obj = mapper.readValue(value,
 					new TypeReference<Map<String, RangerPolicyResource>>() {
@@ -714,7 +715,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
 			return false;
 		}
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = JsonUtilsV2.getMapper();
 		try {
 			List<RangerDataMaskPolicyItem> obj = mapper.readValue(value,
 					new TypeReference<List<RangerDataMaskPolicyItem>>() {
@@ -758,7 +759,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
 			return false;
 		}
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = JsonUtilsV2.getMapper();
 		try {
 			List<RangerRowFilterPolicyItem> obj = mapper.readValue(value,
 					new TypeReference<List<RangerRowFilterPolicyItem>>() {

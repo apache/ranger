@@ -3272,7 +3272,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		String content = xDataHist.getContent();
-		RangerPolicy policy = (RangerPolicy) dataHistService.writeJsonToJavaObject(content, RangerPolicy.class);
+		RangerPolicy policy = (RangerPolicy) jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
 
 		return policy;
 	}
@@ -3296,7 +3296,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		String content = xDataHist.getContent();
-		RangerPolicy policy = (RangerPolicy) dataHistService.writeJsonToJavaObject(content, RangerPolicy.class);
+		RangerPolicy policy = (RangerPolicy) jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
 
 		return policy;
 	}

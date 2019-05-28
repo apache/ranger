@@ -41,7 +41,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -217,10 +217,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
             logger.debug("name : " + name + " and versionName : " + versionName);
         }
         try {
-            ObjectMapper om = new ObjectMapper();
-            String attribute = om.writeValueAsString(attributes);
+            String attribute = JsonUtilsV2.mapToJson(attributes);
             dbStore.addKeyEntry(versionName, new SecretKeySpec(material, cipher), masterKey, cipher, bitLength, description, version, attribute);
-        } catch (KeyStoreException e) {
+        } catch (Exception e) {
             throw new IOException("Can't store key " + versionName, e);
         }
         changed = true;
@@ -271,10 +270,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
             for (Map.Entry<String, Metadata> entry : cache.entrySet()) {
                 try {
                     Metadata metadata = entry.getValue();
-                    ObjectMapper om = new ObjectMapper();
-                    String attributes = om.writeValueAsString(metadata.getAttributes());
+                    String attributes = JsonUtilsV2.mapToJson(metadata.getAttributes());
                     dbStore.addKeyEntry(entry.getKey(), new KeyMetadata(metadata), masterKey, metadata.getAlgorithm(), metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
-                } catch (KeyStoreException e) {
+                } catch (Exception e) {
                     throw new IOException("Can't set metadata key " + entry.getKey(), e);
                 }
             }

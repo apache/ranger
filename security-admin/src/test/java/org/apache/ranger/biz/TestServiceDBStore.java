@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.SearchCriteria;
@@ -145,6 +146,9 @@ public class TestServiceDBStore {
 
 	@Mock
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
+	@Mock
+	JSONUtil jsonUtil;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

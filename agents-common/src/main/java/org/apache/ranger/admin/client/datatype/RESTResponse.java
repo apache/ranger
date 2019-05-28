@@ -22,10 +22,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -34,7 +34,7 @@ import com.sun.jersey.api.client.ClientResponse;
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RESTResponse {
+public class RESTResponse implements java.io.Serializable {
 	private static final Logger LOG = Logger.getLogger(RESTResponse.class);
 
 	/**
@@ -111,9 +111,7 @@ public class RESTResponse {
 
 	public String toJson() {
 		try {
-			ObjectMapper om = new ObjectMapper();
-
-			return om.writeValueAsString(this);
+			return JsonUtilsV2.objToJson(this);
 		} catch (Exception e) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("toJson() failed", e);
@@ -125,9 +123,7 @@ public class RESTResponse {
 
 	public static RESTResponse fromJson(String jsonString) {
 		try {
-			ObjectMapper om = new ObjectMapper();
-
-			return om.readValue(jsonString, RESTResponse.class);
+			return JsonUtilsV2.jsonToObj(jsonString, RESTResponse.class);
 		} catch (Exception e) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("fromJson('" + jsonString + "') failed", e);
@@ -145,7 +141,7 @@ public class RESTResponse {
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Message {
+	public static class Message implements java.io.Serializable {
 		private String name;
 		private String rbKey;
 		private String message;
@@ -185,9 +181,7 @@ public class RESTResponse {
 
 		public String toJson() {
 			try {
-				ObjectMapper om = new ObjectMapper();
-
-				return om.writeValueAsString(this);
+				return JsonUtilsV2.objToJson(this);
 			} catch (Exception e) {
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("toJson() failed", e);
@@ -199,9 +193,7 @@ public class RESTResponse {
 
 		public static RESTResponse fromJson(String jsonString) {
 			try {
-				ObjectMapper om = new ObjectMapper();
-
-				return om.readValue(jsonString, RESTResponse.class);
+				return JsonUtilsV2.jsonToObj(jsonString, RESTResponse.class);
 			} catch (Exception e) {
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("fromJson('" + jsonString + "') failed", e);

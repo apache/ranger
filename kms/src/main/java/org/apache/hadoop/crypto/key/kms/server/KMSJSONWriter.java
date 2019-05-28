@@ -18,7 +18,7 @@
 package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.hadoop.classification.InterfaceAudience;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -63,8 +63,7 @@ public class KMSJSONWriter implements MessageBodyWriter<Object> {
       MultivaluedMap<String, Object> stringObjectMultivaluedMap,
       OutputStream outputStream) throws IOException, WebApplicationException {
     Writer writer = new OutputStreamWriter(outputStream);
-    ObjectMapper jsonMapper = new ObjectMapper();
-    jsonMapper.writerWithDefaultPrettyPrinter().writeValue(writer, obj);
+    JsonUtilsV2.getMapper().writerWithDefaultPrettyPrinter().writeValue(writer, obj);
   }
 
 }

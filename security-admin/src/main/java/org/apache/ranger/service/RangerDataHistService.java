@@ -17,11 +17,11 @@
 
 package org.apache.ranger.service;
 
-import java.io.IOException;
 import java.util.Date;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -32,9 +32,6 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -48,6 +45,9 @@ public class RangerDataHistService {
 	
 	@Autowired
 	RangerDaoManager daoMgr;
+
+	@Autowired
+	JSONUtil jsonUtil;
 	
 	public static final String ACTION_CREATE = "Create";
 	public static final String ACTION_UPDATE = "Update";
@@ -84,12 +84,12 @@ public class RangerDataHistService {
 			RangerServiceDef serviceDef = (RangerServiceDef) baseModelObj;
 			objectName = serviceDef.getName();
 			classType = AppConstants.CLASS_TYPE_XA_SERVICE_DEF;
-			content = writeObjectAsString(serviceDef);
+			content = jsonUtil.writeObjectAsString(serviceDef);
 		} else if(baseModelObj instanceof RangerService) {
 			RangerService service = (RangerService) baseModelObj;
 			objectName = service.getName();
 			classType = AppConstants.CLASS_TYPE_XA_SERVICE;
-			content = writeObjectAsString(service);
+			content = jsonUtil.writeObjectAsString(service);
 		} else if(baseModelObj instanceof RangerPolicy) {
 			RangerPolicy policy = (RangerPolicy) baseModelObj;
 			objectName = policy.getName();
@@ -102,7 +102,7 @@ public class RangerDataHistService {
                         if(xxServiceDef != null){
                                 policy.setServiceType(xxServiceDef.getName());
                         }
-			content = writeObjectAsString(policy);
+			content = jsonUtil.writeObjectAsString(policy);
 		}
 		
 		xDataHist.setObjectClassType(classType);
@@ -123,45 +123,6 @@ public class RangerDataHistService {
 			prevHist.setToTime(currentDate);
 			prevHist.setObjectName(objectName);
 			prevHist = daoMgr.getXXDataHist().update(prevHist);
-		}
-	}
-
-	public String writeObjectAsString(RangerBaseModelObject vObj) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		String jsonStr;
-		try {
-			jsonStr = mapper.writeValueAsString(vObj);
-			return jsonStr;
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (IOException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		}
-	}
-
-	public Object writeJsonToJavaObject(String json, Class<?> tClass) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		try {
-			return mapper.readValue(json, tClass);
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (IOException e) {
-			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
 

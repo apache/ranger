@@ -30,9 +30,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -103,10 +103,8 @@ public class KnoxClient {
 					if (response.getStatus() == 200) {
 						String jsonString = response.getEntity(String.class);
 						LOG.debug("Knox topology list response JSON string: "+ jsonString);
-						
-						ObjectMapper objectMapper = new ObjectMapper();
-						
-						JsonNode rootNode = objectMapper.readTree(jsonString);
+
+						JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
 						JsonNode topologyNode = rootNode.findValue("topology");
 						if (topologyNode == null) {
 							return topologyList;
@@ -215,9 +213,7 @@ public class KnoxClient {
 							String jsonString = response.getEntity(String.class);
 							LOG.debug("Knox service lookup response JSON string: " + jsonString);
 
-							ObjectMapper objectMapper = new ObjectMapper();
-
-							JsonNode rootNode = objectMapper.readTree(jsonString);
+							JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
 							JsonNode topologyNode = rootNode.findValue("topology");
 							if (topologyNode != null) {
 								JsonNode servicesNode = topologyNode.get("service");

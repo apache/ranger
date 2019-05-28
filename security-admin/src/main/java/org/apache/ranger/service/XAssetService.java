@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
@@ -41,7 +42,6 @@ import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAsset;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -189,11 +189,10 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 	public void validateConfig(VXAsset vObj) {
 		HashMap<String, Object> configrationMap = null;
 		if (vObj.getAssetType() == AppConstants.ASSET_HDFS) {
-			ObjectMapper objectMapper = new ObjectMapper();
 			TypeReference<HashMap<String, Object>> typeRef = new TypeReference
 					<HashMap<String, Object>>() {};
 			try {
-				configrationMap = objectMapper.readValue(vObj.getConfig(),
+				configrationMap = JsonUtilsV2.getMapper().readValue(vObj.getConfig(),
 						typeRef);
 			} catch (Exception e) {
 				logger.error("Error in config json", e);

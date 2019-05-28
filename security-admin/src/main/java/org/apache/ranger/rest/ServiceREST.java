@@ -111,6 +111,7 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -131,7 +132,6 @@ import org.apache.ranger.view.RangerServiceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -1923,7 +1923,7 @@ public class ServiceREST {
 			
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 			svcStore.putMetaDataInfo(rangerExportPolicyList);
-			String metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
+			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 			
 			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 			XXTrxLog xxTrxLog = new XXTrxLog();
@@ -1976,7 +1976,7 @@ public class ServiceREST {
 			
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 			svcStore.putMetaDataInfo(rangerExportPolicyList);
-			String metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
+			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 			
 			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 			XXTrxLog xxTrxLog = new XXTrxLog();
@@ -2039,7 +2039,7 @@ public class ServiceREST {
 			if(!checkPoliciesExists){
 				RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 				svcStore.putMetaDataInfo(rangerExportPolicyList);
-				String metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
+				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 							
 				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 				XXTrxLog xxTrxLog = new XXTrxLog();
@@ -2126,7 +2126,7 @@ public class ServiceREST {
 					List<RangerPolicy> policies = null;
 					rangerExportPolicyList = processPolicyInputJsonForMetaData(uploadedInputStream,rangerExportPolicyList);
 					if (rangerExportPolicyList != null && !CollectionUtils.sizeIsEmpty(rangerExportPolicyList.getMetaDataInfo())) {
-						metaDataInfo = new ObjectMapper().writeValueAsString(rangerExportPolicyList.getMetaDataInfo());
+						metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 					} else {
 						LOG.info("metadata info is not provided!!");
 					}
@@ -2343,13 +2343,13 @@ public class ServiceREST {
 	}
 
 	private RangerExportPolicyList processPolicyInputJsonForMetaData(InputStream uploadedInputStream,
-			RangerExportPolicyList rangerExportPolicyList) throws IOException, WebApplicationException {
+			RangerExportPolicyList rangerExportPolicyList) throws Exception {
 		Gson gson = new Gson();
 		String policiesString = IOUtils.toString(uploadedInputStream);
 		policiesString = policiesString.trim();
 		if (StringUtils.isNotEmpty(policiesString)) {
 			gson.fromJson(policiesString, RangerExportPolicyList.class);
-			rangerExportPolicyList = new ObjectMapper().readValue(policiesString, RangerExportPolicyList.class);
+			rangerExportPolicyList = JsonUtilsV2.jsonToObj(policiesString, RangerExportPolicyList.class);
 		} else {
 			LOG.error("Provided json file is empty!!");
 			throw restErrorUtil.createRESTException("Provided json file is empty!!");

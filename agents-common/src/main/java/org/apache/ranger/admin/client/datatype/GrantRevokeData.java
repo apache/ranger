@@ -20,18 +20,15 @@
  package org.apache.ranger.admin.client.datatype;
 
 
-import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.codehaus.jackson.JsonGenerationException;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -151,14 +148,8 @@ public class GrantRevokeData implements java.io.Serializable {
 	
 	public String toJson() {
 		try {
-			ObjectMapper om = new ObjectMapper();
-
-			return om.writeValueAsString(this);
-		} catch (JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+			return JsonUtilsV2.objToJson(this);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -173,7 +164,7 @@ public class GrantRevokeData implements java.io.Serializable {
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class PermMap {
+	public static class PermMap implements java.io.Serializable {
 		private List<String> userList  = new ArrayList<>();
 		private List<String> groupList = new ArrayList<>();
 		private List<String> permList  = new ArrayList<>();
@@ -233,14 +224,8 @@ public class GrantRevokeData implements java.io.Serializable {
 
 		public String toJson() {
 			try {
-				ObjectMapper om = new ObjectMapper();
-
-				return om.writeValueAsString(this);
-			} catch (JsonGenerationException e) {
-				e.printStackTrace();
-			} catch (JsonMappingException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
+				return JsonUtilsV2.objToJson(this);
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			

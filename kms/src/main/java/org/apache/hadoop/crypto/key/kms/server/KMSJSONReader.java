@@ -18,7 +18,7 @@
 package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.hadoop.classification.InterfaceAudience;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
@@ -48,7 +48,6 @@ public class KMSJSONReader implements MessageBodyReader<Map> {
       Annotation[] annotations, MediaType mediaType,
       MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
       throws IOException, WebApplicationException {
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue(entityStream, type);
+    return JsonUtilsV2.getMapper().readValue(entityStream, type);
   }
 }
