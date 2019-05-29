@@ -762,27 +762,45 @@ define(function(require) {
 	XAUtils.addVisualSearch = function(searchOpt, serverAttrName, collection,
 			pluginAttr) {
 		var visualSearch, that = this;
-		var search = function(searchCollection, serverAttrName, searchOpt,
-				collection) {
+		var supportMultipleItems = pluginAttr.supportMultipleItems || false;
+		var multipleFacet = serverAttrName.filter(function(elem) { 
+			return elem['addMultiple'];
+		}).map(function(elem) {
+			return elem.text;
+		});
+		var search = function(searchCollection, collection) {
 			var params = {};
-                        if($('.popover')){
-                                $('.popover').remove();
-                        }
+			if($('.popover')){
+					$('.popover').remove();
+			}
 			searchCollection.each(function(m) {
 				var serverParamName = _.findWhere(serverAttrName, {
 					text : m.attributes.category
 				});
 				var extraParam = {};
-				if (!_.isUndefined(serverParamName)) {
-					if (_.has(serverParamName, 'multiple')
-							&& serverParamName.multiple) {
-						extraParam[serverParamName.label] = XAUtils
-								.enumLabelToValue(serverParamName.optionsArr, m
-										.get('value'));
-						$.extend(params, extraParam);
-					} else {
-						extraParam[serverParamName.label] = m.get('value');
-						$.extend(params, extraParam);
+				if (_.has(serverParamName, 'multiple')
+						&& serverParamName.multiple) {
+					extraParam[serverParamName.label] = XAUtils
+							.enumLabelToValue(serverParamName.optionsArr, m
+									.get('value'));
+					;
+					$.extend(params, extraParam);
+				} else {
+					if (!_.isUndefined(serverParamName)) {
+						var oldValue = params[serverParamName.label];
+						var newValue = m.get('value');
+						if (oldValue && serverParamName.addMultiple) {
+							// if a value is already there
+							if (Array.isArray(oldValue)) {
+								// if it's a list, append to the end
+								oldValue.push(newValue);
+							} else {
+								// convert to a list
+								params[serverParamName.label] = [oldValue, newValue];
+							}
+						} else {
+							params[serverParamName.label] = newValue;
+						}
 					}
 				}
 			});
@@ -791,6 +809,7 @@ define(function(require) {
 			collection.fetch({
 				reset : true,
 				cache : false,
+				traditional: supportMultipleItems, // for sending multiple values without []
 				error : function(coll, response, options) {
 					that.blockUI('unblock');
                                         if(response && response.responseJSON && response.responseJSON.msgDesc){
@@ -806,7 +825,7 @@ define(function(require) {
 		var callbackCommon = {
 			search : function(query, searchCollection) {
 				collection.VSQuery = query;
-				search(searchCollection, serverAttrName, searchOpt, collection);
+				search(searchCollection, collection);
 			},
 			clearSearch : function(callback) {
                                 //Remove search history when click on clear search
@@ -823,8 +842,9 @@ define(function(require) {
 				// console.log(visualSearch);
 				var searchOptTemp = $.extend(true, [], searchOpt);
 				visualSearch.searchQuery.each(function(m) {
-					if ($.inArray(m.get('category'), searchOptTemp) >= 0) {
-						searchOptTemp.splice($.inArray(m.get('category'),
+					var cat = m.get('category');
+					if ($.inArray(cat, searchOptTemp) >= 0 && $.inArray(cat, multipleFacet) < 0) {
+						searchOptTemp.splice($.inArray(cat,
 								searchOptTemp), 1);
 					}
 				});
@@ -841,7 +861,15 @@ define(function(require) {
 					text : removedFacet.get('category')
 				});
 				if (!_.isUndefined(removedFacetSeverName)) {
-					delete collection.queryParams[removedFacetSeverName.label];
+					var queryValue = collection.queryParams[removedFacetSeverName.label];
+					if ($.inArray(removedFacetSeverName.text, multipleFacet) && Array.isArray(queryValue)) {
+						var idx = queryValue.indexOf(removedFacet.get("value"));
+						if (idx != -1) {
+							queryValue.splice(idx);
+						}
+					} else {
+						delete collection.queryParams[removedFacetSeverName.label];
+					}
 					collection.state.currentPage = collection.state.firstPage;
 				}
 				// TODO Added for Demo to remove datapicker popups
@@ -858,8 +886,7 @@ define(function(require) {
 		}));
 
 		if (visualSearch.searchQuery.length > 0) // For On Load Visual Search
-			search(visualSearch.searchQuery, serverAttrName, searchOpt,
-					collection);
+			search(visualSearch.searchQuery, collection);
 
 		return visualSearch;
 	};

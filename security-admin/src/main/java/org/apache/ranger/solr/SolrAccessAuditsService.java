@@ -22,7 +22,9 @@ package org.apache.ranger.solr;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -32,11 +34,11 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -54,7 +56,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class SolrAccessAuditsService {
-	private static final Logger logger = Logger.getLogger(SolrAccessAuditsService.class);
+	private static final Logger LOGGER = Logger.getLogger(SolrAccessAuditsService.class);
 
 	@Autowired
 	SolrMgr solrMgr;
@@ -71,8 +73,8 @@ public class SolrAccessAuditsService {
 	@Autowired
 	RangerDaoManager daoManager;
 
-	public List<SortField> sortFields = new ArrayList<SortField>();
-	public List<SearchField> searchFields = new ArrayList<SearchField>();
+	private List<SortField> sortFields = new ArrayList<SortField>();
+	private List<SearchField> searchFields = new ArrayList<SearchField>();
 
 	public SolrAccessAuditsService() {
 
@@ -89,7 +91,9 @@ public class SolrAccessAuditsService {
 		searchFields.add(new SearchField("sessionId", "sess",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("requestUser", "reqUser",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+			SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField("excludeUser", "exlUser",
+			SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("requestData", "reqData", SearchField.DATA_TYPE.STRING,
 				SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("resourcePath", "resource", SearchField.DATA_TYPE.STRING,
@@ -142,22 +146,16 @@ public class SolrAccessAuditsService {
 		SolrClient solrClient = solrMgr.getSolrClient();
 		final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
 		if (solrClient == null) {
-			logger.warn("Solr client is null, so not running the query.");
+			LOGGER.warn("Solr client is null, so not running the query.");
 			throw restErrorUtil.createRESTException(
 					"Error connecting to search engine",
 					MessageEnums.ERROR_SYSTEM);
 		}
-		List<String> excludeUsersList = new ArrayList<String>();
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
-		String val = (String) searchCriteria.getParamList().get("excludeServiceUser");
+		Map<String, Object> paramList = searchCriteria.getParamList();
+		updateUserExclusion(paramList);
 
-		if(val !=null && Boolean.valueOf(val.trim())) { //add param to negate requestUsers which will be added as filter query in solr
-			excludeUsersList = getExcludeUsersList();
-			if(CollectionUtils.isNotEmpty(excludeUsersList)) {
-				searchCriteria.getParamList().put("-requestUser", excludeUsersList);
-			}
-        }
 		QueryResponse response = solrUtil.searchResources(searchCriteria,
 				searchFields, sortFields, solrClient);
 		SolrDocumentList docs = response.getResults();
@@ -176,7 +174,7 @@ public class SolrAccessAuditsService {
                                                 logger.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
                                             }
                                         } catch (UnsupportedEncodingException e) {
-                                                logger.warn("Error while encoding request data");
+                                                LOGGER.warn("Error while encoding request data");
                                         }
                                 }
                         }
@@ -192,11 +190,28 @@ public class SolrAccessAuditsService {
 		return returnList;
 	}
 
+
+	private void updateUserExclusion(Map<String, Object> paramList) {
+		String val = (String) paramList.get("excludeServiceUser");
+
+		if (val != null && Boolean.valueOf(val.trim())) { // add param to negate requestUsers which will be added as
+			// filter query in solr
+			List<String> excludeUsersList = getExcludeUsersList();
+			if (CollectionUtils.isNotEmpty(excludeUsersList)) {
+				Object oldUserExclusions = paramList.get("-requestUser");
+				if (oldUserExclusions instanceof Collection && (!((Collection<?>)oldUserExclusions).isEmpty())) {
+					excludeUsersList.addAll((Collection<String>)oldUserExclusions);
+					paramList.put("-requestUser", excludeUsersList);
+				} else {
+					paramList.put("-requestUser", excludeUsersList);
+				}
+			}
+		}
+	}
+
 	private List<String> getExcludeUsersList() {
-		List<String> excludeUsersList = new ArrayList<String>();
 		//for excluding serviceUsers using existing property in ranger-admin-site
-		List<String> serviceUsersList = getServiceUserList();
-		excludeUsersList.addAll(serviceUsersList);
+		List<String> excludeUsersList = new ArrayList<String>(getServiceUserList());
 
 		//for excluding additional users using new property in ranger-admin-site
 		String additionalExcludeUsers = PropertiesUtil.getProperty("ranger.accesslogs.exclude.users.list");
@@ -233,8 +248,8 @@ public class SolrAccessAuditsService {
 		VXAccessAudit accessAudit = new VXAccessAudit();
 
 		Object value = null;
-		if(logger.isDebugEnabled()) {
-			logger.debug("doc=" + doc.toString());
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug("doc=" + doc.toString());
 		}
 
 		value = doc.getFieldValue("id");

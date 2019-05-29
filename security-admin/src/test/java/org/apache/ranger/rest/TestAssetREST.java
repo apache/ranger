@@ -40,6 +40,7 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXServiceDef;
@@ -761,7 +762,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(14)).extractString((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(13)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
@@ -769,6 +770,19 @@ public class TestAssetREST {
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil).extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+			(SearchCriteria) Mockito.any(), Mockito.eq("requestUser"), Mockito.eq("Users"), Mockito.eq("requestUser"),
+			Mockito.any(), Mockito.eq(StringUtil.VALIDATION_TEXT));
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+				(SearchCriteria) Mockito.any(), Mockito.eq("excludeUser"), Mockito.eq("Exclude Users"), Mockito.eq("-requestUser"),
+				Mockito.any(), Mockito.eq(StringUtil.VALIDATION_TEXT));
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+				(SearchCriteria) Mockito.any(), Mockito.eq("zoneName"), Mockito.eq("Zone Name List"), Mockito.eq("zoneName"),
+				Mockito.eq(null), Mockito.eq(null));
+		Mockito.verify(searchUtil).extractCommonCriterias(Mockito.any(HttpServletRequest.class),
+			(List<SortField>) Mockito.any());
+		Mockito.verifyNoMoreInteractions(searchUtil, assetMgr, daoManager);
+
 	}
 
 	@Test
@@ -804,7 +818,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(14)).extractString((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(13)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
@@ -812,6 +826,18 @@ public class TestAssetREST {
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil).extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+			(SearchCriteria) Mockito.any(), Mockito.eq("requestUser"), Mockito.eq("Users"), Mockito.eq("requestUser"),
+			Mockito.any(), Mockito.eq(StringUtil.VALIDATION_TEXT));
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+			(SearchCriteria) Mockito.any(), Mockito.eq("excludeUser"), Mockito.eq("Exclude Users"), Mockito.eq("-requestUser"),
+			Mockito.any(), Mockito.eq(StringUtil.VALIDATION_TEXT));
+		Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class),
+				(SearchCriteria) Mockito.any(), Mockito.eq("zoneName"), Mockito.eq("Zone Name List"), Mockito.eq("zoneName"),
+				Mockito.eq(null), Mockito.eq(null));
+		Mockito.verify(searchUtil).extractCommonCriterias(Mockito.any(HttpServletRequest.class),
+			(List<SortField>) Mockito.any());
+		Mockito.verifyNoMoreInteractions(searchUtil, assetMgr, daoManager);
 	}
 
 	@Test

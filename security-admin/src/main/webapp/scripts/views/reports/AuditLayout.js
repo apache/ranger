@@ -337,7 +337,9 @@ define(function(require) {
             var serviceUser = [{'label' : 'True' , 'value' : true},{'label' : 'False' , 'value' : false}]
 			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                  {text : 'Application',label : 'agentId'},
-			                      {text : 'User',label :'requestUser'},{text : 'Resource Name',label :'resourcePath'},
+				                  {text : 'User',label :'requestUser', 'addMultiple': true},
+				                  {text : 'Exclude User',label :'excludeUser', 'addMultiple': true},
+				                  {text : 'Resource Name',label :'resourcePath'},
 			                      {text : 'Service Name',label :'repoName'},{text : 'Policy ID',label :'policyId'},
 			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
 			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
@@ -346,21 +348,22 @@ define(function(require) {
 			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
                                   {text : 'Zone Name',label : 'zoneName'},{text : localization.tt("lbl.agentHost"), label :"agentHost"}];
             var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name', localization.tt("lbl.agentHost")];//,'Policy ID'
+            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost")];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
                                             {text :'Client IP' 		, info :localization.tt('msg.clientIP')},
-                                            {text : 'Cluster Name'  , info :localization.tt('h.clusterName')},
+                                            {text :'Cluster Name'	, info :localization.tt('h.clusterName')},
                                             {text :'Zone Name'      , info :localization.tt('h.zoneName')},
                                             {text :'End Date'       , info :localization.tt('h.endDate')},
                                             {text :'Resource Name' 	, info :localization.tt('msg.resourceName')},
                                             {text :'Resource Type'  , info :localization.tt('msg.resourceTypeMsg')},
                                             {text :'Result'			, info :localization.tt('msg.resultMsg')},
                                             {text :'Service Name' 	, info :localization.tt('h.serviceNameMsg')},
-                                        {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
+                                            {text :'Service Type' 	, info :localization.tt('h.serviceTypeMsg')},
                                             {text :'Start Date'     , info :localization.tt('h.startDate')},
                                             {text :'User' 			, info :localization.tt('h.userMsg')},
+                                            {text :'Exclude User' 	, info :localization.tt('h.userMsg')},
                                             {text :'Application' 	, info :localization.tt('h.application')},
                                             {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
                         //initilize info popover
@@ -376,7 +379,8 @@ define(function(require) {
 			      placeholder :localization.tt('h.searchForYourAccessAudit'),
 			      container : this.ui.visualSearch,
 			      query     : query,
-                              type		: 'bigData',
+			      supportMultipleItems: true,
+			      type		: 'bigData',
 			      callbacks :  { 
 					valueMatches : function(facet, searchTerm, callback) {
 						var auditList = [];
@@ -462,9 +466,9 @@ define(function(require) {
                 this.accessAuditList.queryParams.excludeServiceUser = true;
                 this.ui.serviceUsersExclude.prop('checked', true);
             }
-			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
-                        this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
-		},
+            this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
+            this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
+        },
 		addSearchForAdminTab : function(){
 			var that = this;
 			var searchOpt = ["Audit Type", "User", "Actions", "Session ID", "Start Date", "End Date"];
@@ -678,14 +682,20 @@ define(function(require) {
                                 value.push(model) ;
                         });
                         vs.searchQuery.bind('remove', function(model){
-                                value = _.filter(value, function(m){ return m.get('category') != model.get('category');})
+                                value = _.filter(value, function(m){
+                                    return m.get('category') != model.get('category') || m.get('value') != model.get('value');
+                                });
                                 App.vsHistory[vs.options.type] = value;
                         });
                         vs.searchQuery.bind('change', function(model){
                                 _.each(App.vsHistory[vs.options.type],function(m){
-                                        if(m.get('category') == model.get('category')){
-                                                m.attributes.value = model.get('value');
+                                    if(m.cid == model.cid) {
+                                        m.attributes.value = model.get('value');
+                                    } else if (model._previousAttributes) {
+                                        if (model._previousAttributes.category === m.attributes.category && model._previousAttributes.value === m.attributes.value ) {
+                                            m.attributes.value = model.get('value');
                                         }
+                                    }
                                 })
                         });
 		},

@@ -141,9 +141,8 @@ public class XAuditREST {
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
 	public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xAccessAuditService.sortFields);
-		 return xAuditMgr.searchXAccessAudits(searchCriteria);
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+		return xAuditMgr.searchXAccessAudits(searchCriteria);
 	}
 
 	@GET

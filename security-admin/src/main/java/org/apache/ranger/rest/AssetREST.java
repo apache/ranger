@@ -626,8 +626,10 @@ public class AssetREST {
 				"Access Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "sessionId",
 				"Access Type", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractString(request, searchCriteria, "requestUser",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractStringList(request, searchCriteria, "requestUser",
+			"Users", "requestUser", null, StringUtil.VALIDATION_TEXT);
+		searchUtil.extractStringList(request, searchCriteria, "excludeUser",
+			"Exclude Users", "-requestUser", null, StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "requestData",
 				"Access Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourcePath",
