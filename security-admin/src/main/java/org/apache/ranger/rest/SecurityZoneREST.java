@@ -466,13 +466,17 @@ public class SecurityZoneREST {
 	private void blockAdminFromKMSService(RangerSecurityZone securityZone) {
 		if(securityZone != null) {
 			Map<String, RangerSecurityZoneService> serviceMap = securityZone.getServices();
-			for (String serviceName : serviceMap.keySet()) {
-				XXService xService = daoManager.getXXService().findByName(serviceName);
-				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
-					throw restErrorUtil.createRESTException(
-							"KMS Services/Service-Defs are not accessible for Zone operations",
-							MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+			if (serviceMap != null) {
+				for (String serviceName : serviceMap.keySet()) {
+					XXService xService = daoManager.getXXService().findByName(serviceName);
+					if (xService != null) {
+						XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+						if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+							throw restErrorUtil.createRESTException(
+									"KMS Services/Service-Defs are not accessible for Zone operations",
+									MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+						}
+					}
 				}
 			}
 		}
