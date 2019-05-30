@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -186,6 +187,18 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		} catch (NoResultException e) {
 			return new ArrayList<XXPolicy>();
 		}
+	}
+	public List<XXPolicy> findByRoleId(Long roleId) {
+		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		if (roleId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXPolicy.findByRoleId", tClass)
+						.setParameter("roleId", roleId)
+						.getResultList();
+			} catch (NoResultException excp) {
+			}
+		}
+		return ret;
 	}
 
 }

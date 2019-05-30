@@ -71,6 +71,13 @@ DROP TABLE IF EXISTS x_perm_map CASCADE;
 DROP TABLE IF EXISTS x_trx_log CASCADE;
 DROP TABLE IF EXISTS x_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
+
+DROP TABLE IF EXISTS x_role_ref_role CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_role CASCADE;
+DROP TABLE IF EXISTS x_role_ref_group CASCADE;
+DROP TABLE IF EXISTS x_role_ref_user CASCADE;
+DROP TABLE IF EXISTS x_role CASCADE;
+
 DROP TABLE IF EXISTS x_group_users CASCADE;
 DROP TABLE IF EXISTS x_user CASCADE;
 DROP TABLE IF EXISTS x_group_groups;
@@ -138,6 +145,13 @@ DROP SEQUENCE IF EXISTS x_trx_log_seq;
 DROP SEQUENCE IF EXISTS x_resource_seq;
 DROP SEQUENCE IF EXISTS x_policy_export_seq;
 DROP SEQUENCE IF EXISTS x_group_users_seq;
+
+DROP SEQUENCE IF EXISTS x_role_ref_role_SEQ;
+DROP SEQUENCE IF EXISTS x_policy_ref_role_SEQ;
+DROP SEQUENCE IF EXISTS x_role_ref_group_SEQ;
+DROP SEQUENCE IF EXISTS x_role_ref_user_SEQ;
+DROP SEQUENCE IF EXISTS x_role_SEQ;
+
 DROP SEQUENCE IF EXISTS x_user_seq;
 DROP SEQUENCE IF EXISTS x_group_groups_seq;
 DROP SEQUENCE IF EXISTS x_group_seq;
@@ -1444,6 +1458,101 @@ policy_id bigint DEFAULT NULL NULL,
 primary key (id)
 );
 commit;
+
+CREATE SEQUENCE x_role_SEQ;
+CREATE TABLE x_role(
+id BIGINT DEFAULT nextval('x_role_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+version BIGINT DEFAULT '0' NOT NULL,
+name varchar(255) NOT NULL,
+description varchar(1024) DEFAULT NULL NULL,
+role_options varchar(4000) DEFAULT NULL NULL,
+role_text text DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_UK_name UNIQUE(name),
+ CONSTRAINT x_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+
+CREATE SEQUENCE x_role_ref_user_SEQ;
+CREATE TABLE x_role_ref_user(
+id BIGINT DEFAULT nextval('x_role_ref_user_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+role_id BIGINT NOT NULL,
+user_id BIGINT DEFAULT NULL NULL,
+user_name varchar(767) DEFAULT NULL NULL,
+priv_type INT DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_user_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
+ CONSTRAINT x_role_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
+);
+commit;
+
+CREATE SEQUENCE x_role_ref_group_SEQ;
+CREATE TABLE x_role_ref_group(
+id BIGINT DEFAULT nextval('x_role_ref_group_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+role_id BIGINT NOT NULL,
+group_id BIGINT DEFAULT NULL NULL,
+group_name varchar(767) DEFAULT NULL NULL,
+priv_type INT DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_grp_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
+ CONSTRAINT x_role_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
+);
+commit;
+
+CREATE SEQUENCE x_policy_ref_role_SEQ;
+CREATE TABLE x_policy_ref_role(
+id BIGINT DEFAULT nextval('x_policy_ref_role_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+policy_id BIGINT NOT NULL,
+role_id BIGINT NOT NULL,
+role_name varchar(255) DEFAULT NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_pol_ref_role_UK_polId_roleId UNIQUE(policy_id,role_id),
+ CONSTRAINT x_pol_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_pol_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_pol_ref_role_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+ CONSTRAINT x_pol_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
+);
+commit;
+
+CREATE SEQUENCE x_role_ref_role_SEQ;
+CREATE TABLE x_role_ref_role(
+id BIGINT DEFAULT nextval('x_role_ref_role_SEQ'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+role_ref_id BIGINT DEFAULT NULL NULL,
+role_id BIGINT NOT NULL,
+role_name varchar(255) DEFAULT NULL NULL,
+priv_type INT DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_role_FK_role_ref_id FOREIGN KEY (role_ref_id) REFERENCES x_role (id)
+);
+commit;
+
 CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
 commit;
@@ -1655,6 +1764,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('038',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('039',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

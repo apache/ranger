@@ -509,7 +509,7 @@ body {
 
 .table-permission {
   float: left;
-  width: 90%
+  width: 100%
 }
 
 /* toggle */
@@ -609,6 +609,7 @@ table td.backgrid-filter .clear {
 
 .table-permission th, .table-permission td {
   border: 1px solid #dddddd;
+  padding: 7px 5px;
 }
 
 .table-permission thead {
@@ -1787,8 +1788,8 @@ margin-bottom: 5px;
 .table .table {
 	width:auto;
 }
-.width-25{
-	width:25%;
+.width-22{
+        width:22%;
 }
 .margin-left-0{
 	margin-left:0%!important;
@@ -2724,3 +2725,74 @@ textarea:read-only{
 div#zoneServiceAccordion table thead {
   background: none;
 }
+.no-margin {
+  margin: 0 !important;
+}
+.no-padding {
+  padding: 0 !important;
+}
+
+.custom-table{
+  margin-bottom: 0;
+}
+
+.custom-table thead{
+  background-color: #eeeeee;
+}
+
+.custom-table th,
+.custom-table td {
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.custom-table .js-formInput .select2-container{
+  width: 100%;
+}
+
+.m-l-50 {
+  margin-left: 50px;
+}
+
+.fixed-headertable,
+.fixed-headertable > thead,
+.fixed-headertable > tbody {
+  display: block;
+  width: 100%;
+}
+
+.fixed-headertable > tbody {
+  overflow: auto;
+  max-height: 350px;
+  overflow: overlay;
+}
+
+.fixed-headertable tr{
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.fixed-headertable td,
+.fixed-headertable th{
+  width: 33%;
+  display: table-cell;
+}
+
+.ellipsize{
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/*.fixed-headertable td,
+.fixed-headertable th{
+  width: 100px;
+  display: table-cell;
+}
+
+.fixed-headertable td:first-child,
+.fixed-headertable th:first-child{
+  width: calc(100% - 200px);
+}*/

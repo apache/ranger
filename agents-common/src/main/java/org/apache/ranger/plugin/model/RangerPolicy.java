@@ -834,17 +834,19 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		private List<RangerPolicyItemAccess>    accesses;
 		private List<String>                    users;
 		private List<String>                    groups;
+		private List<String>                    roles;
 		private List<RangerPolicyItemCondition> conditions;
 		private Boolean                         delegateAdmin;
 
 		public RangerPolicyItem() {
-			this(null, null, null, null, null);
+			this(null, null, null, null, null, null);
 		}
 
-		public RangerPolicyItem(List<RangerPolicyItemAccess> accessTypes, List<String> users, List<String> groups, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+		public RangerPolicyItem(List<RangerPolicyItemAccess> accessTypes, List<String> users, List<String> groups, List<String> roles, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
 			setAccesses(accessTypes);
 			setUsers(users);
 			setGroups(groups);
+			setRoles(roles);
 			setConditions(conditions);
 			setDelegateAdmin(delegateAdmin);
 		}
@@ -919,6 +921,30 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 			if(groups != null) {
 				this.groups.addAll(groups);
+			}
+		}
+		/**
+		 * @return the roles
+		 */
+		public List<String> getRoles() {
+			return roles;
+		}
+		/**
+		 * @param roles the roles to set
+		 */
+		public void setRoles(List<String> roles) {
+			if(this.roles == null) {
+				this.roles = new ArrayList<>();
+			}
+
+			if(this.roles == roles) {
+				return;
+			}
+
+			this.roles.clear();
+
+			if(roles != null) {
+				this.roles.addAll(roles);
 			}
 		}
 		/**
@@ -1002,6 +1028,16 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			}
 			sb.append("} ");
 
+			sb.append("roles={");
+			if(roles != null) {
+				for(String role : roles) {
+					if(role != null) {
+						sb.append(role).append(" ");
+					}
+				}
+			}
+			sb.append("} ");
+
 			sb.append("conditions={");
 			if(conditions != null) {
 				for(RangerPolicyItemCondition condition : conditions) {
@@ -1028,6 +1064,8 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 					+ ((conditions == null) ? 0 : conditions.hashCode());
 			result = prime * result
 					+ ((delegateAdmin == null) ? 0 : delegateAdmin.hashCode());
+			result = prime * result
+					+ ((roles == null) ? 0 : roles.hashCode());
 			result = prime * result
 					+ ((groups == null) ? 0 : groups.hashCode());
 			result = prime * result + ((users == null) ? 0 : users.hashCode());
@@ -1058,6 +1096,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 					return false;
 			} else if (!delegateAdmin.equals(other.delegateAdmin))
 				return false;
+			if (roles == null) {
+				if (other.roles != null)
+					return false;
+			} else if (!roles.equals(other.roles))
+				return false;
 			if (groups == null) {
 				if (other.groups != null)
 					return false;
@@ -1084,11 +1127,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		private RangerPolicyItemDataMaskInfo dataMaskInfo;
 
 		public RangerDataMaskPolicyItem() {
-			this(null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null);
 		}
 
-		public RangerDataMaskPolicyItem(List<RangerPolicyItemAccess> accesses, RangerPolicyItemDataMaskInfo dataMaskDetail, List<String> users, List<String> groups, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
-			super(accesses, users, groups, conditions, delegateAdmin);
+		public RangerDataMaskPolicyItem(List<RangerPolicyItemAccess> accesses, RangerPolicyItemDataMaskInfo dataMaskDetail, List<String> users, List<String> groups, List<String> roles, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+			super(accesses, users, groups, roles, conditions, delegateAdmin);
 
 			setDataMaskInfo(dataMaskDetail);
 		}
@@ -1171,11 +1214,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		private RangerPolicyItemRowFilterInfo rowFilterInfo;
 
 		public RangerRowFilterPolicyItem() {
-			this(null, null, null, null, null, null);
+			this(null, null, null, null, null, null, null);
 		}
 
-		public RangerRowFilterPolicyItem(RangerPolicyItemRowFilterInfo rowFilterInfo, List<RangerPolicyItemAccess> accesses, List<String> users, List<String> groups, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
-			super(accesses, users, groups, conditions, delegateAdmin);
+		public RangerRowFilterPolicyItem(RangerPolicyItemRowFilterInfo rowFilterInfo, List<RangerPolicyItemAccess> accesses, List<String> users, List<String> groups, List<String> roles, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+			super(accesses, users, groups, roles, conditions, delegateAdmin);
 
 			setRowFilterInfo(rowFilterInfo);
 		}

@@ -101,7 +101,7 @@ public class TestPolicyACLs {
 				policyEngine.preProcess(request);
 				RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
-				boolean userACLsMatched = true, groupACLsMatched = true;
+				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true;
 
 				if (MapUtils.isNotEmpty(acls.getUserACLs()) && MapUtils.isNotEmpty(oneTest.userPermissions)) {
 
@@ -178,7 +178,43 @@ public class TestPolicyACLs {
 					groupACLsMatched = false;
 				}
 
-				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched);
+				if (MapUtils.isNotEmpty(acls.getRoleACLs()) && MapUtils.isNotEmpty(oneTest.rolePermissions)) {
+					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
+							acls.getRoleACLs().entrySet()) {
+						String roleName = entry.getKey();
+						Map<String, RangerResourceACLs.AccessResult> expected = oneTest.rolePermissions.get(roleName);
+						if (MapUtils.isNotEmpty(entry.getValue()) && MapUtils.isNotEmpty(expected)) {
+							// Compare
+							for (Map.Entry<String, RangerResourceACLs.AccessResult> privilege : entry.getValue().entrySet()) {
+								if (StringUtils.equals(RangerPolicyEngine.ADMIN_ACCESS, privilege.getKey())) {
+									continue;
+								}
+								RangerResourceACLs.AccessResult expectedResult = expected.get(privilege.getKey());
+								if (expectedResult == null) {
+									roleACLsMatched = false;
+									break;
+								} else if (!expectedResult.equals(privilege.getValue())) {
+									roleACLsMatched = false;
+									break;
+								}
+							}
+						} else if (!(MapUtils.isEmpty(entry.getValue()) && MapUtils.isEmpty(expected))){
+							Set<String> privileges = entry.getValue().keySet();
+							if (privileges.size() == 1 && privileges.contains(RangerPolicyEngine.ADMIN_ACCESS)) {
+								roleACLsMatched = true;
+							} else {
+								roleACLsMatched = false;
+							}
+							break;
+						}
+						if (!roleACLsMatched) {
+							break;
+						}
+					}
+				} else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
+					roleACLsMatched = false;
+				}
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched && roleACLsMatched);
 			}
 		}
 	}
@@ -196,6 +232,7 @@ public class TestPolicyACLs {
 				RangerAccessResource   resource;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions;
+				Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions;
 			}
 		}
 	}

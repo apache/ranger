@@ -35,8 +35,9 @@ define(function(require){
 	var VXUserList		= require('collections/VXUserList');
 	var XATableLayout	= require('views/common/XATableLayout');
 	var vUserInfo		= require('views/users/UserInfo');
-
 	var VXUser          = require('models/VXUser');
+        var VXRoleList		= require('collections/VXRoleList');
+        var VXRole			= require('models/VXRole');
 
 	var UsertablelayoutTmpl = require('hbs!tmpl/users/UserTableLayout_tmpl');
 
@@ -65,8 +66,10 @@ define(function(require){
     		btnShowHide		: '[data-action="showHide"]',
 			visibilityDropdown		: '[data-id="visibilityDropdown"]',
 			addNewBtnDiv	: '[data-id="addNewBtnDiv"]',
-                        deleteUser: '[data-id="deleteUserGroup"]',
-                       showUserList:'[data-js="showUserList"]',
+            deleteUser: '[data-id="deleteUserGroup"]',
+            showUserList:'[data-js="showUserList"]',
+            addNewRoles: '[data-id="addNewRoles"]',
+            hideShowVisibility: '[data-id="hideShowVisibility"]'
     	},
 
 		/** ui events hash */
@@ -89,8 +92,9 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a UserTableLayout Layout");
 
-			_.extend(this, _.pick(options, 'groupList','tab'));
+                        _.extend(this, _.pick(options, 'groupList','tab', 'roleList'));
 			this.showUsers = this.tab == 'usertab' ? true : false;
+                        this.showGroups = this.tab == 'grouptab' ? true : false;
 			this.chgFlags = [];
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
@@ -112,11 +116,14 @@ define(function(require){
 			this.initializePlugins();
 			if(this.tab == 'grouptab'){
 				this.renderGroupTab();
-			} else {
+                        } else if(this.tab == 'usertab'){
 				this.renderUserTab();
+                        } else{
+                                this.renderRoleTab();
 			}
 			this.bindEventToColl(this.collection);
 			this.bindEventToColl(this.groupList);
+                        this.bindEventToColl(this.roleList);
 			this.addVisualSearch();
 		},
 		bindEventToColl : function(coll){
@@ -141,12 +148,16 @@ define(function(require){
 			var that = this;
 			this.chgFlags = [];
 			this.showUsers = $(e.currentTarget).attr('href') == '#users' ? true : false;
+                        this.showGroups = $(e.currentTarget).attr('href') == '#groups' ? true : false;
 			if(this.showUsers){				
 				this.renderUserTab();
 				this.addVisualSearch();
-			} else {				
+                        } else if(this.showGroups){
 				this.renderGroupTab();
 				this.addVisualSearch();
+                        }else{
+                                this.renderRoleTab();
+                                this.addVisualSearch();
 			}
 			$(this.rUserDetail.el).hide();
 		},
@@ -221,6 +232,8 @@ define(function(require){
 		},
 		renderUserTab : function(){
 			var that = this;
+                        this.ui.addNewRoles.hide();
+                        this.ui.hideShowVisibility.show();
 			if(_.isUndefined(this.collection)){
 				this.collection = new VXUserList();
 			}	
@@ -253,6 +266,8 @@ define(function(require){
 		},
 		renderGroupTab : function(){
 			var that = this;
+                        this.ui.addNewRoles.hide();
+                        this.ui.hideShowVisibility.show();
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
 			}
@@ -282,6 +297,39 @@ define(function(require){
 				that.checkRoleKeyAdmin();
 			});
 		},
+                renderRoleTab : function(){
+                        var that = this;
+                        this.ui.hideShowVisibility.hide();
+                        if(_.isUndefined(this.roleList)){
+                                this.roleList = new VXRoleList();
+                        }
+                        this.renderRoleListTable();
+                        this.roleList.fetch({
+                                reset:true,
+                                cache: false,
+                        }).done(function(roleList){
+                                if(App.usersGroupsListing && !_.isEmpty(App.usersGroupsListing) && App.usersGroupsListing.showLastPage){
+                                        if(roleList.state.totalRecords > roleList.state.pageSize){
+                                                that.roleList.getLastPage({
+                                                        cache : false,
+                                                }).done(function(m){
+                                                        (_.last(m.models)).trigger("model:highlightUserGroupTableRow");
+                                                });
+                                        }else{
+                                                (_.last(roleList.models)).trigger("model:highlightUserGroupTableRow");
+                                        }
+                                        App.usersGroupsListing={};
+                                }
+                                that.ui.addNewUser.hide();
+                                that.ui.addNewGroup.hide();
+                                that.ui.addNewRoles.show();
+                                that.$('.wrap-header').text('Role List');
+                                that.$('ul').find('[data-js="roles"]').addClass('active');
+                                that.$('ul').find('[data-js="users"]').removeClass();
+                                that.$('ul').find('[data-js="groups"]').removeClass();
+                                // that.checkRoleKeyAdmin();
+                        });
+                },
 		renderUserListTable : function(){
 			var that = this;
 			var tableRow = Backgrid.Row.extend({
@@ -524,6 +572,91 @@ define(function(require){
 			return this.groupList.constructor.getTableCols(cols, this.groupList);
 		},
 
+                renderRoleListTable : function(){
+                        var that = this;
+
+                        var tableRow = Backgrid.Row.extend({
+                                render: function () {
+                                        tableRow.__super__.render.apply(this, arguments);
+                                        return this;
+                                },
+
+                        });
+                        this.rTableList.show(new XATableLayout({
+                                columns: this.getRoleColumns(),
+                                collection: this.roleList,
+                                includeFilter : false,
+                                gridOpts : {
+                                        row: tableRow,
+                                        header : XABackgrid,
+                                        emptyText : 'No Groups found!'
+                                }
+                        }));
+                },
+
+                getRoleColumns : function(){
+                        var cols = {
+
+                                select : {
+                                        label : localization.tt("lbl.isVisible"),
+                                        cell: "select-row",
+                                    headerCell: "select-all",
+                                        click : false,
+                                        drag : false,
+                                        editable : false,
+                                        sortable : false
+                                },
+                                name : {
+                                        label	: localization.tt("lbl.roleName"),
+                                        href: function(model){
+                                                return '#!/roles/'+ model.id;
+                                        },
+                                        editable:false,
+                                        sortable:false,
+                                        cell :'uri'
+                                },
+                                users : {
+                                        cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                        label : localization.tt("lbl.users"),
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                                                var users = rawValue.map(function(m){return m.name});
+                                                                return XAUtil.showMoreAndLessButton(users, model)
+                                                        }else{
+                                                                return '--';
+                                                        }
+                                                }
+                                        }),
+                                        editable : false,
+                                        sortable : false
+                                },
+                                groups : {
+                                        cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                        label : localization.tt("lbl.groups"),
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                                                var groups = rawValue.map(function(m){return m.name});
+                                                                return XAUtil.showMoreAndLessButton(groups, model)
+                                                        }else{
+                                                                return '--';
+                                                        }
+                                                }
+                                        }),
+                                        editable : false,
+                                        sortable : false
+                                },
+                        };
+            if(!SessionMgr.isSystemAdmin()){
+                delete cols.select;
+            }
+            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+                cols.name.cell = 'string';
+            }
+                        return this.roleList.constructor.getTableCols(cols, this.roleList);
+                },
+
         showUserList :function(e){
             XAUtil.blockUI();
             var that = this , name , msg = "", content = "" , totalRecords, infoMsg = ""; this.copyUserLists = [];
@@ -646,7 +779,7 @@ define(function(require){
 		onDeleteUser: function(e){
 
 			var that = this;
-			var collection = that.showUsers ? that.collection : that.groupList;
+                        var collection = that.showUsers ? that.collection : (that.showGroups ? that.groupList : that.roleList);
 			var selArr = [];
 			var message = '';
 			collection.each(function(obj){
@@ -669,16 +802,18 @@ define(function(require){
 			if(total_selected == 0){
 				if(that.showUsers){
 					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noDeleteUserRow'));
-				}else{
+                                }else if(that.showGroups){
 					XAUtil.alertBoxWithTimeSet(localization.tt('msg.noDeleteGroupRow'));
+                                }else {
+                                        XAUtil.alertBoxWithTimeSet(localization.tt('msg.noDeleteRoleRow'));
 				}
 				return;
 			}
             if(total_selected == 1) {
-                message = 'Are you sure you want to delete '+(that.showUsers ? 'user':'group')+' \''+ _.escape( jsonUsers.vXStrings[0].value )+'\'?';
+                message = 'Are you sure you want to delete '+(that.showUsers ? 'user': (that.showGroups ? 'group' : 'role'))+' \''+ _.escape( jsonUsers.vXStrings[0].value )+'\'?';
 			}
 			else {
-				message = 'Are you sure you want to delete '+total_selected+' '+(that.showUsers ? 'users':'groups')+'?';
+                                message = 'Are you sure you want to delete '+total_selected+' '+(that.showUsers ? 'user': (that.showGroups ? 'group' : 'role'))+'?';
 			}
 			if(total_selected > 0){
 				XAUtil.confirmPopup({
@@ -706,7 +841,7 @@ define(function(require){
                             		}
                             	});
                             });
-                        }else {
+                        }else if(that.showGroups) {
 							var model = new VXGroup();
                             var count = 0, notDeletedGroupName ="", errorMsgForNotDeletedGroups = "";
                             _.map(jsonUsers.vXStrings, function(m){
@@ -726,6 +861,27 @@ define(function(require){
                             			that.groupCollection(jsonUsers.vXStrings.length,count, notDeletedGroupName, errorMsgForNotDeletedGroups)
                             		}
                             	})
+                            });
+                                                }else {
+                                                        var model = new VXRole();
+                            var count = 0, notDeletedRoleName ="", errorMsgForNotDeletedRoles = "";
+                            _.map(jsonUsers.vXStrings, function(m){
+                                model.deleteRoles(m.id,{
+                                        success: function(response){
+                                                count += 1;
+                                                that.roleCollection(jsonUsers.vXStrings.length,count,notDeletedRoleName, errorMsgForNotDeletedRoles);
+                                        },
+                                        error:function(response,options){
+                                                count += 1;
+                                        if(response.responseJSON && response.responseJSON.msgDesc){
+                                            errorMsgForNotDeletedRoles += _.escape(response.responseJSON.msgDesc) +"<br>"
+                                        }else{
+                                            notDeletedRoleName += _.escape(m.value) + ", ";
+                                        }
+                                                that.roleList.find(function(model){return model.get('name') === m.value}).selected = false
+                                                that.roleCollection(jsonUsers.vXStrings.length,count, notDeletedRoleName, errorMsgForNotDeletedRoles)
+                                        }
+                                })
                             });
 						}
 					}
@@ -764,6 +920,22 @@ define(function(require){
                         }
                 }
         },
+        roleCollection : function(numberOfRole, count ,notDeletedRoleName, errorMsgForNotDeletedRoles){
+                if(count == numberOfRole){
+                        this.roleList.getFirstPage({fetch:true});
+                        this.roleList.selected  = {};
+                        XAUtil.blockUI('unblock');
+                        if(notDeletedRoleName === "" && _.isEmpty(errorMsgForNotDeletedRoles)){
+                                XAUtil.notifySuccess('Success','Role deleted successfully!');
+                        } else {
+                            var msg = "";
+                            if(!_.isEmpty(notDeletedRoleName)){
+                                msg = 'Error occurred during deleting Users: '+ notDeletedRoleName.slice(0 , -2);
+                            }
+                            XAUtil.notifyError('Error', errorMsgForNotDeletedRoles + msg);
+                        }
+                }
+        },
 		addVisualSearch : function(){
 			var that = this;
 			var coll,placeholder;
@@ -780,7 +952,7 @@ define(function(require){
 				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
 				                   {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus)},
 								];
-			} else {
+            } else if(this.showGroups){
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
 				searchOpt = ['Group Name','Group Source', 'Visibility'];//,'Start Date','End Date','Today'];
@@ -788,6 +960,14 @@ define(function(require){
 				                   {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
 				                   {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes)},];
 
+            } else{
+                placeholder = localization.tt('h.searchForYourRole');
+                coll = this.roleList;
+                searchOpt = ['Role Name','User Name', 'Group Name'];//,'Start Date','End Date','Today'];
+                serverAttrName  = [{text : "Role Name", label :"name"},
+                                   {text : "User Name", label :"users"},
+                                   {text : "Group Name", label :"groups"},
+                                  ];
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
 			var pluginAttr = {

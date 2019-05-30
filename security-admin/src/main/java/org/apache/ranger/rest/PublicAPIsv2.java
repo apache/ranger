@@ -25,11 +25,13 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerPluginInfoList;
+import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -59,6 +61,9 @@ public class PublicAPIsv2 {
 
 	@Autowired
 	SecurityZoneREST securityZoneRest;
+
+	@Autowired
+	RoleREST roleREST;
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -530,5 +535,84 @@ public class PublicAPIsv2 {
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
 		}
+	}
+
+	/*
+	 * Role Creation API
+	 */
+
+	@POST
+	@Path("/api/roles")
+	public RangerRole createRole(RangerRole role) {
+		return roleREST.createRole(role);
+	}
+
+	/*
+	 * Role Manipulation API
+	 */
+	@PUT
+	@Path("/api/roles/{id}")
+	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role) {
+		return roleREST.updateRole(roleId, role);
+	}
+
+	@DELETE
+	@Path("/api/roles/name/{name}")
+	public void deleteRole(@PathParam("name") String roleName) {
+		roleREST.deleteRole(roleName);
+	}
+
+	@DELETE
+	@Path("/api/roles/{id}")
+	public void deleteRole(@PathParam("id") Long roleId) {
+		roleREST.deleteRole(roleId);
+	}
+
+	/*
+	 *  APIs to Access Roles
+	 */
+	@GET
+	@Path("/api/roles/name/{name}")
+	public RangerRole getRole(@PathParam("name") String roleName) {
+		return roleREST.getRole(roleName);
+	}
+
+	@GET
+	@Path("/api/roles/{id}")
+	public RangerRole getRole(@PathParam("id") Long id) {
+		return roleREST.getRole(id);
+	}
+
+	@GET
+	@Path("/api/roles")
+	public RangerRoleList getAllRoles(@Context HttpServletRequest request){
+		return roleREST.getAllRoles(request);
+	}
+
+	/*
+    	This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
+ 	 */
+	@PUT
+	@Path("/api/roles/{id}/addUsersAndGroups")
+	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+		return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
+	}
+
+	/*
+        This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
+     */
+	@PUT
+	@Path("/api/roles/{id}/removeUsersAndGroups")
+	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+		return roleREST.removeUsersAndGroups(roleId, users, groups);
+	}
+
+	/*
+        This API is used to remove GRANT privilege from listed users and groups.
+     */
+	@PUT
+	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
+	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+		return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
 	}
 }

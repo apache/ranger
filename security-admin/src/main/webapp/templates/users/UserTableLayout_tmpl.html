@@ -15,6 +15,9 @@
   limitations under the License.
 --}}
   <ul class="nav nav-tabs tabs clearfix">
+    <li data="roles" data-js="roles">
+      <a data-toggle="tab" href="#roles">Roles</a>
+    </li>
     <li data="groups" data-js="groups"> 
       <a data-toggle="tab" href="#groups">Groups</a> 
     </li>
@@ -31,10 +34,10 @@
 		</div>
 		<div class="clearfix" data-id="addNewBtnDiv">
 			{{#isSystemAdmin .}}
-				<a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
+                                <a href="javascript:void(0);" data-id="deleteUserGroup" title="Permanently delete selected users/groups/roles" class="btn btn-primary btn-right btn-danger"><i class="icon-trash icon-large" /></a>
 			{{/isSystemAdmin}}
       {{#isSystemAdmin .}}
-      <div class="btn-group btn-right">
+      <div class="btn-group btn-right" data-id="hideShowVisibility">
         <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
           {{tt 'btn.setVisibility'}}
           <span class="caret"></span>
@@ -46,6 +49,7 @@
       </div>
       <a href="#!/user/create" class="btn btn-primary btn-right" type="button" data-id="addNewUser"> {{tt 'lbl.addNewUser'}} </a>
       <a href="#!/group/create" class="btn btn-primary btn-right" type="button" data-id="addNewGroup" style="display:none;"> {{tt 'lbl.addNewGroup'}} </a>
+      <a href="#!/roles/create" class="btn btn-primary btn-right" type="button" data-id="addNewRoles" style="display:none;"> {{tt 'lbl.addNewRole'}} </a>
       {{/isSystemAdmin}}
 		</div>
                 <div data-id="r_tableList">

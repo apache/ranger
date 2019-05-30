@@ -184,7 +184,8 @@ define(function(require) {
 		CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE:{value:1012, label:'Transaction log attribute', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE', tt: 'lbl.ClassTypes_CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE'},
 		CLASS_TYPE_RANGER_POLICY:{value:1020, label:'Ranger Policy', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_POLICY', modelName:'VXRangerPolicy', type:'vXResource', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_POLICY'},
 		CLASS_TYPE_RANGER_SERVICE:{value:1030, label:'Ranger Service', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_SERVICE', modelName:'VXRangerService', type:'vXRangerService', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_SERVICE'},
-		CLASS_TYPE_RANGER_SECURITY_ZONE:{value:1056, label:'Ranger Security Zone', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE', modelName:'VXRangerService', type:'vXRangerService', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_SECURITY_ZONE'}
+                CLASS_TYPE_RANGER_SECURITY_ZONE:{value:1056, label:'Ranger Security Zone', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE', modelName:'VXRangerService', type:'vXRangerService', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_SECURITY_ZONE'},
+                CLASS_TYPE_RANGER_ROLE:{value:1057, label:'Ranger Role', rbkey:'xa.enum.ClassTypes.CLASS_TYPE_RANGER_ROLE', modelName:'VXRole', type:'vXRole', tt: 'lbl.ClassTypes_CLASS_TYPE_RANGER_ROLE'}
 	});
 
 	XAEnums.DataType = mergeParams(XAEnums.DataType, {

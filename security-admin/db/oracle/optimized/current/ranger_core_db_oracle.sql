@@ -31,6 +31,13 @@ call spdropsequence('X_AUDIT_MAP_SEQ');
 call spdropsequence('X_AUTH_SESS_SEQ');
 call spdropsequence('X_CRED_STORE_SEQ');
 call spdropsequence('X_DB_BASE_SEQ');
+
+call spdropsequence('X_ROLE_REF_ROLE_SEQ');
+call spdropsequence('X_POLICY_REF_ROLE_SEQ');
+call spdropsequence('X_ROLE_REF_GROUP_SEQ');
+call spdropsequence('X_ROLE_REF_USER_SEQ');
+call spdropsequence('X_ROLE_SEQ');
+
 call spdropsequence('X_GROUP_SEQ');
 call spdropsequence('X_GROUP_USERS_SEQ');
 call spdropsequence('X_GROUP_GROUPS_SEQ');
@@ -92,6 +99,7 @@ call spdropsequence('X_SEC_ZONE_REF_TAG_SRVC_SEQ');
 call spdropsequence('X_RANGER_GLOBAL_STATE_SEQ');
 call spdropsequence('X_SECURITY_ZONE_SEQ');
 call spdropsequence('X_POLICY_CHANGE_LOG_SEQ');
+
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ASSET_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -162,6 +170,12 @@ CREATE SEQUENCE X_SEC_ZONE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOC
 CREATE SEQUENCE X_POLICY_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 call spdropsequence('X_DB_VERSION_H_SEQ');
 CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+CREATE SEQUENCE X_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_ROLE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_ROLE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_ROLE_REF_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
 
 CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
@@ -247,6 +261,13 @@ call spdroptable('x_trx_log');
 call spdroptable('x_resource');
 call spdroptable('x_policy_export_audit');
 call spdroptable('x_group_users');
+
+call spdroptable('x_role_ref_role');
+call spdroptable('x_policy_ref_role');
+call spdroptable('x_role_ref_group');
+call spdroptable('x_role_ref_user');
+call spdroptable('x_role');
+
 call spdroptable('x_user');
 call spdroptable('x_group_groups');
 call spdroptable('x_group');
@@ -1478,6 +1499,96 @@ CREATE INDEX x_plcy_chng_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_plcy_chng_log_IDX_policy_ver ON x_policy_change_log(policy_version);
 COMMIT;
 
+CREATE TABLE x_role(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+version NUMBER(20) DEFAULT NULL NULL,
+name varchar(255) NOT NULL,
+description varchar(1024) DEFAULT NULL NULL,
+role_options varchar(4000) DEFAULT NULL NULL,
+role_text CLOB DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_UK_name UNIQUE(name),
+ CONSTRAINT x_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+
+CREATE TABLE x_role_ref_user(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+role_id NUMBER(20) NOT NULL,
+user_id NUMBER(20) DEFAULT NULL NULL,
+user_name varchar(767) DEFAULT NULL NULL,
+priv_type NUMBER(10)  DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_user_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
+ CONSTRAINT x_role_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
+);
+commit;
+
+CREATE TABLE x_role_ref_group(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+role_id NUMBER(20) NOT NULL,
+group_id NUMBER(20) DEFAULT NULL NULL,
+group_name varchar(767) DEFAULT NULL NULL,
+priv_type NUMBER(10)  DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_grp_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
+ CONSTRAINT x_role_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
+);
+commit;
+
+
+CREATE TABLE x_policy_ref_role(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+policy_id NUMBER(20) NOT NULL,
+role_id NUMBER(20) NOT NULL,
+role_name varchar(255) DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_pol_ref_role_UK_polId_roleId UNIQUE(policy_id,role_id),
+ CONSTRAINT x_pol_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_pol_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_pol_ref_role_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+ CONSTRAINT x_pol_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
+);
+commit;
+
+CREATE TABLE x_role_ref_role(
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+role_ref_id NUMBER(20) DEFAULT NULL NULL,
+role_id NUMBER(20) NOT NULL,
+role_name varchar(255) DEFAULT NULL NULL,
+priv_type NUMBER(10)  DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_role_ref_role_FK_role_ref_id FOREIGN KEY (role_ref_id) REFERENCES x_role (id)
+);
+commit;
+
 CREATE TABLE x_security_zone_ref_resource (
 id NUMBER(20) NOT NULL,
 create_time DATE DEFAULT NULL NULL,
@@ -1729,6 +1840,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '038',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '039',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '040',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '041',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Resource Based Policies'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

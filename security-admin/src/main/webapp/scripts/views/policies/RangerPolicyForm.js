@@ -592,7 +592,7 @@ define(function(require){
 		},
 		setPermissionsToColl : function(list, policyItemList) {
 			list.each(function(m){
-				if(!_.isUndefined(m.get('groupName')) || !_.isUndefined(m.get("userName"))){ //groupName or userName
+                                if(!_.isUndefined(m.get('groupName')) || !_.isUndefined(m.get("userName")) || !_.isUndefined(m.get('roleName'))){ //groupName or userName
 					var RangerPolicyItem=Backbone.Model.extend()
 					var policyItem = new RangerPolicyItem();
 					if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
@@ -601,6 +601,9 @@ define(function(require){
 					if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
 						policyItem.set("users",m.get("userName"));
 					}
+                                        if(!_.isUndefined(m.get('roleName')) && !_.isNull(m.get('roleName'))){
+                                                policyItem.set("roles",m.get("roleName"));
+                                        }
 					if(!(_.isUndefined(m.get('conditions')) && _.isEmpty(m.get('conditions')))){
 						var RangerPolicyItemConditionList = Backbone.Collection.extend();
 						var rPolicyItemCondList = new RangerPolicyItemConditionList(m.get('conditions'))
@@ -848,26 +851,34 @@ define(function(require){
 		},
 		formValidation : function(coll){
                         var groupSet = false , permSet = false , groupPermSet = false , delegateAdmin = false ,
-			userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false,customMaskSet = true;
+                        userSet=false, userPerm = false, userPermSet =false,breakFlag =false, condSet = false,customMaskSet = true,
+                        roleSet = false, rolePermSet = false, rolePerm = false;
 			console.log('validation called..');
 			coll.each(function(m){
 				if(_.isEmpty(m.attributes)) return;
-                                if(m.has('groupName') || m.has('userName') || m.has('accesses') || m.has('delegateAdmin') ){
+                if(m.has('groupName') || m.has('userName') || m.has('accesses') || m.has('delegateAdmin') || m.has('roleName')){
 					if(! breakFlag){
 						groupSet = m.has('groupName') ? true : false;
 						userSet = m.has('userName') ? true : false;
+                                                roleSet = m.has('roleName') ? true : false;
                                                 permSet = m.has('accesses') ? true : false;
                                                 delegateAdmin = m.has('delegateAdmin') ? m.get('delegateAdmin') : false;
 						if(groupSet && permSet){
 							groupPermSet = true;
 							userPermSet = false;
+                                                        rolePermSet = false;
 						}else if(userSet && permSet){
 							userPermSet = true;
 							groupPermSet = false;
+                                                        rolePermSet = false;
+                                                }else if(roleSet && permSet){
+                                                        rolePermSet = true;
+                                                        userPermSet = false;
+                                                        groupPermSet = false;
 						}else{
-                                                        if(!((userSet || groupSet) && delegateAdmin)){
-                                                                breakFlag=true;
-                                                        }
+                            if(!((userSet || groupSet || roleSet) && delegateAdmin)){
+                                    breakFlag=true;
+                            }
 						}
 					}
 				}
@@ -887,15 +898,18 @@ define(function(require){
 						userSet 		: userSet, isUsers:userPermSet,
 						auditLoggin 	: auditStatus,
 						condSet			: condSet,
-                                                customMaskSet   : customMaskSet,
-                                                delegateAdmin	: delegateAdmin,
+                        customMaskSet   : customMaskSet,
+                        delegateAdmin	: delegateAdmin,
+                        roleSet : roleSet, rolePermSet : rolePermSet,
 					};
-			if(groupSet || userSet){
+                        if(groupSet || userSet || roleSet){
 				obj['permSet'] = groupSet ? permSet : false;
 				obj['userPerm'] = userSet ? permSet : false;
+                                obj['rolePerm'] = roleSet ? permSet : false;
 			}else{
 				obj['permSet'] = permSet;
 				obj['userPerm'] = userSet;
+                                obj['rolePerm'] = roleSet;
 			}
 			return obj;
 		},

@@ -306,6 +306,7 @@ public class RangerPolicyRetriever {
 	class LookupCache {
 		final Map<Long, String>              userScreenNames            = new HashMap<Long, String>();
 		final Map<Long, String>              zoneNames                  = new HashMap<Long, String>();
+		final Map<Long, Map<String, String>> roleMappingsPerPolicy      = new HashMap<>();
 		final Map<Long, Map<String, String>> groupMappingsPerPolicy     = new HashMap<>();
 		final Map<Long, Map<String, String>> userMappingsPerPolicy      = new HashMap<>();
 		final Map<Long, Map<String, String>> accessMappingsPerPolicy    = new HashMap<>();
@@ -416,6 +417,9 @@ public class RangerPolicyRetriever {
 			return policyNameMap != null ? policyNameMap.get(nameToMap) : null;
 		}
 
+		void setRoleNameMapping(List<PolicyTextNameMap> roleNameMapping) {
+			setNameMapping(roleMappingsPerPolicy, roleNameMapping);
+		}
 		void setGroupNameMapping(List<PolicyTextNameMap> groupNameMapping) {
 			setNameMapping(groupMappingsPerPolicy, groupNameMapping);
 		}
@@ -473,6 +477,7 @@ public class RangerPolicyRetriever {
 			if (xService != null) {
 				Long serviceId = xService.getId();
 
+				lookupCache.setRoleNameMapping(daoMgr.getXXPolicyRefRole().findUpdatedRoleNamesByService(serviceId));
 				lookupCache.setGroupNameMapping(daoMgr.getXXPolicyRefGroup().findUpdatedGroupNamesByService(serviceId));
 				lookupCache.setUserNameMapping(daoMgr.getXXPolicyRefUser().findUpdatedUserNamesByService(serviceId));
 				lookupCache.setAccessNameMapping(daoMgr.getXXPolicyRefAccessType().findUpdatedAccessNamesByService(serviceId));
@@ -493,6 +498,7 @@ public class RangerPolicyRetriever {
 		RetrieverContext(XXPolicy xPolicy, XXService xService) {
 			Long policyId = xPolicy.getId();
 
+			lookupCache.setRoleNameMapping(daoMgr.getXXPolicyRefRole().findUpdatedRoleNamesByPolicy(policyId));
 			lookupCache.setGroupNameMapping(daoMgr.getXXPolicyRefGroup().findUpdatedGroupNamesByPolicy(policyId));
 			lookupCache.setUserNameMapping(daoMgr.getXXPolicyRefUser().findUpdatedUserNamesByPolicy(policyId));
 			lookupCache.setAccessNameMapping(daoMgr.getXXPolicyRefAccessType().findUpdatedAccessNamesByPolicy(policyId));
@@ -585,6 +591,13 @@ public class RangerPolicyRetriever {
 				}
 
 				for (RangerPolicyItem policyItem : policyItems) {
+					if (lookupCache.roleMappingsPerPolicy.containsKey(policyId)) {
+						List<String> updatedRoles = getUpdatedNames(lookupCache.roleMappingsPerPolicy, policyId, policyItem.getRoles());
+
+						if (updatedRoles != null) {
+							policyItem.setRoles(updatedRoles);
+						}
+					}
 					if (lookupCache.groupMappingsPerPolicy.containsKey(policyId)) {
 						List<String> updatedGroups = getUpdatedNames(lookupCache.groupMappingsPerPolicy, policyId, policyItem.getGroups());
 

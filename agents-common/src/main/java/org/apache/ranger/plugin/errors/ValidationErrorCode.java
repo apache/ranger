@@ -85,7 +85,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_RECURSIVE_NOT_SUPPORTED(3017, "Recursive option not supported: resource-name=[{0}]."),
     POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX(3018, "Invalid resource specified. A value of [{0}] is not valid for resource [{1}]"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM(3019, "policy items object was null"),
-    POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3020, "both users and user-groups collections on the policy item were null/empty"),
+    POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3020, "All of users,  user-groups and roles collections on the policy item were null/empty"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS(3021, "policy items access object was null"),
     POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_INVALID(3022, "Invalid access type: access type=[{0}], valid access types=[{1}]"),
     POLICY_VALIDATION_ERR_POLICY_ITEM_ACCESS_TYPE_DENY(3023, "Currently deny access types are not supported. Access type is set to deny."),

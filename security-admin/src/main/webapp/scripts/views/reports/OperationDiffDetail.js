@@ -32,6 +32,8 @@ define(function(require){
 	var GroupUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/GroupUpdateOperationDiff_tmpl');
 	var ZoneOperationDiff_tmpl 			= require('hbs!tmpl/reports/ZoneOperationDiff_tmpl');
 	var ZoneUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/ZoneUpdateOperationDiff_tmpl');
+        var RoleOperationDiff_tmpl 		    = require('hbs!tmpl/reports/RoleOperationDiff_tmpl');
+        var RoleUpdateOperationDiff_tmpl 	= require('hbs!tmpl/reports/RoleUpdateOperationDiff_tmpl');
 	
 	var OperationDiffDetail = Backbone.Marionette.ItemView.extend(
 	/** @lends OperationDiffDetail */
@@ -180,6 +182,14 @@ define(function(require){
 				else
 					this.template = ZoneOperationDiff_tmpl;
 			}
+                        if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value){
+                                if(this.action == 'update'){
+                                        this.template = RoleUpdateOperationDiff_tmpl;
+                                } else{
+                                        this.template = RoleOperationDiff_tmpl;
+                                }
+                                this.templateType = XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value;
+                        }
 		},
 		assetDiffOperation : function(){	
 			var that = this, configModel;

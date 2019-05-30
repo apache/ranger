@@ -192,6 +192,15 @@
 	      {{#each this.policyItems}}
 	      <tr>
           <td>
+            {{#if this.roles}}
+              {{#each this.roles}}
+               <span class="label label-info">{{this}}</span>
+              {{/each}}
+            {{else}}
+                 --
+            {{/if}}
+          </td>
+          <td>
             {{#if this.groups}}
               {{#each this.groups}}
                <span class="label label-info">{{this}}</span>

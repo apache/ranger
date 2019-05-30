@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -59,6 +60,8 @@ public class ServicePolicies implements java.io.Serializable {
 	private TagPolicies        tagPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
 	private List<RangerPolicyDelta> policyDeltas;
+	private Map<String, Set<String>> userRoles;
+	private Map<String, Set<String>> groupRoles;
 
 	/**
 	 * @return the serviceName
@@ -159,6 +162,12 @@ public class ServicePolicies implements java.io.Serializable {
 		this.securityZones = securityZones;
 	}
 
+	public Map<String, Set<String>> getUserRoles() { return userRoles; }
+	public Map<String, Set<String>> getGroupRoles() { return groupRoles; }
+
+	public void setUserRoles(Map<String, Set<String>> userRoles) { this.userRoles = userRoles; }
+	public void setGroupRoles(Map<String, Set<String>> groupRoles) { this.groupRoles = groupRoles; }
+
 	@Override
 	public String toString() {
 		return "serviceName=" + serviceName + ", "
@@ -170,7 +179,9 @@ public class ServicePolicies implements java.io.Serializable {
 			 	+ "policyDeltas=" + policyDeltas + ", "
 			 	+ "serviceDef=" + serviceDef + ", "
 			 	+ "auditMode=" + auditMode + ", "
-			 	+ "securityZones=" + securityZones
+			 	+ "securityZones=" + securityZones + ", "
+				+ "userRoles=" + userRoles + ", "
+				+ "groupRoles=" + groupRoles + ", "
 				;
 	}
 	public List<RangerPolicyDelta> getPolicyDeltas() { return this.policyDeltas; }
@@ -341,6 +352,7 @@ public class ServicePolicies implements java.io.Serializable {
 					;
 		}
 	}
+
 	static public ServicePolicies copyHeader(ServicePolicies source) {
 		ServicePolicies ret = new ServicePolicies();
 
@@ -351,6 +363,8 @@ public class ServicePolicies implements java.io.Serializable {
 		ret.setServiceDef(source.getServiceDef());
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
 		ret.setSecurityZones(source.getSecurityZones());
+		ret.setUserRoles(source.getUserRoles());
+		ret.setGroupRoles(source.getGroupRoles());
 		ret.setPolicies(Collections.emptyList());
 		ret.setPolicyDeltas(null);
 		if (source.getTagPolicies() != null) {

@@ -376,6 +376,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_with_roles() {
+		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_with_roles.json" };
+
+		runTestsFromResourceFiles(conditionsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -395,6 +402,8 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 		servicePolicies.setSecurityZones(testCase.securityZones);
+		servicePolicies.setUserRoles(testCase.userRoles);
+		servicePolicies.setGroupRoles(testCase.groupRoles);
 
 		if (StringUtils.isNotBlank(testCase.auditMode)) {
 			servicePolicies.setAuditMode(testCase.auditMode);
@@ -581,6 +590,8 @@ public class TestPolicyEngine {
 		public List<RangerPolicy> policies;
 		public TagPolicyInfo	  tagPolicyInfo;
 		public Map<String, ServicePolicies.SecurityZoneInfo> securityZones;
+		public Map<String, Set<String>> userRoles;
+		public Map<String, Set<String>> groupRoles;
 		public String             auditMode;
 		public List<TestData>     tests;
 

@@ -84,6 +84,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private Map<String, RangerResourceTrie>   trieMap;
 	private Map<String, String>               zoneTagServiceMap;
+	private final Map<String, Set<String>>         userRoleMapping;
+	private final Map<String, Set<String>>         groupRoleMapping;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
 
@@ -208,6 +210,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 		this.allContextEnrichers = tmpList;
 
+		// Initialize role-related information
+		userRoleMapping = MapUtils.isNotEmpty(servicePolicies.getUserRoles()) ? servicePolicies.getUserRoles() : null;
+		groupRoleMapping = MapUtils.isNotEmpty(servicePolicies.getGroupRoles()) ? servicePolicies.getGroupRoles() : null;
+
 		reorderPolicyEvaluators();
 
 	}
@@ -297,6 +303,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				policyRepositories.put(zone.getKey(), policyRepository);
 			}
 		}
+
+		// Initialize role-related information
+		userRoleMapping = MapUtils.isNotEmpty(servicePolicies.getUserRoles()) ? servicePolicies.getUserRoles() : null;
+		groupRoleMapping = MapUtils.isNotEmpty(servicePolicies.getGroupRoles()) ? servicePolicies.getGroupRoles() : null;
 
 		RangerPerfTracer.log(perf);
 
@@ -404,6 +414,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+
+		Set<String> roles = getRolesFromUserAndGroups(request.getUser(), request.getUserGroups());
+
+		if (CollectionUtils.isNotEmpty(roles)) {
+			RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
+		}
 
 		List<RangerContextEnricher> enrichers = allContextEnrichers;
 
@@ -656,6 +672,23 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 							ret.setGroupAccessInfo(groupName, accessInfo.getKey(), accessResult, policy);
 						}
 					}
+
+					for (Map.Entry<String, Map<String, PolicyACLSummary.AccessResult>> roleAccessInfo : aclSummary.getRolesAccessInfo().entrySet()) {
+						final String roleName = roleAccessInfo.getKey();
+
+						for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : roleAccessInfo.getValue().entrySet()) {
+							if (isConditional) {
+								accessResult = ACCESS_CONDITIONAL;
+							} else {
+								accessResult = accessInfo.getValue().getResult();
+								if (accessResult.equals(RangerPolicyEvaluator.ACCESS_UNDETERMINED)) {
+									accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
+								}
+							}
+							RangerPolicy policy = evaluator.getPolicy();
+							ret.setRoleAccessInfo(roleName, accessInfo.getKey(), accessResult, policy);
+						}
+					}
 				}
 			}
 			ret.finalizeAcls();
@@ -804,9 +837,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			matchedRepositories.add(this.policyRepository);
 		}
 
+		Set<String> roles = getRolesFromUserAndGroups(user, userGroups);
+
 		for (RangerPolicyRepository policyRepository : matchedRepositories) {
 			for (RangerPolicyEvaluator evaluator : policyRepository.getLikelyMatchPolicyEvaluators(resource, RangerPolicy.POLICY_TYPE_ACCESS)) {
-				ret = evaluator.isAccessAllowed(resource, user, userGroups, accessType);
+				ret = evaluator.isAccessAllowed(resource, user, userGroups, roles, accessType);
 
 				if (ret) {
 					break;
@@ -836,12 +871,27 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
+		boolean ret = isAccessAllowed(policy, user, userGroups, null, accessType);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + ") : " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ")");
+		}
+
 		boolean ret = false;
 
 		RangerPerfTracer perf = null;
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + "," + userGroups + ",accessType=" + accessType + ")");
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + "," + userGroups + ", roles=" + roles + ",accessType=" + accessType + ")");
 		}
 
 		String zoneName = trieMap == null ? null : policy.getZoneName();
@@ -867,7 +917,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		for (RangerPolicyRepository policyRepository : matchedRepositories) {
 			for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-				ret = evaluator.isAccessAllowed(policy, user, userGroups, accessType);
+				ret = evaluator.isAccessAllowed(policy, user, userGroups, roles, accessType);
 
 				if (ret) {
 					break;
@@ -881,7 +931,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerPerfTracer.log(perf);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + "): " + ret);
 		}
 
 		return ret;
@@ -1215,6 +1265,34 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
+		Set<String> allRoles = new HashSet<>();
+		if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
+			Set<String> userRoles = userRoleMapping.get(user);
+			if (CollectionUtils.isNotEmpty(userRoles)) {
+				allRoles.addAll(userRoles);
+			}
+		}
+
+		if (MapUtils.isNotEmpty(groupRoleMapping)) {
+			if (CollectionUtils.isNotEmpty(groups)) {
+				for (String group : groups) {
+					Set<String> groupRoles = groupRoleMapping.get(group);
+					if (CollectionUtils.isNotEmpty(groupRoles)) {
+						allRoles.addAll(groupRoles);
+					}
+				}
+			}
+			Set<String> publicGroupRoles = groupRoleMapping.get(RangerPolicyEngine.GROUP_PUBLIC);
+			if (CollectionUtils.isNotEmpty(publicGroupRoles)) {
+				allRoles.addAll(publicGroupRoles);
+			}
+		}
+
+		return allRoles;
 	}
 
 	public List<RangerPolicy> getResourcePolicies(String zoneName) {

@@ -66,6 +66,7 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
@@ -285,6 +286,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
     RangerSecurityZoneServiceService securityZoneService;
+
+	@Autowired
+	RoleDBStore roleStore;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -2651,6 +2655,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setTagPolicies(tagPolicies);
 		}
 
+		if (ret != null) {
+			// Add role mapping
+			List<RangerRole> rolesForService = roleStore.getRoles(serviceDbObj.getId());
+			if (CollectionUtils.isNotEmpty(rolesForService)) {
+				Map<String, Set<String>> userRoleMapping = new HashMap<>();
+				Map<String, Set<String>> groupRoleMapping = new HashMap<>();
+				for (RangerRole role : rolesForService) {
+					buildMap(userRoleMapping, role.getUsers(), role.getName());
+					buildMap(groupRoleMapping, role.getGroups(), role.getName());
+					// TBD - roles within roles
+				}
+
+				ret.setUserRoles(userRoleMapping);
+				ret.setGroupRoles(groupRoleMapping);
+			}
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()) + ", delta-count=" + ((ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size()));
 		}
@@ -2658,6 +2679,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	private void buildMap(Map<String, Set<String>> map, List<RangerRole.RoleMember> usersOrGroups, String roleName) {
+		for(RangerRole.RoleMember userOrGroup : usersOrGroups) {
+			if (StringUtils.isNotEmpty(userOrGroup.getName())) {
+				Set<String> roleNames = map.get(userOrGroup.getName());
+				if (roleNames == null) {
+					roleNames = new HashSet<>();
+					map.put(userOrGroup.getName(), roleNames);
+				}
+				roleNames.add(roleName);
+			}
+		}
+	}
 	private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
 		@Override
 		public int compare(RangerPolicyDelta me, RangerPolicyDelta other) {

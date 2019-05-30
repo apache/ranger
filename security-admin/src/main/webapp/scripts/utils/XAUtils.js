@@ -509,7 +509,7 @@ define(function(require) {
 		} else
 			return '--';
 	};
-	XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showGroups, rangerServiceDefModel) {
+        XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showType, rangerServiceDefModel) {
 		var showMoreLess = false, groupArr = [], items = [];
 		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems','rowFilterPolicyItems']
 		if(!_.isUndefined(rangerServiceDefModel)){
@@ -521,7 +521,7 @@ define(function(require) {
 				: this.isMaskingPolicy(model.get('policyType')) ? _.difference(itemList, ["rowFilterPolicyItems"])
 				: this.isRowFilterPolicy(model.get('policyType')) ? _.difference(itemList, ["dataMaskPolicyItems"]) : itemList; 
 						
-		var type = _.isUndefined(showGroups) || showGroups ? 'groups' : 'users';
+                var type = _.isUndefined(showType) || (showType == 'groups') ? 'groups' : ((showType == 'users') ? 'users' : 'roles');
 		_.each(itemList, function(item){
 		    if(!_.isUndefined(model.get(item)) && !_.isEmpty(model.get(item))) {
 		    	items =_.union(items,  model.get(item))
@@ -655,11 +655,13 @@ define(function(require) {
 				// _.filter(policyItems,function(m){if(!_.isEmpty(m.groups))
 				// return m;});
 				_.each(policyItems, function(obj) {
-					var groupNames = null, userNames = null;
+                                        var groupNames = null, userNames = null, roleNames = null;
 					if (!_.isEmpty(obj.groups))
 						groupNames = obj.groups;
 					if (!_.isEmpty(obj.users))
 						userNames = obj.users;
+                                        if (!_.isEmpty(obj.roles))
+                                                roleNames = obj.roles;
 					var m = new Backbone.Model({
 						groupName : groupNames,
 						userName : userNames,
@@ -667,6 +669,7 @@ define(function(require) {
 						conditions : obj.conditions,
 						delegateAdmin : obj.delegateAdmin,
 						editMode : true,
+                                                roleName : roleNames,
 					});
 					if(that.isMaskingPolicy(model.get('policyType'))){
 						m.set('dataMaskInfo', obj.dataMaskInfo)
@@ -1575,6 +1578,102 @@ define(function(require) {
             }, 300);
         });
     }
+
+    XAUtils.getUsersGroupsList = function(typeUserOrGroup, $select, domElement){
+        var that = domElement,
+            tags = [],
+            placeholder = (typeUserOrGroup) ? 'Select Group' : 'Select User',
+            searchUrl = (typeUserOrGroup) ? "service/xusers/lookup/groups" : "service/xusers/lookup/users";
+            if(that.model && !_.isEmpty(that.model.get('name'))){
+                tags.push({
+                    'id': _.escape(that.model.get('name')),
+                    'text': _.escape(that.model.get('name'))
+                });
+                domElement.ui['selectUsersOrGroups'].val(tags.map(function(val) {
+                    return val.text
+                }));
+            }
+
+        return {
+            closeOnSelect : true,
+            placeholder   : placeholder,
+            tags : true,
+            width : '300px',
+            initSelection: function(element, callback) {
+                callback(tags);
+            },
+            ajax: {
+                url: searchUrl,
+                dataType: 'json',
+                data: function(term, page) {
+                    return {
+                        name: term,
+                        isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
+                    };
+                },
+                results: function(data, page) {
+                    var results = [],
+                        selectedVals = [];
+                    //Get selected values of groups/users dropdown
+                    if (data.totalCount != "0") {
+                        console.log(that);
+                        if (typeUserOrGroup) {
+                            results = data.vXStrings.map(function(m) {
+                                return {
+                                    id: _.escape(m.value),
+                                    text: _.escape(m.value)
+                                };
+                            });
+                        } else {
+                            //remove users {USER} and {OWNER}
+                            data.vXStrings = _.reject(data.vXStrings, function(m){return (m.value == '{USER}' || m.value == '{OWNER}')})
+                            results = data.vXStrings.map(function(m) {
+                                return {
+                                    id: _.escape(m.value),
+                                    text: _.escape(m.value)
+                                };
+                            });
+                        }
+                        //remove selected values
+                        if(that.collection && that.collection.models){
+                            _.filter(that.collection.models, function(model){
+                                if(model && !_.isUndefined(model.get('name'))){
+                                    selectedVals.push(model.get('name'));
+                                }
+                            })
+                        }
+                        if (!_.isEmpty(selectedVals)) {
+                            results = XAUtils.filterResultByText(results, selectedVals);
+                        }
+                        return {
+                            results: results
+                        };
+                    }
+                    return {
+                        results: results
+                    };
+                },
+                transport: function(options) {
+                    $.ajax(options).fail(function(respones) {
+                        XAUtils.defaultErrorHandler('error', respones);
+                        this.success({
+                            resultSize: 0
+                        });
+                    });
+                }
+            },
+            formatResult: function(result) {
+                return result.text;
+            },
+            formatSelection: function(result) {
+                return result.text;
+            },
+            formatNoMatches: function(result) {
+                return typeUserOrGroup ? 'No group found.' : 'No user found.';
+            }
+
+        }
+        }
 
 	return XAUtils;
 });

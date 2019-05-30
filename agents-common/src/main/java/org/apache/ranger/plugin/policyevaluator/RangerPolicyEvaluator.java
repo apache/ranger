@@ -102,11 +102,11 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
-	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType);
+	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, Set<String> roles, String accessType);
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
-	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType);
+	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType);
 
 	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason);
 
@@ -140,8 +140,48 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		return false;
 	}
 
+	default boolean hasRoles() {
+		RangerPolicy policy = getPolicy();
+
+		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		for (RangerPolicy.RangerDataMaskPolicyItem policyItem : policy.getDataMaskPolicyItems()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		for (RangerPolicy.RangerRowFilterPolicyItem policyItem : policy.getRowFilterPolicyItems()) {
+			if (hasRoles(policyItem)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	static boolean hasContextSensitiveSpecification(RangerPolicyItem policyItem) {
 		return  CollectionUtils.isNotEmpty(policyItem.getConditions()) || policyItem.getUsers().contains(RangerPolicyEngine.RESOURCE_OWNER); /* || policyItem.getGroups().contains(RangerPolicyEngine.RESOURCE_GROUP_OWNER) */
+	}
+
+	static boolean hasRoles(RangerPolicyItem policyItem) {
+		return  CollectionUtils.isNotEmpty(policyItem.getRoles());
 	}
 
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
@@ -197,8 +237,9 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	class PolicyACLSummary {
 		private final Map<String, Map<String, AccessResult>> usersAccessInfo = new HashMap<>();
 		private final Map<String, Map<String, AccessResult>> groupsAccessInfo = new HashMap<>();
+		private final Map<String, Map<String, AccessResult>> rolesAccessInfo  = new HashMap<>();
 
-		private enum AccessorType { USER, GROUP }
+		private enum AccessorType { USER, GROUP, ROLE }
 
 		public static class AccessResult {
 			private int result;
@@ -247,6 +288,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 			return groupsAccessInfo;
 		}
 
+		public Map<String, Map<String, AccessResult>> getRolesAccessInfo() {
+			return rolesAccessInfo;
+		}
+
 		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional) {
 			final Integer result;
 			final boolean hasContextSensitiveSpecification = RangerPolicyEvaluator.hasContextSensitiveSpecification(policyItem);
@@ -287,6 +332,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 				final List<String> groups         = policyItem.getGroups();
 				final List<String> users          = policyItem.getUsers();
+				final List<String> roles          = policyItem.getRoles();
 				boolean            hasPublicGroup = false;
 
 				for (RangerPolicyItemAccess access : accesses) {
@@ -312,6 +358,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 					if (hasPublicGroup) {
 						addAccess(RangerPolicyEngine.GROUP_PUBLIC, AccessorType.GROUP, access.getType(), result, policyItemType);
+					}
+
+					for (String role : roles) {
+						addAccess(role, AccessorType.ROLE, access.getType(), result, policyItemType);
 					}
 				}
 			}
@@ -392,6 +442,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 				case GROUP:
 					accessorsAccessInfo = groupsAccessInfo;
+					break;
+
+				case ROLE:
+					accessorsAccessInfo = rolesAccessInfo;
 					break;
 
 				default:

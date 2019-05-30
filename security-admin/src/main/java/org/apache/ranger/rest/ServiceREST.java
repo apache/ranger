@@ -3400,9 +3400,10 @@ public class ServiceREST {
 						if(userGroups == null) {
 							userGroups = daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
 						}
+						Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyEngine.isAccessAllowed(policy, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS) 
+							if (policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS) 
 									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
 									|| isServiceAdminUser) {
 								ret.add(policy);
@@ -3498,7 +3499,8 @@ public class ServiceREST {
 		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
 
 		if(policyEngine != null) {
-			isAllowed = policyEngine.isAccessAllowed(policy, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
+			Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
+			isAllowed = policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS);
 		}
 
 		return isAllowed;
@@ -3673,6 +3675,8 @@ public class ServiceREST {
 				ret.setPolicies(servicePolicies.getPolicies());
 				ret.setTagPolicies(servicePolicies.getTagPolicies());
 				ret.setSecurityZones(servicePolicies.getSecurityZones());
+				ret.setUserRoles(servicePolicies.getUserRoles());
+				ret.setGroupRoles(servicePolicies.getGroupRoles());
 
 				if (containsDisabledResourcePolicies) {
 					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();

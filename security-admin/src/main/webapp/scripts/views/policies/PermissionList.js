@@ -35,6 +35,8 @@ define(function(require) {
 	var VXGroupList			= require('collections/VXGroupList');
 	var VXUserList			= require('collections/VXUserList');
 	var Vent			= require('modules/Vent');
+        var VXRole			= require('models/VXRole');
+        var VXRoleList		= require('collections/VXRoleList');
 	
 	require('bootstrap-editable');
 	require('esprima');
@@ -67,14 +69,16 @@ define(function(require) {
 			addConditionsSpan  : '.add-conditions',
 			addMaskingTypeSpan : '.add-masking-type',
 			addRowFilterSpan   : '.add-row-filter',
-			
+                        selectRoles : '[data-js="selectRoles"]'
+
 		},
 		events : {
 			'click [data-action="delete"]'	: 'evDelete',
 			'click [data-js="delegatedAdmin"]'	: 'evClickTD',
 			'change [data-js="selectGroups"]': 'evSelectGroup',
 			'change [data-js="selectUsers"]': 'evSelectUser',
-			'change input[class="policy-conditions"]'	: 'policyCondtionChange'
+                        'change input[class="policy-conditions"]'	: 'policyCondtionChange',
+                        'change [data-js="selectRoles"]': 'evSelectRoles',
 		},
 
 		initialize : function(options) {
@@ -88,11 +92,13 @@ define(function(require) {
 			//To setup permissions for edit mode 
 			this.setupFormForEditMode();
 			//create select2 dropdown for groups and users  
-			this.createDropDown(this.ui.selectGroups, true);
-			this.createDropDown(this.ui.selectUsers, false);
+                        this.createDropDown(this.ui.selectGroups, 'groups');
+                        this.createDropDown(this.ui.selectUsers, 'users');
+                        this.createDropDown(this.ui.selectRoles, 'roles');
 			//groups or users select2 dropdown change vent 
 			this.dropDownChange(this.ui.selectGroups);
 			this.dropDownChange(this.ui.selectUsers);
+                        this.dropDownChange(this.ui.selectRoles);
 			//render permissions and policy conditions
 			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
 				this.renderPermsForTagBasedPolicies();
@@ -123,7 +129,9 @@ define(function(require) {
 				if(!_.isUndefined(this.model.get('userName')) && !_.isNull(this.model.get('userName'))){
 					this.ui.selectUsers.val(_.map(this.model.get('userName'), function(name){ return _.escape(name); }));
 				}
-				
+                                if(!_.isUndefined(this.model.get('roleName')) && !_.isNull(this.model.get('roleName'))){
+                                        this.ui.selectRoles.val(_.map(this.model.get('roleName'), function(name){ return _.escape(name); }));
+                                }
 				if(!_.isUndefined(this.model.get('conditions'))){
 					_.each(this.model.get('conditions'), function(obj){
 						this.$el.find('input[data-js="'+obj.type+'"]').val(obj.values.toString())
@@ -168,12 +176,17 @@ define(function(require) {
 		dropDownChange : function($select){
 			var that = this;
 			$select.on('change',function(e){
-				var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group': 'user';
+                                var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group' :
+                                (($(e.currentTarget).attr('data-js') == that.ui.selectUsers.attr('data-js')) ? 'user' : 'role');
 				var otherName = (name == 'user') ? 'group': 'user';
+                                var otherName2 = (name == 'user') ? 'role': 'user';
 				that.checkDirtyFieldForDropDown(e);
 				
 				if(_.isNull(that.model.get(otherName+'Name'))){
                     that.model.unset(otherName+'Name')
+                }
+                if(_.isNull(that.model.get(otherName2+'Name'))){
+                    that.model.unset(otherName2+'Name')
                 }
 				if(e.removed != undefined){
 					var gNameArr = [];
@@ -192,12 +205,12 @@ define(function(require) {
 				}
 			});
 		},
-		createDropDown :function($select, typeGroup){
+                createDropDown :function($select, type){
 			var that = this, tags = [],
-			placeholder = (typeGroup) ? 'Select Group' : 'Select User',
-					searchUrl   = (typeGroup) ? "service/xusers/lookup/groups" : "service/xusers/lookup/users";
+                        placeholder = (type == 'users') ? 'Select Users' : ((type == 'groups') ? 'Select Groups' : 'Select Roles'),
+                        searchUrl   = (type == 'users') ? "service/xusers/lookup/users" : ((type == 'groups') ? "service/xusers/lookup/groups" : "service/roles/roles");
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
-				var temp = this.model.attributes[ (typeGroup) ? 'groupName': 'userName'];
+                                var temp = this.model.attributes[ (type == 'users') ? 'userName' : ((type == 'groups') ? 'groupName' : 'roleName')];
 				_.each(temp , function(name){
 					tags.push( { 'id' : _.escape( name ), 'text' : _.escape( name ) } );
 				});
@@ -220,12 +233,12 @@ define(function(require) {
 					results: function (data, page) { 
 						var results = [] , selectedVals = [];
 						//Get selected values of groups/users dropdown
-						selectedVals = that.getSelectedValues($select, typeGroup);
+                                                selectedVals = that.getSelectedValues($select, type);
 						if(data.totalCount != "0"){
-							if(typeGroup){
+                                                        if(type == 'users' || type == 'groups'){
 								results = data.vXStrings.map(function(m){	return {id : _.escape(m.value), text: _.escape(m.value) };	});
 							} else {
-								results = data.vXStrings.map(function(m){	return {id : _.escape(m.value), text: _.escape(m.value) };	});
+                                                                results = data.roles.map(function(m){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
 							}
 							if(!_.isEmpty(selectedVals)){
 								results = XAUtil.filterResultByText(results, selectedVals);
@@ -250,7 +263,7 @@ define(function(require) {
 					return result.text;
 				},
 				formatNoMatches: function(result){
-					return typeGroup ? 'No group found.' : 'No user found.';
+                                        return (type == 'users') ? 'No user found.' : ((type == 'groups') ? 'No group found.' : 'No role found');
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},
@@ -772,9 +785,9 @@ define(function(require) {
 			    that.model.unset('conditions');
 			}
 		},
-		getSelectedValues : function($select, typeGroup){
+                getSelectedValues : function($select, type){
 			var vals = [],selectedVals = [];
-			var name = typeGroup ? 'group' : 'user';
+                        var name = (type == 'users') ? 'user' : ((type == 'groups') ? 'group' : 'role');
 			if(!_.isEmpty($select.select2('data'))){
 				selectedVals = _.map($select.select2('data'),function(obj){ return obj.text; });
 			}
@@ -994,6 +1007,7 @@ define(function(require) {
 			}
 			permList.unshift(localization.tt('lbl.selectUser'));
 			permList.unshift(localization.tt('lbl.selectGroup'));
+                        permList.unshift(localization.tt('lbl.selectRole'));
 			permList.push("");
 			return permList;
 		},

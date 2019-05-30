@@ -40,6 +40,7 @@ import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACC
 public class RangerResourceACLs {
 	final private Map<String, Map<String, AccessResult>> userACLs  = new HashMap<>();
 	final private Map<String, Map<String, AccessResult>> groupACLs = new HashMap<>();
+	final private Map<String, Map<String, AccessResult>> roleACLs  = new HashMap<>();
 	public RangerResourceACLs() {
 	}
 
@@ -50,6 +51,8 @@ public class RangerResourceACLs {
 	public Map<String, Map<String, AccessResult>> getGroupACLs() {
 		return groupACLs;
 	}
+
+	public Map<String, Map<String, AccessResult>> getRoleACLs() { return roleACLs; }
 
 	public void finalizeAcls() {
 		Map<String, AccessResult>  publicGroupAccessInfo = groupACLs.get(RangerPolicyEngine.GROUP_PUBLIC);
@@ -83,6 +86,7 @@ public class RangerResourceACLs {
 		}
 		finalizeAcls(userACLs);
 		finalizeAcls(groupACLs);
+		finalizeAcls(roleACLs);
 	}
 
 	public void setUserAccessInfo(String userName, String accessType, Integer access, RangerPolicy policy) {
@@ -127,11 +131,33 @@ public class RangerResourceACLs {
 		}
 	}
 
+	public void setRoleAccessInfo(String roleName, String accessType, Integer access, RangerPolicy policy) {
+		Map<String, AccessResult> roleAccessInfo = roleACLs.get(roleName);
+
+		if (roleAccessInfo == null) {
+			roleAccessInfo = new HashMap<>();
+
+			roleACLs.put(roleName, roleAccessInfo);
+		}
+
+		AccessResult accessResult = roleAccessInfo.get(accessType);
+
+		if (accessResult == null) {
+			accessResult = new AccessResult(access, policy);
+
+			roleAccessInfo.put(accessType, accessResult);
+		} else {
+			accessResult.setResult(access);
+			accessResult.setPolicy(policy);
+		}
+	}
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 
 		sb.append("{");
+
 		sb.append("UserACLs={");
 		for (Map.Entry<String, Map<String, AccessResult>> entry : userACLs.entrySet()) {
 			sb.append("user=").append(entry.getKey()).append(":");
@@ -143,6 +169,7 @@ public class RangerResourceACLs {
 			sb.append("},");
 		}
 		sb.append("}");
+
 		sb.append(", GroupACLs={");
 		for (Map.Entry<String, Map<String, AccessResult>> entry : groupACLs.entrySet()) {
 			sb.append("group=").append(entry.getKey()).append(":");
@@ -154,6 +181,19 @@ public class RangerResourceACLs {
 			sb.append("},");
 		}
 		sb.append("}");
+
+		sb.append(", RoleACLs={");
+		for (Map.Entry<String, Map<String, AccessResult>> entry : roleACLs.entrySet()) {
+			sb.append("role=").append(entry.getKey()).append(":");
+			sb.append("permissions={");
+			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
+				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("}, ");
+				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy().getId()).append("},");
+			}
+			sb.append("},");
+		}
+		sb.append("}");
+
 		sb.append("}");
 
 		return sb.toString();

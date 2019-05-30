@@ -357,6 +357,24 @@
                 "conditions":[{"type":"ip-range","values":["10.*.10.*"]}]
               }
             ]
+          },
+          {
+            "id": 15, "name": "db=db3; table=tbl3; column=col3", "isEnabled": true, "isAuditEnabled": true,
+            "resources": {
+              "database": { "values": [ "db3" ] },
+              "table": { "values": [ "tbl3" ] },
+              "column": { "values": [ "col3" ] }
+            },
+            "policyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true }, { "type": "update", "isAllowed": true } ],
+                "users": [ "john", "jane" ], "roles": ["tarzan"]
+              }
+            ],
+            "denyPolicyItems": [
+              { "accesses": [ { "type": "drop", "isAllowed": true } ],
+                "users": ["adam", "eve"], "roles": ["eden"]
+              }
+            ]
           }
         ],
         "tagPolicies": {
@@ -579,6 +597,12 @@
           "resource": {"elements":{"database":"db2", "table":"tbl2", "column": "col2" }},
           "userPermissions": {"john":{"select":{"result":1, "isFinal":true}, "update":{"result":-1, "isFinal":true}}, "jane":{"select":{"result":1, "isFinal":true},"update":{"result":1, "isFinal":true}}, "adam":{"drop":{"result":2, "isFinal":true}}, "eve":{"drop":{"result":2, "isFinal":true}}},
           "groupPermissions": {}
+        },
+        {
+          "name": "roles-test",
+          "resource": {"elements":{"database":"db3", "table":"tbl3", "column": "col3" }},
+          "userPermissions": {"john":{"select":{"result":1, "isFinal":true}, "update":{"result":1, "isFinal":true}}, "jane":{"select":{"result":1, "isFinal":true},"update":{"result":1, "isFinal":true}}, "adam":{"drop":{"result":-1, "isFinal":true}}, "eve":{"drop":{"result":-1, "isFinal":true}}},
+          "rolePermissions": {"tarzan":{"select":{"result":1, "isFinal":true}, "update":{"result":1, "isFinal":true}}, "eden":{"drop":{"result":-1, "isFinal":true}}}
         }
       ]
     }

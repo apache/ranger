@@ -155,6 +155,13 @@ public class RangerAuthContext implements RangerPolicyEngine {
 	    }
 
 	    RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+
+        Set<String> roles = getRolesFromUserAndGroups(request.getUser(), request.getUserGroups());
+
+        if (CollectionUtils.isNotEmpty(roles)) {
+            RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
+        }
+
 	    if (MapUtils.isNotEmpty(requestContextEnrichers)) {
             for (Map.Entry<RangerContextEnricher, Object> entry : requestContextEnrichers.entrySet()) {
                 if (entry.getValue() instanceof RangerContextEnricher && entry.getKey().equals(entry.getValue())) {
@@ -237,7 +244,12 @@ public class RangerAuthContext implements RangerPolicyEngine {
     }
 
     @Override
-	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType) {
+    public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType) {
+        return false;
+    }
+
+    @Override
+	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
     	return false;
     }
 
@@ -265,5 +277,11 @@ public class RangerAuthContext implements RangerPolicyEngine {
     public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies) {
         return policyEngine.cloneWithDelta(servicePolicies);
     }
+
+    @Override
+    public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
+        return policyEngine.getRolesFromUserAndGroups(user, groups);
+    }
+
 
 }

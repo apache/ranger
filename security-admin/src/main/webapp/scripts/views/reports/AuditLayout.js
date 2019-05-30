@@ -190,7 +190,7 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
-				</tr>');
+                    </tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
@@ -920,6 +920,8 @@ define(function(require) {
 									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
 								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value)
 									 html =     'Security Zone '+action+'d '+'<b>'+name+'</b>';
+                                                                else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value)
+                                                                         html =     'Role '+action+'d '+'<b>'+name+'</b>';
 								 return html;
 						    }
 						}
@@ -1296,8 +1298,7 @@ define(function(require) {
 							}
 						}),
 					},
-
-			};
+                                };
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
 		renderLoginSessionTable : function(){

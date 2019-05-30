@@ -910,10 +910,10 @@ public class RangerPolicyValidator extends RangerValidator {
 				valid = isValidItemAccesses(policyItem.getAccesses(), failures, serviceDef) && valid;
 			}
 			// both users and user-groups collections can't be empty
-			if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+			if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) {
 				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS;
 				failures.add(new ValidationFailureDetailsBuilder()
-					.field("policy item users/user-groups")
+					.field("policy item users/user-groups/roles")
 					.isMissing()
 					.becauseOf(error.getMessage())
 					.errorCode(error.getErrorCode())

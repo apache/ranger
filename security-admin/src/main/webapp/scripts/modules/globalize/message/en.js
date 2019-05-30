@@ -269,6 +269,13 @@ define(function(require) {
                 addPolicyCondition              : 'Add Policy Condition',
                 editPolicyCondition             : 'Edit Policy Condition',
                 agentHost	                    :'Agent Host Name',
+                addNewRole                      : 'Add New Role',
+                roleName                        : 'Role Name',
+                roleCreate                      : 'Role Create',
+                roleEdit                        : 'Role Edit',
+                roles                           : 'Roles',
+                userWithGrantRolePrivilege      : 'Users (Grant privilege)',
+                groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
 
 			},
 			btn : {
@@ -294,7 +301,7 @@ define(function(require) {
 				// Menu
 				dashboard					: 'Dashboard',
 				policyManager 				: 'Policy Manager',
-				usersOrGroups 				: 'Users/Groups',
+                                usersOrGroupsOrRoles		: 'Users/Groups/Roles',
 				reports 					: 'Reports',
 				config 						: 'Config',
 				accounts					: 'Accounts',
@@ -328,6 +335,7 @@ define(function(require) {
 				searchForPermissions		:"Search for permissions...",
 				searchForYourUser 			:"Search for your users...",
 				searchForYourGroup 			:"Search for your groups...",
+                                searchForYourRole			:"Search for your roles",
 				access						: 'Access',
 				policyCondition				: 'Policy Conditions',
 				permissions					: 'Permissions',
@@ -405,8 +413,8 @@ define(function(require) {
 				noRecordsFound			  : 'No Records Found',
 				keyDeleteMsg			  : 'Key deleted successfully',
 				rolloverSuccessfully	  : 'Key rollover successfully',
-				addUserOrGroup			  : 'Please select group/user for the selected permission, else group/user will not be added.',
-				addUserOrGroupForPC		  : 'Please select group/user for the added policy condition, else group/user will not be added.',
+                                addUserOrGroupOrRole	  : 'Please select group/user/role for the selected permission, else group/user will not be added.',
+                                addUserOrGroupOrRoleForPC : 'Please select group/user/role for the added policy condition, else group/user will not be added.',
 				userCreatedSucc		      : 'User created successfully',
 				userUpdatedSucc           :     'User updated successfully',
 				grpUpdatedSucc            : 'Group updated successfully',
@@ -444,7 +452,7 @@ define(function(require) {
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
                 activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
-                addUserOrGroupForDelegateAdmin      : 'Please select user/group for the selected permission(s)',
+                addUserOrGroupOrRoleForDelegateAdmin      : 'Please select user/group/role for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',
                 noUserFoundText			: 'No user is associated with this group.',
                 showInitialHundredUser  : 'Initially search filter is applied for first hundred users. To get more users click on ',
@@ -462,7 +470,11 @@ define(function(require) {
                 policyTimeDetails       : '<b>Last Update: </b>Last updated time of policy.<br><b>Download: </b>Time when policy actually downloaded(sync-up with Ranger).<br>\
                                             <b>Active: </b>Time when policy actually in use for enforcement.',
                 tagPolicyTimeDetails    : '<b>Last Update: </b> Last updated time of Tag-service.<br><b>Download: </b>Time when tag-based policies sync-up with Ranger.<br>\
-                                            <b>Active: </b>Time when tag-based policies in use for enforcement.'
+                                            <b>Active: </b>Time when tag-based policies in use for enforcement.',
+                noDeleteRoleRow         :'Please select ranger role first to delete.',
+                addRolePermission       : 'Please add permission(s) for the selected role, else role will not be added.',
+                addRole                 : 'Please select role for the selected permission(s), else role will not be added.',
+
 			},
 			plcHldr : {
 				search 						:'Search',
@@ -495,6 +507,7 @@ define(function(require) {
                 jsValidationMsg        :'1. JavaScript Condition Examples :\ncountry_code == \'USA\', time_range >= 900 && time_range <= 1800 etc.\n2. Dragging bottom-right corner of javascript condition editor(Textarea) can resizable',
 				emailAddressValidationMsg  :'1. Email address should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character <b>.-@</b> .<br>3. Email address length should be greater than 9 characters.<br> 4. Email address examples : abc@de.fg, A-C@D-.FG',
                 nameValidationMsg      :'Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).',
+                roleNameValidationMsg :'1. Role name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
 			},
 			serverMsg : {
 

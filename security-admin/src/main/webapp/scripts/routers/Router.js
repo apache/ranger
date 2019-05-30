@@ -51,6 +51,9 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/group/create"	: "groupCreateAction",
 			"!/group/:id"		: "groupEditAction",
 
+                        "!/roles/create"		: "roleCreateAction",
+                        "!/roles/:id"			: "roleEditAction",
+
 			/************GENERIC UI *****************************************/
 			"!/service/:serviceType/create" 	: "serviceCreateAction",
 			"!/service/:serviceType/edit/:id"	: "serviceEditAction",

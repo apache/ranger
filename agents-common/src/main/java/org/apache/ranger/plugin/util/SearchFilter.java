@@ -40,6 +40,7 @@ public class SearchFilter {
 	public static final String TAG_SERVICE_ID  = "tagServiceId";  // search
 	public static final String USER            = "user";          // search
 	public static final String GROUP           = "group";         // search
+	public static final String ROLE            = "role";         // search
 	public static final String RESOURCE_PREFIX = "resource:";     // search
 	public static final String RESOURCE_MATCH_SCOPE = "resourceMatchScope"; // search - valid values: "self", "ancestor", "self_or_ancestor"
 	public static final String POL_RESOURCE    = "polResource";   // search
@@ -58,6 +59,8 @@ public class SearchFilter {
     public static final String POLICY_LABEL_ID       = "policyLabelId";      // search, sort
     public static final String ZONE_ID               = "zoneId";      // search, sort
     public static final String ZONE_NAME             = "zoneName";      // search, sort
+	public static final String ROLE_ID               = "roleId";      // search, sort
+	public static final String ROLE_NAME             = "roleName";      // search, sort
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search

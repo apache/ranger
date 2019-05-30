@@ -79,6 +79,8 @@ public interface RangerPolicyEngine {
 
 	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, String accessType);
 
+	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType);
+
 	List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, Map<String, Object> evalContext);
 
 	List<RangerPolicy> getExactMatchPolicies(RangerPolicy policy, Map<String, Object> evalContext);
@@ -92,5 +94,7 @@ public interface RangerPolicyEngine {
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
 	RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies);
+
+	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 
 }

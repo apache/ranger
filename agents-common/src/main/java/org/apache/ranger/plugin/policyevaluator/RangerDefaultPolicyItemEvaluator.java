@@ -40,6 +40,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 
@@ -159,9 +160,9 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	}
 
 	@Override
-	public boolean matchUserGroup(String user, Set<String> userGroups) {
+	public boolean matchUserGroup(String user, Set<String> userGroups, Set<String> roles) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ")");
+			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + ")");
 		}
 
 		boolean ret = false;
@@ -175,10 +176,13 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 				ret = policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC) ||
 						!Collections.disjoint(policyItem.getGroups(), userGroups);
 			}
+			if (!ret && CollectionUtils.isNotEmpty(roles) && CollectionUtils.isNotEmpty(policyItem.getRoles())) {
+				ret = !Collections.disjoint(policyItem.getRoles(), roles);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + "): " + ret);
 		}
 
 		return ret;
@@ -203,7 +207,11 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			}
 		}
 		if (!ret) {
-			ret = matchUserGroup(user, userGroups);
+			Set<String> roles = null;
+			if (CollectionUtils.isNotEmpty(policyItem.getRoles())) {
+				roles = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
+			}
+			ret = matchUserGroup(user, userGroups, roles);
 		}
 
 		if(LOG.isDebugEnabled()) {

@@ -564,7 +564,7 @@ public class TestRangerPolicyValidator {
 		when(policyItem.getUsers()).thenReturn(null);
 		when(policyItem.getGroups()).thenReturn(new ArrayList<String>());
 		_failures.clear(); Assert.assertFalse(_validator.isValidPolicyItem(policyItem, _failures, _serviceDef));
-		_utils.checkFailureForMissingValue(_failures, "policy item users/user-groups");
+		_utils.checkFailureForMissingValue(_failures, "policy item users/user-groups/roles");
 	}
 	
 	@Test

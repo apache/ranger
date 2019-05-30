@@ -305,5 +305,15 @@ public abstract class RangerDaoManagerBase {
 
 	public XXPolicyChangeLogDao getXXPolicyChangeLog() { return new XXPolicyChangeLogDao(this); }
 
+	public XXRoleDao getXXRole() { return new XXRoleDao(this); }
+
+	public XXPolicyRefRoleDao getXXPolicyRefRole() { return new XXPolicyRefRoleDao(this); }
+
+	public XXRoleRefUserDao getXXRoleRefUser() { return new XXRoleRefUserDao(this); }
+
+	public XXRoleRefGroupDao getXXRoleRefGroup() { return new XXRoleRefGroupDao(this); }
+
+	public XXRoleRefRoleDao getXXRoleRefRole() { return new XXRoleRefRoleDao(this); }
+
 }
 

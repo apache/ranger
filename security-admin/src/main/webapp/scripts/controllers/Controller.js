@@ -189,6 +189,37 @@ define(function(require) {
 		   });	   
 	   },
 
+                roleCreateAction : function(){
+                        MAppState.set({
+                                'currentTab' : XAGlobals.AppTabs.Settings.value
+                        });
+                        var view 		= require('views/users/RoleCreate');
+                        var VXRole		= require('models/VXRole');
+                        var VXRoleList	= require('collections/VXRoleList');
+
+                        var role 		= new VXRole();
+                        role.collection = new VXRoleList();
+                        App.rContent.show(new view({
+                                model : role
+                        }));
+                },
+                roleEditAction : function(roleId){
+                        MAppState.set({
+                                'currentTab' : XAGlobals.AppTabs.Settings.value
+                        });
+                        var view 		= require('views/users/RoleCreate');
+                        var VXRole		= require('models/VXRole');
+                        var VXRoleList	= require('collections/VXRoleList');
+
+                        var role 		= new VXRole({id : roleId});
+                        role.collection = new VXRoleList();
+
+                        role.fetch({cache : true}).done(function(){
+                                App.rContent.show(new view({
+                                        model : role
+                                }));
+                        });
+                },
 
    	   /************************************************************/
    	   //************** Generic design Related *********************/

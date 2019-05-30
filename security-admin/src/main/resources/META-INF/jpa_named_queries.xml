@@ -300,6 +300,10 @@
 	<named-query name="XXPolicy.findByServiceNameAndZoneId">
 		<query>select obj from XXPolicy obj, XXService svc where obj.zoneId = :zoneId and obj.service = svc.id and svc.name = :serviceName</query>
 	</named-query>
+	<named-query name="XXPolicy.findByRoleId">
+		<query>select obj from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id order by obj.service</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
@@ -1442,4 +1446,82 @@
 		<query>delete from XXPolicyChangeLog obj where obj.createTime &lt; :olderThan</query>
 	</named-query>
 
+	<!-- XXRole -->
+	<named-query name="XXRole.findByRoleId">
+		<query>select obj from XXRole obj where obj.id = :roleId</query>
+	</named-query>
+
+	<named-query name="XXRole.findByRoleName">
+		<query>select obj from XXRole obj where obj.name = :roleName</query>
+	</named-query>
+
+	<named-query name="XXRole.findByServiceId">
+		<query>select obj from XXRole obj, XXPolicyRefRole policyRefRole, XXPolicy policy where obj.id = policyRefRole.roleId and policyRefRole.policyId = policy.id and policy.service = :serviceId </query>
+	</named-query>
+
+	<!-- XXRoleRef* -->
+
+    <named-query name="XXRoleRefUser.findByRoleId">
+        <query>select obj from XXRoleRefUser obj  where obj.roleId = :roleId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefUser.findByUserId">
+        <query>select obj from XXRoleRefUser obj where obj.userId = :userId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefUser.findByUserName">
+        <query>select obj from XXRoleRefUser obj where obj.userName = :userName</query>
+    </named-query>
+
+    <named-query name="XXRoleRefGroup.findByRoleId">
+        <query>select obj from XXRoleRefGroup obj  where obj.roleId = :roleId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefGroup.findByGroupId">
+        <query>select obj from XXRoleRefGroup obj  where obj.groupId = :groupId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefGroup.findByGroupName">
+        <query>select obj from XXRoleRefGroup obj where obj.groupName = :groupName </query>
+    </named-query>
+
+    <named-query name="XXRoleRefRole.findByRoleId">
+        <query>select obj from XXRoleRefRole obj  where obj.roleId = :roleId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefRole.findBySubRoleId">
+        <query>select obj from XXRoleRefRole obj  where obj.subRoleId = :subRoleId</query>
+    </named-query>
+
+    <named-query name="XXRoleRefRole.findBySubRoleName">
+        <query>select obj from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
+    </named-query>
+
+	<!-- XXPolicyRefRole -->
+	<named-query name="XXPolicyRefRole.findByPolicyId">
+		<query>select obj from XXPolicyRefRole obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.findByRoleName">
+		<query>select obj from XXPolicyRefRole obj where obj.roleName = :roleName</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.findUpdatedRoleNamesByPolicy">
+		<query>select roleRef.policyId, roleRef.roleName, role.name
+			from XXPolicyRefRole roleRef, XXRole role
+			where roleRef.policyId    = :policy
+			and roleRef.roleId       = role.id
+			and roleRef.roleName    != role.name
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.findUpdatedRoleNamesByService">
+		<query>select roleRef.policyId, roleRef.roleName, role.name
+			from XXPolicy policy, XXPolicyRefRole roleRef, XXRole role
+			where policy.service       = :service
+			and roleRef.policyId      = policy.id
+			and roleRef.roleId       = role.id
+			and roleRef.roleName    != role.name
+		</query>
+	</named-query>
 </entity-mappings>

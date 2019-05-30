@@ -31,6 +31,7 @@ import org.apache.ranger.db.XXPolicyRefConditionDao;
 import org.apache.ranger.db.XXPolicyRefDataMaskTypeDao;
 import org.apache.ranger.db.XXPolicyRefGroupDao;
 import org.apache.ranger.db.XXPolicyRefResourceDao;
+import org.apache.ranger.db.XXPolicyRefRoleDao;
 import org.apache.ranger.db.XXPolicyRefUserDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
@@ -42,8 +43,10 @@ import org.apache.ranger.entity.XXPolicyRefCondition;
 import org.apache.ranger.entity.XXPolicyRefDataMaskType;
 import org.apache.ranger.entity.XXPolicyRefGroup;
 import org.apache.ranger.entity.XXPolicyRefResource;
+import org.apache.ranger.entity.XXPolicyRefRole;
 import org.apache.ranger.entity.XXPolicyRefUser;
 import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -73,6 +76,7 @@ public class PolicyRefUpdater {
 		cleanupRefTables(policy);
 
 		final Set<String> resourceNames   = policy.getResources().keySet();
+		final Set<String> roleNames       = new HashSet<>();
 		final Set<String> groupNames      = new HashSet<>();
 		final Set<String> userNames       = new HashSet<>();
 		final Set<String> accessTypes     = new HashSet<>();
@@ -92,6 +96,7 @@ public class PolicyRefUpdater {
 			}
 
 			for (RangerPolicyItem policyItem : policyItems) {
+				roleNames.addAll(policyItem.getRoles());
 				groupNames.addAll(policyItem.getGroups());
 				userNames.addAll(policyItem.getUsers());
 
@@ -129,6 +134,26 @@ public class PolicyRefUpdater {
 			xPolRes.setResourceName(resource);
 
 			daoMgr.getXXPolicyRefResource().create(xPolRes);
+		}
+
+		for (String role : roleNames) {
+			if (StringUtils.isBlank(role)) {
+				continue;
+			}
+
+			XXRole xRole = daoMgr.getXXRole().findByRoleName(role);
+
+			if (xRole == null) {
+				throw new Exception(role + ": role does not exist. policy='"+  policy.getName() + "' service='"+ policy.getService() + "' role='" + role + "'");
+			}
+
+			XXPolicyRefRole xPolRole = rangerAuditFields.populateAuditFields(new XXPolicyRefRole(), xPolicy);
+
+			xPolRole.setPolicyId(policy.getId());
+			xPolRole.setRoleId(xRole.getId());
+			xPolRole.setRoleName(role);
+
+			daoMgr.getXXPolicyRefRole().create(xPolRole);
 		}
 
 		for (String group : groupNames) {
@@ -228,6 +253,7 @@ public class PolicyRefUpdater {
 		}
 
 		XXPolicyRefResourceDao     xPolResDao      = daoMgr.getXXPolicyRefResource();
+		XXPolicyRefRoleDao         xPolRoleDao     = daoMgr.getXXPolicyRefRole();
 		XXPolicyRefGroupDao        xPolGroupDao    = daoMgr.getXXPolicyRefGroup();
 		XXPolicyRefUserDao         xPolUserDao     = daoMgr.getXXPolicyRefUser();
 		XXPolicyRefAccessTypeDao   xPolAccessDao   = daoMgr.getXXPolicyRefAccessType();
@@ -236,6 +262,10 @@ public class PolicyRefUpdater {
 
 		for (XXPolicyRefResource resource : xPolResDao.findByPolicyId(policyId)) {
 			xPolResDao.remove(resource);
+		}
+
+		for(XXPolicyRefRole role : xPolRoleDao.findByPolicyId(policyId)) {
+			xPolRoleDao.remove(role);
 		}
 
 		for(XXPolicyRefGroup group : xPolGroupDao.findByPolicyId(policyId)) {

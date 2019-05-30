@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.util;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_REQUESTED_RESOURCES = "REQUESTED_RESOURCES";
 	public static final String KEY_TOKEN_NAMESPACE = "token:";
 	public static final String KEY_USER = "USER";
+	public static final String KEY_ROLES = "ROLES";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -144,5 +146,13 @@ public class RangerAccessRequestUtil {
 	public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
 		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
 		return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
+	}
+
+	public static void setCurrentUserRolesInContext(Map<String, Object> context, Set<String> roles) {
+		setTokenInContext(context, KEY_ROLES, roles);
+	}
+	public static Set<String> getCurrentUserRolesFromContext(Map<String, Object> context) {
+		Object ret = getTokenFromContext(context, KEY_ROLES);
+		return ret != null ? (Set<String>) ret : Collections.EMPTY_SET;
 	}
 }

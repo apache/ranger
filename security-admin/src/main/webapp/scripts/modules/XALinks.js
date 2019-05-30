@@ -68,13 +68,13 @@ define(function(require) {
 			},
 			Users : { 
 				href : '#!/users/usertab',
-				text : 'h.usersOrGroups',
-				title: 'h.usersOrGroups'
+                                text : 'h.usersOrGroupsOrRoles',
+                                title: 'h.usersOrGroupsOrRoles'
 			},
 			Groups : { 
 				href : '#!/users/grouptab',
-				text : 'h.usersOrGroups',
-				title: 'h.usersOrGroups'
+                                text : 'h.usersOrGroupsOrRoles',
+                                title: 'h.usersOrGroupsOrRoles'
 			},
 			Kms : { 
 				href : '#!/kms/keys/new/manage/service',
@@ -323,6 +323,21 @@ define(function(require) {
                     href: 'javascript:void(0)',
                     text: 'Zone Name : ' + options
                 }
+            },
+            Roles : {
+                href : '#!/users/roletab',
+                text : 'h.usersOrGroupsOrRoles',
+                title: 'h.usersOrGroupsOrRoles',
+            },
+            RoleCreate : {
+                href : '#!/role/create',
+                text : 'lbl.roleCreate',
+                title: 'lbl.roleCreate',
+            },
+            RoleEdit : {
+                href : 'javascript:void(0);',
+                text : 'lbl.roleEdit',
+                title: 'lbl.roleEdit',
             },
 	};      
        

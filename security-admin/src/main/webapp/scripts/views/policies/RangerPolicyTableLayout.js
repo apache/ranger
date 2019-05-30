@@ -305,6 +305,18 @@ define(function(require){
 					drag : false,
 					sortable : false
 				},
+                                roles : {
+                                        reName : 'roleName',
+                                        cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                        label : localization.tt("lbl.roles"),
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'roles', that.rangerServiceDefModel);
+                                                }
+                                        }),
+                                        editable : false,
+                                        sortable : false
+                                },
 				policyItems : {
 					reName : 'groupName',
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
@@ -312,7 +324,7 @@ define(function(require){
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
-								return XAUtil.showGroupsOrUsersForPolicy(rawValue, model, true, that.rangerServiceDefModel);
+                                                                return XAUtil.showGroupsOrUsersForPolicy(rawValue, model, 'groups', that.rangerServiceDefModel);
 							}
 							return '--';
 						}
@@ -327,12 +339,12 @@ define(function(require){
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-								return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, false, that.rangerServiceDefModel);
-						}
-					}),
-					editable : false,
-					sortable : false
-				},
+                                                                return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'users', that.rangerServiceDefModel);
+                                                }
+                                        }),
+                                        editable : false,
+                                        sortable : false
+                                },
 			};
 			cols['permissions'] = {
 				cell :  "html",

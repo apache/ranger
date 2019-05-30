@@ -242,6 +242,7 @@ define(function(require) {
 			}
 			permList.unshift(localization.tt('lbl.selectUser'));
 			permList.unshift(localization.tt('lbl.selectGroup'));
+                        permList.unshift(localization.tt('lbl.selectRole'));
 			return {
 				header : permList,
 				policyCondition : policyCondition
