@@ -297,6 +297,7 @@ public class PatchForKafkaServiceDefUpdate_J10025 extends BaseLoader {
 				RangerPolicy rangerPolicy = getRangerPolicy(newResource,xxPortalUser,xxService);
 				xxPolicy.setPolicyText(JsonUtils.objectToJson(rangerPolicy));
 				xxPolicy.setResourceSignature(rangerPolicy.getResourceSignature());
+				xxPolicy.setZoneId(1L);
 				XXPolicy createdPolicy = daoMgr.getXXPolicy().create(xxPolicy);
 
 				XXPolicyItem xxPolicyItem = new XXPolicyItem();
