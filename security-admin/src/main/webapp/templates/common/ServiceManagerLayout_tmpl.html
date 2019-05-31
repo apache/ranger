@@ -68,8 +68,11 @@
                                                 <a href="javascript:void(0)" title="Import" data-id="uploadBtnOnServices" data-servicetype="{{./this.attributes.name}}" class=" btn-right importbtn text-decoration">
                                                     <i class="icon-rotate-180 icon-external-link-sign"> </i>
                                                 </a>
-
-                                                <a href="#!/service/{{./this.id}}/create" class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+                                                {{#if ../../isServiceManager}}
+                                                    <a href="#!/service/{{./this.id}}/create" class="pull-right text-decoration" title="Add New Service" style="margin-right: 2px;"> <i class="icon-plus"></i></a>
+                                                {{else}}
+                                                    <a href="javascript:void(0)" class="pull-right text-decoration disabled add-service" title="Services cannot be added while filtering Security Zones"> <i class="icon-plus"></i></a>
+                                                {{/if}}
                                             </span>
 
                                         {{/if}}

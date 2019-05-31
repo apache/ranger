@@ -2670,6 +2670,9 @@ textarea:read-only{
 .select2-container.select2-container-disabled .select2-choice {
   cursor: not-allowed;
 }
+.disabled {
+  cursor: not-allowed;
+}
 .modal-policy-conditions{
   width: 500px;
 }
@@ -2796,3 +2799,12 @@ div#zoneServiceAccordion table thead {
 .fixed-headertable th:first-child{
   width: calc(100% - 200px);
 }*/
+
+.policy-manager table thead tr th:first-child a:focus {
+  text-decoration: none;
+}
+
+.add-service {
+  margin-right: 2px;
+  opacity: 0.7;
+}
