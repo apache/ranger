@@ -42,9 +42,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	public static final String COMPONENT_ACCESSTYPE_SEPARATOR = ":";
 
-	private static final String AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP = "ranger.servicedef.autopropagate.rowfilterdef.to.tag";
+	public static final String AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP = "ranger.servicedef.autopropagate.rowfilterdef.to.tag";
 
-	private static final boolean AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT = false;
+	public static final boolean AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT = false;
 
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 
@@ -571,10 +571,15 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		boolean ret = false;
 
-		RangerServiceDef.RangerResourceDef tagResource = new RangerServiceDef.RangerResourceDef();
-		tagResource.setName(RangerServiceTag.TAG_RESOURCE_NAME);
-		List<RangerServiceDef.RangerResourceDef> resources = new ArrayList<>();
-		resources.add(tagResource);
+		final RangerServiceDef.RangerResourceDef accessPolicyTagResource = getResourceDefForTagResource(tagServiceDef.getResources());
+
+		final List<RangerServiceDef.RangerResourceDef> resources = new ArrayList<>();
+
+		if (accessPolicyTagResource == null) {
+			LOG.warn("Resource with name :[" + RangerServiceTag.TAG_RESOURCE_NAME + "] not found in  tag-service-definition!!");
+		} else {
+			resources.add(accessPolicyTagResource);
+		}
 
 		RangerServiceDef.RangerDataMaskDef dataMaskDef = tagServiceDef.getDataMaskDef();
 
@@ -613,6 +618,20 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== AbstractServiceStore.updateResourceInTagServiceDef(" + tagServiceDef + ") : " + ret);
+		}
+		return ret;
+	}
+
+	private RangerServiceDef.RangerResourceDef getResourceDefForTagResource(List<RangerServiceDef.RangerResourceDef> resourceDefs) {
+		RangerServiceDef.RangerResourceDef ret = null;
+
+		if (CollectionUtils.isNotEmpty(resourceDefs)) {
+			for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+				if (resourceDef.getName().equals(RangerServiceTag.TAG_RESOURCE_NAME)) {
+					ret = resourceDef;
+					break;
+				}
+			}
 		}
 		return ret;
 	}
