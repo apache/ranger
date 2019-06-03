@@ -59,7 +59,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	volatile Client _client = null;
 	SSLContext _sslContext = null;
 	HostnameVerifier _hv;
-	String _baseUrl = null;
+	String _baseUrl = "";
 	String _sslConfigFileName = null;
 	String _serviceName = null;
 	String _clusterName = null;
@@ -76,9 +76,8 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 
 		_serviceName = serviceName;
 		_pluginId = _utils.getPluginId(serviceName, appId);
-		_baseUrl = _utils.getPolicyRestUrl(configPropertyPrefix);
+		String tmpUrl = _utils.getPolicyRestUrl(configPropertyPrefix);
 		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
-		_isSSL = _utils.isSsl(_baseUrl);
 		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
@@ -87,6 +86,13 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 			_supportsPolicyDeltas = "false";
 		}
 
+		if (!StringUtils.isEmpty(tmpUrl)) {
+			_baseUrl = tmpUrl.trim();
+			if (_baseUrl.endsWith("/")) {
+		        _baseUrl = _baseUrl.substring(0, _baseUrl.length() - 1);
+		    }
+		 }
+		_isSSL = _utils.isSsl(_baseUrl);
 		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s]", _baseUrl, _sslConfigFileName, _serviceName, _supportsPolicyDeltas));
 		
 		_client = getClient();
