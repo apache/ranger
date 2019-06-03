@@ -103,7 +103,9 @@ public class RangerKrbFilter implements Filter {
   public static final String SIGNER_SECRET_PROVIDER_ATTRIBUTE =
       "signer.secret.provider.object";
 
-  private static final String BROWSER_USER_AGENT_PARAM = "ranger.krb.browser-useragents-regex";	
+  private static final String BROWSER_USER_AGENT_PARAM = "ranger.krb.browser-useragents-regex";
+
+  static final String ALLOW_TRUSTED_PROXY = "ranger.authentication.allow.trustedproxy";
 
   private String[] browserUserAgents;
 
@@ -426,6 +428,7 @@ public class RangerKrbFilter implements Filter {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
     boolean isHttps = "https".equals(httpRequest.getScheme());
+    boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
     try {
       boolean newToken = false;
       AuthenticationToken token;
@@ -474,7 +477,7 @@ public class RangerKrbFilter implements Filter {
               return (authToken != AuthenticationToken.ANONYMOUS) ? authToken : null;
             }
           };
-          if (newToken && !token.isExpired() && token != AuthenticationToken.ANONYMOUS) {
+          if ((newToken || allowTrustedProxy) && !token.isExpired() && token != AuthenticationToken.ANONYMOUS) {
             String signedToken = signer.sign(token.toString());
             createAuthCookie(httpResponse, signedToken, getCookieDomain(),
                     getCookiePath(), token.getExpires(), isHttps);
@@ -503,16 +506,16 @@ public class RangerKrbFilter implements Filter {
           errCode = HttpServletResponse.SC_FORBIDDEN;
         }
         if (authenticationEx == null) {
-        	String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT);
+            String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT);
             if (agents == null) {
               agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
             }
             parseBrowserUserAgents(agents);
-        	if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT))){
-        		((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
-        		filterChain.doFilter(request, response);
+            if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && !allowTrustedProxy){
+        	  ((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
+                filterChain.doFilter(request, response);
         	}else{
-	        	boolean chk = true;
+                boolean chk = true;
 	            Collection<String> headerNames = httpResponse.getHeaderNames();
 	            for(String headerName : headerNames){
 	                String value = httpResponse.getHeader(headerName);
