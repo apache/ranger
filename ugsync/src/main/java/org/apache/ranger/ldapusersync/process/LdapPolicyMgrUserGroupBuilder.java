@@ -833,7 +833,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 					}
 				}
 
-				sslContext = SSLContext.getInstance("SSL");
+				sslContext = SSLContext.getInstance("TLS");
 	
 				sslContext.init(kmList, tmList, new SecureRandom());
 

@@ -1425,7 +1425,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					}
 				}
 
-				sslContext = SSLContext.getInstance("SSL");
+				sslContext = SSLContext.getInstance("TLS");
 
 				sslContext.init(kmList, tmList, new SecureRandom());
 

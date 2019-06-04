@@ -63,7 +63,7 @@ public class RangerSslHelper {
 
 	static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
 	static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
-	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "SSL";
+	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLS";
 
 	private String mKeyStoreURL;
 	private String mKeyStoreAlias;

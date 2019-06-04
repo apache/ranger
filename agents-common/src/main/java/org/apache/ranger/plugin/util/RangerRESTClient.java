@@ -80,7 +80,7 @@ public class RangerRESTClient {
 
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE					 = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE				 = TrustManagerFactory.getDefaultAlgorithm();
-	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "SSL";
+	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "TLS";
 
 	private String  mUrl;
 	private String  mSslConfigFileName;
