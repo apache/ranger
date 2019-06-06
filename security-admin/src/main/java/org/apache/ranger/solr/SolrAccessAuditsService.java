@@ -171,7 +171,7 @@ public class SolrAccessAuditsService {
                                             if (vXAccessAudit.getRequestData() != null) {
                                                 vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
                                             } else {
-                                                logger.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
+                                                LOGGER.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
                                             }
                                         } catch (UnsupportedEncodingException e) {
                                                 LOGGER.warn("Error while encoding request data");
