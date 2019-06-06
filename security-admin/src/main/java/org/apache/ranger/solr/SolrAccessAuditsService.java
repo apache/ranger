@@ -170,7 +170,11 @@ public class SolrAccessAuditsService {
                                 }
                                 else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && ("grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType()))){
                                         try {
+                                            if (vXAccessAudit.getRequestData() != null) {
                                                 vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
+                                            } else {
+                                                logger.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
+                                            }
                                         } catch (UnsupportedEncodingException e) {
                                                 logger.warn("Error while encoding request data");
                                         }
