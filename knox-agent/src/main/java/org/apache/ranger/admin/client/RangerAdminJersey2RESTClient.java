@@ -40,6 +40,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.glassfish.jersey.client.ClientProperties;
 
 import com.google.gson.Gson;
@@ -80,7 +81,10 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
 		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
-		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
+		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".access.cluster.name", "");
+		if(StringUtil.isEmpty(_clusterName)){
+			_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
+		}
 		_supportsPolicyDeltas = RangerConfiguration.getInstance().get(configPropertyPrefix + ".policy.rest.supports.policy.deltas", "false");
 		if (!"true".equalsIgnoreCase(_supportsPolicyDeltas)) {
 			_supportsPolicyDeltas = "false";

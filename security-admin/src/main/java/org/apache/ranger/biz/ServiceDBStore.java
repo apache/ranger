@@ -196,6 +196,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String RANGER_VERSION = "Ranger apache version";
 	private static final String TIMESTAMP      = "Export time";
 
+    private static final String SERVICE_CHECK_USER = "service.check.user";
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	private static final String SERVICE_ADMIN_USERS     = "service.admin.users";
 
@@ -3104,19 +3105,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	List<String> getServiceCheckUsers(RangerService createdService) {
 		List<String> ret = new ArrayList<String>();
+		String userNames ="";
 
 		Map<String, String> serviceConfig = createdService.getConfigs();
 
-		if (serviceConfig.containsKey(AMBARI_SERVICE_CHECK_USER)) {
-			String userNames = serviceConfig.get(AMBARI_SERVICE_CHECK_USER);
+		if (serviceConfig.containsKey(SERVICE_CHECK_USER)) {
+			userNames = serviceConfig.get(SERVICE_CHECK_USER);
+		} else if (serviceConfig.containsKey(AMBARI_SERVICE_CHECK_USER)) {
+			userNames = serviceConfig.get(AMBARI_SERVICE_CHECK_USER);
+		}
+
+		if (!StringUtils.isEmpty(userNames)) {
 			String[] userList = userNames.split(",");
 			for (String userName : userList) {
 				if (!StringUtils.isEmpty(userName)) {
-                                        ret.add(userName.trim());
+					ret.add(userName.trim());
 				}
 			}
 		}
-
 		return ret;
 	}
 

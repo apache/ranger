@@ -192,7 +192,10 @@ public class RangerBasePlugin {
 		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
 		serviceName = configuration.get(propertyPrefix + ".service.name");
-		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
+		if(StringUtil.isEmpty(clusterName)){
+			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+		}
 		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
