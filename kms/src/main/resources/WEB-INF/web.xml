@@ -18,6 +18,7 @@
 <web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee">
 
   <display-name>ranger-kms</display-name>
+  <absolute-ordering />
 
   <listener>
     <listener-class>org.apache.hadoop.crypto.key.kms.server.KMSWebApp</listener-class>
