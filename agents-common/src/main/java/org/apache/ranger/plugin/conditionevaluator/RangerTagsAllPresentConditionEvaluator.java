@@ -28,16 +28,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class RangerMultipleTagsConditionEvaluator extends RangerAbstractConditionEvaluator {
+public class RangerTagsAllPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
 
-	private static final Log LOG = LogFactory.getLog(RangerMultipleTagsConditionEvaluator.class);
+	private static final Log LOG = LogFactory.getLog(RangerTagsAllPresentConditionEvaluator.class);
 
 	private final Set<String> policyConditionTags = new HashSet<>();
 
 	@Override
 	public void init() {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerMultipleTagsConditionEvaluator.init(" + condition + ")");
+			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.init(" + condition + ")");
 		}
 
 		super.init();
@@ -49,7 +49,7 @@ public class RangerMultipleTagsConditionEvaluator extends RangerAbstractConditio
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerMultipleTagsConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
+			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
 		}
 	}
 
@@ -57,7 +57,7 @@ public class RangerMultipleTagsConditionEvaluator extends RangerAbstractConditio
 	public boolean isMatched(RangerAccessRequest request) {
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerMultipleTagsConditionEvaluator.isMatched(" + request + ")");
+			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.isMatched(" + request + ")");
 		}
 
 		boolean matched = true;
@@ -72,7 +72,7 @@ public class RangerMultipleTagsConditionEvaluator extends RangerAbstractConditio
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerMultipleTagsConditionEvaluator.isMatched(" + request+ "): " + matched);
+			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.isMatched(" + request+ "): " + matched);
 		}
 
 		return matched;
