@@ -17,136 +17,141 @@
  * under the License.
  */
 
- require.config({
+require.config({
 
-     baseUrl: "scripts",
+    baseUrl: "scripts",
 
-	 urlArgs : 'ver=build.version',
+    urlArgs: 'ver=build.version',
 
     shim: {
         bootstrap: {
             deps: ['jquery'],
             exports: 'jQuery'
         },
-        'backgrid-paginator' : {
-        	deps: [ 'backbone', 'backgrid' ]
+        'backgrid-paginator': {
+            deps: ['backbone', 'backgrid']
         },
-        'backgrid-filter' : {
-        	deps: [ 'backbone', 'backgrid' ]
+        'backgrid-filter': {
+            deps: ['backbone', 'backgrid']
         },
-        'backbone-forms.XAOverrides' : {
-        	deps: [ 'backbone-forms' ]
+        'backbone-forms.XAOverrides': {
+            deps: ['backbone-forms']
         },
-		'Backbone.BootstrapModal' : {
-			deps : ['jquery', 'underscore', 'backbone']
-		},
-		'bootstrap-editable': {
-           deps: ['bootstrap']
-       },
-       'jquery-toggles' : {
-    	   deps: ['jquery']
-       },
-       'jquery.cookie': {
-           deps: [ 'jquery' ]
-       },
-       'tag-it': {
-           deps: [ 'jquery', 'jquery-ui' ]
-       },
-       'jquery-ui': {
-           deps: [ 'jquery' ]
-       },
-       'globalize' :{
-   			exports: 'Globalize'
-   		},
-   	   'bootstrap-datepicker' : {
-   		   deps: ['bootstrap']
-   	   } ,
+        'Backbone.BootstrapModal': {
+            deps: ['jquery', 'underscore', 'backbone']
+        },
+        'bootstrap-editable': {
+            deps: ['bootstrap']
+        },
+        'jquery-toggles': {
+            deps: ['jquery']
+        },
+        'jquery.cookie': {
+            deps: ['jquery']
+        },
+        'tag-it': {
+            deps: ['jquery', 'jquery-ui']
+        },
+        'jquery-ui': {
+            deps: ['jquery']
+        },
+        'globalize': {
+            exports: 'Globalize'
+        },
+        'bootstrap-datepicker': {
+            deps: ['bootstrap']
+        },
 
-       'bootstrap-notify' :	{
-    	   deps: ['jquery','bootstrap'],
-       },
-       'moment'  :	{ deps: ['jquery'], exports: 'moment' },
+        'bootstrap-notify': {
+            deps: ['jquery', 'bootstrap'],
+        },
+        'moment': {
+            deps: ['jquery'],
+            exports: 'moment'
+        },
 
-       'momentTz'  :    { deps: ['jquery']},
+        'momentTz': {
+            deps: ['jquery']
+        },
 
-       'localstorage' :{
-            deps : ['backbone','underscore','jquery']
-       },
-       'visualsearch': {
-            deps: [ 'jquery', 'jquery-ui','backbone','underscore']
-       },
-       'select2' : {
-           deps: ['jquery', 'bootstrap']
-       },
-       'bootbox' : {
-         deps: ['jquery']
-       },
-       'esprima': {
-    	   'exports' : 'esprima'
-       },
+        'localstorage': {
+            deps: ['backbone', 'underscore', 'jquery']
+        },
+        'visualsearch': {
+            deps: ['jquery', 'jquery-ui', 'backbone', 'underscore']
+        },
+        'select2': {
+            deps: ['jquery', 'bootstrap']
+        },
+        'bootbox': {
+            deps: ['jquery']
+        },
+        'esprima': {
+            'exports': 'esprima'
+        },
     },
 
     paths: {
-    	
-        jquery						: '../libs/bower/jquery/js/jquery-3.3.1.min',
-        'jquery-ui'					: '../libs/other/jquery-ui/js/jquery-ui.min',
-        backbone					: '../libs/bower/backbone-amd/js/backbone',
-        underscore					: '../libs/bower/underscore-amd/js/underscore',
+
+        jquery: '../libs/bower/jquery/js/jquery-3.4.1.min',
+        'jquery-ui': '../libs/other/jquery-ui/js/jquery-ui.min',
+        backbone: '../libs/bower/backbone-amd/js/backbone',
+        underscore: '../libs/bower/underscore-amd/js/underscore',
 
         /* alias all marionette libs */
-        'backbone.marionette'		: '../libs/bower/backbone.marionette/js/backbone.marionette',
-        'backbone.wreqr'			: '../libs/bower/backbone.wreqr/js/backbone.wreqr',
-        'backbone.babysitter'		: '../libs/bower/backbone.babysitter/js/backbone.babysitter',
+        'backbone.marionette': '../libs/bower/backbone.marionette/js/backbone.marionette',
+        'backbone.wreqr': '../libs/bower/backbone.wreqr/js/backbone.wreqr',
+        'backbone.babysitter': '../libs/bower/backbone.babysitter/js/backbone.babysitter',
 
         /* alias the bootstrap js lib */
-        bootstrap					: '../libs/bower/bootstrap/js/bootstrap',
+        bootstrap: '../libs/bower/bootstrap/js/bootstrap',
 
         /* BackGrid for Tables */
-        'backgrid'					: '../libs/other/backgrid/backgrid',
-        'backbone-fetch-cache'		: '../libs/other/backbone.fetch-cache',
+        'backgrid': '../libs/other/backgrid/backgrid',
+        'backbone-fetch-cache': '../libs/other/backbone.fetch-cache',
 
-        'backgrid-paginator'		: '../libs/bower/backgrid-paginator/js/backgrid-paginator',
-        'backgrid-filter'			: '../libs/bower/backgrid-filter/js/backgrid-filter',
+        'backgrid-paginator': '../libs/bower/backgrid-paginator/js/backgrid-paginator',
+        'backgrid-filter': '../libs/bower/backgrid-filter/js/backgrid-filter',
 
-        'backbone-pageable'			: '../libs/bower/backbone-pageable/js/backbone-pageable',
-        'localstorage'				: '../libs/bower/backbone.localstorage/backbone.localStorage',
-        'backbone-forms'			: '../libs/bower/backbone-forms/js/backbone-forms',
-        'backbone-forms.list'		: '../libs/bower/backbone-forms/js/list',
-        'backbone-forms.templates'	: '../libs/bower/backbone-forms/js/bootstrap',
+        'backbone-pageable': '../libs/bower/backbone-pageable/js/backbone-pageable',
+        'localstorage': '../libs/bower/backbone.localstorage/backbone.localStorage',
+        'backbone-forms': '../libs/bower/backbone-forms/js/backbone-forms',
+        'backbone-forms.list': '../libs/bower/backbone-forms/js/list',
+        'backbone-forms.templates': '../libs/bower/backbone-forms/js/bootstrap',
         'backbone-forms.XAOverrides': '../libs/fsOverrides/BBFOverrides',
 
-		'Backbone.BootstrapModal'	: '../libs/bower/backbone.bootstrap-modal/js/backbone.bootstrap-modal',
-		'bootstrap-editable'		: '../libs/bower/x-editable/js/bootstrap-editable',
-		'bootstrap-datepicker'		: '../libs/other/datepicker/js/bootstrap-datepicker',
-                'bootstrap-datetimepicker'		: '../libs/other/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min',
-		'bootstrap-notify'			: '../libs/bower/bootstrap-notify/js/bootstrap-notify',
+        'Backbone.BootstrapModal': '../libs/bower/backbone.bootstrap-modal/js/backbone.bootstrap-modal',
+        'bootstrap-editable': '../libs/bower/x-editable/js/bootstrap-editable',
+        'bootstrap-datepicker': '../libs/other/datepicker/js/bootstrap-datepicker',
+        'bootstrap-datetimepicker': '../libs/other/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min',
+        'bootstrap-notify': '../libs/bower/bootstrap-notify/js/bootstrap-notify',
 
 
-		'jquery.cookie'				: '../libs/other/jquery-cookie/js/jquery.cookie',
-        'jquery-toggles'			: '../libs/bower/jquery-toggles/js/toggles.min',
-        'tag-it'					: '../libs/bower/tag-it/js/tag-it.min',
-        'select2'					: '../libs/bower/select2/select2',
-        'bootbox'					: '../libs/bower/bootbox/js/bootbox',
-        'moment'					: '../libs/bower/moment/js/moment-with-locales.min',
-        'momentTz'                    : '../libs/bower/moment/js/moment-timezone-with-data.min',
-        'visualsearch'				: '../libs/other/visualsearch/js/visualsearch',
-        'globalize'               	: '../libs/bower/globalize/lib/globalize',
+        'jquery.cookie': '../libs/other/jquery-cookie/js/jquery.cookie',
+        'jquery-toggles': '../libs/bower/jquery-toggles/js/toggles.min',
+        'tag-it': '../libs/bower/tag-it/js/tag-it.min',
+        'select2': '../libs/bower/select2/select2',
+        'bootbox': '../libs/bower/bootbox/js/bootbox',
+        'moment': '../libs/bower/moment/js/moment-with-locales.min',
+        'momentTz': '../libs/bower/moment/js/moment-timezone-with-data.min',
+        'visualsearch': '../libs/other/visualsearch/js/visualsearch',
+        'globalize': '../libs/bower/globalize/lib/globalize',
         /* handlebars from the require handlerbars plugin below */
-        'handlebars'				: '../libs/bower/require-handlebars-plugin/js/Handlebars',
+        'handlebars': '../libs/bower/require-handlebars-plugin/js/Handlebars',
         /* require handlebars plugin - Alex Sexton */
-        'i18nprecompile'			: '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
-        'hbs'						: '../libs/bower/require-handlebars-plugin/js/hbs',
-        'esprima'					: '../libs/bower/esprima/esprima',
+        'i18nprecompile': '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
+        'hbs': '../libs/bower/require-handlebars-plugin/js/hbs',
+        'esprima': '../libs/bower/esprima/esprima',
 
-        'tmpl'						: '../templates'
+        'tmpl': '../templates'
     },
 
     hbs: {
         disableI18n: true,
-        helperPathCallback:         // Callback to determine the path to look for helpers
-            function (name) {       // ('/template/helpers/'+name by default)
+        helperPathCallback: // Callback to determine the path to look for helpers
+            function(name) { // ('/template/helpers/'+name by default)
                 return "../helpers/XAHelpers";
-        },
+            },
         templateExtension: "html",
         compileOptions: {}
     }
