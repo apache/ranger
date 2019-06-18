@@ -79,7 +79,8 @@ define(function(require) {
             'deleteZone': '[data-id="deleteZone"]',
             'editZone': '[data-id="editZone"]',
             'zoneSearch' : '[data-id="zoneSearch"]',
-            'zoneUlList' : '[data-id="zoneUlList"]'
+            'zoneUlList' : '[data-id="zoneUlList"]',
+            'toggleForZoneServiceTbl' : '[data-id="zoneServiceTbl"]'
         },
 
         events: function() {
@@ -91,7 +92,7 @@ define(function(require) {
             events['click ' + this.ui.zoneTable] = 'renderTable';
             events['click ' + this.ui.deleteZone] = 'onDelete';
             events['keyup ' + this.ui.zoneSearch] = 'zoneSearch';
-
+            events['click ' + this.ui.toggleForZoneServiceTbl] = 'toggleForZoneServiceTbl';
             return events;
         },
 
@@ -314,6 +315,11 @@ define(function(require) {
                     });
                 }
             });
+        },
+
+        toggleForZoneServiceTbl : function(e) {
+           $(e.currentTarget).children().toggleClass('icon-chevron-down');
+           $(e.currentTarget).next().slideToggle();
         },
 
         onClick: function() {

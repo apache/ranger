@@ -19,84 +19,72 @@ language governing permissions and limitations under the License. --}}
 {{/if}}
 <div class="row-fluid">
     <div class="span12">
-        <div class="accordion zone-accordion" id="zone-admin-accordion">
-            <div class="accordion-group">
-                <div class="accordion-heading accordion-opened">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#zone-admin-accordion" href="#collapseOne">Zone Administration</a>
-                </div>
-                <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
-                    <div class="accordion-inner">
-                        <form class="form-horizontal form-administration">
-                            <div class="control-group">
-                                <label class="control-label" for="inputEmail">Admin Users</label>
-                                <div class="controls">
-                                    {{#compare this.zoneModel.attributes.adminUsers "eq" ''}}
-                                        <span> -- </span>
-                                    {{else}}
-                                        {{#each this.zoneModel.attributes.adminUsers}}
-                                            <span class="label label-info">{{this}}</span>
-                                        {{/each}}
-                                    {{/compare}}
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="inputEmail">Admin Usergroups</label>
-                                <div class="controls">
-                                    {{#compare this.zoneModel.attributes.adminUserGroups "eq" ''}}
-                                        <span> -- </span>
-                                    {{else}}
-                                        {{#each this.zoneModel.attributes.adminUserGroups}}
-                                            <span class="label label-default">{{this}}</span>
-                                        {{/each}}
-                                    {{/compare}}
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="inputEmail">Auditor Users</label>
-                                <div class="controls">
-                                    {{#compare this.zoneModel.attributes.auditUsers "eq" ''}}
-                                        <span> -- </span>
-                                    {{else}}
-                                        {{#each this.zoneModel.attributes.auditUsers}}
-                                            <span class="label label-info">{{this}}</span>
-                                        {{/each}}
-                                    {{/compare}}
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="inputEmail">Auditor Usergroups</label>
-                                <div class="controls">
-                                    {{#compare this.zoneModel.attributes.auditUserGroups "eq" ''}}
-                                        <span> -- </span>
-                                    {{else}}
-                                        {{#each this.zoneModel.attributes.auditUserGroups}}
-                                            <span class="label label-default">{{this}}</span>
-                                        {{/each}}
-                                    {{/compare}}
-                                </div>
-                            </div>
-                        </form>
+        <div class="panel panel-default m-b-md">
+            <div class="panel-header" data-id="panel">Zone Administration<i class="icon-chevron-up pull-right"></i></div>
+            <div class="panel-content">
+                <form class="form-horizontal form-administration">
+                    <div class="control-group">
+                        <label class="control-label" for="inputEmail">Admin Users</label>
+                        <div class="controls">
+                            {{#compare this.zoneModel.attributes.adminUsers "eq" ''}}
+                                <span> -- </span>
+                            {{else}}
+                                {{#each this.zoneModel.attributes.adminUsers}}
+                                    <span class="label label-info">{{this}}</span>
+                                {{/each}}
+                            {{/compare}}
+                        </div>
                     </div>
-                </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputEmail">Admin Usergroups</label>
+                        <div class="controls">
+                            {{#compare this.zoneModel.attributes.adminUserGroups "eq" ''}}
+                                <span> -- </span>
+                            {{else}}
+                                {{#each this.zoneModel.attributes.adminUserGroups}}
+                                    <span class="label label-default">{{this}}</span>
+                                {{/each}}
+                            {{/compare}}
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputEmail">Auditor Users</label>
+                        <div class="controls">
+                            {{#compare this.zoneModel.attributes.auditUsers "eq" ''}}
+                                <span> -- </span>
+                            {{else}}
+                                {{#each this.zoneModel.attributes.auditUsers}}
+                                    <span class="label label-info">{{this}}</span>
+                                {{/each}}
+                            {{/compare}}
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputEmail">Auditor Usergroups</label>
+                        <div class="controls">
+                            {{#compare this.zoneModel.attributes.auditUserGroups "eq" ''}}
+                                <span> -- </span>
+                            {{else}}
+                                {{#each this.zoneModel.attributes.auditUserGroups}}
+                                    <span class="label label-default">{{this}}</span>
+                                {{/each}}
+                            {{/compare}}
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
-<div class="accordion zone-accordion" id="zone-tag-accordion">
-    <div class="accordion-group">
-        <div class="accordion-heading accordion-opened">
-            <a class="accordion-toggle" data-toggle="collapse" data-parent="#zone-tag-accordion" href="#collapseTag">Zone Tag Services</a>
-        </div>
-        <div id="collapseTag" class="accordion-body in collapse" style="height: auto;">
-            <div class="accordion-inner">
-                {{#if tagServices}}
-                    {{#each tagServices}}
-                        <span class="label label-info">{{this}}</span>
-                    {{/each}}
-                {{else}}
-                    <span> No tag based services are associated with this zone </span>
-                {{/if}}
-            </div>
-        </div>
+<div class="panel panel-default m-b-md">
+    <div class="panel-header" data-id="panel">Zone Tag Services <i class="icon-chevron-up pull-right"></i></div>
+    <div class="panel-content">
+        {{#if tagServices}}
+            {{#each tagServices}}
+                <span class="label label-info">{{this}}</span>
+            {{/each}}
+        {{else}}
+            <span> No tag based services are associated with this zone </span>
+        {{/if}}
     </div>
 </div>

@@ -2573,30 +2573,6 @@ textarea:read-only{
   color: #64a224;
   margin-top: 0;
 }
-.zone-accordion .accordion-group {
-  border-color: #ccc;
-}
-.zone-accordion .accordion-heading .accordion-toggle {
-  background-color: #eeeeee;
-  color: #444;
-  text-decoration: none;
-  font-weight: bold;
-  border-bottom: 1px solid #ccc;
-}
-.zone-accordion .accordion-inner {
-  border-top: none;
-}
-.zone-accordion .accordion-heading .accordion-toggle:after {
-  font-family: 'FontAwesome';
-  content: "\f078";
-  float: right;
-}
-.zone-accordion .form-horizontal .control-group {
-  margin-bottom: 10px;
-}
-.zone-accordion form {
-  margin-bottom: 0px;
-}
 .table-operations-new > thead > tr > th {
   background-color: #eee;  
 }
@@ -2807,4 +2783,27 @@ div#zoneServiceAccordion table thead {
 .add-service {
   margin-right: 2px;
   opacity: 0.7;
+}
+
+.panel{
+  border:1px solid #ccc;
+}
+
+.panel-header{
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  display: block;
+  padding: 8px 15px;
+  cursor: pointer;
+}
+
+.panel-default .panel-header {
+  background-color: #eeeeee;
+  color: #444;
+}
+
+.panel .panel-content{
+  padding: 9px 15px;
+  background-color: white;
 }

@@ -51,13 +51,15 @@ define(function(require) {
             /** ui selector cache */
             ui: {
                 'btnServiceName': '[data-id="servicesName"]',
-                
+                'panelClick' : '[data-id="panel"]'
+
             },
 
             /** ui events hash */
             events: function() {
                 var events = {};
                 events['click ' + this.ui.btnSave] = 'onSave';
+                events['click ' + this.ui.panelClick] = 'onPanelToggle';
                 return events;
             },
 
@@ -77,7 +79,10 @@ define(function(require) {
                
             },
 
-            
+            onPanelToggle : function(e){
+                $(e.currentTarget).children().toggleClass('icon-chevron-down');
+                $(e.currentTarget).next().slideToggle();
+            }
         });
 
     return ZoneAdministration;
