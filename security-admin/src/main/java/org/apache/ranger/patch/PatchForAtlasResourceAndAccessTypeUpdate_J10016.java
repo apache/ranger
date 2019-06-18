@@ -216,6 +216,7 @@ public class PatchForAtlasResourceAndAccessTypeUpdate_J10016 extends BaseLoader 
 				RangerPolicy rangerPolicy = new RangerPolicy();
 				RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(rangerPolicy);
 				xxPolicy.setResourceSignature(resourceSignature.getSignature());
+				xxPolicy.setZoneId(1L);
 				XXPolicy createdPolicy = daoMgr.getXXPolicy().create(xxPolicy);
 
 				XXPolicyItem xxPolicyItem = new XXPolicyItem();
