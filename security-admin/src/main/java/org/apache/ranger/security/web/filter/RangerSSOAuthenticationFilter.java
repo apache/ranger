@@ -266,11 +266,21 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			xForwardedHost = xForwardedHost.split(",")[0].trim();
 		}
 		String xForwardedURL = "";
-		if (StringUtils.trimToNull(xForwardedProto) != null && StringUtils.trimToNull(xForwardedHost) != null) {
-			if (StringUtils.trimToNull(xForwardedContext) != null) {
+		if (StringUtils.trimToNull(xForwardedProto) != null) {
+			//if header contains x-forwarded-host and x-forwarded-context
+			if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
 				xForwardedURL = xForwardedProto + "://" + xForwardedHost + xForwardedContext + PROXY_RANGER_URL_PATH + httpRequest.getRequestURI();
-			} else {
+			} else if (StringUtils.trimToNull(xForwardedHost) != null) {
+				//if header contains x-forwarded-host and does not contains x-forwarded-context
 				xForwardedURL = xForwardedProto + "://" + xForwardedHost + httpRequest.getRequestURI();
+			} else {
+				//if header does not contains x-forwarded-host and x-forwarded-context
+				//preserve the x-forwarded-proto value coming from the request.
+				String requestURL = httpRequest.getRequestURL().toString();
+				if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
+					requestURL = requestURL.replaceFirst("http", xForwardedProto);
+				}
+				xForwardedURL = requestURL;
 			}
 		}
 		return xForwardedURL;
