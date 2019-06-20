@@ -221,7 +221,7 @@ getPropertyFromFile(){
 #Update Properties to File
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
 updatePropertyToFilePy(){
-        python update_property.py $1 $2 $3
+    python update_property.py $1 "${2}" $3
         check_ret_status $? "Update property failed for: " $1
 }
 
@@ -569,6 +569,10 @@ update_properties() {
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.jpa.jdbc.preferredtestquery
+		newPropertyValue="select 1;"
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
 	then
@@ -599,6 +603,10 @@ update_properties() {
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.jpa.jdbc.preferredtestquery
+		newPropertyValue="select 1 from dual;"
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
@@ -624,6 +632,10 @@ update_properties() {
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.jpa.jdbc.preferredtestquery
+		newPropertyValue="select 1;"
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
@@ -647,6 +659,10 @@ update_properties() {
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.jpa.jdbc.preferredtestquery
+		newPropertyValue="select 1;"
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "SQLA" ]
@@ -670,6 +686,10 @@ update_properties() {
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.jpa.jdbc.preferredtestquery
+		newPropertyValue="select 1;"
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
 	if [ "${audit_store}" == "solr" ]
