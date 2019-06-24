@@ -275,12 +275,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		final List<AuthzAuditEvent> _familyLevelAccessEvents;
 		final AuthzAuditEvent _accessDeniedEvent;
 		final String _denialReason;
-		final RangerAuthorizationFilter _filter;
-		final String _clusterName;
+		final RangerAuthorizationFilter _filter;;
 
 		ColumnFamilyAccessResult(boolean everythingIsAccessible, boolean somethingIsAccessible,
 								 List<AuthzAuditEvent> accessAllowedEvents, List<AuthzAuditEvent> familyLevelAccessEvents, AuthzAuditEvent accessDeniedEvent, String denialReason,
-								 RangerAuthorizationFilter filter, String clusterName) {
+								 RangerAuthorizationFilter filter) {
 			_everythingIsAccessible = everythingIsAccessible;
 			_somethingIsAccessible = somethingIsAccessible;
 			// WARNING: we are just holding on to reference of the collection.  Potentially risky optimization
@@ -290,7 +289,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			_denialReason = denialReason;
 			// cached values of access results
 			_filter = filter;
-			_clusterName = clusterName;
 		}
 		
 		@Override
@@ -303,7 +301,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					.add("accessDeniedEvent", _accessDeniedEvent)
 					.add("denialReason", _denialReason)
 					.add("filter", _filter)
-					.add("clusterName", _clusterName)
 					.toString();
 			
 		}
@@ -328,13 +325,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			throw new AccessDeniedException("Insufficient permissions for operation '" + operation + "',action: " + action);
 		}
 		String table = Bytes.toString(tableBytes);
-		String clusterName = hbasePlugin.getClusterName();
 
 		final String messageTemplate = "evaluateAccess: exiting: user[%s], Operation[%s], access[%s], families[%s], verdict[%s]";
 		ColumnFamilyAccessResult result;
 		if (canSkipAccessCheck(user, operation, access, table) || canSkipAccessCheck(user, operation, access, env)) {
 			LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
-			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null, null);
+			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null);
 			if (LOG.isDebugEnabled()) {
 				Map<String, Set<String>> families = getColumnFamilies(familyMap);
 				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
@@ -351,8 +347,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				.auditHandler(auditHandler)
 				.user(user)
 				.access(access)
-				.table(table)
-				.clusterName(clusterName);
+				.table(table);
 		Map<String, Set<String>> families = getColumnFamilies(familyMap);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("evaluateAccess: families to process: " + families.toString());
@@ -374,7 +369,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			// if authorized then pass captured events as access allowed set else as access denied set.
 			result = new ColumnFamilyAccessResult(authorized, authorized,
 						authorized ? Collections.singletonList(event) : null,
-						null, authorized ? null : event, reason, null, clusterName);
+						null, authorized ? null : event, reason, null);
 			if (LOG.isDebugEnabled()) {
 				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
 				LOG.debug(message);
@@ -520,7 +515,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		}
 		// Cache of auth results are encapsulated the in the filter. Not every caller of the function uses it - only preGet and preOpt will.
 		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familesAccessAllowed, familesAccessDenied, familesAccessIndeterminate, columnsAccessAllowed);
-		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter, clusterName);
+		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter);
 		if (LOG.isDebugEnabled()) {
 			String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
 			LOG.debug(message);
@@ -626,7 +621,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			return;
 		}
 
-		String clusterName = hbasePlugin.getClusterName();
 		
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
@@ -639,7 +633,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			.table(table)
 			.columnFamily(columnFamily)
 			.column(column)
-			.clusterName(clusterName)
 			.buildRequest()
 			.authorize();
 		
@@ -673,7 +666,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	
 	boolean canSkipAccessCheck(User user, final String operation, String access, final RegionCoprocessorEnvironment regionServerEnv) throws AccessDeniedException {
 
-		String clusterName = hbasePlugin.getClusterName();
 		// read access to metadata tables is always allowed and isn't audited.
 		if (isAccessForMetaTables(regionServerEnv) && _authUtils.isReadAccess(access)) {
 			LOG.debug("isKnownAccessPattern: exiting: Read access for metadata tables allowed, not audited!");
@@ -687,7 +679,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				.remoteAddress(getRemoteAddress())
 				.user(user)
 				.access(createAccess)
-				.clusterName(clusterName)
 				.buildRequest()
 				.authorize();
 			if (session.isAuthorized()) {
@@ -1179,7 +1170,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
 		}
-		String clusterName = hbasePlugin.getClusterName();
 
 		if (CollectionUtils.isNotEmpty(descriptors)) {
 			// Retains only those which passes authorization checks
@@ -1192,8 +1182,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				.remoteAddress(getRemoteAddress())
 				.auditHandler(auditHandler)
 				.user(user)
-				.access(access)
-				.clusterName(clusterName);
+				.access(access);
 	
 			Iterator<TableDescriptor> itr = descriptors.iterator();
 			while (itr.hasNext()) {
@@ -1248,9 +1237,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 				if(plugin != null) {
 
-					String clusterName = plugin.getClusterName();
-					grData.setClusterName(clusterName);
-					
 					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.grantAccess(grData, auditHandler);
@@ -1290,9 +1276,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				RangerHBasePlugin plugin = hbasePlugin;
 
 				if(plugin != null) {
-					String clusterName = plugin.getClusterName();
-					grData.setClusterName(clusterName);
-					
+
 					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.revokeAccess(grData, auditHandler);
@@ -1344,7 +1328,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			rangerAccessrequest.setAction(operation);
 			rangerAccessrequest.setClientIPAddress(getRemoteAddress());
 			rangerAccessrequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
-			rangerAccessrequest.setClusterName(hbasePlugin.getClusterName());
 			List<UserPermission> perms = null;
 			if (request.getType() == AccessControlProtos.Permission.Type.Table) {
 				final TableName table = request.hasTableName() ? ProtobufUtil.toTableName(request.getTableName()) : null;

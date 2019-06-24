@@ -42,8 +42,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 								   String                  hiveOpTypeName,
 								   HiveAccessType          accessType,
 								   HiveAuthzContext        context,
-								   HiveAuthzSessionContext sessionContext,
-								   String clusterName) {
+								   HiveAuthzSessionContext sessionContext) {
 		this.setResource(resource);
 		this.setUser(user);
 		this.setUserGroups(userGroups);
@@ -62,7 +61,6 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 			this.setSessionId(sessionContext.getSessionString());
 		}
 		
-		this.setClusterName(clusterName);
 	}
 
 	public RangerHiveAccessRequest(RangerHiveResource      resource,
@@ -71,13 +69,12 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 			   HiveOperationType       hiveOpType,
 			   HiveAccessType          accessType,
 			   HiveAuthzContext        context,
-			   HiveAuthzSessionContext sessionContext,
-			   String clusterName) {
-		this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext, clusterName);
+			   HiveAuthzSessionContext sessionContext) {
+		this(resource, user, userGroups, hiveOpType.name(), accessType, context, sessionContext);
 	}
 
-	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, HiveAuthzContext context, HiveAuthzSessionContext sessionContext, String clusterName) {
-		this(resource, user, groups, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext, clusterName);
+	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
+		this(resource, user, groups, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext);
 	}
 
 	public HiveAccessType getHiveAccessType() {

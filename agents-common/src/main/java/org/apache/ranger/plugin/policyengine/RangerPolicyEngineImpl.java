@@ -86,8 +86,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private Map<String, String>               zoneTagServiceMap;
 	private final Map<String, Set<String>>         userRoleMapping;
 	private final Map<String, Set<String>>         groupRoleMapping;
+	private final RangerPluginContext rangerPluginContext;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
+		 this(other, servicePolicies, null);
+	}
+
+	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies, RangerPluginContext rangerPluginContext) {
 
 		List<RangerPolicyDelta> deltas        = servicePolicies.getPolicyDeltas();
 		long                    policyVersion = servicePolicies.getPolicyVersion();
@@ -195,8 +200,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		List<RangerContextEnricher> tmpList;
+		this.rangerPluginContext = (rangerPluginContext != null) ? rangerPluginContext : null;
 
+		List<RangerContextEnricher> tmpList;
 		List<RangerContextEnricher> tagContextEnrichers = tagPolicyRepository == null ? null :tagPolicyRepository.getContextEnrichers();
 		List<RangerContextEnricher> resourceContextEnrichers = policyRepository.getContextEnrichers();
 
@@ -219,8 +225,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
+		 this(appId, servicePolicies, options, null);
+	}
+
+	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext rangerPluginContext) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ")");
+			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ", " + rangerPluginContext + ")");
 		}
 
 		RangerPerfTracer perf = null;
@@ -235,6 +245,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if (options == null) {
 			options = new RangerPolicyEngineOptions();
 		}
+
+		this.rangerPluginContext = (rangerPluginContext != null) ? rangerPluginContext : null;
 
 		if(StringUtils.isBlank(options.evaluatorType) || StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO)) {
 
@@ -270,7 +282,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyEngineImpl : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
 			}
-
 			tagPolicyRepository = new RangerPolicyRepository(appId, tagPolicies, options, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
 
 		} else {
@@ -333,9 +344,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
 			perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.cloneWithDelta()");
 		}
-
-		if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) && RangerPolicyDeltaUtil.isValidDeltas(servicePolicies.getPolicyDeltas(), this.getServiceDef().getName())) {
-			ret = new RangerPolicyEngineImpl(this, servicePolicies);
+		RangerServiceDef serviceDef = this.getServiceDef();
+		String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
+		if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) && RangerPolicyDeltaUtil.isValidDeltas(servicePolicies.getPolicyDeltas(), serviceType)) {
+			ret = new RangerPolicyEngineImpl(this, servicePolicies, this.rangerPluginContext);
 		} else {
 			ret = null;
 		}
@@ -410,7 +422,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		setResourceServiceDef(request);
 		if (request instanceof RangerAccessRequestImpl) {
-			((RangerAccessRequestImpl) request).extractAndSetClientIPAddress(useForwardedIPAddress, trustedProxyAddresses);
+			RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
+			reqImpl.extractAndSetClientIPAddress(useForwardedIPAddress, trustedProxyAddresses);
+
+			if(rangerPluginContext != null) {
+				reqImpl.setClusterName(rangerPluginContext.getClusterName());
+			}
 		}
 
 		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
@@ -439,7 +456,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 
 		}
-
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.preProcess(" + request + ")");

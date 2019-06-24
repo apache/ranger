@@ -89,9 +89,8 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
 		if (elasticsearchPlugin != null) {
 
 			String privilege = IndexPrivilegeUtils.getPrivilegeFromAction(action);
-			String clusterName = elasticsearchPlugin.getClusterName();
 			RangerElasticsearchAccessRequest request = new RangerElasticsearchAccessRequest(user, groups, index,
-					privilege, clusterName, clientIPAddress);
+					privilege, clientIPAddress);
 
 			RangerAccessResult result = elasticsearchPlugin.isAccessAllowed(request);
 			if (result != null && result.getIsAllowed()) {
@@ -133,7 +132,7 @@ class RangerElasticsearchResource extends RangerAccessResourceImpl {
 
 class RangerElasticsearchAccessRequest extends RangerAccessRequestImpl {
 	public RangerElasticsearchAccessRequest(String user, List<String> groups, String index, String privilege,
-			String clusterName, String clientIPAddress) {
+			String clientIPAddress) {
 		super.setUser(user);
 		if (CollectionUtils.isNotEmpty(groups)) {
 			super.setUserGroups(Sets.newHashSet(groups));
@@ -141,7 +140,6 @@ class RangerElasticsearchAccessRequest extends RangerAccessRequestImpl {
 		super.setResource(new RangerElasticsearchResource(index));
 		super.setAccessType(privilege);
 		super.setAction(privilege);
-		super.setClusterName(clusterName);
 		super.setClientIPAddress(clientIPAddress);
 		super.setAccessTime(new Date());
 	}

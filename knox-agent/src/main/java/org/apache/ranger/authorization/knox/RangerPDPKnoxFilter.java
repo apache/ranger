@@ -134,15 +134,13 @@ public class RangerPDPKnoxFilter implements Filter {
 		}
 
 		String clientIp = request.getRemoteAddr();
-		String clusterName = plugin.getClusterName();
 		List<String> forwardedAddresses = getForwardedAddresses(request);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Checking access primaryUser: " + primaryUser
 					+ ", impersonatedUser: " + impersonatedUser
 					+ ", effectiveUser: " + user + ", groups: " + groups
-					+ ", clientIp: " + clientIp + ", clusterName: " + clusterName
-			    + ", remoteIp: " + clientIp + ", forwardedAddresses: " + forwardedAddresses);
+					+ ", clientIp: " + clientIp + ", remoteIp: " + clientIp + ", forwardedAddresses: " + forwardedAddresses);
 		}
 
 		RangerAccessRequest accessRequest = new RequestBuilder()
@@ -151,7 +149,6 @@ public class RangerPDPKnoxFilter implements Filter {
 			.user(user)
 			.groups(groups)
 			.clientIp(clientIp)
-			.clusterName(clusterName)
 			.remoteIp(clientIp)
 			.forwardedAddresses(forwardedAddresses)
 			.build();

@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
@@ -41,6 +42,7 @@ public class PerfTestEngine {
 	private final URL servicePoliciesFileURL;
 	private final RangerPolicyEngineOptions policyEngineOptions;
 	private RangerPolicyEngine policyEvaluationEngine;
+	private RangerPluginContext rangerPluginContext;
 	private final boolean disableDynamicPolicyEvalReordering;
 	private AtomicLong requestCount = new AtomicLong();
 
@@ -71,8 +73,10 @@ public class PerfTestEngine {
 			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
 
 			servicePolicies = gsonBuilder.fromJson(reader, ServicePolicies.class);
-
-			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions);
+			RangerServiceDef serviceDef = servicePolicies.getServiceDef();
+			String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
+			rangerPluginContext = new RangerPluginContext(serviceType);
+			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions, rangerPluginContext);
 
 			requestCount.set(0L);
 

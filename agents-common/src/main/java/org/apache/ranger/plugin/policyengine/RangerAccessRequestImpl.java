@@ -72,7 +72,6 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setRequestData(null);
 		setSessionId(null);
 		setContext(null);
-		setClusterName(null);
 	}
 
 	@Override

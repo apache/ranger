@@ -101,9 +101,8 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
 			}
 
 			String accessType = ExternalAclProvider.transformPermission(permission);
-			String clusterName = kylinPlugin.getClusterName();
 			RangerKylinAccessRequest request = new RangerKylinAccessRequest(projectName, user, groups, accessType,
-					clusterName, clientIPAddress);
+					clientIPAddress);
 
 			RangerAccessResult result = kylinPlugin.isAccessAllowed(request);
 			if (result != null && result.getIsAllowed()) {
@@ -169,7 +168,7 @@ class RangerKylinResource extends RangerAccessResourceImpl {
 
 class RangerKylinAccessRequest extends RangerAccessRequestImpl {
 	public RangerKylinAccessRequest(String projectName, String user, List<String> groups, String accessType,
-			String clusterName, String clientIPAddress) {
+			String clientIPAddress) {
 		super.setResource(new RangerKylinResource(projectName));
 		super.setAccessType(accessType);
 		super.setUser(user);
@@ -177,6 +176,5 @@ class RangerKylinAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(clientIPAddress);
 		super.setAction(accessType);
-		super.setClusterName(clusterName);
 	}
 }

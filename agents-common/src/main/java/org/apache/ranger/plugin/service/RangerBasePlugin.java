@@ -51,6 +51,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
@@ -73,10 +74,10 @@ public class RangerBasePlugin {
 	private String                    serviceType;
 	private String                    appId;
 	private String                    serviceName;
-	private String                    clusterName;
 	private PolicyRefresher           refresher;
 	private RangerPolicyEngine        policyEngine;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+	private RangerPluginContext       rangerPluginContext;
 	private RangerAuthContext         currentAuthContext;
 	private RangerAuthContext         readOnlyAuthContext;
 	private RangerAccessResultProcessor resultProcessor;
@@ -146,19 +147,11 @@ public class RangerBasePlugin {
 		return serviceType;
 	}
 
-	public String getClusterName() {
-		return clusterName;
-	}
-
 	public RangerAuthContext createRangerAuthContext() {
 		return new RangerAuthContext(readOnlyAuthContext);
 	}
 
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
-
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
 
 	public RangerServiceDef getServiceDef() {
 		RangerPolicyEngine policyEngine = this.policyEngine;
@@ -192,10 +185,6 @@ public class RangerBasePlugin {
 		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
 		serviceName = configuration.get(propertyPrefix + ".service.name");
-		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
-		if(StringUtil.isEmpty(clusterName)){
-			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
-		}
 		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
@@ -322,8 +311,9 @@ public class RangerBasePlugin {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
-					currentAuthContext = new RangerAuthContext();
-					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions);
+					rangerPluginContext = new RangerPluginContext(serviceType);
+					currentAuthContext = new RangerAuthContext(rangerPluginContext);
+					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions, rangerPluginContext);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policy-deltas are not null");
@@ -342,8 +332,9 @@ public class RangerBasePlugin {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
-							currentAuthContext = new RangerAuthContext();
-							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions);
+							rangerPluginContext = new RangerPluginContext(serviceType);
+							currentAuthContext = new RangerAuthContext(rangerPluginContext);
+							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions, rangerPluginContext);
 						}
 					} else {
 						if (LOG.isDebugEnabled()) {
@@ -649,7 +640,6 @@ public class RangerBasePlugin {
 			accessRequest.setClientType(request.getClientType());
 			accessRequest.setRequestData(request.getRequestData());
 			accessRequest.setSessionId(request.getSessionId());
-			accessRequest.setClusterName(request.getClusterName());
 
 			// call isAccessAllowed() to determine if audit is enabled or not
 			RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);

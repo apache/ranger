@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -75,7 +76,11 @@ public class RangerPolicyEngineCache {
 
 
 	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies, RangerPolicyEngineOptions options) {
-		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options);
+		RangerServiceDef serviceDef = policies.getServiceDef();
+		String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
+
+		RangerPluginContext rangerPluginContext = new RangerPluginContext(serviceType);
+		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options, rangerPluginContext);
 
 		policyEngineCache.put(policies.getServiceName(), ret);
 

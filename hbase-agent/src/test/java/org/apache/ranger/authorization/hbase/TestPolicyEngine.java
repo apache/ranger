@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
@@ -102,8 +103,9 @@ public class TestPolicyEngine {
 			servicePolicies.setPolicies(testCase.policies);
 
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-
-			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions);
+			RangerPluginContext pluginContext = new RangerPluginContext("hive");
+			pluginContext.setClusterName("cl1");
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext);
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 

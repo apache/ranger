@@ -56,7 +56,6 @@ public class AuthorizationSession {
 	String _column;
 	String _columnFamily;
 	String _remoteAddress;
-	String _clusterName;
 
 	User _user;
 	Set<String> _groups; // this exits to avoid having to get group for a user repeatedly.  It is kept in sync with _user;
@@ -90,11 +89,6 @@ public class AuthorizationSession {
 	
 	AuthorizationSession access(String anAccess) {
 		_access = anAccess;
-		return this;
-	}
-	
-	AuthorizationSession clusterName(String clusterName) {
-		_clusterName = clusterName;
 		return this;
 	}
 
@@ -200,7 +194,6 @@ public class AuthorizationSession {
 		request.setRequestData(_otherInformation);
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
-		request.setClusterName(_clusterName);
 		request.setAccessTime(new Date());
 		
 		_request = request;
@@ -345,7 +338,6 @@ public class AuthorizationSession {
 			.add(RangerHBaseResource.KEY_COLUMN, _column)
 			.add(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily)
 			.add("resource-matching-scope", _resourceMatchingScope)
-			.add("clusterName", _clusterName)
 			.toString();
 	}
 
@@ -361,8 +353,7 @@ public class AuthorizationSession {
 		String format = "Access[%s] by user[%s] belonging to groups[%s] to table[%s] for column-family[%s], column[%s] triggered by operation[%s], otherInformation[%s]";
 		String user = _userUtils.getUserAsString();
 		String message = String.format(format, getPrintableValue(_access), getPrintableValue(user), _groups, getPrintableValue(_table),
-				getPrintableValue(_columnFamily), getPrintableValue(_column), getPrintableValue(_operation), getPrintableValue(_otherInformation),
-				getPrintableValue(_clusterName));
+				getPrintableValue(_columnFamily), getPrintableValue(_column), getPrintableValue(_operation), getPrintableValue(_otherInformation));
 		return message;
 	}
 	
