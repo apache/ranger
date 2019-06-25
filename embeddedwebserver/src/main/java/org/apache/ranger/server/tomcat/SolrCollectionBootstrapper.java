@@ -23,19 +23,26 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystems;
+import java.io.StringReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.UUID;
+import java.util.Set;
 import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.util.EntityUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.solr.client.solrj.SolrClient;
@@ -51,16 +58,15 @@ import org.apache.solr.common.cloud.SolrZkClient;
 import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.solr.common.cloud.ZkConfigManager;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.data.Id;
-import org.apache.zookeeper.data.Stat;
+import org.noggit.JSONParser;
+import org.noggit.ObjectBuilder;
+
 import com.google.protobuf.TextFormat.ParseException;
 
-public class SolrCollectionBoostrapper extends Thread {
+public class SolrCollectionBootstrapper extends Thread {
 
 	private static final Logger logger = Logger
-			.getLogger(SolrCollectionBoostrapper.class.getName());
+			.getLogger(SolrCollectionBootstrapper.class.getName());
 	final static String SOLR_ZK_HOSTS = "ranger.audit.solr.zookeepers";
 	final static String SOLR_COLLECTION_NAME = "ranger.audit.solr.collection.name";
 	final static String SOLR_CONFIG_NAME = "ranger.audit.solr.config.name";
@@ -84,12 +90,8 @@ public class SolrCollectionBoostrapper extends Thread {
 	private static final String RANGER_SERVICE_HOSTNAME = "ranger.service.host";
 	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
 	private static final String SOLR_CONFIG_FILE = "solrconfig.xml";
-	private static final String[] configFiles = { "admin-extra.html",
-			"admin-extra.menu-bottom.html", "admin-extra.menu-top.html",
-			"elevate.xml", "enumsConfig.xml", "managed-schema",
-			"solrconfig.xml" };
 	private File configSetFolder = null;
-	private boolean hasEnumConfig;
+
 	boolean solr_cloud_mode = false;
 	boolean is_completed = false;
 	boolean isKERBEROS = false;
@@ -113,7 +115,7 @@ public class SolrCollectionBoostrapper extends Thread {
 
 	private Properties serverConfigProperties = new Properties();
 
-	public SolrCollectionBoostrapper() throws IOException {
+	public SolrCollectionBootstrapper() throws IOException {
 		logger.info("Starting Solr Setup");
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILENAME, serverConfigProperties);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILENAME, serverConfigProperties);
@@ -189,7 +191,7 @@ public class SolrCollectionBoostrapper extends Thread {
 					if (connect(zookeeperHosts)) {
 						if (solr_cloud_mode) {
 							if (uploadConfiguration() && createCollection()
-									&& setupACL(zkClient)) {
+                                                                        ) {
 								is_completed = true;
 								break;
 							} else {
@@ -244,33 +246,76 @@ public class SolrCollectionBoostrapper extends Thread {
 		HttpClientUtil.setHttpClientBuilder(kb);
 	}
 
+        public static Map postDataAndGetResponse(CloudSolrClient cloudClient,
+                      String uri, ByteBuffer bytarr) throws IOException {
+                    HttpPost httpPost = null;
+                    HttpEntity entity;
+                    String response = null;
+                    Map m = null;
+                    try {
+                      httpPost = new HttpPost(uri);
+
+                      httpPost.setHeader("Content-Type", "application/octet-stream");
+
+                      httpPost.setEntity(new ByteArrayEntity(bytarr.array(), bytarr
+                          .arrayOffset(), bytarr.limit()));
+                      entity = cloudClient.getLbClient().getHttpClient().execute(httpPost)
+                          .getEntity();
+                      try {
+                        response = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                        m = (Map) ObjectBuilder.getVal(new JSONParser(
+                            new StringReader(response)));
+                      } catch (JSONParser.ParseException e) {
+                        System.err.println("err response: " + response);
+                        throw new AssertionError(e);
+                      }
+                    } finally {
+                      httpPost.releaseConnection();
+                    }
+                    return m;
+                  }
 	private boolean uploadConfiguration() {
 		try {
-			Path path = Paths.get(System.getProperty("java.io.tmpdir"), UUID
-					.randomUUID().toString(), "RangerAudit");
-
-			File tmpDir = path.toFile();
-
 			solrCloudClient.connect();
 			zkClient = solrCloudClient.getZkStateReader().getZkClient();
 
 			if (zkClient != null) {
 				ZkConfigManager zkConfigManager = new ZkConfigManager(zkClient);
 
-				boolean configExists = zkConfigManager
-						.configExists(solr_config_name);
-				if (!configExists) {
-					logger.info("Config does not exist with name "
-							+ solr_config_name);
-					doIfConfigNotExist(solr_config_name, zkConfigManager);
-					uploadMissingConfigFiles(zkClient, zkConfigManager,
-							solr_config_name);
-					return true;
-				} else {
-					logger.info("Config exist with name " + solr_config_name);
-					doIfConfigExists(solr_config_name, zkClient, path, tmpDir);
+                boolean configExists = zkConfigManager.configExists(solr_config_name);
+                if (!configExists) {
+                    logger.info("Config does not exist with name " + solr_config_name);
+                    String zipOfConfigs = null;
+                    String[] files = configSetFolder.list();
+                    for (String file : files) {
+                            if(file != null) {
+                                    if (file.equals("solr_audit_conf.zip")) {
+                                            zipOfConfigs = file;
+                                            break;
+                                    }
+                            }
+                    }
+                    if(zipOfConfigs == null) {
+                            throw new FileNotFoundException("Could Not Find Configs File (Ex. configName.zip) : "+ getConfigSetFolder());
+                    }
+                    File file = new File(configSetFolder + "/" + zipOfConfigs);
+                    byte[] arrByte = Files.readAllBytes(file.toPath());
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(arrByte);
+                    Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
+                    String baseUrl = null;
+                    String[] nodeArr = nodes.toArray(new String[0]);
+                    /*getting nodes URL as 'solr_8983', so converting it to 'solr/9893'*/
+                    baseUrl = nodeArr[0].replaceAll("_", "/");
+                    String uploadConfigsUrl ="http://" + baseUrl.toString() + "/admin/configs?action=UPLOAD&name=";
+                    postDataAndGetResponse(solrCloudClient,
+                                    uploadConfigsUrl  + solr_config_name,
+                                    byteBuffer);
 					return true;
 				}
+                else {
+                	logger.info("Config already exists with name " + solr_config_name );
+    				return true;
+                }
 			} else {
 				logger.severe("Solr is in cloud mode and could not find the zookeeper client for performing upload operations. ");
 				return false;
@@ -279,87 +324,7 @@ public class SolrCollectionBoostrapper extends Thread {
 			logger.severe("Error while uploading configuration : " + ex);
 			return false;
 		}
-
-	}
-
-	private void doIfConfigNotExist(String configName,
-			ZkConfigManager zkConfigManager) throws IOException {
-		File[] listOfFiles = getConfigSetFolder().listFiles();
-		if (listOfFiles != null) {
-			zkConfigManager.uploadConfigDir(getConfigSetFolder().toPath(),
-					configName);
-		}
-	}
-
-	private void doIfConfigExists(String solrConfigName, SolrZkClient zkClient,
-			Path path, File tmpDir) throws IOException {
-
-		logger.info("Config set exists for " + solr_collection_name
-				+ " collection. Refreshing it if needed...");
-		if (!tmpDir.mkdirs()) {
-			logger.severe("Cannot create directories for"
-					+ tmpDir.getAbsolutePath());
-		}
-		ZkConfigManager zkConfigManager = new ZkConfigManager(zkClient);
-		zkConfigManager.downloadConfigDir(solrConfigName, path);
-		File[] listOfFiles = getConfigSetFolder().listFiles();
-		if (listOfFiles != null) {
-			for (File file : listOfFiles) {
-				if (file.getName().equals(getConfigFileName())
-						&& updateConfigIfNeeded(solrConfigName, zkClient, file,
-								path)) {
-					break;
-				}
-			}
-		}
-	}
-
-	private void uploadMissingConfigFiles(SolrZkClient zkClient,
-			ZkConfigManager zkConfigManager, String configName)
-			throws IOException {
-		logger.info("Check any of the configs files are missing for config"
-				+ configName);
-
-		for (String configFile : configFiles) {
-			if ("enumsConfig.xml".equals(configFile) && !hasEnumConfig) {
-				logger.info("Config file " + configFile + " is not needed for "
-						+ configName);
-				continue;
-			}
-			Path zkPath = Paths.get(configName, configFile);
-			if (zkConfigManager.configExists(zkPath.toString())) {
-				logger.info("Config file " + configFile
-						+ " has already uploaded properly.");
-			} else {
-				logger.info("Config file " + configFile
-						+ " is missing. Reupload...");
-				FileSystems.getDefault().getSeparator();
-				uploadFileToZk(zkClient,
-						Paths.get(getConfigSetFolder().toString(), configFile),
-						Paths.get("/configs/", zkPath.toString()));
-
-			}
-		}
-	}
-
-	private boolean updateConfigIfNeeded(String solrConfigName,
-			SolrZkClient zkClient, File file, Path path) throws IOException {
-		boolean result = false;
-		if (!FileUtils.contentEquals(file,
-				Paths.get(path.toString(), file.getName()).toFile())) {
-			logger.info("Solr config file differs " + file.getName()
-					+ " upload config set to zookeeper");
-			Path filePath = Paths.get(getConfigSetFolder().toString(),
-					getConfigFileName());
-			Path configsPath = Paths.get("/configs", solrConfigName,
-					getConfigFileName());
-			uploadFileToZk(zkClient, filePath, configsPath);
-			result = true;
-		} else {
-			logger.info("Content is same of SolrConfig file");
-		}
-		return result;
-	}
+    }
 
 	private void logErrorMessageAndWait(String msg, Exception exception) {
 		retry_counter++;
@@ -441,112 +406,8 @@ public class SolrCollectionBoostrapper extends Thread {
 		return ret;
 	}
 
-	private boolean setupACL(SolrZkClient zkClient) {
-		solrZookeeper = zkClient.getSolrZooKeeper();
-		String serviceName = "";
-		List<String> aclUserList = null;
-		Path zNodeConfigPath = Paths.get("/configs", solr_config_name);
-		Path zNodeCollectionPath = Paths.get("/collections",
-				solr_collection_name);
-		if (isKERBEROS) {
-			if (principal != null && !StringUtil.isEmpty(principal)) {
-				serviceName = principal.substring(0, principal.indexOf("/"));
-			} else {
-				serviceName = DEFAULT_SERVICE_NAME;
-			}
-			aclUserList = new ArrayList<String>();
-			if (getConfig(SOLR_ACL_USER_LIST_SASL) != null
-					&& !StringUtil.isEmpty(SOLR_ACL_USER_LIST_SASL)) {
-				aclUserList = Arrays.asList(getConfig(SOLR_ACL_USER_LIST_SASL)
-						.trim().split(","));
-			}
-		}
-		if (performACLOnZnode(zNodeConfigPath, solrZookeeper, serviceName,
-				aclUserList)
-				&& performACLOnZnode(zNodeCollectionPath, solrZookeeper,
-						serviceName, aclUserList)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 
-	/**
-	 * In case of Kerberize env scheme "world" users should have only READ
-	 * access and scheme "sasl" users e.g. infra-solr, solr, rangeradmin should
-	 * have all access on Znode. In case of simple env scheme "world" users
-	 * should have all access on Znode.
-	 */
-	private boolean performACLOnZnode(Path zookeeperNodePath,
-			SolrZooKeeper solrZookeeper, String serviceName,
-			List<String> aclUserList) {
-		List<ACL> aclListForZnodePath = new ArrayList<ACL>();
-		try {
 
-			if (isKERBEROS) {
-				Stat stat = solrZookeeper.exists(zookeeperNodePath.toString(),
-						false);
-
-				List<ACL> existingACLOnZnodePath = solrZookeeper.getACL(
-						zookeeperNodePath.toString(), stat);
-				if (existingACLOnZnodePath != null
-						&& existingACLOnZnodePath.size() > 0) {
-					List<String> existingIdForZnodePath = new ArrayList<String>();
-					int permissionForWorldScheme = 0;
-					for (ACL acl : existingACLOnZnodePath) {
-						existingIdForZnodePath.add(acl.getId().getId());
-						if (acl.getId().getId().equalsIgnoreCase("anyone")) {
-							permissionForWorldScheme = acl.getPerms();
-						}
-
-					}
-
-					if (aclUserList != null && !aclUserList.isEmpty()) {
-						for (String aclUser : aclUserList) {
-							if (!existingIdForZnodePath.contains(aclUser)) {
-								aclListForZnodePath.add(new ACL(
-										ZooDefs.Perms.ALL, new Id("sasl",
-												aclUser)));
-							}
-						}
-					}
-					if (!existingIdForZnodePath.contains(serviceName)) {
-						aclListForZnodePath.add(new ACL(ZooDefs.Perms.ALL,
-								new Id("sasl", serviceName)));
-					}
-					if (!existingIdForZnodePath.contains("anyone")
-							|| (existingACLOnZnodePath.contains("anyone") && permissionForWorldScheme != ZooDefs.Perms.READ)) {
-						aclListForZnodePath.add(new ACL(ZooDefs.Perms.READ,
-								new Id("world", "anyone")));
-					}
-				} else {
-					aclListForZnodePath.add(new ACL(ZooDefs.Perms.READ, new Id(
-							"world", "anyone")));
-					aclListForZnodePath.add(new ACL(ZooDefs.Perms.ALL, new Id(
-							"sasl", serviceName)));
-					for (String aclUser : aclUserList) {
-						aclListForZnodePath.add(new ACL(ZooDefs.Perms.ALL,
-								new Id("sasl", aclUser)));
-					}
-				}
-
-			} else {
-				aclListForZnodePath.add(new ACL(ZooDefs.Perms.ALL, new Id(
-						"world", "anyone")));
-			}
-
-			if (aclListForZnodePath != null && !aclListForZnodePath.isEmpty()) {
-				solrZookeeper.setACL(zookeeperNodePath.toString(),
-						aclListForZnodePath, -1);
-			}
-
-		} catch (Exception ex) {
-			logger.severe("Error while performing ACL on zNode : "
-					+ zookeeperNodePath.toString() + " Error: " + ex);
-			return false;
-		}
-		return true;
-	}
 
 	@SuppressWarnings("unchecked")
 	private List<String> getCollections() throws IOException, ParseException {

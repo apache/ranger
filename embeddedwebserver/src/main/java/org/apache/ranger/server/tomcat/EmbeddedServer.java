@@ -277,7 +277,7 @@ public class EmbeddedServer {
 					String servername = getConfig("servername");
 					LOG.info("Server Name : " + servername);
 					if (servername.equalsIgnoreCase(ADMIN_SERVER_NAME)) {
-						SolrCollectionBoostrapper solrSetup = new SolrCollectionBoostrapper();
+						SolrCollectionBootstrapper solrSetup = new SolrCollectionBootstrapper();
 						solrSetup.start();
 					}
 				}
