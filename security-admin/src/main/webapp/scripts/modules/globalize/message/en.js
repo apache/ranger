@@ -508,6 +508,7 @@ define(function(require) {
 				emailAddressValidationMsg  :'1. Email address should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character <b>.-@</b> .<br>3. Email address length should be greater than 9 characters.<br> 4. Email address examples : abc@de.fg, A-C@D-.FG',
                 nameValidationMsg      :'Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).',
                 roleNameValidationMsg :'1. Role name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
+                policyNameValidationMsg   :'Please avoid these characters (&, <, >, \', ", `) for policy name.',
 			},
 			serverMsg : {
 

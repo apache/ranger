@@ -1700,7 +1700,16 @@ define(function(require) {
             }
 
         }
-        }
+    }
+
+    //string contain escape character or not
+    XAUtils.checkForEscapeCharacter = function(policyName){
+        var escapeCharacter = ["&amp;", "&lt;", "&gt;", "&quot;", "&#96;", "&#x27;"];
+        return _.some(escapeCharacter, function(m){
+            return policyName.includes(m);
+        });
+    }
+
 
 	return XAUtils;
 });

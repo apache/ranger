@@ -55,10 +55,11 @@ define(function(require){
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
 				name : {
-					type		: 'Text',
+                                        type		: 'TextFieldWithIcon',
 					title		: 'Policy Name *',
 					validators	: ['required'],
 					editorAttrs 	:{ maxlength: 255},
+                                        errorMsg    : localization.tt("validationMessages.policyNameValidationMsg")
 				},
 				description : {
 					type		: 'TextArea',
