@@ -21,7 +21,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.springframework.stereotype.Service;
-
 import javax.persistence.NoResultException;
 import java.util.Collections;
 import java.util.List;
@@ -73,4 +72,29 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return Collections.emptyList();
         }
     }
+
+	public List<String> findZoneNamesByUserId(Long userId) {
+		if (userId == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByUserId", String.class)
+					.setParameter("userId", userId).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
+
+	public List<String> findZoneNamesByGroupId(Long groupId) {
+		if (groupId == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByGroupId", String.class)
+					.setParameter("groupId", groupId).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
+
 }

@@ -1408,6 +1408,18 @@
         </query>
     </named-query>
 
+	<named-query name="XXSecurityZone.findZoneNamesByUserId">
+        <query>
+            select distinct obj.name from XXSecurityZone obj, XXSecurityZoneRefUser refObj where obj.id = refObj.zoneId and refObj.userId = :userId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZone.findZoneNamesByGroupId">
+        <query>
+            select distinct obj.name from XXSecurityZone obj, XXSecurityZoneRefGroup refObj where obj.id = refObj.zoneId and refObj.groupId = :groupId
+        </query>
+    </named-query>
+
     <named-query name="XXGlobalState.findByStateId">
         <query>
             select obj from XXGlobalState obj where obj.id = :stateId
