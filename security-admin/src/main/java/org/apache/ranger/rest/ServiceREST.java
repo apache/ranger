@@ -157,6 +157,7 @@ public class ServiceREST {
 	final static public String PARAM_SERVICE_TYPE     = "serviceType";
 	final static public String PARAM_POLICY_NAME      = "policyName";
 	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
+	final static public String PARAM_IGNORE_POLICY_NAME = "ignorePolicyName";
 	public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
 	public static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
@@ -2293,6 +2294,7 @@ public class ServiceREST {
 	
 	private int createPolicesBasedOnPolicyMap(HttpServletRequest request, Map<String, RangerPolicy> policiesMap,
 			List<String> serviceNameList, String updateIfExists, int totalPolicyCreate) {
+		boolean ignorePolicyName= "true".equalsIgnoreCase(StringUtils.trimToNull(request.getParameter(PARAM_IGNORE_POLICY_NAME))) ?  true : false;
 		if (!CollectionUtils.sizeIsEmpty(policiesMap.entrySet())) {
 			for (Entry<String, RangerPolicy> entry : policiesMap.entrySet()) {
 				RangerPolicy policy = entry.getValue();
@@ -2304,8 +2306,26 @@ public class ServiceREST {
 									if (updateIfExists != null && !updateIfExists.isEmpty()){
 										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+										if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
+											String user = request.getRemoteUser();
+											RangerPolicy existingPolicy;
+											try {
+												existingPolicy = getExactMatchPolicyForResource(policy, StringUtils.isNotBlank(user) ? user :"admin");
+											} catch (Exception e) {
+												existingPolicy=null;
+											}
+											if (existingPolicy == null) {
+												createPolicy(policy, request);
+											} else {
+												ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
+												updatePolicy(existingPolicy);
+											}
+										} else {
+											createPolicy(policy, request);
+										}
+									} else {
+										createPolicy(policy, request);
 									}
-									createPolicy(policy, request);
 									totalPolicyCreate = totalPolicyCreate + 1;
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("Policy " + policy.getName() + " created successfully.");
@@ -2321,8 +2341,26 @@ public class ServiceREST {
 						if (updateIfExists != null && !updateIfExists.isEmpty()){
 							request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 							request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+							if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
+								String user = request.getRemoteUser();
+								RangerPolicy existingPolicy;
+								try {
+									existingPolicy = getExactMatchPolicyForResource(policy, StringUtils.isNotBlank(user) ? user :"admin");
+								} catch (Exception e) {
+									existingPolicy=null;
+								}
+								if (existingPolicy == null) {
+									createPolicy(policy, request);
+								} else {
+									ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
+									updatePolicy(existingPolicy);
+								}
+							} else {
+								createPolicy(policy, request);
+							}
+						} else {
+							createPolicy(policy, request);
 						}
-						createPolicy(policy, request);
 						totalPolicyCreate = totalPolicyCreate + 1;
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Policy " + policy.getName() + " created successfully.");

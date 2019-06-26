@@ -252,6 +252,66 @@ public class ServiceRESTUtil {
 		}
 	}
 
+	static public void mergeExactMatchPolicyForResource(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceRESTUtil.mergeExactMatchPolicyForResource()");
+		}
+		mergeExactMatchPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
+		mergeExactMatchPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
+		mergeExactMatchPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
+		mergeExactMatchPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceRESTUtil.mergeExactMatchPolicyForResource()");
+		}
+	}
+
+	static private void mergeExactMatchPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceRESTUtil.mergeExactMatchPolicyForItemType()");
+		}
+		List<RangerPolicy.RangerPolicyItem> appliedPolicyItems = null;
+		switch (policyItemType) {
+			case ALLOW:
+				appliedPolicyItems = appliedPolicy.getPolicyItems();
+				break;
+			case DENY:
+				appliedPolicyItems = appliedPolicy.getDenyPolicyItems();
+				break;
+			case ALLOW_EXCEPTIONS:
+				appliedPolicyItems = appliedPolicy.getAllowExceptions();
+				break;
+			case DENY_EXCEPTIONS:
+				appliedPolicyItems = appliedPolicy.getDenyExceptions();
+				break;
+			default:
+				LOG.warn("mergeExactMatchPolicyForItemType(): invalid policyItemType=" + policyItemType);
+		}
+
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+
+			Set<String> users = new HashSet<String>();
+			Set<String> groups = new HashSet<String>();
+
+			Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+			Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+
+			// Extract users and groups specified in appliedPolicy items
+			extractUsersAndGroups(appliedPolicyItems, users, groups);
+
+			// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
+			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems);
+			// Apply policyItems of given type in appliedPolicy to policyItems extracted from existingPolicy
+			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems);
+			// Add modified/new policyItems back to existing policy
+			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems);
+			compactPolicy(existingPolicy);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceRESTUtil.mergeExactMatchPolicyForItemType()");
+		}
+	}
+
 	static private void extractUsersAndGroups(List<RangerPolicy.RangerPolicyItem> policyItems, Set<String> users, Set<String> groups) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.extractUsersAndGroups()");
@@ -479,6 +539,43 @@ public class ServiceRESTUtil {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.applyPolicyItems()");
+		}
+	}
+
+	static private void mergePolicyItems(List<RangerPolicy.RangerPolicyItem> appliedPolicyItems,
+			POLICYITEM_TYPE policyItemType, Map<String, RangerPolicy.RangerPolicyItem[]> existingUserPolicyItems,
+			Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceRESTUtil.mergePolicyItems()");
+		}
+		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
+			List<String> users = policyItem.getUsers();
+			for (String user : users) {
+				RangerPolicy.RangerPolicyItem[] items = existingUserPolicyItems.get(user);
+				if (items == null) {
+					// Should not get here
+					LOG.warn("Should not have come here..");
+					items = new RangerPolicy.RangerPolicyItem[4];
+					existingUserPolicyItems.put(user, items);
+				}
+				addPolicyItemForUser(items, policyItemType.ordinal(), user, policyItem);
+			}
+		}
+
+		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
+			List<String> groups = policyItem.getGroups();
+			for (String group : groups) {
+				RangerPolicy.RangerPolicyItem[] items = existingGroupPolicyItems.get(group);
+				if (items == null) {
+					// Should not get here
+					items = new RangerPolicy.RangerPolicyItem[4];
+					existingGroupPolicyItems.put(group, items);
+				}
+				addPolicyItemForGroup(items, policyItemType.ordinal(), group, policyItem);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceRESTUtil.mergePolicyItems()");
 		}
 	}
 
