@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -69,7 +70,6 @@ import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
-import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -79,7 +79,6 @@ import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
@@ -123,6 +122,7 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPluginInfoList;
@@ -171,8 +171,9 @@ public class ServiceREST {
 	@Autowired
 	ServiceMgr serviceMgr;
 
-        @Autowired
-        XUserService xUserService;
+	@Autowired
+	XUserService xUserService;
+
 	@Autowired
 	AssetMgr assetMgr;
 
@@ -194,7 +195,7 @@ public class ServiceREST {
 	@Autowired
     RangerPolicyLabelsService policyLabelsService;
 
-        @Autowired
+	@Autowired
 	RangerServiceService svcService;
 	
 	@Autowired
@@ -220,12 +221,9 @@ public class ServiceREST {
 
 	@Autowired
 	TagDBStore tagStore;
-	
-	@Autowired
-    JSONUtil jsonUtil;
 
 	@Autowired
-	XXGroupUserDao groupUserDao;
+	RangerTransactionService transactionService;
 	
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
@@ -697,6 +695,13 @@ public class ServiceREST {
 				}
 			}
                          bizUtil.blockAuditorRoleUser();
+
+			if (StringUtils.isBlank(service.getTagService()) && xxServiceDef != null && !xxServiceDef.getId().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
+				}
+				scheduleCreateOrGetTagService(service);
+			}
 			ret = svcStore.createService(service);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -3800,69 +3805,204 @@ public class ServiceREST {
 		return ret;
 	}
 
-        void ensureAdminAndAuditAccess(RangerPolicy policy) {
-                boolean isAdmin = bizUtil.isAdmin();
-                boolean isKeyAdmin = bizUtil.isKeyAdmin();
-                String userName = bizUtil.getCurrentUserLoginId();
-                boolean isAuditAdmin = bizUtil.isAuditAdmin();
-                boolean isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
-                boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName) || (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())));
-                if (!isAdmin && !isKeyAdmin && !isSvcAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
-                        boolean isAllowed = false;
+	void ensureAdminAndAuditAccess(RangerPolicy policy) {
+		boolean isAdmin = bizUtil.isAdmin();
+		boolean isKeyAdmin = bizUtil.isKeyAdmin();
+		String userName = bizUtil.getCurrentUserLoginId();
+		boolean isAuditAdmin = bizUtil.isAuditAdmin();
+		boolean isAuditKeyAdmin = bizUtil.isAuditKeyAdmin();
+		boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName) || (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())));
+		if (!isAdmin && !isKeyAdmin && !isSvcAdmin && !isAuditAdmin && !isAuditKeyAdmin) {
+			boolean isAllowed = false;
 
-                        Set<String> userGroups = userMgr.getGroupsForUser(userName);
-                        isAllowed = hasAdminAccess(policy, userName, userGroups);
+			Set<String> userGroups = userMgr.getGroupsForUser(userName);
+			isAllowed = hasAdminAccess(policy, userName, userGroups);
 
-                        if (!isAllowed) {
-                                throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,"User '"
-                                                                                + userName+ "' does not have delegated-admin privilege on given resources",true);
-                        }
-                } else {
+			if (!isAllowed) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User '"
+						+ userName + "' does not have delegated-admin privilege on given resources", true);
+			}
+		} else {
 
-                        XXService xService = daoManager.getXXService().findByName(policy.getService());
-                        XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+			XXService xService = daoManager.getXXService().findByName(policy.getService());
+			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 
-                        if (isAdmin || isAuditAdmin) {
-                                if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
-                                        throw restErrorUtil.createRESTException(
-                                                        "KMS Policies/Services/Service-Defs are not accessible for user '"
-                                                                        + userName + "'.",MessageEnums.OPER_NO_PERMISSION);
-                                }
-                        } else if (isKeyAdmin || isAuditKeyAdmin) {
-                                if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
-                                        throw restErrorUtil.createRESTException("Only KMS Policies/Services/Service-Defs are accessible for user '"
-                                                                        + userName + "'.",MessageEnums.OPER_NO_PERMISSION);
-                                }
-                        }
-                }
-        }
-
-		private void patchAssociatedTagServiceInSecurityZoneInfos(ServicePolicies servicePolicies) {
-			if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
-				// Get list of zones that associated tag-service (if any) is associated with
-				List<String> zonesInAssociatedTagService = new ArrayList<>();
-
-				String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
-				if (StringUtils.isNotEmpty(tagServiceName)) {
-					try {
-						RangerService tagService = svcStore.getServiceByName(tagServiceName);
-						if (tagService != null && tagService.getIsEnabled()) {
-							zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByServiceName(tagServiceName);
-						}
-					} catch (Exception exception) {
-						LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
-					}
+			if (isAdmin || isAuditAdmin) {
+				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+					throw restErrorUtil.createRESTException(
+							"KMS Policies/Services/Service-Defs are not accessible for user '"
+									+ userName + "'.", MessageEnums.OPER_NO_PERMISSION);
 				}
-				if (CollectionUtils.isNotEmpty(zonesInAssociatedTagService)) {
-					for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
-						String zoneName = entry.getKey();
-						ServicePolicies.SecurityZoneInfo securityZoneInfo = entry.getValue();
-
-						securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(zoneName));
-					}
+			} else if (isKeyAdmin || isAuditKeyAdmin) {
+				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+					throw restErrorUtil.createRESTException("Only KMS Policies/Services/Service-Defs are accessible for user '"
+							+ userName + "'.", MessageEnums.OPER_NO_PERMISSION);
 				}
 			}
 		}
+	}
+
+	private void patchAssociatedTagServiceInSecurityZoneInfos(ServicePolicies servicePolicies) {
+		if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
+			// Get list of zones that associated tag-service (if any) is associated with
+			List<String> zonesInAssociatedTagService = new ArrayList<>();
+
+			String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
+			if (StringUtils.isNotEmpty(tagServiceName)) {
+				try {
+					RangerService tagService = svcStore.getServiceByName(tagServiceName);
+					if (tagService != null && tagService.getIsEnabled()) {
+						zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByServiceName(tagServiceName);
+					}
+				} catch (Exception exception) {
+					LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
+				}
+			}
+			if (CollectionUtils.isNotEmpty(zonesInAssociatedTagService)) {
+				for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
+					String zoneName = entry.getKey();
+					ServicePolicies.SecurityZoneInfo securityZoneInfo = entry.getValue();
+
+					securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(zoneName));
+				}
+			}
+		}
+	}
+
+	private void scheduleCreateOrGetTagService(RangerService resourceService) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> scheduleCreateOrGetTagService(resourceService=" + resourceService.getName() + ")");
+		}
+		final boolean isAutoCreateTagService = RangerConfiguration.getInstance().getBoolean("ranger.tagservice.auto.create", true);
+
+		if (isAutoCreateTagService) {
+
+			String tagServiceName = RangerConfiguration.getInstance().get("ranger.tagservice.auto.name");
+
+			if (StringUtils.isBlank(tagServiceName)) {
+				tagServiceName = getGeneratedTagServiceName(resourceService.getName());
+			}
+
+			if (StringUtils.isNotBlank(tagServiceName)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Attempting to get/create and possibly link to tag-service:[" + tagServiceName + "]");
+				}
+
+				final boolean isAutoLinkTagService = RangerConfiguration.getInstance().getBoolean("ranger.tagservice.auto.link", true);
+				RangerService tagService = null;
+
+				try {
+					tagService = svcStore.getServiceByName(tagServiceName);
+				} catch (Exception e) {
+					LOG.info("failed to retrieve tag-service [" + tagServiceName + "]. Will attempt to create.", e);
+				}
+
+				if (tagService == null) {
+					final TagServiceOperationContext context = new TagServiceOperationContext(tagServiceName, resourceService.getName(), isAutoLinkTagService);
+
+					Runnable createAndLinkTagServiceTask = new Runnable() {
+						@Override
+						public void run() {
+							doCreateAndLinkTagService(context);
+						}
+					};
+					transactionService.executeAfterTransactionComplete(createAndLinkTagServiceTask);
+				} else if (isAutoLinkTagService) {
+					resourceService.setTagService(tagServiceName);
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== scheduleCreateOrGetTagService(resourceService=" + resourceService.getName() + ")");
+		}
+	}
+
+	private String getGeneratedTagServiceName(String resourceServiceName) {
+		int lastIndexOfMarker = StringUtils.lastIndexOf(resourceServiceName, '_');
+		if (lastIndexOfMarker != -1) {
+			return resourceServiceName.substring(0, lastIndexOfMarker) + "_tag";
+		} else {
+			return null;
+		}
+	}
+
+	private final class TagServiceOperationContext {
+		final String tagServiceName;
+		final String resourceServiceName;
+		final boolean isAutoLinkTagService;
+
+		TagServiceOperationContext(@Nonnull String tagserviceName, @Nonnull String resourceServiceName, boolean isAutoLinkTagService) {
+			this.tagServiceName = tagserviceName;
+			this.resourceServiceName = resourceServiceName;
+			this.isAutoLinkTagService = isAutoLinkTagService;
+		}
+
+		@Override
+		public String toString() {
+			return "{tagServiceName=" + tagServiceName + ", resourceServiceName=" + resourceServiceName + ", isAutoLinkTagService=" + isAutoLinkTagService + "}";
+		}
+	}
+
+	private void doCreateAndLinkTagService(final TagServiceOperationContext context) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> doCreateAndLinkTagService(context=" + context + ")");
+		}
+
+		RangerService resourceService = null;
+
+		try {
+			resourceService = getServiceByName(context.resourceServiceName);
+			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+		} catch (Exception e) {
+			LOG.error("Resource-service:[" + context.resourceServiceName + "] cannot be retrieved");
+		}
+
+		if (resourceService != null) {
+
+			RangerService tagService = new RangerService();
+
+			tagService.setName(context.tagServiceName);
+			tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+			LOG.info("creating tag-service [" + context.tagServiceName + "]");
+
+			RangerService service;
+
+			try {
+				service = svcStore.createService(tagService);
+				LOG.info("Created tag-service:[" + service.getName() + "]");
+			} catch (Exception e) {
+				LOG.info("Failed to create tag-service " + context.tagServiceName, e);
+			}
+
+			if (context.isAutoLinkTagService) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Linking resource service:[" + resourceService.getName() + "] with tag service:[" + context.tagServiceName + "]");
+				}
+				try {
+					tagService = getServiceByName(context.tagServiceName);
+					LOG.info("Successfully retrieved tag-service:[" + tagService.getName() + "]");
+
+					if (!StringUtils.equals(tagService.getName(), resourceService.getTagService())) {
+						resourceService.setTagService(tagService.getName());
+
+						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + tagService.getName() + "]");
+
+						service = svcStore.updateService(resourceService, null);
+
+						LOG.info("Updated resource-service:[" + service.getName() + "]");
+					}
+				} catch (Exception e) {
+					LOG.error("Failed to link service[" + context.resourceServiceName + "] with tag-service [" + context.tagServiceName + "]");
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== doCreateAndLinkTagService(context=" + context + ")");
+		}
+	}
+
 }
 
 
