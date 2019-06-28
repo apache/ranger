@@ -109,6 +109,7 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 		ret.setContext(RangerAccessRequestUtil.copyContext(getContext()));
 		ret.accessType = accessType;
 		ret.setClusterName(getClusterName());
+		ret.setClusterType(getClusterType());
 
 		return ret;
 	}

@@ -29,9 +29,11 @@ public class RangerPluginContext {
 
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 	private String clusterName;
+	private String clusterType;
 
 	public RangerPluginContext(String serviceType){
 		this.clusterName = findClusterName(serviceType);
+		this.clusterType = findClusterType(serviceType);
 	}
 
 	public String getClusterName() {
@@ -40,6 +42,14 @@ public class RangerPluginContext {
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+	}
+
+	public String getClusterType() {
+		return clusterType;
+	}
+
+	public void setClusterType(String clusterType) {
+		this.clusterType = clusterType;
 	}
 
 	private String findClusterName(String serviceType) {
@@ -58,6 +68,24 @@ public class RangerPluginContext {
 		}
 
 		return clusterName;
+	}
+
+	private String findClusterType(String serviceType) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPluginContext.findClusterType , serviceType = " + serviceType);
+		}
+
+		String propertyPrefix    = "ranger.plugin." + serviceType;
+		String clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.type", "");
+		if(StringUtil.isEmpty(clusterType)){
+			clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.type", "");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPluginContext.findClusterType ");
+		}
+
+		return clusterType;
 	}
 
 }

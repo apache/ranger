@@ -48,6 +48,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String               sessionId;
 	private Map<String, Object>  context;
 	private String				 clusterName;
+	private String				 clusterType;
 
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
@@ -212,6 +213,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.clusterName = clusterName;
 	}
 
+	public String getClusterType() {
+		return clusterType;
+	}
+
+	public void setClusterType(String clusterType) {
+		this.clusterType = clusterType;
+	}
+
 	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
 
 	public void setContext(Map<String, Object> context) {
@@ -290,6 +299,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("sessionId={").append(sessionId).append("} ");
 		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
 		sb.append("clusterName={").append(clusterName).append("} ");
+		sb.append("clusterType={").append(clusterType).append("} ");
 
 		sb.append("context={");
 		if(context != null) {

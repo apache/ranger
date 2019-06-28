@@ -96,4 +96,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	@Override
 	public String getClusterName() { return source.getClusterName();	}
 
+	@Override
+	public String getClusterType() {  return source.getClusterType();	}
+
 }

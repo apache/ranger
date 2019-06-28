@@ -437,6 +437,7 @@ public class TestPolicyEngine {
 		}
 		RangerPluginContext pluginContext = new RangerPluginContext("hive");
 		pluginContext.setClusterName("cl1");
+		pluginContext.setClusterType("on-prem");
 		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext);
 
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);

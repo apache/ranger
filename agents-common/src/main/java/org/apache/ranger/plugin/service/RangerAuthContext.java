@@ -175,6 +175,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
 		    reqImpl.extractAndSetClientIPAddress(getUseForwardedIPAddress(), getTrustedProxyAddresses());
 		    if(rangerPluginContext != null) {
 		        reqImpl.setClusterName(rangerPluginContext.getClusterName());
+		        reqImpl.setClusterType(rangerPluginContext.getClusterType());
 		    }
 	    }
 

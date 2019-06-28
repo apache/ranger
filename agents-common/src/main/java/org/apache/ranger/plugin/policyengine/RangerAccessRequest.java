@@ -55,6 +55,8 @@ public interface RangerAccessRequest {
 	
 	String getClusterName();
 
+	String getClusterType();
+
 	Map<String, Object> getContext();
 
 	RangerAccessRequest getReadOnlyCopy();

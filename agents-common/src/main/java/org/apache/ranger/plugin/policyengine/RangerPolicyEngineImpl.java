@@ -427,6 +427,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			if(rangerPluginContext != null) {
 				reqImpl.setClusterName(rangerPluginContext.getClusterName());
+				reqImpl.setClusterType(rangerPluginContext.getClusterType());
 			}
 		}
 
