@@ -178,7 +178,7 @@ updatePropertyToFile(){
 #Update Properties to File
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
 updatePropertyToFilePy(){
-    python update_property.py $1 $2 $3
+    $PYTHON_COMMAND_INVOKER update_property.py $1 $2 $3
     check_ret_status $? "Update property failed for: {'$1'}"
 }
 
@@ -278,7 +278,7 @@ run_dba_steps(){
 		log "[I] Setup mode is set to SeparateDBA. Not Running DBA steps. Please run dba_script.py before running setup..!";
 	else
 		log "[I] Setup mode is not set. Running DBA steps..";
-                python dba_script.py -q
+                $PYTHON_COMMAND_INVOKER dba_script.py -q
         fi
 }
 check_db_connector() {
