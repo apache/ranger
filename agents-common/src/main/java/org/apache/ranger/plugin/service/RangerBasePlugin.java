@@ -74,6 +74,7 @@ public class RangerBasePlugin {
 	private String                    serviceType;
 	private String                    appId;
 	private String                    serviceName;
+	private String                    clusterName;
 	private PolicyRefresher           refresher;
 	private RangerPolicyEngine        policyEngine;
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
@@ -147,11 +148,19 @@ public class RangerBasePlugin {
 		return serviceType;
 	}
 
+	public String getClusterName() {
+		return clusterName;
+	}
+
 	public RangerAuthContext createRangerAuthContext() {
 		return new RangerAuthContext(readOnlyAuthContext);
 	}
 
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
 	public RangerServiceDef getServiceDef() {
 		RangerPolicyEngine policyEngine = this.policyEngine;
@@ -185,6 +194,10 @@ public class RangerBasePlugin {
 		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
 		serviceName = configuration.get(propertyPrefix + ".service.name");
+		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
+		if(StringUtil.isEmpty(clusterName)){
+			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+		}
 		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
