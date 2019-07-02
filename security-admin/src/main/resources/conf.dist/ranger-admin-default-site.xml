@@ -568,7 +568,7 @@
        </property>
        <property>
                <name>ranger.password.encryption.algorithm</name>
-               <value>PBEWithMD5AndDES</value>
+               <value>PBEWithHmacSHA512AndAES_128</value>
        </property>
 	   <property>
 			<name>ranger.default.browser-useragents</name>

@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +44,8 @@ import org.apache.ranger.plugin.util.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Joiner;
 
 @Service
 @Scope("singleton")
@@ -290,42 +291,41 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		return xTrxLog;
 	}
 
-	public Map<String, String> getConfigsWithDecryptedPassword(RangerService service) throws IOException {
+	public Map<String, String> getConfigsWithDecryptedPassword(RangerService service) throws Exception  {
 		Map<String, String> configs = service.getConfigs();
 		
 		String pwd = configs.get(ServiceDBStore.CONFIG_KEY_PASSWORD);
 		if(!stringUtil.isEmpty(pwd) && ServiceDBStore.HIDDEN_PASSWORD_STR.equalsIgnoreCase(pwd)) {
 			XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(),
 					ServiceDBStore.CONFIG_KEY_PASSWORD);
-                        if (pwdConfig != null) {
+
+			if (pwdConfig != null) {
 				String encryptedPwd = pwdConfig.getConfigvalue();
-                                String decryptedPwd = "";
-                                String crypt_algo_array[] = null;
-                                if (encryptedPwd.contains(",")) {
-                                        crypt_algo_array = encryptedPwd.split(",");
-                                }
-                                if (crypt_algo_array != null && crypt_algo_array.length > 1) {
-					 String cryptAlgo = null;
-					 String encryptKey = null;
-					 String salt = null;
-					 int iterationCount = 0;
-                                        cryptAlgo = crypt_algo_array[0];
-                                        encryptKey = crypt_algo_array[1];
-                                        salt = crypt_algo_array[2];
-                                        iterationCount = Integer.parseInt(crypt_algo_array[3]);
-
-                                        String paddingString = cryptAlgo + "," +  encryptKey + "," + salt + "," + iterationCount;
-                                        decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-
-                                        if (StringUtils.equalsIgnoreCase(paddingString + "," + PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd), encryptedPwd)) {
-                                                configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
-                                        }
-                                } else {
-                                        encryptedPwd = pwdConfig.getConfigvalue();
-                                        decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-                                        if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-                                                configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
-                                        }
+				if (encryptedPwd.contains(",")) {
+					PasswordUtils util = PasswordUtils.build(encryptedPwd);
+					String freeTextPasswordMetaData = Joiner.on(",").skipNulls().join(util.getCryptAlgo(),
+							new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(),
+							PasswordUtils.needsIv(util.getCryptAlgo()) ? util.getIvAsString() : null);
+					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+					if (StringUtils
+							.equalsIgnoreCase(
+									freeTextPasswordMetaData + ","
+											+ PasswordUtils
+													.encryptPassword(freeTextPasswordMetaData + "," + decryptedPwd),
+									encryptedPwd)) {
+						configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
+																						// getConfigsWithDecryptedPassword,
+																						// then why do we store the
+																						// encryptedPwd?
+					}
+				} else {
+					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+					if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
+						configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
+																						// getConfigsWithDecryptedPassword,
+																						// then why do we store the
+																						// encryptedPwd?
+					}
 				}
 			}
 		}

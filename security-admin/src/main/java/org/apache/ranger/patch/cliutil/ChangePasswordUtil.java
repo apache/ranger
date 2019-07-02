@@ -189,7 +189,6 @@ public class ChangePasswordUtil extends BaseLoader {
 					currentEncryptedPassword = userMgr.encrypt(userLoginIdTemp, currentPasswordTemp);
 					if (currentEncryptedPassword.equals(dbPassword)) {
 						validatePassword(newPasswordTemp);
-						logger.info("User:" + userLoginIdTemp + "|Password:"+newPasswordTemp);
 						userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
 						logger.info("User '" + userLoginIdTemp + "' Password updated sucessfully.");
 					} else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {

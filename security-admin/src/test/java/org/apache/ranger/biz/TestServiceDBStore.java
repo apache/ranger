@@ -2215,6 +2215,89 @@ public class TestServiceDBStore {
 		Mockito.verify(daoManager).getXXPolicy();
 	}
 
+	@Test
+	public void test41updateServiceCryptAlgo() throws Exception {
+		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+		XXService xService = Mockito.mock(XXService.class);
+		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
+				.mock(XXServiceConfigMapDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
+				.mock(XXServiceConfigDefDao.class);
+		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+
+		RangerService rangerService = rangerService();
+		rangerService.getConfigs().put(ServiceDBStore.CONFIG_KEY_PASSWORD, "*****");
+
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+
+		List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
+		XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
+		serviceConfigDefObj.setId(Id);
+		xServiceConfigDefList.add(serviceConfigDefObj);
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
+				xServiceConfigDefDao);
+
+		Mockito.when(svcService.update(rangerService))
+				.thenReturn(rangerService);
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+
+		// the old pass
+		List<XXServiceConfigMap> xConfMapList = new ArrayList<XXServiceConfigMap>();
+		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+		xConfMap.setAddedByUserId(null);
+		xConfMap.setConfigkey(ServiceDBStore.CONFIG_KEY_PASSWORD);
+		//old outdated
+		xConfMap.setConfigvalue("PBEWithSHA1AndDESede,ENCRYPT_KEY,SALTSALT,4,lXintlvY73rdk3jXvD7CqB5mcSKl0AMhouBbI5m3whrhLdbKddnzxA==");
+		xConfMap.setCreateTime(new Date());
+		xConfMap.setServiceId(null);
+		xConfMap.setUpdatedByUserId(null);
+		xConfMap.setUpdateTime(new Date());
+		xConfMapList.add(xConfMap);
+
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(
+			xServiceConfigMapDao);
+	Mockito.when(xServiceConfigMapDao.findByServiceId(Id)).thenReturn(
+			xConfMapList);
+	Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(
+			xServiceConfigMapDao);
+	Mockito.when(xServiceConfigMapDao.remove(xConfMap)).thenReturn(true);
+
+	Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(
+			xServiceConfigMapDao);
+	Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+
+	Mockito.when(
+			rangerAuditFields.populateAuditFields(
+					Mockito.isA(XXServiceConfigMap.class),
+					Mockito.isA(XXService.class))).thenReturn(xConfMap);
+
+	Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
+			rangerService);
+
+	XXServiceResourceDao xServiceResourceDao = Mockito.mock(XXServiceResourceDao.class);
+	Mockito.when(daoManager.getXXServiceResource()).thenReturn(xServiceResourceDao);
+	Mockito.when(xServiceResourceDao.countTaggedResourcesInServiceId(xService.getId())).thenReturn(0L);
+	Map<String, Object> options = null;
+	RangerService dbRangerService = serviceDBStore
+			.updateService(rangerService, options);
+
+	Assert.assertNotNull(dbRangerService);
+	Assert.assertEquals(dbRangerService, rangerService);
+	Assert.assertEquals(dbRangerService.getId(), rangerService.getId());
+	Assert.assertEquals(dbRangerService.getName(), rangerService.getName());
+	Assert.assertEquals(dbRangerService.getCreatedBy(),
+			rangerService.getCreatedBy());
+	Assert.assertEquals(dbRangerService.getDescription(),
+			rangerService.getDescription());
+	Assert.assertEquals(dbRangerService.getType(), rangerService.getType());
+	Assert.assertEquals(dbRangerService.getVersion(),
+			rangerService.getVersion());
+	Mockito.verify(daoManager).getXXUser();
+}
     @Test
     public void test41getMetricByTypeusergroup() throws Exception{
     	VXGroupList vxGroupList = new VXGroupList();

@@ -175,6 +175,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -1451,12 +1452,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
-                                String cryptConfigString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT + "," + configValue;
-                                String encryptedPwd = PasswordUtils.encryptPassword(cryptConfigString);
-                                encryptedPwd = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT + "," + encryptedPwd;
-				String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+				Joiner joiner = Joiner.on(",").skipNulls();
+				String iv = PasswordUtils.generateIvIfNeeded(CRYPT_ALGO);
+
+				String cryptConfigString = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, configValue);
+				String encryptedPwd = PasswordUtils.encryptPassword(cryptConfigString);
+
+				String paddedEncryptedPwd = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv,
+						encryptedPwd);
+				String decryptedPwd = PasswordUtils.decryptPassword(paddedEncryptedPwd);
 				if (StringUtils.equals(decryptedPwd, configValue)) {
-					configValue = encryptedPwd;
+					configValue = paddedEncryptedPwd;
 				}
 			}
 
@@ -1633,42 +1639,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
 				if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
-                                        String[] crypt_algo_array = null;
-                                        if (configValue.contains(",")) {
-                                                crypt_algo_array = configValue.split(",");
-                                        }
-                                        if (oldPassword != null && oldPassword.contains(",")) {
-						String encryptKey = null;
-						String salt = null;
-						int iterationCount = 0;
-
-                                                crypt_algo_array = oldPassword.split(",");
-                                                String OLD_CRYPT_ALGO = crypt_algo_array[0];
-                                                encryptKey = crypt_algo_array[1];
-                                                salt = crypt_algo_array[2];
-                                                iterationCount = Integer.parseInt(crypt_algo_array[3]);
-
-                                                if (!OLD_CRYPT_ALGO.equalsIgnoreCase(CRYPT_ALGO)) {
-                                                        String decryptedPwd = PasswordUtils.decryptPassword(oldPassword);
-                                                        String paddingString = CRYPT_ALGO + "," +  encryptKey + "," + salt + "," + iterationCount;
-                                                        String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
-                                                        String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
-                                                        if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
-                                                                configValue = paddingString + "," + encryptedPwd;
-                                                        }
-                                                } else {
-                                                        configValue = oldPassword;
-                                                }
-                                        } else {
-                                                configValue = oldPassword;
-                                        }
+					if (oldPassword != null && oldPassword.contains(",")) {
+						PasswordUtils util = PasswordUtils.build(oldPassword);
+						if (!util.getCryptAlgo().equalsIgnoreCase(CRYPT_ALGO)) {
+							String decryptedPwd = PasswordUtils.decryptPassword(oldPassword);
+							String paddingString = Joiner.on(",").skipNulls().join(CRYPT_ALGO,
+									new String(util.getEncryptKey()), new String(util.getSalt()),
+									util.getIterationCount(), PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
+							String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
+							String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+							if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
+								configValue = paddingString + "," + encryptedPwd;
+							}
+						} else {
+							configValue = oldPassword;
+						}
+					} else {
+												configValue = oldPassword;
+											}
 				} else {
-                                        String paddingString = CRYPT_ALGO + "," +  ENCRYPT_KEY + "," + SALT + "," + ITERATION_COUNT;
-                                        String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," +configValue);
-                                        String decryptedPwd = PasswordUtils.decryptPassword(paddingString + "," +encryptedPwd);
-
+					String paddingString = Joiner.on(",").skipNulls().join(CRYPT_ALGO, ENCRYPT_KEY, SALT,
+							ITERATION_COUNT, PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
+					String encryptedPwd = PasswordUtils.encryptPassword(paddingString + "," + configValue);
+					String decryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
 					if (StringUtils.equals(decryptedPwd, configValue)) {
-                                                configValue = paddingString + "," + encryptedPwd;
+						configValue = paddingString + "," + encryptedPwd;
 					}
 				}
 			}
