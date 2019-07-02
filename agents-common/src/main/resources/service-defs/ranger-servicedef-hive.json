@@ -93,7 +93,7 @@
 			"lookupSupported": false,
 			"recursiveSupported": true,
 			"excludesSupported": false,
-			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher",
 			"matcherOptions": { "wildCard":true, "ignoreCase":false },
 			"validationRegEx":"",
 			"validationMessage": "",
