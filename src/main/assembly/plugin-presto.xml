@@ -80,6 +80,7 @@
                             <include>commons-cli:commons-cli</include>
                             <include>commons-collections:commons-collections</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                            <include>commons-codec:commons-codec</include>
                             <include>commons-io:commons-io:jar:${commons.io.version}</include>
                             <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                             <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -98,6 +99,9 @@
                             <include>org.codehaus.jackson:jackson-mapper-asl</include>
                             <include>org.codehaus.jackson:jackson-xc</include>
                             <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+                            <include>net.java.dev.jna:jna</include>
+                            <include>net.java.dev.jna:jna-platform</include>
+                            <include>com.kstruct:gethostname4j</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -120,6 +124,7 @@
                         <includes>
                             <include>commons-cli:commons-cli</include>
                             <include>commons-collections:commons-collections</include>
+                            <include>com.google.guava:guava:jar:${presto.guava.version}</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                             <include>commons-io:commons-io:jar:${commons.io.version}</include>
                             <include>commons-lang:commons-lang</include>
