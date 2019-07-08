@@ -213,7 +213,7 @@ elif [ "${HCOMPONENT_NAME}" = "kylin" ]; then
 elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugins
 elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
-    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugins/ranger
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
     if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
@@ -798,9 +798,14 @@ then
 		bf=${dn}/.${bn}.${dt}
 		echo "backup of ${fn} to ${bf} ..."
 		cp ${fn} ${bf}
-		echo "Add or Update properties file: [${fn}] ... "
-		addOrUpdatePropertyToFile access-control.name $controlName ${fn}
+	else
+	    fn=${HCOMPONENT_CONF_DIR}/access-control.properties
 	fi
+	echo "Add or Update properties file: [${fn}] ... "
+	addOrUpdatePropertyToFile access-control.name $controlName ${fn}
+	echo "Linking config files"
+	cd ${HCOMPONENT_LIB_DIR}/ranger-presto-plugin-impl/
+	ln -sf ${HCOMPONENT_CONF_DIR} conf
 fi
 
 
