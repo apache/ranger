@@ -102,8 +102,8 @@
     },
     {
       "itemId": 2,
-      "name": "update",
-      "label": "Update"
+      "name": "insert",
+      "label": "Insert"
     },
     {
       "itemId": 3,
@@ -136,7 +136,7 @@
       "label": "All",
       "impliedGrants": [
         "select",
-        "update",
+        "insert",
         "create",
         "drop",
         "use",
