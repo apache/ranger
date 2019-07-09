@@ -109,12 +109,20 @@
             	2. Download the PGP signature for, apache-ranger-%version-number%.tar.gz which usaully named as apache-ranger-%version-number%.tar.gz.asc (from URL provided in the release email)
 			</p>
 			<p>
-            	3. Execute the following command to verify the release
+            	3. Get the keys used to sign the releases for verification. https://dist.apache.org/repos/dist/release/ranger/KEYS
+        <source> 
+           $ gpg --import KEYS
+           $ gpg --fingerprint <key-id> 
+        </source>
+			</p>
+        
+			<p>
+            	4. Execute the following command to verify the release
         <source> $ gpg --verify apache-ranger-%version-number%.tar.gz.asc apache-ranger-%version-number%.tar.gz </source>
         
 			</p>
         <p>
-            4. Download MD5/SHA hash for apache-ranger-%version-number%.tar.gz which usaully named as apache-ranger-%version-number%.tar.gz.mds (from URL provided in the release email)
+            5. Download MD5/SHA hash for apache-ranger-%version-number%.tar.gz which usaully named as apache-ranger-%version-number%.tar.gz.mds (from URL provided in the release email)
             <source>$ gpg --print-mds apache-ranger-%version-number%.tar.gz </source>
             Compare MD5, SHA hash generated from the above command and the signature available in the apache-ranger-%version-number%.tar.gz.mds.
         </p>
