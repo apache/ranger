@@ -157,6 +157,7 @@ public class ServiceREST {
 	final static public String PARAM_SERVICE_NAME     = "serviceName";
 	final static public String PARAM_SERVICE_TYPE     = "serviceType";
 	final static public String PARAM_POLICY_NAME      = "policyName";
+	final static public String PARAM_ZONE_NAME        = "zoneName";
 	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
 	final static public String PARAM_IGNORE_POLICY_NAME = "ignorePolicyName";
 	public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
@@ -1565,41 +1566,50 @@ public class ServiceREST {
 			}
 
 			if(request != null) {
-				String serviceName    = request.getParameter(PARAM_SERVICE_NAME);
-				String policyName     = request.getParameter(PARAM_POLICY_NAME);
 				String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
-
-				if (serviceName == null && policyName == null && updateIfExists != null
-						&& updateIfExists.equalsIgnoreCase("true")) {
-					serviceName = (String) request.getAttribute(PARAM_SERVICE_NAME);
-					policyName = (String) request.getAttribute(PARAM_POLICY_NAME);
-				}
-
-				if(StringUtils.isNotEmpty(serviceName)) {
-					policy.setService(serviceName);
-				}
-
-				if(StringUtils.isNotEmpty(policyName)) {
-					policy.setName(StringUtils.trim(policyName));
-				}
-
-				if (updateIfExists != null && Boolean.valueOf(updateIfExists)) {
+				if(updateIfExists != null && updateIfExists.equalsIgnoreCase("true")) {
 					RangerPolicy existingPolicy = null;
+					if(StringUtils.isNotEmpty(policy.getGuid())) {
+						existingPolicy = getPolicyByGuid(policy.getGuid());
+					}
+					if (existingPolicy == null) {
+						String serviceName = request.getParameter(PARAM_SERVICE_NAME);
+						if (serviceName == null) {
+							serviceName = (String) request.getAttribute(PARAM_SERVICE_NAME);
+						}
+						if(StringUtils.isNotEmpty(serviceName)) {
+							policy.setService(serviceName);
+						}
+						String policyName = request.getParameter(PARAM_POLICY_NAME);
+						if (policyName == null) {
+							policyName = (String) request.getAttribute(PARAM_POLICY_NAME);
+						}
+						if(StringUtils.isNotEmpty(policyName)) {
+							policy.setName(StringUtils.trim(policyName));
+						}
+						if (StringUtils.isNotEmpty(serviceName) && StringUtils.isNotEmpty(policyName)) {
+							String zoneName = request.getParameter(PARAM_ZONE_NAME);
+							if(StringUtils.isBlank(zoneName)) {
+								zoneName = (String) request.getAttribute(PARAM_ZONE_NAME);
+							}
+							if (StringUtils.isNotBlank(zoneName)) {
+								policy.setZoneName(StringUtils.trim(zoneName));
+							}
+							if (StringUtils.isNotBlank(zoneName)) {
+								existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
+							} else {
+								existingPolicy = getPolicyByName(policy.getService(), policy.getName());
+							}
+						}
+					}
 					try {
-						if(StringUtils.isNotEmpty(policy.getGuid())) {
-							existingPolicy = getPolicyByGuid(policy.getGuid());
-						}
-
-						if(existingPolicy == null && StringUtils.isNotEmpty(serviceName) && StringUtils.isNotEmpty(policyName)) {
-							existingPolicy = getPolicyByName(policy.getService(), policy.getName());
-						}
-
 						if (existingPolicy != null) {
 							policy.setId(existingPolicy.getId());
 							ret = updatePolicy(policy);
 						}
-					} catch(Exception excp) {
-						LOG.info("ServiceREST.createPolicy(): Failed to find/update exising policy, will attempt to create the policy", excp);
+					} catch (Exception excp){
+						LOG.error("updatePolicy(" + policy + ") failed", excp);
+						throw restErrorUtil.createRESTException(excp.getMessage());
 					}
 				}
 			}
@@ -2310,6 +2320,7 @@ public class ServiceREST {
 									if (updateIfExists != null && !updateIfExists.isEmpty()){
 										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+										request.setAttribute(PARAM_ZONE_NAME, policy.getZoneName());
 										if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
 											String user = request.getRemoteUser();
 											RangerPolicy existingPolicy;
@@ -2345,6 +2356,7 @@ public class ServiceREST {
 						if (updateIfExists != null && !updateIfExists.isEmpty()){
 							request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 							request.setAttribute(PARAM_POLICY_NAME, policy.getName());
+							request.setAttribute(PARAM_ZONE_NAME, policy.getZoneName());
 							if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
 								String user = request.getRemoteUser();
 								RangerPolicy existingPolicy;
@@ -3377,6 +3389,28 @@ public class ServiceREST {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")" + ret);
+		}
+		return ret;
+	}
+
+	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
+		RangerPolicy ret = null;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
+		}
+
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
+		filter.setParam(SearchFilter.ZONE_NAME, zoneName);
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		if (CollectionUtils.isNotEmpty(policies) && policies.size()==1) {
+			ret = policies.get(0);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
 		}
 		return ret;
 	}
