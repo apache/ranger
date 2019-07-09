@@ -113,6 +113,39 @@ public abstract class BaseDao<T> {
 		return true;
 	}
 
+	public void flush() {
+		em.flush();
+	}
+
+	public T create(T obj, boolean flush) {
+		T ret = null;
+		em.persist(obj);
+		if(flush) {
+			em.flush();
+		}
+		ret = obj;
+		return ret;
+	}
+
+	public T update(T obj, boolean flush) {
+		em.merge(obj);
+		if(flush) {
+			em.flush();
+		}
+		return obj;
+	}
+
+	public boolean remove(T obj, boolean flush) {
+		if (obj == null) {
+			return true;
+		}
+		em.remove(obj);
+		if(flush) {
+			em.flush();
+		}
+		return true;
+	}
+
 	public T getById(Long id) {
 		if (id == null) {
 			return null;
@@ -248,25 +281,6 @@ public abstract class BaseDao<T> {
 		}else{
 			logger.warn("Required annotation `Table` not found");
 		}
-	}
-
-	public boolean deletePolicyIDReference(String paramName,long oldID) {
-		Table table = tClass.getAnnotation(Table.class);
-		if(table != null) {
-			String tableName = table.name();
-			String query = "delete from " + tableName + " where " +paramName+"=" + oldID;
-			if (logger.isDebugEnabled()) {
-				logger.debug("Delete Query:" + query);
-			}
-			int count=getEntityManager().createNativeQuery(query).executeUpdate();
-			getEntityManager().flush();
-			if(count>0){
-				return true;
-			}
-		}else{
-			logger.warn("Required annotation `Table` not found");
-		}
-		return false;
 	}
 
 	public String getDBVersion(){

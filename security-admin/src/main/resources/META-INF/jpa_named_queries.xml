@@ -278,6 +278,10 @@
 		<query>select obj from XXPolicy obj where obj.service = :serviceId order by obj.id</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findPolicyIdsByServiceId">
+		<query>select obj.id from XXPolicy obj where obj.service = :serviceId</query>
+	</named-query>
+
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
 		<query>select MAX(obj.id) from XXPolicy obj</query>
 	</named-query>
@@ -297,8 +301,8 @@
 		<query>select obj from XXPolicy obj, XXService svc where 
 		obj.service = svc.id and svc.type = :serviceDefId</query>
 	</named-query>
-	<named-query name="XXPolicy.findByServiceNameAndZoneId">
-		<query>select obj from XXPolicy obj, XXService svc where obj.zoneId = :zoneId and obj.service = svc.id and svc.name = :serviceName</query>
+	<named-query name="XXPolicy.findPolicyIdsByServiceNameAndZoneId">
+		<query>select obj.id from XXPolicy obj, XXService svc where obj.zoneId = :zoneId and obj.service = svc.id and svc.name = :serviceName</query>
 	</named-query>
 	<named-query name="XXPolicy.findByRoleId">
 		<query>select obj from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id order by obj.service</query>

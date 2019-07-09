@@ -26,7 +26,6 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
-import org.apache.solr.common.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -89,6 +88,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		} catch (NoResultException e) {
 			return new ArrayList<XXPolicy>();
 		}
+	}
+
+	public List<Long> findPolicyIdsByServiceId(Long serviceId) {
+		List<Long> ret = new ArrayList<Long>();
+		try {
+			ret = getEntityManager()
+					.createNamedQuery("XXPolicy.findPolicyIdsByServiceId", Long.class)
+					.setParameter("serviceId", serviceId).getResultList();
+		} catch (Exception e) {
+		}
+		return ret;
 	}
 
 	public Long getMaxIdOfXXPolicy() {
@@ -174,20 +184,19 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 	}
 
-	public List<XXPolicy> findByServiceNameAndZoneId(String serviceName, Long zoneId) {
-		if(StringUtils.isEmpty(serviceName) || zoneId == null) {
-			return new ArrayList<XXPolicy>();
-		}
+	public List<Long> findPolicyIdsByServiceNameAndZoneId(String serviceName, Long zoneId) {
+		List<Long> ret = new ArrayList<Long>();
 		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicy.findByServiceNameAndZoneId", tClass)
+			ret = getEntityManager()
+					.createNamedQuery("XXPolicy.findPolicyIdsByServiceNameAndZoneId", Long.class)
 					.setParameter("serviceName", serviceName)
 					.setParameter("zoneId", zoneId)
 					.getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicy>();
+		} catch (Exception e) {
 		}
+		return ret;
 	}
+
 	public List<XXPolicy> findByRoleId(Long roleId) {
 		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
 		if (roleId != null) {

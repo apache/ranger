@@ -1673,6 +1673,7 @@ public class TestServiceREST {
 		RangerPolicyValidator policyValidator = Mockito.mock(RangerPolicyValidator.class) ;
 		Map<String, RangerPolicy> policiesMap = new LinkedHashMap<String, RangerPolicy>();
 		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService service = rangerService();
 		XXService xService = xService();
 		policiesMap.put("Name", rangerPolicy);
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
@@ -1725,6 +1726,7 @@ public class TestServiceREST {
 		Mockito.when(xSecZoneRefServiceDao.findByServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneServiceList);
 		Mockito.when(daoManager.getXXSecurityZoneRefTagService()).thenReturn(xSecZoneRefTagServiceDao);
 		Mockito.when(xSecZoneRefTagServiceDao.findByTagServiceNameAndZoneId(Mockito.anyString(),Mockito.anyLong())).thenReturn(zoneTagServiceList);
+		Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(service);
 		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride , "unzoneToZone");
 
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);

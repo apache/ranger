@@ -284,6 +284,30 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return result;
 	}
 
+	public boolean delete(V vObj, boolean flush) {
+		boolean result = false;
+		Long id = vObj.getId();
+		T resource = preDelete(id);
+		if (resource == null) {
+			throw restErrorUtil.createRESTException(
+					tEntityClass.getSimpleName() + " not found",
+					MessageEnums.DATA_NOT_FOUND, id, null,
+					tEntityClass.getSimpleName() + ":" + id);
+		}
+		try {
+			result = getDao().remove(resource, flush);
+		} catch (Exception e) {
+			LOG.error("Error deleting " + tEntityClass.getSimpleName()
+					+ ". Id=" + id, e);
+
+			throw restErrorUtil.createRESTException(
+					tEntityClass.getSimpleName() + " can't be deleted",
+					MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id
+							+ ", error=" + e.getMessage());
+		}
+		return result;
+	}
+
 	protected T preDelete(Long id) {
 		T resource = getDao().getById(id);
 		if (resource == null) {

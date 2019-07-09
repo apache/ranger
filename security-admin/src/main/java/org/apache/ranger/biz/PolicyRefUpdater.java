@@ -73,7 +73,7 @@ public class PolicyRefUpdater {
 			return;
 		}
 
-		cleanupRefTables(policy);
+		cleanupRefTables(policy, true);
 
 		final Set<String> resourceNames   = policy.getResources().keySet();
 		final Set<String> roleNames       = new HashSet<>();
@@ -245,7 +245,7 @@ public class PolicyRefUpdater {
 		}
 	}
 
-	public Boolean cleanupRefTables(RangerPolicy policy) {
+	public Boolean cleanupRefTables(RangerPolicy policy, boolean flush) {
 		final Long policyId = policy == null ? null : policy.getId();
 
 		if (policyId == null) {
@@ -261,31 +261,31 @@ public class PolicyRefUpdater {
 		XXPolicyRefDataMaskTypeDao xPolDataMaskDao = daoMgr.getXXPolicyRefDataMaskType();
 
 		for (XXPolicyRefResource resource : xPolResDao.findByPolicyId(policyId)) {
-			xPolResDao.remove(resource);
+			xPolResDao.remove(resource, flush);
 		}
 
 		for(XXPolicyRefRole role : xPolRoleDao.findByPolicyId(policyId)) {
-			xPolRoleDao.remove(role);
+			xPolRoleDao.remove(role, flush);
 		}
 
 		for(XXPolicyRefGroup group : xPolGroupDao.findByPolicyId(policyId)) {
-			xPolGroupDao.remove(group);
+			xPolGroupDao.remove(group, flush);
 		}
 
 		for(XXPolicyRefUser user : xPolUserDao.findByPolicyId(policyId)) {
-			xPolUserDao.remove(user);
+			xPolUserDao.remove(user, flush);
 		}
 
 		for(XXPolicyRefAccessType access : xPolAccessDao.findByPolicyId(policyId)) {
-			xPolAccessDao.remove(access);
+			xPolAccessDao.remove(access, flush);
 		}
 
 		for(XXPolicyRefCondition condVal : xPolCondDao.findByPolicyId(policyId)) {
-			xPolCondDao.remove(condVal);
+			xPolCondDao.remove(condVal, flush);
 		}
 
 		for(XXPolicyRefDataMaskType dataMask : xPolDataMaskDao.findByPolicyId(policyId)) {
-			xPolDataMaskDao.remove(dataMask);
+			xPolDataMaskDao.remove(dataMask, flush);
 		}
 
 		return true;

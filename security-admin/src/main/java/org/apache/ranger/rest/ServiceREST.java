@@ -2616,7 +2616,7 @@ public class ServiceREST {
 		return policyLists;
 	}
 	
-	private void deletePoliciesProvidedInServiceMap(List<String> sourceServices, List<String> destinationServices, String zoneName) {
+	private void deletePoliciesProvidedInServiceMap(List<String> sourceServices, List<String> destinationServices, String zoneName) throws Exception {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
@@ -2625,27 +2625,25 @@ public class ServiceREST {
 				if (!destinationServices.get(i).isEmpty() ) {
 					SearchFilter filter = new SearchFilter();
 					filter.setParam("zoneName",zoneName);
+					RangerService service=getServiceByName(destinationServices.get(i));
 					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i),filter);
 					if (servicePolicies != null) {
 						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
 							for (RangerPolicy rangerPolicy : rangerPolicyList) {
 								if (rangerPolicy != null) {
-									try {
-										validator.validate(rangerPolicy.getId(), Action.DELETE);
-										ensureAdminAccess(rangerPolicy);
-                                                                                bizUtil.blockAuditorRoleUser();
-										svcStore.deletePolicy(rangerPolicy.getId());
-										totalDeletedPilicies = totalDeletedPilicies + 1;
-										if (LOG.isDebugEnabled()) {
-											LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully." );
-											LOG.debug("TotalDeletedPilicies: " +totalDeletedPilicies);
-										}
-									} catch(Throwable excp) {
-										LOG.error("deletePolicy(" + rangerPolicy.getId() + ") failed", excp);
+									validator.validate(rangerPolicy.getId(), Action.DELETE);
+									ensureAdminAccess(rangerPolicy);
+									bizUtil.blockAuditorRoleUser();
+									svcStore.deletePolicy(rangerPolicy, service);
+									totalDeletedPilicies = totalDeletedPilicies + 1;
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully." );
+										LOG.debug("TotalDeletedPilicies: " +totalDeletedPilicies);
 									}
 								}
 							}
+							svcStore.createTrxLogsAndHistoryAfterDelete(rangerPolicyList,service);
 						}
 					}
 				}
@@ -2656,7 +2654,7 @@ public class ServiceREST {
 		}
 	}
 
-	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies, String zoneName) {
+	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies, String zoneName)  throws Exception {
 		int totalDeletedPilicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
@@ -2674,9 +2672,11 @@ public class ServiceREST {
 					SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
 					filter.setParam("zoneName", zoneName);
 					servicePolicies = getServicePolicies(destinationServices.get(i), filter);
+					RangerService service=getServiceByName(destinationServices.get(i));
 					if (servicePolicies != null) {
 						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
 						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
+							List<RangerPolicy> policiesToBeDeleted = new ArrayList<RangerPolicy>();
 							for (RangerPolicy rangerPolicy : rangerPolicyList) {
 								if (rangerPolicy != null) {
 									Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap=rangerPolicy.getResources();
@@ -2695,14 +2695,20 @@ public class ServiceREST {
 									}
 									if (rangerPolicy.getId() != null) {
 										if (!exportedPolicyNames.contains(rangerPolicy.getName())) {
-											deletePolicy(rangerPolicy.getId());
-											if (LOG.isDebugEnabled()) {
-												LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
-											}
-											totalDeletedPilicies = totalDeletedPilicies + 1;
+											policiesToBeDeleted.add(rangerPolicy);
 										}
 									}
 								}
+							}
+							if (CollectionUtils.isNotEmpty(policiesToBeDeleted)) {
+								for (RangerPolicy rangerPolicy : policiesToBeDeleted) {
+									svcStore.deletePolicy(rangerPolicy, service);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
+									}
+									totalDeletedPilicies = totalDeletedPilicies + 1;
+								}
+								svcStore.createTrxLogsAndHistoryAfterDelete(policiesToBeDeleted, service);
 							}
 						}
 					}

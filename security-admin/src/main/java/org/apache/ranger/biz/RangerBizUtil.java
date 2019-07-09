@@ -1148,6 +1148,46 @@ public class RangerBizUtil {
 		}
 	}
 
+	public void createTrxLog(List<XXTrxLog> trxLogList, boolean flush) {
+		if (trxLogList == null) {
+			return;
+		}
+
+		UserSessionBase usb = ContextUtil.getCurrentUserSession();
+		Long authSessionId = null;
+		if (usb != null) {
+			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
+		}
+		if(guidUtil != null){
+		Long trxId = guidUtil.genLong();
+		for (XXTrxLog xTrxLog : trxLogList) {
+			if (xTrxLog != null) {
+				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
+					if (xTrxLog.getPreviousValue() != null
+							&& !xTrxLog.getPreviousValue().trim().isEmpty()
+							&& !"null".equalsIgnoreCase(xTrxLog
+									.getPreviousValue().trim())) {
+						xTrxLog.setPreviousValue(AppConstants.Masked_String);
+					}
+					if (xTrxLog.getNewValue() != null
+							&& !xTrxLog.getNewValue().trim().isEmpty()
+							&& !"null".equalsIgnoreCase(xTrxLog.getNewValue()
+									.trim())) {
+						xTrxLog.setNewValue(AppConstants.Masked_String);
+					}
+				}
+				xTrxLog.setTransactionId(trxId.toString());
+				if (authSessionId != null) {
+					xTrxLog.setSessionId("" + authSessionId);
+				}
+				xTrxLog.setSessionType("Spring Authenticated Session");
+				xTrxLog.setRequestId(trxId.toString());
+				daoManager.getXXTrxLog().create(xTrxLog, flush);
+			}
+		}
+		}
+	}
+
 	public static int getDBFlavor() {
 		String[] propertyNames = { "xa.db.flavor",
 									"ranger.jpa.jdbc.dialect",
