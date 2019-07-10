@@ -90,11 +90,13 @@ public class SolrCollectionBootstrapper extends Thread {
 	private static final String RANGER_SERVICE_HOSTNAME = "ranger.service.host";
 	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
 	private static final String SOLR_CONFIG_FILE = "solrconfig.xml";
+  private static final String SSL_ENABLED_PARAM = "ranger.service.https.attrib.ssl.enabled";
 	private File configSetFolder = null;
 
 	boolean solr_cloud_mode = false;
 	boolean is_completed = false;
 	boolean isKERBEROS = false;
+  private boolean isSSLEnabled = false;
 	String principal = null;
 	String hostName;
 	String keytab;
@@ -167,6 +169,8 @@ public class SolrCollectionBootstrapper extends Thread {
 		path_for_cloud_mode = Paths.get(solrFileDir, "contrib",
 				"solr_for_audit_setup", "conf");
 		configSetFolder = path_for_cloud_mode.toFile();
+                String sslEnabledProp = getConfig(SSL_ENABLED_PARAM);
+                isSSLEnabled = ("true".equalsIgnoreCase(sslEnabledProp));
 	}
 
 	public void run() {
@@ -296,7 +300,7 @@ public class SolrCollectionBootstrapper extends Thread {
                             }
                     }
                     if(zipOfConfigs == null) {
-                            throw new FileNotFoundException("Could Not Find Configs File (Ex. configName.zip) : "+ getConfigSetFolder());
+                            throw new FileNotFoundException("Could Not Find Configs Zip File : "+ getConfigSetFolder());
                     }
                     File file = new File(configSetFolder + "/" + zipOfConfigs);
                     byte[] arrByte = Files.readAllBytes(file.toPath());
@@ -306,10 +310,9 @@ public class SolrCollectionBootstrapper extends Thread {
                     String[] nodeArr = nodes.toArray(new String[0]);
                     /*getting nodes URL as 'solr_8983', so converting it to 'solr/9893'*/
                     baseUrl = nodeArr[0].replaceAll("_", "/");
-                    String uploadConfigsUrl ="http://" + baseUrl.toString() + "/admin/configs?action=UPLOAD&name=";
-                    postDataAndGetResponse(solrCloudClient,
-                                    uploadConfigsUrl  + solr_config_name,
-                                    byteBuffer);
+                    String protocol = isSSLEnabled ? "https": "http";
+                    String uploadConfigsUrl = String.format("%s://%s/admin/configs?action=UPLOAD&name=%s", protocol, baseUrl.toString(),solr_config_name);
+                    postDataAndGetResponse(solrCloudClient,uploadConfigsUrl ,byteBuffer);
 					return true;
 				}
                 else {
