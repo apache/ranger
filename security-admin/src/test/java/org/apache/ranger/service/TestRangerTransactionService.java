@@ -55,7 +55,7 @@ public class TestRangerTransactionService {
 
 	@Test
 	public void test3ExecuteAfterTransactionComplete() {
-		rangerTransactionService.executeAfterTransactionComplete(task);
+		rangerTransactionService.scheduleToExecuteInOwnTransaction(task, 1000L);
 
 	}
 }

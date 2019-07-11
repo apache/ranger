@@ -78,6 +78,7 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXSecurityZone;
@@ -225,6 +226,9 @@ public class ServiceREST {
 
 	@Autowired
 	RangerTransactionService transactionService;
+
+	@Autowired
+	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
 	
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
@@ -3941,10 +3945,18 @@ public class ServiceREST {
 					Runnable createAndLinkTagServiceTask = new Runnable() {
 						@Override
 						public void run() {
-							doCreateAndLinkTagService(context);
+							Runnable realTask = new Runnable() {
+								@Override
+								public void run() {
+									doCreateAndLinkTagService(context);
+								}
+							};
+							transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
 						}
 					};
-					transactionService.executeAfterTransactionComplete(createAndLinkTagServiceTask);
+
+					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
+
 				} else if (isAutoLinkTagService) {
 					resourceService.setTagService(tagServiceName);
 				}
@@ -3989,7 +4001,7 @@ public class ServiceREST {
 		RangerService resourceService = null;
 
 		try {
-			resourceService = getServiceByName(context.resourceServiceName);
+			resourceService = svcStore.getServiceByName(context.resourceServiceName);
 			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
 		} catch (Exception e) {
 			LOG.error("Resource-service:[" + context.resourceServiceName + "] cannot be retrieved");
@@ -4014,30 +4026,52 @@ public class ServiceREST {
 			}
 
 			if (context.isAutoLinkTagService) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Linking resource service:[" + resourceService.getName() + "] with tag service:[" + context.tagServiceName + "]");
-				}
-				try {
-					tagService = getServiceByName(context.tagServiceName);
-					LOG.info("Successfully retrieved tag-service:[" + tagService.getName() + "]");
-
-					if (!StringUtils.equals(tagService.getName(), resourceService.getTagService())) {
-						resourceService.setTagService(tagService.getName());
-
-						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + tagService.getName() + "]");
-
-						service = svcStore.updateService(resourceService, null);
-
-						LOG.info("Updated resource-service:[" + service.getName() + "]");
+				Runnable linkTagServiceTask = new Runnable() {
+					@Override
+					public void run() {
+						Runnable realTask = new Runnable() {
+							@Override
+							public void run() {
+								doLinkTagService(context);
+							}
+						};
+						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
 					}
-				} catch (Exception e) {
-					LOG.error("Failed to link service[" + context.resourceServiceName + "] with tag-service [" + context.tagServiceName + "]");
-				}
+				};
+				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(linkTagServiceTask);
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== doCreateAndLinkTagService(context=" + context + ")");
+		}
+	}
+
+	private void doLinkTagService(final TagServiceOperationContext context) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> doLinkTagService(context=" + context + ")");
+		}
+		try {
+			RangerService resourceService = svcStore.getServiceByName(context.resourceServiceName);
+			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+
+			RangerService tagService = svcStore.getServiceByName(context.tagServiceName);
+			LOG.info("Successfully retrieved tag-service:[" + tagService.getName() + "]");
+
+			if (!StringUtils.equals(tagService.getName(), resourceService.getTagService())) {
+				resourceService.setTagService(tagService.getName());
+
+				LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + tagService.getName() + "]");
+
+				RangerService service = svcStore.updateService(resourceService, null);
+
+				LOG.info("Updated resource-service:[" + service.getName() + "]");
+			}
+		} catch (Exception e) {
+			LOG.error("Failed to link service[" + context.resourceServiceName + "] with tag-service [" + context.tagServiceName + "]");
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== doLinkTagService(context=" + context + ")");
 		}
 	}
 

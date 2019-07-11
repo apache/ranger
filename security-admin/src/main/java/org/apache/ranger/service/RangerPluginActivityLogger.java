@@ -61,7 +61,8 @@ public class RangerPluginActivityLogger {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Using separate thread for committing work [pluginActivityAuditCommitInline:" + pluginActivityAuditCommitInline + "]");
             }
-            transactionService.executeAfterTransactionComplete(commitWork);
+            final long delayInMillis = 1000L;
+            transactionService.scheduleToExecuteInOwnTransaction(commitWork, delayInMillis);
         }
     }
 

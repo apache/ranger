@@ -52,6 +52,7 @@ import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
@@ -231,7 +232,10 @@ public class TestServiceREST {
 	RangerPolicyEngine policyEngine;
 
 	@Mock
-	RangerTransactionService transactionService;
+	RangerTransactionService rangerTransactionService;
+
+	@Mock
+	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

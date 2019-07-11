@@ -72,7 +72,7 @@ public class RangerTransactionService {
         }
     }
 
-    public void executeAfterTransactionComplete(final Runnable task) {
+    public void scheduleToExecuteInOwnTransaction(final Runnable task, final long delayInMillis) {
         try {
             scheduler.schedule(new Runnable() {
                 @Override
@@ -95,7 +95,7 @@ public class RangerTransactionService {
                         }
                     }
                 }
-            }, 1000L, MILLISECONDS);
+            }, delayInMillis, MILLISECONDS);
         } catch (Exception e) {
             LOG.error("Failed to schedule TransactionService transaction:", e);
             LOG.error("Ignroing...");
