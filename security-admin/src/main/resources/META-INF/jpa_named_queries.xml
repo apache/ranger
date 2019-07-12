@@ -308,6 +308,10 @@
 		<query>select obj from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id order by obj.service</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findServiceIdsByRoleId">
+		<query>select DISTINCT(obj.service) from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
@@ -1474,6 +1478,10 @@
 	<named-query name="XXRole.findByServiceId">
 		<query>select obj from XXRole obj, XXPolicyRefRole policyRefRole, XXPolicy policy where obj.id = policyRefRole.roleId and policyRefRole.policyId = policy.id and policy.service = :serviceId </query>
 	</named-query>
+
+    <named-query name="XXRole.getAllNames">
+        <query>select obj.name from XXRole obj</query>
+    </named-query>
 
 	<!-- XXRoleRef* -->
 

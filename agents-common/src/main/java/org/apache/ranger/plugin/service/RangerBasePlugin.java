@@ -19,14 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,6 +38,7 @@ import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -57,11 +51,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.plugin.util.DownloadTrigger;
-import org.apache.ranger.plugin.util.DownloaderTask;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.PolicyRefresher;
-import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.*;
 
 
 public class RangerBasePlugin {
@@ -508,25 +498,100 @@ public class RangerBasePlugin {
 		return null;
 	}
 
+	public RangerRole createRole(RangerRole request, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.createRole(" + request + ")");
+		}
+
+		RangerRole ret = getAdminClient().createRole(request);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.createRole(" + request + ")");
+		}
+		return ret;
+	}
+
+	public void dropRole(String execUser, String roleName, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.dropRole(" + roleName + ")");
+		}
+		getAdminClient().dropRole(execUser, roleName);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.dropRole(" + roleName + ")");
+		}
+	}
+
+	public List<String> getUserRoles(String execUser, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.getUserRoleNames(" + execUser + ")");
+		}
+		final List<String> ret = getAdminClient().getUserRoles(execUser);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.getUserRoleNames(" + execUser + ")");
+		}
+		return ret;
+	}
+
+	public List<String> getAllRoles(String execUser, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.getAllRoles()");
+		}
+		final List<String> ret = getAdminClient().getAllRoles(execUser);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.getAllRoles()");
+		}
+		return ret;
+	}
+
+	public RangerRole getRole(String execUser, String roleName, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.getPrincipalsForRole(" + roleName + ")");
+		}
+		final RangerRole ret = getAdminClient().getRole(execUser, roleName);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.getPrincipalsForRole(" + roleName + ")");
+		}
+		return ret;
+	}
+
+	public void grantRole(GrantRevokeRoleRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.grantRole(" + request + ")");
+		}
+		getAdminClient().grantRole(request);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.grantRole(" + request + ")");
+		}
+	}
+
+	public void revokeRole(GrantRevokeRoleRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.revokeRole(" + request + ")");
+		}
+		getAdminClient().revokeRole(request);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.revokeRole(" + request + ")");
+		}
+	}
+
 	public void grantAccess(GrantRevokeRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.grantAccess(" + request + ")");
 		}
-
-		PolicyRefresher   refresher = this.refresher;
-		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
 		boolean           isSuccess = false;
 
 		try {
-			if(admin == null) {
-				throw new Exception("ranger-admin client is null");
-			}
-
 			if (policyEngine != null) {
 				request.setZoneName(policyEngine.getMatchedZoneName(request));
 			}
 
-			admin.grantAccess(request);
+			getAdminClient().grantAccess(request);
 
 			isSuccess = true;
 		} finally {
@@ -542,21 +607,14 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.revokeAccess(" + request + ")");
 		}
-
-		PolicyRefresher   refresher = this.refresher;
-		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
 		boolean           isSuccess = false;
 
 		try {
-			if(admin == null) {
-				throw new Exception("ranger-admin client is null");
-			}
-
 			if (policyEngine != null) {
 				request.setZoneName(policyEngine.getMatchedZoneName(request));
 			}
 
-			admin.revokeAccess(request);
+			getAdminClient().revokeAccess(request);
 
 			isSuccess = true;
 		} finally {
@@ -763,6 +821,16 @@ public class RangerBasePlugin {
 			}
 		}
 		return ret;
+	}
+
+	private RangerAdminClient getAdminClient() throws Exception {
+		PolicyRefresher   refresher = this.refresher;
+		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
+
+		if(admin == null) {
+			throw new Exception("ranger-admin client is null");
+		}
+		return admin;
 	}
 
 }

@@ -48,6 +48,7 @@ public class GrantRevokeRequest implements Serializable {
 	private Map<String, String> resource;
 	private Set<String>         users;
 	private Set<String>         groups;
+	private Set<String>         roles;
 	private Set<String>         accessTypes;
 	private Boolean             delegateAdmin              = Boolean.FALSE;
 	private Boolean             enableAudit                = Boolean.TRUE;
@@ -68,11 +69,19 @@ public class GrantRevokeRequest implements Serializable {
 							  Set<String> groups, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
 							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
 							  String clientType, String requestData, String sessionId, String clusterName, String zoneName) {
+		this(grantor, grantorGroups, resource, users, groups, null, accessTypes, delegateAdmin, enableAudit, replaceExistingPermissions, isRecursive, clientIPAddress, clientType, requestData, sessionId, clusterName, zoneName);
+	}
+
+	public GrantRevokeRequest(String grantor, Set<String> grantorGroups, Map<String, String> resource, Set<String> users,
+							  Set<String> groups, Set<String> roles, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
+							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
+							  String clientType, String requestData, String sessionId, String clusterName, String zoneName) {
 		setGrantor(grantor);
 		setGrantorGroups(grantorGroups);
 		setResource(resource);
 		setUsers(users);
 		setGroups(groups);
+		setRoles(roles);
 		setAccessTypes(accessTypes);
 		setDelegateAdmin(delegateAdmin);
 		setEnableAudit(enableAudit);
@@ -154,6 +163,21 @@ public class GrantRevokeRequest implements Serializable {
 	public void setGroups(Set<String> groups) {
 		this.groups = groups == null ? new HashSet<String>() : groups;
 	}
+
+	/**
+	 * @return the roles
+	 */
+	public Set<String> getRoles() {
+		return roles;
+	}
+
+	/**
+	 * @param roles the roles to set
+	 */
+	public void setRoles(Set<String> roles) {
+		this.roles = roles == null ? new HashSet<String>() : roles;
+	}
+
 
 	/**
 	 * @return the accessTypes

@@ -23,9 +23,8 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
@@ -37,7 +36,7 @@ import com.google.gson.GsonBuilder;
 /**
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them
  */
-public class RangerAdminClientImpl implements RangerAdminClient {
+public class RangerAdminClientImpl extends AbstractRangerAdminClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminClientImpl.class);
     private final static String cacheFilename = "hdfs-policies.json";
     private final static String tagFilename = "hdfs-policies-tag.json";
@@ -72,14 +71,6 @@ public class RangerAdminClientImpl implements RangerAdminClient {
         byte[] cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
-    }
-
-    public void grantAccess(GrantRevokeRequest request) throws Exception {
-
-    }
-
-    public void revokeAccess(GrantRevokeRequest request) throws Exception {
-
     }
 
     public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {

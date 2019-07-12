@@ -209,5 +209,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 		return ret;
 	}
+	public List<Long> findServiceIdsByRoleId(Long roleId) {
+		List<Long> ret = ListUtils.EMPTY_LIST;
+		if (roleId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXPolicy.findServiceIdsByRoleId", Long.class)
+						.setParameter("roleId", roleId)
+						.getResultList();
+			} catch (NoResultException excp) {
+			}
+		}
+		return ret;
+	}
 
 }

@@ -133,51 +133,6 @@ public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 	}
 
 	@Override
-	public void createRole(String roleName, HivePrincipal adminGrantor)
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.createRole()");
-
-		throwNotImplementedException("createRole");
-	}
-
-	@Override
-	public void dropRole(String roleName)
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.dropRole()");
-
-		throwNotImplementedException("dropRole");
-	}
-
-	@Override
-	public List<String> getAllRoles()
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.getAllRoles()");
-
-		throwNotImplementedException("getAllRoles");
-
-		return null;
-	}
-
-	@Override
-	public List<String> getCurrentRoleNames() throws HiveAuthzPluginException {
-		LOG.debug("RangerHiveAuthorizerBase.getCurrentRoleNames()");
-
-		throwNotImplementedException("getCurrentRoleNames");
-
-		return null;
-	}
-
-	@Override
-	public List<HiveRoleGrant> getPrincipalGrantInfoForRole(String roleName)
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.getPrincipalGrantInfoForRole()");
-
-		throwNotImplementedException("getPrincipalGrantInfoForRole");
-
-		return null;
-	}
-
-	@Override
 	public List<HiveRoleGrant> getRoleGrantInfoForPrincipal(HivePrincipal principal)
 			throws HiveAuthzPluginException, HiveAccessControlException {
 		LOG.debug("RangerHiveAuthorizerBase.getRoleGrantInfoForPrincipal()");
@@ -190,24 +145,6 @@ public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 	@Override
 	public VERSION getVersion() {
 		return VERSION.V1;
-	}
-
-	@Override
-	public void grantRole(List<HivePrincipal> hivePrincipals, List<String> roles,
-			boolean grantOption, HivePrincipal grantorPrinc)
-					throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.grantRole()");
-
-		throwNotImplementedException("grantRole");
-	}
-
-	@Override
-	public void revokeRole(List<HivePrincipal> hivePrincipals, List<String> roles,
-			boolean grantOption, HivePrincipal grantorPrinc)
-					throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.revokeRole()");
-
-		throwNotImplementedException("revokeRole");
 	}
 
 	@Override

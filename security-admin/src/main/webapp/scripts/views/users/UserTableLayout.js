@@ -647,6 +647,22 @@ define(function(require){
                                         editable : false,
                                         sortable : false
                                 },
+                                roles : {
+                                        cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                                        label : localization.tt("lbl.roles"),
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(!_.isUndefined(rawValue) && rawValue.length != 0){
+                                                                var roles = rawValue.map(function(m){return m.name});
+                                                                return XAUtil.showMoreAndLessButton(roles, model)
+                                                        }else{
+                                                                return '--';
+                                                        }
+                                                }
+                                        }),
+                                        editable : false,
+                                        sortable : false
+                                },
                         };
             if(!SessionMgr.isSystemAdmin()){
                 delete cols.select;
@@ -963,10 +979,11 @@ define(function(require){
             } else{
                 placeholder = localization.tt('h.searchForYourRole');
                 coll = this.roleList;
-                searchOpt = ['Role Name','User Name', 'Group Name'];//,'Start Date','End Date','Today'];
-                serverAttrName  = [{text : "Role Name", label :"name"},
-                                   {text : "User Name", label :"users"},
-                                   {text : "Group Name", label :"groups"},
+                searchOpt = ['Role Name','User Name', 'Group Name', /*Role ID*/];//,'Start Date','End Date','Today'];
+                serverAttrName  = [{text : "Role Name", label :"roleName"},
+                                   {text : "User Name", label :"userName"},
+                                   {text : "Group Name", label :"groupName"},
+                                   // {text : "Role ID", label : "roleId"}
                                   ];
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';

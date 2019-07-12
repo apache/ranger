@@ -1606,20 +1606,21 @@ define(function(require) {
         });
     }
 
-    XAUtils.getUsersGroupsList = function(typeUserOrGroup, $select, domElement){
+    XAUtils.getUsersGroupsList = function($select, domElement){
         var that = domElement,
             tags = [],
-            placeholder = (typeUserOrGroup) ? 'Select Group' : 'Select User',
-            searchUrl = (typeUserOrGroup) ? "service/xusers/lookup/groups" : "service/xusers/lookup/users";
-            if(that.model && !_.isEmpty(that.model.get('name'))){
-                tags.push({
-                    'id': _.escape(that.model.get('name')),
-                    'text': _.escape(that.model.get('name'))
-                });
-                domElement.ui['selectUsersOrGroups'].val(tags.map(function(val) {
-                    return val.text
-                }));
-            }
+            placeholder = $select === 'users' ? "Select User" : $select === 'groups' ? "Select Group" : "Select Role",
+            searchUrl = $select === 'users' ? "service/xusers/lookup/users" : $select === 'groups' ? "service/xusers/lookup/groups"
+                : "service/roles/roles";
+            // if(that.model && !_.isEmpty(that.model.get('name'))){
+            //     tags.push({
+            //         'id': _.escape(that.model.get('name')),
+            //         'text': _.escape(that.model.get('name'))
+            //     });
+            //     domElement.ui['selectUsersOrGroups'].val(tags.map(function(val) {
+            //         return val.text
+            //     }));
+            // }
 
         return {
             closeOnSelect : true,
@@ -1643,8 +1644,9 @@ define(function(require) {
                         selectedVals = [];
                     //Get selected values of groups/users dropdown
                     if (data.totalCount != "0") {
-                        console.log(that);
-                        if (typeUserOrGroup) {
+                        //remove users {USER} and {OWNER}
+                        if ($select == 'users' || $select == 'groups') {
+                            data.vXStrings = _.reject(data.vXStrings, function(m){return (m.value == '{USER}' || m.value == '{OWNER}')})
                             results = data.vXStrings.map(function(m) {
                                 return {
                                     id: _.escape(m.value),
@@ -1652,12 +1654,15 @@ define(function(require) {
                                 };
                             });
                         } else {
-                            //remove users {USER} and {OWNER}
-                            data.vXStrings = _.reject(data.vXStrings, function(m){return (m.value == '{USER}' || m.value == '{OWNER}')})
-                            results = data.vXStrings.map(function(m) {
+                            if(that.model && !_.isEmpty(that.model.get('name'))){
+                                data.roles = _.reject(data.roles, function(m){
+                                    return (m.name == that.model.get('name'))
+                                })
+                            }
+                            results = data.roles.map(function(m){
                                 return {
-                                    id: _.escape(m.value),
-                                    text: _.escape(m.value)
+                                    id : _.escape(m.name),
+                                    text: _.escape(m.name)
                                 };
                             });
                         }
@@ -1696,7 +1701,7 @@ define(function(require) {
                 return result.text;
             },
             formatNoMatches: function(result) {
-                return typeUserOrGroup ? 'No group found.' : 'No user found.';
+                return $select === 'users' ? "No user found." : $select === 'groups' ? "No group found." : "No role found.";
             }
 
         }

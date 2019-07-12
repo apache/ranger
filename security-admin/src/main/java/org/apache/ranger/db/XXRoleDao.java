@@ -24,6 +24,7 @@ import org.apache.ranger.entity.XXRole;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -73,6 +74,14 @@ public class XXRoleDao extends BaseDao<XXRole> {
             ret = ListUtils.EMPTY_LIST;
         }
         return ret;
+    }
+
+    public List<String> getAllNames() {
+        try {
+            return getEntityManager().createNamedQuery("XXRole.getAllNames", String.class).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<String>();
+        }
     }
 }
 

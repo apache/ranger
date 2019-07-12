@@ -18,7 +18,9 @@
 package org.apache.ranger.biz;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -30,11 +32,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXRole;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
+import org.apache.ranger.plugin.store.RolePredicateUtil;
 import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
@@ -63,6 +64,8 @@ public class RoleDBStore implements RoleStore {
     @Autowired
     RangerBizUtil bizUtil;
 
+    private Boolean populateExistingBaseFields = true;
+
     AbstractPredicateUtil predicateUtil = null;
 
     public void init() throws Exception {}
@@ -73,7 +76,8 @@ public class RoleDBStore implements RoleStore {
             LOG.debug("==> RoleDBStore.initStore()");
         }
 
-        //predicateUtil = new RolePredicateUtil();
+        roleService.setPopulateExistingBaseFields(populateExistingBaseFields);
+        predicateUtil = new RolePredicateUtil();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RoleDBStore.initStore()");
@@ -190,13 +194,21 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public List<String> getRoleNames(SearchFilter filter) throws Exception {
-        List<String> ret = new ArrayList<>();
+        return daoMgr.getXXRole().getAllNames();
+    }
 
-        List<RangerRole> roles = getRoles(filter);
-
-        if (CollectionUtils.isNotEmpty(roles)) {
-            for (RangerRole role : roles) {
-                ret.add(role.getName());
+    public Set<RangerRole> getRoleNames(String userName, Set<String> userGroups) throws Exception{
+        Set<RangerRole> ret = new HashSet<>();
+        if (StringUtils.isNotEmpty(userName)) {
+            List<XXRoleRefUser> xxRoleRefUsers = roleRefUpdater.daoMgr.getXXRoleRefUser().findByUserName(userName);
+            for (XXRoleRefUser xxRoleRefUser : xxRoleRefUsers) {
+                ret.add(getRole(xxRoleRefUser.getRoleId()));
+            }
+        }
+        for(String userGroup : userGroups) {
+            List<XXRoleRefGroup> xxRoleRefGroups = roleRefUpdater.daoMgr.getXXRoleRefGroup().findByGroupName(userGroup);
+            for (XXRoleRefGroup xxRoleRefGroup : xxRoleRefGroups) {
+                ret.add(getRole(xxRoleRefGroup.getRoleId()));
             }
         }
 

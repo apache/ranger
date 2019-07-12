@@ -20,10 +20,13 @@
 package org.apache.ranger.db;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefRole;
 import org.springframework.stereotype.Service;
@@ -71,5 +74,22 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
         } catch (NoResultException e) {
             return Collections.EMPTY_LIST;
         }
+    }
+
+    public Set<Long> getContainingRoles(Long subRoleId) {
+        Set<Long> ret;
+
+        List<XXRoleRefRole> roles = findBySubRoleId(subRoleId);
+
+        if (CollectionUtils.isNotEmpty(roles)) {
+            ret = new HashSet<>();
+            for (XXRoleRefRole role : roles) {
+                ret.add(role.getRoleId());
+            }
+        } else {
+            ret = Collections.EMPTY_SET;
+        }
+
+        return ret;
     }
 }

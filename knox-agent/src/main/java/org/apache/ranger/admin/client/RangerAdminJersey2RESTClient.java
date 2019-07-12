@@ -50,7 +50,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 
-public class RangerAdminJersey2RESTClient implements RangerAdminClient {
+public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 	// none of the members are public -- this is only for testability.  None of these is meant to be accessible
 	private static final Log LOG = LogFactory.getLog(RangerAdminJersey2RESTClient.class);

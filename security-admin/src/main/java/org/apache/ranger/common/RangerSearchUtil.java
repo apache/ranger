@@ -73,6 +73,13 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.PLUGIN_IP_ADDRESS, request.getParameter(SearchFilter.PLUGIN_IP_ADDRESS));
 		ret.setParam(SearchFilter.ZONE_NAME, request.getParameter(SearchFilter.ZONE_NAME));
 		ret.setParam(SearchFilter.TAG_SERVICE_ID, request.getParameter(SearchFilter.TAG_SERVICE_ID));
+		ret.setParam(SearchFilter.ROLE_NAME, request.getParameter(SearchFilter.ROLE_NAME));
+		ret.setParam(SearchFilter.ROLE_ID, request.getParameter(SearchFilter.ROLE_ID));
+		ret.setParam(SearchFilter.GROUP_NAME, request.getParameter(SearchFilter.GROUP_NAME));
+		ret.setParam(SearchFilter.USER_NAME, request.getParameter(SearchFilter.USER_NAME));
+		ret.setParam(SearchFilter.ROLE_NAME_PARTIAL, request.getParameter(SearchFilter.ROLE_NAME_PARTIAL));
+		ret.setParam(SearchFilter.GROUP_NAME_PARTIAL, request.getParameter(SearchFilter.GROUP_NAME_PARTIAL));
+		ret.setParam(SearchFilter.USER_NAME_PARTIAL, request.getParameter(SearchFilter.USER_NAME_PARTIAL));
 		for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
 			String name = e.getKey();
 			String[] values = e.getValue();

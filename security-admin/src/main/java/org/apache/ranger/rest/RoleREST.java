@@ -27,33 +27,35 @@ import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -93,25 +95,34 @@ public class RoleREST {
     @Autowired
     RangerBizUtil bizUtil;
 
+    @Autowired
+    XUserMgr userMgr;
+
     static {
         INVALID_USERS.add(RangerPolicyEngine.USER_CURRENT);
         INVALID_USERS.add(RangerPolicyEngine.RESOURCE_OWNER);
     }
 
+    /* This operation is allowed only when effective User has ranger admin privilege
+     * if execUser is not same as logged-in user then effective user is execUser
+     * else  effective user is logged-in user.
+     * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
+     */
+
     @POST
     @Path("/roles")
-    public RangerRole createRole(RangerRole role) {
+    public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> createRole("+ role + ")");
         }
 
         RangerRole ret;
         try {
-            ensureAdminAccess();
+            String userName = role.getCreatedByUser();
+            ensureAdminAccess(serviceName, userName);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            sanitizeRole(role);
             ret = roleStore.createRole(role);
         } catch(WebApplicationException excp) {
             throw excp;
@@ -125,6 +136,10 @@ public class RoleREST {
         }
         return ret;
     }
+
+    /* This operation is allowed only when -
+     * Logged in user has ranger admin role
+     */
 
     @PUT
     @Path("/roles/{id}")
@@ -141,8 +156,7 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
-            ensureAdminAccess();
-            sanitizeRole(role);
+            ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
@@ -160,14 +174,20 @@ public class RoleREST {
         return ret;
     }
 
+    /* This operation is allowed only when effective User has ranger admin privilege
+     * if execUser is not same as logged-in user then effective user is execUser
+     * else  effective user is logged-in user.
+     * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
+     */
+
     @DELETE
     @Path("/roles/name/{name}")
-    public void deleteRole(@PathParam("name") String roleName) {
+    public void deleteRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String execUser, @PathParam("name") String roleName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> deleteRole(name=" + roleName + ")");
+            LOG.debug("==> deleteRole(user=" + execUser + " name=" + roleName + ")");
         }
         try {
-            ensureAdminAccess();
+            ensureAdminAccess(serviceName, execUser);
             roleStore.deleteRole(roleName);
         } catch(WebApplicationException excp) {
             throw excp;
@@ -181,6 +201,10 @@ public class RoleREST {
         }
     }
 
+    /* This operation is allowed only when -
+     * Logged in user has ranger admin role
+     */
+
     @DELETE
     @Path("/roles/{id}")
     public void deleteRole(@PathParam("id") Long roleId) {
@@ -188,7 +212,7 @@ public class RoleREST {
             LOG.debug("==> deleteRole(id=" + roleId + ")");
         }
         try {
-            ensureAdminAccess();
+            ensureAdminAccess(null, null);
             roleStore.deleteRole(roleId);
         } catch(WebApplicationException excp) {
             throw excp;
@@ -202,15 +226,24 @@ public class RoleREST {
         }
     }
 
+    /*
+     * Minimum required privilege is the effective user has admin option for this role.
+     * This is used to list all the roles, groups, and users who belong to this role.
+     */
+
     @GET
     @Path("/roles/name/{name}")
-    public RangerRole getRole(@PathParam("name") String roleName) {
+    public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String execUser, @PathParam("name") String roleName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getRole(name=" + roleName + ")");
         }
         RangerRole ret;
         try {
-            ret = roleStore.getRole(roleName);
+            ret = getRoleIfAccessible(roleName, serviceName, execUser, userMgr.getGroupsForUser(execUser));
+            if (ret == null) {
+                throw restErrorUtil.createRESTException("User doesn't have permissions to get details for " + roleName);
+            }
+
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -246,6 +279,12 @@ public class RoleREST {
         return ret;
     }
 
+    /* This operation is allowed only when effective User has ranger admin privilege
+     * if execUser is not same as logged-in user then effective user is execUser
+     * else  effective user is logged-in user.
+     * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
+     */
+
     @GET
     @Path("/roles")
     public RangerRoleList getAllRoles(@Context HttpServletRequest request) {
@@ -256,6 +295,7 @@ public class RoleREST {
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
         List<RangerRole> roles;
         try {
+            ensureAdminAccess(null, null);
             roles = roleStore.getRoles(filter);
             ret.setRoleList(roles);
             if (roles != null) {
@@ -277,6 +317,37 @@ public class RoleREST {
         return ret;
     }
 
+    /* This operation is allowed only when effective User has ranger admin privilege
+     * if execUser is not same as logged-in user then effective user is execUser
+     * else  effective user is logged-in user.
+     * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
+     */
+
+    @GET
+    @Path("/roles/names")
+    public List<String> getAllRoleNames(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @Context HttpServletRequest request) {
+        final List<String> ret;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAllRoleNames()");
+        }
+        SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
+        try {
+            ensureAdminAccess(serviceName, userName);
+            ret = roleStore.getRoleNames(filter);
+
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("getAllRoleNames() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAllRoleNames():" + ret);
+        }
+        return ret;
+    }
+
     /*
         This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
      */
@@ -291,7 +362,7 @@ public class RoleREST {
 
         try {
             // Real processing
-            ensureAdminAccess();
+            ensureAdminAccess(null, null);
             if (containsInvalidUser(users)) {
                 throw new Exception("Invalid role user(s)");
             }
@@ -302,12 +373,16 @@ public class RoleREST {
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
 
             for (RangerRole.RoleMember user : role.getUsers()) {
-                if (user.getIsAdmin() == isAdmin) {
+                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
+                    user.setIsAdmin(isAdmin);
                     roleUsers.add(user);
                 }
             }
+            Set<String> existingUsernames = getUserNames(role);
             for (String user : users) {
-                roleUsers.add(new RangerRole.RoleMember(user, isAdmin));
+                if (!existingUsernames.contains(user)) {
+                    roleUsers.add(new RangerRole.RoleMember(user, isAdmin));
+                }
             }
 
             for (RangerRole.RoleMember group : role.getGroups()) {
@@ -351,7 +426,7 @@ public class RoleREST {
 
         try {
             // Real processing
-            ensureAdminAccess();
+            ensureAdminAccess(null, null);
             role = getRole(roleId);
 
             for (String user : users) {
@@ -403,7 +478,7 @@ public class RoleREST {
         RangerRole role;
         try {
             // Real processing
-            ensureAdminAccess();
+            ensureAdminAccess(null, null);
             role = getRole(roleId);
 
             for (String user : users) {
@@ -438,19 +513,246 @@ public class RoleREST {
         return role;
     }
 
-    private void sanitizeRole(RangerRole role) {
-        if (role != null) {
-            role.setRoles(null);
-            role.setRoles(null);
+    /*
+     * This API is used to GRANT role to users and roles with/without ADMIN option. It follows add-or-update semantics
+     * Minimum required privilege is the effective user has admin option for the target roles
+     */
+
+    @PUT
+    @Consumes({ "application/json", "application/xml" })
+    @Produces({ "application/json", "application/xml" })
+    @Path("/roles/grant/{serviceName}")
+    public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RoleREST.grantRole(" + serviceName + ", " + grantRoleRequest + ")");
+        }
+        RESTResponse     ret  = new RESTResponse();
+
+        try {
+            validateUsersGroupsAndRoles(grantRoleRequest);
+            String userName = grantRoleRequest.getGrantor();
+            for (String roleName : grantRoleRequest.getTargetRoles()) {
+                /* For each target Role, check following to allow access
+                 * If userName (execUser) is not same as logged in user then check
+                    * If logged-in user is not ranger admin/service admin/service user, then deny the operation
+                    * effective User is execUser
+                 * else
+                    * effective user is logged-in user
+                 * If effective user is ranger admin/has role admin privilege, then allow the operation
+                 * else deny the operation
+                 * This logic is implemented as part of getRoleIfAccessible(roleName, serviceName, userName, userGroups)
+                */
+                Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRoleRequest.getGrantorGroups()) ? grantRoleRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
+                RangerRole existingRole = getRoleIfAccessible(roleName, serviceName, userName, userGroups);
+                if (existingRole == null) {
+                    throw restErrorUtil.createRESTException("User doesn't have permissions to grant role " + roleName);
+                }
+
+                addUsersGroupsAndRoles(existingRole, grantRoleRequest.getUsers(), grantRoleRequest.getGroups(), grantRoleRequest.getRoles(), grantRoleRequest.getGrantOption());
+            }
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("grantRole() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> grantRole(serviceName=" + serviceName + ", users=" + Arrays.toString(grantRoleRequest.getUsers().toArray()) + ", groups=" + Arrays.toString(grantRoleRequest.getRoles().toArray()) + ", isAdmin=" + grantRoleRequest.getGrantOption() + ")");
+        }
+        ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+
+        return ret;
+    }
+
+    /*
+     * This API is used to remove users and roles, with regard to their REVOKE role from users and roles.
+     * Minimum required privilege is the execUser (or doAsUser) has admin option for the target roles
+     */
+
+    @PUT
+    @Path("/roles/revoke/{serviceName}")
+    @Consumes({ "application/json", "application/xml" })
+    @Produces({ "application/json", "application/xml" })
+    public RESTResponse revokeRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RoleREST.revokeRole(" + serviceName + ", " + revokeRoleRequest + ")");
+        }
+        RESTResponse     ret  = new RESTResponse();
+
+        try {
+            validateUsersGroupsAndRoles(revokeRoleRequest);
+            String userName = revokeRoleRequest.getGrantor();
+            for (String roleName : revokeRoleRequest.getTargetRoles()) {
+                /* For each target Role, check following to allow access
+                 * If userName (execUser) is not same as logged in user then check
+                    * If logged-in user is not ranger admin/service admin/service user, then deny the operation
+                    * effective User is execUser
+                 * else
+                    * effective user is logged-in user
+                 * If effective user is ranger admin/has role admin privilege, then allow the operation
+                 * else deny the operation
+                 * This logic is implemented as part of getRoleIfAccessible(roleName, serviceName, userName, userGroups)
+                 */
+                Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRoleRequest.getGrantorGroups()) ? revokeRoleRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
+                RangerRole existingRole = getRoleIfAccessible(roleName, serviceName, userName, userGroups);
+                if (existingRole == null) {
+                    throw restErrorUtil.createRESTException("User doesn't have permissions to revoke role " + roleName);
+                }
+
+                if (revokeRoleRequest.getGrantOption()) {
+                    removeAdminFromUsersGroupsAndRoles(existingRole, revokeRoleRequest.getUsers(), revokeRoleRequest.getGroups(), revokeRoleRequest.getRoles());
+                } else {
+                    removeUsersGroupsAndRoles(existingRole, revokeRoleRequest.getUsers(), revokeRoleRequest.getGroups(), revokeRoleRequest.getRoles());
+                }
+            }
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("revokeRole() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> revokeRole(serviceName=" + serviceName + ", users=" + Arrays.toString(revokeRoleRequest.getUsers().toArray()) + ", roles=" + Arrays.toString(revokeRoleRequest.getRoles().toArray()) + ", isAdmin=" + revokeRoleRequest.getGrantOption() + ")");
+        }
+        ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+
+        return ret;
+    }
+
+    /* Get all the roles that this user or user's groups belong to
+     */
+
+    @GET
+    @Path("/roles/user/{user}")
+    @Produces({ "application/json", "application/xml" })
+    public List<String> getUserRoles(@PathParam("user") String userName, @Context HttpServletRequest request) {
+        Set<String> ret = new HashSet<>();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getUserRoles()");
+        }
+        try {
+            Set<RangerRole> roleList = roleStore.getRoleNames(userName, userMgr.getGroupsForUser(userName));
+            for (RangerRole role : roleList) {
+                ret.add(role.getName());
+                Set<String> roleMembers = new HashSet<>();
+                getRoleMemberNames(roleMembers, role);
+                ret.addAll(roleMembers);
+            }
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("getUserRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getUserRoles():" + ret);
+        }
+        return new ArrayList<>(ret);
+    }
+
+    private void ensureAdminAccess(String serviceName, String userName) throws Exception {
+
+        /* If userName (execUser) is not same as logged in user then check
+            * If logged-in user is not ranger admin/service admin/service user, then deny the operation
+            * effective User is execUser
+         * else
+            * effective user is logged-in user
+         * If effective user is ranger admin, then allow the operation
+         * else deny the operation
+         */
+        String effectiveUser;
+        UserSessionBase usb = ContextUtil.getCurrentUserSession();
+        String loggedInUser = usb != null ? usb.getLoginId() : null;
+        if (!StringUtil.equals(userName, loggedInUser)) {
+            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+                throw new Exception("User does not have permission for this operation");
+            }
+            effectiveUser = userName != null ? userName : loggedInUser;
+        } else {
+            effectiveUser = loggedInUser;
+        }
+
+        if (!userIsRangerAdmin(effectiveUser)) {
+            throw new Exception("User " + effectiveUser + " does not have permission for this operation");
         }
     }
 
-    private void ensureAdminAccess() throws Exception {
+    private RangerRole getRoleIfAccessible(String roleName, String serviceName, String userName, Set<String> userGroups) {
+        /* If userName (execUser) is not same as logged in user then check
+            * If logged-in user is not ranger admin/service admin/service user, then deny the operation
+                * effective User is execUser
+         * else
+            * effective user is logged-in user
+         * If effective user is ranger admin/has role admin privilege, then allow the operation
+         * else deny the operation
+         */
+        RangerRole existingRole;
+        String effectiveUser;
         UserSessionBase usb = ContextUtil.getCurrentUserSession();
-
-        if (usb == null || !usb.isUserAdmin()) {
-            throw new Exception("User does not have permission for this operation");
+        String loggedInUser = usb != null ? usb.getLoginId() : null;
+        if (!StringUtil.equals(userName, loggedInUser)) {
+            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+                LOG.error("User does not have permission for this operation");
+                return null;
+            }
+            effectiveUser = userName != null ? userName : loggedInUser;
+        } else {
+            effectiveUser = loggedInUser;
         }
+        try {
+            if (!userIsRangerAdmin(effectiveUser)) {
+                existingRole = roleStore.getRole(roleName);
+                ensureRoleAccess(effectiveUser, userGroups, existingRole);
+
+            } else {
+                existingRole = roleStore.getRole(roleName);
+            }
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+            return null;
+        }
+
+        return existingRole;
+    }
+
+    private boolean userIsRangerAdmin(String username) {
+        boolean isAdmin = false;
+        try {
+            VXUser vxUser = xUserService.getXUserByUserName(username);
+            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
+                isAdmin = true;
+            }
+        } catch (Exception ex) {
+            LOG.error("User " + username + " does not have permissions for this operation" + ex.getMessage());
+        }
+        return isAdmin;
+    }
+
+    private boolean userIsSrvAdmOrSrvUser(String serviceName, String username) {
+        boolean isServiceAdmin = false;
+
+        if (!StringUtil.isEmpty(serviceName)) {
+            try {
+                isServiceAdmin = svcStore.isServiceAdminUser(serviceName, username);
+                if (!isServiceAdmin) {
+                    RangerService rangerService = svcStore.getServiceByName(serviceName);
+                    if (rangerService != null) {
+                        String serviceUser = PropertiesUtil.getProperty("ranger.plugins." + rangerService.getType() + ".serviceuser");
+
+                        isServiceAdmin = StringUtil.equals(serviceUser, username);
+                    }
+                }
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+            }
+        }
+        return isServiceAdmin;
     }
 
     private boolean containsInvalidMember(List<RangerRole.RoleMember> users) {
@@ -473,5 +775,320 @@ public class RoleREST {
         return CollectionUtils.isNotEmpty(users) && CollectionUtils.containsAny(users, INVALID_USERS);
     }
 
+    private boolean ensureRoleAccess(String username, Set<String> userGroups, RangerRole role) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ensureRoleAccess("+ username + ", " + role + ")");
+        }
+        boolean isAccessible = false;
+        List<RangerRole.RoleMember> userList = role.getUsers();
+        RangerRole.RoleMember userMember = new RangerRole.RoleMember(username, true);
+
+        if (!CollectionUtils.isEmpty(userList) && userList.contains(userMember))  {
+            isAccessible = true;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("==> ensureRoleAccess(): user "+ username + " has permission for role " + role.getName());
+            }
+            return isAccessible;
+        }
+
+        if (!CollectionUtils.isEmpty(userGroups)) {
+            List<RangerRole.RoleMember> groupList = role.getGroups();
+            for (RangerRole.RoleMember groupMember : groupList) {
+                if (!groupMember.getIsAdmin()) {
+                    continue;
+                }
+                if (userGroups.contains(groupMember.getName())) {
+                    isAccessible = true;
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("==> ensureRoleAccess(): group " + groupMember.getName() + " has permission for role " + role.getName());
+                    }
+                    return isAccessible;
+                }
+            }
+        }
+
+        Set<RangerRole.RoleMember> roleMemberList = new HashSet<>();
+        getRoleMembers(roleMemberList, role);
+        for (RangerRole.RoleMember roleMember : roleMemberList) {
+            if (!roleMember.getIsAdmin()) {
+                continue;
+            }
+
+            RangerRole roleMemberObj = roleStore.getRole(roleMember.getName());
+            if (getUserNames(roleMemberObj).contains(username)) {
+                isAccessible = true;
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("==> ensureRoleAccess(): role "+ roleMember.getName() + " has permission for role " + role.getName());
+                }
+                return isAccessible;
+            }
+
+            if (!CollectionUtils.isEmpty(userGroups) && !CollectionUtils.intersection(userGroups, getGroupNames(roleMemberObj)).isEmpty()) {
+                isAccessible = true;
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("==> ensureRoleAccess(): role " + roleMember.getName() + " has permission for role " + role.getName());
+                }
+                return isAccessible;
+            }
+        }
+        if (!isAccessible) {
+            throw restErrorUtil.createRESTException("User " + username + " does not have privilege to role " + role.getName());
+        }
+        return isAccessible;
+    }
+
+    private RangerRole addUsersGroupsAndRoles(RangerRole role, Set<String> users, Set<String> groups, Set<String> roles, Boolean isAdmin) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> addUsersGroupsAndRoles(name=" + role.getName() + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ", isAdmin=" + isAdmin + ")");
+        }
+
+        try {
+            // Check for any cycling relationship between roles
+            for (String newRole : roles) {
+                //get members recursively and check if the grantor role is already a member
+                Set<String> roleMembers = new HashSet<>();
+                getRoleMemberNames(roleMembers, roleStore.getRole(newRole));
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Role members for " + newRole + " = " + roleMembers);
+                }
+                if (roleMembers.contains(role.getName())) {
+                    throw new Exception("Invalid role grant");
+                }
+
+            }
+
+            Set<RangerRole.RoleMember> roleUsers = new HashSet<>();
+            Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
+            Set<RangerRole.RoleMember> roleRoles = new HashSet<>();
+
+            for (RangerRole.RoleMember user : role.getUsers()) {
+                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
+                    user.setIsAdmin(isAdmin);
+                    roleUsers.add(user);
+                } else if (!users.contains(user.getName())) {
+                    roleUsers.add(user);
+                }
+            }
+
+            Set<String> existingUsernames = getUserNames(role);
+            for (String user : users) {
+                if (!existingUsernames.contains(user)) {
+                    roleUsers.add(new RangerRole.RoleMember(user, isAdmin));
+                }
+            }
+
+            for (RangerRole.RoleMember group : role.getGroups()) {
+                if (groups.contains(group.getName()) && isAdmin == Boolean.TRUE) {
+                    group.setIsAdmin(isAdmin);
+                    roleGroups.add(group);
+                } else if (!groups.contains(group.getName())) {
+                    roleGroups.add(group);
+                }
+            }
+
+            Set<String> existingGroupnames = getGroupNames(role);
+            for (String group : groups) {
+                if (!existingGroupnames.contains(group)) {
+                    roleGroups.add(new RangerRole.RoleMember(group, isAdmin));
+                }
+            }
+
+            for (RangerRole.RoleMember roleMember : role.getRoles()) {
+                if (roles.contains(roleMember.getName()) && isAdmin == Boolean.TRUE) {
+                    roleMember.setIsAdmin(isAdmin);
+                    roleRoles.add(roleMember);
+                } else if (!roles.contains(roleMember.getName())) {
+                    roleRoles.add(roleMember);
+                }
+            }
+            Set<String> existingRolenames = getRoleNames(role);
+            for (String newRole : roles) {
+                if (!existingRolenames.contains(newRole)) {
+                    roleRoles.add(new RangerRole.RoleMember(newRole, isAdmin));
+                }
+            }
+            role.setUsers(new ArrayList<>(roleUsers));
+            role.setGroups(new ArrayList<>(roleGroups));
+            role.setRoles(new ArrayList<>(roleRoles));
+
+            role = roleStore.updateRole(role);
+
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("addUsersGroupsAndRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== addUsersGroupsAndRoles(name=" + role.getName() + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ", isAdmin=" + isAdmin + ")");
+        }
+
+        return role;
+    }
+
+    private RangerRole removeUsersGroupsAndRoles(RangerRole role, Set<String> users, Set<String> groups, Set<String> roles) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> removeUsersGroupsAndRoles(name=" + role.getName() + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ")");
+        }
+
+        try {
+            // Real processing
+            for (String user : users) {
+                Iterator<RangerRole.RoleMember> iter = role.getUsers().iterator();
+                while (iter.hasNext()) {
+                    RangerRole.RoleMember member = iter.next();
+                    if (StringUtils.equals(member.getName(), user)) {
+                        iter.remove();
+                        break;
+                    }
+                }
+            }
+
+            for (String group : groups) {
+                Iterator<RangerRole.RoleMember> iter = role.getGroups().iterator();
+                while (iter.hasNext()) {
+                    RangerRole.RoleMember member = iter.next();
+                    if (StringUtils.equals(member.getName(), group)) {
+                        iter.remove();
+                        break;
+                    }
+                }
+            }
+
+            for (String newRole : roles) {
+                Iterator<RangerRole.RoleMember> iter = role.getRoles().iterator();
+                while (iter.hasNext()) {
+                    RangerRole.RoleMember member = iter.next();
+                    if (StringUtils.equals(member.getName(), newRole)) {
+                        iter.remove();
+                        break;
+                    }
+                }
+            }
+
+            role = roleStore.updateRole(role);
+
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("removeUsersGroupsAndRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== removeUsersGroupsAndRoles(name=" + role.getName() + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ")");
+        }
+
+        return role;
+    }
+
+    private RangerRole removeAdminFromUsersGroupsAndRoles(RangerRole role, Set<String> users, Set<String> groups, Set<String> roles) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> removeAdminFromUsersGroupsAndRoles(name=" + role + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ")");
+        }
+        try {
+            // Real processing
+            for (String user : users) {
+                for (RangerRole.RoleMember member : role.getUsers()) {
+                    if (StringUtils.equals(member.getName(), user) && member.getIsAdmin()) {
+                        member.setIsAdmin(false);
+                    }
+                }
+            }
+            for (String group : groups) {
+                for (RangerRole.RoleMember member : role.getGroups()) {
+                    if (StringUtils.equals(member.getName(), group) && member.getIsAdmin()) {
+                        member.setIsAdmin(false);
+                    }
+                }
+            }
+
+            for (String newRole : roles) {
+                for (RangerRole.RoleMember member : role.getRoles()) {
+                    if (StringUtils.equals(member.getName(), newRole) && member.getIsAdmin()) {
+                        member.setIsAdmin(false);
+                    }
+                }
+            }
+
+            role = roleStore.updateRole(role);
+
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("removeAdminFromUsersGroupsAndRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== removeAdminFromUsersGroupsAndRoles(name=" + role.getName() + ", users=" + Arrays.toString(users.toArray()) + ", roles=" + Arrays.toString(roles.toArray()) + ")");
+        }
+
+        return role;
+    }
+
+    private Set<String> getUserNames(RangerRole role) {
+
+        Set<String> usernames = new HashSet<>();
+        for (RangerRole.RoleMember user : role.getUsers()) {
+            usernames.add(user.getName());
+        }
+        return usernames;
+    }
+
+    private Set<String> getGroupNames(RangerRole role) {
+
+        Set<String> groupnames = new HashSet<>();
+        for (RangerRole.RoleMember group : role.getGroups()) {
+            groupnames.add(group.getName());
+        }
+        return groupnames;
+    }
+
+    private Set<String> getRoleNames(RangerRole role) {
+        Set<String> rolenames = new HashSet<>();
+        for (RangerRole.RoleMember roleMember : role.getRoles()) {
+            rolenames.add(roleMember.getName());
+        }
+        return rolenames;
+    }
+
+    private void getRoleMemberNames(Set<String> roleMembers, RangerRole role) throws Exception {
+       for (RangerRole.RoleMember roleMember : role.getRoles()) {
+           roleMembers.add(roleMember.getName());
+           getRoleMemberNames(roleMembers, roleStore.getRole(roleMember.getName()));
+        }
+    }
+
+    private void getRoleMembers(Set<RangerRole.RoleMember> roleMembers, RangerRole role) throws Exception {
+        for (RangerRole.RoleMember roleMember : role.getRoles()) {
+            roleMembers.add(roleMember);
+            getRoleMembers(roleMembers, roleStore.getRole(roleMember.getName()));
+        }
+    }
+
+    private void validateUsersGroupsAndRoles(GrantRevokeRoleRequest request){
+        if (request == null) {
+            throw restErrorUtil.createRESTException("Invalid grant/revoke role request");
+        }
+
+        if(CollectionUtils.isEmpty(request.getUsers()) && CollectionUtils.isEmpty(request.getGroups()) && CollectionUtils.isEmpty(request.getRoles())) {
+            throw restErrorUtil.createRESTException("Grantee users/groups/roles list is empty");
+        }
+        if (request.getUsers() == null) {
+            request.setUsers(new HashSet<>());
+        }
+
+        if (request.getGroups() == null ) {
+            request.setGroups(new HashSet<>());
+        }
+
+        if (request.getRoles() == null) {
+            request.setRoles(new HashSet<>());
+        }
+    }
 }
 

@@ -100,7 +100,7 @@ define(function(require){
         initializePlugins: function(){
         },
         onSave: function(){
-            var that = this, usersDetails = [], groupsDetails = [] ;
+            var that = this, usersDetails = [], groupsDetails = [], rolesDetails = [] ;
             var errors = this.form.commit({validate : false});
             if(! _.isEmpty(errors)){
                 return;
@@ -113,8 +113,12 @@ define(function(require){
             this.form.groupsColl.models.filter(function(m){
                 groupsDetails.push ({'name' : m.get('name') , 'isAdmin' : m.get('isAdmin')});
             })
+            this.form.rolesColl.models.filter(function(m){
+                rolesDetails.push ({'name' : m.get('name') , 'isAdmin' : m.get('isAdmin')});
+            })
             this.model.set('users', usersDetails);
             this.model.set('groups', groupsDetails);
+            this.model.set('roles', rolesDetails);
             this.model.save({},{
                 success: function () {
                     XAUtil.blockUI('unblock');

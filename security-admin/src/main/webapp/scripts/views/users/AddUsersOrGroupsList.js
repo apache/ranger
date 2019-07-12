@@ -83,8 +83,8 @@ define(function(require) {
         template : require('hbs!tmpl/users/AddUserOrGroupsList_tmpl'),
 
         templateHelpers :function(){
-            var headerName = this.fieldName === 'users' ? "User Name" : "Group Name",
-            btnLable = this.fieldName === 'users' ? 'Add Users' : 'Add Groups';
+            var headerName = this.fieldName === 'users' ? "User Name" : this.fieldName === 'groups' ? "Group Name" : "Role Name",
+            btnLable = this.fieldName === 'users' ? 'Add Users' : this.fieldName === 'groups' ? "Add Group" : "Add Role";
             return {
                 headerName : headerName,
                 btnLable : btnLable
@@ -119,16 +119,15 @@ define(function(require) {
         },
 
         initialize : function(options) {
-            _.extend(this, _.pick(options, 'collection', 'fieldName'));
+            _.extend(this, _.pick(options, 'collection', 'fieldName', 'model'));
         },
 
         onRender : function() {
-            var isGroup = this.fieldName === 'users' ? false : true;
             if(this.collection.length === 0){
                 this.$el.find('[data-id="userGroupsTable"]').html('<tr data-name="'+this.fieldName+'"><td colspan="3"> No '
                     +this.fieldName+' found</td></tr>');
             }
-            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(isGroup, this.fieldName, this));
+            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this));
         },
 
         addNew : function() {

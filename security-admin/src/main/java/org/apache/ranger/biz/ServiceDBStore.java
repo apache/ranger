@@ -139,6 +139,7 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
+import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
@@ -291,6 +292,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RoleDBStore roleStore;
+
+	@Autowired
+	RangerRoleService roleService;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -2719,9 +2723,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 				Map<String, Set<String>> userRoleMapping = new HashMap<>();
 				Map<String, Set<String>> groupRoleMapping = new HashMap<>();
 				for (RangerRole role : rolesForService) {
-					buildMap(userRoleMapping, role.getUsers(), role.getName());
-					buildMap(groupRoleMapping, role.getGroups(), role.getName());
-					// TBD - roles within roles
+					// Get a closure set of all contained roles too
+					Set<RangerRole> containedRoles = getAllContainedRoles(role);
+
+					buildMap(userRoleMapping, role, containedRoles, true);
+					buildMap(groupRoleMapping, role, containedRoles, false);
 				}
 
 				ret.setUserRoles(userRoleMapping);
@@ -2736,8 +2742,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
-	private void buildMap(Map<String, Set<String>> map, List<RangerRole.RoleMember> usersOrGroups, String roleName) {
-		for(RangerRole.RoleMember userOrGroup : usersOrGroups) {
+	private Set<RangerRole> getAllContainedRoles(RangerRole role) {
+		Set<RangerRole> allRoles = new HashSet<>();
+		allRoles.add(role);
+		addContainedRoles(allRoles, role);
+		return allRoles;
+	}
+
+	private void addContainedRoles(Set<RangerRole> allRoles, RangerRole role) {
+		List<XXRoleRefRole> roles = daoMgr.getXXRoleRefRole().findByRoleId(role.getId());
+		for (XXRoleRefRole xRefRole : roles) {
+			RangerRole containedRole = roleService.read(xRefRole.getSubRoleId());
+			if (!allRoles.contains(containedRole)) {
+				allRoles.add(containedRole);
+				addContainedRoles(allRoles, containedRole);
+			}
+		}
+	}
+
+	private void buildMap(Map<String, Set<String>> map, RangerRole role, Set<RangerRole> containedRoles, boolean isUser) {
+		buildMap(map, role, role.getName(), isUser);
+
+		for (RangerRole containedRole : containedRoles) {
+			buildMap(map, containedRole, role.getName(), isUser);
+		}
+	}
+
+	private void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, boolean isUser) {
+		for (RangerRole.RoleMember userOrGroup : isUser ? role.getUsers() : role.getGroups()) {
 			if (StringUtils.isNotEmpty(userOrGroup.getName())) {
 				Set<String> roleNames = map.get(userOrGroup.getName());
 				if (roleNames == null) {
@@ -2748,6 +2780,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 	}
+
 	private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
 		@Override
 		public int compare(RangerPolicyDelta me, RangerPolicyDelta other) {

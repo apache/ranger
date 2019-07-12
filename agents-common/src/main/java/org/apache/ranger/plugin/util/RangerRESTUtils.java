@@ -45,6 +45,14 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SECURE_SERVICE_GRANT_ACCESS              = "/service/plugins/secure/services/grant/";
 	public static final String REST_URL_SECURE_SERVICE_REVOKE_ACCESS             = "/service/plugins/secure/services/revoke/";
 
+	public static final String REST_URL_SERVICE_CREATE_ROLE              = "/service/public/v2/api/roles/";
+	public static final String REST_URL_SERVICE_DROP_ROLE         = "/service/public/v2/api/roles/name/";
+	public static final String REST_URL_SERVICE_GET_ALL_ROLES         = "/service/public/v2/api/roles/names/";
+	public static final String REST_URL_SERVICE_GET_USER_ROLES         = "/service/public/v2/api/roles/user/";
+	public static final String REST_URL_SERVICE_GET_ROLE_INFO         = "/service/public/v2/api/roles/name/";
+	public static final String REST_URL_SERVICE_GRANT_ROLE              = "/service/public/v2/api/roles/grant/";
+	public static final String REST_URL_SERVICE_REVOKE_ROLE              = "/service/public/v2/api/roles/revoke/";
+
 	public static final String REST_URL_GET_SERVICE_TAGS_IF_UPDATED = "/service/tags/download/";
 	public static final String REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED = "/service/tags/secure/download/";
 	public static final String SERVICE_NAME_PARAM = "serviceName";
@@ -66,6 +74,7 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_SUPPORTS_POLICY_DELTAS   = "supportsPolicyDeltas";
 
 	public static final String REST_PARAM_ZONE_NAME		 = "zoneName";
+	public static final String REST_PARAM_EXEC_USER      = "execUser";
 
 	public static String hostname;
 

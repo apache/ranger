@@ -48,10 +48,9 @@ define(function(require){
         */
 
         ui : {
-            'selectUserName': '[data-id="users"]',
-            'selectGroupName': '[data-id="groups"]',
             'usersItemList'  : '[data-name="userTableLayout"]',
             'groupsItemList'  : '[data-name="groupTableLayout"]',
+            'rolesItemList'  : '[data-name="roleTableLayout"]',
         },
 
         initialize: function(options) {
@@ -76,26 +75,34 @@ define(function(require){
             Backbone.Form.prototype.render.call(this, options);
             this.addUserTbl();
             this.addGroupTbl();
+            this.addRoleTbl();
         },
 
         /** all custom field rendering */
-        renderCustomFields: function(collection, $filed, fieldName) {
+        renderCustomFields: function(collection, $filed, fieldName, model) {
             this.$el.find($filed).html(new usersAndGroupsItemList({
                 collection : collection,
                 fieldName  : fieldName,
+                model      : model,
             }).render().el);
         },
 
         addUserTbl : function() {
             var that = this, models = this.model.isNew() ? [] : this.model.get('users');
             this.usersColl = new Backbone.Collection(models);
-            this.renderCustomFields(this.usersColl, this.ui.usersItemList, 'users');
+            this.renderCustomFields(this.usersColl, this.ui.usersItemList, 'users', this.model);
         },
 
         addGroupTbl : function() {
             var that = this, models = this.model.isNew() ? [] : this.model.get('groups');
             this.groupsColl = new Backbone.Collection(models);
-            this.renderCustomFields(this.groupsColl, this.ui.groupsItemList, 'groups');
+            this.renderCustomFields(this.groupsColl, this.ui.groupsItemList, 'groups', this.model);
+        },
+
+        addRoleTbl : function() {
+            var that = this, models = this.model.isNew() ? [] : this.model.get('roles');
+            this.rolesColl = new Backbone.Collection(models);
+            this.renderCustomFields(this.rolesColl, this.ui.rolesItemList, 'roles', this.model);
         },
 
         beforeSave : function() {
@@ -104,6 +111,9 @@ define(function(require){
                 return _.isUndefined(model.get('name'))
             }));
             this.groupsColl.remove(that.groupsColl.models.filter(function(model){
+                return _.isUndefined(model.get('name'))
+            }));
+            this.rolesColl.remove(that.rolesColl.models.filter(function(model){
                 return _.isUndefined(model.get('name'))
             }))
         },

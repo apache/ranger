@@ -20,12 +20,9 @@ package org.apache.ranger.authorization.sqoop.authorizer;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.List;
 
-import org.apache.ranger.admin.client.RangerAdminClient;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,7 @@ import com.google.gson.GsonBuilder;
  * A test implementation of the RangerAdminClient interface that just reads
  * policies in from a file and returns them
  */
-public class RangerAdminClientImpl implements RangerAdminClient {
+public class RangerAdminClientImpl extends AbstractRangerAdminClient {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminClientImpl.class);
 	private static final String cacheFilename = "sqoop-policies.json";
 	private Gson gson;
@@ -67,26 +64,4 @@ public class RangerAdminClientImpl implements RangerAdminClient {
 
 		return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
 	}
-
-	@Override
-	public void grantAccess(GrantRevokeRequest request) throws Exception {
-
-	}
-
-	@Override
-	public void revokeAccess(GrantRevokeRequest request) throws Exception {
-
-	}
-
-	@Override
-	public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-		return null;
-
-	}
-
-	@Override
-	public List<String> getTagTypes(String tagTypePattern) throws Exception {
-		return null;
-	}
-
 }

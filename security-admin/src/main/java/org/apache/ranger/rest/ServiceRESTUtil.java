@@ -48,9 +48,9 @@ public class ServiceRESTUtil {
 
 		boolean policyUpdated = false;
 
-		// replace all existing privileges for users and groups
+		// replace all existing privileges for users, groups, and roles
 		if (grantRequest.getReplaceExistingPermissions()) {
-			policyUpdated = removeUsersAndGroupsFromPolicy(policy, grantRequest.getUsers(), grantRequest.getGroups());
+			policyUpdated = removeUsersGroupsAndRolesFromPolicy(policy, grantRequest.getUsers(), grantRequest.getGroups(), grantRequest.getRoles());
 		}
 
 		//Build a policy and set up policyItem in it to mimic grant request
@@ -61,6 +61,7 @@ public class ServiceRESTUtil {
 		policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
 		policyItem.getUsers().addAll(grantRequest.getUsers());
 		policyItem.getGroups().addAll(grantRequest.getGroups());
+		policyItem.getRoles().addAll(grantRequest.getRoles());
 
 		List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
 
@@ -93,7 +94,7 @@ public class ServiceRESTUtil {
 
 		// remove all existing privileges for users and groups
 		if (revokeRequest.getReplaceExistingPermissions()) {
-			policyUpdated = removeUsersAndGroupsFromPolicy(existingRangerPolicy, revokeRequest.getUsers(), revokeRequest.getGroups());
+			policyUpdated = removeUsersGroupsAndRolesFromPolicy(existingRangerPolicy, revokeRequest.getUsers(), revokeRequest.getGroups(), revokeRequest.getRoles());
 		} else {
 			//Build a policy and set up policyItem in it to mimic revoke request
 			RangerPolicy appliedRangerPolicy = new RangerPolicy();
@@ -103,6 +104,7 @@ public class ServiceRESTUtil {
 			appliedRangerPolicyItem.setDelegateAdmin(revokeRequest.getDelegateAdmin());
 			appliedRangerPolicyItem.getUsers().addAll(revokeRequest.getUsers());
 			appliedRangerPolicyItem.getGroups().addAll(revokeRequest.getGroups());
+			appliedRangerPolicyItem.getRoles().addAll(revokeRequest.getRoles());
 
 			List<RangerPolicy.RangerPolicyItemAccess> appliedRangerPolicyItemAccess = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
 
@@ -120,15 +122,17 @@ public class ServiceRESTUtil {
 			if (CollectionUtils.isNotEmpty(appliedRangerPolicyItems)) {
 				Set<String> users = new HashSet<String>();
 				Set<String> groups = new HashSet<String>();
+				Set<String> roles = new HashSet<>();
 
 				Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 				Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+				Map<String, RangerPolicy.RangerPolicyItem[]> rolePolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 
-				// Extract users and groups specified in appliedPolicy items
-				extractUsersAndGroups(appliedRangerPolicyItems, users, groups);
+				// Extract users, groups, and roles specified in appliedPolicy items
+				extractUsersGroupsAndRoles(appliedRangerPolicyItems, users, groups, roles);
 
-				// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
-				splitExistingPolicyItems(existingRangerPolicy, users, userPolicyItems, groups, groupPolicyItems);
+				// Split existing policyItems for users, groups, and roles extracted from appliedPolicyItem into userPolicyItems, groupPolicyItems and rolePolicyItems
+				splitExistingPolicyItems(existingRangerPolicy, users, userPolicyItems, groups, groupPolicyItems, roles, rolePolicyItems);
 
 				for (RangerPolicy.RangerPolicyItem tempPolicyItem : appliedRangerPolicyItems) {
 					List<String> appliedPolicyItemsUser = tempPolicyItem.getUsers();
@@ -170,8 +174,29 @@ public class ServiceRESTUtil {
 						}
 					}
 				}
+
+				for (RangerPolicy.RangerPolicyItem tempPolicyItem : appliedRangerPolicyItems) {
+					List<String> appliedPolicyItemsRole = tempPolicyItem.getRoles();
+					for (String role : appliedPolicyItemsRole) {
+						RangerPolicy.RangerPolicyItem[] rangerPolicyItems = rolePolicyItems.get(role);
+						if(rangerPolicyItems!=null && rangerPolicyItems.length>0){
+							if(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], tempPolicyItem.getAccesses());
+								if(!CollectionUtils.isEmpty(rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].getAccesses())){
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(revokeRequest.getDelegateAdmin());
+								}else{
+									rangerPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()].setDelegateAdmin(Boolean.FALSE);
+								}
+							}
+							if(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()]!=null){
+								removeAccesses(rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], tempPolicyItem.getAccesses());
+								rangerPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()].setDelegateAdmin(Boolean.FALSE);
+							}
+						}
+					}
+				}
 				// Add modified/new policyItems back to existing policy
-				mergeProcessedPolicyItems(existingRangerPolicy, userPolicyItems, groupPolicyItems);
+				mergeProcessedPolicyItems(existingRangerPolicy, userPolicyItems, groupPolicyItems, rolePolicyItems);
 				compactPolicy(existingRangerPolicy);
 			}
 
@@ -228,21 +253,23 @@ public class ServiceRESTUtil {
 
 			Set<String> users = new HashSet<String>();
 			Set<String> groups = new HashSet<String>();
+			Set<String> roles = new HashSet<String>();
 
 			Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 			Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+			Map<String, RangerPolicy.RangerPolicyItem[]> rolePolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 
-			// Extract users and groups specified in appliedPolicy items
-			extractUsersAndGroups(appliedPolicyItems, users, groups);
+			// Extract users, groups, and roles specified in appliedPolicy items
+			extractUsersGroupsAndRoles(appliedPolicyItems, users, groups, roles);
 
-			// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
-			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems);
+			// Split existing policyItems for users, groups, and roles extracted from appliedPolicyItem into userPolicyItems, groupPolicyItems, and rolePolicyItems
+			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems, roles, rolePolicyItems);
 
 			// Apply policyItems of given type in appliedPolicy to policyItems extracted from existingPolicy
-			applyPolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems);
+			applyPolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems, rolePolicyItems);
 
 			// Add modified/new policyItems back to existing policy
-			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems);
+			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems, rolePolicyItems);
 
 			compactPolicy(existingPolicy);
 		}
@@ -291,19 +318,21 @@ public class ServiceRESTUtil {
 
 			Set<String> users = new HashSet<String>();
 			Set<String> groups = new HashSet<String>();
+			Set<String> roles = new HashSet<String>();
 
 			Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 			Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
+			Map<String, RangerPolicy.RangerPolicyItem[]> rolePolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem[]>();
 
 			// Extract users and groups specified in appliedPolicy items
-			extractUsersAndGroups(appliedPolicyItems, users, groups);
+			extractUsersGroupsAndRoles(appliedPolicyItems, users, groups, roles);
 
 			// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
-			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems);
+			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems, roles, rolePolicyItems);
 			// Apply policyItems of given type in appliedPolicy to policyItems extracted from existingPolicy
 			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems);
 			// Add modified/new policyItems back to existing policy
-			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems);
+			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems, rolePolicyItems);
 			compactPolicy(existingPolicy);
 		}
 
@@ -312,9 +341,9 @@ public class ServiceRESTUtil {
 		}
 	}
 
-	static private void extractUsersAndGroups(List<RangerPolicy.RangerPolicyItem> policyItems, Set<String> users, Set<String> groups) {
+	static private void extractUsersGroupsAndRoles(List<RangerPolicy.RangerPolicyItem> policyItems, Set<String> users, Set<String> groups, Set<String> roles) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceRESTUtil.extractUsersAndGroups()");
+			LOG.debug("==> ServiceRESTUtil.extractUsersGroupsAndRoles()");
 		}
 		if (CollectionUtils.isNotEmpty(policyItems)) {
 			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
@@ -324,20 +353,26 @@ public class ServiceRESTUtil {
 				if (CollectionUtils.isNotEmpty(policyItem.getGroups())) {
 					groups.addAll(policyItem.getGroups());
 				}
+
+				if (CollectionUtils.isNotEmpty(policyItem.getRoles())) {
+					roles.addAll(policyItem.getRoles());
+				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceRESTUtil.extractUsersAndGroups()");
+			LOG.debug("<== ServiceRESTUtil.extractUsersGroupsAndRoles()");
 		}
 	}
 
 	static private void splitExistingPolicyItems(RangerPolicy existingPolicy,
 												 Set<String> users, Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems, Set<String> groups,
-												 Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems) {
+												 Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems, Set<String> roles,
+												 Map<String, RangerPolicy.RangerPolicyItem[]> rolePolicyItems) {
 
 		if (existingPolicy == null
 				|| users == null || userPolicyItems == null
-				|| groups == null || groupPolicyItems == null) {
+				|| groups == null || groupPolicyItems == null
+				|| roles == null || rolePolicyItems == null) {
 			return;
 		}
 
@@ -385,6 +420,25 @@ public class ServiceRESTUtil {
 			policyItem = splitAndGetConsolidatedPolicyItemForGroup(allowExceptionItems, group);
 			value[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()] = policyItem;
 			policyItem = splitAndGetConsolidatedPolicyItemForGroup(denyExceptionItems, group);
+			value[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()] = policyItem;
+		}
+
+		for (String role : roles) {
+			RangerPolicy.RangerPolicyItem value[] = rolePolicyItems.get(role);
+			if (value == null) {
+				value = new RangerPolicy.RangerPolicyItem[4];
+				rolePolicyItems.put(role, value);
+			}
+
+			RangerPolicy.RangerPolicyItem policyItem = null;
+
+			policyItem = splitAndGetConsolidatedPolicyItemForRole(allowItems, role);
+			value[POLICYITEM_TYPE.ALLOW.ordinal()] = policyItem;
+			policyItem = splitAndGetConsolidatedPolicyItemForRole(denyItems, role);
+			value[POLICYITEM_TYPE.DENY.ordinal()] = policyItem;
+			policyItem = splitAndGetConsolidatedPolicyItemForRole(allowExceptionItems, role);
+			value[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()] = policyItem;
+			policyItem = splitAndGetConsolidatedPolicyItemForRole(denyExceptionItems, role);
 			value[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()] = policyItem;
 		}
 
@@ -459,8 +513,41 @@ public class ServiceRESTUtil {
 		return ret;
 	}
 
+	static private RangerPolicy.RangerPolicyItem splitAndGetConsolidatedPolicyItemForRole(List<RangerPolicy.RangerPolicyItem> policyItems, String role) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceRESTUtil.splitAndGetConsolidatedPolicyItemForGroup()");
+		}
+
+		RangerPolicy.RangerPolicyItem ret = null;
+
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+				List<String> roles = policyItem.getRoles();
+				if (roles.contains(role)) {
+					if (ret == null) {
+						ret = new RangerPolicy.RangerPolicyItem();
+					}
+					ret.getRoles().add(role);
+					if (policyItem.getDelegateAdmin()) {
+						ret.setDelegateAdmin(Boolean.TRUE);
+					}
+					addAccesses(ret, policyItem.getAccesses());
+
+					// Remove this role from existingPolicyItem
+					roles.remove(role);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceRESTUtil.splitAndGetConsolidatedPolicyItemForGroup()");
+		}
+
+		return ret;
+	}
+
 	static private void applyPolicyItems(List<RangerPolicy.RangerPolicyItem> appliedPolicyItems, POLICYITEM_TYPE policyItemType, Map<String, RangerPolicy.RangerPolicyItem[]> existingUserPolicyItems,
-										 Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems) {
+										 Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems, Map<String, RangerPolicy.RangerPolicyItem[]> existingRolePolicyItems) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.applyPolicyItems()");
 		}
@@ -537,6 +624,41 @@ public class ServiceRESTUtil {
 			}
 		}
 
+		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
+			List<String> roles = policyItem.getRoles();
+			for (String role : roles) {
+				RangerPolicy.RangerPolicyItem[] items = existingRolePolicyItems.get(role);
+
+				if (items == null) {
+					// Should not get here
+					items = new RangerPolicy.RangerPolicyItem[4];
+					existingRolePolicyItems.put(role, items);
+				}
+
+				addPolicyItemForRole(items, policyItemType.ordinal(), role, policyItem);
+
+				switch (policyItemType) {
+					case ALLOW:
+						removeAccesses(items[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
+						removeAccesses(items[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
+						addPolicyItemForRole(items, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), role, policyItem);
+						break;
+					case DENY:
+						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+						addPolicyItemForRole(items, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), role, policyItem);
+						removeAccesses(items[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
+						break;
+					case ALLOW_EXCEPTIONS:
+						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+						break;
+					case DENY_EXCEPTIONS:
+						break;
+					default:
+						break;
+				}
+			}
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.applyPolicyItems()");
 		}
@@ -580,7 +702,8 @@ public class ServiceRESTUtil {
 	}
 
 	static private void mergeProcessedPolicyItems(RangerPolicy existingPolicy, Map<String, RangerPolicy.RangerPolicyItem[]> userPolicyItems,
-												  Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems) {
+												  Map<String, RangerPolicy.RangerPolicyItem[]> groupPolicyItems,
+												  Map<String, RangerPolicy.RangerPolicyItem[]> rolePolicyItems) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.mergeProcessedPolicyItems()");
 		}
@@ -612,6 +735,32 @@ public class ServiceRESTUtil {
 		}
 
 		for (Map.Entry<String, RangerPolicy.RangerPolicyItem[]> entry : groupPolicyItems.entrySet()) {
+			RangerPolicy.RangerPolicyItem[] items = entry.getValue();
+
+			RangerPolicy.RangerPolicyItem item = null;
+
+			item = items[POLICYITEM_TYPE.ALLOW.ordinal()];
+			if (item != null) {
+				existingPolicy.getPolicyItems().add(item);
+			}
+
+			item = items[POLICYITEM_TYPE.DENY.ordinal()];
+			if (item != null) {
+				existingPolicy.getDenyPolicyItems().add(item);
+			}
+
+			item = items[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()];
+			if (item != null) {
+				existingPolicy.getAllowExceptions().add(item);
+			}
+
+			item = items[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()];
+			if (item != null) {
+				existingPolicy.getDenyExceptions().add(item);
+			}
+		}
+
+		for (Map.Entry<String, RangerPolicy.RangerPolicyItem[]> entry : rolePolicyItems.entrySet()) {
 			RangerPolicy.RangerPolicyItem[] items = entry.getValue();
 
 			RangerPolicy.RangerPolicyItem item = null;
@@ -723,7 +872,7 @@ public class ServiceRESTUtil {
 			Map<String, RangerPolicy.RangerPolicyItem> matchedPolicyItems = new HashMap<String, RangerPolicy.RangerPolicyItem>();
 
 			for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-				if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) ||
+				if((CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) ||
 				   (CollectionUtils.isEmpty(policyItem.getAccesses()) && !policyItem.getDelegateAdmin())) {
 					continue;
 				}
@@ -748,6 +897,7 @@ public class ServiceRESTUtil {
 				if (matchingPolicyItem != null) {
 					addDistinctItems(policyItem.getUsers(), matchingPolicyItem.getUsers());
 					addDistinctItems(policyItem.getGroups(), matchingPolicyItem.getGroups());
+					addDistinctItems(policyItem.getRoles(), matchingPolicyItem.getRoles());
 				} else {
 					matchedPolicyItems.put(allAccessesString, policyItem);
 				}
@@ -793,6 +943,22 @@ public class ServiceRESTUtil {
 		}
 	}
 
+	static void addPolicyItemForRole(RangerPolicy.RangerPolicyItem[] items, int typeOfItems, String role, RangerPolicy.RangerPolicyItem policyItem) {
+
+		if (items[typeOfItems] == null) {
+			RangerPolicy.RangerPolicyItem newItem = new RangerPolicy.RangerPolicyItem();
+			newItem.getRoles().add(role);
+
+			items[typeOfItems] = newItem;
+		}
+
+		addAccesses(items[typeOfItems], policyItem.getAccesses());
+
+		if (policyItem.getDelegateAdmin()) {
+			items[typeOfItems].setDelegateAdmin(Boolean.TRUE);
+		}
+	}
+
 	static private void addDistinctItems(List<String> fromItems, List<String> toItems) {
 		for (String fromItem : fromItems) {
 			if (! toItems.contains(fromItem)) {
@@ -801,7 +967,7 @@ public class ServiceRESTUtil {
 		}
 	}
 
-	static private boolean removeUsersAndGroupsFromPolicy(RangerPolicy policy, Set<String> users, Set<String> groups) {
+	static private boolean removeUsersGroupsAndRolesFromPolicy(RangerPolicy policy, Set<String> users, Set<String> groups, Set<String> roles) {
 		boolean policyUpdated = false;
 
 		List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
@@ -823,7 +989,13 @@ public class ServiceRESTUtil {
 				policyUpdated = true;
 			}
 
-			if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+			if(CollectionUtils.containsAny(policyItem.getRoles(), roles)) {
+				policyItem.getRoles().removeAll(roles);
+
+				policyUpdated = true;
+			}
+
+			if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) {
 				policyItems.remove(i);
 				numOfItems--;
 				i--;

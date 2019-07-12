@@ -21,25 +21,21 @@ package org.apache.ranger.service;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXRole;
-import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.util.RangerEnumUtil;
@@ -57,9 +53,6 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
     @Autowired
     RangerEnumUtil xaEnumUtil;
 
-    @Autowired
-    ServiceDBStore serviceDBStore;
-
     private static final Log logger = LogFactory.getLog(RangerRoleService.class);
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 
@@ -74,7 +67,9 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         trxLogAttrs.put("groups", new VTrxLogAttr("groups", "Groups", false));
         trxLogAttrs.put("adminGroups", new VTrxLogAttr("adminGroups", "Admin Groups", false));
         trxLogAttrs.put("roles", new VTrxLogAttr("roles", "Roles", false));
-        trxLogAttrs.put("adminRoles", new VTrxLogAttr("adminRoles", "Admin Roles", false));    }
+        trxLogAttrs.put("adminRoles", new VTrxLogAttr("adminRoles", "Admin Roles", false));
+        trxLogAttrs.put("createdByUser", new VTrxLogAttr("createdByUser", "Created By User", false)); }
+
 
     public RangerRoleService() {
         super();
@@ -116,6 +111,7 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 ret.setUsers(roleFromJsonData.getUsers());
                 ret.setGroups(roleFromJsonData.getGroups());
                 ret.setRoles(roleFromJsonData.getRoles());
+                ret.setCreatedByUser(roleFromJsonData.getCreatedByUser());
             }
         } else {
             logger.info("Empty string representing jsonData in [" + xxRole + "]!!");
@@ -216,43 +212,75 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
     }
 
     public void updatePolicyVersions(Long roleId) {
-
-        List<XXPolicy> dbPolicies = roleId == null ? null : daoMgr.getXXPolicy().findByRoleId(roleId);
-        if (CollectionUtils.isEmpty(dbPolicies)) {
-            return;
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updatePolicyVersions(roleId=" + roleId + ")");
         }
-        // dbPolicies are ordered by service-id
+        // Get all roles which include this role because change to this affects all these roles
+        Set<Long> containingRoles = getContainingRoles(roleId);
 
-        RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr);
-
-        Map<Long, List<RangerPolicy>> policiesByServiceId = new HashMap<>();
-
-        Long               currentServiceId        = -1L;
-        XXService          currentService          = null;
-        List<RangerPolicy> currentPolicyList       = null;
-
-        for (XXPolicy dbPolicy : dbPolicies) {
-            Long serviceId = dbPolicy.getService();
-            if (!currentServiceId.equals(serviceId)) {
-                //
-                currentService = daoMgr.getXXService().getById(serviceId);
-                currentPolicyList = new ArrayList<>();
-                policiesByServiceId.put(serviceId, currentPolicyList);
-            }
-            currentPolicyList.add(policyRetriever.getPolicy(dbPolicy, currentService));
+        if (logger.isDebugEnabled()) {
+            logger.debug("All containing Roles for roleId:[" + roleId +"] are [" + containingRoles + "]");
         }
 
-        final RangerDaoManager finalDaoManager = daoMgr;
+        updatePolicyVersions(containingRoles);
 
-        for (Map.Entry<Long, List<RangerPolicy>> entry : policiesByServiceId.entrySet()) {
-            final Long finalServiceId = entry.getKey();
-            List<RangerPolicy> policies = entry.getValue();
-
-            for (final RangerPolicy policy : policies) {
-                Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finalDaoManager, finalServiceId, ServiceDBStore.VERSION_TYPE.POLICY_VERSION, policy.getZoneName(), RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, policy);
-                daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
-            }
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updatePolicyVersions(roleId=" + roleId + ")");
         }
     }
+
+    private Set<Long> getContainingRoles(Long roleId) {
+        Set<Long> ret = new HashSet<>();
+
+        addContainingRoles(roleId, ret);
+
+        return ret;
+    }
+
+
+    private void addContainingRoles(Long roleId, Set<Long> allRoles) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> addContainingRoles(roleId=" + roleId + ")");
+        }
+        if (!allRoles.contains(roleId)) {
+            allRoles.add(roleId);
+
+            Set<Long> roles = daoMgr.getXXRoleRefRole().getContainingRoles(roleId);
+
+            for (Long role : roles) {
+                addContainingRoles(role, allRoles);
+            }
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== addContainingRoles(roleId=" + roleId + ")");
+        }
+    }
+
+    private void updatePolicyVersions(Set<Long> roleIds) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+
+        if (CollectionUtils.isNotEmpty(roleIds)) {
+            Set<Long> allAffectedServiceIds = new HashSet<>();
+
+            for (Long roleId : roleIds) {
+                List<Long> affectedServiceIds = daoMgr.getXXPolicy().findServiceIdsByRoleId(roleId);
+                allAffectedServiceIds.addAll(affectedServiceIds);
+            }
+
+            if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
+                for (final Long serviceId : allAffectedServiceIds) {
+                    Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.POLICY_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null);
+                    daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+    }
+
 }
 

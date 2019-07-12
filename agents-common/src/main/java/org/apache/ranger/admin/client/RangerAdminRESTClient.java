@@ -32,13 +32,8 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.plugin.util.RangerRESTUtils;
-import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
-import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.plugin.util.URLEncoderUtil;
+import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.util.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
@@ -47,7 +42,7 @@ import java.lang.reflect.Type;
 import java.security.PrivilegedAction;
 import java.util.List;
 
-public class RangerAdminRESTClient implements RangerAdminClient {
+public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private static final Log LOG = LogFactory.getLog(RangerAdminRESTClient.class);
 
 	private String           serviceName;
@@ -187,6 +182,348 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public RangerRole createRole(final RangerRole request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.createRole(" + request + ")");
+		}
+
+		RangerRole ret = null;
+
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_CREATE_ROLE)
+							.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceNameUrlParam);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("create role as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_CREATE_ROLE);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).post(ClientResponse.class, restClient.toJson(request));
+		}
+
+		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("createRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+		} else if(response == null) {
+			throw new Exception("unknown error during createRole. roleName="  + request.getName());
+		} else {
+			ret = response.getEntity(RangerRole.class);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.createRole(" + request + ")");
+		}
+		return ret;
+	}
+
+	@Override
+	public void dropRole(final String execUser, final String roleName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.dropRole(" + roleName + ")");
+		}
+
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_DROP_ROLE + roleName)
+							.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceNameUrlParam)
+							.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).delete(ClientResponse.class);
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("drop role as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_DROP_ROLE + roleName)
+					.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).delete(ClientResponse.class);
+		}
+		if(response == null) {
+			throw new Exception("unknown error during deleteRole. roleName="  + roleName);
+		} else if(response.getStatus() != HttpServletResponse.SC_OK && response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("createRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.deleteRole(" + roleName + ")");
+		}
+	}
+
+	@Override
+	public List<String> getUserRoles(final String execUser) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getUserRoles(" + execUser + ")");
+		}
+
+		List<String> ret = null;
+		String emptyString = "";
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_USER_ROLES + execUser);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("get roles as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_USER_ROLES + execUser);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+		}
+		if(response != null) {
+			if (response.getStatus() != HttpServletResponse.SC_OK) {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				LOG.error("getUserRoles() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+					throw new AccessControlException();
+				}
+
+				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+			} else {
+				ret = response.getEntity(getGenericType(emptyString));
+			}
+		} else {
+			throw new Exception("unknown error during getUserRoles. execUser="  + execUser);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getUserRoles(" + execUser + ")");
+		}
+		return ret;
+	}
+
+	@Override
+	public List<String> getAllRoles(final String execUser) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getAllRoles()");
+		}
+
+		List<String> ret = null;
+		String emptyString = "";
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_ALL_ROLES)
+							.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceNameUrlParam)
+							.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("get roles as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_ALL_ROLES)
+					.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+		}
+		if(response != null) {
+			if (response.getStatus() != HttpServletResponse.SC_OK) {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				LOG.error("getAllRoles() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+					throw new AccessControlException();
+				}
+
+				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+			} else {
+				ret = response.getEntity(getGenericType(emptyString));
+			}
+		} else {
+			throw new Exception("unknown error during getAllRoles.");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getAllRoles()");
+		}
+		return ret;
+	}
+
+	@Override
+	public RangerRole getRole(final String execUser, final String roleName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getPrincipalsForRole(" + roleName + ")");
+		}
+
+		RangerRole ret = null;
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_ROLE_INFO + roleName)
+							.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceNameUrlParam)
+							.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("get role info as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GET_ROLE_INFO + roleName)
+					.queryParam(RangerRESTUtils.REST_PARAM_EXEC_USER, execUser);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+		}
+		if(response != null) {
+			if (response.getStatus() != HttpServletResponse.SC_OK) {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				LOG.error("getPrincipalsForRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+					throw new AccessControlException();
+				}
+
+				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+			} else {
+				ret = response.getEntity(RangerRole.class);
+			}
+		} else {
+			throw new Exception("unknown error during getPrincipalsForRole. roleName="  + roleName);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getPrincipalsForRole(" + roleName + ")");
+		}
+		return ret;
+	}
+
+
+	@Override
+	public void grantRole(final GrantRevokeRoleRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.grantRole(" + request + ")");
+		}
+
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GRANT_ROLE + serviceNameUrlParam);
+							//.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).put(ClientResponse.class, restClient.toJson(request));
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("grant role as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_GRANT_ROLE + serviceNameUrlParam);
+					//.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).put(ClientResponse.class, restClient.toJson(request));
+		}
+		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("grantRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+		} else if(response == null) {
+			throw new Exception("unknown error during grantRole. serviceName="  + serviceName);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.grantRole(" + request + ")");
+		}
+	}
+
+	@Override
+	public void revokeRole(final GrantRevokeRoleRequest request) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.revokeRole(" + request + ")");
+		}
+
+		ClientResponse response = null;
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					WebResource secureWebResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_REVOKE_ROLE + serviceNameUrlParam);
+							//.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+					return secureWebResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).put(ClientResponse.class, restClient.toJson(request));
+				}
+			};
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("revoke role as user " + user);
+			}
+			response = user.doAs(action);
+		} else {
+			WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_SERVICE_REVOKE_ROLE + serviceNameUrlParam);
+					//.queryParam(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+			response = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).put(ClientResponse.class, restClient.toJson(request));
+		}
+		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("revokeRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode + (isSecureMode ? (", user=" + user) : ""));
+
+			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+				throw new AccessControlException();
+			}
+
+			throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
+		} else if(response == null) {
+			throw new Exception("unknown error during revokeRole. serviceName="  + serviceName);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.revokeRole(" + request + ")");
+		}
 	}
 
 	@Override

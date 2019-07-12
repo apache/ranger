@@ -49,6 +49,7 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
     private List<RoleMember>        users;
     private List<RoleMember>        groups;
     private List<RoleMember>        roles;
+    private String createdByUser;
 
     public RangerRole() {
         this(null, null, null, null, null, null);
@@ -115,6 +116,14 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
         this.roles = roles == null ? new ArrayList<>() : roles;
     }
 
+    public String getCreatedByUser() {
+        return createdByUser;
+    }
+
+    public void setCreatedByUser(String createdByUser) {
+        this.createdByUser = createdByUser;
+    }
+
     @Override
     public String toString() {
         return "{name=" + name
@@ -123,6 +132,7 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
                 + ", users=" + users
                 + ", groups=" + groups
                 + ", roles=" + roles
+                + ", createdByUser=" + createdByUser
                 + "}";
     }
 

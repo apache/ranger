@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -29,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerPluginInfoList;
 import org.apache.ranger.view.RangerRoleList;
@@ -543,8 +545,13 @@ public class PublicAPIsv2 {
 
 	@POST
 	@Path("/api/roles")
-	public RangerRole createRole(RangerRole role) {
-		return roleREST.createRole(role);
+	@Produces({ "application/json", "application/xml" })
+	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role, @Context HttpServletRequest request) {
+		logger.info("==> PublicAPIsv2.createRole");
+		RangerRole ret;
+		ret = roleREST.createRole(serviceName, role);
+		logger.info("<== PublicAPIsv2.createRole" + ret.getName());
+		return ret;
 	}
 
 	/*
@@ -552,19 +559,20 @@ public class PublicAPIsv2 {
 	 */
 	@PUT
 	@Path("/api/roles/{id}")
-	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role) {
+	@Produces({ "application/json", "application/xml" })
+	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role, @Context HttpServletRequest request) {
 		return roleREST.updateRole(roleId, role);
 	}
 
 	@DELETE
 	@Path("/api/roles/name/{name}")
-	public void deleteRole(@PathParam("name") String roleName) {
-		roleREST.deleteRole(roleName);
+	public void deleteRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @PathParam("name") String roleName, @Context HttpServletRequest request) {
+		roleREST.deleteRole(serviceName, userName, roleName);
 	}
 
 	@DELETE
 	@Path("/api/roles/{id}")
-	public void deleteRole(@PathParam("id") Long roleId) {
+	public void deleteRole(@PathParam("id") Long roleId, @Context HttpServletRequest request) {
 		roleREST.deleteRole(roleId);
 	}
 
@@ -573,20 +581,37 @@ public class PublicAPIsv2 {
 	 */
 	@GET
 	@Path("/api/roles/name/{name}")
-	public RangerRole getRole(@PathParam("name") String roleName) {
-		return roleREST.getRole(roleName);
+	@Produces({ "application/json", "application/xml" })
+	public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @PathParam("name") String roleName, @Context HttpServletRequest request) {
+		return roleREST.getRole(serviceName, userName, roleName);
 	}
 
 	@GET
 	@Path("/api/roles/{id}")
-	public RangerRole getRole(@PathParam("id") Long id) {
+	@Produces({ "application/json", "application/xml" })
+	public RangerRole getRole(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		return roleREST.getRole(id);
 	}
 
 	@GET
 	@Path("/api/roles")
+	@Produces({ "application/json", "application/xml" })
 	public RangerRoleList getAllRoles(@Context HttpServletRequest request){
 		return roleREST.getAllRoles(request);
+	}
+
+	@GET
+	@Path("/api/roles/names")
+	@Produces({ "application/json", "application/xml" })
+	public List<String> getAllRoleNames(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @Context HttpServletRequest request){
+		return roleREST.getAllRoleNames(serviceName, userName, request);
+	}
+
+	@GET
+	@Path("/api/roles/user/{user}")
+	@Produces({ "application/json", "application/xml" })
+	public List<String> getUserRoles(@PathParam("user") String userName, @Context HttpServletRequest request){
+		return roleREST.getUserRoles(userName, request);
 	}
 
 	/*
@@ -594,7 +619,7 @@ public class PublicAPIsv2 {
  	 */
 	@PUT
 	@Path("/api/roles/{id}/addUsersAndGroups")
-	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
 		return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
 	}
 
@@ -603,7 +628,7 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/{id}/removeUsersAndGroups")
-	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeUsersAndGroups(roleId, users, groups);
 	}
 
@@ -612,7 +637,32 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
-	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
+	}
+
+	/*
+    	This API is used to add users and roles with/without GRANT privileges to this Role. It follows add-or-update semantics
+ 	 */
+	@PUT
+	@Path("/api/roles/grant/{serviceName}")
+	@Consumes({ "application/json", "application/xml" })
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.grantRoleUsersAndRoles(" + grantRoleRequest.toString() + ")");
+		}
+		return roleREST.grantRole(serviceName, grantRoleRequest, request);
+	}
+
+	/*
+        This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
+     */
+	@PUT
+	@Path("/api/roles/revoke/{serviceName}")
+	@Consumes({ "application/json", "application/xml" })
+	@Produces({ "application/json", "application/xml" })
+	public RESTResponse revokeRoleUsersAndRoles(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
+		return roleREST.revokeRole(serviceName, revokeRoleRequest, request);
 	}
 }

@@ -87,6 +87,7 @@ import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -1247,6 +1248,7 @@ public class ServiceREST {
 						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
 						policyItem.getUsers().addAll(grantRequest.getUsers());
 						policyItem.getGroups().addAll(grantRequest.getGroups());
+						policyItem.getRoles().addAll(grantRequest.getRoles());
 	
 						for(String accessType : grantRequest.getAccessTypes()) {
 							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
@@ -1361,6 +1363,7 @@ public class ServiceREST {
 							policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
 							policyItem.getUsers().addAll(grantRequest.getUsers());
 							policyItem.getGroups().addAll(grantRequest.getGroups());
+							policyItem.getRoles().addAll(grantRequest.getRoles());
 
 							for(String accessType : grantRequest.getAccessTypes()) {
 								policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
@@ -3802,16 +3805,17 @@ public class ServiceREST {
 
 	private void validateGrantRevokeRequest(GrantRevokeRequest request){
 		if( request!=null){
-			validateUsersAndGroups(request.getUsers(),request.getGroups());
+			validateUsersGroupsAndRoles(request.getUsers(),request.getGroups(), request.getRoles());
 			validateGrantor(request.getGrantor());
 			validateGrantees(request.getUsers());
 			validateGroups(request.getGroups());
+			validateRoles(request.getRoles());
 		}
 	}
 
-	private void validateUsersAndGroups(Set<String> users, Set<String> groups){
-		if(CollectionUtils.isEmpty(users) && CollectionUtils.isEmpty(groups)){
-			throw restErrorUtil.createGrantRevokeRESTException( "Grantee users/groups list is empty");
+	private void validateUsersGroupsAndRoles(Set<String> users, Set<String> groups, Set<String> roles){
+		if(CollectionUtils.isEmpty(users) && CollectionUtils.isEmpty(groups) && CollectionUtils.isEmpty(roles)) {
+			throw restErrorUtil.createGrantRevokeRESTException("Grantee users/groups/roles list is empty");
 		}
 	}
 
@@ -3853,6 +3857,20 @@ public class ServiceREST {
 				}
 			} catch (Exception e) {
 				throw restErrorUtil.createGrantRevokeRESTException( "Grantee group "+ groupName +" doesn't exist");
+			}
+		}
+	}
+
+	private void validateRoles(Set<String> roles)  {
+		XXRole xxRole = null;
+		for (String role : roles) {
+			try {
+				xxRole = daoManager.getXXRole().findByRoleName(role);
+				if (xxRole == null) {
+					throw restErrorUtil.createGrantRevokeRESTException( "Grantee role "+ role +" doesn't exist");
+				}
+			} catch (Exception e) {
+				throw restErrorUtil.createGrantRevokeRESTException( "Grantee role "+ role +" doesn't exist");
 			}
 		}
 	}
