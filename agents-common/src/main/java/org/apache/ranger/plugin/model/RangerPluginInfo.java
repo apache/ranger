@@ -64,6 +64,7 @@ public class RangerPluginInfo implements Serializable {
 	private Date    updateTime;
 
 	private String serviceName;
+        private String serviceType;
 	private String hostName;
 	private String appType;
 	private String ipAddress;
@@ -109,6 +110,14 @@ public class RangerPluginInfo implements Serializable {
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
+
+        public String getServiceType() {
+                return serviceType;
+        }
+
+        public void setServiceType(String serviceType) {
+                this.serviceType = serviceType;
+        }
 
 	public String getServiceName() {
 		return serviceName;
@@ -278,6 +287,7 @@ public class RangerPluginInfo implements Serializable {
 		sb.append("createTime={").append(createTime).append("} ");
 		sb.append("updateTime={").append(updateTime).append("} ");
 		sb.append("serviceName={").append(serviceName).append("} ");
+                sb.append("serviceType={").append(serviceType).append("} ");
 		sb.append("hostName={").append(hostName).append("} ");
 		sb.append("appType={").append(appType).append("} ");
 		sb.append("ipAddress={").append(ipAddress).append("} ");

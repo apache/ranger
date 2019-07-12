@@ -99,9 +99,6 @@ define(function(require) {
 			newState.pageSize = pageSize ? pageSize : state.pageSize;
 			newState.currentPage = startIndex === 0 ? 0 : Math.ceil(startIndex / newState.pageSize);
 			newState.startIndex = startIndex;
-			if(this.mode === "client") {
-				newState.pageSize = XAGlobals.settings.PAGE_SIZE;
-			}
 			//newState.totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / serverState.pageSize);
 
 			return newState;

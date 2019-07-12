@@ -276,6 +276,7 @@ define(function(require) {
                 roles                           : 'Roles',
                 userWithGrantRolePrivilege      : 'Users (Grant privilege)',
                 groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
+                applicationType					: 'Application',
 
 			},
 			btn : {
@@ -450,7 +451,7 @@ define(function(require) {
                 noDeleteGroupRow        :'Please select group first to delete.',
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
-                activationTimeDelayMsg       :'Policy activation time delayed by more than 1hr from last update time.',
+                activationTimeDelayMsg       : 'Policy is updated but not yet used for any enforcement.',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupOrRoleForDelegateAdmin      : 'Please select user/group/role for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',

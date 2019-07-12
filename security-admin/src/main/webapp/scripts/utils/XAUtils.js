@@ -1715,6 +1715,20 @@ define(function(require) {
         });
     }
 
+    //remove sort caret on grids
+    XAUtils.backgirdSort = function(col){
+        col.on('backgrid:sort', function(model) {
+            // No ids so identify model with CID
+            var cid = model.cid;
+            var filtered = model.collection.filter(function(model) {
+                return model.cid !== cid;
+            });
+            _.each(filtered, function(model) {
+               model.set('direction', null);
+            });
+        });
+    }
+
 
 	return XAUtils;
 });

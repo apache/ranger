@@ -19,6 +19,7 @@ package org.apache.ranger.db;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.springframework.stereotype.Service;
@@ -64,4 +65,17 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
 		updateSequence("X_SERVICE_DEF_SEQ", maxId + 1);
 	}
 
+        public String findServiceDefTypeByServiceName(String serviceName) {
+                String serviceType = null;
+                if (StringUtils.isNotBlank(serviceName)) {
+                        try {
+                                serviceType = getEntityManager()
+                                                .createNamedQuery("XXServiceDef.findServiceDefNameByServiceName", String.class)
+                                                .setParameter("name", serviceName).getSingleResult();
+                        } catch (NoResultException e) {
+                                return null;
+                        }
+                }
+                return serviceType;
+        }
 }

@@ -198,6 +198,7 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
+                                        <th class="renderable ruser"></th>\
 					<th class="renderable cip" colspan="3">Policy ( Time )<i class="icon-info-sign m-l-sm" data-id ="policyTimeDetails"></th>\
                     <th class="renderable cip" colspan="3">Tag ( Time )<i class="icon-info-sign m-l-sm" data-id ="tagPolicyTimeDetails"></th>\
 			 	</tr>');
@@ -300,7 +301,7 @@ define(function(require) {
 					 //To use existing collection
 					 this.pluginInfoList.url = 'service/plugins/plugins/info';
 					 this.pluginInfoList.modelAttrName = 'pluginInfoList';
-					 this.pluginInfoList.switchMode("client")
+                                         this.pluginInfoList.switchMode("client",  {fetch:false});
                      if(_.isEmpty(App.vsHistory.pluginStatus)){
                          this.pluginInfoList.fetch({cache : false});
                      }
@@ -648,10 +649,11 @@ define(function(require) {
 		},
 		addSearchForPluginStatusTab : function(){
                         var that = this , query = '';
-			var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),
+                        var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),localization.tt("lbl.applicationType"),
 			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName")];
-			var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.serviceType"), label :"pluginAppType"},
-			                       {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"}];
+                        var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.applicationType"), label :"pluginAppType"},
+                                               {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"},
+                                               {text : localization.tt("lbl.serviceType"), label :"serviceType"}];
                         _.map(App.vsHistory.pluginStatus, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 					placeholder    : localization.tt('msg.searchForPluginStatus'),
@@ -668,10 +670,17 @@ define(function(require) {
 											callback(serviceList.map(function(model){return model.get('name');}));
 										});
 										break;
-								}     
-			            	
+
+                                                                        case 'Service Type':
+                                                                                var serviveType = [];
+                                                                                that.serviceDefList.each(function(m){
+                                                                                        serviveType.push({ 'label' : m.get('name') , 'value' : m.get('name') });
+                                                                                });
+                                                                                callback(serviveType);
+                                                                                break;
+                                                                }
 							}
-				      }
+                                        }
 			}
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.pluginInfoList, pluginAttr);
                         this.setEventsToFacets(this.visualSearch, App.vsHistory.pluginStatus);
@@ -1532,52 +1541,72 @@ define(function(require) {
 		},
 		renderPluginInfoTable : function(){
 			this.ui.tableList.removeClass("clickable");
-			this.rTableList.show(new XATableLayout({
-				columns: this.getPluginInfoColums(),
-				collection: this.pluginInfoList,
-				includeFilter : false,
-				gridOpts : {
-					row : 	Backgrid.Row.extend({}),
-					header : XABackgrid,
-						emptyText : 'No plugin status found!'
-				}
-			}));	
-		},
-		getPluginInfoColums : function(){
-			var that = this, cols ={
+                        this.rTableList.show(new XATableLayout({
+                                columns: this.getPluginInfoColums(),
+                                collection: this.pluginInfoList,
+                                includePagination : false,
+                                includeFilter : false,
+                                gridOpts : {
+                                        row : 	Backgrid.Row.extend({}),
+                                        header : XABackgrid,
+                                                emptyText : 'No plugin status found!'
+                                }
+                        }));
+            XAUtils.backgirdSort(this.pluginInfoList);
+                },
+                getPluginInfoColums : function(){
+                        var that = this, cols ={
 				serviceName : {
                                         cell 	: 'html',
 					label	: localization.tt("lbl.serviceName"),
 					editable:false,
-                                        sortable:false,
+                                        sortable:true,
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
-                                                                rawValue = _.escape(rawValue);
-                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
-                                                             }
-                                            }),
+                                                        rawValue = _.escape(rawValue);
+                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                }
+                                        }),
+                                },
+                                serviceType : {
+                                        cell : 'html',
+                                        label   : localization.tt("lbl.serviceType"),
+                                        editable:false,
+                                        sortable:true,
+                                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                                fromRaw: function (rawValue, model) {
+                                                        if(_.isEmpty(rawValue) || _.isUndefined(rawValue)){
+                                                                return '<center>--</center>';
+                                                        }
+                                                        rawValue = _.escape(rawValue);
+                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                }
+                                        }),
 				},
 				appType : {
                                         cell : 'html',
-					label	: localization.tt("lbl.serviceType"),
+                                        label	: localization.tt("lbl.applicationType"),
 					editable:false,
-                                        sortable:false,
+                                        sortable:true,
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
-                                                                rawValue = _.escape(rawValue);
-                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
-                                                             }
-                                            }),
+                                                        rawValue = _.escape(rawValue);
+                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                }
+                                        }),
 				},
 				hostName : {
 					cell : 'html',
 					label	: localization.tt("lbl.hostName"),
 					editable:false,
-					sortable:false,
+                                        sortable:true,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							rawValue = _.escape(rawValue);
-							return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                        if(_.isEmpty(rawValue) || _.isUndefined(rawValue)){
+                                                                return '<center>--</center>';
+                                                        }
+                            return '<span title="'+rawValue+'">'+rawValue+'</span>';
 						}
 					}),
 				},
@@ -1585,7 +1614,7 @@ define(function(require) {
 					cell 	: 'string',
 					label	: localization.tt("lbl.agentIp"),
 					editable:false,
-					sortable:false
+                                        sortable:true,
 				},
 				lastPolicyUpdateTime : {
 					cell : 'html',
@@ -1601,7 +1630,7 @@ define(function(require) {
 								|| _.isNull(model.get('info').lastPolicyUpdateTime)){
 									return '<center>--</center>';
 							}
-							return Globalize.format(new Date(parseInt(model.get('info')['lastPolicyUpdateTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+                                                        return that.setTimeStamp(new Date(parseInt(model.get('info')['lastPolicyUpdateTime'])) , moment);
 						}
 					})
 				},
@@ -1619,7 +1648,7 @@ define(function(require) {
 								|| _.isNull(model.get('info').policyDownloadTime)){
 								return '<center>--</center>';
 							}
-							return Globalize.format(new Date(parseInt(model.get('info')['policyDownloadTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+                                                        return that.setTimeStamp(new Date(parseInt(model.get('info')['policyDownloadTime'])) , moment);
 						}
 					})
 				},
@@ -1642,10 +1671,10 @@ define(function(require) {
 								var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
 								if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
 									return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
-										+ Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                                                + that.setTimeStamp(activeDate , moment);
 								}
 							}
-							return Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                        return that.setTimeStamp(activeDate , moment);
 						}
 					})
 				},
@@ -1667,7 +1696,7 @@ define(function(require) {
 								|| _.isNull(model.get('info').lastTagUpdateTime)){
 								return '<center>--</center>';
 							}
-							return Globalize.format(new Date(parseInt(model.get('info')['lastTagUpdateTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+                                                        return that.setTimeStamp(new Date(parseInt(model.get('info')['lastTagUpdateTime'])) , moment);
 						}
 					})
 				},
@@ -1685,7 +1714,8 @@ define(function(require) {
 								|| _.isNull(model.get('info').tagDownloadTime)){
 								return '<center>--</center>';
 							}
-							return Globalize.format(new Date(parseInt(model.get('info')['tagDownloadTime'])),  "MM/dd/yyyy hh:mm:ss tt")
+                                                        return that.setTimeStamp(new Date(parseInt(model.get('info')['tagDownloadTime'])) , moment);
+
 						}
 					})
 				},
@@ -1708,10 +1738,11 @@ define(function(require) {
 									var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
 									if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
 										return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
-											+ Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                                                        + that.setTimeStamp(activeDate , moment);
 									}
 								}
-							return Globalize.format(activeDate,  "MM/dd/yyyy hh:mm:ss tt");
+                                                        return that.setTimeStamp(activeDate , moment);
+
 						}
 					})
 				},
@@ -1834,9 +1865,16 @@ define(function(require) {
         },
 
         isDateDifferenceMoreThanHr : function(date1, date2){
-                var diff = Math.abs(date1 - date2) / 36e5;
-                return parseInt(diff) >= 1 ? true : false;
-		},
+                var diff = date1 - date2 / 36e5;
+                return parseInt(diff) < 0 ? true : false;
+        },
+
+        //Time stamp
+        setTimeStamp : function(time, moment) {
+            return '<span title="'+Globalize.format(time,  "MM/dd/yyyy hh:mm:ss tt")+'">'+Globalize.format(time,  "MM/dd/yyyy hh:mm:ss tt")
+            + '<div><small style="color : #8c8c8c">'+moment(time).fromNow()+'</small></div></span>'
+        },
+
 		onRefresh : function(){
 			var that =this, coll,params = {};
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1857,7 +1895,7 @@ define(function(require) {
 				coll = this.policyExportAuditList;
 				break;
 			case "#pluginStatus":
-				this.pluginInfoList.switchMode("client");
+                                this.pluginInfoList.switchMode("client", {fetch:false});
 				coll = this.pluginInfoList;
 				break;
                         case "#userSync":
@@ -1907,7 +1945,7 @@ define(function(require) {
 					this.collection = this.policyExportAuditList;
 					break;
 				case "#pluginStatus":
-					this.pluginInfoList.switchMode("client");
+                                        this.pluginInfoList.switchMode("client",  {fetch:false});
 					this.collection = this.pluginInfoList;
 					break;
                                 case "#userSync":

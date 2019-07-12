@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -91,6 +92,13 @@ public class RangerPluginInfoService {
 
 		List<XXService> servicesWithTagService = daoManager.getXXService().getAllServicesWithTagService();
 
+                // Rebuild searchFilter without serviceType
+
+                String serviceTypeToSearch = searchFilter.getParam(SearchFilter.SERVICE_TYPE);
+                if (StringUtils.isNotBlank(serviceTypeToSearch)) {
+                        searchFilter.removeParam(SearchFilter.SERVICE_TYPE);
+                }
+
 		List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
 		List<Object[]> objectsList = null;
@@ -126,7 +134,10 @@ public class RangerPluginInfoService {
 			}
 
 			RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo, hasAssociatedTagService);
-			objList.add(obj);
+
+                        if (StringUtils.isBlank(serviceTypeToSearch) || StringUtils.equals(serviceTypeToSearch, obj.getServiceType())) {
+                                objList.add(obj);
+                        }
 		}
 
 		retList.setList(objList);
@@ -140,6 +151,11 @@ public class RangerPluginInfoService {
 		ret.setCreateTime(xObj.getCreateTime());
 		ret.setUpdateTime(xObj.getUpdateTime());
 		ret.setServiceName(xObj.getServiceName());
+
+                String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
+                if (StringUtils.isNotBlank(serviceType)) {
+                        ret.setServiceType(serviceType);
+                }
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
@@ -166,6 +182,11 @@ public class RangerPluginInfoService {
 		ret.setCreateTime(xObj.getCreateTime());
 		ret.setUpdateTime(xObj.getUpdateTime());
 		ret.setServiceName(xObj.getServiceName());
+
+                String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
+                if (StringUtils.isNotBlank(serviceType)) {
+                        ret.setServiceType(serviceType);
+                }
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
