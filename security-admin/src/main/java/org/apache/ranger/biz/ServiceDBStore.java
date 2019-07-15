@@ -2108,6 +2108,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			for (RangerPolicy policy : policies) {
 				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 	
+				if(service==null) {
+					service = getServiceByName(policy.getService());
+				}
 				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
 	
 				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE, false);

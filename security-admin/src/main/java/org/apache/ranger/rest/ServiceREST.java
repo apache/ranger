@@ -160,7 +160,8 @@ public class ServiceREST {
 	final static public String PARAM_POLICY_NAME      = "policyName";
 	final static public String PARAM_ZONE_NAME        = "zoneName";
 	final static public String PARAM_UPDATE_IF_EXISTS = "updateIfExists";
-	final static public String PARAM_IGNORE_POLICY_NAME = "ignorePolicyName";
+	final static public String PARAM_MERGE_IF_EXISTS  = "mergeIfExists";
+	final static public String PARAM_DELETE_IF_EXISTS = "deleteIfExists";
 	public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
 	public static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
@@ -1569,8 +1570,13 @@ public class ServiceREST {
 			}
 
 			if(request != null) {
-				String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
-				if(updateIfExists != null && updateIfExists.equalsIgnoreCase("true")) {
+				boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
+				if(deleteIfExists) {
+					List<RangerPolicy> policies=new ArrayList<RangerPolicy>() { { add(policy); } };
+					deleteExactMatchPolicyForResource(policies, request.getRemoteUser(), null);
+				}
+				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
+				if(updateIfExists) {
 					RangerPolicy existingPolicy = null;
 					if(StringUtils.isNotEmpty(policy.getGuid())) {
 						existingPolicy = getPolicyByGuid(policy.getGuid());
@@ -2166,12 +2172,10 @@ public class ServiceREST {
 									}
 									if (StringUtils.isNotEmpty(policyInJson.getService().trim())) {
 										String serviceName = policyInJson.getService().trim();
-										if (CollectionUtils.isNotEmpty(serviceNameList) && serviceNameList.contains(serviceName)) {
+										if (CollectionUtils.isNotEmpty(serviceNameList) && serviceNameList.contains(serviceName) && !sourceServices.contains(serviceName) && !destinationServices.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
-										} else if (CollectionUtils.isEmpty(serviceNameList)
-												&& !sourceServices.contains(serviceName)
-												&& !destinationServices.contains(serviceName)) {
+										} else if (CollectionUtils.isEmpty(serviceNameList) && !sourceServices.contains(serviceName) && !destinationServices.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
 										}
@@ -2206,24 +2210,24 @@ public class ServiceREST {
 							}
 						}
 					}
-					String updateIfExists = request.getParameter(PARAM_UPDATE_IF_EXISTS);
+					boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
+					boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
 					String polResource = request.getParameter(SearchFilter.POL_RESOURCE);
-					if (updateIfExists == null || updateIfExists.isEmpty()) {
-						updateIfExists = "false";
-					} else if (updateIfExists.equalsIgnoreCase("true")) {
+					if (updateIfExists) {
 						isOverride = false;
 					}
 					String destinationZoneName = getDestinationZoneName(destinationZones,zoneNameInJson);
-					if (isOverride && "false".equalsIgnoreCase(updateIfExists) && StringUtils.isEmpty(polResource)) {
+					if (deleteIfExists) {
+						deleteExactMatchPolicyForResource(policies, request.getRemoteUser(), destinationZoneName);
+					}
+					if (isOverride && !updateIfExists && StringUtils.isEmpty(polResource)) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file...");
 						}
 						if (CollectionUtils.isNotEmpty(sourceServices) && CollectionUtils.isNotEmpty(destinationServices)) {
 							deletePoliciesProvidedInServiceMap(sourceServices, destinationServices,destinationZoneName);//In order to delete Zone specific policies from service
 						}
-					}
-
-					if ("true".equalsIgnoreCase(updateIfExists) && StringUtils.isNotEmpty(polResource)) {
+					} else if (updateIfExists && StringUtils.isNotEmpty(polResource)) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Deleting Policy from provided services in servicesMapJson file for specific resource...");
 						}
@@ -2310,8 +2314,9 @@ public class ServiceREST {
 	}
 	
 	private int createPolicesBasedOnPolicyMap(HttpServletRequest request, Map<String, RangerPolicy> policiesMap,
-			List<String> serviceNameList, String updateIfExists, int totalPolicyCreate) {
-		boolean ignorePolicyName= "true".equalsIgnoreCase(StringUtils.trimToNull(request.getParameter(PARAM_IGNORE_POLICY_NAME))) ?  true : false;
+			List<String> serviceNameList, boolean updateIfExists, int totalPolicyCreate) {
+		boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
+		boolean deleteIfExists = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS))) ? true : false;
 		if (!CollectionUtils.sizeIsEmpty(policiesMap.entrySet())) {
 			for (Entry<String, RangerPolicy> entry : policiesMap.entrySet()) {
 				RangerPolicy policy = entry.getValue();
@@ -2320,11 +2325,11 @@ public class ServiceREST {
 						for (String service : serviceNameList) {
 							if (StringUtils.isNotEmpty(service.trim()) && StringUtils.isNotEmpty(policy.getService().trim())){
 								if (policy.getService().trim().equalsIgnoreCase(service.trim())) {
-									if (updateIfExists != null && !updateIfExists.isEmpty()){
+									if (updateIfExists || mergeIfExists || deleteIfExists) {
 										request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 										request.setAttribute(PARAM_POLICY_NAME, policy.getName());
 										request.setAttribute(PARAM_ZONE_NAME, policy.getZoneName());
-										if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
+										if(mergeIfExists && !ServiceRESTUtil.containsRangerCondition(policy)) {
 											String user = request.getRemoteUser();
 											RangerPolicy existingPolicy;
 											try {
@@ -2356,11 +2361,11 @@ public class ServiceREST {
 							}
 						}
 					} else {
-						if (updateIfExists != null && !updateIfExists.isEmpty()){
+						if (updateIfExists || mergeIfExists || deleteIfExists) {
 							request.setAttribute(PARAM_SERVICE_NAME, policy.getService());
 							request.setAttribute(PARAM_POLICY_NAME, policy.getName());
 							request.setAttribute(PARAM_ZONE_NAME, policy.getZoneName());
-							if(ignorePolicyName && !ServiceRESTUtil.containsRangerCondition(policy)) {
+							if(mergeIfExists && !ServiceRESTUtil.containsRangerCondition(policy)) {
 								String user = request.getRemoteUser();
 								RangerPolicy existingPolicy;
 								try {
@@ -3219,7 +3224,18 @@ public class ServiceREST {
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
-			ret = svcStore.getPolicy(policies.get(0).getId());
+			if(policies.size()==1) {
+				ret = svcStore.getPolicy(policies.get(0).getId());
+			} else {
+				if (StringUtils.isNotEmpty(policy.getZoneName())) {
+					for(RangerPolicy existingPolicy:policies) {
+						if (StringUtils.equals(policy.getZoneName(), existingPolicy.getZoneName())) {
+							ret = svcStore.getPolicy(existingPolicy.getId());
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -4133,6 +4149,32 @@ public class ServiceREST {
 		}
 	}
 
+	private void deleteExactMatchPolicyForResource(List<RangerPolicy> policies, String user, String zoneName) throws Exception {
+		if (CollectionUtils.isNotEmpty(policies)) {
+			List<RangerPolicy> existingMatchedPolicies=new ArrayList<RangerPolicy>();
+			for (RangerPolicy rangerPolicy : policies) {
+				RangerPolicy existingPolicy = null ;
+				try {
+					if(zoneName!=null) {
+						rangerPolicy.setZoneName(zoneName);
+					}
+					existingPolicy = getExactMatchPolicyForResource(rangerPolicy, StringUtils.isNotBlank(user) ? user :"admin");
+				} catch (Exception e) {
+					existingPolicy=null;
+				}
+				if(existingPolicy!=null) {
+					svcStore.deletePolicy(existingPolicy, null);
+					existingMatchedPolicies.add(existingPolicy);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
+					}
+				}
+			}
+			if (CollectionUtils.isNotEmpty(existingMatchedPolicies)) {
+				svcStore.createTrxLogsAndHistoryAfterDelete(existingMatchedPolicies, null);
+			}
+		}
+	}
 }
 
 
