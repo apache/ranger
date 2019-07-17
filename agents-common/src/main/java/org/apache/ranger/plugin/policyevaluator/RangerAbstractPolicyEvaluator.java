@@ -97,7 +97,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	public boolean hasDeny() {
-		return policy != null && CollectionUtils.isNotEmpty(policy.getDenyPolicyItems());
+		return policy != null && (policy.getIsDenyAllElse() || CollectionUtils.isNotEmpty(policy.getDenyPolicyItems()));
 	}
 
 	@Override

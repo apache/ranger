@@ -375,6 +375,25 @@
                 "users": ["adam", "eve"], "roles": ["eden"]
               }
             ]
+          },
+          {
+            "id": 20, "name": "db=denyAllElse; table=table-1; column=column-1", "isEnabled": true, "isAuditEnabled": true,
+            "resources": {
+              "database": { "values": [ "denyAllElse" ] },
+              "table": { "values": [ "table-1" ] },
+              "column": { "values": [ "column-1" ] }
+            },
+            "isDenyAllElse": true,
+            "policyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true }, { "type": "update", "isAllowed": true }, { "type": "create", "isAllowed": true }, { "type": "drop", "isAllowed": true }, { "type": "alter", "isAllowed": true }, { "type": "index", "isAllowed": true }],
+                "users": [ "user1", "user3" ]
+              }
+            ],
+            "allowExceptions": [
+              { "accesses": [ { "type": "update", "isAllowed": true } ],
+                "users": ["user1", "user2"]
+              }
+            ]
           }
         ],
         "tagPolicies": {
@@ -538,6 +557,16 @@
       },
 
       "tests": [
+      {
+        "name": "denyAllElse-test",
+        "resource": {"elements":{"database":"denyAllElse", "table":"table-1", "column": "column-1" }},
+        "userPermissions":
+          {"user1": {"select": {"result": 1, "isFinal": true}, "update": {"result": -1, "isFinal": true},"create": {"result": 1, "isFinal": true},"drop": {"result": 1, "isFinal": true},"alter": {"result": 1, "isFinal": true},"index": {"result": 1, "isFinal": true},"lock": {"result": -1, "isFinal": true}},
+            "user2": {"select": {"result": -1, "isFinal": true}, "update": {"result": -1, "isFinal": true},"create": {"result": -1, "isFinal": true},"drop": {"result": -1, "isFinal": true},"alter": {"result": -1, "isFinal": true},"index": {"result": -1, "isFinal": true},"lock": {"result": -1, "isFinal": true}},
+            "user3": {"select": {"result": 1, "isFinal": true}, "update": {"result": 1, "isFinal": true},"create": {"result": 1, "isFinal": true},"drop": {"result": 1, "isFinal": true},"alter": {"result": 1, "isFinal": true},"index": {"result": 1, "isFinal": true},"lock": {"result": -1, "isFinal": true}}},
+        "groupPermissions": {"public": {"select": {"result": 2, "isFinal": true}, "update": {"result": 2, "isFinal": true},"create": {"result": 2, "isFinal": true},"drop": {"result": 2, "isFinal": true},"alter": {"result": 2, "isFinal": true},"index": {"result": 2, "isFinal": true},"lock": {"result": -1, "isFinal": true}}},
+        "rolePermissions": {}
+      },
         {
           "name": "all-deny-test",
           "resource": {"elements":{"database":"hr", "udf":"udf" }},

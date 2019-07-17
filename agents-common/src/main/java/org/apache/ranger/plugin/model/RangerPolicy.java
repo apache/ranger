@@ -87,6 +87,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	private List<RangerValiditySchedule>      validitySchedules;
 	private List<String>                      policyLabels;
 	private String                            zoneName;
+	private Boolean                           isDenyAllElse;
 
 	public RangerPolicy() {
 		this(null, null, null, null, null, null, null, null, null, null, null);
@@ -100,6 +101,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this(service, name, policyType, policyPriority, description, resources, policyItems, resourceSignature, options, validitySchedules, policyLables, zoneName, null);
 	}
 
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyItemCondition> conditions) {
+		this(service, name, policyType, policyPriority, description, resources, policyItems, resourceSignature, options, validitySchedules, policyLables, zoneName, conditions, null);
+	}
+
 	/**
 	 * @param service
 	 * @param name
@@ -109,7 +114,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	 * @param policyItems
 	 * @param resourceSignature TODO
 	 */
-	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyItemCondition> conditions) {
+	public RangerPolicy(String service, String name, Integer policyType, Integer policyPriority, String description, Map<String, RangerPolicyResource> resources, List<RangerPolicyItem> policyItems, String resourceSignature, Map<String, Object> options, List<RangerValiditySchedule> validitySchedules, List<String> policyLables, String zoneName, List<RangerPolicyItemCondition> conditions, Boolean isDenyAllElse) {
 		super();
 
 		setService(service);
@@ -131,6 +136,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setPolicyLabels(policyLables);
 		setZoneName(zoneName);
 		setConditions(conditions);
+		setIsDenyAllElse(isDenyAllElse);
 
 	}
 
@@ -159,6 +165,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setPolicyLabels(other.getPolicyLabels());
 		setZoneName(other.getZoneName());
 		setConditions(other.getConditions());
+		setIsDenyAllElse(other.getIsDenyAllElse());
 	}
 
 	/**
@@ -509,6 +516,14 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.conditions = conditions;
 	}
 
+	public Boolean getIsDenyAllElse() {
+		return isDenyAllElse;
+	}
+
+	public void setIsDenyAllElse(Boolean isDenyAllElse) {
+		this.isDenyAllElse = isDenyAllElse == null ? Boolean.FALSE : isDenyAllElse;
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -641,7 +656,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
             }
         }
         sb.append(", zoneName=").append(zoneName);
-        sb.append("}");
+
+		sb.append(", isDenyAllElse={").append(isDenyAllElse).append("} ");
+
+		sb.append("}");
 
 		sb.append("}");
 

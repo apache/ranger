@@ -94,10 +94,14 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
             }
         }
 
-        for (String group : groups) {
-            if (RangerPolicyEngine.GROUP_PUBLIC.equalsIgnoreCase(group)) {
-                hasPublicGroup = true;
-                break;
+        if (policy.getIsDenyAllElse()) {
+            hasPublicGroup = true;
+        } else {
+            for (String group : groups) {
+                if (RangerPolicyEngine.GROUP_PUBLIC.equalsIgnoreCase(group)) {
+                    hasPublicGroup = true;
+                    break;
+                }
             }
         }
 
@@ -332,11 +336,15 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
         boolean result = true;
 
-        List<RangerServiceDef.RangerAccessTypeDef> serviceAccessTypes = getServiceDef().getAccessTypes();
-        for (RangerServiceDef.RangerAccessTypeDef serviceAccessType : serviceAccessTypes) {
-            if(! accessPerms.contains(serviceAccessType.getName())) {
-                result = false;
-                break;
+        if (getPolicy().getIsDenyAllElse()) {
+            hasAllPerms = true;
+        } else {
+            List<RangerServiceDef.RangerAccessTypeDef> serviceAccessTypes = getServiceDef().getAccessTypes();
+            for (RangerServiceDef.RangerAccessTypeDef serviceAccessType : serviceAccessTypes) {
+                if (!accessPerms.contains(serviceAccessType.getName())) {
+                    result = false;
+                    break;
+                }
             }
         }
 

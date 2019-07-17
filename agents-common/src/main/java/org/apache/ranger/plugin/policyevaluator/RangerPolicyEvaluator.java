@@ -367,10 +367,11 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 			}
 		}
 
-		void finalizeAcls() {
+		void finalizeAcls(final boolean isDenyAllElse, final Set<String> allAccessTypeNames) {
 			Map<String, AccessResult>  publicGroupAccessInfo = groupsAccessInfo.get(RangerPolicyEngine.GROUP_PUBLIC);
 
 			if (publicGroupAccessInfo != null) {
+
 				// For each accessType in public, retrieve access
 				for (Map.Entry<String, AccessResult> entry : publicGroupAccessInfo.entrySet()) {
 					final String       accessType   = entry.getKey();
@@ -428,7 +429,73 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 						}
 					}
 				}
+			}
 
+			if (isDenyAllElse) {
+				// Go through all usersAccessInfo and groupsAccessInfo and mark ACCESS_UNDETERMINED to ACCESS_DENIED
+				for (Map.Entry<String, Map<String, AccessResult>> mapEntry : usersAccessInfo.entrySet()) {
+					for (Map.Entry<String, AccessResult> accessEntry : mapEntry.getValue().entrySet()) {
+						AccessResult result = accessEntry.getValue();
+						if (result.getResult() == ACCESS_UNDETERMINED) {
+							result.setResult(ACCESS_DENIED);
+						}
+					}
+				}
+
+				for (Map.Entry<String, Map<String, AccessResult>> mapEntry : groupsAccessInfo.entrySet()) {
+					for (Map.Entry<String, AccessResult> accessEntry : mapEntry.getValue().entrySet()) {
+						AccessResult result = accessEntry.getValue();
+						if (result.getResult() == ACCESS_UNDETERMINED) {
+							result.setResult(ACCESS_DENIED);
+						}
+					}
+				}
+
+				// Mark all unseen accessTypeNames are having no permission
+				for (Map.Entry<String, Map<String, AccessResult>> mapEntry : usersAccessInfo.entrySet()) {
+					for (String accessTypeName : allAccessTypeNames) {
+						if (!mapEntry.getValue().keySet().contains(accessTypeName)) {
+							mapEntry.getValue().put(accessTypeName, new AccessResult(ACCESS_DENIED, true));
+						}
+					}
+				}
+
+				for (Map.Entry<String, Map<String, AccessResult>> mapEntry : groupsAccessInfo.entrySet()) {
+					for (String accessTypeName : allAccessTypeNames) {
+						if (!mapEntry.getValue().keySet().contains(accessTypeName)) {
+							mapEntry.getValue().put(accessTypeName, new AccessResult(ACCESS_DENIED, true));
+						}
+					}
+				}
+
+				publicGroupAccessInfo = groupsAccessInfo.computeIfAbsent(RangerPolicyEngine.GROUP_PUBLIC, k -> new HashMap<>());
+
+				Set<String> accessTypeNamesInPublicGroup = publicGroupAccessInfo.keySet();
+
+				for (String accessTypeName : allAccessTypeNames) {
+					if (!accessTypeNamesInPublicGroup.contains(accessTypeName)) {
+						boolean isDenyAccess = true;
+						for (Map.Entry<String, Map<String, AccessResult>> mapEntry : usersAccessInfo.entrySet()) {
+							AccessResult result = mapEntry.getValue().get(accessTypeName);
+							if (result == null || result.getResult() != ACCESS_DENIED) {
+								isDenyAccess = false;
+								break;
+							}
+						}
+						if (isDenyAccess) {
+							for (Map.Entry<String, Map<String, AccessResult>> mapEntry : groupsAccessInfo.entrySet()) {
+								if (!StringUtils.equals(mapEntry.getKey(), RangerPolicyEngine.GROUP_PUBLIC)) {
+									AccessResult result = mapEntry.getValue().get(accessTypeName);
+									if (result == null || result.getResult() != ACCESS_DENIED) {
+										isDenyAccess = false;
+										break;
+									}
+								}
+							}
+						}
+						publicGroupAccessInfo.put(accessTypeName, new AccessResult(isDenyAccess ? ACCESS_DENIED : ACCESS_CONDITIONAL, true));
+					}
+				}
 			}
 		}
 

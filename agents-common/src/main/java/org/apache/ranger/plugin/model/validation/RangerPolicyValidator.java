@@ -353,6 +353,17 @@ public class RangerPolicyValidator extends RangerValidator {
 						.build());
 					valid = false;
 				} else {
+					if (Boolean.TRUE.equals(policy.getIsDenyAllElse())) {
+						if (CollectionUtils.isNotEmpty(policy.getDenyPolicyItems()) || CollectionUtils.isNotEmpty(policy.getDenyExceptions())) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE;
+							failures.add(new ValidationFailureDetailsBuilder()
+									.field("policy items")
+									.becauseOf(error.getMessage())
+									.errorCode(error.getErrorCode())
+									.build());
+							valid = false;
+						}
+					}
 					valid = isValidPolicyItems(policy.getPolicyItems(), failures, serviceDef) && valid;
 					valid = isValidPolicyItems(policy.getDenyPolicyItems(), failures, serviceDef) && valid;
 					valid = isValidPolicyItems(policy.getAllowExceptions(), failures, serviceDef) && valid;
