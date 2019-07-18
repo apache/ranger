@@ -278,7 +278,6 @@ define(function(require){
 			this.collection.add(new Backbone.Model());
 		},
 		onRender: function() {
-			this.$el.find('.fileValidation').hide();
 			this.ui.selectFileValidationMsg.hide();
 			this.ui.selectZoneMapping.hide();
 			this.ui.selectServicesMapping.hide();
@@ -286,16 +285,25 @@ define(function(require){
 		importPolicy : function(e){
 			var that =this;
 			console.log("uploading....");
-			this.$el.find('.selectFile').hide(); 
 			this.ui.selectFileValidationMsg.hide(); 
-			this.$el.find('.fileValidation').hide();
-			this.selectedFileValidation(e)
-			this.targetFileObj = e.target.files[0];
+                        if(e.target && e.target.files.length > 0){
+                                this.targetFileObj = e.target.files[0];
+                        } else {
+                                return
+                        }
 			if(!_.isUndefined(this.targetFileObj)){
-				this.$el.find('.selectFile').html('<i>'+this.targetFileObj.name+
-					'</i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>').removeClass('text-color-red').show();
+                                this.$el.find('.selectFile').text(this.targetFileObj.name);
+                                this.$el.find('.selectFile').append('<i></i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>');
+                                //check if file name is proper json extension or not
+                                if(this.targetFileObj.type === "application/json" || (this.targetFileObj.name).match(".json$", "i")){
+                                        this.selectedFileValidation(e)
+                                } else {
+                                        this.ui.selectFileValidationMsg.show();
+                                        this.fileNameClosebtn(false);
+                                        return
+                                }
 			} else {
-				this.$el.find('.selectFile').html("No file chosen").show();
+                                this.$el.find('.selectFile').text("No file chosen");
 			}
 		},
 		selectedFileValidation : function(file){
@@ -402,11 +410,11 @@ define(function(require){
 				}
 			});
 		},
-		fileNameClosebtn : function(){
-			this.$el.find('.selectFile').hide()
-			this.$el.find('.selectFile').html("No file chosen").removeClass('text-color-red').show()
-			this.$el.find('.fileValidation').hide();
-			this.ui.selectFileValidationMsg.hide();
+                fileNameClosebtn : function(fileSelected){
+                        if(fileSelected && fileSelected.hasOwnProperty('currentTarget')){
+                                this.$el.find('.selectFile').text("No file chosen");
+                                this.ui.selectFileValidationMsg.hide();
+                        }
 			this.targetFileObj = undefined;
 			this.ui.importFilePolicy.val('');
 			this.ui.selectServicesMapping.hide();
