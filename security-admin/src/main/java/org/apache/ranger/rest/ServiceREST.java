@@ -704,7 +704,7 @@ public class ServiceREST {
 			}
                          bizUtil.blockAuditorRoleUser();
 
-			if (StringUtils.isBlank(service.getTagService()) && xxServiceDef != null && !xxServiceDef.getId().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			if (StringUtils.isBlank(service.getTagService()) && xxServiceDef != null && !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, xxServiceDef.getName())) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
 				}
