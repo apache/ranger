@@ -300,5 +300,31 @@ public class XPortalUserService extends
 		daoManager.getXXPolicyRefUser().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXPolicyRefAccessType().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXPolicyRefAccessType().updateUserIDReference("upd_by_id", xXPortalUserId);
+		//2.0
+		//Note: skipping x_policy_change_log table as it does not have 'added_by_id' and 'upd_by_id' fields
+		daoManager.getXXSecurityZoneRefGroup().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefGroup().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefUser().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefUser().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefResource().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefResource().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefTagService().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefTagService().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefService().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneRefService().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGlobalState().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGlobalState().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneDao().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXSecurityZoneDao().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefRole().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefRole().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefGroup().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefGroup().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefUser().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXRoleRefUser().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXPolicyRefRole().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXPolicyRefRole().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXRole().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXRole().updateUserIDReference("upd_by_id", xXPortalUserId);
 	}
 }
