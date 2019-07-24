@@ -619,21 +619,21 @@ public class AssetREST {
 		searchUtil.extractString(request, searchCriteria, "accessType",
 				"Access Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "aclEnforcer",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Access Enforcer", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "agentId",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Application", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "repoName",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Service Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "sessionId",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Session ID", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractStringList(request, searchCriteria, "requestUser",
 			"Users", "requestUser", null, StringUtil.VALIDATION_TEXT);
 		searchUtil.extractStringList(request, searchCriteria, "excludeUser",
 			"Exclude Users", "-requestUser", null, StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "requestData",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Request Data", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourcePath",
-				"Access Type", StringUtil.VALIDATION_TEXT);
+				"Resource Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "clientIP",
 				"Client IP", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourceType",
@@ -642,8 +642,8 @@ public class AssetREST {
 				"Exclude Service User",StringUtil.VALIDATION_TEXT);
 		searchUtil.extractInt(request, searchCriteria, "auditType", "Audit Type");
                 searchUtil.extractInt(request, searchCriteria, "accessResult", "Result");
-		searchUtil.extractInt(request, searchCriteria, "assetId", "Audit Type");
-		searchUtil.extractLong(request, searchCriteria, "policyId", "Audit Type");
+		searchUtil.extractInt(request, searchCriteria, "assetId", "Asset ID");
+		searchUtil.extractLong(request, searchCriteria, "policyId", "Policy ID");
                 searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
 		
 		searchUtil.extractDate(request, searchCriteria, "startDate",
