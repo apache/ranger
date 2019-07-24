@@ -3010,7 +3010,7 @@ public class ServiceREST {
 				RangerPerfTracer.log(perf);
 			}
 		}
-		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
 
 		if(httpCode != HttpServletResponse.SC_OK) {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
@@ -3135,7 +3135,7 @@ public class ServiceREST {
 				RangerPerfTracer.log(perf);
 			}
 		}
-		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
 
 		if (httpCode != HttpServletResponse.SC_OK) {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;

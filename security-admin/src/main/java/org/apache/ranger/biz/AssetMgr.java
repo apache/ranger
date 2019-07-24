@@ -56,6 +56,7 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.*;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
@@ -660,7 +661,7 @@ public class AssetMgr extends AssetMgrBase {
 		return ret;
 	}
 
-	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode) {
+	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName) {
 		RangerRESTUtils restUtils = new RangerRESTUtils();
 
 		final String ipAddress = getRemoteAddress(request);
@@ -695,10 +696,10 @@ public class AssetMgr extends AssetMgrBase {
 			pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
 		}
 
-		createOrUpdatePluginInfo(pluginSvcVersionInfo, entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES, httpCode);
+		createOrUpdatePluginInfo(pluginSvcVersionInfo, entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES, httpCode, clusterName);
 	}
 
-	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final int httpCode) {
+	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final int httpCode, String clusterName) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("==> createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
 		}
@@ -719,7 +720,7 @@ public class AssetMgr extends AssetMgrBase {
 			Runnable commitWork = new Runnable() {
 				@Override
 				public void run() {
-					doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded);
+					doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded, clusterName);
 				}
 			};
 			activityLogger.commitAfterTransactionComplete(commitWork);
@@ -737,7 +738,7 @@ public class AssetMgr extends AssetMgrBase {
 				commitWork = new Runnable() {
 					@Override
 					public void run() {
-						doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, false);
+						doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, false, clusterName);
 					}
 				};
 			}
@@ -745,7 +746,7 @@ public class AssetMgr extends AssetMgrBase {
 
 		} else {
 			isTagVersionResetNeeded = false;
-			doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded);
+			doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded, clusterName);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
@@ -753,8 +754,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	}
 
-	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final boolean isTagVersionResetNeeded) {
+	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final boolean isTagVersionResetNeeded, String clusterName) {
 		XXPluginInfo ret = null;
+		Map<String, String> infoMap = null;
 
 		if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
 
@@ -762,6 +764,11 @@ public class AssetMgr extends AssetMgrBase {
 					pluginInfo.getHostName(), pluginInfo.getAppType());
 
 			if (xObj == null) {
+				infoMap = pluginInfo.getInfo();
+				if(!stringUtil.isEmpty(clusterName) && infoMap != null ) {
+					infoMap.put(SearchFilter.CLUSTER_NAME, clusterName);
+					pluginInfo.setInfo(infoMap);
+				}
 				// ranger-admin is restarted, plugin contains latest versions and no earlier record for this plug-in client
 				if (isPolicyDownloadRequest) {
 					if (pluginInfo.getPolicyDownloadedVersion() != null && pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
@@ -783,6 +790,14 @@ public class AssetMgr extends AssetMgrBase {
 				boolean needsUpdating = false;
 
 				RangerPluginInfo dbObj = pluginInfoService.populateViewObject(xObj);
+
+				infoMap = dbObj.getInfo();
+				if (infoMap != null && !stringUtil.isEmpty(clusterName)) {
+					if(!stringUtil.isEmpty(infoMap.get(SearchFilter.CLUSTER_NAME)) && !stringUtil.equals(infoMap.get(SearchFilter.CLUSTER_NAME) , clusterName) ) {
+						infoMap.put(SearchFilter.CLUSTER_NAME, clusterName);
+						needsUpdating = true;
+					}
+				}
 				if (!dbObj.getIpAddress().equals(pluginInfo.getIpAddress())) {
 					dbObj.setIpAddress(pluginInfo.getIpAddress());
 					needsUpdating = true;

@@ -1115,6 +1115,10 @@ public class TagREST {
 		int         httpCode = HttpServletResponse.SC_OK;
 		String      logMsg   = null;
         Long downloadedVersion = null;
+        String clusterName = null;
+		if (request != null) {
+			clusterName = !StringUtils.isEmpty(request.getParameter(SearchFilter.CLUSTER_NAME)) ? request.getParameter(SearchFilter.CLUSTER_NAME) : "";
+		}
 
         try {
             ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
@@ -1135,7 +1139,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         } finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
@@ -1169,6 +1173,10 @@ public class TagREST {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
         Long downloadedVersion = null;
+        String clusterName = null;
+		if (request != null) {
+			clusterName = !StringUtils.isEmpty(request.getParameter(SearchFilter.CLUSTER_NAME)) ? request.getParameter(SearchFilter.CLUSTER_NAME) : "";
+		}
 
         try {
         	XXService xService = daoManager.getXXService().findByName(serviceName);
@@ -1217,7 +1225,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         }  finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {

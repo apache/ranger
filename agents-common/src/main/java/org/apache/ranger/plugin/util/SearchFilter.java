@@ -85,6 +85,7 @@ public class SearchFilter {
 	public static final String PLUGIN_APP_TYPE           = "pluginAppType";
 	public static final String PLUGIN_ENTITY_TYPE        = "pluginEntityType";
 	public static final String PLUGIN_IP_ADDRESS         = "pluginIpAddress";
+	public static final String CLUSTER_NAME              = "clusterName";
 
 	private Map<String, String> params;
 	private int                 startIndex;

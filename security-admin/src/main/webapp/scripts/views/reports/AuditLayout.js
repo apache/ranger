@@ -199,6 +199,7 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
+					<th class="renderable ruser"></th>\
 					<th class="renderable cip" colspan="3">Policy ( Time )<i class="icon-info-sign m-l-sm" data-id ="policyTimeDetails"></th>\
                     <th class="renderable cip" colspan="3">Tag ( Time )<i class="icon-info-sign m-l-sm" data-id ="tagPolicyTimeDetails"></th>\
 			 	</tr>');
@@ -650,10 +651,10 @@ define(function(require) {
 		addSearchForPluginStatusTab : function(){
                         var that = this , query = '';
                         var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),localization.tt("lbl.applicationType"),
-			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName")];
+			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName"), localization.tt("lbl.clusterName")];
                         var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.applicationType"), label :"pluginAppType"},
                                                {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"},
-                                               {text : localization.tt("lbl.serviceType"), label :"serviceType"}];
+                                               {text : localization.tt("lbl.serviceType"), label :"serviceType"}, {text : localization.tt("lbl.clusterName"),label :'clusterName'}];
                         _.map(App.vsHistory.pluginStatus, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
 			var pluginAttr = {
 					placeholder    : localization.tt('msg.searchForPluginStatus'),
@@ -1615,6 +1616,18 @@ define(function(require) {
 					label	: localization.tt("lbl.agentIp"),
 					editable:false,
                                         sortable:true,
+				},
+				clusterName : {
+					cell : 'html',
+					label	: localization.tt("lbl.clusterName"),
+					editable:false,
+					sortable:true,
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							var clusterName = _.escape(model.get('info')['clusterName']);
+							return '<span title="'+clusterName+'">'+clusterName+'</span>';
+						}
+					}),
 				},
 				lastPolicyUpdateTime : {
 					cell : 'html',

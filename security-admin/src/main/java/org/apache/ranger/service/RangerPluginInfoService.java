@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -98,6 +99,7 @@ public class RangerPluginInfoService {
                 if (StringUtils.isNotBlank(serviceTypeToSearch)) {
                         searchFilter.removeParam(SearchFilter.SERVICE_TYPE);
                 }
+                String clusterNameToSearch =  searchFilter.getParam(SearchFilter.CLUSTER_NAME);
 
 		List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
@@ -138,6 +140,19 @@ public class RangerPluginInfoService {
                         if (StringUtils.isBlank(serviceTypeToSearch) || StringUtils.equals(serviceTypeToSearch, obj.getServiceType())) {
                                 objList.add(obj);
                         }
+
+			if (StringUtils.isNotBlank(clusterNameToSearch)) {
+				Map<String, String> infoMap = obj.getInfo();
+				Set<Map.Entry<String, String>> infoSet = infoMap.entrySet();
+				for (Map.Entry<String, String> info : infoSet) {
+					if (StringUtils.equals(info.getKey(), SearchFilter.CLUSTER_NAME)) {
+						if (!StringUtils.equals(info.getValue(), clusterNameToSearch)) {
+							objList.remove(obj);
+						}
+						break;
+					}
+				}
+			}
 		}
 
 		retList.setList(objList);
