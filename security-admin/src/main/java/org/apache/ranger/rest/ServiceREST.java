@@ -3968,7 +3968,7 @@ public class ServiceREST {
 				try {
 					RangerService tagService = svcStore.getServiceByName(tagServiceName);
 					if (tagService != null && tagService.getIsEnabled()) {
-						zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByServiceName(tagServiceName);
+						zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByTagServiceName(tagServiceName);
 					}
 				} catch (Exception exception) {
 					LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
