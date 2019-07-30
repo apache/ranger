@@ -20,6 +20,7 @@ package org.apache.ranger.services.atlas;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -70,11 +71,18 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_END_TWO_ENTITY_TYPE           =  "end-two-entity-type";
 	public static final String RESOURCE_END_TWO_ENTITY_CLASSIFICATION = "end-two-entity-classification";
 	public static final String RESOURCE_END_TWO_ENTITY_ID             = "end-two-entity";
+	public static final String SEARCH_FEATURE_POLICY_NAME             = " Allow users to manage favorite searches";
 
 	public static final String ACCESS_TYPE_ENTITY_READ  = "entity-read";
+	public static final String ACCESS_TYPE_ENTITY_CREATE  = "entity-create";
+	public static final String ACCESS_TYPE_ENTITY_UPDATE = "entity-update";
+	public static final String ACCESS_TYPE_ENTITY_DELETE = "entity-delete";
 	public static final String ADMIN_USERNAME_DEFAULT   = "admin";
 	public static final String TAGSYNC_USERNAME_DEFAULT = "rangertagsync";
-
+	public static final String ENTITY_TYPE_USER_PROFILE = "__AtlasUserProfile";
+	public static final String ENTITY_TYPE_SAVED_SEARCH = "__AtlasUserSavedSearch";
+	public static final String ENTITY_ID_USER_PROFILE = RangerPolicyEngine.USER_CURRENT;
+	public static final String ENTITY_ID_USER_SAVED_SEARCH= RangerPolicyEngine.USER_CURRENT + ":*";
 
 
 	public static final String CONFIG_REST_ADDRESS            = "atlas.rest.address";
@@ -162,6 +170,7 @@ public class RangerServiceAtlas extends RangerBaseService {
                 RangerPolicyItem policyItemForTagSyncUser = new RangerPolicyItem();
 
                 policyItemForTagSyncUser.setUsers(Collections.singletonList(tagSyncUser));
+                policyItemForTagSyncUser.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
                 policyItemForTagSyncUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
 
                 defaultPolicy.getPolicyItems().add(policyItemForTagSyncUser);
@@ -175,8 +184,12 @@ public class RangerServiceAtlas extends RangerBaseService {
                     }
                 }
             }
+
         }
 
+        //4.add new policy for public group with entity-read, entity-create, entity-update, entity-delete for  __AtlasUserProfile, __AtlasUserSavedSearch entity type
+        RangerPolicy searchFeaturePolicy = getSearchFeaturePolicy();
+        ret.add(searchFeaturePolicy);
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceAtlas.getDefaultRangerPolicies()");
         }
@@ -184,7 +197,41 @@ public class RangerServiceAtlas extends RangerBaseService {
         return ret;
     }
 
-    private static class AtlasServiceClient extends BaseClient {
+	private RangerPolicy getSearchFeaturePolicy() {
+		RangerPolicy searchFeaturePolicy = new RangerPolicy();
+
+		searchFeaturePolicy.setName(SEARCH_FEATURE_POLICY_NAME);
+		searchFeaturePolicy.setService(serviceName);
+		searchFeaturePolicy.setResources(getSearchFeaturePolicyResource());
+		searchFeaturePolicy.setPolicyItems(getSearchFeaturePolicyItem());
+
+		return searchFeaturePolicy;
+	}
+
+	private List<RangerPolicyItem> getSearchFeaturePolicyItem() {
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ));
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_CREATE));
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_UPDATE));
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_DELETE));
+
+		RangerPolicyItem item = new RangerPolicyItem(accesses, Arrays.asList(RangerPolicyEngine.USER_CURRENT), null, null, null, false);
+
+		return Collections.singletonList(item);
+	}
+
+	private Map<String, RangerPolicyResource> getSearchFeaturePolicyResource() {
+		Map<String, RangerPolicyResource> resources = new HashMap<>();
+
+		resources.put(RESOURCE_ENTITY_TYPE, new RangerPolicyResource(Arrays.asList(ENTITY_TYPE_USER_PROFILE, ENTITY_TYPE_SAVED_SEARCH), false, false));
+		resources.put(RESOURCE_ENTITY_CLASSIFICATION, new RangerPolicyResource("*"));
+		resources.put(RESOURCE_ENTITY_ID, new RangerPolicyResource(Arrays.asList(ENTITY_ID_USER_PROFILE, ENTITY_ID_USER_SAVED_SEARCH), false, false));
+
+		return resources;
+	}
+
+	private static class AtlasServiceClient extends BaseClient {
 		private static final String[] TYPE_CATEGORIES = new String[] { "classification", "enum", "entity", "relationship", "struct" };
 
 		Map<String, List<String>> typesDef = new HashMap<>();
