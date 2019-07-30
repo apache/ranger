@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -240,7 +241,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RangerPolicyService policyService;
 	
 	@Autowired
-        RangerPolicyLabelsService policyLabelsService;
+        RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
 
         @Autowired
 	XUserService xUserService;
@@ -1888,7 +1889,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		List<String> policyLabels = policy.getPolicyLabels();
-
+		Set<String> uniquePolicyLabels = new TreeSet<>(policyLabels);
 		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
 
@@ -1907,8 +1908,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef);
-		createNewLabelsForPolicy(xCreatedPolicy, policyLabels);
-
+		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
                 RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy);
@@ -1919,6 +1919,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 		bizUtil.createTrxLog(trxLogList);
 
 		return createdPolicy;
+	}
+
+	public void createOrMapLabels(XXPolicy xPolicy, Set<String> uniquePolicyLabels) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.createOrMapLabels()");
+		}
+
+		for (String policyLabel : uniquePolicyLabels) {
+			//check and create new label If does not exist
+			XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
+			if(xxPolicyLabel == null) {
+				synchronized(this) {
+					xxPolicyLabel  = policyLabelsService.createNewOrGetLabel(policyLabel, xPolicy);
+				}
+			}
+			//label mapping with policy
+			if (xxPolicyLabel.getId() != null) {
+				XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
+				xxPolicyLabelMap.setPolicyId(xPolicy.getId());
+				xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId()); xxPolicyLabelMap =
+				rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
+				xxPolicyLabelMap = daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.createOrMapLabels()");
+		}
 	}
 
 	private boolean validatePolicyItems(List<? extends RangerPolicyItem> policyItems) {
@@ -1993,6 +2021,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		List<String> policyLabels = policy.getPolicyLabels();
+		Set<String> uniquePolicyLabels = new TreeSet<>(policyLabels);
 		policy.setCreateTime(xxExisting.getCreateTime());
 		policy.setGuid(xxExisting.getGuid());
 		policy.setVersion(xxExisting.getVersion());
@@ -2008,8 +2037,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		deleteExistingPolicyLabel(policy, true);
 
 		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
-		createNewLabelsForPolicy(newUpdPolicy, policyLabels);
-
+		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE, true);
@@ -3347,26 +3375,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private void createNewLabelsForPolicy(XXPolicy xPolicy, List<String> policyLabels) throws Exception {
-		for (String policyLabel : policyLabels) {
-			XXPolicyLabel xXPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
-			if (xXPolicyLabel == null) {
-				xXPolicyLabel = new XXPolicyLabel();
-				if (StringUtils.isNotEmpty(policyLabel)) {
-					xXPolicyLabel.setPolicyLabel(policyLabel);
-					xXPolicyLabel = rangerAuditFields.populateAuditFieldsForCreate(xXPolicyLabel);
-					xXPolicyLabel = daoMgr.getXXPolicyLabels().create(xXPolicyLabel);
-				}
-			}
-			if (xXPolicyLabel.getId() != null) {
-				XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
-				xxPolicyLabelMap.setPolicyId(xPolicy.getId());
-				xxPolicyLabelMap.setPolicyLabelId(xXPolicyLabel.getId());
-				xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
-				xxPolicyLabelMap = daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
-			}
-		}
-	}
 
 	private Boolean deleteExistingPolicyLabel(RangerPolicy policy, boolean flush) {
 		if (policy == null) {
