@@ -49,7 +49,8 @@ define(function(require) {
 			return {
 				PolicyDetails: this.policyDetails,
                 isDelegatAdmin: isDelegatAdminChk,
-                policyType: policyType.label
+                policyType: policyType.label,
+                isDenyAllElse : this.policy.has('isDenyAllElse') && !_.isUndefined(this.policy.get('isDenyAllElse')) ? true : false,
 			};
 		},
 
@@ -177,6 +178,9 @@ define(function(require) {
             if(this.policy.has('conditions') && this.policy.get('conditions').length > 0 && self.serviceDef){
                 details.conditions = XAUtils.getPolicyConditionDetails(this.policy.get('conditions'), self.serviceDef);
             }
+            if(this.policy.has('isDenyAllElse')) {
+            	details.isDenyAllElse = this.policy.get('isDenyAllElse') ? 'TRUE' : 'FALSE';
+            }
 			//get policyItems
 			this.createPolicyItems();
 			
@@ -198,6 +202,11 @@ define(function(require) {
                 items.push({'itemName': 'allowExceptions',title : 'Exclude from Allow Conditions'},
                           {'itemName': 'denyPolicyItems',title : 'Deny Condition'},
                           {'itemName': 'denyExceptions',title : 'Exclude from Deny Conditions'});
+                if(this.policy.has('isDenyAllElse') && this.policy.get('isDenyAllElse')){
+                	items = _.reject(items, function(m){
+                		return m.itemName == 'denyPolicyItems' || m.itemName == 'denyExceptions'
+                	})
+                }
             }
 			_.each(items, function(item){
                 if(!_.isUndefined(this.policy.get(item.itemName))){

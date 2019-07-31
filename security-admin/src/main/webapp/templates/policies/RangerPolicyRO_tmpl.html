@@ -66,6 +66,20 @@
           <span class="label label-inverse pull-right">{{PolicyDetails.isEnabled}}</span>
         </td>
       </tr>
+      <tr>
+        <td>
+          {{tt 'lbl.policyLabels'}}
+        </td>
+        <td>
+        {{#ifCond PolicyDetails.policyLabels.length '==' "0"}}
+          --
+        {{else}}
+          {{#each PolicyDetails.policyLabels}}
+            <span class="label label-inverse ">{{this}}</span>
+          {{/each}}
+        {{/ifCond}}
+        </td>
+      </tr>
       {{#each PolicyDetails.resources}}
       <tr>
         <td>
@@ -100,20 +114,6 @@
         </td>
         <td>
           <span class="label label-info">{{PolicyDetails.isAuditEnabled}}</span>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          {{tt 'lbl.policyLabels'}}
-        </td>
-        <td>
-        {{#ifCond PolicyDetails.policyLabels.length '==' "0"}}
-                --
-        {{else}}
-                        {{#each PolicyDetails.policyLabels}}
-                                <span class="label label-inverse ">{{this}}</span>
-                        {{/each}}
-        {{/ifCond}}
         </td>
       </tr>
         <tr>
@@ -267,6 +267,20 @@
 	    </tbody>
 	  </table>
 	</div>
+  {{#compare "Exclude from Allow Conditions" "eq" this.title}}
+    {{#if ../../isDenyAllElse}}
+      <div class="deny-all-else">
+        <tr>
+          <td>
+            <b>{{tt 'lbl.isDenyAllElse'}} : </b>
+          </td>
+          <td>
+            <span class="label label-inverse">{{ ../../../  PolicyDetails.isDenyAllElse}}</span>
+          </td>
+        </tr>
+      </div>
+    {{/if}}
+  {{/compare}}
 {{/each}}
 <div class="updateInfo row-fluid">
   <div class="pull-left">

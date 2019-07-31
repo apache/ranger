@@ -2807,3 +2807,9 @@ div#zoneServiceAccordion table thead {
   padding: 9px 15px;
   background-color: white;
 }
+
+.deny-all-else {
+  margin-top: 16px;
+  margin-bottom: 15px;
+  padding: 9px 0;
+}
