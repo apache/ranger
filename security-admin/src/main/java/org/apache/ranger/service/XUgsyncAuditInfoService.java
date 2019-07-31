@@ -144,7 +144,7 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 
 	public VXUgsyncAuditInfo createUgsyncAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
 
-		Long sessionId = ContextUtil.getCurrentUserSession().getSessionId();
+		Long sessionId = ContextUtil.getCurrentUserSession() != null ? ContextUtil.getCurrentUserSession().getSessionId() : null;
 		if (sessionId != null) {
 			vxUgsyncAuditInfo.setSessionId("" + sessionId);
 		}

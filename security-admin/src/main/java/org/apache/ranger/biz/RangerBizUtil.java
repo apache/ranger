@@ -1339,13 +1339,17 @@ public class RangerBizUtil {
 
 		if (!session.isKeyAdmin() && !session.isUserAdmin()) {
 			throw restErrorUtil.createRESTException(
-					"User is not allowed to update service-def, only Admin can create/update/delete " + objType,
+					"This user is not allowed this operation. Only users with Admin permission have access to this operation " + objType,
 					MessageEnums.OPER_NO_PERMISSION);
 		}
 	}
 
 	public void hasKMSPermissions(String objType, String implClassName) {
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session == null) {
+			throw restErrorUtil.createRESTException("UserSession cannot be null, only KeyAdmin can create/update/delete "
+					+ objType, MessageEnums.OPER_NO_PERMISSION);
+		}
 
 		if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
 			throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
@@ -1461,6 +1465,9 @@ public class RangerBizUtil {
 
 	public boolean hasModuleAccess(String moduleName) {
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		if(currentUserSession == null) {
+			return false;
+		}
 		if(!currentUserSession.isUserAdmin() && !currentUserSession.isAuditUserAdmin()) {
 			if(!currentUserSession.getRangerUserPermission().getUserPermissions().contains(moduleName)) {
 				return false;

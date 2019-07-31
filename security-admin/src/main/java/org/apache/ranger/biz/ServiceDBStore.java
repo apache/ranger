@@ -3981,7 +3981,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public void putMetaDataInfo(RangerExportPolicyList rangerExportPolicyList){
 		Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		String userId = usb.getLoginId();
+		String userId = usb!=null ? usb.getLoginId() : null;
 		
 		metaDataInfo.put(HOSTNAME, LOCAL_HOSTNAME);
 		metaDataInfo.put(USER_NAME, userId);
