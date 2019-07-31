@@ -101,6 +101,12 @@ language governing permissions and limitations under the License. --}}
 				{{/compare}}
 			</div>
 			{{#compare "Allow" "eq" conditionType}}
+				<div>
+					<div class="toggle-xa control-group">
+						<label class="control-label"> Deny All Other Accesses : </label>
+						<div data-js="isDenyAllElse" class="toggle controls"></div>
+					</div>
+				</div>
 				<div data-js="denyConditionItems">
 					<p class="wrap-header bold formHeader">Deny Conditions :</p>
 					&nbsp;

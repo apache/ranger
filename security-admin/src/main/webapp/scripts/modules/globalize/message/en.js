@@ -64,6 +64,7 @@ define(function(require) {
 				groups 						: 'Groups',
 				group 						: 'Groups',
 				auditLogging 				: 'Audit Logging',
+				isDenyAllElse				: 'Deny All Other Accesses',
 				encrypted 					: 'Encrypt',
 				resourceType 				: 'Resource Type',
 				description 				: 'Description',

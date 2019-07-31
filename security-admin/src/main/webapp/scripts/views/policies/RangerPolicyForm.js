@@ -113,7 +113,8 @@ define(function(require){
 			'allowExcludePerm' : '[data-js="allowExcludePerm"]',
       		'policyTimeBtn'      : '[data-js="policyTimeBtn"]',
 			'policyConditions' : '[data-js="customPolicyConditions"]',
-            'conditionData' : '[data-id="conditionData"]'
+            'conditionData' : '[data-id="conditionData"]',
+            'isDenyAllElse' : '[data-js="isDenyAllElse"]',
 		},
 		/** fields for the form
 		*/
@@ -142,10 +143,13 @@ define(function(require){
                         if(!_.isUndefined(this.initilializePathPlugin) && this.initilializePathPlugin){
 				this.initializePathPlugins(this.pathPluginOpts);
 			}
-			this.renderCustomFields();
+			if(XAUtil.isAccessPolicy(this.model.get('policyType'))){
+				this.evdenyAccessChange();
+			}
 			if(!this.model.isNew()){
 				this.setUpSwitches();
 			}
+			this.renderCustomFields();
 			//checkParent
 			this.renderParentChildHideShow();
 
@@ -321,6 +325,22 @@ define(function(require){
 		evIsEnabledChange : function(form, fieldEditor){
 			XAUtil.checkDirtyFieldForToggle(fieldEditor.$el);
 		},
+		evdenyAccessChange : function(){
+			var that =this;
+			this.$el.find(this.ui.isDenyAllElse).toggles({
+			    	on : that.model.has('isDenyAllElse') ? that.model.get('isDenyAllElse') : false,
+			    	text : {on : 'True', off : 'False' },
+			    	width : 80,
+			}).on('click', function(e){
+				XAUtil.checkDirtyFieldForToggle(that.$el.find(that.ui.isDenyAllElse));
+				if(that.$el.find(that.ui.isDenyAllElse).find('.toggle-slide').hasClass('active')) {
+					that.$el.find(that.ui.denyConditionItems).hide();
+				} else {
+					that.$el.find(that.ui.denyConditionItems).show();
+				}
+			});
+
+		},
 		setupForm : function() {
 			if(!this.model.isNew()){
 				this.selectedResourceTypes = {};
@@ -393,7 +413,10 @@ define(function(require){
 			if( !enableDenyAndExceptionsInPolicies ){
 				this.$el.find(this.ui.allowExcludePerm).hide();
 				this.$el.find(this.ui.denyConditionItems).remove();
-			} 
+			}
+			if(enableDenyAndExceptionsInPolicies && this.$el.find(this.ui.isDenyAllElse).find('.toggle-slide').hasClass('active')){
+				this.$el.find(this.ui.denyConditionItems).hide();
+			}
 	
                         that.$('[data-customfields="groupPerms"]').html(new PermissionList({
                                 collection : that.formInputList,
@@ -578,10 +601,20 @@ define(function(require){
 			}else if( XAUtil.isRowFilterPolicy(this.model.get('policyType')) ){
 				this.model.set('rowFilterPolicyItems', this.setPermissionsToColl(this.formInputList, new RangerPolicyItem()));
 			}else{
+	            if(this.$el.find(this.ui.isDenyAllElse).find('.toggle-slide').hasClass('active')) {
+	            	this.model.set('isDenyAllElse',true);
+	            } else {
+	            	this.model.set('isDenyAllElse',false);
+	            }
 				this.model.set('policyItems', this.setPermissionsToColl(this.formInputList, new RangerPolicyItem()));
-				this.model.set('denyPolicyItems', this.setPermissionsToColl(this.formInputDenyList, new RangerPolicyItem()));
 				this.model.set('allowExceptions', this.setPermissionsToColl(this.formInputAllowExceptionList, new RangerPolicyItem()));
-				this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
+				if(!this.model.get('isDenyAllElse')){
+					this.model.set('denyPolicyItems', this.setPermissionsToColl(this.formInputDenyList, new RangerPolicyItem()));
+					this.model.set('denyExceptions', this.setPermissionsToColl(this.formInputDenyExceptionList, new RangerPolicyItem()));
+				}else{
+					this.model.set('denyPolicyItems',[]);
+					this.model.set('denyExceptions',[]);
+				}
 			}
 			this.model.set('service',this.rangerService.get('name'));
             var policyName = this.model.get('name');
@@ -592,6 +625,7 @@ define(function(require){
                         if(this.model.has('policyPriority')){
                                 this.model.set('policyPriority', this.model.get('policyPriority') ? 1 : 0);
                         }
+
 		},
 		setPermissionsToColl : function(list, policyItemList) {
 			list.each(function(m){
@@ -917,7 +951,11 @@ define(function(require){
 			return obj;
 		},
 		getPolicyBaseFieldNames : function(){
-                        return ['description','isAuditEnabled'];
+			var baseField = ['description','isAuditEnabled', 'isDenyAllElse'];
+			if(XAUtil.isMaskingPolicy(this.model.get('policyType')) || XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
+				baseField = _.without(baseField, 'isDenyAllElse');
+			}
+			return baseField;
 		},
 		getResources : function(){
 			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
