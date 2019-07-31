@@ -466,40 +466,40 @@ define(function(require) {
 		options = _.isUndefined(options) ? Opt : options;
 		$.msg(options);
 	};
-	XAUtils.showGroups = function(rawValue) {
+        XAUtils.showMoreLessBtnForGroupsUsersRoles = function(rawValue , type) {
 		var showMoreLess = false, id;
 		if (_.isArray(rawValue))
 			rawValue = new Backbone.Collection(rawValue);
 		if (!_.isUndefined(rawValue) && rawValue.models.length > 0) {
 			var groupArr = _.uniq(_.compact(_.map(rawValue.models, function(m,
 					i) {
-				if (m.has('groupName'))
-					return _.escape(m.get('groupName'));
+                                if (m.has('entityName'))
+                                        return _.escape(m.get('entityName'));
 			})));
 			if (groupArr.length > 0) {
 				if (rawValue.first().has('resourceId'))
 					id = rawValue.first().get('resourceId');
 				else
-					id = rawValue.first().get('userId');
+                                        id = rawValue.first().get('modelId');
 			}
 			var newGroupArr = _.map(groupArr, function(name, i) {
 				if (i >= 4)
-					return '<span class="label label-info float-left-margin-2" policy-group-id="'
+                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '" style="display:none;">' + name
 							+ '</span>';
 				else if (i == 3 && groupArr.length > 4) {
 					showMoreLess = true;
-					return '<span class="label label-info float-left-margin-2" policy-group-id="'
+                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '">' + name + '</span>';
 				} else
-					return '<span class="label label-info float-left-margin-2" policy-group-id="'
+                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '">' + name + '</span>';
 			});
 			if (showMoreLess) {
 				newGroupArr
-						.push('<span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" class="" policy-group-id="'
+                                                .push('<span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showMore" class="" data-name='+type+' model-'+ type +'-id="'
 								+ id
-								+ '"><code style=""> + More..</code></a></span><span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showLess" class="" policy-group-id="'
+                                                                + '"><code style=""> + More..</code></a></span><span class="float-left-margin-2"><a href="javascript:void(0);" data-id="showLess" class="" data-name='+type+' model-'+ type +'-id="'
 								+ id
 								+ '" style="display:none;"><code> - Less..</code></a></span>');
 			}
@@ -1729,6 +1729,14 @@ define(function(require) {
         });
     }
 
+    //Scroll up for roles create page
+    XAUtils.scrollToRolesField = function(field) {
+        $("html, body").animate({
+            scrollTop : field.position().top - 150
+        }, 1100, function() {
+            field.focus();
+        });
+    };
 
 	return XAUtils;
 });

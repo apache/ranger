@@ -476,6 +476,7 @@ define(function(require) {
                 noDeleteRoleRow         :'Please select ranger role first to delete.',
                 addRolePermission       : 'Please add permission(s) for the selected role, else role will not be added.',
                 addRole                 : 'Please select role for the selected permission(s), else role will not be added.',
+                addSelectedUserGroupRoles : 'Please add selected user/group/roles to there respective table else user/group/roles will not be added.'
 
 			},
 			plcHldr : {

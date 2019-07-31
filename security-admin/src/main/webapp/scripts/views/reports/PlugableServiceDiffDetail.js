@@ -152,6 +152,7 @@ define(function(require){
 			
 			_.each(oldOl, function(ol, i) {
 				this.highLightElement($(ol).find('.username'), $(newOl[i]).find('.username'));
+                                this.highLightElement($(ol).find('.rolename'), $(newOl[i]).find('.rolename'));
 				this.highLightElement($(ol).find('.groupname'), $(newOl[i]).find('.groupname'));
 				this.highLightElement($(ol).find('.perm'), $(newOl[i]).find('.perm'));
 				this.highLightElement($(ol).find('.condition'), $(newOl[i]).find('.condition'));

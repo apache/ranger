@@ -424,8 +424,8 @@ define(function(require){
 					label : localization.tt("lbl.groups"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue,model) {
-							if(!_.isUndefined(rawValue)){
-								return XAUtil.showGroups(_.map(rawValue,function(name){return {'userId': model.id,'groupName': name}}));
+                                                        if(!_.isUndefined(rawValue) && !_.isEmpty(rawValue)){
+                                                                return XAUtil.showMoreLessBtnForGroupsUsersRoles(_.map(rawValue,function(name){return {'modelId': model.id,'entityName': name}}) , 'groups');
 							}
 							else
 							return '--';
@@ -621,8 +621,7 @@ define(function(require){
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
                                                         if(!_.isUndefined(rawValue) && rawValue.length != 0){
-                                                                var users = rawValue.map(function(m){return m.name});
-                                                                return XAUtil.showMoreAndLessButton(users, model)
+                                                                return XAUtil.showMoreLessBtnForGroupsUsersRoles(_.map(rawValue,function(m){return {'modelId': model.id,'entityName': m.name}}), 'users');
                                                         }else{
                                                                 return '--';
                                                         }
@@ -637,8 +636,7 @@ define(function(require){
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
                                                         if(!_.isUndefined(rawValue) && rawValue.length != 0){
-                                                                var groups = rawValue.map(function(m){return m.name});
-                                                                return XAUtil.showMoreAndLessButton(groups, model)
+								return XAUtil.showMoreLessBtnForGroupsUsersRoles(_.map(rawValue,function(m){return {'modelId': model.id,'entityName': m.name}}), 'groups');
                                                         }else{
                                                                 return '--';
                                                         }
@@ -653,8 +651,7 @@ define(function(require){
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
                                                         if(!_.isUndefined(rawValue) && rawValue.length != 0){
-                                                                var roles = rawValue.map(function(m){return m.name});
-                                                                return XAUtil.showMoreAndLessButton(roles, model)
+								return XAUtil.showMoreLessBtnForGroupsUsersRoles(_.map(rawValue,function(m){return {'modelId': model.id,'entityName': m.name}}), 'roles');
                                                         }else{
                                                                 return '--';
                                                         }
@@ -1040,18 +1037,20 @@ define(function(require){
 			return _.map(activeStatusList, function(status) { return { 'label': status.label, 'value': status.label}; })
 		},
 		onShowMore : function(e){
-			var id = $(e.currentTarget).attr('policy-group-id');
-			this.rTableList.$el.find('[policy-group-id="'+id+'"]').show();
-			$('[data-id="showLess"][policy-group-id="'+id+'"]').show();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').hide();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
+                        var name = $(e.currentTarget).attr('data-name');
+                        var id = $(e.currentTarget).attr('model-'+name+'-id');
+                        this.rTableList.$el.find('[model-'+name+'-id="'+id+'"]').show();
+                        $('[data-id="showLess"][model-'+name+'-id="'+id+'"]').show();
+                        $('[data-id="showMore"][model-'+name+'-id="'+id+'"]').hide();
+                        $('[data-id="showMore"][model-'+name+'-id="'+id+'"]').parents('div[data-id="groupsDiv"]').addClass('set-height-groups');
 		},
 		onShowLess : function(e){
-			var id = $(e.currentTarget).attr('policy-group-id');
-			this.rTableList.$el.find('[policy-group-id="'+id+'"]').slice(4).hide();
-			$('[data-id="showLess"][policy-group-id="'+id+'"]').hide();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').show();
-			$('[data-id="showMore"][policy-group-id="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups')
+                        var name = $(e.currentTarget).attr('data-name');
+                        var id = $(e.currentTarget).attr('model-'+name+'-id');
+                        this.rTableList.$el.find('[model-'+name+'-id="'+id+'"]').slice(4).hide();
+                        $('[data-id="showLess"][model-'+name+'-id="'+id+'"]').hide();
+                        $('[data-id="showMore"][model-'+name+'-id="'+id+'"]').show();
+                        $('[data-id="showMore"][model-'+name+'-id="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups')
 		},
 		checkRoleKeyAdmin : function() {
 			if(SessionMgr.isKeyAdmin()){
