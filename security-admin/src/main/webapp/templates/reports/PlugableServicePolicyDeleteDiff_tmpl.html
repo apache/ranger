@@ -104,6 +104,15 @@
 			<h3>Old Value</h3>
 			{{#each oldPolicyItems}}
 				<ol class="unstyled data">
+                                                        <li class="change-row"><i>Roles</i>:
+                                                                {{#if_eq this.roles compare=0}}
+                                                                        &lt;empty&gt;
+                                                                {{else}}
+                                                                        {{#each this.roles}}
+                                                                                <span class="rolename">{{this}}</span><span>,</span>
+                                                                        {{/each}}
+                                                                {{/if_eq}}
+                                                        </li>
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt; 
@@ -149,6 +158,15 @@
 			<h3>old Value</h3>
 				{{#each oldMaskPolicyItems}}
 					<ol class="unstyled data">
+                                                <li class="change-row"><i>Roles</i>:
+                                                        {{#if_eq this.roles compare=0}}
+                                                                &lt;empty&gt;
+                                                        {{else}}
+                                                                {{#each this.roles}}
+                                                                        <span class="rolename">{{this}}</span><span>,</span>
+                                                                {{/each}}
+                                                        {{/if_eq}}
+                                                </li>
 						<li class="change-row">Groups:
 							{{#if_eq this.groups compare=0}}
 								&lt;empty&gt;
@@ -190,6 +208,15 @@
 			<h3>Old Value</h3>
 			{{#each oldRowFilterPolicyItems}}
 				<ol class="unstyled data">
+                                                <li class="change-row"><i>Roles</i>:
+                                                        {{#if_eq this.roles compare=0}}
+                                                                &lt;empty&gt;
+                                                        {{else}}
+                                                                {{#each this.roles}}
+                                                                        <span class="rolename">{{this}}</span><span>,</span>
+                                                                {{/each}}
+                                                        {{/if_eq}}
+                                                </li>
 						<li class="change-row">Groups:
 							{{#if_eq this.groups compare=0}}
 								&lt;empty&gt;
@@ -228,6 +255,15 @@
 			<h3>Old Value</h3>
 			{{#each oldAllowExceptionPolicyItems}}
 				<ol class="unstyled data">
+                                                        <li class="change-row"><i>Roles</i>:
+                                                                {{#if_eq this.roles compare=0}}
+                                                                        &lt;empty&gt;
+                                                                {{else}}
+                                                                        {{#each this.roles}}
+                                                                                <span class="rolename">{{this}}</span><span>,</span>
+                                                                        {{/each}}
+                                                                {{/if_eq}}
+                                                        </li>
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt; 
@@ -273,6 +309,15 @@
 			<h3>Old Value</h3>
 			{{#each oldDenyPolicyItems}}
 				<ol class="unstyled data">
+                                                        <li class="change-row"><i>Roles</i>:
+                                                                {{#if_eq this.roles compare=0}}
+                                                                        &lt;empty&gt;
+                                                                {{else}}
+                                                                        {{#each this.roles}}
+                                                                                <span class="rolename">{{this}}</span><span>,</span>
+                                                                        {{/each}}
+                                                                {{/if_eq}}
+                                                        </li>
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt; 
@@ -318,6 +363,15 @@
 			<h3>Old Value</h3>
 			{{#each oldDenyExceptionPolicyItems}}
 				<ol class="unstyled data">
+                                                        <li class="change-row"><i>Roles</i>:
+                                                                {{#if_eq this.roles compare=0}}
+                                                                        &lt;empty&gt;
+                                                                {{else}}
+                                                                        {{#each this.roles}}
+                                                                                <span class="rolename">{{this}}</span><span>,</span>
+                                                                        {{/each}}
+                                                                {{/if_eq}}
+                                                        </li>
 							<li class="change-row"><i>Groups</i>:
 								{{#if_eq this.groups compare=0}}
 									&lt;empty&gt; 

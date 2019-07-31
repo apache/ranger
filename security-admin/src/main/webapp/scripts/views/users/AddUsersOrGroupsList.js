@@ -108,6 +108,7 @@ define(function(require) {
 
         ui : {
             'selectUsersOrGroups' : '[data-js="selectUsersOrGroups"]',
+            'addUserGroupRoleBtn' : '[data-action="addUserGroup"]'
         },
 
         events : {
@@ -128,6 +129,8 @@ define(function(require) {
                     +this.fieldName+' found</td></tr>');
             }
             this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this));
+            this.ui.selectUsersOrGroups.attr("data-name", this.fieldName+"Select");
+            this.ui.addUserGroupRoleBtn.attr("data-name", this.fieldName+"AddBtn")
         },
 
         addNew : function() {

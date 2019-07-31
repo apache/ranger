@@ -417,7 +417,7 @@ define(function(require){
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');
 		},
                 attributName :function(e){
-                    var attrName = ['policy-groups-id', 'policy-users-id', 'policy-label-id'], attributeName = "";
+                    var attrName = ['policy-groups-id', 'policy-users-id', 'policy-label-id' , 'policy-roles-id'], attributeName = "";
                     attributeName =_.filter(attrName, function(name){
                         if($(e.currentTarget).attr(name)){
                             return name;

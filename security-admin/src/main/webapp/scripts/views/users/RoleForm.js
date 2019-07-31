@@ -107,6 +107,21 @@ define(function(require){
 
         beforeSave : function() {
             var that = this;
+            if(!_.isEmpty(this.$el.find('[data-name="usersSelect"]').select2('data')) ||
+                !_.isEmpty(this.$el.find('[data-name="groupsSelect"]').select2('data')) ||
+                !_.isEmpty(this.$el.find('[data-name="rolesSelect"]').select2('data'))) {
+                if(!_.isEmpty(this.$el.find('[data-name="usersSelect"]').select2('data'))) {
+                    XAUtils.scrollToRolesField(this.$el.find('[data-name="usersAddBtn"]'));
+                } else if (!_.isEmpty(this.$el.find('[data-name="groupsSelect"]').select2('data'))) {
+                    XAUtils.scrollToRolesField(this.$el.find('[data-name="groupsAddBtn"]'));
+                } else {
+                    XAUtils.scrollToRolesField(this.$el.find('[data-name="rolesAddBtn"]'));
+                }
+                XAUtils.alertPopup({
+                    msg :localization.tt('msg.addSelectedUserGroupRoles'),
+                });
+                return false;
+            }
             this.usersColl.remove(that.usersColl.models.filter(function(model){
                 return _.isUndefined(model.get('name'))
             }));
@@ -116,6 +131,7 @@ define(function(require){
             this.rolesColl.remove(that.rolesColl.models.filter(function(model){
                 return _.isUndefined(model.get('name'))
             }))
+            return true;
         },
 
     });

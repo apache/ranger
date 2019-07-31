@@ -107,6 +107,10 @@ define(function(require){
             }
             XAUtil.blockUI();
             this.form.beforeSave()
+            if(!this.form.beforeSave()){
+                XAUtil.blockUI('unblock');
+                return
+            }
             this.form.usersColl.models.filter(function(m){
                 usersDetails.push ({'name' : m.get('name') , 'isAdmin' : m.get('isAdmin')});
             })
