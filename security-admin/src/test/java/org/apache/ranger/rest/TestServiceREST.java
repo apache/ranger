@@ -1817,6 +1817,18 @@ public class TestServiceREST {
 		xService.setType(embeddedServiceDefsUtil.getTagServiceDefId());
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
+		String userLoginID = "testuser";
+		Long userId = 8L;
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(new UserSessionBase());
+		RangerContextHolder.setSecurityContext(context);
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		session.setUserAdmin(true);
+		XXPortalUser xXPortalUser = new XXPortalUser();
+		xXPortalUser.setLoginId(userLoginID);
+		xXPortalUser.setId(userId);
+		session.setXXPortalUser(xXPortalUser);
+
 		Mockito.when(validatorFactory.getServiceValidator(svcStore)).thenReturn(serviceValidator);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByTagServiceId(Mockito.anyLong())).thenReturn(referringServices);

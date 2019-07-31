@@ -798,40 +798,46 @@ public class ServiceREST {
 			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(id, Action.DELETE);
-
-			bizUtil.hasAdminPermissions("Services");
-
-			// TODO: As of now we are allowing SYS_ADMIN to create all the
-			// services including KMS
-
-			XXService service = daoManager.getXXService().getById(id);
-			if (service != null) {
-				EmbeddedServiceDefsUtil embeddedServiceDefsUtil = EmbeddedServiceDefsUtil.instance();
-				if (service.getType().equals(embeddedServiceDefsUtil.getTagServiceDefId())) {
-					List<XXService> referringServices = daoManager.getXXService().findByTagServiceId(id);
-					if (!CollectionUtils.isEmpty(referringServices)) {
-						Set<String> referringServiceNames = new HashSet<String>();
-						for (XXService xXService : referringServices) {
-							referringServiceNames.add(xXService.getName());
-							if (referringServiceNames.size() >= 10) {
-								break;
+			UserSessionBase session = ContextUtil.getCurrentUserSession();
+			if (session != null) {
+				XXService service = daoManager.getXXService().getById(id);
+				if (service != null) {
+					//if logged-in user is not the service creator then check admin priv.
+					if (!session.getUserId().equals(service.getAddedByUserId())) {
+						bizUtil.hasAdminPermissions("Services");
+					}
+					EmbeddedServiceDefsUtil embeddedServiceDefsUtil = EmbeddedServiceDefsUtil.instance();
+					if (service.getType().equals(embeddedServiceDefsUtil.getTagServiceDefId())) {
+						List<XXService> referringServices = daoManager.getXXService().findByTagServiceId(id);
+						if (!CollectionUtils.isEmpty(referringServices)) {
+							Set<String> referringServiceNames = new HashSet<String>();
+							for (XXService xXService : referringServices) {
+								referringServiceNames.add(xXService.getName());
+								if (referringServiceNames.size() >= 10) {
+									break;
+								}
+							}
+							if (referringServices.size() <= 10) {
+								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames, MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+							} else {
+								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames + " and more..", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
 							}
 						}
-						if (referringServices.size() <= 10) {
-							throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames, MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
-						} else {
-							throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames + " and more..", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
-						}
 					}
-				}
-				XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
-				bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
-				bizUtil.blockAuditorRoleUser();
-				tagStore.deleteAllTagObjectsForService(service.getName());
+					XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
+					if (!session.getUserId().equals(service.getAddedByUserId())) {
+						bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+						bizUtil.blockAuditorRoleUser();
+					}
+					tagStore.deleteAllTagObjectsForService(service.getName());
 
-				svcStore.deleteService(id);
+					svcStore.deleteService(id);
+				} else {
+					LOG.error("Cannot retrieve service:[" + id + "] for deletion");
+					throw new Exception("deleteService(" + id + ") failed");
+				}
 			} else {
-				LOG.error("Cannot retrieve service:[" + id + "] for deletion");
+				LOG.error("Cannot retrieve user session.");
 				throw new Exception("deleteService(" + id + ") failed");
 			}
 		} catch(WebApplicationException excp) {

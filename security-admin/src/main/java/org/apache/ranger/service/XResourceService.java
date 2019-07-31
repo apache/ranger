@@ -357,7 +357,7 @@ public class XResourceService extends
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		// If user is system admin
-		if (currentUserSession.isUserAdmin()) {
+		if (currentUserSession != null && currentUserSession.isUserAdmin()) {
 			returnList = super.searchXResources(searchCriteria);
 			
 		} else {// need to be optimize
