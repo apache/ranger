@@ -71,7 +71,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_END_TWO_ENTITY_TYPE           =  "end-two-entity-type";
 	public static final String RESOURCE_END_TWO_ENTITY_CLASSIFICATION = "end-two-entity-classification";
 	public static final String RESOURCE_END_TWO_ENTITY_ID             = "end-two-entity";
-	public static final String SEARCH_FEATURE_POLICY_NAME             = " Allow users to manage favorite searches";
+	public static final String SEARCH_FEATURE_POLICY_NAME             = "Allow users to manage favorite searches";
 
 	public static final String ACCESS_TYPE_ENTITY_READ  = "entity-read";
 	public static final String ACCESS_TYPE_ENTITY_CREATE  = "entity-create";
