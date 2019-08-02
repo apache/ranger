@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.io.IOException;
+import static org.apache.ranger.plugin.util.PasswordUtils.decryptPassword;
 
 public class PrestoClient extends BaseClient implements Closeable {
   public static final String PRESTO_USER_NAME_PROP = "user";
