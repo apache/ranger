@@ -48,7 +48,32 @@
                 </div>
             </div>
         {{/if}}
-        {{else}}
+        {{#each newRolesUsersGroupsRolesDetails}}
+            <h5>{{@key}} :</h5>
+            <div class="diff">
+                <div class="diff-left">
+                    <h3>Name</h3>
+                    <ol class="attr">
+                    {{#each this}}
+                        <li class="change-row">{{name}}</li>
+                    {{/each}}
+                    </ol>
+                </div>
+                <div class="diff-right">
+                    <h3>Is Role Admin</h3>
+                    <ol class="unstyled data">
+                    {{#each this}}
+                        {{#if isAdmin}}
+                            <li class="change-row">{{isAdmin}}</li>
+                        {{else}}
+                            <li class="change-row">false</li>
+                        {{/if}}
+                    {{/each}}
+                    </ol>
+                </div>
+            </div>
+        {{/each}}
+    {{else}}
         <label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
         {{#if collection.length}}
         <h5>Role Details:</h5>
@@ -75,5 +100,30 @@
                 </div>
             </div>
         {{/if}}
+        {{#each oldRolesUsersGroupsRolesDetails}}
+            <h5>{{@key}} :</h5>
+            <div class="diff">
+                <div class="diff-left">
+                    <h3>Name</h3>
+                    <ol class="attr">
+                    {{#each this}}
+                        <li class="change-row">{{name}}</li>
+                    {{/each}}
+                    </ol>
+                </div>
+                <div class="diff-right">
+                    <h3>Is Role Admin</h3>
+                    <ol class="unstyled data">
+                    {{#each this}}
+                        {{#if isAdmin}}
+                            <li class="change-row">{{isAdmin}}</li>
+                        {{else}}
+                            <li class="change-row">false</li>
+                        {{/if}}
+                    {{/each}}
+                    </ol>
+                </div>
+            </div>
+        {{/each}}
     {{/compare}}
 </div>

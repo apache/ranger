@@ -1676,7 +1676,8 @@ define(function(require) {
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							if(_.isUndefined(model.get('info').policyActivationTime)
-								|| _.isNull(model.get('info').policyActivationTime)){
+                                                                || _.isNull(model.get('info').policyActivationTime)
+                                                                || model.get('info').policyActivationTime == 0){
 								return '<center>--</center>';
 							}
 							var activeDate = new Date(parseInt(model.get('info')['policyActivationTime']));

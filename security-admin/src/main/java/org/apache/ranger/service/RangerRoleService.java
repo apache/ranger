@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXTrxLog;
@@ -126,6 +127,8 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         }
         List<XXTrxLog> trxLogList = new ArrayList<>();
         Field[] fields = current.getClass().getDeclaredFields();
+        String users   = RangerConstants.MODULE_USER_GROUPS.split("/")[0];
+        String groups  = RangerConstants.MODULE_USER_GROUPS.split("/")[1];
 
         try {
             Field nameField = current.getClass().getDeclaredField("name");
@@ -155,6 +158,18 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                     value = xaEnumUtil.getLabel(enumName, enumValue);
                 } else {
                     value = "" + field.get(current);
+                                        if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
+                                                        || fieldName.equalsIgnoreCase("Roles")) {
+                                                if (fieldName.equalsIgnoreCase(users)) {
+                                                        value = !stringUtil.isEmpty(current.getUsers()) ? JsonUtils.listToJson(current.getUsers()) : null;
+                                                }
+                                                if (fieldName.equalsIgnoreCase(groups)) {
+                                                        value = !stringUtil.isEmpty(current.getGroups()) ? JsonUtils.listToJson(current.getGroups()) : null;
+                                                }
+                                                if (fieldName.equalsIgnoreCase("Roles")) {
+                                                        value = !stringUtil.isEmpty(current.getRoles()) ? JsonUtils.listToJson(current.getRoles()) : null;
+                                                }
+                                        }
                     if ((value == null || "null".equalsIgnoreCase(value))
                             && !"update".equalsIgnoreCase(action)) {
                         continue;
@@ -183,6 +198,18 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                             }
                             else {
                                 formerValue = mField.get(former) + "";
+                                                                if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
+                                                                                || fieldName.equalsIgnoreCase("Roles")) {
+                                                                        if (fieldName.equalsIgnoreCase(users)) {
+                                                                                formerValue = !stringUtil.isEmpty(former.getUsers()) ? JsonUtils.listToJson(former.getUsers()) : null;
+                                                                        }
+                                                                        if (fieldName.equalsIgnoreCase(groups)) {
+                                                                                formerValue = !stringUtil.isEmpty(former.getGroups()) ? JsonUtils.listToJson(former.getGroups()) : null;
+                                                                        }
+                                                                        if (fieldName.equalsIgnoreCase("Roles")) {
+                                                                                formerValue = !stringUtil.isEmpty(former.getRoles()) ? JsonUtils.listToJson(former.getRoles()) : null;
+                                                                        }
+                                                                }
                             }
                             break;
                         }

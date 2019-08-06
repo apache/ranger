@@ -2813,3 +2813,7 @@ div#zoneServiceAccordion table thead {
   margin-bottom: 15px;
   padding: 9px 0;
 }
+
+.row.clear-seconds .span6:nth-child(2n+3) {
+    clear: left;
+}

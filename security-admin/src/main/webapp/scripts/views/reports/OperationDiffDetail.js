@@ -42,7 +42,7 @@ define(function(require){
 		
         templateHelpers :function(){
         	var obj = {
-        			collection : this.collection.models,
+                                collection : _.sortBy(this.collection.models, 'id'),
         			action	   : this.action,
         			objectName : this.objectName,
         			objectId   : this.objectId,
@@ -86,7 +86,15 @@ define(function(require){
         			isServiceResourcesDiffEmpty : (_.isEmpty(this.oldServiceResourceArr) && _.isEmpty(this.oldServiceResourceArr)) ? false : true
         		});
         	}
-        	
+
+                        if(this.templateType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value){
+                                obj = $.extend(obj, {
+                                        oldRolesUsersGroupsRolesDetails : this.oldRolesUsersGroupsRolesDetails,
+                                        newRolesUsersGroupsRolesDetails : this.newRolesUsersGroupsRolesDetails,
+                                        updateRolesUsersGroupsRolesDetails : this.updateRolesUsersGroupsRolesDetails
+                                });
+                        }
+
         	return obj;
         },
     	/** ui selector cache */
@@ -182,14 +190,15 @@ define(function(require){
 				else
 					this.template = ZoneOperationDiff_tmpl;
 			}
-                        if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value){
-                                if(this.action == 'update'){
-                                        this.template = RoleUpdateOperationDiff_tmpl;
-                                } else{
-                                        this.template = RoleOperationDiff_tmpl;
-                                }
-                                this.templateType = XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value;
-                        }
+            if(this.classType == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value){
+                this.rolesDiffOperation();
+                if(this.action == 'update'){
+                    this.template = RoleUpdateOperationDiff_tmpl;
+                } else{
+                    this.template = RoleOperationDiff_tmpl;
+                }
+                this.templateType = XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value;
+            }
 		},
 		assetDiffOperation : function(){	
 			var that = this, configModel;
@@ -310,6 +319,56 @@ define(function(require){
 			});
 
 		},
+
+                rolesDiffOperation : function() {
+                        var that = this;
+                        this.newRolesUsersGroupsRolesDetails = {};
+                        this.oldRolesUsersGroupsRolesDetails = {};
+                        this.updateRolesUsersGroupsRolesDetails = {};
+                        var roleDetails = ['Users', 'Groups', 'Roles'];
+                        if(this.action !== 'update') {
+                                _.each(roleDetails, function(m) {
+                                        var rolesObj = that.collection.findWhere({attributeName : m});
+                                        if(rolesObj && rolesObj.has('newValue') &&!_.isEmpty(rolesObj.get('newValue'))) {
+                                                var newValJson = $.parseJSON(rolesObj.get('newValue'));
+                                                that.newRolesUsersGroupsRolesDetails[m] = (newValJson);
+                                        }
+                                })
+                                _.each(roleDetails, function(m) {
+                                        var rolesObj = that.collection.findWhere({attributeName : m});
+                                        if(rolesObj && rolesObj.has('previousValue') &&!_.isEmpty(rolesObj.get('previousValue'))) {
+                                                var newValJson = $.parseJSON(rolesObj.get('previousValue'));
+                                                that.oldRolesUsersGroupsRolesDetails[m] = (newValJson);
+                                        }
+                                })
+                        } else {
+                                _.each(roleDetails, function(m) {
+                                        var rolesObj = that.collection.findWhere({attributeName : m});
+                                        if(rolesObj) {
+                                                that.updateRolesUsersGroupsRolesDetails[m] = {};
+                                                var newValJson, oldValJson;
+                                                try {
+                                                        newValJson = JSON.parse(rolesObj.get('newValue'));
+                                                } catch(err) {
+                                                        newValJson = "";
+                                                } finally {
+                                                        that.updateRolesUsersGroupsRolesDetails[m]["newVal"] = (newValJson)
+                                                }
+                                                try {
+                                                        oldValJson = JSON.parse(rolesObj.get('previousValue'));
+                                                } catch(err) {
+                                                        oldValJson = "";
+                                                } finally {
+                                                        that.updateRolesUsersGroupsRolesDetails[m]["oldVal"] = (oldValJson)
+                                                }
+                                        }
+                                })
+                        }
+                        _.each(roleDetails, function(key) {
+                                that.collection.remove(that.collection.where({attributeName : key}));
+                        })
+                },
+
 		removeUnwantedFromObject : function(obj){
 			_.each(obj, function(val, key){
 					if(_.isEmpty(val))
