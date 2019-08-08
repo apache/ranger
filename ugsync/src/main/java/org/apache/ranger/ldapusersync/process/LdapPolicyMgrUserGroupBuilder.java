@@ -130,6 +130,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
     Map<String, String> userMap = new LinkedHashMap<String, String>();
     Map<String, String> groupMap = new LinkedHashMap<String, String>();
     private boolean isRangerCookieEnabled;
+    private volatile Client client;
 
 	static {
 		try {
@@ -1117,7 +1118,22 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		return response;
 	}
 
-	private synchronized Client getClient() {
+	public Client getClient() {
+		// result saves on access time when client is built at the time of the call
+		Client result = client;
+		if(result == null) {
+			synchronized(this) {
+				result = client;
+				if(result == null) {
+					client = result = buildClient();
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private Client buildClient() {
 		
 		Client ret = null;
 		

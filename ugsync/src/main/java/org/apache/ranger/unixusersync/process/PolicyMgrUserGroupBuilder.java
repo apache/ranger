@@ -115,12 +115,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private UserGroupSyncConfig  config = UserGroupSyncConfig.getInstance();
 
 	private UserGroupInfo				usergroupInfo = new UserGroupInfo();
-	private List<XGroupInfo> 			xgroupList = new ArrayList<XGroupInfo>();
-	private List<XUserInfo> 			xuserList = new ArrayList<XUserInfo>();
-	private List<XUserGroupInfo> 		xusergroupList = new ArrayList<XUserGroupInfo>();
-	private HashMap<String,XUserInfo>  	userId2XUserInfoMap = new HashMap<String,XUserInfo>();
-	private HashMap<String,XUserInfo>  	userName2XUserInfoMap = new HashMap<String,XUserInfo>();
-	private HashMap<String,XGroupInfo>  groupName2XGroupInfoMap = new HashMap<String,XGroupInfo>();
+	private List<XGroupInfo> 			xgroupList;
+	private List<XUserInfo> 			xuserList;
+	private List<XUserGroupInfo> 		xusergroupList;
+	private HashMap<String,XUserInfo>  	userId2XUserInfoMap;
+	private HashMap<String,XUserInfo>  	userName2XUserInfoMap;
+	private HashMap<String,XGroupInfo>  groupName2XGroupInfoMap;
 
 	private String keyStoreFile =  null;
 	private String keyStoreFilepwd = null;
@@ -135,8 +135,8 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	String principal;
 	String keytab;
 	String nameRules;
-    Map<String, String> userMap = new LinkedHashMap<String, String>();
-    Map<String, String> groupMap = new LinkedHashMap<String, String>();
+    Map<String, String> userMap;
+    Map<String, String> groupMap;
 	private int noOfNewUsers;
 	private int noOfNewGroups;
 	private int noOfModifiedUsers;
@@ -147,6 +147,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	private HashSet<String> modifiedGroupList = new HashSet<String>();
 	private boolean isRangerCookieEnabled;
 	boolean isStartupFlag = false;
+	private volatile Client client;
 
 	static {
 		try {
@@ -164,6 +165,14 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 
 
 	synchronized public void init() throws Throwable {
+		xgroupList = new ArrayList<XGroupInfo>();
+		xuserList = new ArrayList<XUserInfo>();
+		xusergroupList = new ArrayList<XUserGroupInfo>();
+		userId2XUserInfoMap = new HashMap<String,XUserInfo>();
+		userName2XUserInfoMap = new HashMap<String,XUserInfo>();
+		groupName2XGroupInfoMap = new HashMap<String,XGroupInfo>();
+		userMap = new LinkedHashMap<String, String>();
+		groupMap = new LinkedHashMap<String, String>();
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
@@ -278,6 +287,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		if (userName != null) {
 			userName2XUserInfoMap.put(userName, aUserInfo);
 		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PolicyMgrUserGroupBuilder:addUserToList() xuserList.size() = " + xuserList.size());
+		}
 	}
 
 
@@ -291,6 +304,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			groupName2XGroupInfoMap.put(aGroupInfo.getName(), aGroupInfo);
 		}
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PolicyMgrUserGroupBuilder:addGroupToList() xgroupList.size() = " + xgroupList.size());
+		}
 	}
 
 	private void addUserGroupToList(XUserGroupInfo ugInfo) {
@@ -1366,8 +1382,22 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		return response;
 	}
 
+	public Client getClient() {
+		// result saves on access time when client is built at the time of the call
+		Client result = client;
+		if(result == null) {
+			synchronized(this) {
+				result = client;
+				if(result == null) {
+					client = result = buildClient();
+				}
+			}
+		}
 
-	private synchronized Client getClient() {
+		return result;
+	}
+
+	private Client buildClient() {
 
 		Client ret = null;
 		if (policyMgrBaseUrl.startsWith("https://")) {
