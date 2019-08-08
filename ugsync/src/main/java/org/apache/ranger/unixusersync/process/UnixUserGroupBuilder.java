@@ -73,11 +73,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private long timeout = 0;
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-	private Map<String,List<String>> user2GroupListMap = new HashMap<String,List<String>>();
-	private Map<String,List<String>>  	internalUser2GroupListMap = new HashMap<String,List<String>>();
-	private Map<String,String>			groupId2groupNameMap = new HashMap<String,String>();
-	private int 						minimumUserId  = 0;
-	private int							minimumGroupId = 0;
+	private Map<String,List<String>> user2GroupListMap;
+	private Map<String,List<String>> internalUser2GroupListMap;
+	private Map<String,String> groupId2groupNameMap;
+	private int minimumUserId  = 0;
+	private int minimumGroupId = 0;
 	private String unixPasswordFile;
 	private String unixGroupFile;
 
@@ -194,6 +194,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private void buildUserGroupInfo() throws Throwable {
 		user2GroupListMap = new HashMap<String,List<String>>();
 		groupId2groupNameMap = new HashMap<String, String>();
+		internalUser2GroupListMap = new HashMap<String,List<String>>();
 		allGroups = new HashSet<>();
 
 		if (OS.startsWith("Mac")) {
