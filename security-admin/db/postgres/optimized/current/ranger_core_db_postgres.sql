@@ -1703,6 +1703,7 @@ CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 CREATE INDEX x_ugsync_audit_info_etime ON x_ugsync_audit_info(event_time);
 CREATE INDEX x_ugsync_audit_info_sync_src ON x_ugsync_audit_info(sync_source);
 CREATE INDEX x_ugsync_audit_info_uname ON x_ugsync_audit_info(user_name);
+CREATE INDEX x_data_hist_idx_objid_objclstype ON x_data_hist(obj_id,obj_class_type);
 
 CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val varchar(100))
 RETURNS bigint LANGUAGE SQL AS $$ SELECT x_portal_user.id FROM x_portal_user
@@ -1765,6 +1766,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('039',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

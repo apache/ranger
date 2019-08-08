@@ -2009,6 +2009,8 @@ CREATE NONCLUSTERED INDEX x_ugsync_audit_info_sync_src ON dbo.x_ugsync_audit_inf
 GO
 CREATE NONCLUSTERED INDEX x_ugsync_audit_info_uname ON dbo.x_ugsync_audit_info(user_name ASC)
 GO
+CREATE NONCLUSTERED INDEX x_data_hist_idx_objid_objclstype ON dbo.x_data_hist(obj_id ASC, obj_class_type ASC)
+GO
 
 CREATE OR REPLACE FUNCTION dbo.getXportalUIdByLoginId (input_val CHAR(60))
 RETURNS INTEGER
@@ -2123,6 +2125,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
