@@ -147,6 +147,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 		} finally {
 			// [4]remove context from thread-local
 			RangerContextHolder.resetSecurityContext();
+			RangerContextHolder.resetOpContext();
 		}
 	}
 }

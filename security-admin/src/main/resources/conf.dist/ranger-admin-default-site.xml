@@ -366,6 +366,18 @@
 	</property>
 
 	<property>
+		<name>ranger.jpa.jdbc.batch-clear.enable</name>
+		<value>true</value>
+		<description>property to enable bulk mode optimization</description>
+	</property>
+
+	<property>
+		<name>ranger.jpa.jdbc.batch-clear.size</name>
+		<value>10</value>
+		<description>batch size to flush and clear jdbc statements</description>
+	</property>
+
+	<property>
 		<name>ranger.jpa.jdbc.credential.alias</name>
 		<value>ranger.db.password</value>
 		<description></description>

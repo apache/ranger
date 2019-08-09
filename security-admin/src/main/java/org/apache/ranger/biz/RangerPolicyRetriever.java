@@ -508,7 +508,8 @@ public class RangerPolicyRetriever {
 
 			this.service    = xService;
 			this.iterPolicy = asList(xPolicy).listIterator();
-			this.iterPolicyLabels = daoMgr.getXXPolicyLabelMap().findByPolicyId(policyId).listIterator();
+			List<XXPolicyLabelMap> policyLabels = daoMgr.getXXPolicyLabelMap().findByPolicyId(policyId);
+			this.iterPolicyLabels = policyLabels != null ? policyLabels.listIterator() : null;
 		}
 
 		RangerPolicy getNextPolicy() {
@@ -545,19 +546,21 @@ public class RangerPolicyRetriever {
 
 		private void getPolicyLabels(RangerPolicy ret) {
 			List<String> xPolicyLabels = new ArrayList<String>();
-			while (iterPolicyLabels.hasNext()) {
-				XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
-				if (xPolicyLabel.getPolicyId().equals(ret.getId())) {
-					String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
-					if (policyLabel != null) {
-						xPolicyLabels.add(policyLabel);
+			if (iterPolicyLabels != null) {
+				while (iterPolicyLabels.hasNext()) {
+					XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
+					if (xPolicyLabel.getPolicyId().equals(ret.getId())) {
+						String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
+						if (policyLabel != null) {
+							xPolicyLabels.add(policyLabel);
+						}
+						ret.setPolicyLabels(xPolicyLabels);
+					} else {
+						if (iterPolicyLabels.hasPrevious()) {
+							iterPolicyLabels.previous();
+						}
+						break;
 					}
-					ret.setPolicyLabels(xPolicyLabels);
-				} else {
-					if (iterPolicyLabels.hasPrevious()) {
-						iterPolicyLabels.previous();
-					}
-					break;
 				}
 			}
 		}

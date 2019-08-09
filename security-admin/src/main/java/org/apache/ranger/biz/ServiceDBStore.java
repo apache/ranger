@@ -94,7 +94,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
 import org.apache.ranger.db.XXContextEnricherDefDao;
-import org.apache.ranger.db.XXDBBaseDao;
 import org.apache.ranger.db.XXDataMaskTypeDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
 import org.apache.ranger.db.XXEnumElementDefDao;
@@ -617,7 +616,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
-		dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE, true);
+		dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
 
 		postCreate(createdServiceDef);
 
@@ -678,7 +677,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
 
 		RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
-		dataHistService.createObjectDataHistory(updatedSvcDef, RangerDataHistService.ACTION_UPDATE, true);
+		dataHistService.createObjectDataHistory(updatedSvcDef, RangerDataHistService.ACTION_UPDATE);
 
 		postUpdate(updatedSvcDef);
 
@@ -1186,7 +1185,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.deleteServiceDef(" + serviceDefId + ", " + forceDelete + ")");
 		}
-                bizUtil.blockAuditorRoleUser();
+		bizUtil.blockAuditorRoleUser();
 		UserSessionBase session = ContextUtil.getCurrentUserSession();
 		if (session == null) {
 			throw restErrorUtil.createRESTException(
@@ -1205,7 +1204,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw restErrorUtil.createRESTException("No Service Definiton found for Id: " + serviceDefId,
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		
+
 		List<XXService> serviceList = daoMgr.getXXService().findByServiceDefId(serviceDefId);
 		if (!forceDelete) {
 			if(CollectionUtils.isNotEmpty(serviceList)) {
@@ -1225,13 +1224,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		for(XXAccessTypeDef accessType : accTypeDefs) {
 			deleteXXAccessTypeDef(accessType);
 		}
-		
+
 		XXContextEnricherDefDao xContextEnricherDao = daoMgr.getXXContextEnricherDef();
 		List<XXContextEnricherDef> contextEnrichers = xContextEnricherDao.findByServiceDefId(serviceDefId);
 		for(XXContextEnricherDef context : contextEnrichers) {
 			xContextEnricherDao.remove(context);
 		}
-		
+
 		XXEnumDefDao enumDefDao = daoMgr.getXXEnumDef();
 		List<XXEnumDef> enumDefList = enumDefDao.findByServiceDefId(serviceDefId);
 		for (XXEnumDef enumDef : enumDefList) {
@@ -1241,10 +1240,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 			enumDefDao.remove(enumDef);
 		}
-		
+
 		XXPolicyConditionDefDao policyCondDao = daoMgr.getXXPolicyConditionDef();
 		List<XXPolicyConditionDef> policyCondList = policyCondDao.findByServiceDefId(serviceDefId);
-		
+
 		for (XXPolicyConditionDef policyCond : policyCondList) {
 			List<XXPolicyRefCondition> xxPolicyRefConditions = daoMgr.getXXPolicyRefCondition().findByConditionDefId(policyCond.getId());
 			for (XXPolicyRefCondition XXPolicyRefCondition : xxPolicyRefConditions) {
@@ -1252,24 +1251,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 			policyCondDao.remove(policyCond);
 		}
-		
+
 		List<XXResourceDef> resDefList = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
 		for(XXResourceDef resDef : resDefList) {
 			deleteXXResourceDef(resDef);
 		}
-		
+
 		XXServiceConfigDefDao configDefDao = daoMgr.getXXServiceConfigDef();
 		List<XXServiceConfigDef> configDefList = configDefDao.findByServiceDefId(serviceDefId);
 		for(XXServiceConfigDef configDef : configDefList) {
 			configDefDao.remove(configDef);
 		}
-		
+
 		if(CollectionUtils.isNotEmpty(serviceList)) {
 			for(XXService service : serviceList) {
 				deleteService(service.getId());
 			}
 		}
-		
+
 		Long version = serviceDef.getVersion();
 		if(version == null) {
 			version = Long.valueOf(1);
@@ -1278,11 +1277,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			version = Long.valueOf(version.longValue() + 1);
 		}
 		serviceDef.setVersion(version);
-		
+
 		serviceDefService.delete(serviceDef);
 		LOG.info("ServiceDefinition has been deleted successfully. Service-Def Name: " + serviceDef.getName());
-		
-		dataHistService.createObjectDataHistory(serviceDef, RangerDataHistService.ACTION_DELETE, true);
+
+		dataHistService.createObjectDataHistory(serviceDef, RangerDataHistService.ACTION_DELETE);
 
 		postDelete(serviceDef);
 
@@ -1486,7 +1485,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			throw restErrorUtil.createRESTException("Could not create service - Internal error ", MessageEnums.ERROR_CREATING_OBJECT);
 		}
 
-		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE, true);
+		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService,
 				RangerServiceService.OPERATION_CREATE_CONTEXT);
@@ -1679,7 +1678,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("vXUser:[" + vXUser + "]");
 		}
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
-		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE, true);
+		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
 		bizUtil.createTrxLog(trxLogList);
 
 		return updService;
@@ -1699,13 +1698,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 		restrictIfZoneService(service);
 		List<Long> policyIds = daoMgr.getXXPolicy().findPolicyIdsByServiceId(service.getId());
 		if (CollectionUtils.isNotEmpty(policyIds)) {
-			List<RangerPolicy> rangerPolicies = new ArrayList<RangerPolicy>();
-			for(Long policyID : policyIds) {
-				RangerPolicy rangerPolicy=getPolicy(policyID);
+			long totalDeletedPolicies = 0;
+			for (Long policyID : policyIds) {
+				RangerPolicy rangerPolicy = getPolicy(policyID);
 				deletePolicy(rangerPolicy, service);
-				rangerPolicies.add(rangerPolicy);
+				totalDeletedPolicies = totalDeletedPolicies + 1;
+				// its a bulk policy delete call flush and clear
+				if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+					bizUtil.bulkModeOnlyFlushAndClear();
+				}
 			}
-			createTrxLogsAndHistoryAfterDelete(rangerPolicies, service);
+			bizUtil.bulkModeOnlyFlushAndClear();
 		}
 
 		XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
@@ -1725,7 +1728,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		svcService.delete(service);
 
-		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE, true);
+		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
@@ -1897,13 +1900,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
 			daoMgr.getXXPolicy().setIdentityInsert(true);
 
-			policy = assignedIdPolicyService.create(policy);
+			policy = assignedIdPolicyService.create(policy, true);
 
 			daoMgr.getXXPolicy().setIdentityInsert(false);
 			daoMgr.getXXPolicy().updateSequence();
 			assignedIdPolicyService.setPopulateExistingBaseFields(false);
 		} else {
-			policy = policyService.create(policy);
+			policy = policyService.create(policy, true);
 		}
 
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
@@ -1912,7 +1915,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy);
-		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE, true);
+		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
 		List<XXTrxLog> trxLogList = getTransactionLogList(createdPolicy,
 				RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
@@ -2033,14 +2036,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
-		policyRefUpdater.cleanupRefTables(policy, true);
-		deleteExistingPolicyLabel(policy, true);
+		policyRefUpdater.cleanupRefTables(policy);
+		deleteExistingPolicyLabel(policy);
 
 		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy);
-		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE, true);
+		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 
 		bizUtil.createTrxLog(trxLogList);
 
@@ -2061,11 +2064,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		String policyName = policy.getName();
 		RangerService service = getServiceByName(policy.getService());
-		
+
 		if(service == null) {
 			throw new Exception("service does not exist - name='" + policy.getService());
 		}
-		
+
 		Long version = policy.getVersion();
 		if(version == null) {
 			version = Long.valueOf(1);
@@ -2073,25 +2076,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 		} else {
 			version = Long.valueOf(version.longValue() + 1);
 		}
-		
+
 		policy.setVersion(version);
-		
+
 		List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT,
 				RangerPolicyService.OPERATION_DELETE_CONTEXT);
 
-		policyRefUpdater.cleanupRefTables(policy, true);
-		deleteExistingPolicyLabel(policy, true);
+		policyRefUpdater.cleanupRefTables(policy);
+		deleteExistingPolicyLabel(policy);
 		policyService.delete(policy);
 
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
 
-		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE, true);
-		
+		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
+
 		bizUtil.createTrxLog(trxLogList);
-		
+
 		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
 	}
 
+	@Override
 	public void deletePolicy(RangerPolicy policy, RangerService service) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.deletePolicy()");
@@ -2113,37 +2117,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 					version = Long.valueOf(version.longValue() + 1);
 				}
 				policy.setVersion(version);
-				policyRefUpdater.cleanupRefTables(policy, false);
-				deleteExistingPolicyLabel(policy, false);
-				policyService.delete(policy, false);
+				policyRefUpdater.cleanupRefTables(policy);
+				deleteExistingPolicyLabel(policy);
+				policyService.delete(policy);
+				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
+				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
+				bizUtil.createTrxLog(trxLogList);
 			}
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.deletePolicy()");
-		}
-	}
-
-	public void createTrxLogsAndHistoryAfterDelete(List<RangerPolicy> policies, RangerService service) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.createTrxLogsAndHistoryAfterDelete");
-		}
-		if(CollectionUtils.isNotEmpty(policies)) {
-			for (RangerPolicy policy : policies) {
-				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
-	
-				if(service==null) {
-					service = getServiceByName(policy.getService());
-				}
-				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
-	
-				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE, false);
-	
-				bizUtil.createTrxLog(trxLogList, false);
-			}
-			XXDBBaseDao xXDBBaseDao = daoMgr.getXXDBBase();
-			if(xXDBBaseDao!=null) {
-				xXDBBaseDao.flush();
-			}
 		}
 	}
 
@@ -2290,9 +2274,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public List<RangerPolicy> noZoneFilter(List<RangerPolicy> servicePolicies) {
 		List<RangerPolicy> noZonePolicies = new ArrayList<RangerPolicy>();
-		for (RangerPolicy policy : servicePolicies) {
-			if (StringUtils.isBlank(policy.getZoneName())) {
-				noZonePolicies.add(policy);
+		if (CollectionUtils.isNotEmpty(servicePolicies)) {
+			for (RangerPolicy policy : servicePolicies) {
+				if (StringUtils.isBlank(policy.getZoneName())) {
+					noZonePolicies.add(policy);
+				}
 			}
 		}
 		return noZonePolicies;
@@ -3064,14 +3050,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 				RangerService service = getServiceByName(serviceName);
 				List<Long> policyIds = policyDao.findPolicyIdsByServiceNameAndZoneId(serviceName, zoneId);
 				if (CollectionUtils.isNotEmpty(policyIds)) {
-					List<RangerPolicy> rangerPolicyList=new ArrayList<RangerPolicy>();
+					List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
 					for (Long id : policyIds) {
 						rangerPolicyList.add(getPolicy(id));
 					}
+					long totalDeletedPolicies = 0;
 					for (RangerPolicy rangerPolicy : rangerPolicyList) {
 						deletePolicy(rangerPolicy, service);
+						totalDeletedPolicies = totalDeletedPolicies + 1;
+						if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+							bizUtil.bulkModeOnlyFlushAndClear();
+						}
 					}
-					createTrxLogsAndHistoryAfterDelete(rangerPolicyList, service);
+					bizUtil.bulkModeOnlyFlushAndClear();
 				}
 			}
 		}
@@ -3376,7 +3367,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 
-	private Boolean deleteExistingPolicyLabel(RangerPolicy policy, boolean flush) {
+	private Boolean deleteExistingPolicyLabel(RangerPolicy policy) {
 		if (policy == null) {
 			return false;
 		}
@@ -3384,7 +3375,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXPolicyLabelMap> xxPolicyLabelMaps = daoMgr.getXXPolicyLabelMap().findByPolicyId(policy.getId());
 		XXPolicyLabelMapDao policyLabelMapDao = daoMgr.getXXPolicyLabelMap();
 		for (XXPolicyLabelMap xxPolicyLabelMap : xxPolicyLabelMaps) {
-			policyLabelMapDao.remove(xxPolicyLabelMap, flush);
+			policyLabelMapDao.remove(xxPolicyLabelMap);
 		}
 		return true;
 	}

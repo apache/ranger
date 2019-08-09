@@ -118,6 +118,8 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.security.context.RangerAdminOpContext;
+import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
 import org.apache.ranger.service.RangerPluginInfoService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
@@ -142,7 +144,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -336,7 +337,9 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteServiceDef(" + id + ")");
 		}
-
+		RangerAdminOpContext opContext = new RangerAdminOpContext();
+		opContext.setBulkModeContext(true);
+		RangerContextHolder.setOpContext(opContext);
 		RangerPerfTracer perf = null;
 
 		try {
@@ -789,7 +792,9 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
 		}
-
+		RangerAdminOpContext opContext = new RangerAdminOpContext();
+		opContext.setBulkModeContext(true);
+		RangerContextHolder.setOpContext(opContext);
 		RangerPerfTracer perf = null;
 
 		try {
@@ -2112,24 +2117,27 @@ public class ServiceREST {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.importPoliciesFromFile()");
 		}
+		RangerAdminOpContext opContext = new RangerAdminOpContext();
+		opContext.setBulkModeContext(true);
+		RangerContextHolder.setOpContext(opContext);
 		RangerPerfTracer perf = null;
 		String metaDataInfo = null;
 		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
 		XXTrxLog xxTrxLogError = new XXTrxLog();
-		
+
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.importPoliciesFromFile()");
 			}
-			
+
 			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 			XXTrxLog xxTrxLog = new XXTrxLog();
 			xxTrxLog.setAction("IMPORT START");
 			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-                        xxTrxLog.setPreviousValue("IMPORT START");
+			xxTrxLog.setPreviousValue("IMPORT START");
 			trxLogList.add(xxTrxLog);
 			bizUtil.createTrxLog(trxLogList);
-			
+
 			if (isOverride == null){
 				isOverride = false;
 			}
@@ -2398,7 +2406,11 @@ public class ServiceREST {
 						}
 					}
 				}
+				if(totalPolicyCreate % RangerBizUtil.batchSize == 0) {
+					bizUtil.bulkModeOnlyFlushAndClear();
+				}
 			}
+			bizUtil.bulkModeOnlyFlushAndClear();
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Total Policy Created From Json file : " + totalPolicyCreate);
 			}
@@ -2419,11 +2431,9 @@ public class ServiceREST {
 
 	private RangerExportPolicyList processPolicyInputJsonForMetaData(InputStream uploadedInputStream,
 			RangerExportPolicyList rangerExportPolicyList) throws Exception {
-		Gson gson = new Gson();
 		String policiesString = IOUtils.toString(uploadedInputStream);
 		policiesString = policiesString.trim();
 		if (StringUtils.isNotEmpty(policiesString)) {
-			gson.fromJson(policiesString, RangerExportPolicyList.class);
 			rangerExportPolicyList = JsonUtilsV2.jsonToObj(policiesString, RangerExportPolicyList.class);
 		} else {
 			LOG.error("Provided json file is empty!!");
@@ -2644,7 +2654,7 @@ public class ServiceREST {
 	}
 	
 	private void deletePoliciesProvidedInServiceMap(List<String> sourceServices, List<String> destinationServices, String zoneName) throws Exception {
-		int totalDeletedPilicies = 0;
+		int totalDeletedPolicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
@@ -2663,26 +2673,29 @@ public class ServiceREST {
 									ensureAdminAccess(rangerPolicy);
 									bizUtil.blockAuditorRoleUser();
 									svcStore.deletePolicy(rangerPolicy, service);
-									totalDeletedPilicies = totalDeletedPilicies + 1;
+									totalDeletedPolicies = totalDeletedPolicies + 1;
+									if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+										bizUtil.bulkModeOnlyFlushAndClear();
+									}
 									if (LOG.isDebugEnabled()) {
-										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully." );
-										LOG.debug("TotalDeletedPilicies: " +totalDeletedPilicies);
+										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
+										LOG.debug("TotalDeletedPilicies: " + totalDeletedPolicies);
 									}
 								}
 							}
-							svcStore.createTrxLogsAndHistoryAfterDelete(rangerPolicyList,service);
+							bizUtil.bulkModeOnlyFlushAndClear();
 						}
 					}
 				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Total Deleted Policy : " + totalDeletedPilicies);
+			LOG.debug("Total Deleted Policy : " + totalDeletedPolicies);
 		}
 	}
 
 	private void deletePoliciesForResource(List<String> sourceServices, List<String> destinationServices, HttpServletRequest request, List<RangerPolicy> exportPolicies, String zoneName)  throws Exception {
-		int totalDeletedPilicies = 0;
+		int totalDeletedPolicies = 0;
 		if (CollectionUtils.isNotEmpty(sourceServices)
 				&& CollectionUtils.isNotEmpty(destinationServices)) {
 			Set<String> exportedPolicyNames=new HashSet<String>();
@@ -2733,9 +2746,12 @@ public class ServiceREST {
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
 									}
-									totalDeletedPilicies = totalDeletedPilicies + 1;
+									totalDeletedPolicies = totalDeletedPolicies + 1;
+									if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+										bizUtil.bulkModeOnlyFlushAndClear();
+									}
 								}
-								svcStore.createTrxLogsAndHistoryAfterDelete(policiesToBeDeleted, service);
+								bizUtil.bulkModeOnlyFlushAndClear();
 							}
 						}
 					}
@@ -4162,7 +4178,7 @@ public class ServiceREST {
 
 	private void deleteExactMatchPolicyForResource(List<RangerPolicy> policies, String user, String zoneName) throws Exception {
 		if (CollectionUtils.isNotEmpty(policies)) {
-			List<RangerPolicy> existingMatchedPolicies=new ArrayList<RangerPolicy>();
+			long totalDeletedPolicies = 0;
 			for (RangerPolicy rangerPolicy : policies) {
 				RangerPolicy existingPolicy = null ;
 				try {
@@ -4173,17 +4189,18 @@ public class ServiceREST {
 				} catch (Exception e) {
 					existingPolicy=null;
 				}
-				if(existingPolicy!=null) {
+				if (existingPolicy != null) {
 					svcStore.deletePolicy(existingPolicy, null);
-					existingMatchedPolicies.add(existingPolicy);
+					totalDeletedPolicies = totalDeletedPolicies + 1;
+					if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+						bizUtil.bulkModeOnlyFlushAndClear();
+					}
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
 					}
 				}
 			}
-			if (CollectionUtils.isNotEmpty(existingMatchedPolicies)) {
-				svcStore.createTrxLogsAndHistoryAfterDelete(existingMatchedPolicies, null);
-			}
+			bizUtil.bulkModeOnlyFlushAndClear();
 		}
 	}
 }

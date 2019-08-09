@@ -46,6 +46,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXDBBaseDao;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXGroup;
@@ -100,6 +101,8 @@ public class RangerBizUtil {
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
 	public static final String AUDIT_STORE_RDBMS = "DB";
 	public static final String AUDIT_STORE_SOLR = "solr";
+	public static final boolean batchClearEnabled = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
+	public static final int batchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
 
@@ -1148,46 +1151,6 @@ public class RangerBizUtil {
 		}
 	}
 
-	public void createTrxLog(List<XXTrxLog> trxLogList, boolean flush) {
-		if (trxLogList == null) {
-			return;
-		}
-
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		Long authSessionId = null;
-		if (usb != null) {
-			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
-		}
-		if(guidUtil != null){
-		Long trxId = guidUtil.genLong();
-		for (XXTrxLog xTrxLog : trxLogList) {
-			if (xTrxLog != null) {
-				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
-					if (xTrxLog.getPreviousValue() != null
-							&& !xTrxLog.getPreviousValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog
-									.getPreviousValue().trim())) {
-						xTrxLog.setPreviousValue(AppConstants.Masked_String);
-					}
-					if (xTrxLog.getNewValue() != null
-							&& !xTrxLog.getNewValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog.getNewValue()
-									.trim())) {
-						xTrxLog.setNewValue(AppConstants.Masked_String);
-					}
-				}
-				xTrxLog.setTransactionId(trxId.toString());
-				if (authSessionId != null) {
-					xTrxLog.setSessionId("" + authSessionId);
-				}
-				xTrxLog.setSessionType("Spring Authenticated Session");
-				xTrxLog.setRequestId(trxId.toString());
-				daoManager.getXXTrxLog().create(xTrxLog, flush);
-			}
-		}
-		}
-	}
-
 	public static int getDBFlavor() {
 		String[] propertyNames = { "xa.db.flavor",
 									"ranger.jpa.jdbc.dialect",
@@ -1496,6 +1459,21 @@ public class RangerBizUtil {
 				if(item.startsWith(" ") || item.endsWith(" ")) {
 					list.set(i, StringUtils.trim(item));
 				}
+			}
+		}
+	}
+
+	public static boolean isBulkMode() {
+		return ContextUtil.isBulkModeContext();
+	}
+
+	//should be used only in bulk operation like importPolicies, policies delete.
+	public void bulkModeOnlyFlushAndClear() {
+		if (batchClearEnabled) {
+			XXDBBaseDao xXDBBaseDao = daoManager.getXXDBBase();
+			if (xXDBBaseDao != null) {
+				xXDBBaseDao.flush();
+				xXDBBaseDao.clear();
 			}
 		}
 	}

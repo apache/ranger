@@ -863,8 +863,7 @@
 
 	<!-- XXDataHist -->
 	<named-query name="XXDataHist.findLatestByObjectClassTypeAndObjectId">
-		<query>select obj from XXDataHist obj where obj.objectId = :objectId 
-                               and obj.objectClassType = :classType ORDER BY obj.id</query>
+		<query>select obj from XXDataHist obj where obj.objectId = :objectId and obj.objectClassType = :classType</query>
 	</named-query>
 
 	<named-query name="XXDataHist.getVersionListOfObject">
@@ -873,8 +872,7 @@
 	</named-query>
 
 	<named-query name="XXDataHist.findObjectByVersionNumber">
-		<query>select obj from XXDataHist obj where obj.objectClassType = :classType and 
-		obj.objectId = :objId and obj.version = :version</query>
+		<query>select obj from XXDataHist obj where obj.objectId = :objId and obj.objectClassType = :classType and obj.version = :version</query>
 	</named-query>
 
 	<!-- XXTrxLog -->

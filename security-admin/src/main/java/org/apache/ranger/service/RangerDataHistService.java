@@ -53,7 +53,7 @@ public class RangerDataHistService {
 	public static final String ACTION_UPDATE = "Update";
 	public static final String ACTION_DELETE = "Delete";
 	
-	public void createObjectDataHistory(RangerBaseModelObject baseModelObj, String action, boolean flush) {
+	public void createObjectDataHistory(RangerBaseModelObject baseModelObj, String action) {
 		if(baseModelObj == null || action == null) {
 			throw restErrorUtil
 					.createRESTException("Error while creating DataHistory. "
@@ -108,7 +108,7 @@ public class RangerDataHistService {
 		xDataHist.setObjectClassType(classType);
 		xDataHist.setObjectName(objectName);
 		xDataHist.setContent(content);
-		xDataHist = daoMgr.getXXDataHist().create(xDataHist, flush);
+		xDataHist = daoMgr.getXXDataHist().create(xDataHist);
 		
 		if (ACTION_UPDATE.equalsIgnoreCase(action) || ACTION_DELETE.equalsIgnoreCase(action)) {
 			XXDataHist prevHist = daoMgr.getXXDataHist().findLatestByObjectClassTypeAndObjectId(classType, objectId);
@@ -122,7 +122,7 @@ public class RangerDataHistService {
 			prevHist.setUpdateTime(currentDate);
 			prevHist.setToTime(currentDate);
 			prevHist.setObjectName(objectName);
-			prevHist = daoMgr.getXXDataHist().update(prevHist, flush);
+			prevHist = daoMgr.getXXDataHist().update(prevHist);
 		}
 	}
 

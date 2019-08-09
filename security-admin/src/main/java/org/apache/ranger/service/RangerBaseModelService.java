@@ -227,6 +227,13 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return vObj;
 	}
 
+	public V create(V vObj, boolean flush) {
+		T resource = preCreate(vObj);
+		resource = getDao().create(resource, flush);
+		vObj = postCreate(resource);
+		return vObj;
+	}
+
 	public V read(Long id) {
 		T resource = getDao().getById(id);
 		if (resource == null) {
@@ -295,7 +302,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 					tEntityClass.getSimpleName() + ":" + id);
 		}
 		try {
-			result = getDao().remove(resource, flush);
+			result = getDao().remove(resource);
 		} catch (Exception e) {
 			LOG.error("Error deleting " + tEntityClass.getSimpleName()
 					+ ". Id=" + id, e);
