@@ -272,6 +272,56 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure</artifactId>
+		    <version>${com.microsoft.azure.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>azure-keyvault</artifactId>
+			<version>${com.microsoft.azure.azure-keyvault.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure-mgmt-keyvault</artifactId>
+		    <version>${com.microsoft.azure.azure-mgmt-keyvault.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.rest</groupId>
+		    <artifactId>client-runtime</artifactId>
+		    <version>${com.microsoft.rest.client-runtime.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure-client-runtime</artifactId>
+		    <version>${com.microsoft.azure.azure-client-runtime.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+   			<artifactId>adal4j</artifactId>
+    		<version>${com.microsoft.azure.adal4j.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>io.reactivex</groupId>
+		    <artifactId>rxjava</artifactId>
+		    <version>${io.reactivex.rxjava.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>net.minidev</groupId>
+		    <artifactId>asm</artifactId>
+		    <version>${net.minidev.asm.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcprov-jdk15on}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk15on}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.directory.api</groupId>
             <artifactId>api-i18n</artifactId>
             <version>1.0.0-M20</version>
