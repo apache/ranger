@@ -487,10 +487,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								HivePrincipal       grantorPrincipal,
 								boolean             grantOption)
 										throws HiveAuthzPluginException, HiveAccessControlException {
-		if (LOG.isDebugEnabled()) {
-				LOG.debug("grantPrivileges() => HivePrivilegeObject:" + toString(hivePrivObject, new StringBuilder()) + "grantorPrincipal: " + grantorPrincipal + "hivePrincipals" + hivePrincipals + "hivePrivileges" + hivePrivileges);
-		}
-
 		if(! RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
@@ -498,8 +494,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			List<HivePrivilegeObject> outputs = new ArrayList<>(Arrays.asList(hivePrivObject));
-			RangerHiveResource resource = getHiveResource(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject, null, outputs);
+			RangerHiveResource resource = getHiveResource(HiveOperationType.GRANT_PRIVILEGE, hivePrivObject);
 			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
 			LOG.info("grantPrivileges(): " + request);
@@ -539,8 +534,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
 		try {
-			List<HivePrivilegeObject> outputs = new ArrayList<>(Arrays.asList(hivePrivObject));
-			RangerHiveResource resource = getHiveResource(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject, null, outputs);
+			RangerHiveResource resource = getHiveResource(HiveOperationType.REVOKE_PRIVILEGE, hivePrivObject);
 			GrantRevokeRequest request  = createGrantRevokeData(resource, hivePrincipals, hivePrivileges, grantorPrincipal, grantOption);
 
 			LOG.info("revokePrivileges(): " + request);
@@ -604,7 +598,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			if(!CollectionUtils.isEmpty(inputHObjs)) {
 				for(HivePrivilegeObject hiveObj : inputHObjs) {
-					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj, inputHObjs, outputHObjs);
+					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
 
 					if (resource == null) { // possible if input object/object is of a kind that we don't currently authorize
 						continue;
@@ -665,7 +659,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			if(!CollectionUtils.isEmpty(outputHObjs)) {
 				for(HivePrivilegeObject hiveObj : outputHObjs) {
-					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj, inputHObjs, outputHObjs);
+					RangerHiveResource resource = getHiveResource(hiveOpType, hiveObj);
 
 					if (resource == null) { // possible if input object/object is of a kind that we don't currently authorize
 						continue;
@@ -1174,9 +1168,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 
 	private RangerHiveResource getHiveResource(HiveOperationType   hiveOpType,
-											   HivePrivilegeObject hiveObj,
-											   List<HivePrivilegeObject> inputs,
-											   List<HivePrivilegeObject> outputs) {
+											   HivePrivilegeObject hiveObj) {
 		RangerHiveResource ret = null;
 
 		HiveObjectType objectType = getObjectType(hiveObj, hiveOpType);
@@ -1184,36 +1176,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		switch(objectType) {
 			case DATABASE:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname());
-				if (!isCreateOperation(hiveOpType)) {
-					ret.setOwnerUser(hiveObj.getOwnerName());
-				}
 			break;
 	
 			case TABLE:
 			case VIEW:
-			case FUNCTION:
-				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName());
-
-				String ownerName = hiveObj.getOwnerName();
-
-				if (isCreateOperation(hiveOpType)) {
-					HivePrivilegeObject dbObject = getDatabaseObject(hiveObj.getDbname(), inputs, outputs);
-					if (dbObject != null) {
-						ownerName = dbObject.getOwnerName();
-					}
-				}
-
-				ret.setOwnerUser(ownerName);
-			break;
-
 			case PARTITION:
 			case INDEX:
+			case FUNCTION:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName());
 			break;
 	
 			case COLUMN:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName(), StringUtils.join(hiveObj.getColumns(), COLUMN_SEP));
-				ret.setOwnerUser(hiveObj.getOwnerName());
 			break;
 
             case URI:
@@ -1231,44 +1205,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		if (ret != null) {
 			ret.setServiceDef(hivePlugin == null ? null : hivePlugin.getServiceDef());
-		}
-
-		return ret;
-	}
-
-	private boolean isCreateOperation(HiveOperationType hiveOpType){
-		boolean ret = false;
-		switch (hiveOpType) {
-			case CREATETABLE:
-			case CREATEVIEW:
-			case CREATETABLE_AS_SELECT:
-			case CREATE_MATERIALIZED_VIEW:
-			case CREATEFUNCTION:
-				ret = true;
-			break;
-		}
-		return ret;
-	}
-
-	private HivePrivilegeObject getDatabaseObject(String dbName, List<HivePrivilegeObject> inputs, List<HivePrivilegeObject> outputs) {
-		HivePrivilegeObject ret = null;
-
-		if (CollectionUtils.isNotEmpty(outputs)) {
-			for (HivePrivilegeObject hiveOutPrivObj : outputs) {
-				if (hiveOutPrivObj.getType() == HivePrivilegeObjectType.DATABASE
-						&& dbName.equalsIgnoreCase(hiveOutPrivObj.getDbname())) {
-					ret = hiveOutPrivObj;
-				}
-			}
-		}
-
-		if (ret == null && CollectionUtils.isNotEmpty(inputs)) {
-			for (HivePrivilegeObject hiveInPrivObj : inputs) {
-				if (hiveInPrivObj.getType() == HivePrivilegeObjectType.DATABASE
-						&& dbName.equalsIgnoreCase(hiveInPrivObj.getDbname())) {
-					ret = hiveInPrivObj;
-				}
-			}
 		}
 
 		return ret;
@@ -1923,7 +1859,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		mapResource.put(RangerHiveResource.KEY_DATABASE, database);
 		mapResource.put(RangerHiveResource.KEY_TABLE, table);
 		mapResource.put(RangerHiveResource.KEY_COLUMN, column);
-		ret.setOwnerUser(resource.getOwnerUser());
+
 		ret.setResource(mapResource);
 
 		SessionState ss = SessionState.get();
@@ -2432,6 +2368,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		sb.append(", 'user':").append(this.getCurrentUserGroupInfo().getUserName());
 		sb.append(", 'groups':[").append(StringUtil.toString(this.getCurrentUserGroupInfo().getGroupNames())).append("]");
+
 		sb.append("}");
 
 		return sb.toString();
@@ -2459,7 +2396,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append(", 'partKeys':[").append(StringUtil.toString(privObj.getPartKeys())).append("]");
 		sb.append(", 'commandParams':[").append(StringUtil.toString(privObj.getCommandParams())).append("]");
 		sb.append(", 'actionType':").append(privObj.getActionType().toString());
-		sb.append(", 'owner':").append(privObj.getOwnerName());
 		sb.append("}");
 
 		return sb;

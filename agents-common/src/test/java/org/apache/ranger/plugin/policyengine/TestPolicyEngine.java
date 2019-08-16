@@ -383,13 +383,6 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
-	@Test
-	public void testPolicyEngine_with_owner() {
-		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_hive_default_policies.json" };
-
-		runTestsFromResourceFiles(conditionsTestResourceFiles);
-	}
-
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);

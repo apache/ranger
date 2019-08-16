@@ -60,7 +60,6 @@ public class GrantRevokeRequest implements Serializable {
 	private String              sessionId;
 	private String              clusterName;
 	private String              zoneName;
-	private String 				ownerUser;
 
 	public GrantRevokeRequest() {
 		this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -77,13 +76,6 @@ public class GrantRevokeRequest implements Serializable {
 							  Set<String> groups, Set<String> roles, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
 							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
 							  String clientType, String requestData, String sessionId, String clusterName, String zoneName) {
-		this(grantor, grantorGroups, resource, users, groups, roles, accessTypes, delegateAdmin, enableAudit, replaceExistingPermissions, isRecursive, clientIPAddress, clientType, requestData, sessionId, clusterName, zoneName, null);
-	}
-
-	public GrantRevokeRequest(String grantor, Set<String> grantorGroups, Map<String, String> resource, Set<String> users,
-							  Set<String> groups, Set<String> roles, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
-							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
-							  String clientType, String requestData, String sessionId, String clusterName, String zoneName, String ownerUser) {
 		setGrantor(grantor);
 		setGrantorGroups(grantorGroups);
 		setResource(resource);
@@ -101,7 +93,6 @@ public class GrantRevokeRequest implements Serializable {
 		setSessionId(sessionId);
 		setClusterName(clusterName);
 		setZoneName(zoneName);
-		setOwnerUser(ownerUser);
 	}
 
 	/**
@@ -228,20 +219,6 @@ public class GrantRevokeRequest implements Serializable {
 	 */
 	public void setEnableAudit(Boolean enableAudit) {
 		this.enableAudit = enableAudit == null ? Boolean.TRUE : enableAudit;
-	}
-
-	/**
-	 * @return the ownerUser
-	 */
-	public String getOwnerUser() {
-		return ownerUser;
-	}
-
-	/**
-	 * @param ownerUser the ownerUser to set
-	 */
-	public void setOwnerUser(String ownerUser) {
-		this.ownerUser = ownerUser;
 	}
 
 	/**
