@@ -1177,6 +1177,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 											   HivePrivilegeObject hiveObj,
 											   List<HivePrivilegeObject> inputs,
 											   List<HivePrivilegeObject> outputs) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHiveAuthorizer.getHiveResource(" + "HiveOperationType: " + hiveOpType + "HivePrivilegeObject:"+ hiveObj +  " InputObjs:" + inputs + " OutputObjs:" + outputs);
+		}
+
 		RangerHiveResource ret = null;
 
 		HiveObjectType objectType = getObjectType(hiveObj, hiveOpType);
@@ -1184,9 +1188,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		switch(objectType) {
 			case DATABASE:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname());
-				if (!isCreateOperation(hiveOpType)) {
+				/*if (!isCreateOperation(hiveOpType)) {
 					ret.setOwnerUser(hiveObj.getOwnerName());
-				}
+				}*/
 			break;
 	
 			case TABLE:
@@ -1194,7 +1198,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case FUNCTION:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName());
 
-				String ownerName = hiveObj.getOwnerName();
+				/*String ownerName = hiveObj.getOwnerName();
 
 				if (isCreateOperation(hiveOpType)) {
 					HivePrivilegeObject dbObject = getDatabaseObject(hiveObj.getDbname(), inputs, outputs);
@@ -1204,6 +1208,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 
 				ret.setOwnerUser(ownerName);
+				*/
 			break;
 
 			case PARTITION:
@@ -1213,7 +1218,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	
 			case COLUMN:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName(), StringUtils.join(hiveObj.getColumns(), COLUMN_SEP));
-				ret.setOwnerUser(hiveObj.getOwnerName());
+				//ret.setOwnerUser(hiveObj.getOwnerName());
 			break;
 
             case URI:
@@ -1233,9 +1238,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			ret.setServiceDef(hivePlugin == null ? null : hivePlugin.getServiceDef());
 		}
 
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<= RangerHiveAuthorizer.getHiveResource(" + " RangerHiveResource: " + ret);
+		}
+
 		return ret;
 	}
 
+	/*
 	private boolean isCreateOperation(HiveOperationType hiveOpType){
 		boolean ret = false;
 		switch (hiveOpType) {
@@ -1273,6 +1283,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		return ret;
 	}
+	*/
 
 	private HiveObjectType getObjectType(HivePrivilegeObject hiveObj, HiveOperationType hiveOpType) {
 		HiveObjectType objType = HiveObjectType.NONE;
@@ -2459,7 +2470,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append(", 'partKeys':[").append(StringUtil.toString(privObj.getPartKeys())).append("]");
 		sb.append(", 'commandParams':[").append(StringUtil.toString(privObj.getCommandParams())).append("]");
 		sb.append(", 'actionType':").append(privObj.getActionType().toString());
-		sb.append(", 'owner':").append(privObj.getOwnerName());
+		//sb.append(", 'owner':").append(privObj.getOwnerName());
 		sb.append("}");
 
 		return sb;
