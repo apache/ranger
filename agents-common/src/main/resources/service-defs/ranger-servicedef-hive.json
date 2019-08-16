@@ -23,7 +23,8 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Hive Database",
-			"description": "Hive Database"
+			"description": "Hive Database",
+			"isValidLeaf": true
 		},
 
 		{
@@ -42,7 +43,8 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Hive Table",
-			"description": "Hive Table"
+			"description": "Hive Table",
+			"isValidLeaf": true
 		},
 
 		{
