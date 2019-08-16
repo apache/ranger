@@ -1204,7 +1204,8 @@ public class ServiceREST {
 					validateGrantRevokeRequest(grantRequest);
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
+					String				 ownerUser  = grantRequest.getOwnerUser();
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
                                         VXUser vxUser = xUserService.getXUserByUserName(userName);
                                         if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
                                                  VXResponse vXResponse = new VXResponse();
@@ -1314,7 +1315,8 @@ public class ServiceREST {
 
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()));
+					String				 ownerUser  = grantRequest.getOwnerUser();
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
 					XXService xService = daoManager.getXXService().findByName(serviceName);
@@ -1431,7 +1433,8 @@ public class ServiceREST {
 
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
+					String				 ownerUser  = revokeRequest.getOwnerUser();
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
                                         VXUser vxUser = xUserService.getXUserByUserName(userName);
                                         if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
                                                  VXResponse vXResponse = new VXResponse();
@@ -1502,7 +1505,8 @@ public class ServiceREST {
 
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()));
+					String				 ownerUser  = revokeRequest.getOwnerUser();
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 					boolean isAllowed = false;
 					boolean isKeyAdmin = bizUtil.isKeyAdmin();
