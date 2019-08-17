@@ -179,6 +179,7 @@ public class TestAuditQueue {
 		logger.debug("testAuditSummaryByInfra()...");
 
 		Properties props = new Properties();
+		props.put(AuditProviderFactory.AUDIT_IS_ENABLED_PROP, "true");
 		// Destination
 		String propPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".test";
 		props.put(propPrefix, "enable");
@@ -594,6 +595,7 @@ public class TestAuditQueue {
 		File logFile = new File(logFolder, logFileName);
 
 		Properties props = new Properties();
+		props.put(AuditProviderFactory.AUDIT_IS_ENABLED_PROP, "true");
 		// Destination
 		String filePropPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".file";
 		props.put(filePropPrefix, "enable");

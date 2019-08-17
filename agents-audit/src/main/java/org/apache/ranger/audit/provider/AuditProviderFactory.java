@@ -126,6 +126,12 @@ public class AuditProviderFactory {
 
 		boolean isEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_IS_ENABLED_PROP, false);
+        if (!isEnabled) {
+            LOG.info("AuditProviderFactory: Audit not enabled..");
+            mProvider = getDefaultProvider();
+            return;
+        }
+
 		boolean isAuditToDbEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_DB_IS_ENABLED_PROP, false);
 		boolean isAuditToHdfsEnabled = MiscUtil.getBooleanProperty(props,
