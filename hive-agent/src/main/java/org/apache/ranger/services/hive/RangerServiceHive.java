@@ -19,6 +19,7 @@
 package org.apache.ranger.services.hive;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -47,8 +48,15 @@ public class RangerServiceHive extends RangerBaseService {
 	public static final String RESOURCE_UDF       = "udf";
 	public static final String RESOURCE_COLUMN    = "column";
 	public static final String ACCESS_TYPE_CREATE = "create";
+	public static final String ACCESS_TYPE_SELECT = "select";
 	public static final String ACCESS_TYPE_ALL    = "all";
 	public static final String WILDCARD_ASTERISK  = "*";
+
+	public static final String HIVE_DB_DEFAULT   		        = "default";
+	public static final String HIVE_DB_INFOMATION_SCHEMA        = "information_schema";
+	public static final String DEFAULT_DB_POLICYNAME 		    = "default database tables columns";
+	public static final String INFORMATION_SCHEMA_DB_POLICYNAME = "Information_schema database tables columns";
+
 
 
 	public RangerServiceHive() {
@@ -143,6 +151,14 @@ public class RangerServiceHive extends RangerBaseService {
 			}
 		}
 
+		//Policy for default db
+		RangerPolicy defaultDBPolicy = createDefaultDBPolicy();
+		ret.add(defaultDBPolicy);
+
+		// Policy for information_schema db
+		RangerPolicy informationSchemaPolicy = createInformationSchemaPolicy();
+		ret.add(informationSchemaPolicy);
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceHive.getDefaultRangerPolicies()");
 		}
@@ -159,8 +175,68 @@ public class RangerServiceHive extends RangerBaseService {
 				return false;
 			}
 		}
-
 		return true;
+	}
+
+	private RangerPolicy createDefaultDBPolicy() {
+		RangerPolicy defaultDBPolicy = new RangerPolicy();
+
+		defaultDBPolicy.setName(DEFAULT_DB_POLICYNAME);
+		defaultDBPolicy.setService(serviceName);
+		defaultDBPolicy.setResources(createDefaultDBPolicyResource());
+		defaultDBPolicy.setPolicyItems(createDefaultDBPolicyItem());
+
+		return defaultDBPolicy;
+	}
+
+	private Map<String, RangerPolicyResource> createDefaultDBPolicyResource() {
+		Map<String, RangerPolicyResource> resources = new HashMap<>();
+
+		resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Arrays.asList(HIVE_DB_DEFAULT), false, false));
+		resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
+		resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
+
+		return resources;
+	}
+
+	private List<RangerPolicyItem> createDefaultDBPolicyItem() {
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
+
+		RangerPolicyItem item = new RangerPolicyItem(accesses, null, Arrays.asList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+
+		return Collections.singletonList(item);
+	}
+
+	private RangerPolicy createInformationSchemaPolicy() {
+		RangerPolicy informationSchemaPolicy = new RangerPolicy();
+
+		informationSchemaPolicy.setName(INFORMATION_SCHEMA_DB_POLICYNAME);
+		informationSchemaPolicy.setService(serviceName);
+		informationSchemaPolicy.setResources(createInformationSchemaPolicyResource());
+		informationSchemaPolicy.setPolicyItems(createInformationSchemaPolicyItem());
+
+		return informationSchemaPolicy;
+	}
+
+	private Map<String, RangerPolicyResource> createInformationSchemaPolicyResource() {
+		Map<String, RangerPolicyResource> resources = new HashMap<>();
+
+		resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Arrays.asList(HIVE_DB_INFOMATION_SCHEMA), false, false));
+		resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
+		resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
+
+		return resources;
+	}
+
+	private List<RangerPolicyItem> createInformationSchemaPolicyItem() {
+		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+
+		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
+		RangerPolicyItem item = new RangerPolicyItem(accesses, null, Arrays.asList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+
+		return Collections.singletonList(item);
 	}
 }
 
