@@ -1214,6 +1214,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
+		if(CollectionUtils.isNotEmpty(serviceList)) {
+			for(XXService service : serviceList) {
+				deleteService(service.getId());
+			}
+		}
+
 		XXDataMaskTypeDefDao dataMaskDao = daoMgr.getXXDataMaskTypeDef();
 		List<XXDataMaskTypeDef> dataMaskDefs = dataMaskDao.findByServiceDefId(serviceDefId);
 		for(XXDataMaskTypeDef dataMaskDef : dataMaskDefs) {
@@ -1261,12 +1267,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXServiceConfigDef> configDefList = configDefDao.findByServiceDefId(serviceDefId);
 		for(XXServiceConfigDef configDef : configDefList) {
 			configDefDao.remove(configDef);
-		}
-
-		if(CollectionUtils.isNotEmpty(serviceList)) {
-			for(XXService service : serviceList) {
-				deleteService(service.getId());
-			}
 		}
 
 		Long version = serviceDef.getVersion();
