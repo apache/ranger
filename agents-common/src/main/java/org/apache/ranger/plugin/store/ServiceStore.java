@@ -71,7 +71,7 @@ public interface ServiceStore {
 
 	void deletePolicy(RangerPolicy policy, RangerService service) throws Exception;
 
-	void deletePolicy(Long id) throws Exception;
+	void deletePolicy(RangerPolicy policy) throws Exception;
 
 	RangerPolicy getPolicy(Long id) throws Exception;
 

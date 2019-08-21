@@ -1786,7 +1786,7 @@ public class ServiceREST {
 
 			ensureAdminAccess(policy);
                         bizUtil.blockAuditorRoleUser();
-			svcStore.deletePolicy(id);
+			svcStore.deletePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {

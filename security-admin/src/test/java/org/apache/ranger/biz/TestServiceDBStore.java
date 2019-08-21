@@ -1975,9 +1975,6 @@ public class TestServiceDBStore {
 		serviceConfigDefObj.setId(Id);
 		xServiceConfigDefList.add(serviceConfigDefObj);
 
-		Mockito.when(policyService.read(rangerPolicy.getId())).thenReturn(
-				rangerPolicy);
-
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
@@ -1995,7 +1992,7 @@ public class TestServiceDBStore {
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
 
-		serviceDBStore.deletePolicy(Id);
+		serviceDBStore.deletePolicy(rangerPolicy);
 	}
 
 	@Test

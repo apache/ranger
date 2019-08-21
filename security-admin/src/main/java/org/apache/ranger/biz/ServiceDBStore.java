@@ -136,6 +136,7 @@ import org.apache.ranger.rest.ServiceREST;
 import org.apache.ranger.rest.TagREST;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
+import org.apache.ranger.service.RangerPolicyLabelHelper;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
@@ -241,6 +242,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	@Autowired
         RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
+
+	@Autowired
+	RangerPolicyLabelHelper policyLabelsHelper;
 
         @Autowired
 	XUserService xUserService;
@@ -1934,7 +1938,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
 			if(xxPolicyLabel == null) {
 				synchronized(this) {
-					xxPolicyLabel  = policyLabelsService.createNewOrGetLabel(policyLabel, xPolicy);
+					xxPolicyLabel  = policyLabelsHelper.createNewOrGetLabel(policyLabel, xPolicy);
 				}
 			}
 			//label mapping with policy
@@ -2051,15 +2055,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
-	public void deletePolicy(Long policyId) throws Exception {
+	public void deletePolicy(RangerPolicy policy) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.deletePolicy(" + policyId + ")");
+			LOG.debug("==> ServiceDBStore.deletePolicy(" + policy + ")");
 		}
 
-		RangerPolicy policy = getPolicy(policyId);
-
 		if(policy == null) {
-			throw new Exception("no policy exists with ID=" + policyId);
+			throw new Exception("No such policy exists");
 		}
 
 		String policyName = policy.getName();
