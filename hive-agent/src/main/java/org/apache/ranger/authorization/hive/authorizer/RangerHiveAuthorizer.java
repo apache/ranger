@@ -741,6 +741,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						}
 
 						RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
+						colResource.setOwnerUser(resource.getOwnerUser());
 
 						RangerHiveAccessRequest colRequest = request.copy();
 						colRequest.setResource(colResource);
@@ -1157,9 +1158,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		switch(objectType) {
 		case DATABASE:
 			resource = new RangerHiveResource(HiveObjectType.DATABASE, objectName);
+			//when fix is in place for HIVE-22128 we can un comment this.
+			//resource.setOwnerUser(privilegeObject.getOwnerName());
 			break;
 		case TABLE_OR_VIEW:
 			resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, objectName);
+			//when fix is in place for HIVE-22128 we can un comment this.
+			//resource.setOwnerUser(privilegeObject.getOwnerName());
 			break;
 		default:
 			LOG.warn("RangerHiveAuthorizer.getHiveResource: unexpected objectType:" + objectType);
@@ -2079,6 +2084,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 
 					RangerHiveResource colResource = new RangerHiveResource(HiveObjectType.COLUMN, resource.getDatabase(), resource.getTable(), column);
+					colResource.setOwnerUser(resource.getOwnerUser());
 					colResource.setServiceDef(hivePlugin.getServiceDef());
 
 					requestedResources.addRequestedResource(colResource);
