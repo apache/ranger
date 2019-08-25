@@ -589,7 +589,7 @@ create table dbo.x_service_config_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_service_config_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -620,7 +620,7 @@ create table dbo.x_resource_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 	rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 	CONSTRAINT x_resource_def_PK_id PRIMARY KEY CLUSTERED(id)
@@ -638,7 +638,7 @@ create table dbo.x_access_type_def (
 	name varchar(1024) DEFAULT NULL NULL,
 	label varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 	rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 	CONSTRAINT x_access_type_def_PK_id PRIMARY KEY CLUSTERED(id)
@@ -676,7 +676,7 @@ create table dbo.x_policy_condition_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_condition_def_grants_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -692,7 +692,7 @@ create table dbo.x_context_enricher_def(
 	name varchar(1024) DEFAULT NULL NULL,
 	enricher varchar(1024) DEFAULT NULL NULL,
 	enricher_options varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_context_enricher_def_grants_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -722,7 +722,7 @@ create table dbo.x_enum_element_def (
 	name varchar(1024) DEFAULT NULL NULL,
 	label varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_enum_element_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -762,7 +762,7 @@ create table dbo.x_policy_resource_map (
 	upd_by_id bigint DEFAULT NULL NULL,
 	resource_id bigint NOT NULL,
 	value varchar(1024) DEFAULT NULL NULL,
-	sort_order INT DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_resource_map_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -775,7 +775,7 @@ create table dbo.x_policy_item (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_id bigint NOT NULL,
 	delegate_admin tinyint DEFAULT 0 NOT NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	item_type int DEFAULT 0 NOT NULL,
 	is_enabled tinyint DEFAULT 1 NOT NULL,
 	comments varchar(255) DEFAULT NULL NULL,
@@ -792,7 +792,7 @@ create table dbo.x_policy_item_access (
 	policy_item_id bigint NOT NULL,
 	type bigint NOT NULL,
 	is_allowed tinyint DEFAULT 0 NOT NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_access_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -806,7 +806,7 @@ create table dbo.x_policy_item_condition (
 	policy_item_id bigint NOT NULL,
 	type bigint NOT NULL,
 	value varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_condition_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -819,7 +819,7 @@ create table dbo.x_policy_item_user_perm (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_item_id bigint NOT NULL,
 	user_id bigint DEFAULT NULL NULL,
-	sort_order INT DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_user_perm_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -832,7 +832,7 @@ create table dbo.x_policy_item_group_perm (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_item_id bigint NOT NULL,
 	group_id bigint DEFAULT NULL NULL,
-	sort_order INT DEFAULT 0 NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_group_perm_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -966,7 +966,7 @@ CREATE TABLE dbo.x_datamask_type_def(
 	datamask_options varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
-	sort_order tinyint DEFAULT 0  NULL,
+	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_datamask_type_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO

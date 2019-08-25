@@ -35,7 +35,7 @@ CREATE TABLE x_datamask_type_def (
   datamask_options VARCHAR(1024) DEFAULT NULL NULL,
   rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
   rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
-  sort_order SMALLINT DEFAULT '0' NULL,
+  sort_order INT DEFAULT '0' NULL,
   primary key (id),      
   CONSTRAINT x_datamask_type_def_FK_def_id FOREIGN KEY (def_id) REFERENCES x_service_def (id) ,
   CONSTRAINT x_datamask_type_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),

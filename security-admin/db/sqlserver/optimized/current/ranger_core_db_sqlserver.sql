@@ -1489,7 +1489,7 @@ CREATE TABLE [dbo].[x_service_config_def] (
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1525,7 +1525,7 @@ CREATE TABLE [dbo].[x_resource_def] (
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         [datamask_options] [varchar](1024) DEFAULT NULL NULL,
         [rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
@@ -1548,7 +1548,7 @@ CREATE TABLE [dbo].[x_access_type_def] (
         [name] [varchar](1024) DEFAULT NULL NULL,
         [label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0 NULL,
+        [sort_order] [int] DEFAULT 0 NULL,
         [datamask_options] [varchar](1024) DEFAULT NULL NULL,
         [rowfilter_options] [varchar](1024) DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
@@ -1596,7 +1596,7 @@ CREATE TABLE [dbo].[x_policy_condition_def] (
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1614,7 +1614,7 @@ CREATE TABLE [dbo].[x_context_enricher_def](
         [name] [varchar](1024) DEFAULT NULL NULL,
         [enricher] [varchar](1024) DEFAULT NULL NULL,
         [enricher_options] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1654,7 +1654,7 @@ CREATE TABLE [dbo].[x_enum_element_def] (
         [name] [varchar](1024) DEFAULT NULL NULL,
         [label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
     PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1727,7 +1727,7 @@ CREATE TABLE [dbo].[x_policy_item] (
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [policy_id] [bigint] NOT NULL,
         [delegate_admin] [tinyint] DEFAULT 0 NOT NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         [item_type] [int] DEFAULT 0 NOT NULL,
         [is_enabled] [tinyint] DEFAULT 1 NOT NULL,
         [comments] [varchar](255) DEFAULT NULL NULL,
@@ -1749,7 +1749,7 @@ CREATE TABLE [dbo].[x_policy_item_access] (
         [policy_item_id] [bigint] NOT NULL,
         [type] [bigint] NOT NULL,
         [is_allowed] [tinyint] DEFAULT 0 NOT NULL,
-        [sort_order] [tinyint] DEFAULT 0 NULL,
+        [sort_order] [int] DEFAULT 0 NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1768,7 +1768,7 @@ CREATE TABLE [dbo].[x_policy_item_condition] (
         [policy_item_id] [bigint] NOT NULL,
         [type] [bigint] NOT NULL,
         [value] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0  NULL,
+        [sort_order] [int] DEFAULT 0  NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1998,7 +1998,7 @@ CREATE TABLE [dbo].[x_datamask_type_def](
         [datamask_options] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [tinyint] DEFAULT 0 NULL,
+        [sort_order] [int] DEFAULT 0 NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -2440,7 +2440,7 @@ CREATE TABLE [dbo].[x_role](
 [name] [varchar](255) NOT NULL,
 [description] [varchar](1024) DEFAULT NULL NULL,
 [role_options] [varchar](4000) DEFAULT NULL NULL,
-[role_text] [int] DEFAULT NULL NULL,
+[role_text] [nvarchar](max) DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
 (
         [id] ASC
