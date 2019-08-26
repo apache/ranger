@@ -311,7 +311,17 @@ public class ServiceDefUtil {
         if(CollectionUtils.isNotEmpty(delta.getAccessTypeRestrictions()))
             ret.setAccessTypeRestrictions(delta.getAccessTypeRestrictions());
 
-        if (delta.getIsValidLeaf() != null)
+        boolean copyLeafValue = false;
+        if (ret.getIsValidLeaf() != null) {
+            if (!ret.getIsValidLeaf().equals(delta.getIsValidLeaf())) {
+                copyLeafValue = true;
+            }
+        } else {
+            if (delta.getIsValidLeaf() != null) {
+                copyLeafValue = true;
+            }
+        }
+        if (copyLeafValue)
             ret.setIsValidLeaf(delta.getIsValidLeaf());
 
         return ret;
