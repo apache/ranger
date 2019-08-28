@@ -439,6 +439,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
 		}
 
+		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+
+		if (StringUtils.isNotEmpty(owner)) {
+			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
+		}
+
 		List<RangerContextEnricher> enrichers = allContextEnrichers;
 
 		if(!CollectionUtils.isEmpty(enrichers)) {
@@ -879,7 +885,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	/*
-	 * This API is used by ranger-admin
+	 * This API is used by ranger-admin - kept for backward compatibility
 	 */
 
 	@Override
@@ -896,6 +902,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		return ret;
 	}
+
+	/*
+	 * This API is used by ranger-admin
+	 */
 
 	@Override
 	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
@@ -1071,6 +1081,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	/*
+	 * This API is used by ranger-admin
+	 */
+
 	@Override
 	public List<RangerPolicy> getMatchingPolicies(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -1145,7 +1159,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	/*
-	* This API is used by ranger-admin
+	* This API is used by plugin code, but never used
 	*/
 
 	@Override
@@ -1219,7 +1233,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	/*
-	 * This API is used by test-code; checks only policies within default security-zone
+	 * This API is used only by test-code; checks only policies within default security-zone
 	 */
 
 	@Override

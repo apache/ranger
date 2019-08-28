@@ -40,6 +40,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_REQUESTED_RESOURCES = "REQUESTED_RESOURCES";
 	public static final String KEY_TOKEN_NAMESPACE = "token:";
 	public static final String KEY_USER = "USER";
+	public static final String KEY_OWNER = "OWNER";
 	public static final String KEY_ROLES = "ROLES";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
@@ -133,7 +134,9 @@ public class RangerAccessRequestUtil {
 	public static void setCurrentUserInContext(Map<String, Object> context, String user) {
 		setTokenInContext(context, KEY_USER, user);
 	}
-
+	public static void setOwnerInContext(Map<String, Object> context, String owner) {
+		setTokenInContext(context, KEY_OWNER, owner);
+	}
 	public static String getCurrentUserFromContext(Map<String, Object> context) {
 		Object ret = getTokenFromContext(context, KEY_USER);
 		return ret != null ? ret.toString() : "";

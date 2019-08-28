@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.service;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
@@ -185,6 +186,12 @@ public class RangerAuthContext implements RangerPolicyEngine {
 
         if (CollectionUtils.isNotEmpty(roles)) {
             RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
+        }
+
+        String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+
+        if (StringUtils.isNotEmpty(owner)) {
+            RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
         }
 
 	    if (MapUtils.isNotEmpty(requestContextEnrichers)) {

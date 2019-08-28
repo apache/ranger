@@ -113,7 +113,6 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -147,6 +146,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.gson.JsonSyntaxException;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
+
 
 @Path("plugins")
 @Component
@@ -3216,10 +3216,7 @@ public class ServiceREST {
 		RangerPolicy       ret          = null;
 		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
 
-		Map<String, Object> evalContext = new HashMap<String, Object>();
-		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
-
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource, evalContext) : null;
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource, null) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -3241,10 +3238,7 @@ public class ServiceREST {
 		RangerPolicy       ret          = null;
 		RangerPolicyEngine policyEngine = getPolicyEngine(policy.getService());
 
-		Map<String, Object> evalContext = new HashMap<String, Object>();
-		RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
-
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(policy, evalContext) : null;
+		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(policy, null) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
