@@ -1389,49 +1389,6 @@ ul.tabs > li > a {
   left: 100%;
   margin-left: 0.5em;
 }
-
-.error-page{
-  margin-top: 0px;
-  background: #fff;
-  height: 160px;
-  margin: 30px auto 0 auto;
-  padding-left: 190px;
-  width: 540px;
-  -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  -moz-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-.error-page .icon-box {
-  background: #f9f9f9;
-  border-right: 1px solid #eaeaea;
-  height: 160px;
-  margin-left: -190px;
-  position: absolute;
-  width: 160px;
-}
-
-.error-page .icon-box img {
-  display: block;
-  margin: 40px auto 0 auto;
-}
-.error-page .error-box h1 {
-  display: block;
-  font-size: 19px;
-  font-weight: 600;
-  line-height: 20px;
-  margin: 0;
-  padding: 35px 0 0 0;
-}
-.error-page .error-box p {
-  color: #888;
-  font-size: 14px;
-  line-height: 14px;
-  margin: 0;
-  padding: 10px 0 20px 0;
-}
 .table-license tbody tr td:first-child{
   width: 15%;
 }
@@ -2436,6 +2393,10 @@ textarea:read-only{
   margin-top:5px;
 }
 
+.m-t-sm{
+  margin-top:10px;
+}
+
 .m-r-xs{
   margin-right:5px;
 }
@@ -2816,4 +2777,37 @@ div#zoneServiceAccordion table thead {
 
 .row.clear-seconds .span6:nth-child(2n+3) {
     clear: left;
+}
+
+.new-error-page{
+  height: calc(100vh - 200px);
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  /*align-items: center;*/
+  margin-top: 6%;
+}
+
+.new-error-box{
+  display: table;
+  max-width: 40%;
+  min-width: 450px;
+}
+
+.error-white-bg{
+  background-color: white;
+}
+
+.new-icon-box,
+.new-description-box {
+  display: table-cell;
+  vertical-align: middle;
+  padding: 20px;
+  color: #888;
+}
+
+.new-icon-box{
+  width: 60px;
+  text-align: center;
+  border-right: 1px solid #ddd;
 }
