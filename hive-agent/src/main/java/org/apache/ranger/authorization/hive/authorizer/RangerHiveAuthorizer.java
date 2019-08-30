@@ -1064,11 +1064,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			if(isRowFilterEnabled(result)) {
 				ret = result.getFilterExpr();
-				auditHandler.flushAudit();
 			}
-		} catch (Exception e){
+		} finally {
 			auditHandler.flushAudit();
-			LOG.error("RangerHiveAuthoriser.applyRowFilterAndColumnMasking() failed...", e);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1129,7 +1127,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					columnTransformer = transformer.replace("{col}", columnName);
 				}
 
-				auditHandler.flushAudit();
 				/*
 				String maskCondition = result.getMaskCondition();
 
@@ -1138,9 +1135,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 				*/
 			}
-		} catch (Exception e){
+		} finally {
 			auditHandler.flushAudit();
-			LOG.error("RangerHiveAuthoriser.applyRowFilterAndColumnMasking() failed...", e);
 		}
 
 		columnTransformers.add(columnTransformer);
