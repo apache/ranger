@@ -125,7 +125,7 @@ public class AuditProviderFactory {
 		MiscUtil.setApplicationType(appType);
 
 		boolean isEnabled = MiscUtil.getBooleanProperty(props,
-				AUDIT_IS_ENABLED_PROP, false);
+				AUDIT_IS_ENABLED_PROP, true);
         if (!isEnabled) {
             LOG.info("AuditProviderFactory: Audit not enabled..");
             mProvider = getDefaultProvider();
