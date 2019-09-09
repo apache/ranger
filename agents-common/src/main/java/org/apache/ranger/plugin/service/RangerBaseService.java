@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -325,7 +326,7 @@ public abstract class RangerBaseService {
 		RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
 		policyItem.setUsers(getUserList());
-
+		policyItem.setGroups(getGroupList());
 		List<RangerPolicy.RangerPolicyItemAccess> accesses = getAllowedAccesses(policyResources);
 		policyItem.setAccesses(accesses);
 
@@ -400,17 +401,27 @@ public abstract class RangerBaseService {
 
 	private List<String> getUserList() {
 		List<String> ret = new ArrayList<>();
+
+		HashSet<String> uniqueUsers = new HashSet<String>();
+		String[] users = RangerConfiguration.getInstance().getStrings("ranger.default.policy.users");
+
+		if (users != null) {
+			for (String user : users) {
+				uniqueUsers.add(user);
+			}
+		}
+
 		Map<String, String> serviceConfig =  service.getConfigs();
 		if (serviceConfig != null ) {
                         String serviceConfigUser = serviceConfig.get("username");
                         if (StringUtils.isNotBlank(serviceConfigUser)){
-                                ret.add(serviceConfig.get("username"));
+                            uniqueUsers.add(serviceConfig.get("username"));
                         }
 			String defaultUsers = serviceConfig.get("default.policy.users");
 			if (!StringUtils.isEmpty(defaultUsers)) {
 				List<String> defaultUserList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultUsers,",")));
 				if (!defaultUserList.isEmpty()) {
-					ret.addAll(defaultUserList);
+					uniqueUsers.addAll(defaultUserList);
 				}
 			}
 		}
@@ -421,8 +432,34 @@ public abstract class RangerBaseService {
 		String lookUpUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
 
 		if (StringUtils.isNotBlank(lookUpUser)) {
-			ret.add(lookUpUser);
+			uniqueUsers.add(lookUpUser);
 		}
+		ret.addAll(uniqueUsers);
+		return ret;
+	}
+	private List<String> getGroupList() {
+		List<String> ret = new ArrayList<>();
+
+		HashSet<String> uniqueGroups = new HashSet<String>();
+		String[] groups = RangerConfiguration.getInstance().getStrings("ranger.default.policy.groups");
+
+		if (groups != null) {
+			for (String group : groups) {
+				uniqueGroups.add(group);
+			}
+		}
+
+		Map<String, String> serviceConfig = service.getConfigs();
+		if (serviceConfig != null) {
+			String defaultGroups = serviceConfig.get("default.policy.groups");
+			if (!StringUtils.isEmpty(defaultGroups)) {
+				List<String> defaultGroupList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultGroups, ",")));
+				if (!defaultGroupList.isEmpty()) {
+					uniqueGroups.addAll(defaultGroupList);
+				}
+			}
+		}
+		ret.addAll(uniqueGroups);
 
 		return ret;
 	}
