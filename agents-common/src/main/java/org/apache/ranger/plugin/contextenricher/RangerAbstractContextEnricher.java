@@ -35,7 +35,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
@@ -45,6 +44,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	protected String serviceName;
 	protected String appId;
 	protected RangerServiceDef serviceDef;
+	protected RangerAuthContext authContext;
 
 	@Override
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -71,13 +71,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
-		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
-		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
-		if (plugin != null) {
-			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
-			if (currentAuthContext != null) {
-				currentAuthContext.addOrReplaceRequestContextEnricher(this, null);
-			}
+		if (authContext != null) {
+			authContext.addOrReplaceRequestContextEnricher(this, null);
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
@@ -94,13 +89,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
 		}
-		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
-		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
-		if (plugin != null) {
-			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
-			if (currentAuthContext != null) {
-				currentAuthContext.cleanupRequestContextEnricher(this);
-			}
+		if (authContext != null) {
+			authContext.cleanupRequestContextEnricher(this);
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
@@ -155,6 +145,14 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		}
 
 		return ret;
+	}
+
+	public void setAuthContext(RangerAuthContext authContext) {
+		this.authContext = authContext;
+	}
+
+	public RangerAuthContext getAuthContext() {
+		return authContext;
 	}
 
 	public String getOption(String name, String defaultValue) {

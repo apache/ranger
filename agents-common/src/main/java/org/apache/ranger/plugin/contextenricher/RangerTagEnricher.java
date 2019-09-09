@@ -314,17 +314,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 
 			enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie, tagsForEmptyResourceAndAnyAccess);
+		}
+
+		RangerAuthContext authContext = getAuthContext();
+		if (authContext != null) {
+			authContext.addOrReplaceRequestContextEnricher(this, enrichedServiceTags);
 
 			Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
 			RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
 			if (plugin != null) {
-				RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
-				if (currentAuthContext != null) {
-					currentAuthContext.addOrReplaceRequestContextEnricher(this, enrichedServiceTags);
-					plugin.contextChanged();
-				}
+				plugin.contextChanged();
 			}
 		}
+
 	}
 
 	protected Long getServiceTagsVersion() {

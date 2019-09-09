@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 public class RangerPluginContext {
@@ -30,6 +31,7 @@ public class RangerPluginContext {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 	private String clusterName;
 	private String clusterType;
+	private RangerAuthContext authContext;
 
 	public RangerPluginContext(String serviceType){
 		this.clusterName = findClusterName(serviceType);
@@ -51,6 +53,10 @@ public class RangerPluginContext {
 	public void setClusterType(String clusterType) {
 		this.clusterType = clusterType;
 	}
+
+	public RangerAuthContext getAuthContext() { return authContext; }
+
+	public void setAuthContext(RangerAuthContext authContext) { this.authContext = authContext; }
 
 	private String findClusterName(String serviceType) {
 		if(LOG.isDebugEnabled()) {

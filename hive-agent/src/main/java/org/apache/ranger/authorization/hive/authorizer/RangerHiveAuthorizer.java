@@ -97,8 +97,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private static volatile RangerHivePlugin hivePlugin = null;
 
-	private static RangerAuthContext authContext;
-
 	private static final String ROLE_ALL = "ALL", ROLE_DEFAULT = "DEFAULT", ROLE_NONE = "NONE";
 	private static final Set<String> RESERVED_ROLE_NAMES;
 
@@ -2016,7 +2014,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		try {
-			authContext            = hivePlugin.createRangerAuthContext();
 			HiveObjectRef msObjRef = AuthorizationUtils.getThriftHiveObjectRef(privObj);
 
 			if (msObjRef.getObjectName() == null) {
@@ -2334,6 +2331,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		RangerHiveResource hiveResource = createHiveResource(hiveObject);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null);
+
+		final RangerAuthContext authContext = hivePlugin.createRangerAuthContext();
 
 		ret = authContext.getResourceACLs(request);
 

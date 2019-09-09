@@ -50,137 +50,153 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RangerAuthContext implements RangerPolicyEngine {
 	private static final Log LOG = LogFactory.getLog(RangerAuthContext.class);
 	private final RangerPluginContext rangerPluginContext;
-    private RangerPolicyEngine policyEngine;
-    private Map<RangerContextEnricher, Object> requestContextEnrichers;
+    private final RangerPolicyEngine policyEngine;
+    private final Map<RangerContextEnricher, Object> requestContextEnrichers;
 
-	protected RangerAuthContext() {
-		this(null, null, null);
-	}
-
-    protected RangerAuthContext(RangerPluginContext rangerPluginContext) {
-        this(null, null, rangerPluginContext);
-    }
-
-    RangerAuthContext(RangerPolicyEngine policyEngine, Map<RangerContextEnricher, Object> requestContextEnrichers, RangerPluginContext rangerPluginContext) {
+    public RangerAuthContext(RangerPolicyEngine policyEngine, Map<RangerContextEnricher, Object> requestContextEnrichers, RangerPluginContext rangerPluginContext) {
         this.policyEngine = policyEngine;
-        this.requestContextEnrichers = requestContextEnrichers;
+        this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
         this.rangerPluginContext = rangerPluginContext;
     }
 
-	RangerAuthContext(RangerAuthContext other) {
-		this(other, null);
-	}
+    RangerAuthContext(RangerAuthContext other) {
+        if (other != null) {
+            this.policyEngine = other.getPolicyEngine();
 
-     RangerAuthContext(RangerAuthContext other, RangerPluginContext rangerPluginContext) {
-	     if (other != null) {
-	         this.policyEngine = other.getPolicyEngine();
-	         Map<RangerContextEnricher, Object> localReference = other.requestContextEnrichers;
-	         if (MapUtils.isNotEmpty(localReference)) {
-	             this.requestContextEnrichers = new ConcurrentHashMap<>(localReference);
-	             }
-	         }
-	     this.rangerPluginContext = rangerPluginContext;
+            Map<RangerContextEnricher, Object> localReference = other.requestContextEnrichers;
+            if (MapUtils.isNotEmpty(localReference)) {
+                this.requestContextEnrichers = new ConcurrentHashMap<>(localReference);
+            } else {
+                this.requestContextEnrichers = new ConcurrentHashMap<>();
+            }
+
+            this.rangerPluginContext = other.rangerPluginContext;
+        } else {
+            this.policyEngine            = null;
+            this.requestContextEnrichers = new ConcurrentHashMap<>();
+            this.rangerPluginContext     = null;
+        }
     }
 
     public RangerPolicyEngine getPolicyEngine() {
         return policyEngine;
     }
 
-    void setPolicyEngine(RangerPolicyEngine policyEngine) { this.policyEngine = policyEngine; }
-
     public Map<RangerContextEnricher, Object> getRequestContextEnrichers() {
         return requestContextEnrichers;
     }
 
     public void addOrReplaceRequestContextEnricher(RangerContextEnricher enricher, Object database) {
-        if (requestContextEnrichers == null) {
-            requestContextEnrichers = new ConcurrentHashMap<>();
-        }
         // concurrentHashMap does not allow null to be inserted into it, so insert a dummy which is checked
         // when enrich() is called
         requestContextEnrichers.put(enricher, database != null ? database : enricher);
     }
 
     public void cleanupRequestContextEnricher(RangerContextEnricher enricher) {
-        if (requestContextEnrichers != null) {
-            requestContextEnrichers.remove(enricher);
-        }
+        requestContextEnrichers.remove(enricher);
+
     }
 
     @Override
     public void setUseForwardedIPAddress(boolean useForwardedIPAddress) {
-        policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+        if (policyEngine != null) {
+            policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+        }
     }
 
     @Override
     public void setTrustedProxyAddresses(String[] trustedProxyAddresses) {
-        policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+        if (policyEngine != null) {
+            policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+        }
     }
 
 	@Override
 	public boolean getUseForwardedIPAddress() {
-		return policyEngine.getUseForwardedIPAddress();
+        if (policyEngine != null) {
+            return policyEngine.getUseForwardedIPAddress();
+        }
+        return false;
 	}
 
 	@Override
 	public String[] getTrustedProxyAddresses() {
-		return policyEngine.getTrustedProxyAddresses();
+        if (policyEngine != null) {
+            return policyEngine.getTrustedProxyAddresses();
+        }
+        return null;
 	}
 
     @Override
     public RangerServiceDef getServiceDef() {
-        return policyEngine.getServiceDef();
+        if (policyEngine != null) {
+            return policyEngine.getServiceDef();
+        }
+        return null;
     }
 
     @Override
     public long getPolicyVersion() {
-        return policyEngine.getPolicyVersion();
+        if (policyEngine != null) {
+            return policyEngine.getPolicyVersion();
+        }
+        return 0L;
     }
 
     public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
-        preProcess(requests);
-        return policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
+        if (policyEngine != null) {
+            preProcess(requests);
+            return policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
+        }
+        return null;
     }
 
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        preProcess(request);
-        return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
+        if (policyEngine != null) {
+            preProcess(request);
+            return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
+        }
+        return null;
     }
 
     public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        preProcess(request);
-        return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
+        if (policyEngine != null) {
+            preProcess(request);
+            return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
+        }
+        return null;
     }
 
     public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        preProcess(request);
-        return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
+        if (policyEngine != null) {
+            preProcess(request);
+            return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
+        }
+        return null;
     }
 
     @Override
     public void preProcess(RangerAccessRequest request) {
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAuthContext.preProcess");
-		}
-
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerAuthContext.preProcess");
+        }
         RangerAccessResource resource = request.getResource();
         if (resource.getServiceDef() == null) {
-	        if (resource instanceof RangerMutableResource) {
-		        RangerMutableResource mutable = (RangerMutableResource) resource;
-		        mutable.setServiceDef(getServiceDef());
-	        }
+            if (resource instanceof RangerMutableResource) {
+                RangerMutableResource mutable = (RangerMutableResource) resource;
+                mutable.setServiceDef(getServiceDef());
+            }
         }
-	    if (request instanceof RangerAccessRequestImpl) {
-		    RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
-		    reqImpl.extractAndSetClientIPAddress(getUseForwardedIPAddress(), getTrustedProxyAddresses());
-		    if(rangerPluginContext != null) {
-		        reqImpl.setClusterName(rangerPluginContext.getClusterName());
-		        reqImpl.setClusterType(rangerPluginContext.getClusterType());
-		    }
-	    }
+        if (request instanceof RangerAccessRequestImpl) {
+            RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
+            reqImpl.extractAndSetClientIPAddress(getUseForwardedIPAddress(), getTrustedProxyAddresses());
+            if (rangerPluginContext != null) {
+                reqImpl.setClusterName(rangerPluginContext.getClusterName());
+                reqImpl.setClusterType(rangerPluginContext.getClusterType());
+            }
+        }
 
-	    RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+        RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
         Set<String> roles = getRolesFromUserAndGroups(request.getUser(), request.getUserGroups());
 
@@ -194,7 +210,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
             RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
         }
 
-	    if (MapUtils.isNotEmpty(requestContextEnrichers)) {
+        if (MapUtils.isNotEmpty(requestContextEnrichers)) {
             for (Map.Entry<RangerContextEnricher, Object> entry : requestContextEnrichers.entrySet()) {
                 if (entry.getValue() instanceof RangerContextEnricher && entry.getKey().equals(entry.getValue())) {
                     // This entry was a result of addOrReplaceRequestContextEnricher() API called with null database value
@@ -204,10 +220,9 @@ public class RangerAuthContext implements RangerPolicyEngine {
                 }
             }
         }
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAuthContext.preProcess");
-		}
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAuthContext.preProcess");
+        }
     }
 
     @Override
@@ -221,51 +236,77 @@ public class RangerAuthContext implements RangerPolicyEngine {
 
     @Override
     public RangerAccessResult evaluatePolicies(RangerAccessRequest request, int policyType, RangerAccessResultProcessor resultProcessor) {
-        return policyEngine.evaluatePolicies(request, policyType, resultProcessor);
+        if (policyEngine != null) {
+            return policyEngine.evaluatePolicies(request, policyType, resultProcessor);
+        }
+        return null;
     }
 
     @Override
     public Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor) {
-        return policyEngine.evaluatePolicies(requests, policyType, resultProcessor);
+        if (policyEngine != null) {
+            return policyEngine.evaluatePolicies(requests, policyType, resultProcessor);
+        }
+        return null;
     }
 
 	@Override
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
-		preProcess(request);
-		return policyEngine.getResourceACLs(request);
+        if (policyEngine != null) {
+            preProcess(request);
+            return policyEngine.getResourceACLs(request);
+        }
+        return null;
 	}
 
 	@Override
 	public String getMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
-		return policyEngine.getMatchedZoneName(grantRevokeRequest);
+        if (policyEngine != null) {
+            return policyEngine.getMatchedZoneName(grantRevokeRequest);
+        }
+        return null;
 	}
 
     @Override
     public boolean preCleanup() {
-        return policyEngine.preCleanup();
+        if (policyEngine != null) {
+            return policyEngine.preCleanup();
+        }
+        return false;
     }
 
     @Override
     public void cleanup() {
-        policyEngine.cleanup();
+        if (policyEngine != null) {
+            policyEngine.cleanup();
+        }
     }
 
     @Override
     public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
-        preProcess(request);
-        return policyEngine.getResourceAccessInfo(request);
+        if (policyEngine != null) {
+            preProcess(request);
+            return policyEngine.getResourceAccessInfo(request);
+        }
+        return null;
     }
 
     @Override
     public List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource) {
-        RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, RangerPolicyEngine.ANY_ACCESS, null, null);
-        preProcess(request);
-        return getMatchingPolicies(request);
+        if (policyEngine != null) {
+            RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, RangerPolicyEngine.ANY_ACCESS, null, null);
+            preProcess(request);
+            return getMatchingPolicies(request);
+        }
+        return null;
     }
 
     @Override
     public List<RangerPolicy> getMatchingPolicies(RangerAccessRequest request) {
-        return policyEngine.getMatchingPolicies(request);
+        if (policyEngine != null) {
+            return policyEngine.getMatchingPolicies(request);
+        }
+        return null;
     }
 
     /* This API is called for a long running policy-engine. Not needed here */
@@ -285,7 +326,7 @@ public class RangerAuthContext implements RangerPolicyEngine {
     }
 
     @Override
-	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
+    public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
     	return false;
     }
 
@@ -311,12 +352,18 @@ public class RangerAuthContext implements RangerPolicyEngine {
 
     @Override
     public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies) {
-        return policyEngine.cloneWithDelta(servicePolicies);
+        if (policyEngine != null) {
+            return policyEngine.cloneWithDelta(servicePolicies);
+        }
+        return null;
     }
 
     @Override
     public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
-        return policyEngine.getRolesFromUserAndGroups(user, groups);
+        if (policyEngine != null) {
+            return policyEngine.getRolesFromUserAndGroups(user, groups);
+        }
+        return null;
     }
 
 

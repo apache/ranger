@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.PolicyACLSummary;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -82,23 +83,21 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	private Map<String, RangerPolicyRepository> policyRepositories = new HashMap<>();
 
-	private Map<String, RangerResourceTrie>   trieMap;
-	private Map<String, String>               zoneTagServiceMap;
-	private final Map<String, Set<String>>         userRoleMapping;
-	private final Map<String, Set<String>>         groupRoleMapping;
-	private final RangerPluginContext rangerPluginContext;
+	private       Map<String, RangerResourceTrie>   trieMap;
+	private       Map<String, String>               zoneTagServiceMap;
+	private final Map<String, Set<String>>          userRoleMapping;
+	private final Map<String, Set<String>>          groupRoleMapping;
+	private final RangerPluginContext               pluginContext;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
-		 this(other, servicePolicies, null);
-	}
-
-	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies, RangerPluginContext rangerPluginContext) {
 
 		List<RangerPolicyDelta> deltas        = servicePolicies.getPolicyDeltas();
 		long                    policyVersion = servicePolicies.getPolicyVersion();
 
 		this.useForwardedIPAddress = other.useForwardedIPAddress;
 		this.trustedProxyAddresses = other.trustedProxyAddresses;
+
+		this.pluginContext = other.pluginContext;
 
 		List<RangerPolicyDelta> defaultZoneDeltas = new ArrayList<>();
 		List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies = new ArrayList<>();
@@ -146,7 +145,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						}
 						servicePolicies.getSecurityZones().get(zoneName).setPolicies(policies);
 
-						policyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies, other.policyRepository.getOptions(), zoneName);
+						policyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies, other.policyRepository.getOptions(), this.pluginContext, zoneName);
 					} else {
 						policyRepository = new RangerPolicyRepository(otherRepository, zoneDeltas, policyVersion);
 					}
@@ -192,15 +191,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						}
 					}
 					servicePolicies.getTagPolicies().setPolicies(tagPolicies);
-					this.tagPolicyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies.getTagPolicies(), other.policyRepository.getOptions(), servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+					this.tagPolicyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies.getTagPolicies(), other.policyRepository.getOptions(), this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
 				}
 			} else {
 				this.tagPolicyRepository = other.tagPolicyRepository;
 				other.isTagPolicyRepositoryShared = true;
 			}
 		}
-
-		this.rangerPluginContext = (rangerPluginContext != null) ? rangerPluginContext : null;
 
 		List<RangerContextEnricher> tmpList;
 		List<RangerContextEnricher> tagContextEnrichers = tagPolicyRepository == null ? null :tagPolicyRepository.getContextEnrichers();
@@ -224,10 +221,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	}
 
-	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
-		 this(appId, servicePolicies, options, null);
-	}
-
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext rangerPluginContext) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ", " + rangerPluginContext + ")");
@@ -246,7 +239,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			options = new RangerPolicyEngineOptions();
 		}
 
-		this.rangerPluginContext = (rangerPluginContext != null) ? rangerPluginContext : null;
+		this.pluginContext = (rangerPluginContext != null) ? rangerPluginContext : new RangerPluginContext(servicePolicies.getServiceDef().getName());
+
+		RangerAuthContext authContext = new RangerAuthContext(this, null, this.pluginContext);
+		this.pluginContext.setAuthContext(authContext);
+
 
 		if(StringUtils.isBlank(options.evaluatorType) || StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO)) {
 
@@ -269,7 +266,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			options.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
 		}
 
-		policyRepository = new RangerPolicyRepository(appId, servicePolicies, options);
+		policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, this.pluginContext);
 
 		ServicePolicies.TagPolicies tagPolicies = servicePolicies.getTagPolicies();
 
@@ -282,7 +279,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyEngineImpl : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
 			}
-			tagPolicyRepository = new RangerPolicyRepository(appId, tagPolicies, options, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+			tagPolicyRepository = new RangerPolicyRepository(appId, tagPolicies, options, this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
 
 		} else {
 			if (LOG.isDebugEnabled()) {
@@ -310,7 +307,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
 			buildZoneTrie(servicePolicies);
 			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> zone : servicePolicies.getSecurityZones().entrySet()) {
-				RangerPolicyRepository policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, zone.getKey());
+				RangerPolicyRepository policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, this.pluginContext, zone.getKey());
 				policyRepositories.put(zone.getKey(), policyRepository);
 			}
 		}
@@ -347,7 +344,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerServiceDef serviceDef = this.getServiceDef();
 		String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
 		if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) && RangerPolicyDeltaUtil.isValidDeltas(servicePolicies.getPolicyDeltas(), serviceType)) {
-			ret = new RangerPolicyEngineImpl(this, servicePolicies, this.rangerPluginContext);
+			ret = new RangerPolicyEngineImpl(this, servicePolicies);
 		} else {
 			ret = null;
 		}
@@ -425,9 +422,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
 			reqImpl.extractAndSetClientIPAddress(useForwardedIPAddress, trustedProxyAddresses);
 
-			if(rangerPluginContext != null) {
-				reqImpl.setClusterName(rangerPluginContext.getClusterName());
-				reqImpl.setClusterType(rangerPluginContext.getClusterType());
+			if(pluginContext != null) {
+				reqImpl.setClusterName(pluginContext.getClusterName());
+				reqImpl.setClusterType(pluginContext.getClusterType());
 			}
 		}
 

@@ -87,6 +87,8 @@ public class TestRangerAuthContext {
 
 		for(RangerAuthContextTests.TestCase testCase : testCases.testCases) {
 			String testName = testCase.name;
+			RangerPluginContext pluginContext = new RangerPluginContext(testCase.servicePolicies.getServiceDef().getName());
+			plugin.setPluginContext(pluginContext);
 			plugin.setPolicies(testCase.servicePolicies);
 			RangerAuthContext ctx = plugin.createRangerAuthContext();
 

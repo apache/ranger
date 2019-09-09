@@ -70,7 +70,6 @@ public class RangerBasePlugin {
 	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 	private RangerPluginContext       rangerPluginContext;
 	private RangerAuthContext         currentAuthContext;
-	private RangerAuthContext         readOnlyAuthContext;
 	private RangerAccessResultProcessor resultProcessor;
 	private boolean                   useForwardedIPAddress;
 	private String[]                  trustedProxyAddresses;
@@ -143,7 +142,7 @@ public class RangerBasePlugin {
 	}
 
 	public RangerAuthContext createRangerAuthContext() {
-		return new RangerAuthContext(readOnlyAuthContext);
+		return new RangerAuthContext(currentAuthContext);
 	}
 
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
@@ -215,6 +214,8 @@ public class RangerBasePlugin {
 			LOG.error("No authorization audits will be generated. ");
 			auditProviderFactory = null;
 		}
+
+		rangerPluginContext = new RangerPluginContext(serviceType);
 
 		policyEngineOptions.configureForPlugin(configuration, propertyPrefix);
 
@@ -314,8 +315,6 @@ public class RangerBasePlugin {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
-					rangerPluginContext = new RangerPluginContext(serviceType);
-					currentAuthContext = new RangerAuthContext(rangerPluginContext);
 					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions, rangerPluginContext);
 				} else {
 					if (LOG.isDebugEnabled()) {
@@ -335,8 +334,6 @@ public class RangerBasePlugin {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
-							rangerPluginContext = new RangerPluginContext(serviceType);
-							currentAuthContext = new RangerAuthContext(rangerPluginContext);
 							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions, rangerPluginContext);
 						}
 					} else {
@@ -351,8 +348,7 @@ public class RangerBasePlugin {
 					newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 					newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 					this.policyEngine = newPolicyEngine;
-					currentAuthContext.setPolicyEngine(this.policyEngine);
-					readOnlyAuthContext = new RangerAuthContext(currentAuthContext);
+					this.currentAuthContext = new RangerAuthContext(rangerPluginContext.getAuthContext());
 
 					contextChanged();
 
@@ -363,6 +359,7 @@ public class RangerBasePlugin {
 						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
 					}
 				}
+
 			} else {
 				LOG.error("Returning without saving policies to cache. Leaving current policy engine as-is");
 			}
@@ -697,6 +694,15 @@ public class RangerBasePlugin {
 		if (LOG.isDebugEnabled()) {
 			LOG.info("<== refreshPoliciesAndTags()");
 		}
+	}
+
+
+	/*
+		This API is provided only for unit testing
+	 */
+
+	public void setPluginContext(RangerPluginContext pluginContext) {
+		this.rangerPluginContext = pluginContext;
 	}
 
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {

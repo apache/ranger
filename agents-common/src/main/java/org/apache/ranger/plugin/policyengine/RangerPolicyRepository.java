@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
@@ -81,6 +82,7 @@ class RangerPolicyRepository {
     private final String                      zoneName;
     private final String                      appId;
     private final RangerPolicyEngineOptions   options;
+    private final RangerPluginContext         pluginContext;
     private final RangerServiceDef            serviceDef;
     private final List<RangerPolicy>          policies;
     private final long                        policyVersion;
@@ -106,6 +108,7 @@ class RangerPolicyRepository {
         this.zoneName = other.zoneName;
         this.appId = other.appId;
         this.options = other.options;
+        this.pluginContext = other.pluginContext;
         this.serviceDef = other.serviceDef;
         this.policies = new ArrayList<>(other.policies);
         this.policyEvaluators = new ArrayList<>(other.policyEvaluators);
@@ -252,11 +255,11 @@ class RangerPolicyRepository {
 
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
-        this(appId, servicePolicies, options, null);
+    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext) {
+        this(appId, servicePolicies, options, pluginContext, null);
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, String zoneName) {
+    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext, String zoneName) {
         super();
 
         this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
@@ -266,6 +269,7 @@ class RangerPolicyRepository {
 
         this.appId = appId;
         this.options = new RangerPolicyEngineOptions(options);
+        this.pluginContext = pluginContext;
 
         if (StringUtils.isEmpty(zoneName)) {
             this.policies = Collections.unmodifiableList(servicePolicies.getPolicies());
@@ -322,7 +326,7 @@ class RangerPolicyRepository {
         }
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options,
+    RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext,
                            RangerServiceDef componentServiceDef, String componentServiceName) {
         super();
 
@@ -336,6 +340,7 @@ class RangerPolicyRepository {
 
         this.appId = appId;
         this.options = options;
+        this.pluginContext = pluginContext;
 
         this.policies = Collections.unmodifiableList(normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName()));
         this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
@@ -1023,6 +1028,10 @@ class RangerPolicyRepository {
             ret.setServiceName(componentServiceName);
             ret.setServiceDef(componentServiceDef);
             ret.setAppId(appId);
+            if (ret instanceof RangerAbstractContextEnricher) {
+                RangerAbstractContextEnricher abstractContextEnricher = (RangerAbstractContextEnricher) ret;
+                abstractContextEnricher.setAuthContext(pluginContext.getAuthContext());
+            }
             ret.init();
         }
 
