@@ -33,7 +33,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.audit.RangerMultiResourceAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -63,6 +62,8 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	public static final String ACCESS_TYPE_ADMIN = "solr_admin";
 
 	private static volatile RangerBasePlugin solrPlugin = null;
+
+	private RangerSolrAuditHandler auditHandler = null;
 
 	boolean useProxyIP = false;
 	String proxyIPHeader = "HTTP_X_FORWARDED_FOR";
@@ -94,6 +95,8 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				}
 			}
 			solrPlugin.init();
+			auditHandler = new RangerSolrAuditHandler();
+			solrPlugin.setResultProcessor(auditHandler);
 		} catch (Throwable t) {
 			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}
@@ -169,8 +172,6 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				logger.debug("==> RangerSolrAuthorizer.authorize()");
 				logAuthorizationConext(context);
 			}
-
-			RangerMultiResourceAuditHandler auditHandler = new RangerMultiResourceAuditHandler();
 
 			RangerPerfTracer perf = null;
 
