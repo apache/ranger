@@ -44,7 +44,7 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
 
     @Override
     public void processResult(RangerAccessResult result) {
-        // We don't audit "allowed" operation for user "solr" on collection "ranger_audits" to avoid recursive
+        // We don't audit operation for user "solr" on collection "ranger_audits" to avoid recursive
         // loging due to updated of ranger_audits collection by solr plugin's audit creation.
         if (!isAuditingNeeded(result)) {
             return;
@@ -55,12 +55,11 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
 
     private boolean isAuditingNeeded(final RangerAccessResult result) {
         boolean                  ret       = true;
-        boolean                  isAllowed = result.getIsAllowed();
         RangerAccessRequest      request   = result.getAccessRequest();
         RangerAccessResourceImpl resource  = (RangerAccessResourceImpl) request.getResource();
         String resourceName                = (String) resource.getValue(RangerSolrAuthorizer.KEY_COLLECTION);
         String requestUser                 = request.getUser();
-        if (resourceName != null && resourceName.equals(RANGER_AUDIT_COLLECTION) && excludeUsers.contains(requestUser) && isAllowed) {
+        if (resourceName != null && resourceName.equals(RANGER_AUDIT_COLLECTION) && excludeUsers.contains(requestUser)) {
            ret = false;
         }
         return ret;
