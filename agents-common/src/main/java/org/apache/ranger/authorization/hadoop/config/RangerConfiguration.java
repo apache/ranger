@@ -20,6 +20,7 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Properties;
 
@@ -39,7 +40,8 @@ public class RangerConfiguration extends Configuration {
 	public void addResourcesForServiceType(String serviceType) {
 		String auditCfg    = "ranger-" + serviceType + "-audit.xml";
 		String securityCfg = "ranger-" + serviceType + "-security.xml";
-		
+		String sslCfg 	   = "ranger-" + serviceType + "-policymgr-ssl.xml";
+
 		if ( !addResourceIfReadable(auditCfg)) {
 			addAuditResource(serviceType);
 		}
@@ -47,6 +49,11 @@ public class RangerConfiguration extends Configuration {
 		if ( !addResourceIfReadable(securityCfg)) {
 			addSecurityResource(serviceType);
 		}
+
+		if ( !addResourceIfReadable(sslCfg)) {
+			addSslConfigResource(serviceType);
+		}
+
 	}
 
 	public boolean addAdminResources() {
@@ -183,6 +190,46 @@ public class RangerConfiguration extends Configuration {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== addAuditResource(Service Type: " + serviceType + ")");
 		}
+	}
+
+	private void addSslConfigResource(String serviceType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> addSslConfigResource(Service Type: " + serviceType);
+		}
+		try {
+			String sslConfigFile = config.get(RangerLegacyConfigBuilder.getPropertyName(RangerConfigConstants.RANGER_PLUGIN_REST_SSL_CONFIG_FILE, serviceType));
+			URL url = getSSLConfigResource(sslConfigFile);
+			if (url != null) {
+				addResource(url);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("SSL config file URL:" + url.getPath());
+				}
+			}
+		} catch (Throwable t) {
+			LOG.warn(" Unable to find SSL Configs");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(" Unable to find SSL Configs");
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== addSslConfigResource(Service Type: " + serviceType + ")");
+		}
+	}
+
+	private URL getSSLConfigResource(String fileName) throws Throwable {
+		URL ret = null;
+		try {
+			if (fileName != null) {
+				File f = new File(fileName);
+				if (f.exists() && f.canRead()) {
+					ret = f.toURI().toURL();
+				}
+			}
+		} catch (Throwable t) {
+			LOG.error("Unable to read SSL configuration file:" + fileName);
+			throw t;
+		}
+		return ret;
 	}
 
 }

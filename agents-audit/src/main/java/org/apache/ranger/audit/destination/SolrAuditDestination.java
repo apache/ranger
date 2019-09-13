@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.destination;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
@@ -36,13 +37,32 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedExceptionAction;
+import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -84,6 +104,12 @@ public class SolrAuditDestination extends AuditDestination {
 			synchronized(SolrAuditDestination.class) {
 				me = solrClient;
 				if (solrClient == null) {
+					KeyManager[]   kmList     = getKeyManagers();
+					TrustManager[] tmList     = getTrustManagers();
+					SSLContext     sslContext = getSSLContext(kmList, tmList);
+					if(sslContext != null) {
+						SSLContext.setDefault(sslContext);
+					}
 					String urls = MiscUtil.getStringProperty(props, propPrefix
 							+ "." + PROP_SOLR_URLS);
 					if (urls != null) {
@@ -320,5 +346,135 @@ public class SolrAuditDestination extends AuditDestination {
 			 LOG.info("In solrAuditDestination.init() (finally) : JAAS Configuration set as [" + confFileName + "]");
 		}
 		LOG.info("<==SolrAuditDestination.init()" );
+	}
+
+	private KeyManager[] getKeyManagers() {
+		KeyManager[] kmList = null;
+		String credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
+		String keyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
+		String keyStoreFile = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE);
+		String keyStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, keyStoreAlias);
+		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
+			InputStream in = null;
+
+			try {
+				in = getFileInputStream(keyStoreFile);
+
+				if (in != null) {
+					String keyStoreType = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE);
+					keyStoreType = StringUtils.isNotEmpty(keyStoreType) ? keyStoreType : RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT;
+					KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+
+					keyStore.load(in, keyStoreFilepwd.toCharArray());
+
+					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
+
+					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
+
+					kmList = keyManagerFactory.getKeyManagers();
+				} else {
+					LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
+				}
+			} catch (KeyStoreException e) {
+				LOG.error("Unable to obtain from KeyStore :" + e.getMessage(), e);
+			} catch (NoSuchAlgorithmException e) {
+				LOG.error("SSL algorithm is NOT available in the environment", e);
+			} catch (CertificateException e) {
+				LOG.error("Unable to obtain the requested certification ", e);
+			} catch (FileNotFoundException e) {
+				LOG.error("Unable to find the necessary SSL Keystore Files", e);
+			} catch (IOException e) {
+				LOG.error("Unable to read the necessary SSL Keystore Files", e);
+			} catch (UnrecoverableKeyException e) {
+				LOG.error("Unable to recover the key from keystore", e);
+			} finally {
+				close(in, keyStoreFile);
+			}
+		}
+
+		return kmList;
+	}
+
+	private TrustManager[] getTrustManagers() {
+		TrustManager[] tmList = null;
+		String credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+		String trustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
+		String trustStoreFile = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE);
+		String trustStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, trustStoreAlias);
+		if (StringUtils.isNotEmpty(trustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
+			InputStream in = null;
+
+			try {
+				in = getFileInputStream(trustStoreFile);
+
+				if (in != null) {
+					String trustStoreType = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE);
+					trustStoreType = StringUtils.isNotEmpty(trustStoreType) ? trustStoreType : RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT;
+					KeyStore trustStore = KeyStore.getInstance(trustStoreType);
+
+					trustStore.load(in, trustStoreFilepwd.toCharArray());
+
+					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(RANGER_SSL_TRUSTMANAGER_ALGO_TYPE);
+
+					trustManagerFactory.init(trustStore);
+
+					tmList = trustManagerFactory.getTrustManagers();
+				} else {
+					LOG.error("Unable to obtain truststore from file [" + trustStoreFile + "]");
+				}
+			} catch (KeyStoreException e) {
+				LOG.error("Unable to obtain from KeyStore", e);
+			} catch (NoSuchAlgorithmException e) {
+				LOG.error("SSL algorithm is NOT available in the environment :" + e.getMessage(), e);
+			} catch (CertificateException e) {
+				LOG.error("Unable to obtain the requested certification :" + e.getMessage(), e);
+			} catch (FileNotFoundException e) {
+				LOG.error("Unable to find the necessary SSL TrustStore File:" + trustStoreFile, e);
+			} catch (IOException e) {
+				LOG.error("Unable to read the necessary SSL TrustStore Files :" + trustStoreFile, e);
+			} finally {
+				close(in, trustStoreFile);
+			}
+		}
+
+		return tmList;
+	}
+
+	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
+		SSLContext sslContext = null;
+		try {
+			sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
+			if (sslContext != null) {
+				sslContext.init(kmList, tmList, new SecureRandom());
+			}
+		} catch (NoSuchAlgorithmException e) {
+			LOG.error("SSL algorithm is not available in the environment", e);
+		} catch (KeyManagementException e) {
+			LOG.error("Unable to initialise the SSLContext", e);
+		}
+		return sslContext;
+	}
+
+	private InputStream getFileInputStream(String fileName) throws IOException {
+		InputStream in = null;
+		if (StringUtils.isNotEmpty(fileName)) {
+			File file = new File(fileName);
+			if (file != null && file.exists()) {
+				in = new FileInputStream(file);
+			} else {
+				in = ClassLoader.getSystemResourceAsStream(fileName);
+			}
+		}
+		return in;
+	}
+
+	private void close(InputStream str, String filename) {
+		if (str != null) {
+			try {
+				str.close();
+			} catch (IOException excp) {
+				LOG.error("Error while closing file: [" + filename + "]", excp);
+			}
+		}
 	}
 }
