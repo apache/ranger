@@ -619,7 +619,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 			if (matchedPolicyItem != null) {
 				matchedPolicyItem.updateAccessResult(this, result, matchType);
-			} else if (getPolicy().getIsDenyAllElse() && (getPolicy().getPolicyType() == null || getPolicy().getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS)) {
+			} else if (getPolicy().getIsDenyAllElse() && (getPolicy().getPolicyType() == null || getPolicy().getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS) && !request.isAccessTypeAny()) {
 				updateAccessResult(result, RangerPolicyResourceMatcher.MatchType.NONE, false, "matched deny-all-else policy");
 			}
 		}
