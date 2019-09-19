@@ -78,4 +78,16 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
                 }
                 return serviceType;
         }
+
+	public String findServiceDefTypeByServiceId(Long serviceId) {
+		String serviceType = null;
+		try {
+			serviceType = getEntityManager()
+					.createNamedQuery("XXServiceDef.findServiceDefNameByServiceId", String.class)
+					.setParameter("id", serviceId).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+		return serviceType;
+	}
 }

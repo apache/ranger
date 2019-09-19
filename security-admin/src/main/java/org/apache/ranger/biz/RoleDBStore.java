@@ -29,6 +29,7 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -226,8 +227,27 @@ public class RoleDBStore implements RoleStore {
 
     public List<RangerRole> getRoles(Long serviceId) {
         List<RangerRole> ret = ListUtils.EMPTY_LIST;
+
         if (serviceId != null) {
-            List<XXRole> rolesFromDb = daoMgr.getXXRole().findByServiceId(serviceId);
+            String       serviceTypeName            = daoMgr.getXXServiceDef().findServiceDefTypeByServiceId(serviceId);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Service Type for serviceId (" + serviceId + ") = " + serviceTypeName);
+            }
+            String       serviceTypesToGetAllRoles  = RangerConfiguration.getInstance().get("ranger.admin.service.types.for.returning.all.roles", "solr");
+
+            boolean      getAllRoles                = false;
+            if (StringUtils.isNotEmpty(serviceTypesToGetAllRoles)) {
+                String[] allRolesServiceTypes = StringUtils.split(serviceTypesToGetAllRoles, ",");
+                if (allRolesServiceTypes != null) {
+                    for (String allRolesServiceType : allRolesServiceTypes) {
+                        if (StringUtils.equalsIgnoreCase(serviceTypeName, allRolesServiceType)) {
+                            getAllRoles = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            List<XXRole> rolesFromDb = getAllRoles ? daoMgr.getXXRole().getAll() : daoMgr.getXXRole().findByServiceId(serviceId);
             if (CollectionUtils.isNotEmpty(rolesFromDb)) {
                 ret = new ArrayList<>();
                 for (XXRole xxRole : rolesFromDb) {

@@ -325,6 +325,10 @@
                 <query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.name = :name</query>
         </named-query>
 
+	<named-query name="XXServiceDef.findServiceDefNameByServiceId">
+		<query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.id = :id</query>
+	</named-query>
+
 	<!-- XXResourceDef -->
 	<named-query name="XXResourceDef.findByNameAndDefId">
 		<query>select obj from XXResourceDef obj where obj.name = :name and obj.defId = :defId order by obj.level</query>
