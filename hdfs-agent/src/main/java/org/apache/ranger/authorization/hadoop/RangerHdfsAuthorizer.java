@@ -826,6 +826,8 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
+		super.setForwardedAddresses(null);
+		super.setRemoteIPAddress(getRemoteIp());
 
 		if (inode != null) {
 			buildRequestContext(inode);

@@ -98,7 +98,8 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 		AccessType accessType = accessRequest.getAccessType();
 	    PrivilegedEntity entity = accessRequest.getEntity();
 		UserGroupInformation ugi = accessRequest.getUser();
-
+		List<String> forwardedAddresses = accessRequest.getForwardedAddresses();
+		String remoteIpAddress = accessRequest.getRemoteAddress();
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerYarnAuthorizer.checkPermission(" + accessType + ", " + toString(entity) + ", " + ugi + ")");
 		}
@@ -117,7 +118,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 				perf = RangerPerfTracer.getPerfTracer(PERF_YARNAUTH_REQUEST_LOG, "RangerYarnAuthorizer.checkPermission(entity=" + entity + ")");
 			}
 
-			RangerYarnAccessRequest request = new RangerYarnAccessRequest(entity, getRangerAccessType(accessType), accessType.name(), ugi);
+			RangerYarnAccessRequest request = new RangerYarnAccessRequest(entity, getRangerAccessType(accessType), accessType.name(), ugi, forwardedAddresses, remoteIpAddress);
 
 			auditHandler = new RangerYarnAuditHandler();
 
@@ -300,7 +301,7 @@ class RangerYarnResource extends RangerAccessResourceImpl {
 }
 
 class RangerYarnAccessRequest extends RangerAccessRequestImpl {
-	public RangerYarnAccessRequest(PrivilegedEntity entity, String accessType, String action, UserGroupInformation ugi) {
+	public RangerYarnAccessRequest(PrivilegedEntity entity, String accessType, String action, UserGroupInformation ugi, List<String> forwardedAddresses, String remoteIpAddress) {
 		super.setResource(new RangerYarnResource(entity));
 		super.setAccessType(accessType);
 		super.setUser(ugi.getShortUserName());
@@ -308,6 +309,8 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(action);
+		super.setRemoteIPAddress(remoteIpAddress);
+		super.setForwardedAddresses(forwardedAddresses);
 	}
 	
 	private static String getRemoteIp() {
