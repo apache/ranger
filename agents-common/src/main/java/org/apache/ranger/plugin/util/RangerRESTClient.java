@@ -44,7 +44,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -240,7 +239,7 @@ public class RangerRESTClient {
 			InputStream in = null;
 
 			try {
-				Configuration conf = new Configuration();
+				RangerConfiguration conf = RangerConfiguration.getInstance();
 
 				in = getFileInputStream(mSslConfigFileName);
 
