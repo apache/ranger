@@ -1088,7 +1088,7 @@ define(function(require) {
 					policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
 						view.previousVer(e);
 					});
-					var policyVerIndexAt = policyVersionList.indexOf(policy.get('version').toString());
+                                        var policyVerIndexAt = policyVersionList.indexOf(policy.get('version'));
 					policyVerEl.append('<i id="nextVer" class="icon-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
 						view.nextVer(e);
 					});
