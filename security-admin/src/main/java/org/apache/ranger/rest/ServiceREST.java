@@ -2050,7 +2050,7 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 		SearchFilter filter = searchUtil.getSearchFilter(request,policyService.sortFields);
-		String zoneName = filter.getParam("zoneName");
+		requestParamsValidation(filter);
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getPoliciesInJson()");
@@ -2062,9 +2062,7 @@ public class ServiceREST {
 			List<RangerPolicy> policyLists = new ArrayList<RangerPolicy>();
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
-			if (StringUtils.isBlank(zoneName)) {// if zoneName not provided in search parameter, return only policies which are not in any zone.
-				policyLists = svcStore.noZoneFilter(policyLists);
-			}
+
 			if (CollectionUtils.isNotEmpty(policyLists)) {
 				for (RangerPolicy rangerPolicy : policyLists) {
 					if (rangerPolicy != null) {
@@ -2102,6 +2100,15 @@ public class ServiceREST {
 		}
 	}
 	
+	private void requestParamsValidation(SearchFilter filter) {
+		Boolean fetchAllZonePolicies = Boolean.valueOf(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES));
+		String  zoneName             = filter.getParam(SearchFilter.ZONE_NAME);
+
+		if (fetchAllZonePolicies && StringUtils.isNotEmpty(zoneName)) {
+		    throw restErrorUtil.createRESTException("Invalid parameter: " + SearchFilter.ZONE_NAME + " can not be provided, along with " + SearchFilter.FETCH_ZONE_UNZONE_POLICIES + "=true");
+		}
+	}
+
 	@POST
 	@Path("/policies/importPoliciesFromFile")
 	@Consumes({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_JSON})

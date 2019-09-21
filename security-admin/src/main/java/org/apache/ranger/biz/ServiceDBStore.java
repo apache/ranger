@@ -19,20 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +26,21 @@ import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletOutputStream;
@@ -62,27 +63,12 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.RangerCommonEnums;
-import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
-import org.apache.ranger.db.XXPolicyDao;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
-import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
-import org.apache.ranger.plugin.model.validation.RangerValidator;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
-import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.service.RangerBaseService;
-import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.RangerServicePoliciesCache;
@@ -90,6 +76,7 @@ import org.apache.ranger.common.RangerVersionInfo;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
@@ -98,12 +85,39 @@ import org.apache.ranger.db.XXDataMaskTypeDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
 import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXPolicyConditionDefDao;
+import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXServiceConfigDefDao;
 import org.apache.ranger.db.XXServiceConfigMapDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
+import org.apache.ranger.entity.XXAccessTypeDef;
+import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.apache.ranger.entity.XXContextEnricherDef;
+import org.apache.ranger.entity.XXDataHist;
+import org.apache.ranger.entity.XXDataMaskTypeDef;
+import org.apache.ranger.entity.XXEnumDef;
+import org.apache.ranger.entity.XXEnumElementDef;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXPolicyChangeLog;
+import org.apache.ranger.entity.XXPolicyConditionDef;
+import org.apache.ranger.entity.XXPolicyLabel;
+import org.apache.ranger.entity.XXPolicyLabelMap;
+import org.apache.ranger.entity.XXPolicyRefAccessType;
+import org.apache.ranger.entity.XXPolicyRefCondition;
+import org.apache.ranger.entity.XXPolicyRefResource;
+import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXRoleRefRole;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceConfigDef;
+import org.apache.ranger.entity.XXServiceConfigMap;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceVersionInfo;
+import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -111,7 +125,10 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
+import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -125,10 +142,19 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -1810,7 +1836,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 						MessageEnums.OPER_NO_PERMISSION);
 			}
 		}
-
 		return xService == null ? null : svcService.getPopulatedViewObject(xService);
 	}
 
@@ -2155,12 +2180,58 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPolicies()");
 		}
+		Boolean fetchTagPolicies     = Boolean.valueOf(filter.getParam(SearchFilter.FETCH_TAG_POLICIES));
+		Boolean fetchAllZonePolicies = Boolean.valueOf(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES));
+		String  zoneName             = filter.getParam(SearchFilter.ZONE_NAME);
+
+		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 		RangerPolicyList policyList = searchRangerPolicies(filter);
-		List<RangerPolicy> ret = policyList.getPolicies();
+		List<RangerPolicy> resourcePolicies = policyList.getPolicies();
+		List<RangerPolicy> tagPolicies = new ArrayList<RangerPolicy>();
+
+		if(fetchTagPolicies) {
+			tagPolicies = searchRangerTagPoliciesOnBasisOfServiceName(resourcePolicies);
+			Iterator<RangerPolicy> itr = tagPolicies.iterator();
+			while (itr.hasNext()) {
+				RangerPolicy pol = (RangerPolicy) itr.next();
+				if(!fetchAllZonePolicies) {
+					if(StringUtils.isNotEmpty(zoneName)) {
+						if(!zoneName.equals(pol.getZoneName())){
+							itr.remove();
+						}
+					} else {
+						if(StringUtils.isNotEmpty(pol.getZoneName())) {
+							itr.remove();
+						}
+					}
+				}
+			}
+		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getPolicies()");
 		}
+		ret.addAll(resourcePolicies);
+		ret.addAll(tagPolicies);
 		return ret;
+	}
+
+	private List<RangerPolicy> searchRangerTagPoliciesOnBasisOfServiceName(List<RangerPolicy> allExceptTagPolicies) throws Exception {
+		Set<String> rangerServiceNames = new HashSet<String>();
+		for(RangerPolicy pol : allExceptTagPolicies) {
+			rangerServiceNames.add(pol.getService());
+		}
+		List<RangerPolicy> retPolicies = new ArrayList<RangerPolicy>();
+		for(String eachRangerService : rangerServiceNames) {
+			List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+				RangerService rangerServiceObj = getServiceByName(eachRangerService);
+				RangerService rangerTagService = getServiceByName(rangerServiceObj.getTagService());
+				if(rangerTagService != null) {
+					ServicePolicies servicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(rangerTagService.getName(),rangerTagService.getId(), -1L, true, this);
+					policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
+					retPolicies.addAll(policies);
+				}
+			}
+		return retPolicies;
 	}
 
 	@Override
@@ -2264,8 +2335,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		List<RangerPolicy> ret = getServicePolicies(service, filter);
-		if(StringUtils.isBlank(zoneName)) {
-			ret = noZoneFilter(ret);
+		if(!"true".equalsIgnoreCase(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES))) {
+			if(StringUtils.isBlank(zoneName)) {
+				ret = noZoneFilter(ret);
+			}
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceId + ") : policy-count=" + (ret == null ? 0 : ret.size()));
