@@ -34,6 +34,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
@@ -150,6 +151,20 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
                 xTrxLog.setObjectName(objectName);
 
+                if(!StringUtils.isNotBlank(current.getCreatedByUser())){
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Created User = " + current.getCreatedByUser());
+                    }
+                    XXPortalUser xXPortalUser = daoMgr.getXXPortalUser().findByLoginId(current.getCreatedByUser());
+                    if(xXPortalUser != null){
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("User Id for " + current.getCreatedByUser() + " = " + xXPortalUser.getId());
+                        }
+                        xTrxLog.setAddedByUserId(xXPortalUser.getId());
+                        xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
+                    }
+                }
+
                 String value;
                 if (vTrxLogAttr.isEnum()) {
                     String enumName = XXUser.getEnumName(fieldName);
@@ -221,8 +236,14 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                     xTrxLog.setNewValue(value);
                     trxLogList.add(xTrxLog);
                 }
+                if(logger.isDebugEnabled()) {
+                    logger.debug("AddedByUserId for " + xTrxLog.getObjectName() + " = " + xTrxLog.getAddedByUserId());
+                }
             }
             if (trxLogList.isEmpty()) {
+                if(logger.isDebugEnabled()) {
+                    logger.debug("trxLogList is empty!!");
+                }
                 XXTrxLog xTrxLog = new XXTrxLog();
                 xTrxLog.setAction(action);
                 xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);

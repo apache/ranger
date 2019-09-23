@@ -548,6 +548,7 @@ public class RoleREST {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to grant role " + roleName);
                 }
 
+                existingRole.setUpdatedBy(userName);
                 addUsersGroupsAndRoles(existingRole, grantRoleRequest.getUsers(), grantRoleRequest.getGroups(), grantRoleRequest.getRoles(), grantRoleRequest.getGrantOption());
             }
         } catch(WebApplicationException excp) {
@@ -601,6 +602,7 @@ public class RoleREST {
                 if (existingRole == null) {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to revoke role " + roleName);
                 }
+                existingRole.setUpdatedBy(userName);
 
                 if (revokeRoleRequest.getGrantOption()) {
                     removeAdminFromUsersGroupsAndRoles(existingRole, revokeRoleRequest.getUsers(), revokeRoleRequest.getGroups(), revokeRoleRequest.getRoles());

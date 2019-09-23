@@ -39,23 +39,28 @@ public class JPABeanCallbacks {
 				XXDBBase entity = (XXDBBase) o;
 
 				entity.setUpdateTime(DateUtil.getUTCDate());
+				if (entity.getAddedByUserId() == null || entity.getAddedByUserId() == 0) {
 
-				RangerSecurityContext context = RangerContextHolder
-						.getSecurityContext();
-				if (context != null) {
-					UserSessionBase userSession = context.getUserSession();
-					if (userSession != null) {
-						entity.setAddedByUserId(userSession.getUserId());
-						entity.setUpdatedByUserId(userSession
-								.getUserId());
+					if (logger.isDebugEnabled()) {
+						logger.debug("AddedByUserId is null or 0 and hence getting it from userSession for " + entity.getId());
+					}
+					RangerSecurityContext context = RangerContextHolder
+							.getSecurityContext();
+					if (context != null) {
+						UserSessionBase userSession = context.getUserSession();
+						if (userSession != null) {
+							entity.setAddedByUserId(userSession.getUserId());
+							entity.setUpdatedByUserId(userSession
+									.getUserId());
+						} else {
+							if (logger.isDebugEnabled()) {
+								logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
+							}
+						}
 					} else {
 						if (logger.isDebugEnabled()) {
-							logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
+							logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
 						}
-					}
-				} else {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
 					}
 				}
 			}

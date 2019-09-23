@@ -166,6 +166,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			RangerRole role  = new RangerRole();
 			role.setName(roleName);
 			role.setCreatedByUser(currentUserName);
+			role.setCreatedBy(currentUserName);
+			role.setUpdatedBy(currentUserName);
 			//Add grantor as the member to this role with grant option.
 			RangerRole.RoleMember userMember = new RangerRole.RoleMember(currentUserName, true);
 			List<RangerRole.RoleMember> userMemberList = new ArrayList<>();
