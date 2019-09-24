@@ -31,6 +31,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
@@ -39,6 +44,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.ws.rs.core.Cookie;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -46,12 +52,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -102,6 +109,9 @@ public class RangerRESTClient {
 	private int  mRestClientConnTimeOutMs;
 	private int  mRestClientReadTimeOutMs;
 
+	private int  lastKnownActiveUrlIndex;
+	private final List<String> configuredURLs;
+
 	public RangerRESTClient() {
 		this(RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_URL),
 			 RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME));
@@ -110,7 +120,8 @@ public class RangerRESTClient {
 	public RangerRESTClient(String url, String sslConfigFileName) {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
-
+		this.configuredURLs = getURLs(mUrl);
+		this.lastKnownActiveUrlIndex   = (new Random()).nextInt(configuredURLs.size());
 		init();
 	}
 
@@ -210,7 +221,7 @@ public class RangerRESTClient {
 			client = Client.create(config);
 		}
 
-		if(!StringUtils.isEmpty(mUsername) && !StringUtils.isEmpty(mPassword)) {
+		if(StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword)) {
 			client.addFilter(new HTTPBasicAuthFilter(mUsername, mPassword));
 		}
 
@@ -232,7 +243,7 @@ public class RangerRESTClient {
 			LOG.fatal("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
 		}
 
-		mIsSSL = StringUtil.containsIgnoreCase(mUrl, "https");
+		mIsSSL = StringUtils.containsIgnoreCase(mUrl, "https");
 
 		if (mIsSSL) {
 
@@ -270,7 +281,7 @@ public class RangerRESTClient {
 
 		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
-		if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
+		if (StringUtils.isNotEmpty(mKeyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
 			InputStream in =  null;
 
 			try {
@@ -321,7 +332,7 @@ public class RangerRESTClient {
 
 		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 
-		if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
+		if (StringUtils.isNotEmpty(mTrustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
 			InputStream in =  null;
 
 			try {
@@ -388,7 +399,7 @@ public class RangerRESTClient {
 	private InputStream getFileInputStream(String fileName)  throws IOException {
 		InputStream in = null;
 
-		if(! StringUtil.isEmpty(fileName)) {
+		if(StringUtils.isNotEmpty(fileName)) {
 			File f = new File(fileName);
 
 			if (f.exists()) {
@@ -409,6 +420,175 @@ public class RangerRESTClient {
 			} catch (IOException excp) {
 				LOG.error("Error while closing file: [" + filename + "]", excp);
 			}
+		}
+	}
+
+	public ClientResponse get(String relativeUrl, Map<String, String> params) throws Exception {
+		ClientResponse finalResponse = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
+				webResource = setQueryParams(webResource, params);
+
+				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
+
+				if (finalResponse != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
+				processException(index, ex);
+			}
+		}
+		return finalResponse;
+	}
+
+	public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+		ClientResponse finalResponse = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
+				webResource = setQueryParams(webResource, params);
+				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).post(ClientResponse.class, toJson(obj));
+				if (finalResponse != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
+				processException(index, ex);
+			}
+		}
+		return finalResponse;
+	}
+
+	public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
+		ClientResponse finalResponse = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
+				webResource = setQueryParams(webResource, params);
+
+				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).delete(ClientResponse.class);
+				if (finalResponse != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
+				processException(index, ex);
+			}
+		}
+		return finalResponse;
+	}
+
+	public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+		ClientResponse finalResponse = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
+				webResource = setQueryParams(webResource, params);
+				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).put(ClientResponse.class, toJson(obj));
+				if (finalResponse != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
+				processException(index, ex);
+			}
+		}
+		return finalResponse;
+	}
+
+	public ClientResponse put(String relativeURL, Object request, Cookie sessionId) throws Exception {
+		ClientResponse response = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
+				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
+						.put(ClientResponse.class, toJson(request));
+				if (response != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException e) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
+				processException(index, e);
+			}
+		}
+		return response;
+	}
+
+
+	public static List<String> getURLs(String configURLs) {
+		List<String> configuredURLs = new ArrayList<>();
+		if(configURLs!=null) {
+			String[] urls = configURLs.split(",");
+			for (String strUrl : urls) {
+				if (StringUtils.isNotEmpty(StringUtils.trimToEmpty(strUrl))) {
+					if (strUrl.endsWith("/")) {
+						strUrl = strUrl.substring(0, strUrl.length() - 1);
+					}
+					configuredURLs.add(strUrl);
+				}
+			}
+		}
+		return configuredURLs;
+	}
+
+	private static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
+		WebResource ret = webResource;
+		if (webResource != null && params != null) {
+			Set<Map.Entry<String, String>> entrySet= params.entrySet();
+			for (Map.Entry<String, String> entry : entrySet) {
+				ret = ret.queryParam(entry.getKey(), entry.getValue());
+			}
+		}
+		return ret;
+	}
+
+	private void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
+		this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
+	}
+
+	private WebResource createWebResourceForCookieAuth(int currentIndex, String relativeURL) {
+		Client cookieClient = getClient();
+		cookieClient.removeAllFilters();
+		WebResource ret = cookieClient.resource(configuredURLs.get(currentIndex) + relativeURL);
+		return ret;
+	}
+
+	private void processException(int index, ClientHandlerException e) throws Exception {
+		if (index == configuredURLs.size() - 1) {
+			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configuredURLs + " ]");
+			throw e;
 		}
 	}
 }
