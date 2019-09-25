@@ -49,10 +49,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private String           serviceName;
     private String           serviceNameUrlParam;
 	private String           pluginId;
-	private String clusterName;
+	private String           clusterName;
 	private RangerRESTClient restClient;
-	private RangerRESTUtils restUtils   = new RangerRESTUtils();
-	private String 		 supportsPolicyDeltas = "true";
+	private RangerRESTUtils  restUtils   = new RangerRESTUtils();
+	private String 		     supportsPolicyDeltas;
+	private String 		     supportsTagDeltas;
 
 	public static <T> GenericType<List<T>> getGenericType(final T clazz) {
 
@@ -83,11 +84,13 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		String sslConfigFileName 		= RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
 		clusterName       				= RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(clusterName)){
-			clusterName       				= RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 		}
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
-		supportsPolicyDeltas                    = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.supports.policy.deltas", "false");
+		supportsPolicyDeltas            = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.supports.policy.deltas", "false");
+		supportsTagDeltas               = RangerConfiguration.getInstance().get(propertyPrefix + ".tag.rest.supports.tag.deltas", "false");
+
         if (!StringUtil.isEmpty(tmpUrl)) {
             url = tmpUrl.trim();
         }
@@ -96,6 +99,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
         }
 		if (!"true".equalsIgnoreCase(supportsPolicyDeltas)) {
 			supportsPolicyDeltas = "false";
+		}
+		if (!"true".equalsIgnoreCase(supportsTagDeltas)) {
+			supportsTagDeltas = "false";
 		}
 
 		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs);
@@ -701,6 +707,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion));
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, supportsTagDeltas);
 
 		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
@@ -712,7 +719,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 					} catch (Exception e) {
 						LOG.error("Failed to get response, Error is : "+e.getMessage());
 					}
-				return clientResp;
+					return clientResp;
 				}
 			};
 			if (LOG.isDebugEnabled()) {

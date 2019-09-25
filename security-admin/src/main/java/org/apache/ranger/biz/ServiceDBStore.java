@@ -63,12 +63,28 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
+import org.apache.ranger.db.XXPolicyDao;
+import org.apache.ranger.entity.XXTagChangeLog;
+import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
-import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.RangerServicePoliciesCache;
@@ -76,7 +92,6 @@ import org.apache.ranger.common.RangerVersionInfo;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
@@ -85,7 +100,6 @@ import org.apache.ranger.db.XXDataMaskTypeDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
 import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXPolicyConditionDefDao;
-import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXServiceConfigDefDao;
@@ -125,10 +139,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
-import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -142,19 +153,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
-import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
-import org.apache.ranger.plugin.model.validation.RangerValidator;
-import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
-import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -220,7 +222,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final String POLICY_TYPE_DATAMASK  = "Masking";
     private static final String POLICY_TYPE_ROWFILTER = "Row Level Filter";
 
-	private static       String LOCAL_HOSTNAME = "unknown";
+	private static       String LOCAL_HOSTNAME;
 	private static final String HOSTNAME       = "Host name";
 	private static final String USER_NAME      = "Exported by";
 	private static final String RANGER_VERSION = "Ranger apache version";
@@ -234,8 +236,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static final String  ENCRYPT_KEY     = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
 	public static final String  SALT            = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
 	public static final Integer ITERATION_COUNT = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
-	public static final boolean SUPPORTS_POLICY_DELTAS = RangerConfiguration.getInstance().getBoolean("ranger.admin.supports.policy.deltas", false);
-	public static final Integer RETENTION_PERIOD_IN_DAYS = RangerConfiguration.getInstance().getInt("ranger.admin.delta.retention.time.in.days", 7);
+	public static boolean SUPPORTS_POLICY_DELTAS = false;
+	public static Integer RETENTION_PERIOD_IN_DAYS = 7;
+	public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
 
 	static {
 		try {
@@ -364,6 +367,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 						LOG.error("Could not add ranger-admin resources to RangerConfiguration.");
 					}
 
+					SUPPORTS_POLICY_DELTAS       = RangerConfiguration.getInstance().getBoolean("ranger.admin.supports.policy.deltas", false);
+					RETENTION_PERIOD_IN_DAYS     = RangerConfiguration.getInstance().getInt("ranger.admin.delta.retention.time.in.days", 7);
+					TAG_RETENTION_PERIOD_IN_DAYS = 	RangerConfiguration.getInstance().getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
+
+
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
 					final ServiceDBStore dbStore = this;
@@ -376,7 +384,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 								EmbeddedServiceDefsUtil.instance().init(dbStore);
 								getServiceUpgraded();
 								createGenericUsers();
-								resetPolicyUpdateLog(RETENTION_PERIOD_IN_DAYS, false);
+								resetPolicyUpdateLog(RETENTION_PERIOD_IN_DAYS, RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START);
+								resetTagUpdateLog(TAG_RETENTION_PERIOD_IN_DAYS, ServiceTags.TagsChangeType.RANGER_ADMIN_START);
 								//createUnzonedSecurityZone();
 								return null;
 							}
@@ -3385,20 +3394,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 		transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
 	}
 
-	public static void persistVersionChange(RangerDaoManager daoMgr, Long id, VERSION_TYPE versionType, String zoneName, Integer policyDeltaType, RangerPolicy policy) {
+	public static void persistVersionChange(ServiceVersionUpdater serviceVersionUpdater) {
+		RangerDaoManager daoMgr = serviceVersionUpdater.daoManager;
+		Long id = serviceVersionUpdater.serviceId;
+		VERSION_TYPE versionType = serviceVersionUpdater.versionType;
+
 		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 
 		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
-        	XXService service = daoMgr.getXXService().getById(id);
+		XXService service = daoMgr.getXXService().getById(id);
 
 		Long nextPolicyVersion = 1L;
 		Date now = new Date();
 
-		if(serviceVersionInfoDbObj != null) {
+		if (serviceVersionInfoDbObj != null) {
 			if (versionType == VERSION_TYPE.POLICY_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
-                		nextPolicyVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
+				nextPolicyVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
 
-                		serviceVersionInfoDbObj.setPolicyVersion(nextPolicyVersion);
+				serviceVersionInfoDbObj.setPolicyVersion(nextPolicyVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(now);
 			}
 			if (versionType == VERSION_TYPE.TAG_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
@@ -3421,24 +3434,69 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if (service != null && versionType != VERSION_TYPE.TAG_VERSION) {
-			// Build and save PolicyChangeLog
-			XXPolicyChangeLog policyChangeLog = new XXPolicyChangeLog();
+		if (service != null) {
+			persistChangeLog(service, versionType, versionType == VERSION_TYPE.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion(), serviceVersionUpdater);
+		}
+	}
 
-			policyChangeLog.setCreateTime(now);
-			policyChangeLog.setServiceId(service.getId());
-			policyChangeLog.setChangeType(policyDeltaType);
-			policyChangeLog.setPolicyVersion(nextPolicyVersion);
-			policyChangeLog.setZoneName(zoneName);
+	private static void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {
+		XXServiceVersionInfoDao serviceVersionInfoDao = serviceVersionUpdater.daoManager.getXXServiceVersionInfo();
 
-			if (policy != null) {
-				policyChangeLog.setServiceType(policy.getServiceType());
-				policyChangeLog.setPolicyType(policy.getPolicyType());
-				policyChangeLog.setPolicyId(policy.getId());
+		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(serviceVersionUpdater.serviceId);
+		XXService service = serviceVersionUpdater.daoManager.getXXService().getById(serviceVersionUpdater.serviceId);
+
+		if (service != null && serviceVersionInfoDao != null) {
+			Long version = serviceVersionUpdater.versionType == VERSION_TYPE.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion();
+			persistChangeLog(service, serviceVersionUpdater.versionType, version, serviceVersionUpdater);
+		}
+	}
+
+	private static void persistChangeLog(XXService service, VERSION_TYPE versionType, Long version, ServiceVersionUpdater serviceVersionUpdater) {
+		Date now = new Date();
+
+		if (versionType == VERSION_TYPE.TAG_VERSION) {
+			ServiceTags.TagsChangeType tagChangeType = serviceVersionUpdater.tagChangeType;
+			if (tagChangeType == ServiceTags.TagsChangeType.RANGER_ADMIN_START || TagDBStore.isSupportsTagDeltas()) {
+				// Build and save TagChangeLog
+				XXTagChangeLog tagChangeLog = new XXTagChangeLog();
+
+				Long serviceResourceId = serviceVersionUpdater.resourceId;
+				Long tagId = serviceVersionUpdater.tagId;
+
+				tagChangeLog.setCreateTime(now);
+				tagChangeLog.setServiceId(service.getId());
+				tagChangeLog.setChangeType(tagChangeType.ordinal());
+				tagChangeLog.setServiceTagsVersion(version);
+				tagChangeLog.setServiceResourceId(serviceResourceId);
+				tagChangeLog.setTagId(tagId);
+
+				serviceVersionUpdater.daoManager.getXXTagChangeLog().create(tagChangeLog);
 			}
 
-			daoMgr.getXXPolicyChangeLog().create(policyChangeLog);
+		} else {
+			Integer policyDeltaChange = serviceVersionUpdater.policyDeltaChange;
+
+			if (policyDeltaChange == RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START || isSupportsPolicyDeltas()) {
+				// Build and save PolicyChangeLog
+				XXPolicyChangeLog policyChangeLog = new XXPolicyChangeLog();
+
+				policyChangeLog.setCreateTime(now);
+				policyChangeLog.setServiceId(service.getId());
+				policyChangeLog.setChangeType(serviceVersionUpdater.policyDeltaChange);
+				policyChangeLog.setPolicyVersion(version);
+				policyChangeLog.setZoneName(serviceVersionUpdater.zoneName);
+
+				RangerPolicy policy = serviceVersionUpdater.policy;
+				if (policy != null) {
+					policyChangeLog.setServiceType(policy.getServiceType());
+					policyChangeLog.setPolicyType(policy.getPolicyType());
+					policyChangeLog.setPolicyId(policy.getId());
+				}
+
+				serviceVersionUpdater.daoManager.getXXPolicyChangeLog().create(policyChangeLog);
+			}
 		}
+
 	}
 
 
@@ -4592,24 +4650,51 @@ public class ServiceDBStore extends AbstractServiceStore {
 		xUserService.createXUserWithOutLogin(genericUser);
 	}
 
-	public void resetPolicyUpdateLog(int retentionInDays, boolean reloadServicePoliciesCache) {
+	public void resetPolicyUpdateLog(int retentionInDays, Integer policyChangeType) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> resetPolicyUpdateLog(" + retentionInDays + ", " + reloadServicePoliciesCache + ")");
+			LOG.debug("==> resetPolicyUpdateLog(" + retentionInDays + ", " + policyChangeType + ")");
 		}
 
 		daoMgr.getXXPolicyChangeLog().deleteOlderThan(retentionInDays);
 
-		if (reloadServicePoliciesCache) {
-			List<Long> allServiceIds = daoMgr.getXXService().getAllServiceIds();
-			if (CollectionUtils.isNotEmpty(allServiceIds)) {
-				for (Long serviceId : allServiceIds) {
-					persistVersionChange(daoMgr, serviceId, VERSION_TYPE.POLICY_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START, null);
+		List<Long> allServiceIds = daoMgr.getXXService().getAllServiceIds();
+		if (CollectionUtils.isNotEmpty(allServiceIds)) {
+			for (Long serviceId : allServiceIds) {
+				ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.POLICY_VERSION, null, policyChangeType, null);
+				if (policyChangeType == RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START) {
+					persistChangeLog(updater);
+				} else {
+					persistVersionChange(updater);
 				}
 			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== resetPolicyUpdateLog(" + retentionInDays + ", " + policyChangeType + ")");
 
 		}
+	}
+	public void resetTagUpdateLog(int retentionInDays, ServiceTags.TagsChangeType tagChangeType) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== resetPolicyUpdateLog(" + retentionInDays + ", " + reloadServicePoliciesCache + ")");
+			LOG.debug("==> resetTagUpdateLog(" + retentionInDays + ", " + tagChangeType + ")");
+		}
+
+		daoMgr.getXXTagChangeLog().deleteOlderThan(retentionInDays);
+
+		List<Long> allServiceIds = daoMgr.getXXService().getAllServiceIds();
+		if (CollectionUtils.isNotEmpty(allServiceIds)) {
+			for (Long serviceId : allServiceIds) {
+				ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.TAG_VERSION, tagChangeType, null, null);
+				if (tagChangeType == ServiceTags.TagsChangeType.RANGER_ADMIN_START) {
+					persistChangeLog(updater);
+				} else {
+					persistVersionChange(updater);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== resetTagUpdateLog(" + retentionInDays + ", " + tagChangeType + ")");
 
 		}
 	}
@@ -5045,6 +5130,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	public static boolean isSupportsPolicyDeltas() {
+		return SUPPORTS_POLICY_DELTAS;
+	}
+
 	public static class ServiceVersionUpdater implements Runnable {
 		final Long 			   serviceId;
 		final RangerDaoManager daoManager;
@@ -5053,9 +5142,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final Integer          policyDeltaChange;
 		final RangerPolicy     policy;
 
-		public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType) {
-			this(daoManager, serviceId, versionType, null, null, null);
-		}
+		final ServiceTags.TagsChangeType tagChangeType;
+		final Long             resourceId;
+		final Long             tagId;
 
 		public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType, Integer policyDeltaType) {
 			this(daoManager, serviceId, versionType, null, policyDeltaType, null);
@@ -5068,10 +5157,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 			this.policyDeltaChange = policyDeltaType;
 			this.zoneName    = zoneName;
 			this.policy      = policy;
+			this.tagChangeType = ServiceTags.TagsChangeType.NONE;
+			this.resourceId    = null;
+			this.tagId         = null;
 		}
+
+		public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType, ServiceTags.TagsChangeType tagChangeType, Long resourceId, Long tagId ) {
+			this.serviceId   = serviceId;
+			this.daoManager  = daoManager;
+			this.versionType = versionType;
+			this.zoneName    = null;
+			this.policyDeltaChange = null;
+			this.policy            = null;
+			this.tagChangeType = tagChangeType;
+			this.resourceId    = resourceId;
+			this.tagId         = tagId;
+		}
+
 		@Override
 		public void run() {
-			ServiceDBStore.persistVersionChange(this.daoManager, this.serviceId, this.versionType, this.zoneName, policyDeltaChange, policy);
+			ServiceDBStore.persistVersionChange(this);
 		}
 	}
 }

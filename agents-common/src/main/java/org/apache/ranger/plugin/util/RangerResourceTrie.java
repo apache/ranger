@@ -220,6 +220,82 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
     }
 
+    public boolean compareSubtree(RangerResourceTrie<T> other) {
+
+        final boolean ret;
+        List<TrieNode<T>> mismatchedNodes = new ArrayList<>();
+
+        if (this.root == null || other.root == null) {
+            ret = this.root == other.root;
+            if (!ret) {
+                mismatchedNodes.add(this.root);
+            }
+        } else {
+            ret = compareSubtree(this.root, other.root, mismatchedNodes);
+        }
+        return ret;
+    }
+
+    private boolean compareSubtree(TrieNode<T> me, TrieNode<T> other, List<TrieNode<T>> misMatched) {
+        boolean ret = StringUtils.equals(me.getStr(), other.getStr());
+
+        if (ret) {
+            Map<Character, TrieNode<T>> myChildren = me.getChildren();
+            Map<Character, TrieNode<T>> otherChildren = other.getChildren();
+
+            ret = myChildren.size() == otherChildren.size() &&
+                    compareLists(me.getEvaluators(), other.getEvaluators()) &&
+                    compareLists(me.getWildcardEvaluators(), other.getWildcardEvaluators()) &&
+                    myChildren.keySet().size() == otherChildren.keySet().size();
+            if (ret) {
+                // Check if subtrees match
+                for (Map.Entry<Character, TrieNode<T>> entry : myChildren.entrySet()) {
+                    Character c = entry.getKey();
+                    TrieNode<T> myNode = entry.getValue();
+                    TrieNode<T> otherNode = otherChildren.get(c);
+                    ret = otherNode != null && compareSubtree(myNode, otherNode, misMatched);
+                    if (!ret) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!ret) {
+            misMatched.add(me);
+        }
+
+        return ret;
+    }
+
+    private boolean compareLists(List<? extends RangerPolicyResourceEvaluator> me, List<? extends RangerPolicyResourceEvaluator> other) {
+        boolean ret;
+
+        if (me == null || other == null) {
+            ret = me == other;
+        } else {
+            ret = me.size() == other.size();
+
+            if (ret) {
+                List<Long> myIds = new ArrayList<>();
+                List<Long> otherIds = new ArrayList<>();
+                for (RangerPolicyResourceEvaluator evaluator : me) {
+                    myIds.add(evaluator.getId());
+                }
+                for (RangerPolicyResourceEvaluator evaluator : other) {
+                    otherIds.add(evaluator.getId());
+                }
+
+                ret = compareLongLists(myIds, otherIds);
+            }
+        }
+        return ret;
+    }
+
+    private boolean compareLongLists(List<Long> me, List<Long> other) {
+        return me.size() == CollectionUtils.intersection(me, other).size();
+    }
+
     private TrieNode<T> copyTrieSubtree(TrieNode<T> source, List<T> parentWildcardEvaluators) {
         if (TRACE_LOG.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder();

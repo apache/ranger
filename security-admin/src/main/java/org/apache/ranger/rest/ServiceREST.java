@@ -93,6 +93,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -3180,15 +3181,15 @@ public class ServiceREST {
 	@DELETE
 	@Path("/server/policydeltas")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			LOG.debug("==> ServiceREST.deletePolicyDeltas(" + olderThan + ")");
 		}
 
-		svcStore.resetPolicyUpdateLog(olderThan, reloadServicePoliciesCache);
+		svcStore.resetPolicyUpdateLog(olderThan, RangerPolicyDelta.CHANGE_TYPE_INVALIDATE_POLICY_DELTAS);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			LOG.debug("<== ServiceREST.deletePolicyDeltas(" + olderThan + ")");
 		}
 	}
 

@@ -72,6 +72,7 @@ public class RangerRESTUtils {
 	
 	public static final String REST_PARAM_CLUSTER_NAME   = "clusterName";
 	public static final String REST_PARAM_SUPPORTS_POLICY_DELTAS   = "supportsPolicyDeltas";
+	public static final String REST_PARAM_SUPPORTS_TAG_DELTAS      = "supportsTagDeltas";
 
 	public static final String REST_PARAM_ZONE_NAME		 = "zoneName";
 	public static final String REST_PARAM_EXEC_USER      = "execUser";

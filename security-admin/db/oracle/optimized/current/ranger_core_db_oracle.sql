@@ -99,6 +99,7 @@ call spdropsequence('X_SEC_ZONE_REF_TAG_SRVC_SEQ');
 call spdropsequence('X_RANGER_GLOBAL_STATE_SEQ');
 call spdropsequence('X_SECURITY_ZONE_SEQ');
 call spdropsequence('X_POLICY_CHANGE_LOG_SEQ');
+call spdropsequence('X_TAG_CHANGE_LOG_SEQ');
 
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -168,6 +169,7 @@ CREATE SEQUENCE X_SEC_ZONE_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE 
 CREATE SEQUENCE X_SEC_ZONE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_TAG_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 call spdropsequence('X_DB_VERSION_H_SEQ');
 CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
@@ -204,6 +206,7 @@ END;/
 call spdropview('vx_trx_log');
 call spdroptable('x_security_zone_ref_resource');
 call spdroptable('x_policy_change_log');
+call spdroptable('x_tag_change_log');
 call spdroptable('x_policy_ref_group');
 call spdroptable('x_policy_ref_user');
 call spdroptable('x_policy_ref_datamask_type');
@@ -1499,6 +1502,20 @@ CREATE INDEX x_plcy_chng_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_plcy_chng_log_IDX_policy_ver ON x_policy_change_log(policy_version);
 COMMIT;
 
+CREATE TABLE x_tag_change_log (
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+service_id NUMBER(20) NOT NULL,
+change_type NUMBER(11) NOT NULL,
+service_tags_version NUMBER(20) DEFAULT '0' NOT NULL,
+service_resource_id NUMBER(20) DEFAULT NULL NULL,
+tag_id NUMBER(20) DEFAULT NULL NULL,
+primary key (id)
+);
+CREATE INDEX x_tag_chng_log_IDX_service_id ON x_tag_change_log(service_id);
+CREATE INDEX x_tag_chng_log_IDX_tag_ver ON x_tag_change_log(service_tags_version);
+COMMIT;
+
 CREATE TABLE x_role(
 id NUMBER(20) NOT NULL,
 create_time DATE DEFAULT NULL NULL,
@@ -1843,6 +1860,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '040',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '041',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '042',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '043',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Resource Based Policies'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

@@ -1560,4 +1560,24 @@
 			and roleRef.roleName    != role.name
 		</query>
 	</named-query>
+
+
+	<!-- XXTagChangeLog -->
+	<named-query name="XXTagChangeLog.findByServiceId">
+		<query>
+			select obj from XXTagChangeLog obj where obj.serviceId = :serviceId
+		</query>
+	</named-query>
+	<named-query name="XXTagChangeLog.findSinceVersion">
+		<query>
+			select obj.id, obj.changeType, obj.serviceTagsVersion, obj.serviceResourceId, obj.tagId from
+			XXTagChangeLog obj where obj.serviceId = :serviceId and obj.serviceTagsVersion >= :version order by
+			obj.serviceTagsVersion
+		</query>
+	</named-query>
+
+	<named-query name="XXTagChangeLog.deleteOlderThan">
+		<query>delete from XXTagChangeLog obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 </entity-mappings>

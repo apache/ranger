@@ -320,7 +320,7 @@ public class RangerBasePlugin {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policy-deltas are not null");
 					}
-					if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
+					if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) || MapUtils.isNotEmpty(policies.getSecurityZones())) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Non empty policy-deltas found. Cloning engine using policy-deltas");
 						}

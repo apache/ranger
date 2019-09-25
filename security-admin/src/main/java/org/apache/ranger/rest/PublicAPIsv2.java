@@ -532,7 +532,7 @@ public class PublicAPIsv2 {
 			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
 		}
 
-		serviceREST.deletePolicyDeltas(olderThan, reloadServicePoliciesCache, request);
+		serviceREST.deletePolicyDeltas(olderThan, request);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");

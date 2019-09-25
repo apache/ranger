@@ -72,6 +72,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	String _serviceName = null;
 	String _clusterName = null;
 	String _supportsPolicyDeltas = null;
+	String _supportsTagDeltas = null;
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
@@ -98,12 +99,16 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		if (!"true".equalsIgnoreCase(_supportsPolicyDeltas)) {
 			_supportsPolicyDeltas = "false";
 		}
+		_supportsTagDeltas = RangerConfiguration.getInstance().get(configPropertyPrefix + ".tag.rest.supports.tag.deltas", "false");
+		if (!"true".equalsIgnoreCase(_supportsTagDeltas)) {
+			_supportsTagDeltas = "false";
+		}
 
 		configURLs = RangerRESTClient.getURLs(tmpUrl);
 		this.lastKnownActiveUrlIndex = new Random().nextInt(configURLs.size());
 		_baseUrl = configURLs.get(this.lastKnownActiveUrlIndex);
 		_isSSL = _utils.isSsl(_baseUrl);
-		LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", _baseUrl, _sslConfigFileName, _serviceName, _supportsPolicyDeltas, configURLs));
+		LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", _baseUrl, _sslConfigFileName, _serviceName, _supportsPolicyDeltas, _supportsTagDeltas, configURLs));
 		
 		_client = getClient();
 		_client.property(ClientProperties.CONNECT_TIMEOUT, _restClientConnTimeOutMs);
@@ -285,7 +290,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion));
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
-		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, _supportsPolicyDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, _supportsTagDeltas);
 
 		String relativeURL = null;
 		ServiceTags serviceTags = null;

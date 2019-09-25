@@ -625,6 +625,10 @@ IF (OBJECT_ID('x_policy_change_log') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy_change_log]
 END
+IF (OBJECT_ID('x_tag_change_log') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_tag_change_log]
+END
 IF (OBJECT_ID('x_policy_ref_group') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy_ref_group]
@@ -2574,6 +2578,33 @@ SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 
+CREATE TABLE [dbo].[x_tag_change_log] (
+[id] [bigint] IDENTITY(1,1) NOT NULL,
+[create_time] [datetime2] DEFAULT NULL NULL,
+[service_id] [bigint] NOT NULL,
+[change_type] [int] NOT NULL,
+[service_tags_version] [bigint] DEFAULT 0 NOT NULL,
+[service_resource_id] [bigint]  DEFAULT NULL NULL,
+[tag_id] [bigint]  DEFAULT NULL NULL,
+PRIMARY KEY CLUSTERED
+(
+        [id] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_tag_change_log_IDX_service_id] ON [x_tag_change_log]
+(
+   [service_id] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+CREATE NONCLUSTERED INDEX [x_tag_change_log_IDX_tag_version] ON [x_tag_change_log]
+(
+   [service_tags_version] ASC
+)
+
+WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
 
 ALTER TABLE [dbo].[x_asset]  WITH CHECK ADD  CONSTRAINT [x_asset_FK_added_by_id] FOREIGN KEY([added_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])
@@ -3861,6 +3892,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

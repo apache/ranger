@@ -56,7 +56,7 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 	public RangerTagDef postUpdate(XXTagDef tagDef) {
 		RangerTagDef ret = super.postUpdate(tagDef);
 
-		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagDefUpdate(tagDef.getId(), tagDef.getUpdateTime());
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagDefUpdate(tagDef.getId());
 
 		return ret;
 	}

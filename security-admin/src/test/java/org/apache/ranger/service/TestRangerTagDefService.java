@@ -83,14 +83,14 @@ public class TestRangerTagDefService {
 		XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 
 		Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
-		Mockito.doNothing().when(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId(), tagDef.getUpdateTime());
+		Mockito.doNothing().when(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId());
 		
 		RangerTagDef result = rangerTagDefService.postUpdate(tagDef);
 		Assert.assertEquals(result.getId(), tagAttrDefList.get(0).getId());
 		Assert.assertEquals(result.getName(), tagAttrDefList.get(0).getName());
 
 		Mockito.verify(daoMgr).getXXServiceVersionInfo();
-		Mockito.verify(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId(), tagDef.getUpdateTime());
+		Mockito.verify(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId());
 	}
 		
 	@Test

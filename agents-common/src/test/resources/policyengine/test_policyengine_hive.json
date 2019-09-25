@@ -6,7 +6,7 @@
     "id":3,
     "resources":[
       {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
-      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
+      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"recursiveSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
       {"name":"hiveservice","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HiveService","description":"HiveService"},
       {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
       {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
@@ -43,6 +43,13 @@
   },
 
   "policies":[
+    {"id":200,"name":"url=s3a://qe-s3-bucket-mst/test_abcd/abcd; s3a://qe-s3-bucket-mst/demo/*: URL-access-policy","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"url":{"values": ["s3a://qe-s3-bucket-mst/test_abcd/abcd", "s3a://qe-s3-bucket-mst/demo"], "isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+  ,
     {"id":1,"name":"db=default: audit-all-access","isEnabled":true,"isAuditEnabled":true,
      "resources":{"database":{"values":["default"]},"table":{"values":["*"]},"column":{"values":["*"]}},
      "policyItems":[
@@ -82,6 +89,30 @@
   ],
 
   "tests":[
+    {"name":"ALLOW 'read s3a://qe-s3-bucket-mst/demo;' for user1",
+      "request":{
+        "resource":{"elements":{"url":"s3a://qe-s3-bucket-mst/demo"}},
+        "accessType":"read","user":"user1","userGroups":["users"],"requestData":"read s3a://qe-s3-bucket-mst/demo for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":200}
+    }
+  ,
+    {"name":"ALLOW 'read s3a://qe-s3-bucket-mst/test_abcd/abcd;' for user1",
+      "request":{
+        "resource":{"elements":{"url":"s3a://qe-s3-bucket-mst/test_abcd/abcd"}},
+        "accessType":"read","user":"user1","userGroups":["users"],"requestData":"read s3a://qe-s3-bucket-mst/test_abcd/abcd for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":200}
+    }
+  ,
+    {"name":"DENY 'read s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent;' for user1",
+      "request":{
+        "resource":{"elements":{"url":"s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent"}},
+        "accessType":"read","user":"user1","userGroups":["users"],"requestData":"read s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent for user1"
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+  ,
     {"name":"DENY 'select tmp_1 from db1.tmp ;' for user1",
       "request":{
         "resource":{"elements":{"database":"db1", "table":"tmp", "column":"tmp_1"}},

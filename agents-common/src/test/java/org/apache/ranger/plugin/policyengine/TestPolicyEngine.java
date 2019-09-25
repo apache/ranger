@@ -405,6 +405,7 @@ public class TestPolicyEngine {
 		assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
 		ServicePolicies servicePolicies = new ServicePolicies();
+		servicePolicies.setPolicyVersion(100L);
 		servicePolicies.setServiceName(testCase.serviceName);
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
@@ -460,13 +461,12 @@ public class TestPolicyEngine {
 
 		runTestCaseTests(policyEngine, policyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.tests);
 
-		if (CollectionUtils.isNotEmpty(testCase.updatedPolicies)) {
-			servicePolicies.setPolicyDeltas(testCase.updatedPolicies);
-			servicePolicies.setPolicyVersion(-1L);
+		if (testCase.updatedPolicies != null) {
+			servicePolicies.setPolicyDeltas(testCase.updatedPolicies.policyDeltas);
+			servicePolicies.setSecurityZones(testCase.updatedPolicies.securityZones);
 			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies);
 			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies);
 			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
-
 		}
 	}
 
@@ -605,7 +605,7 @@ public class TestPolicyEngine {
 		public String             auditMode;
 		public List<TestData>     tests;
 
-		public List<RangerPolicyDelta> updatedPolicies;
+		public UpdatedPolicies    updatedPolicies;
 		public List<TestData>     updatedTests;
 		
 		class TestData {
@@ -622,6 +622,11 @@ public class TestPolicyEngine {
 			public RangerServiceDef serviceDef;
 			public List<RangerPolicy> tagPolicies;
 		}
+	}
+
+	static class UpdatedPolicies {
+		public Map<String, ServicePolicies.SecurityZoneInfo> securityZones;
+		public List<RangerPolicyDelta>                       policyDeltas;
 	}
 
     static class ValiditySchedulerTestResult {

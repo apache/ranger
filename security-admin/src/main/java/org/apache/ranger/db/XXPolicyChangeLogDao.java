@@ -19,6 +19,7 @@ package org.apache.ranger.db;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,12 +56,23 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     .setParameter("version", version)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
-            // Ensure that the first record has the same version as the base-version from where the records are fetched
+
+            // Ensure that some record has the same version as the base-version from where the records are fetched
             if (CollectionUtils.isNotEmpty(logs)) {
-                Object[] firstRecord = logs.get(0);
-                Long versionOfFirstRecord = (Long) firstRecord[2];
-                if (version.equals(versionOfFirstRecord)) {
-                    logs.remove(0);
+                Iterator<Object[]> iter = logs.iterator();
+                boolean foundAndRemoved = false;
+
+                while (iter.hasNext()) {
+                    Object[] record = iter.next();
+                    Long recordVersion = (Long) record[2];
+                    if (version.equals(recordVersion)) {
+                        iter.remove();
+                        foundAndRemoved = true;
+                    } else {
+                        break;
+                    }
+                }
+                if (foundAndRemoved) {
                     ret = convert(policyService, logs);
                 } else {
                     ret = null;
@@ -111,10 +123,11 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
             for (Object[] log : queryResult) {
 
                 RangerPolicy policy;
-                Long logRecordId = (Long) log[0];
+
+                Long    logRecordId      = (Long) log[0];
                 Integer policyChangeType = (Integer) log[1];
-                String serviceType = (String) log[3];
-                Long policyId = (Long) log[5];
+                String  serviceType      = (String) log[3];
+                Long    policyId         = (Long) log[5];
 
                 if (policyId != null) {
                     XXPolicy xxPolicy = daoManager.getXXPolicy().getById(policyId);

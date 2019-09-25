@@ -735,7 +735,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 break;
             }
             case SELF_OR_ANCESTOR: {
-                ret = matchType == MatchType.SELF || matchType == MatchType.ANCESTOR;
+                ret = matchType == MatchType.SELF || matchType == MatchType.ANCESTOR || matchType == MatchType.ANCESTOR_WITH_WILDCARDS;
                 break;
             }
             case DESCENDANT: {
@@ -743,7 +743,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 break;
             }
             case ANCESTOR: {
-                ret = matchType == MatchType.ANCESTOR;
+                ret = matchType == MatchType.ANCESTOR || matchType == MatchType.ANCESTOR_WITH_WILDCARDS;
                 break;
             }
             default: {

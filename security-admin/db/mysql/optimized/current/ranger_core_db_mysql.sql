@@ -16,6 +16,7 @@
 DROP VIEW IF EXISTS `vx_trx_log`;
 DROP TABLE IF EXISTS `x_security_zone_ref_resource`;
 DROP TABLE IF EXISTS `x_policy_change_log`;
+DROP TABLE IF EXISTS `x_tag_change_log`;
 DROP TABLE IF EXISTS `x_policy_ref_group`;
 DROP TABLE IF EXISTS `x_policy_ref_user`;
 DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
@@ -1540,6 +1541,19 @@ CREATE TABLE IF NOT EXISTS `x_role_ref_role`(
  CONSTRAINT `x_role_ref_role_FK_role_ref_id` FOREIGN KEY (`role_ref_id`) REFERENCES `x_role` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_tag_change_log` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`service_id` bigint(20) NOT NULL,
+`change_type` int(11) NOT NULL,
+`service_tags_version` bigint(20) NOT NULL DEFAULT '0',
+`service_resource_id` bigint(20) NULL DEFAULT NULL,
+`tag_id` bigint(20) NULL DEFAULT NULL,
+primary key (`id`)
+) ROW_FORMAT=DYNAMIC;
+
+CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
+CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
 CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
 CREATE INDEX x_service_config_def_IDX_def_id ON x_service_config_def(def_id);
@@ -1650,6 +1664,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)

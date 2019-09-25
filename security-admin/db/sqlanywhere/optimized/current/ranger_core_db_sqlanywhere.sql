@@ -39,6 +39,8 @@ call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
+call dbo.removeForeignKeysAndTable('x_tag_change_log')
+GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_user')
@@ -1221,6 +1223,18 @@ CREATE TABLE dbo.x_policy_change_log(
 )
 GO
 
+CREATE TABLE IF NOT EXISTS dbo.x_tag_change_log (
+id bigint IDENTITY NOT NULL,
+create_time datetime DEFAULT NULL NULL,
+service_id bigint NOT NULL,
+change_type int NOT NULL,
+service_tags_version  bigint DEFAULT 0 NOT NULL,
+service_resource_id bigint DEFAULT NULL NULL,
+tag_id bigint DEFAULT NULL NULL,
+CONSTRAINT x_tag_change_log_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+
 CREATE TABLE dbo.x_role(
 id bigint IDENTITY NOT NULL,
 create_time datetime DEFAULT NULL NULL,
@@ -2032,6 +2046,10 @@ CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_service_id ON dbo.x_policy_cha
 GO
 CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_policy_version ON dbo.x_policy_change_log(policy_version ASC)
 GO
+CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_service_id ON dbo.x_tag_change_log(service_id ASC);
+GO
+CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_tag_version ON dbo.x_tag_change_log(service_tags_version ASC);
+GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1)
@@ -2127,6 +2145,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

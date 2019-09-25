@@ -15,6 +15,7 @@
 
 DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_tag_change_log;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
@@ -99,6 +100,7 @@ DROP SEQUENCE IF EXISTS x_sec_zone_ref_tag_srvc_SEQ;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP SEQUENCE IF EXISTS x_security_zone_seq;
 DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
+DROP SEQUENCE IF EXISTS x_tag_change_log_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
@@ -1553,6 +1555,24 @@ priv_type INT DEFAULT NULL NULL,
 );
 commit;
 
+CREATE SEQUENCE x_tag_change_log_seq;
+
+CREATE TABLE x_tag_change_log (
+id BIGINT DEFAULT nextval('x_tag_change_log_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+service_id bigint NOT NULL,
+change_type int NOT NULL,
+service_tags_version bigint DEFAULT '0' NOT NULL,
+service_resource_id bigint DEFAULT NULL NULL,
+tag_id bigint DEFAULT NULL NULL,
+primary key (id)
+);
+commit;
+
+CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
+CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
+commit;
+
 CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
 commit;
@@ -1767,6 +1787,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
