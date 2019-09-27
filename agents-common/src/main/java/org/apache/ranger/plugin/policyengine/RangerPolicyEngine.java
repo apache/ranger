@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 public interface RangerPolicyEngine {
@@ -93,7 +94,11 @@ public interface RangerPolicyEngine {
 
 	List<RangerPolicy> getAllowedPolicies(String user, Set<String> userGroups, String accessType);
 
-	RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies);
+	RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies, RangerRoles rangerRoles);
+
+	RangerRoles getRangerRoles();
+
+	void setRangerRoles(RangerRoles rangerRoles);
 
 	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 

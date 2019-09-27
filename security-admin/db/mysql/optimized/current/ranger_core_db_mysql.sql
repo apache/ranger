@@ -1234,6 +1234,8 @@ CREATE TABLE `x_service_version_info` (
 `policy_update_time` datetime NULL DEFAULT NULL,
 `tag_version` bigint(20) NOT NULL DEFAULT 0,
 `tag_update_time` datetime NULL DEFAULT NULL,
+`role_version` bigint(20) NOT NULL DEFAULT 0,
+`role_update_time` datetime NULL DEFAULT NULL,
 primary key (`id`),
 CONSTRAINT `x_service_version_info_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)
 )ROW_FORMAT=DYNAMIC;

@@ -45,6 +45,9 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SECURE_SERVICE_GRANT_ACCESS              = "/service/plugins/secure/services/grant/";
 	public static final String REST_URL_SECURE_SERVICE_REVOKE_ACCESS             = "/service/plugins/secure/services/revoke/";
 
+	public static final String REST_URL_ROLE_GET_FOR_SECURE_SERVICE_IF_UPDATED   = "/service/roles/secure/download/";
+	public static final String REST_URL_ROLE_GET_FOR_SERVICE_IF_UPDATED          = "/service/roles/download/";
+
 	public static final String REST_URL_SERVICE_CREATE_ROLE              = "/service/public/v2/api/roles/";
 	public static final String REST_URL_SERVICE_DROP_ROLE         = "/service/public/v2/api/roles/name/";
 	public static final String REST_URL_SERVICE_GET_ALL_ROLES         = "/service/public/v2/api/roles/names/";
@@ -52,6 +55,9 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SERVICE_GET_ROLE_INFO         = "/service/public/v2/api/roles/name/";
 	public static final String REST_URL_SERVICE_GRANT_ROLE              = "/service/public/v2/api/roles/grant/";
 	public static final String REST_URL_SERVICE_REVOKE_ROLE              = "/service/public/v2/api/roles/revoke/";
+
+	public static final String REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES = "/service/roles/secure/download/";
+	public static final String REST_URL_SERVICE_GET_USER_GROUP_ROLES         = "/service/roles/download/";
 
 	public static final String REST_URL_GET_SERVICE_TAGS_IF_UPDATED = "/service/tags/download/";
 	public static final String REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED = "/service/tags/secure/download/";
@@ -67,6 +73,8 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_LAST_KNOWN_POLICY_VERSION = "lastKnownVersion";
 	public static final String REST_PARAM_LAST_ACTIVATION_TIME = "lastActivationTime";
 	public static final String REST_PARAM_PLUGIN_ID                 = "pluginId";
+
+	public static final String REST_PARAM_LAST_KNOWN_ROLE_VERSION = "lastKnownRoleVersion";
 
 	private static final int MAX_PLUGIN_ID_LEN = 255;
 	
@@ -115,8 +123,20 @@ public class RangerRESTUtils {
 		return url;
 	}
 
+	public String getUrlForRoleUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_ROLE_GET_FOR_SERVICE_IF_UPDATED + serviceName;
+
+		return url;
+	}
+
+
 	public String getSecureUrlForPolicyUpdate(String baseUrl, String serviceName) {
 		String url = baseUrl + REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
+		return url;
+	}
+
+	public String getSecureUrlForRoleUpdate(String baseUrl, String serviceName) {
+		String url = baseUrl + REST_URL_ROLE_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
 		return url;
 	}
 

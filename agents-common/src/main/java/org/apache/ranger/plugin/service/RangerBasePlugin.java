@@ -77,6 +77,8 @@ public class RangerBasePlugin {
 	private Timer                     policyEngineRefreshTimer;
 	private RangerAuthContextListener authContextListener;
 	private AuditProviderFactory      auditProviderFactory;
+	private RangerRolesProvider		  rangerRolesProvider;
+	private RangerRoles               rangerRoles;
 
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private final DownloadTrigger                accessTrigger       = new DownloadTrigger();
@@ -149,6 +151,14 @@ public class RangerBasePlugin {
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+	}
+
+	public RangerRoles getRangerRoles() {
+		return this.rangerRoles;
+	}
+
+	public void setRangerRoles(RangerRoles rangerRoles) {
+		this.rangerRoles = rangerRoles;
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -225,7 +235,9 @@ public class RangerBasePlugin {
 
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
 
-		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir);
+		rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir);
+
+		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir, rangerRolesProvider);
 		refresher.setDaemon(true);
 		refresher.startRefresher();
 
@@ -279,6 +291,7 @@ public class RangerBasePlugin {
 			ServicePolicies    servicePolicies = null;
 			boolean            isValid         = true;
 			boolean            usePolicyDeltas = false;
+			boolean            updateRangerRolesOnly = false;
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
@@ -287,7 +300,7 @@ public class RangerBasePlugin {
 					isValid = false;
 				}
 			} else {
-				if ((policies.getPolicies() == null && policies.getPolicyDeltas() == null) || (policies.getPolicies() != null && policies.getPolicyDeltas() != null)) {
+				if ((policies.getPolicies() != null && policies.getPolicyDeltas() != null)) {
 					LOG.error("Invalid servicePolicies: Both policies and policy-deltas cannot be null OR both of them cannot be non-null");
 					isValid = false;
 				} else if (policies.getPolicies() != null) {
@@ -302,6 +315,9 @@ public class RangerBasePlugin {
 						isValid = false;
 						LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
 					}
+				} else if (policies.getPolicies() == null && policies.getPolicyDeltas() == null && rangerRoles != null) {
+					// When no policies changes and only the role changes happens then update the policyengine with Role changes only.
+					updateRangerRolesOnly = true;
 				} else {
 					LOG.error("Should not get here!!");
 					isValid = false;
@@ -311,11 +327,13 @@ public class RangerBasePlugin {
 			if (isValid) {
 				RangerPolicyEngine newPolicyEngine = null;
 
-				if (!usePolicyDeltas) {
+				if(updateRangerRolesOnly) {
+					this.policyEngine.setRangerRoles(rangerRoles);
+				} else if (!usePolicyDeltas) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
-					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions, rangerPluginContext);
+					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions, rangerPluginContext, rangerRoles);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policy-deltas are not null");
@@ -324,7 +342,7 @@ public class RangerBasePlugin {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Non empty policy-deltas found. Cloning engine using policy-deltas");
 						}
-						newPolicyEngine = oldPolicyEngine.cloneWithDelta(policies);
+						newPolicyEngine = oldPolicyEngine.cloneWithDelta(policies, rangerRoles);
 						if (newPolicyEngine != null) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Applied policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + ")");
@@ -334,7 +352,7 @@ public class RangerBasePlugin {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
-							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions, rangerPluginContext);
+							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions, rangerPluginContext, rangerRoles);
 						}
 					} else {
 						if (LOG.isDebugEnabled()) {

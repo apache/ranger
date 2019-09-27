@@ -68,7 +68,6 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.XXTagChangeLog;
-import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -123,7 +122,6 @@ import org.apache.ranger.entity.XXPolicyRefAccessType;
 import org.apache.ranger.entity.XXPolicyRefCondition;
 import org.apache.ranger.entity.XXPolicyRefResource;
 import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXRoleRefRole;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceConfigDef;
@@ -2812,69 +2810,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setTagPolicies(tagPolicies);
 		}
 
-		if (ret != null) {
-			// Add role mapping
-			List<RangerRole> rolesForService = roleStore.getRoles(serviceDbObj.getId());
-			if (CollectionUtils.isNotEmpty(rolesForService)) {
-				Map<String, Set<String>> userRoleMapping = new HashMap<>();
-				Map<String, Set<String>> groupRoleMapping = new HashMap<>();
-				for (RangerRole role : rolesForService) {
-					// Get a closure set of all contained roles too
-					Set<RangerRole> containedRoles = getAllContainedRoles(role);
-
-					buildMap(userRoleMapping, role, containedRoles, true);
-					buildMap(groupRoleMapping, role, containedRoles, false);
-				}
-
-				ret.setUserRoles(userRoleMapping);
-				ret.setGroupRoles(groupRoleMapping);
-			}
-		}
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()) + ", delta-count=" + ((ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size()));
 		}
 
 		return ret;
-	}
-
-	private Set<RangerRole> getAllContainedRoles(RangerRole role) {
-		Set<RangerRole> allRoles = new HashSet<>();
-		allRoles.add(role);
-		addContainedRoles(allRoles, role);
-		return allRoles;
-	}
-
-	private void addContainedRoles(Set<RangerRole> allRoles, RangerRole role) {
-		List<XXRoleRefRole> roles = daoMgr.getXXRoleRefRole().findByRoleId(role.getId());
-		for (XXRoleRefRole xRefRole : roles) {
-			RangerRole containedRole = roleService.read(xRefRole.getSubRoleId());
-			if (!allRoles.contains(containedRole)) {
-				allRoles.add(containedRole);
-				addContainedRoles(allRoles, containedRole);
-			}
-		}
-	}
-
-	private void buildMap(Map<String, Set<String>> map, RangerRole role, Set<RangerRole> containedRoles, boolean isUser) {
-		buildMap(map, role, role.getName(), isUser);
-
-		for (RangerRole containedRole : containedRoles) {
-			buildMap(map, containedRole, role.getName(), isUser);
-		}
-	}
-
-	private void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, boolean isUser) {
-		for (RangerRole.RoleMember userOrGroup : isUser ? role.getUsers() : role.getGroups()) {
-			if (StringUtils.isNotEmpty(userOrGroup.getName())) {
-				Set<String> roleNames = map.get(userOrGroup.getName());
-				if (roleNames == null) {
-					roleNames = new HashSet<>();
-					map.put(userOrGroup.getName(), roleNames);
-				}
-				roleNames.add(roleName);
-			}
-		}
 	}
 
 	private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
@@ -3353,7 +3293,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updatePolicyVersion(service, policyDeltaType, policy);
 	}
 
-	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, POLICY_AND_TAG_VERSION }
+	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, POLICY_AND_TAG_VERSION, ROLE_VERSION }
 
 	private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy) throws Exception {
 		if(service == null || service.getId() == null) {
@@ -3417,6 +3357,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (versionType == VERSION_TYPE.TAG_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
 				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
+			}
+
+			if (versionType == VERSION_TYPE.ROLE_VERSION) {
+				// get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
+				Long currentRoleVersion = daoMgr.getXXGlobalState().getRoleVersion("RangerRole");
+				serviceVersionInfoDbObj.setRolVersion(currentRoleVersion);
+				serviceVersionInfoDbObj.setRoleUpdateTime(now);
 			}
 
 			serviceVersionInfoDao.update(serviceVersionInfoDbObj);

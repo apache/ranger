@@ -68,6 +68,13 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Column(name="tag_update_time"   )
 	protected Date tagUpdateTime = DateUtil.getUTCDate();
 
+	@Column(name = "role_version")
+	protected Long roleVersion;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="role_update_time"   )
+	protected Date roleUpdateTime = DateUtil.getUTCDate();
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -130,6 +137,21 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		return this.tagUpdateTime;
 	}
 
+	public void setRolVersion(Long roleVersion) {
+		this.roleVersion = roleVersion;
+	}
+
+	public Long getRoleVersion() {
+		return this.roleVersion;
+	}
+
+	public void setRoleUpdateTime( Date updateTime ) {
+		this.roleUpdateTime = updateTime;
+	}
+
+	public Date getRoleUpdateTime( ) {
+		return this.roleUpdateTime;
+	}
 
 	/**
 	 * This return the bean content in string format

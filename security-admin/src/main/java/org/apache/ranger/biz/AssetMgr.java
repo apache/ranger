@@ -684,24 +684,34 @@ public class AssetMgr extends AssetMgrBase {
 		pluginSvcVersionInfo.setHostName(hostName);
 		pluginSvcVersionInfo.setIpAddress(ipAddress);
 
-		if (entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES) {
-			pluginSvcVersionInfo.setPolicyActiveVersion(lastKnownVersion);
-			pluginSvcVersionInfo.setPolicyActivationTime(lastActivationTime);
-			pluginSvcVersionInfo.setPolicyDownloadedVersion(downloadedVersion);
-			pluginSvcVersionInfo.setPolicyDownloadTime(new Date().getTime());
-		} else {
-			pluginSvcVersionInfo.setTagActiveVersion(lastKnownVersion);
-			pluginSvcVersionInfo.setTagActivationTime(lastActivationTime);
-			pluginSvcVersionInfo.setTagDownloadedVersion(downloadedVersion);
-			pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
+		switch (entityType) {
+			case 0:
+				pluginSvcVersionInfo.setPolicyActiveVersion(lastKnownVersion);
+				pluginSvcVersionInfo.setPolicyActivationTime(lastActivationTime);
+				pluginSvcVersionInfo.setPolicyDownloadedVersion(downloadedVersion);
+				pluginSvcVersionInfo.setPolicyDownloadTime(new Date().getTime());
+				break;
+			case 1:
+				pluginSvcVersionInfo.setTagActiveVersion(lastKnownVersion);
+				pluginSvcVersionInfo.setTagActivationTime(lastActivationTime);
+				pluginSvcVersionInfo.setTagDownloadedVersion(downloadedVersion);
+				pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
+				break;
+			case 2:
+				pluginSvcVersionInfo.setRoleActiveVersion(lastKnownVersion);
+				pluginSvcVersionInfo.setRoleActivationTime(lastActivationTime);
+				pluginSvcVersionInfo.setRoleDownloadedVersion(downloadedVersion);
+				pluginSvcVersionInfo.setRoleDownloadTime(new Date().getTime());
+				break;
 		}
 
-		createOrUpdatePluginInfo(pluginSvcVersionInfo, entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES, httpCode, clusterName);
+		createOrUpdatePluginInfo(pluginSvcVersionInfo, entityType , httpCode, clusterName);
 	}
 
-	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final int httpCode, String clusterName) {
+	private void createOrUpdatePluginInfo(final RangerPluginInfo pluginInfo, int entityType, final int httpCode, String clusterName) {
+
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
+			logger.debug("==> createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest(entityType) + ", httpCode = " + httpCode + ")");
 		}
 
 		final boolean isTagVersionResetNeeded;
@@ -711,23 +721,33 @@ public class AssetMgr extends AssetMgrBase {
 			// then the TransactionManager will roll-back the changes because the HTTP return code is
 			// HttpServletResponse.SC_NOT_MODIFIED
 
-			if (isPolicyDownloadRequest) {
-				isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
-			} else {
-				isTagVersionResetNeeded = false;
+			switch (entityType) {
+				case 0:
+					isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
+					break;
+				case 1:
+					isTagVersionResetNeeded = false;
+					break;
+				case 2:
+					isTagVersionResetNeeded = false;
+					break;
+				default:
+					isTagVersionResetNeeded = false;
+					break;
 			}
 
 			Runnable commitWork = new Runnable() {
 				@Override
 				public void run() {
-					doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded, clusterName);
+					doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 				}
 			};
 			activityLogger.commitAfterTransactionComplete(commitWork);
 		} else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
 			Runnable commitWork;
-			if ((isPolicyDownloadRequest && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
-				|| (!isPolicyDownloadRequest && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))) {
+			if ((isPolicyDownloadRequest(entityType) && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
+					|| (isTagDownloadRequest(entityType) && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))
+					|| (isRoleDownloadRequest(entityType) && (pluginInfo.getRoleActiveVersion() == null || pluginInfo.getRoleActiveVersion() == -1))) {
 				commitWork = new Runnable() {
 					@Override
 					public void run() {
@@ -738,7 +758,7 @@ public class AssetMgr extends AssetMgrBase {
 				commitWork = new Runnable() {
 					@Override
 					public void run() {
-						doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, false, clusterName);
+						doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, false, clusterName);
 					}
 				};
 			}
@@ -746,15 +766,15 @@ public class AssetMgr extends AssetMgrBase {
 
 		} else {
 			isTagVersionResetNeeded = false;
-			doCreateOrUpdateXXPluginInfo(pluginInfo, isPolicyDownloadRequest, isTagVersionResetNeeded, clusterName);
+			doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest + ", httpCode = " + httpCode + ")");
+			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest(entityType) + ", httpCode = " + httpCode + ")");
 		}
 
 	}
 
-	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, final boolean isPolicyDownloadRequest, final boolean isTagVersionResetNeeded, String clusterName) {
+	private XXPluginInfo doCreateOrUpdateXXPluginInfo(RangerPluginInfo pluginInfo, int entityType, final boolean isTagVersionResetNeeded, String clusterName) {
 		XXPluginInfo ret = null;
 		Map<String, String> infoMap = null;
 
@@ -770,14 +790,21 @@ public class AssetMgr extends AssetMgrBase {
 					pluginInfo.setInfo(infoMap);
 				}
 				// ranger-admin is restarted, plugin contains latest versions and no earlier record for this plug-in client
-				if (isPolicyDownloadRequest) {
+				if (isPolicyDownloadRequest(entityType)) {
 					if (pluginInfo.getPolicyDownloadedVersion() != null && pluginInfo.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyActiveVersion())) {
 						// This is our best guess of when policies may have been downloaded
 						pluginInfo.setPolicyDownloadTime(pluginInfo.getPolicyActivationTime());
 					}
-				} else if (pluginInfo.getTagDownloadedVersion() != null && pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
-					// This is our best guess of when tags may have been downloaded
-					pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
+				} else if (isTagDownloadRequest(entityType)) {
+					if (pluginInfo.getTagDownloadedVersion() != null && pluginInfo.getTagDownloadedVersion().equals(pluginInfo.getTagActiveVersion())) {
+						// This is our best guess of when tags may have been downloaded
+						pluginInfo.setTagDownloadTime(pluginInfo.getTagActivationTime());
+					}
+				} else {
+					if (pluginInfo.getRoleDownloadTime() != null && pluginInfo.getRoleDownloadedVersion().equals(pluginInfo.getRoleActiveVersion())) {
+						// This is our best guess of when role may have been downloaded
+						pluginInfo.setRoleDownloadTime(pluginInfo.getRoleActivationTime());
+					}
 				}
 
 				xObj = pluginInfoService.populateDBObject(pluginInfo);
@@ -802,7 +829,7 @@ public class AssetMgr extends AssetMgrBase {
 					dbObj.setIpAddress(pluginInfo.getIpAddress());
 					needsUpdating = true;
 				}
-				if (isPolicyDownloadRequest) {
+				if (isPolicyDownloadRequest(entityType)) {
 					if (dbObj.getPolicyDownloadedVersion() == null || !dbObj.getPolicyDownloadedVersion().equals(pluginInfo.getPolicyDownloadedVersion())) {
 						dbObj.setPolicyDownloadedVersion(pluginInfo.getPolicyDownloadedVersion());
 						dbObj.setPolicyDownloadTime(pluginInfo.getPolicyDownloadTime());
@@ -824,7 +851,7 @@ public class AssetMgr extends AssetMgrBase {
 						dbObj.setPolicyActivationTime(lastPolicyActivationTime);
 						needsUpdating = true;
 					}
-				} else {
+				} else if (isTagDownloadRequest(entityType)){
 					if (dbObj.getTagDownloadedVersion() == null || !dbObj.getTagDownloadedVersion().equals(pluginInfo.getTagDownloadedVersion())) {
 						// First download for tags after tag-service is associated with resource-service
 						dbObj.setTagDownloadedVersion(pluginInfo.getTagDownloadedVersion());
@@ -847,6 +874,30 @@ public class AssetMgr extends AssetMgrBase {
 
 					if (lastTagActivationTime != null && lastTagActivationTime > 0 && (dbObj.getTagActivationTime() == null || !dbObj.getTagActivationTime().equals(lastTagActivationTime))) {
 						dbObj.setTagActivationTime(lastTagActivationTime);
+						needsUpdating = true;
+					}
+				} else {
+					if (dbObj.getRoleDownloadedVersion() == null || !dbObj.getRoleDownloadedVersion().equals(pluginInfo.getRoleDownloadedVersion())) {
+						dbObj.setRoleDownloadedVersion(pluginInfo.getRoleDownloadedVersion());
+						dbObj.setRoleDownloadTime(pluginInfo.getRoleDownloadTime());
+						needsUpdating = true;
+					}
+
+					Long lastKnownRoleVersion = pluginInfo.getRoleActiveVersion();
+					Long lastRoleActivationTime = pluginInfo.getRoleActivationTime();
+
+					if (lastKnownRoleVersion != null && lastKnownRoleVersion == -1) {
+						dbObj.setRoleDownloadTime(pluginInfo.getRoleDownloadTime());
+						needsUpdating = true;
+					}
+
+					if (lastKnownRoleVersion != null && lastKnownRoleVersion > 0 && (dbObj.getRoleActiveVersion() == null || !dbObj.getRoleActiveVersion().equals(lastKnownRoleVersion))) {
+						dbObj.setRoleActiveVersion(lastKnownRoleVersion);
+						needsUpdating = true;
+					}
+
+					if (lastRoleActivationTime != null && lastRoleActivationTime > 0 && (dbObj.getRoleActivationTime() == null || !dbObj.getRoleActivationTime().equals(lastRoleActivationTime))) {
+						dbObj.setRoleActivationTime(lastRoleActivationTime);
 						needsUpdating = true;
 					}
 				}
@@ -1177,5 +1228,17 @@ public class AssetMgr extends AssetMgrBase {
 		}else{
 			throw restErrorUtil.createRESTException("Please provide a valid syncSource", MessageEnums.INVALID_INPUT_DATA);
 		}
+	}
+
+	private boolean isPolicyDownloadRequest(int entityType) {
+		return entityType == 0;
+	}
+
+	private boolean isTagDownloadRequest(int entityType) {
+		return entityType == 1;
+	}
+
+	private boolean isRoleDownloadRequest(int entityType) {
+		return entityType == 2;
 	}
 }

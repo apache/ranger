@@ -1005,6 +1005,8 @@ CREATE TABLE dbo.x_service_version_info(
 	policy_update_time datetime DEFAULT NULL NULL,
 	tag_version bigint NOT NULL DEFAULT 0,
 	tag_update_time datetime DEFAULT NULL NULL,
+	role_version bigint NOT NULL DEFAULT 0,
+	role_update_time datetime DEFAULT NULL NULL,
 	CONSTRAINT x_service_version_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO

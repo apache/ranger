@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.Collection;
@@ -351,9 +352,9 @@ public class RangerAuthContext implements RangerPolicyEngine {
     }
 
     @Override
-    public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies) {
+    public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies, RangerRoles rangerRoles) {
         if (policyEngine != null) {
-            return policyEngine.cloneWithDelta(servicePolicies);
+            return policyEngine.cloneWithDelta(servicePolicies, rangerRoles);
         }
         return null;
     }
@@ -366,5 +367,14 @@ public class RangerAuthContext implements RangerPolicyEngine {
         return null;
     }
 
+    public RangerRoles getRangerRoles() {
+        return  policyEngine.getRangerRoles();
+    }
 
+    @Override
+    public void setRangerRoles(RangerRoles rangerRoles) {
+        if (policyEngine != null) {
+            policyEngine.setRangerRoles(rangerRoles);
+        }
+    }
 }

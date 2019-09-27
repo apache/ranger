@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
@@ -44,6 +45,7 @@ import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCa
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -57,7 +59,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -410,8 +414,6 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 		servicePolicies.setSecurityZones(testCase.securityZones);
-		servicePolicies.setUserRoles(testCase.userRoles);
-		servicePolicies.setGroupRoles(testCase.groupRoles);
 
 		if (StringUtils.isNotBlank(testCase.auditMode)) {
 			servicePolicies.setAuditMode(testCase.auditMode);
@@ -446,7 +448,43 @@ public class TestPolicyEngine {
 		RangerPluginContext pluginContext = new RangerPluginContext("hive");
 		pluginContext.setClusterName("cl1");
 		pluginContext.setClusterType("on-prem");
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext);
+
+		RangerRoles rangerRoles = new RangerRoles();
+		rangerRoles.setServiceName(testCase.serviceName);
+		rangerRoles.setRoleVersion(-1L);
+		Set<RangerRole> rangerRoleSet = new HashSet<>();
+
+		Map<String, Set<String>> userRoleMapping = testCase.userRoles;
+		Map<String, Set<String>> groupRoleMapping = testCase.groupRoles;
+		if (userRoleMapping != null) {
+			for (Map.Entry<String, Set<String>> userRole : userRoleMapping.entrySet()) {
+				String user = userRole.getKey();
+				Set<String> userRoles = userRole.getValue();
+				RangerRole.RoleMember userRoleMember = new RangerRole.RoleMember(user, true);
+				List<RangerRole.RoleMember> userRoleMembers = Arrays.asList(userRoleMember);
+				for (String usrRole : userRoles) {
+					RangerRole rangerUserRole = new RangerRole(usrRole, usrRole, null, userRoleMembers, null);
+					rangerRoleSet.add(rangerUserRole);
+				}
+			}
+		}
+
+		if (groupRoleMapping != null) {
+			for (Map.Entry<String, Set<String>> groupRole : groupRoleMapping.entrySet()) {
+				String group = groupRole.getKey();
+				Set<String> groupRoles = groupRole.getValue();
+				RangerRole.RoleMember groupRoleMember = new RangerRole.RoleMember(group, true);
+				List<RangerRole.RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
+				for (String grpRole : groupRoles) {
+					RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, groupRoleMembers, null);
+					rangerRoleSet.add(rangerGroupRole);
+				}
+			}
+		}
+
+		rangerRoles.setRangerRoles(rangerRoleSet);
+
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
 
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -464,8 +502,8 @@ public class TestPolicyEngine {
 		if (testCase.updatedPolicies != null) {
 			servicePolicies.setPolicyDeltas(testCase.updatedPolicies.policyDeltas);
 			servicePolicies.setSecurityZones(testCase.updatedPolicies.securityZones);
-			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies);
-			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies);
+			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies, rangerRoles);
+			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies, rangerRoles);
 			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
 		}
 	}

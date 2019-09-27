@@ -3811,8 +3811,6 @@ public class ServiceREST {
 				ret.setPolicies(servicePolicies.getPolicies());
 				ret.setTagPolicies(servicePolicies.getTagPolicies());
 				ret.setSecurityZones(servicePolicies.getSecurityZones());
-				ret.setUserRoles(servicePolicies.getUserRoles());
-				ret.setGroupRoles(servicePolicies.getGroupRoles());
 
 				if (containsDisabledResourcePolicies) {
 					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();

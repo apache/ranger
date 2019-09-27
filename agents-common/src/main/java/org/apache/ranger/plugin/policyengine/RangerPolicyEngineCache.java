@@ -92,7 +92,7 @@ public class RangerPolicyEngineCache {
 
 
 		if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
-			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies);
+			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies, policyEngine.getRangerRoles());
 			if (updatedEngine != null) {
 				policyEngineCache.put(policies.getServiceName(), updatedEngine);
 				ret = updatedEngine;
@@ -120,8 +120,6 @@ public class RangerPolicyEngineCache {
 			ret.setAuditMode(servicePolicies.getAuditMode());
 			ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 			ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
-			ret.setUserRoles(servicePolicies.getUserRoles());
-			ret.setGroupRoles(servicePolicies.getGroupRoles());
 
 			Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 

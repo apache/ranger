@@ -206,6 +206,93 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	}
 
 	@Override
+	public RangerRoles getRolesIfUpdated(final long lastKnowRoleVersion, final long lastActivationTimeInMillis) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminJersey2RESTClient.getRolesIfUpdated(" + lastKnowRoleVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+
+		String      relativeURL = null;
+		RangerRoles ret         = null;
+		Response    response    = null;
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_ROLE_VERSION, Long.toString(lastKnowRoleVersion));
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
+		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
+
+		if (isSecureMode) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking Roles if updated as user : " + user);
+			}
+
+			relativeURL = _utils.getSecureUrlForRoleUpdate(_baseUrl, _serviceName);
+			final String secureRelativeUrl = relativeURL;
+			PrivilegedAction<Response> action = new PrivilegedAction<Response>() {
+				public Response run() {
+					return get(queryParams, secureRelativeUrl);
+				}
+			};
+			response = user.doAs(action);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking Roles if updated with old api call");
+			}
+
+			relativeURL = _utils.getUrlForRoleUpdate(_baseUrl, _serviceName);
+			response = get(queryParams, relativeURL);
+		}
+
+		int httpResponseCode = response == null ? -1 : response.getStatus();
+		String body = null;
+
+		switch (httpResponseCode) {
+			case 200:
+				body = response.readEntity(String.class);
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Response from 200 server: " + body);
+				}
+
+				Gson gson = getGson();
+				ret = gson.fromJson(body, RangerRoles.class);
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Deserialized response to: " + ret);
+				}
+				break;
+			case 304:
+				LOG.debug("Got response: 304. Ok. Returning null");
+				break;
+			case -1:
+				LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
+				break;
+			case 404: {
+				if (response.hasEntity()) {
+					body = response.readEntity(String.class);
+					if (StringUtils.isNotBlank(body)) {
+						RangerServiceNotFoundException.throwExceptionIfServiceNotFound(_serviceName, body);
+					}
+				}
+				LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+				break;
+			}
+			default:
+				body = response.readEntity(String.class);
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, relativeURL));
+				break;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminJersey2RESTClient.getRolesIfUpdated(" + lastKnowRoleVersion + ", " + lastActivationTimeInMillis + "): " + ret);
+		}
+		return ret;
+	}
+
+	@Override
 	public void grantAccess(GrantRevokeRequest request) throws Exception {
 
 		if(LOG.isDebugEnabled()) {

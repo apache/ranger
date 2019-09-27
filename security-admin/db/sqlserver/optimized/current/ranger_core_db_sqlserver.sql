@@ -2048,6 +2048,8 @@ CREATE TABLE [dbo].[x_service_version_info](
         [policy_update_time] [datetime2] DEFAULT NULL NULL,
         [tag_version] [bigint] NOT NULL DEFAULT 0,
         [tag_update_time] [datetime2] DEFAULT NULL NULL,
+        [policy_version] [bigint] NOT NULL DEFAULT 0,
+        [role_update_time] [datetime2] DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC

@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
@@ -43,6 +44,8 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 import java.util.ArrayList;
@@ -74,6 +77,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private final RangerPolicyRepository tagPolicyRepository;
 
 	private List<RangerContextEnricher> allContextEnrichers;
+	private RangerRoles rangerRoles;
 
 	private boolean  useForwardedIPAddress;
 	private String[] trustedProxyAddresses;
@@ -81,17 +85,26 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private Map<String, RangerPolicyRepository> policyRepositories = new HashMap<>();
 
 	private       Map<String, RangerResourceTrie>   trieMap;
+	private Map<String, Set<String>>                userRoleMapping;
+	private Map<String, Set<String>>                groupRoleMapping;
 	private       Map<String, String>               zoneTagServiceMap;
-	private final Map<String, Set<String>>          userRoleMapping;
-	private final Map<String, Set<String>>          groupRoleMapping;
 	private final RangerPluginContext               pluginContext;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
+		this(other,servicePolicies, null);
+	}
+
+	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies, RangerRoles rangerRoles) {
 
 		long                    policyVersion = servicePolicies.getPolicyVersion();
 
 		this.useForwardedIPAddress = other.useForwardedIPAddress;
 		this.trustedProxyAddresses = other.trustedProxyAddresses;
+
+		if (rangerRoles != null) {
+			this.rangerRoles = rangerRoles;
+			setUserGroupRoleMapping(rangerRoles);
+		}
 
 		this.pluginContext = other.pluginContext;
 
@@ -206,15 +219,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 		this.allContextEnrichers = tmpList;
 
-                // Initialize role-related information
-                userRoleMapping = MapUtils.isNotEmpty(servicePolicies.getUserRoles()) ? servicePolicies.getUserRoles() : null;
-                groupRoleMapping = MapUtils.isNotEmpty(servicePolicies.getGroupRoles()) ? servicePolicies.getGroupRoles() : null;
-
 		reorderPolicyEvaluators();
 
 	}
 
+	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options) {
+		this(appId, servicePolicies, options, null);
+	}
+
 	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext rangerPluginContext) {
+			this(appId, servicePolicies, options, rangerPluginContext, null);
+	}
+
+	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext rangerPluginContext, RangerRoles rangerRoles) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl(" + appId + ", " + servicePolicies + ", " + options + ", " + rangerPluginContext + ")");
@@ -234,6 +251,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		this.pluginContext = (rangerPluginContext != null) ? rangerPluginContext : new RangerPluginContext(servicePolicies.getServiceDef().getName());
+
+		if (rangerRoles != null) {
+			this.rangerRoles = rangerRoles;
+			setUserGroupRoleMapping(rangerRoles);
+		}
 
 		RangerAuthContext authContext = new RangerAuthContext(this, null, this.pluginContext);
 		this.pluginContext.setAuthContext(authContext);
@@ -305,10 +327,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-                // Initialize role-related information
-                userRoleMapping = MapUtils.isNotEmpty(servicePolicies.getUserRoles()) ? servicePolicies.getUserRoles() : null;
-                groupRoleMapping = MapUtils.isNotEmpty(servicePolicies.getGroupRoles()) ? servicePolicies.getGroupRoles() : null;
-
 		RangerPerfTracer.log(perf);
 
 		if (PERF_POLICYENGINE_INIT_LOG.isDebugEnabled()) {
@@ -323,7 +341,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
-	public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies) {
+	public RangerPolicyEngine cloneWithDelta(ServicePolicies servicePolicies, RangerRoles rangerRoles) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> cloneWithDelta(" + Arrays.toString(servicePolicies.getPolicyDeltas().toArray()) + ", " + servicePolicies.getPolicyVersion() + ")");
 		}
@@ -359,7 +377,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (isValidDeltas) {
-			ret = new RangerPolicyEngineImpl(this, servicePolicies);
+			ret = new RangerPolicyEngineImpl(this, servicePolicies, rangerRoles);
 		} else {
 			ret = null;
 		}
@@ -1328,7 +1346,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
         @Override
         public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
                 Set<String> allRoles = new HashSet<>();
-                if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
+
+				if (rangerRoles != null ) {
+					userRoleMapping  = MapUtils.isNotEmpty(this.userRoleMapping)  ? this.userRoleMapping  : null;
+					groupRoleMapping = MapUtils.isNotEmpty(this.groupRoleMapping) ? this.groupRoleMapping : null;
+				}
+
+				if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
                         Set<String> userRoles = userRoleMapping.get(user);
                         if (CollectionUtils.isNotEmpty(userRoles)) {
                                 allRoles.addAll(userRoles);
@@ -1352,6 +1376,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
                 return allRoles;
         }
+
+	public RangerRoles getRangerRoles() {
+		return this.rangerRoles;
+	}
+
+	public void setRangerRoles(RangerRoles rangerRoles) {
+		this.rangerRoles = rangerRoles;
+	}
 
 	public List<RangerPolicy> getResourcePolicies(String zoneName) {
 		RangerPolicyRepository zoneResourceRepository = policyRepositories.get(zoneName);
@@ -1984,5 +2016,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			other.setIsShared(true);
 		}
 		return other;
+	}
+
+	private void setUserGroupRoleMapping(RangerRoles rangerRoles) {
+		Set<RangerRole> rangerRoleSet = rangerRoles.getRangerRoles();
+		if (CollectionUtils.isNotEmpty(rangerRoleSet)) {
+			RangerRolesUtil rangerRolesUtil = new RangerRolesUtil();
+			rangerRolesUtil.init(rangerRoleSet);
+			userRoleMapping  = rangerRolesUtil.getUserRoleMapping();
+			groupRoleMapping = rangerRolesUtil.getGroupRoleMapping();
+		}
 	}
 }

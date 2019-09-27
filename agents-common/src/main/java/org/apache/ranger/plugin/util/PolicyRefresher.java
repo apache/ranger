@@ -47,6 +47,7 @@ public class PolicyRefresher extends Thread {
 	private final String            serviceName;
 	private final RangerAdminClient rangerAdmin;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue;
+	private final RangerRolesProvider rangerRolesProvider;
 
 	private final String            cacheFileName;
 	private final String            cacheDir;
@@ -58,7 +59,7 @@ public class PolicyRefresher extends Thread {
 	private boolean policiesSetInPlugin;
 	private boolean serviceDefSetInPlugin;
 
-	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, BlockingQueue<DownloadTrigger> policyDownloadQueue, String cacheDir) {
+	public PolicyRefresher(RangerBasePlugin plugIn, String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, BlockingQueue<DownloadTrigger> policyDownloadQueue, String cacheDir, RangerRolesProvider rangerRolesProvider) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
@@ -68,6 +69,7 @@ public class PolicyRefresher extends Thread {
 		this.serviceName       = serviceName;
 		this.rangerAdmin       = rangerAdmin;
 		this.policyDownloadQueue = policyDownloadQueue;
+		this.rangerRolesProvider = rangerRolesProvider;
 
 		if(StringUtils.isEmpty(appId)) {
 			appId = serviceType;
@@ -133,7 +135,7 @@ public class PolicyRefresher extends Thread {
 	}
 
 	public void startRefresher() {
-
+		loadRoles();
 		loadPolicy();
 
 		super.start();
@@ -158,6 +160,7 @@ public class PolicyRefresher extends Thread {
 		while(true) {
 			try {
 				DownloadTrigger trigger = policyDownloadQueue.take();
+				loadRoles();
 				loadPolicy();
 				trigger.signalCompletion();
 			} catch(InterruptedException excp) {
@@ -426,6 +429,19 @@ public class PolicyRefresher extends Thread {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher.disableCache(serviceName=" + serviceName + ")");
+		}
+	}
+
+	private void loadRoles() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
+		}
+
+		//Load the Ranger UserGroup Roles
+		rangerRolesProvider.loadUserGroupRoles(plugIn);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
 		}
 	}
 }

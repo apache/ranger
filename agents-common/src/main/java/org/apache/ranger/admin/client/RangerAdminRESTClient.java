@@ -195,6 +195,87 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	}
 
 	@Override
+	public RangerRoles getRolesIfUpdated(final long lastKnownRoleVersion, final long lastActivationTimeInMillis) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getRolesIfUpdated(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		final RangerRoles ret;
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final ClientResponse response;
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_ROLE_VERSION, Long.toString(lastKnownRoleVersion));
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
+		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+
+		if (isSecureMode) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking Roles updated as user : " + user);
+			}
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					ClientResponse clientRes = null;
+					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
+					try {
+						clientRes =  restClient.get(relativeURL, queryParams);
+					} catch (Exception e) {
+						LOG.error("Failed to get response, Error is : "+e.getMessage());
+					}
+					return clientRes;
+				}
+			};
+			response = user.doAs(action);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking Roles updated as user : " + user);
+			}
+			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
+			response = restClient.get(relativeURL, queryParams);
+		}
+
+		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+			if (response == null) {
+				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+			} else {
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in Roles. secureMode=" + isSecureMode + ", user=" + user
+							+ ", response=" + resp + ", serviceName=" + serviceName
+							+ ", " + "lastKnownRoleVersion=" + lastKnownRoleVersion
+							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+				}
+			}
+			ret = null;
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+			ret = response.getEntity(RangerRoles.class);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			ret = null;
+			LOG.error("Error getting Roles; service not found. secureMode=" + isSecureMode + ", user=" + user
+					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
+					+ ", " + "lastKnownRoleVersion=" + lastKnownRoleVersion
+					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting Roles. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			ret = null;
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getRolesIfUpdated(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + "): ");
+		}
+
+		return ret;
+	}
+
+	@Override
 	public RangerRole createRole(final RangerRole request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.createRole(" + request + ")");

@@ -285,6 +285,23 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         return ret;
     }
 
+    public void updateRoleVersions(Long roleId) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updateRoleVersions(roleId=" + roleId + ")");
+        }
+        // Get all roles which include this role because change to this affects all these roles
+        Set<Long> containingRoles = getContainingRoles(roleId);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("All containing Roles for roleId:[" + roleId +"] are [" + containingRoles + "]");
+        }
+
+        updateRoleVersions(containingRoles);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updateRoleVersions(roleId=" + roleId + ")");
+        }
+    }
 
     private void addContainingRoles(Long roleId, Set<Long> allRoles) {
         if (logger.isDebugEnabled()) {
@@ -320,6 +337,32 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
             if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
                 for (final Long serviceId : allAffectedServiceIds) {
                     Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.POLICY_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null);
+                    daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+    }
+
+    private void updateRoleVersions(Set<Long> roleIds) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+
+        if (CollectionUtils.isNotEmpty(roleIds)) {
+            Set<Long> allAffectedServiceIds = new HashSet<>();
+
+            for (Long roleId : roleIds) {
+                List<Long> affectedServiceIds = daoMgr.getXXPolicy().findServiceIdsByRoleId(roleId);
+                allAffectedServiceIds.addAll(affectedServiceIds);
+            }
+
+            if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
+                for (final Long serviceId : allAffectedServiceIds) {
+                    Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
                     daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
                 }
             }

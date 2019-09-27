@@ -1310,6 +1310,8 @@ policy_version NUMBER(20) DEFAULT 0 NOT NULL,
 policy_update_time DATE DEFAULT NULL NULL,
 tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
+role_version NUMBER(20) DEFAULT 0 NOT NULL,
+role_update_time DATE DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)
 );

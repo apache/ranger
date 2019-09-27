@@ -37,6 +37,11 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
     }
 
     @Override
+    public RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
+
+    @Override
     public RangerRole createRole(RangerRole request) throws Exception {
         return null;
     }
