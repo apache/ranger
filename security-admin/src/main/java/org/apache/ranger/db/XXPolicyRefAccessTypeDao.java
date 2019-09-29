@@ -97,4 +97,12 @@ public class XXPolicyRefAccessTypeDao extends BaseDao<XXPolicyRefAccessType> {
         return ret;
     }
 
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyRefAccessType.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }

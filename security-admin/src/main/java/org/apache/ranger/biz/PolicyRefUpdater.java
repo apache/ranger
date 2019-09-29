@@ -26,13 +26,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXPolicyRefAccessTypeDao;
-import org.apache.ranger.db.XXPolicyRefConditionDao;
-import org.apache.ranger.db.XXPolicyRefDataMaskTypeDao;
-import org.apache.ranger.db.XXPolicyRefGroupDao;
-import org.apache.ranger.db.XXPolicyRefResourceDao;
-import org.apache.ranger.db.XXPolicyRefRoleDao;
-import org.apache.ranger.db.XXPolicyRefUserDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXGroup;
@@ -252,41 +245,13 @@ public class PolicyRefUpdater {
 			return false;
 		}
 
-		XXPolicyRefResourceDao     xPolResDao      = daoMgr.getXXPolicyRefResource();
-		XXPolicyRefRoleDao         xPolRoleDao     = daoMgr.getXXPolicyRefRole();
-		XXPolicyRefGroupDao        xPolGroupDao    = daoMgr.getXXPolicyRefGroup();
-		XXPolicyRefUserDao         xPolUserDao     = daoMgr.getXXPolicyRefUser();
-		XXPolicyRefAccessTypeDao   xPolAccessDao   = daoMgr.getXXPolicyRefAccessType();
-		XXPolicyRefConditionDao    xPolCondDao     = daoMgr.getXXPolicyRefCondition();
-		XXPolicyRefDataMaskTypeDao xPolDataMaskDao = daoMgr.getXXPolicyRefDataMaskType();
-
-		for (XXPolicyRefResource resource : xPolResDao.findByPolicyId(policyId)) {
-			xPolResDao.remove(resource);
-		}
-
-		for(XXPolicyRefRole role : xPolRoleDao.findByPolicyId(policyId)) {
-			xPolRoleDao.remove(role);
-		}
-
-		for(XXPolicyRefGroup group : xPolGroupDao.findByPolicyId(policyId)) {
-			xPolGroupDao.remove(group);
-		}
-
-		for(XXPolicyRefUser user : xPolUserDao.findByPolicyId(policyId)) {
-			xPolUserDao.remove(user);
-		}
-
-		for(XXPolicyRefAccessType access : xPolAccessDao.findByPolicyId(policyId)) {
-			xPolAccessDao.remove(access);
-		}
-
-		for(XXPolicyRefCondition condVal : xPolCondDao.findByPolicyId(policyId)) {
-			xPolCondDao.remove(condVal);
-		}
-
-		for(XXPolicyRefDataMaskType dataMask : xPolDataMaskDao.findByPolicyId(policyId)) {
-			xPolDataMaskDao.remove(dataMask);
-		}
+		daoMgr.getXXPolicyRefResource().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefRole().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefGroup().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefUser().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefAccessType().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefCondition().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefDataMaskType().deleteByPolicyId(policyId);
 
 		return true;
 	}
