@@ -1497,6 +1497,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		ret.setClientIPAddress(getRemoteAddress());
 		ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
 		ret.setRemoteIPAddress(getRemoteAddress());
+		ret.setRequestData(up.toString());
 
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
@@ -1604,7 +1605,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		ret.setClientIPAddress(getRemoteAddress());
 		ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
 		ret.setRemoteIPAddress(getRemoteAddress());
-		
+		ret.setRequestData(up.toString());
 		
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
