@@ -20,6 +20,7 @@
 package org.apache.ranger.entity;
 
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -179,39 +180,12 @@ public class XXTagChangeLog implements java.io.Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        XXTagChangeLog other = (XXTagChangeLog) obj;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
-            return false;
-        }
-        if ((this.serviceId == null && other.serviceId != null) || (this.serviceId != null && !this.serviceId.equals(other.serviceId))) {
-            return false;
-        }
-        if ((this.changeType == null && other.changeType != null) || (this.changeType != null && !this.changeType.equals(other.changeType))) {
-            return false;
-        }
-        if ((this.serviceTagsVersion == null && other.serviceTagsVersion != null) || (this.serviceTagsVersion != null && !this.serviceTagsVersion.equals(other.serviceTagsVersion))) {
-            return false;
-        }
-        if ((this.serviceResourceId == null && other.serviceResourceId != null) || (this.serviceResourceId != null && !this.serviceResourceId.equals(other.serviceResourceId))) {
-            return false;
-        }
-        if ((this.tagId == null && other.tagId != null) || (this.tagId != null && !this.tagId.equals(other.tagId))) {
-            return false;
-        }
-        return true;
-    }
 
-    public static boolean equals(Object object1, Object object2) {
-        if (object1 == object2) {
-            return true;
-        }
-        if ((object1 == null) || (object2 == null)) {
-            return false;
-        }
-        return object1.equals(object2);
+        XXTagChangeLog other = (XXTagChangeLog) obj;
+
+        return Objects.equals(this.id, other.id) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.serviceId, other.serviceId)
+                && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceTagsVersion, other.serviceTagsVersion)
+                && Objects.equals(this.serviceResourceId, other.serviceResourceId) && Objects.equals(this.tagId, other.tagId);
     }
 
 }

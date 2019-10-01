@@ -22,6 +22,8 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceVersionInfo;
@@ -32,6 +34,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
+
+	private static final Log LOG = LogFactory.getLog(XXServiceVersionInfoDao.class);
 
 	/**
 	 * Default Constructor
@@ -74,6 +78,7 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 	public void updateServiceVersionInfoForTagResourceMapCreate(Long resourceId, Long tagId) {
 		if (resourceId == null || tagId == null) {
+			LOG.warn("Unexpected null value for resourceId and/or tagId");
 			return;
 		}
 
@@ -82,12 +87,12 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
 		}
 	}
 
 	public void updateServiceVersionInfoForTagResourceMapDelete(Long resourceId, Long tagId) {
 		if (resourceId == null || tagId == null) {
+			LOG.warn("Unexpected null value for resourceId and/or tagId");
 			return;
 		}
 
@@ -96,11 +101,11 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
 		}
 	}
 	public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId) {
 		if (resourceId == null) {
+			LOG.warn("Unexpected null value for resourceId");
 			return;
 		}
 
@@ -111,12 +116,12 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
 		}
 	}
 
 	public void updateServiceVersionInfoForTagUpdate(Long tagId) {
 		if (tagId == null) {
+			LOG.warn("Unexpected null value for tagId");
 			return;
 		}
 
@@ -126,13 +131,6 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
-		}
-	}
-
-	public void updateServiceVersionInfoForTagDefUpdate(Long tagDefId) {
-		if (tagDefId != null) {
-			return;
 		}
 	}
 
@@ -140,23 +138,26 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 		if(CollectionUtils.isNotEmpty(serviceVersionInfos) || (resourceId == null && tagId == null)) {
 
+			final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
+			final ServiceTags.TagsChangeType  tagChangeType;
+
+			if (tagId == null) {
+				tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
+			} else if (resourceId == null) {
+				tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
+			} else {
+				tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
+			}
+
 			for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
 
-				final Long                        serviceId   = serviceVersionInfo.getServiceId();
-				final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
-				final ServiceTags.TagsChangeType  tagChangeType;
-
-				if (tagId == null) {
-					tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
-				} else if (resourceId == null) {
-					tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
-				} else {
-					tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
-				}
-
+				final Long     serviceId             = serviceVersionInfo.getServiceId();
 				final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
+
 				daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
 			}
+		} else {
+			LOG.warn("Unexpected empty list of serviceVersionInfos and/or null value for resourceId and tagId");
 		}
 
 	}

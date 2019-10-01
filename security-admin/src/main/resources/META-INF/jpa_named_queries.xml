@@ -1563,11 +1563,6 @@
 
 
 	<!-- XXTagChangeLog -->
-	<named-query name="XXTagChangeLog.findByServiceId">
-		<query>
-			select obj from XXTagChangeLog obj where obj.serviceId = :serviceId
-		</query>
-	</named-query>
 	<named-query name="XXTagChangeLog.findSinceVersion">
 		<query>
 			select obj.id, obj.changeType, obj.serviceTagsVersion, obj.serviceResourceId, obj.tagId from

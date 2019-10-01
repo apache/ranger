@@ -37,6 +37,12 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
 
     private static final Log LOG = LogFactory.getLog(XXTagChangeLogDao.class);
 
+    private static final int TAG_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER                  = 0;
+    private static final int TAG_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER         = 1;
+    private static final int TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER          = 2;
+    private static final int TAG_CHANGE_LOG_RECORD_SERVICE_RESOURCE_ID_COLUMN_NUMBER = 3;
+    private static final int TAG_CHANGE_LOG_RECORD_TAG_ID_COLUMN_NUMBER              = 4;
+
     /**
      * Default Constructor
      */
@@ -52,14 +58,14 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
                     .setParameter("version", version)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
-            // Ensure that some record has the same version as the base-version from where the records are fetched
+            // Ensure that first record has the same version as the base-version from where the records are fetched
             if (CollectionUtils.isNotEmpty(logs)) {
                 Iterator<Object[]> iter = logs.iterator();
                 boolean foundAndRemoved = false;
 
                 while (iter.hasNext()) {
                     Object[] record = iter.next();
-                    Long recordVersion = (Long) record[2];
+                    Long recordVersion = (Long) record[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
                     if (version.equals(recordVersion)) {
                         iter.remove();
                         foundAndRemoved = true;
@@ -103,11 +109,11 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
 
             for (Object[] log : queryResult) {
 
-                Long logRecordId = (Long) log[0];
-                Integer tagChangeType = (Integer) log[1];
-                Long serviceTagsVersion = (Long) log[2];
-                Long serviceResourceId = (Long) log[3];
-                Long tagId = (Long) log[4];
+                Long logRecordId        = (Long) log[TAG_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER];
+                Integer tagChangeType   = (Integer) log[TAG_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER];
+                Long serviceTagsVersion = (Long) log[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
+                Long serviceResourceId  = (Long) log[TAG_CHANGE_LOG_RECORD_SERVICE_RESOURCE_ID_COLUMN_NUMBER];
+                Long tagId              = (Long) log[TAG_CHANGE_LOG_RECORD_TAG_ID_COLUMN_NUMBER];
 
                 ret.add(new XXTagChangeLog(logRecordId, tagChangeType, serviceTagsVersion, serviceResourceId, tagId));
             }

@@ -62,6 +62,9 @@ public class PublicAPIsv2 {
 	ServiceREST serviceREST;
 
 	@Autowired
+	TagREST tagREST;
+
+	@Autowired
 	SecurityZoneREST securityZoneRest;
 
 	@Autowired
@@ -527,15 +530,30 @@ public class PublicAPIsv2 {
 	@DELETE
 	@Path("/api/server/policydeltas")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
 		}
 
 		serviceREST.deletePolicyDeltas(olderThan, request);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
+		}
+	}
+
+	@DELETE
+	@Path("/api/server/tagdeltas")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteTagDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
+		}
+
+		tagREST.deleteTagDeltas(olderThan, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
 		}
 	}
 

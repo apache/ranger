@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.db.XXTagDefDao;
 import org.apache.ranger.entity.XXTagAttributeDef;
 import org.apache.ranger.entity.XXTagDef;
@@ -79,18 +78,11 @@ public class TestRangerTagDefService {
 		xxTagAttributeDef.setId(id);
 		xxTagAttributeDef.setName(name);
 		tagAttrDefList.add(xxTagAttributeDef);
-		
-		XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 
-		Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
-		Mockito.doNothing().when(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId());
-		
 		RangerTagDef result = rangerTagDefService.postUpdate(tagDef);
 		Assert.assertEquals(result.getId(), tagAttrDefList.get(0).getId());
 		Assert.assertEquals(result.getName(), tagAttrDefList.get(0).getName());
 
-		Mockito.verify(daoMgr).getXXServiceVersionInfo();
-		Mockito.verify(xxServiceVersionInfoDao).updateServiceVersionInfoForTagDefUpdate(tagDef.getId());
 	}
 		
 	@Test
