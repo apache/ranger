@@ -98,9 +98,9 @@ public class RangerPreAuthSecurityHandler {
 
 	public boolean isAPISpnegoAccessible(){
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin())) {
+                if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin() || userSession.isAuditUserAdmin())) {
 			return true;
-		}else if(userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin())){
+                }else if(userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin() || userSession.isAuditKeyAdmin())){
 			return true;
 		}
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not allowed to access the API", true);
