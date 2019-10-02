@@ -66,6 +66,7 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
+import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -1637,7 +1638,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.update(service);
 
 			if (hasTagServiceValueChanged || hasIsEnabledChanged) {
-				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null);
+				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
 			}
 		}
 
@@ -1932,6 +1933,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
 
+		boolean updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service.getId());
+
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
 			daoMgr.getXXPolicy().setIdentityInsert(true);
@@ -1950,7 +1953,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
                 RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
-		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy);
+		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
 		List<XXTrxLog> trxLogList = getTransactionLogList(createdPolicy,
@@ -2069,6 +2072,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		updatePolicySignature(policy);
 
+		boolean updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service.getId());
+
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
@@ -2078,7 +2083,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
-		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy);
+		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 
 		bizUtil.createTrxLog(trxLogList);
@@ -2120,7 +2125,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		deleteExistingPolicyLabel(policy);
 		policyService.delete(policy);
 
-		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
+		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 
 		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
 
@@ -2155,7 +2160,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				deleteExistingPolicyLabel(policy);
 				policyService.delete(policy);
 				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
-				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy);
+				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
 				bizUtil.createTrxLog(trxLogList);
 			}
@@ -3289,13 +3294,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return validConfigs;
 	}
 
-	private void handlePolicyUpdate(RangerService service, Integer policyDeltaType, RangerPolicy policy) throws Exception {
-		updatePolicyVersion(service, policyDeltaType, policy);
+	private void handlePolicyUpdate(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
+		updatePolicyVersion(service, policyDeltaType, policy, updateServiceInfoRoleVersion);
 	}
 
 	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, POLICY_AND_TAG_VERSION, ROLE_VERSION }
 
-	private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy) throws Exception {
+	private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
 		if(service == null || service.getId() == null) {
 			return;
 		}
@@ -3332,6 +3337,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
 		transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
+
+		if (updateServiceInfoRoleVersion) {
+			Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, VERSION_TYPE.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+			transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
+		}
 	}
 
 	public static void persistVersionChange(ServiceVersionUpdater serviceVersionUpdater) {
@@ -3359,11 +3369,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
 			}
 
-			if (versionType == VERSION_TYPE.ROLE_VERSION) {
+			if(versionType == VERSION_TYPE.ROLE_VERSION) {
 				// get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
-				Long currentRoleVersion = daoMgr.getXXGlobalState().getRoleVersion("RangerRole");
-				serviceVersionInfoDbObj.setRolVersion(currentRoleVersion);
-				serviceVersionInfoDbObj.setRoleUpdateTime(now);
+				XXGlobalStateDao xxGlobalStateDao = daoMgr.getXXGlobalState();
+				if (xxGlobalStateDao != null) {
+					Long roleVersion = xxGlobalStateDao.getRoleVersion("RangerRole");
+					if (roleVersion != null) {
+						serviceVersionInfoDbObj.setRoleVersion(roleVersion);
+						serviceVersionInfoDbObj.setRoleUpdateTime(now);
+					}
+				}
 			}
 
 			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
@@ -3376,6 +3391,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
 				serviceVersionInfoDbObj.setTagVersion(1L);
 				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+				serviceVersionInfoDbObj.setRoleVersion(1L);
+				serviceVersionInfoDbObj.setRoleUpdateTime(new Date());
 
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);
 			}
@@ -3384,6 +3401,35 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (service != null) {
 			persistChangeLog(service, versionType, versionType == VERSION_TYPE.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion(), serviceVersionUpdater);
 		}
+	}
+
+	private boolean isRoleDownloadRequired(RangerPolicy policy, Long serviceId) {
+		// Role Download to plugin is required if some role in the policy created/updated is not present in any other
+		// policy for that service.
+		boolean ret = false;
+
+		if (policy != null) {
+			List<RangerPolicy.RangerPolicyItem> rangerPolicyItems = policy.getPolicyItems();
+			if (CollectionUtils.isNotEmpty(rangerPolicyItems)) {
+				for (RangerPolicyItem rangerPolicyItem : rangerPolicyItems) {
+					List<String> roleNames = rangerPolicyItem.getRoles();
+					if (CollectionUtils.isNotEmpty(roleNames)) {
+						for (String roleName : roleNames) {
+							List<Long> policyIds = daoMgr.getXXPolicy().findPolicyIdsByRoleNameAndServiceId(roleName, serviceId);
+							if (CollectionUtils.isEmpty(policyIds)) {
+								ret = true;
+								break;
+							}
+						}
+					}
+					if (ret) {
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	private static void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {

@@ -222,4 +222,15 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		return ret;
 	}
 
+	public List<Long> findPolicyIdsByRoleNameAndServiceId(String roleName, Long serviceId) {
+		List<Long> ret = null;
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findPolicyIdsByRoleNameAndServiceId", Long.class)
+					.setParameter("serviceId", serviceId)
+					.setParameter("roleName", roleName).getResultList();
+		} catch (Exception e) {
+		}
+		return ret;
+	}
 }

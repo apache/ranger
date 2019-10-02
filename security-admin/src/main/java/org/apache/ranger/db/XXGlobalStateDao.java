@@ -18,6 +18,7 @@
 package org.apache.ranger.db;
 
 import com.google.gson.Gson;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
@@ -34,7 +35,7 @@ import java.util.Map;
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     private static final Logger logger = Logger.getLogger(RangerDaoManager.class);
 
-    final static String RANGER_ROLE_VERSION_LABEL = "RangerRoleVersion";
+    final static String APP_DATA_ENTRY_ROLE_VERSION = "RangerRoleVersion";
 
     public void onGlobalStateChange(String stateName) throws Exception {
 
@@ -73,18 +74,9 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
                 if (globalState == null) {
-                    globalState = new XXGlobalState();
-                    globalState.setStateName(stateName);
-                    Map<String,String> roleVersion = new HashMap<>();
-                    roleVersion.put(RANGER_ROLE_VERSION_LABEL,new String(Long.toString(1L)));
-                    globalState.setAppData(new Gson().toJson(roleVersion));
-                    create(globalState);
+                    createGlobalStateForRoleVersion(globalState, stateName);
                 } else {
-                    Map<String,String> roleVersionJson = new Gson().fromJson(globalState.getAppData(),Map.class);
-                    Long               roleVersion     = Long.valueOf(roleVersionJson.get(RANGER_ROLE_VERSION_LABEL)) + 1L;
-                    roleVersionJson.put(RANGER_ROLE_VERSION_LABEL,new String(Long.toString(roleVersion)));
-                    globalState.setAppData(new Gson().toJson(roleVersionJson));
-                    update(globalState);
+                    updateGlobalStateForRoleVersion(globalState, stateName);
                 }
             } catch (Exception exception) {
                 logger.error("Cannot create/update GlobalState for state:[" + stateName + "]", exception);
@@ -98,7 +90,11 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         try {
             XXGlobalState       globalState     = findByStateName(stateName);
             Map<String, String> roleVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
-            ret                                 = Long.valueOf(roleVersionJson.get(RANGER_ROLE_VERSION_LABEL));
+            if(MapUtils.isNotEmpty(roleVersionJson)) {
+                ret = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION));
+            } else {
+                ret = 1L;
+            }
         } catch (Exception exception) {
             logger.warn("Unable to find the role version in Ranger Database");
         }
@@ -137,6 +133,28 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             return xxGlobalState;
         } catch (NoResultException e) {
             return null;
+        }
+    }
+
+    private void createGlobalStateForRoleVersion(XXGlobalState globalState, String stateName) {
+        globalState.setStateName(stateName);
+        Map<String,String> roleVersion = new HashMap<>();
+        roleVersion.put(APP_DATA_ENTRY_ROLE_VERSION,new String(Long.toString(1L)));
+        globalState.setAppData(new Gson().toJson(roleVersion));
+        create(globalState);
+    }
+
+    private void updateGlobalStateForRoleVersion(XXGlobalState globalState, String stateName) {
+        Map<String,String> roleVersionJson = new Gson().fromJson(globalState.getAppData(),Map.class);
+        if (MapUtils.isNotEmpty(roleVersionJson)) {
+            Long roleVersion = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION)) + 1L;
+            roleVersionJson.put(APP_DATA_ENTRY_ROLE_VERSION, new String(Long.toString(roleVersion)));
+            globalState.setAppData(new Gson().toJson(roleVersionJson));
+            update(globalState);
+        } else {
+            //if not present create Global State for Role Version.
+            XXGlobalState xxGlobalState = new XXGlobalState();
+            createGlobalStateForRoleVersion(xxGlobalState, stateName);
         }
     }
 }

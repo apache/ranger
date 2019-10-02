@@ -685,19 +685,19 @@ public class AssetMgr extends AssetMgrBase {
 		pluginSvcVersionInfo.setIpAddress(ipAddress);
 
 		switch (entityType) {
-			case 0:
+			case RangerPluginInfo.ENTITY_TYPE_POLICIES:
 				pluginSvcVersionInfo.setPolicyActiveVersion(lastKnownVersion);
 				pluginSvcVersionInfo.setPolicyActivationTime(lastActivationTime);
 				pluginSvcVersionInfo.setPolicyDownloadedVersion(downloadedVersion);
 				pluginSvcVersionInfo.setPolicyDownloadTime(new Date().getTime());
 				break;
-			case 1:
+			case RangerPluginInfo.ENTITY_TYPE_TAGS:
 				pluginSvcVersionInfo.setTagActiveVersion(lastKnownVersion);
 				pluginSvcVersionInfo.setTagActivationTime(lastActivationTime);
 				pluginSvcVersionInfo.setTagDownloadedVersion(downloadedVersion);
 				pluginSvcVersionInfo.setTagDownloadTime(new Date().getTime());
 				break;
-			case 2:
+			case RangerPluginInfo.ENTITY_TYPE_ROLES:
 				pluginSvcVersionInfo.setRoleActiveVersion(lastKnownVersion);
 				pluginSvcVersionInfo.setRoleActivationTime(lastActivationTime);
 				pluginSvcVersionInfo.setRoleDownloadedVersion(downloadedVersion);
@@ -722,13 +722,13 @@ public class AssetMgr extends AssetMgrBase {
 			// HttpServletResponse.SC_NOT_MODIFIED
 
 			switch (entityType) {
-				case 0:
+				case RangerPluginInfo.ENTITY_TYPE_POLICIES:
 					isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
 					break;
-				case 1:
+				case RangerPluginInfo.ENTITY_TYPE_TAGS:
 					isTagVersionResetNeeded = false;
 					break;
-				case 2:
+				case RangerPluginInfo.ENTITY_TYPE_ROLES:
 					isTagVersionResetNeeded = false;
 					break;
 				default:
@@ -1231,14 +1231,14 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	private boolean isPolicyDownloadRequest(int entityType) {
-		return entityType == 0;
+		return entityType == RangerPluginInfo.ENTITY_TYPE_POLICIES;
 	}
 
 	private boolean isTagDownloadRequest(int entityType) {
-		return entityType == 1;
+		return entityType == RangerPluginInfo.ENTITY_TYPE_TAGS;
 	}
 
 	private boolean isRoleDownloadRequest(int entityType) {
-		return entityType == 2;
+		return entityType == RangerPluginInfo.ENTITY_TYPE_ROLES;
 	}
 }

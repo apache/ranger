@@ -1347,11 +1347,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
         public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
                 Set<String> allRoles = new HashSet<>();
 
-				if (rangerRoles != null ) {
-					userRoleMapping  = MapUtils.isNotEmpty(this.userRoleMapping)  ? this.userRoleMapping  : null;
-					groupRoleMapping = MapUtils.isNotEmpty(this.groupRoleMapping) ? this.groupRoleMapping : null;
-				}
-
 				if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
                         Set<String> userRoles = userRoleMapping.get(user);
                         if (CollectionUtils.isNotEmpty(userRoles)) {
@@ -2025,6 +2020,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			rangerRolesUtil.init(rangerRoleSet);
 			userRoleMapping  = rangerRolesUtil.getUserRoleMapping();
 			groupRoleMapping = rangerRolesUtil.getGroupRoleMapping();
+		} else {
+			userRoleMapping  = null;
+			groupRoleMapping = null;
 		}
 	}
 }

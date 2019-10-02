@@ -137,7 +137,7 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		return this.tagUpdateTime;
 	}
 
-	public void setRolVersion(Long roleVersion) {
+	public void setRoleVersion(Long roleVersion) {
 		this.roleVersion = roleVersion;
 	}
 
@@ -166,6 +166,8 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		str += "policyUpdateTime={" + policyUpdateTime + "} ";
 		str += "tagVersion={" + tagVersion + "} ";
 		str += "tagUpdateTime={" + tagUpdateTime + "} ";
+		str += "setRoleVersion={" + roleVersion + "}" ;
+		str += "setRoleUpdateTime={" + roleUpdateTime + "}" ;
 		str += "}";
 		return str;
 	}
@@ -201,6 +203,12 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 			return false;
 		}
 		if ((this.tagUpdateTime == null && other.tagUpdateTime != null) || (this.tagUpdateTime != null && !this.tagUpdateTime.equals(other.tagUpdateTime))) {
+			return false;
+		}
+		if ((this.roleVersion == null && other.roleVersion != null) || (this.roleVersion != null && !this.roleVersion.equals(other.roleVersion))) {
+			return false;
+		}
+		if ((this.roleUpdateTime == null && other.roleUpdateTime != null) || (this.roleUpdateTime != null && !this.roleUpdateTime.equals(other.roleUpdateTime))) {
 			return false;
 		}
 		return true;

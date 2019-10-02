@@ -312,6 +312,15 @@
 		<query>select DISTINCT(obj.service) from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findPolicyIdsByRoleNameAndServiceId">
+		<query>select roleRef.policyId
+			from XXPolicy policy, XXPolicyRefRole roleRef
+			where policy.service  = :serviceId
+			and roleRef.policyId  = policy.id
+			and roleRef.roleName  = :roleName
+		</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>

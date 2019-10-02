@@ -80,7 +80,7 @@ public class RoleREST {
 
     private static List<String> INVALID_USERS = new ArrayList<>();
 
-    public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
+    public static final String POLICY_DOWNLOAD_USERS = "policy.download.auth.users";
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -798,13 +798,13 @@ public class RoleREST {
                     if (isKeyAdmin) {
                         isAllowed = true;
                     }else {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
                     }
                 }else{
                     if (isAdmin) {
                         isAllowed = true;
                     }else{
-                        isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
                     }
                 }
 
