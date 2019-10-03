@@ -2651,6 +2651,9 @@ public class ServiceREST {
 		if (!CollectionUtils.isEmpty(policyLists)) {
 			for (RangerPolicy policy : policyLists) {
 				if (policy != null) {
+					//set createTime & updateTime Time as null since exported policies dont need this
+					policy.setCreateTime(null);
+					policy.setUpdateTime(null);
 					orderedPolicies.put(policy.getId(), policy);
 				}
 			}
