@@ -358,7 +358,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + ")");
 		}
 
-		boolean ret = isAccessAllowed(user, userGroups, null, user, accessType) && isMatch(resources, null);
+		boolean ret = isAccessAllowed(user, userGroups, null, null, accessType) && isMatch(resources, null);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + resources + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
@@ -373,7 +373,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ")");
 		}
 
-		boolean ret = isAccessAllowed(user, userGroups, roles, user, accessType) && isMatch(policy, null);
+		boolean ret = isAccessAllowed(user, userGroups, roles, null, accessType) && isMatch(policy, null);
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + "): " + ret);
