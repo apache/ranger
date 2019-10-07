@@ -59,7 +59,7 @@ public class RangerPolicyDeltaUtil {
             for (RangerPolicyDelta delta : deltas) {
                 int changeType = delta.getChangeType();
                 if (!serviceType.equals(delta.getServiceType())) {
-                    if (!delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                    if (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                         LOG.error("Found unexpected serviceType in policyDelta:[" + delta + "]. Was expecting serviceType:[" + serviceType + "]. Should NOT have come here!! Ignoring delta and continuing");
                     }
                     continue;

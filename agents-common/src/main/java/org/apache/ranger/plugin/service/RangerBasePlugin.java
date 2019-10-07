@@ -325,7 +325,8 @@ public class RangerBasePlugin {
 			}
 
 			if (isValid) {
-				RangerPolicyEngine newPolicyEngine = null;
+				RangerPolicyEngine newPolicyEngine      = null;
+				boolean            isPolicyEngineShared = false;
 
 				if(updateRangerRolesOnly) {
 					this.policyEngine.setRangerRoles(rangerRoles);
@@ -347,6 +348,7 @@ public class RangerBasePlugin {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Applied policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + ")");
 							}
+							isPolicyEngineShared = true;
 						} else {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
@@ -363,15 +365,19 @@ public class RangerBasePlugin {
 
 				if (newPolicyEngine != null) {
 
-					newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-					newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+					if (!isPolicyEngineShared) {
+						newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+						newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+					}
+
 					this.policyEngine = newPolicyEngine;
 					this.currentAuthContext = new RangerAuthContext(rangerPluginContext.getAuthContext());
 
 					contextChanged();
 
-					if (oldPolicyEngine != null && !oldPolicyEngine.preCleanup()) {
-						LOG.error("preCleanup() failed on the previous policy engine instance !!");
+					if (oldPolicyEngine != null && !isPolicyEngineShared) {
+						((RangerPolicyEngineImpl)oldPolicyEngine).setIsShared(false);
+						oldPolicyEngine.preCleanup();
 					}
 					if (this.refresher != null) {
 						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);

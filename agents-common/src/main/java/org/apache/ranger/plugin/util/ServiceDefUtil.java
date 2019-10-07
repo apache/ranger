@@ -28,9 +28,11 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,6 +164,68 @@ public class ServiceDefUtil {
         String val = getOption(options, name, null);
 
         return StringUtils.isEmpty(val) ? defaultValue : val.charAt(0);
+    }
+
+    public static RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
+
+        if (serviceDef != null && StringUtils.isNotBlank(componentType)) {
+
+            List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs = serviceDef.getAccessTypes();
+
+            if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+
+                String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
+
+                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = null;
+
+                for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+
+                    String accessType = accessTypeDef.getName();
+
+                    if (StringUtils.startsWith(accessType, prefix)) {
+
+                        String newAccessType = StringUtils.removeStart(accessType, prefix);
+
+                        accessTypeDef.setName(newAccessType);
+
+                        Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
+
+                        if (CollectionUtils.isNotEmpty(impliedGrants)) {
+
+                            Collection<String> newImpliedGrants = null;
+
+                            for (String impliedGrant : impliedGrants) {
+
+                                if (StringUtils.startsWith(impliedGrant, prefix)) {
+
+                                    String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
+
+                                    if (newImpliedGrants == null) {
+                                        newImpliedGrants = new ArrayList<>();
+                                    }
+
+                                    newImpliedGrants.add(newImpliedGrant);
+                                }
+                            }
+                            accessTypeDef.setImpliedGrants(newImpliedGrants);
+
+                        }
+                    } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                        if(unneededAccessTypeDefs == null) {
+                            unneededAccessTypeDefs = new ArrayList<>();
+                        }
+
+                        unneededAccessTypeDefs.add(accessTypeDef);
+                    }
+                }
+
+                if(unneededAccessTypeDefs != null) {
+                    accessTypeDefs.removeAll(unneededAccessTypeDefs);
+                }
+            }
+        }
+
+        return serviceDef;
     }
 
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {

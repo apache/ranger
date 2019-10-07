@@ -103,6 +103,7 @@ public class RangerPolicyEngineCache {
 			}
 		} else {
 			ret = addPolicyEngine(policies, options);
+			((RangerPolicyEngineImpl)policyEngine).setIsShared(false);
 		}
 
 		return ret;

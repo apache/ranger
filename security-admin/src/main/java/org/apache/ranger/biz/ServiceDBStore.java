@@ -3012,7 +3012,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						ret.setPolicies(null);
 						ret.setPolicyDeltas(compressedDeltas);
 
-						if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
+						if (tagServiceDef != null && tagService != null) {
 							ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
 							tagPolicies.setServiceDef(tagServiceDef);
 							tagPolicies.setServiceId(tagService.getId());

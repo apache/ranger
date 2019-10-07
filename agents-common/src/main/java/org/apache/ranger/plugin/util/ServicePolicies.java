@@ -355,21 +355,21 @@ public class ServicePolicies implements java.io.Serializable {
 		ret.setPolicies(Collections.emptyList());
 		ret.setPolicyDeltas(null);
 		if (source.getTagPolicies() != null) {
-			TagPolicies tagPolicies = copyHeader(source.getTagPolicies());
+			TagPolicies tagPolicies = copyHeader(source.getTagPolicies(), source.getServiceDef().getName());
 			ret.setTagPolicies(tagPolicies);
 		}
 
 		return ret;
 	}
 
-	static public TagPolicies copyHeader(TagPolicies source) {
+	static public TagPolicies copyHeader(TagPolicies source, String componentServiceName) {
 		TagPolicies ret = new TagPolicies();
 
 		ret.setServiceName(source.getServiceName());
 		ret.setServiceId(source.getServiceId());
 		ret.setPolicyVersion(source.getPolicyVersion());
 		ret.setAuditMode(source.getAuditMode());
-		ret.setServiceDef(source.getServiceDef());
+		ret.setServiceDef(ServiceDefUtil.normalizeAccessTypeDefs(source.getServiceDef(), componentServiceName));
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
 		ret.setPolicies(Collections.emptyList());
 
@@ -390,7 +390,7 @@ public class ServicePolicies implements java.io.Serializable {
 		if (servicePolicies.getTagPolicies() != null) {
 			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
 		} else {
-			newTagPolicies = null;
+			newTagPolicies = oldTagPolicies;
 		}
 
 		if (ret.getTagPolicies() != null) {

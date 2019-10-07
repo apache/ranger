@@ -85,9 +85,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private Map<String, RangerPolicyRepository> policyRepositories = new HashMap<>();
 
 	private       Map<String, RangerResourceTrie>   trieMap;
-	private Map<String, Set<String>>                userRoleMapping;
-	private Map<String, Set<String>>                groupRoleMapping;
 	private       Map<String, String>               zoneTagServiceMap;
+	private       Map<String, Set<String>>          userRoleMapping;
+	private       Map<String, Set<String>>          groupRoleMapping;
 	private final RangerPluginContext               pluginContext;
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies) {
@@ -96,7 +96,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies, RangerRoles rangerRoles) {
 
-		long                    policyVersion = servicePolicies.getPolicyVersion();
+		long policyVersion = servicePolicies.getPolicyVersion();
 
 		this.useForwardedIPAddress = other.useForwardedIPAddress;
 		this.trustedProxyAddresses = other.trustedProxyAddresses;
@@ -178,8 +178,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if (other.policyRepository != null && CollectionUtils.isNotEmpty(defaultZoneDeltas)) {
-			this.policyRepository = new RangerPolicyRepository(other.policyRepository, defaultZoneDeltas, policyVersion);
+		if (CollectionUtils.isNotEmpty(defaultZoneDeltas)) {
+			if (other.policyRepository == null) {
+				LOG.warn("Current policy-engine's policy-repository is null! Should not have happened!!");
+				this.policyRepository = other.policyRepository;
+			} else {
+				this.policyRepository = new RangerPolicyRepository(other.policyRepository, defaultZoneDeltas, policyVersion);
+			}
 		} else {
 			this.policyRepository = shareWith(other.policyRepository);
 		}
@@ -220,6 +225,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		this.allContextEnrichers = tmpList;
 
 		reorderPolicyEvaluators();
+
+		RangerAuthContext oldContext = pluginContext.getAuthContext();
+		this.pluginContext.setAuthContext(new RangerAuthContext(this, oldContext));
 
 	}
 
@@ -388,6 +396,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("<== cloneWithDelta(" + Arrays.toString(servicePolicies.getPolicyDeltas().toArray()) + ", " + servicePolicies.getPolicyVersion() + ")");
 		}
 		return ret;
+	}
+
+	public void setIsShared(boolean isShared) {
+		this.policyRepository.setIsShared(isShared);
+		if (this.tagPolicyRepository != null) {
+			this.tagPolicyRepository.setIsShared(isShared);
+		}
+		for (RangerPolicyRepository repository : policyRepositories.values()) {
+			repository.setIsShared(isShared);
+		}
 	}
 
 	@Override

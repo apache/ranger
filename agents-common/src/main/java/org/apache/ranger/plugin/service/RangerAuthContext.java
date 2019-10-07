@@ -49,8 +49,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RangerAuthContext implements RangerPolicyEngine {
-	private static final Log LOG = LogFactory.getLog(RangerAuthContext.class);
-	private final RangerPluginContext rangerPluginContext;
+    private static final Log LOG = LogFactory.getLog(RangerAuthContext.class);
+    private final RangerPluginContext rangerPluginContext;
     private final RangerPolicyEngine policyEngine;
     private final Map<RangerContextEnricher, Object> requestContextEnrichers;
 
@@ -63,19 +63,31 @@ public class RangerAuthContext implements RangerPolicyEngine {
     RangerAuthContext(RangerAuthContext other) {
         if (other != null) {
             this.policyEngine = other.getPolicyEngine();
-
+            this.rangerPluginContext = other.rangerPluginContext;
             Map<RangerContextEnricher, Object> localReference = other.requestContextEnrichers;
             if (MapUtils.isNotEmpty(localReference)) {
                 this.requestContextEnrichers = new ConcurrentHashMap<>(localReference);
             } else {
                 this.requestContextEnrichers = new ConcurrentHashMap<>();
             }
-
-            this.rangerPluginContext = other.rangerPluginContext;
         } else {
             this.policyEngine            = null;
             this.requestContextEnrichers = new ConcurrentHashMap<>();
             this.rangerPluginContext     = null;
+        }
+    }
+
+    public RangerAuthContext(RangerPolicyEngine policyEngine, RangerAuthContext other) {
+        this.policyEngine = policyEngine;
+
+        if (other != null) {
+            Map<RangerContextEnricher, Object> localReference = other.requestContextEnrichers;
+
+            this.rangerPluginContext     = other.rangerPluginContext;
+            this.requestContextEnrichers = MapUtils.isNotEmpty(localReference) ? new ConcurrentHashMap<>(localReference) : new ConcurrentHashMap<>();
+        } else {
+            this.rangerPluginContext     = null;
+            this.requestContextEnrichers = new ConcurrentHashMap<>();
         }
     }
 

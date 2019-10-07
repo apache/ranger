@@ -121,7 +121,7 @@ public class RangerRESTClient {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
 		this.configuredURLs = getURLs(mUrl);
-		this.lastKnownActiveUrlIndex   = (new Random()).nextInt(configuredURLs.size());
+		this.lastKnownActiveUrlIndex = configuredURLs.size() == 0 ? 0 : (new Random()).nextInt(configuredURLs.size());
 		init();
 	}
 
