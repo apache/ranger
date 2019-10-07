@@ -69,7 +69,7 @@
         </mailingList>
     </mailingLists>
     <properties>
-        <maven.version.required>3.3.3</maven.version.required>
+        <maven.version.required>3.6.2</maven.version.required>
         <java.version.required>1.8</java.version.required>
         <javac.source.version>1.8</javac.source.version>
         <javac.target.version>1.8</javac.target.version>
