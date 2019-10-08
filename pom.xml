@@ -304,6 +304,26 @@
             </build>
         </profile>
         <profile>
+            <id>ranger-admin</id>
+            <modules>
+                <module>agents-common</module>
+                <module>security-admin</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.2-beta-5</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>ranger-hdfs-plugin</id>
             <modules>
                 <module>agents-audit</module>
