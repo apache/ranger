@@ -153,6 +153,9 @@
         "defaultIndex": 0
       }
   ],
+  "options": {
+    "enableDenyAndExceptionsInPolicies": "false"
+  },
   "contextEnrichers":[
 
   ],
