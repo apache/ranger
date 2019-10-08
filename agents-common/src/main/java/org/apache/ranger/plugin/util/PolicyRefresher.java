@@ -210,7 +210,7 @@ public class PolicyRefresher extends Thread {
 				plugIn.setPolicies(svcPolicies);
 				policiesSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
-				lastKnownVersion = svcPolicies.getPolicyVersion();
+				lastKnownVersion = svcPolicies.getPolicyVersion() != null ? svcPolicies.getPolicyVersion() : -1L;
 			} else {
 				if (!policiesSetInPlugin && !serviceDefSetInPlugin) {
 					plugIn.setPolicies(null);

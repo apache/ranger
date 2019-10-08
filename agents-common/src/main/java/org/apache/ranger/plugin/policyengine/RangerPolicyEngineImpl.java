@@ -96,7 +96,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	public RangerPolicyEngineImpl(final RangerPolicyEngineImpl other, ServicePolicies servicePolicies, RangerRoles rangerRoles) {
 
-		long policyVersion = servicePolicies.getPolicyVersion();
+		long policyVersion = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1L;
 
 		this.useForwardedIPAddress = other.useForwardedIPAddress;
 		this.trustedProxyAddresses = other.trustedProxyAddresses;
