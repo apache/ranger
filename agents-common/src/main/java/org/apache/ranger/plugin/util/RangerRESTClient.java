@@ -121,7 +121,7 @@ public class RangerRESTClient {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
 		this.configuredURLs = getURLs(mUrl);
-		this.lastKnownActiveUrlIndex = configuredURLs.size() == 0 ? 0 : (new Random()).nextInt(configuredURLs.size());
+		this.setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
 		init();
 	}
 
@@ -281,25 +281,32 @@ public class RangerRESTClient {
 
 		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
-		if (StringUtils.isNotEmpty(mKeyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
+		kmList = getKeyManagers(mKeyStoreFile,keyStoreFilepwd);
+		return kmList;
+	}
+
+	public KeyManager[] getKeyManagers(String keyStoreFile, String keyStoreFilePwd) {
+		KeyManager[] kmList = null;
+
+		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilePwd)) {
 			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(mKeyStoreFile);
+				in = getFileInputStream(keyStoreFile);
 
 				if (in != null) {
 					KeyStore keyStore = KeyStore.getInstance(mKeyStoreType);
 
-					keyStore.load(in, keyStoreFilepwd.toCharArray());
+					keyStore.load(in, keyStoreFilePwd.toCharArray());
 
 					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
 
-					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
+					keyManagerFactory.init(keyStore, keyStoreFilePwd.toCharArray());
 
 					kmList = keyManagerFactory.getKeyManagers();
 				} else {
-					LOG.error("Unable to obtain keystore from file [" + mKeyStoreFile + "]");
-					throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile);
+					LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
+					throw new IllegalStateException("Unable to find keystore file :" + keyStoreFile);
 				}
 			} catch (KeyStoreException e) {
 				LOG.error("Unable to obtain from KeyStore :" + e.getMessage(), e);
@@ -312,15 +319,15 @@ public class RangerRESTClient {
 				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
 				LOG.error("Unable to find the necessary SSL Keystore Files", e);
-				throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to find keystore file :" + keyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
 				LOG.error("Unable to read the necessary SSL Keystore Files", e);
-				throw new IllegalStateException("Unable to read keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to read keystore file :" + keyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (UnrecoverableKeyException e) {
 				LOG.error("Unable to recover the key from keystore", e);
-				throw new IllegalStateException("Unable to recover the key from keystore :" + mKeyStoreFile+", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to recover the key from keystore :" + keyStoreFile+", error :" + e.getMessage(), e);
 			} finally {
-				close(in, mKeyStoreFile);
+				close(in, keyStoreFile);
 			}
 		}
 
@@ -332,11 +339,18 @@ public class RangerRESTClient {
 
 		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 
-		if (StringUtils.isNotEmpty(mTrustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
+		tmList = getTrustManagers(mTrustStoreFile, trustStoreFilepwd);
+		return tmList;
+	}
+
+	public TrustManager[] getTrustManagers(String trustStoreFile, String trustStoreFilepwd) {
+		TrustManager[] tmList = null;
+
+		if (StringUtils.isNotEmpty(trustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
 			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(mTrustStoreFile);
+				in = getFileInputStream(trustStoreFile);
 
 				if (in != null) {
 					KeyStore trustStore = KeyStore.getInstance(mTrustStoreType);
@@ -349,8 +363,8 @@ public class RangerRESTClient {
 
 					tmList = trustManagerFactory.getTrustManagers();
 				} else {
-					LOG.error("Unable to obtain truststore from file [" + mTrustStoreFile + "]");
-					throw new IllegalStateException("Unable to find truststore file :" + mTrustStoreFile);
+					LOG.error("Unable to obtain truststore from file [" + trustStoreFile + "]");
+					throw new IllegalStateException("Unable to find truststore file :" + trustStoreFile);
 				}
 			} catch (KeyStoreException e) {
 				LOG.error("Unable to obtain from KeyStore", e);
@@ -362,20 +376,20 @@ public class RangerRESTClient {
 				LOG.error("Unable to obtain the requested certification :" + e.getMessage(), e);
 				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL TrustStore File:" + mTrustStoreFile, e);
-				throw new IllegalStateException("Unable to find trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
+				LOG.error("Unable to find the necessary SSL TrustStore File:" + trustStoreFile, e);
+				throw new IllegalStateException("Unable to find trust store file :" + trustStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL TrustStore Files :" + mTrustStoreFile, e);
-				throw new IllegalStateException("Unable to read the trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
+				LOG.error("Unable to read the necessary SSL TrustStore Files :" + trustStoreFile, e);
+				throw new IllegalStateException("Unable to read the trust store file :" + trustStoreFile + ", error :" + e.getMessage(), e);
 			} finally {
-				close(in, mTrustStoreFile);
+				close(in, trustStoreFile);
 			}
 		}
 		
 		return tmList;
 	}
 
-	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
+	protected SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
 	        Validate.notNull(tmList, "TrustManager is not specified");
 		try {
 			SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
@@ -563,7 +577,7 @@ public class RangerRESTClient {
 		return configuredURLs;
 	}
 
-	private static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
+	protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
 		WebResource ret = webResource;
 		if (webResource != null && params != null) {
 			Set<Map.Entry<String, String>> entrySet= params.entrySet();
@@ -574,21 +588,49 @@ public class RangerRESTClient {
 		return ret;
 	}
 
-	private void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
+	protected void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
 		this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
 	}
 
-	private WebResource createWebResourceForCookieAuth(int currentIndex, String relativeURL) {
+	protected WebResource createWebResourceForCookieAuth(int currentIndex, String relativeURL) {
 		Client cookieClient = getClient();
 		cookieClient.removeAllFilters();
 		WebResource ret = cookieClient.resource(configuredURLs.get(currentIndex) + relativeURL);
 		return ret;
 	}
 
-	private void processException(int index, ClientHandlerException e) throws Exception {
+	protected void processException(int index, ClientHandlerException e) throws Exception {
 		if (index == configuredURLs.size() - 1) {
 			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configuredURLs + " ]");
 			throw e;
 		}
+	}
+
+	public int getLastKnownActiveUrlIndex() {
+		return lastKnownActiveUrlIndex;
+	}
+
+	public List<String> getConfiguredURLs() {
+		return configuredURLs;
+	}
+
+	public boolean isSSL() {
+		return mIsSSL;
+	}
+
+	public void setSSL(boolean mIsSSL) {
+		this.mIsSSL = mIsSSL;
+	}
+
+	protected void setClient(Client client) {
+		this.client = client;
+	}
+
+	protected void setKeyStoreType(String mKeyStoreType) {
+		this.mKeyStoreType = mKeyStoreType;
+	}
+
+	protected void setTrustStoreType(String mTrustStoreType) {
+		this.mTrustStoreType = mTrustStoreType;
 	}
 }
