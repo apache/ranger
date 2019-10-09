@@ -32,9 +32,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.view.RangerPluginInfoList;
-import org.apache.ranger.view.RangerRoleList;
-import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -120,8 +117,8 @@ public class PublicAPIsv2 {
 
 	@GET
     @Path("/api/zones")
-    public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request){
-		return securityZoneRest.getAllZones(request);
+    public List<RangerSecurityZone> getAllZones(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZones(request).getSecurityZones();
 	}
 
 	/*
@@ -519,12 +516,12 @@ public class PublicAPIsv2 {
 			logger.debug("==> PublicAPIsv2.getPluginsInfo()");
 		}
 
-		RangerPluginInfoList pluginInfoList = serviceREST.getPluginsInfo(request);
+		List<RangerPluginInfo> ret = serviceREST.getPluginsInfo(request).getPluginInfoList();
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.getPluginsInfo()");
 		}
-		return pluginInfoList.getPluginInfoList();
+		return ret;
 	}
 
 	@DELETE
@@ -614,8 +611,8 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/roles")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRoleList getAllRoles(@Context HttpServletRequest request){
-		return roleREST.getAllRoles(request);
+	public List<RangerRole> getAllRoles(@Context HttpServletRequest request) {
+		return roleREST.getAllRoles(request).getSecurityRoles();
 	}
 
 	@GET
