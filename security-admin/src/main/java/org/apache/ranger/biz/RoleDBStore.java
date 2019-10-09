@@ -136,7 +136,9 @@ public class RoleDBStore implements RoleStore {
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
-        roleService.updateRoleVersions(updatedRole.getId());
+        if (ServiceDBStore.isSupportsRolesDownloadByService()) {
+            roleService.updateRoleVersions(updatedRole.getId());
+        }
 
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(updatedRole, oldRole, "update");
         bizUtil.createTrxLog(trxLogList);
@@ -213,6 +215,40 @@ public class RoleDBStore implements RoleStore {
         return daoMgr.getXXRole().getAllNames();
     }
 
+    @Override
+    public RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
+        RangerRoles ret                   = null;
+        Long        rangerRoleVersionInDB = getRoleVersion(serviceName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
+        }
+
+        if (rangerRoleVersionInDB != null) {
+            ret = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(serviceName, this, lastKnownRoleVersion, rangerRoleVersionInDB);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<= RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
+        }
+
+        return ret;
+    }
+
+    @Override
+    public Long getRoleVersion(String serviceName) {
+        Long ret = null;
+
+        if (ServiceDBStore.isSupportsRolesDownloadByService()) {
+            XXServiceVersionInfo xxServiceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
+            ret = (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion() : null;
+        } else {
+            ret = daoMgr.getXXGlobalState().getRoleVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
+        }
+
+        return ret;
+    }
+
     public Set<RangerRole> getRoleNames(String userName, Set<String> userGroups) throws Exception{
         Set<RangerRole> ret = new HashSet<>();
         if (StringUtils.isNotEmpty(userName)) {
@@ -276,30 +312,5 @@ public class RoleDBStore implements RoleStore {
     public List<RangerRole> getRoles(XXService service) {
         return service == null ? ListUtils.EMPTY_LIST : getRoles(service.getId());
     }
-
-    public RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
-        RangerRoles ret                   = null;
-        Long        rangerRoleVersionInDB = getRoleVersion(serviceName);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
-        }
-
-        if (rangerRoleVersionInDB != null) {
-            ret = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(serviceName, this, lastKnownRoleVersion, rangerRoleVersionInDB);
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<= RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
-        }
-
-        return ret;
-    }
-
-    public Long getRoleVersion(String serviceName) {
-        XXServiceVersionInfo xxServiceVersionInfo =  daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
-        return (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion():null;
-    }
-
 }
 

@@ -231,6 +231,8 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	private static final String SERVICE_ADMIN_USERS     = "service.admin.users";
 
+	private static boolean isRolesDownloadedByService = false;
+
 	public static final String  CRYPT_ALGO      = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
 	public static final String  ENCRYPT_KEY     = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
 	public static final String  SALT            = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
@@ -370,6 +372,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					RETENTION_PERIOD_IN_DAYS     = RangerConfiguration.getInstance().getInt("ranger.admin.delta.retention.time.in.days", 7);
 					TAG_RETENTION_PERIOD_IN_DAYS = 	RangerConfiguration.getInstance().getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
 
+					isRolesDownloadedByService = RangerConfiguration.getInstance().getBoolean("ranger.support.for.service.specific.role.download", false);
 
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
@@ -1933,7 +1936,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
 
-		boolean updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service.getId());
+		boolean updateServiceInfoRoleVersion = false;
+		if (isSupportsRolesDownloadByService()) {
+			updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service);
+		}
 
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
@@ -2072,7 +2078,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		updatePolicySignature(policy);
 
-		boolean updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service.getId());
+		boolean updateServiceInfoRoleVersion = false;
+		if (isSupportsRolesDownloadByService()) {
+			updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service);
+		}
 
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
@@ -3330,6 +3339,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 					Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceversionType, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
 					transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
+
+					Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+					transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 				}
 			}
 		}
@@ -3403,33 +3415,95 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private boolean isRoleDownloadRequired(RangerPolicy policy, Long serviceId) {
+	private boolean isRoleDownloadRequired(RangerPolicy policy, RangerService service) {
 		// Role Download to plugin is required if some role in the policy created/updated is not present in any other
 		// policy for that service.
 		boolean ret = false;
 
 		if (policy != null) {
-			List<RangerPolicy.RangerPolicyItem> rangerPolicyItems = policy.getPolicyItems();
-			if (CollectionUtils.isNotEmpty(rangerPolicyItems)) {
-				for (RangerPolicyItem rangerPolicyItem : rangerPolicyItems) {
-					List<String> roleNames = rangerPolicyItem.getRoles();
-					if (CollectionUtils.isNotEmpty(roleNames)) {
-						for (String roleName : roleNames) {
-							List<Long> policyIds = daoMgr.getXXPolicy().findPolicyIdsByRoleNameAndServiceId(roleName, serviceId);
-							if (CollectionUtils.isEmpty(policyIds)) {
-								ret = true;
-								break;
-							}
+			Set<String> roleNames = getAllPolicyItemRoleNames(policy);
+			if (CollectionUtils.isNotEmpty(roleNames)) {
+				Long serviceId = service.getId();
+				checkAndFilterRoleNames(roleNames, service);
+				if (CollectionUtils.isNotEmpty(roleNames)) {
+					for (String roleName : roleNames) {
+						long roleRefPolicyCount = daoMgr.getXXPolicy().findRoleRefPolicyCount(roleName, serviceId);
+						if (roleRefPolicyCount == 0) {
+							ret = true;
+							break;
 						}
-					}
-					if (ret) {
-						break;
 					}
 				}
 			}
 		}
 
 		return ret;
+	}
+
+	private void checkAndFilterRoleNames(Set<String> roleNames, RangerService service) {
+		//remove all roles which are already in DB for this serviceId, so we just download roles if there are new roles added.
+		Set<String>  rolesToRemove = new HashSet<>();
+		Long 		 serviceId     = service.getId();
+		List<String> rolesFromDb   = daoMgr.getXXRole().findRoleNamesByServiceId(serviceId);
+		if(CollectionUtils.isNotEmpty(rolesFromDb)) {
+			rolesToRemove.addAll(rolesFromDb);
+		}
+
+		String    tagService   = service.getTagService();
+		XXService serviceDbObj = daoMgr.getXXService().findByName(tagService);
+		if (serviceDbObj != null) {
+			List<String> rolesFromServiceTag = daoMgr.getXXRole().findRoleNamesByServiceId(serviceDbObj.getId());
+			if (CollectionUtils.isNotEmpty(rolesFromServiceTag)) {
+				rolesToRemove.addAll(rolesFromServiceTag);
+			}
+		}
+
+		roleNames.removeAll(rolesToRemove);
+	}
+
+	private Set<String> getAllPolicyItemRoleNames(RangerPolicy policy) {
+		Set<String> ret = new HashSet<>();
+
+		List<? extends RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		policyItems = policy.getDenyPolicyItems();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		policyItems = policy.getAllowExceptions();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		policyItems = policy.getDenyExceptions();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		policyItems = policy.getDataMaskPolicyItems();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		policyItems = policy.getRowFilterPolicyItems();
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			collectRolesFromPolicyItems(policyItems, ret);
+		}
+
+		return ret;
+	}
+
+	private void collectRolesFromPolicyItems(List<? extends RangerPolicyItem> rangerPolicyItems, Set<String> roleNames) {
+		for (RangerPolicyItem rangerPolicyItem : rangerPolicyItems) {
+			List<String> rangerPolicyItemRoles = rangerPolicyItem.getRoles();
+			if (CollectionUtils.isNotEmpty(rangerPolicyItemRoles)) {
+				roleNames.addAll(rangerPolicyItemRoles);
+			}
+		}
 	}
 
 	private static void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {
@@ -5125,6 +5199,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public static boolean isSupportsPolicyDeltas() {
 		return SUPPORTS_POLICY_DELTAS;
+	}
+
+	public static boolean isSupportsRolesDownloadByService() {
+		return isRolesDownloadedByService;
 	}
 
 	public static class ServiceVersionUpdater implements Runnable {

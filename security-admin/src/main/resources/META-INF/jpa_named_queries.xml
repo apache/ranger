@@ -312,8 +312,8 @@
 		<query>select DISTINCT(obj.service) from XXPolicy obj, XXPolicyRefRole policyRefRole where policyRefRole.roleId = :roleId and policyRefRole.policyId = obj.id</query>
 	</named-query>
 
-	<named-query name="XXPolicy.findPolicyIdsByRoleNameAndServiceId">
-		<query>select roleRef.policyId
+	<named-query name="XXPolicy.findRoleRefPolicyCount">
+		<query>select count(roleRef.policyId)
 			from XXPolicy policy, XXPolicyRefRole roleRef
 			where policy.service  = :serviceId
 			and roleRef.policyId  = policy.id
@@ -1498,6 +1498,10 @@
 
 	<named-query name="XXRole.findByServiceId">
 		<query>select obj from XXRole obj, XXPolicyRefRole policyRefRole, XXPolicy policy where obj.id = policyRefRole.roleId and policyRefRole.policyId = policy.id and policy.service = :serviceId </query>
+	</named-query>
+
+	<named-query name="XXRole.findRoleNamesByServiceId">
+		<query>select obj.name from XXRole obj, XXPolicyRefRole policyRefRole, XXPolicy policy where obj.id = policyRefRole.roleId and policyRefRole.policyId = policy.id and policy.service = :serviceId </query>
 	</named-query>
 
     <named-query name="XXRole.getAllNames">

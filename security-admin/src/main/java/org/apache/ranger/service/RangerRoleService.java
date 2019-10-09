@@ -34,12 +34,16 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXRole;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -360,10 +364,16 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 allAffectedServiceIds.addAll(affectedServiceIds);
             }
 
+            XXServiceDao serviceDao = daoMgr.getXXService();
             if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
                 for (final Long serviceId : allAffectedServiceIds) {
                     Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
                     daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+                    XXService serviceDbObj = serviceDao.getById(serviceId);
+                    boolean   isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
+                    if (isTagService) {
+                        updateRoleVersionOfAllServicesRefferingTag(daoMgr, serviceDao, serviceId);
+                    }
                 }
             }
         }
@@ -373,5 +383,15 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         }
     }
 
+    private void updateRoleVersionOfAllServicesRefferingTag(RangerDaoManager daoManager, XXServiceDao serviceDao, Long serviceId) {
+        List<XXService> referringServices = serviceDao.findByTagServiceId(serviceId);
+        if(CollectionUtils.isNotEmpty(referringServices)) {
+            for(XXService referringService : referringServices) {
+                final Long referringServiceId = referringService.getId();
+                Runnable   roleVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, referringServiceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
+                daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(roleVersionUpdater);
+            }
+        }
+    }
 }
 

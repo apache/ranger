@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.store;
 import java.util.List;
 
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 public interface RoleStore {
@@ -43,5 +44,9 @@ public interface RoleStore {
     List<RangerRole> getRoles(SearchFilter filter) throws Exception;
 
     List<String>     getRoleNames(SearchFilter filter) throws Exception;
+
+    RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception;
+
+    Long getRoleVersion(String serviceName);
 }
 

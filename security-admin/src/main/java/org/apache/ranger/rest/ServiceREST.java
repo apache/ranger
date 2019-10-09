@@ -62,6 +62,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
@@ -189,6 +190,9 @@ public class ServiceREST {
 
 	@Autowired
 	ServiceDBStore svcStore;
+
+	@Autowired
+	RoleDBStore roleDBStore;
 
 	@Autowired
 	SecurityZoneDBStore zoneStore;
@@ -3657,15 +3661,15 @@ public class ServiceREST {
 	}
 
 	public RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, delegateAdminOptions);
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, delegateAdminOptions);
 	}
 
 	private RangerPolicyEngine getPolicySearchPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, policySearchAdminOptions);
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
 	}
 
 	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, defaultAdminOptions);
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, defaultAdminOptions);
 	}
 
 	@GET

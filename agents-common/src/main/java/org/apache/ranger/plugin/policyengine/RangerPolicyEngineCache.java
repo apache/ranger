@@ -33,8 +33,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
 public class RangerPolicyEngineCache {
@@ -42,27 +44,69 @@ public class RangerPolicyEngineCache {
 
 	private final Map<String, RangerPolicyEngine> policyEngineCache = new HashMap<String, RangerPolicyEngine>();
 
-	synchronized final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
+	synchronized final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
 		RangerPolicyEngine ret = null;
 
 		if(serviceName != null) {
 			ret = policyEngineCache.get(serviceName);
 
-			long policyVersion = ret != null ? ret.getPolicyVersion() : -1;
-
 			if(svcStore != null) {
-				try {
-					ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion, false);
+				long        policyVersion;
+				long        roleVersion;
+				RangerRoles rangerRoles;
+				boolean     isRolesUpdated = true;
 
-					if (policies != null && policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
-						ServicePolicies updatedServicePolicies = policies;
-						if (zoneStore != null) {
-							Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
-							if (MapUtils.isNotEmpty(securityZones)) {
-								updatedServicePolicies = getUpdatedServicePoliciesForZones(policies, securityZones);
+				try {
+					if (ret == null) {
+						policyVersion = -1L;
+						roleVersion = -1L;
+						rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
+
+						if (rangerRoles == null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("There are no roles in ranger-admin for service:" + serviceName +"]");
 							}
 						}
-						ret = ret == null ? addPolicyEngine(updatedServicePolicies, options) : updatePolicyEngine(ret, updatedServicePolicies, options);
+					} else {
+						policyVersion = ret.getPolicyVersion();
+
+						if (ret.getRangerRoles() != null && ret.getRangerRoles().getRoleVersion() != null) {
+							roleVersion = ret.getRangerRoles().getRoleVersion();
+						} else {
+							roleVersion = -1L;
+						}
+
+						rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
+
+						if (rangerRoles == null) {
+							rangerRoles = ret.getRangerRoles();
+							isRolesUpdated = false;
+						}
+					}
+
+					ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion, false);
+
+					if (policies != null) {
+						if (policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
+							ServicePolicies updatedServicePolicies = getUpdatedServicePolicies(serviceName, policies, svcStore, zoneStore);
+
+							if (ret == null) {
+								ret = addPolicyEngine(updatedServicePolicies, rangerRoles, options);
+							} else {
+								ret = updatePolicyEngine(ret, updatedServicePolicies, rangerRoles, options);
+							}
+						} else {
+							LOG.error("policies object is null or its version is null for getPolicyEngine(" + serviceName + ") !!");
+							LOG.error("Returning old policy engine");
+						}
+					} else {
+						if (ret == null) {
+							LOG.error("getPolicyEngine(" + serviceName + "): failed to get any policies from service-store");
+						} else {
+							if (isRolesUpdated) {
+								ret.setRangerRoles(rangerRoles);
+							}
+						}
 					}
 
 				} catch(Exception excp) {
@@ -75,24 +119,24 @@ public class RangerPolicyEngineCache {
 	}
 
 
-	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies, RangerPolicyEngineOptions options) {
+	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
 		RangerServiceDef serviceDef = policies.getServiceDef();
 		String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
 
 		RangerPluginContext rangerPluginContext = new RangerPluginContext(serviceType);
-		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options, rangerPluginContext);
+		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options, rangerPluginContext, rangerRoles);
 
 		policyEngineCache.put(policies.getServiceName(), ret);
 
 		return ret;
 	}
 
-	private RangerPolicyEngine updatePolicyEngine(RangerPolicyEngine policyEngine, ServicePolicies policies, RangerPolicyEngineOptions options) {
+	private RangerPolicyEngine updatePolicyEngine(RangerPolicyEngine policyEngine, ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
 		final RangerPolicyEngine ret;
 
 
 		if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
-			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies, policyEngine.getRangerRoles());
+			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies, rangerRoles);
 			if (updatedEngine != null) {
 				policyEngineCache.put(policies.getServiceName(), updatedEngine);
 				ret = updatedEngine;
@@ -102,10 +146,24 @@ public class RangerPolicyEngineCache {
 				ret = policyEngine;
 			}
 		} else {
-			ret = addPolicyEngine(policies, options);
+			ret = addPolicyEngine(policies, rangerRoles, options);
 			((RangerPolicyEngineImpl)policyEngine).setIsShared(false);
 		}
 
+		return ret;
+	}
+
+	private ServicePolicies getUpdatedServicePolicies(String serviceName, ServicePolicies policies, ServiceStore svcStore, SecurityZoneStore zoneStore) throws  Exception{
+		ServicePolicies ret = policies;
+		if (ret == null) {
+			ret = svcStore.getServicePoliciesIfUpdated(serviceName, -1L, false);
+		}
+		if (zoneStore != null) {
+			Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
+			if (MapUtils.isNotEmpty(securityZones)) {
+				ret = getUpdatedServicePoliciesForZones(ret, securityZones);
+			}
+		}
 		return ret;
 	}
 
