@@ -276,6 +276,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 							authentication = getGrantedAuthority(authentication);
 							SecurityContextHolder.getContext().setAuthentication(authentication);
 							request.setAttribute("spnegoEnabled", true);
+							request.setAttribute("trustedProxyEnabled", true);
 							LOG.info("Logged into Ranger as doAsUser = " + doAsUser + ", by authenticatedUser=" + authToken.getUserName());
 						}
 
