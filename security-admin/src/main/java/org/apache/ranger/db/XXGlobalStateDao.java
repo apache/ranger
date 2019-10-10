@@ -74,6 +74,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
                 if (globalState == null) {
+                    globalState = new XXGlobalState();
                     createGlobalStateForRoleVersion(globalState, stateName);
                 } else {
                     updateGlobalStateForRoleVersion(globalState, stateName);
