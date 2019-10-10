@@ -74,7 +74,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
                 if (globalState == null) {
-                    createGlobalStateForRoleVersion(globalState, stateName);
+                    createGlobalStateForRoleVersion(stateName);
                 } else {
                     updateGlobalStateForRoleVersion(globalState, stateName);
                 }
@@ -136,7 +136,8 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         }
     }
 
-    private void createGlobalStateForRoleVersion(XXGlobalState globalState, String stateName) {
+    private void createGlobalStateForRoleVersion(String stateName) {
+        XXGlobalState globalState = new XXGlobalState();
         globalState.setStateName(stateName);
         Map<String,String> roleVersion = new HashMap<>();
         roleVersion.put(APP_DATA_ENTRY_ROLE_VERSION,new String(Long.toString(1L)));
@@ -153,8 +154,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             update(globalState);
         } else {
             //if not present create Global State for Role Version.
-            XXGlobalState xxGlobalState = new XXGlobalState();
-            createGlobalStateForRoleVersion(xxGlobalState, stateName);
+            createGlobalStateForRoleVersion(stateName);
         }
     }
 }
