@@ -33,6 +33,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Date;
+import java.util.HashSet;
 
 
 public class RangerRolesProvider {
@@ -255,7 +257,12 @@ public class RangerRolesProvider {
 				}
 			}
 		} else {
-			LOG.warn("cache file does not exist or not readable '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
+			rangerRoles = new RangerRoles();
+			rangerRoles.setServiceName(serviceName);
+			rangerRoles.setRoleVersion(-1L);
+			rangerRoles.setRoleUpdateTime(new Date());
+			rangerRoles.setRangerRoles(new HashSet<>());
+			saveToCache(rangerRoles);
 		}
 
 		if (LOG.isDebugEnabled()) {
