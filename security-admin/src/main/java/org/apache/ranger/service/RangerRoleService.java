@@ -178,15 +178,15 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 } else {
                     value = "" + field.get(current);
                                         if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
-                                                        || fieldName.equalsIgnoreCase("Roles")) {
+                                                        || fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
                                                 if (fieldName.equalsIgnoreCase(users)) {
-                                                        value = !stringUtil.isEmpty(current.getUsers()) ? JsonUtils.listToJson(current.getUsers()) : null;
+                                                        value = JsonUtils.listToJson(current.getUsers());
                                                 }
-                                                if (fieldName.equalsIgnoreCase(groups)) {
-                                                        value = !stringUtil.isEmpty(current.getGroups()) ? JsonUtils.listToJson(current.getGroups()) : null;
+                                                else if (fieldName.equalsIgnoreCase(groups)) {
+                                                        value = JsonUtils.listToJson(current.getGroups());
                                                 }
-                                                if (fieldName.equalsIgnoreCase("Roles")) {
-                                                        value = !stringUtil.isEmpty(current.getRoles()) ? JsonUtils.listToJson(current.getRoles()) : null;
+                                                else if (fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                        value = JsonUtils.listToJson(current.getRoles());
                                                 }
                                         }
                     if ((value == null || "null".equalsIgnoreCase(value))
@@ -218,22 +218,24 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                             else {
                                 formerValue = mField.get(former) + "";
                                                                 if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
-                                                                                || fieldName.equalsIgnoreCase("Roles")) {
+                                                                                || fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
                                                                         if (fieldName.equalsIgnoreCase(users)) {
-                                                                                formerValue = !stringUtil.isEmpty(former.getUsers()) ? JsonUtils.listToJson(former.getUsers()) : null;
+                                                                                formerValue = JsonUtils.listToJson(former.getUsers());
                                                                         }
-                                                                        if (fieldName.equalsIgnoreCase(groups)) {
-                                                                                formerValue = !stringUtil.isEmpty(former.getGroups()) ? JsonUtils.listToJson(former.getGroups()) : null;
+                                                                        else if (fieldName.equalsIgnoreCase(groups)) {
+                                                                                formerValue = JsonUtils.listToJson(former.getGroups());
                                                                         }
-                                                                        if (fieldName.equalsIgnoreCase("Roles")) {
-                                                                                formerValue = !stringUtil.isEmpty(former.getRoles()) ? JsonUtils.listToJson(former.getRoles()) : null;
+                                                                        else if (fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                                                formerValue = JsonUtils.listToJson(former.getRoles());
                                                                         }
                                                                 }
                             }
                             break;
                         }
                     }
-                    if (formerValue == null || formerValue.equalsIgnoreCase(value)) {
+                    value = ((value == null) ? "" : value);
+                    formerValue = ((formerValue == null) ? "" : formerValue);
+                    if (formerValue.equalsIgnoreCase(value)) {
                         continue;
                     }
                     xTrxLog.setPreviousValue(formerValue);
@@ -248,12 +250,7 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 if(logger.isDebugEnabled()) {
                     logger.debug("trxLogList is empty!!");
                 }
-                XXTrxLog xTrxLog = new XXTrxLog();
-                xTrxLog.setAction(action);
-                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-                xTrxLog.setObjectId(current.getId());
-                xTrxLog.setObjectName(objectName);
-                trxLogList.add(xTrxLog);
+               trxLogList = null;
             }
         } catch (IllegalAccessException e) {
             logger.error("Transaction log failure.", e);
