@@ -672,7 +672,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 		Metadata metadata;
 		private final static long serialVersionUID = 8405872419967874451L;
 
-		private KeyMetadata(Metadata meta) {
+		protected KeyMetadata(Metadata meta) {
 			this.metadata = meta;
 		}
 

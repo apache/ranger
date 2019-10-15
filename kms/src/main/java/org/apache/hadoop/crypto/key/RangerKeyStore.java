@@ -750,8 +750,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 							Metadata metadata = (Metadata) f.get(keyMetadata);
 							entry.bit_length = metadata.getBitLength();
 							entry.cipher_field = metadata.getAlgorithm();
-							entry.version = (alias.split("@").length == 2) ? (Integer
-									.parseInt(alias.split("@")[1])) : 0;
+							entry.version = metadata.getVersions();
 							Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class
 									.getDeclaredConstructor(Metadata.class);
 							constructor.setAccessible(true);
@@ -761,17 +760,43 @@ public class RangerKeyStore extends KeyStoreSpi {
 							secretKey = new SecretKeySpec(k.getEncoded(),
 									getAlgorithm(metadata.getAlgorithm()));
 						} else if (k instanceof KeyByteMetadata) {
-							Metadata m = ((KeyByteMetadata) k).metadata;
-							byte[] encodedKey = ((KeyByteMetadata) k)
-									.getEncoded();
-							entry.cipher_field = m.getCipher();
-							entry.version = m.getVersions();
-							entry.bit_length = m.getBitLength();
-							if (encodedKey != null && encodedKey.length > 0) {
-								secretKey = new SecretKeySpec(encodedKey,
-										m.getAlgorithm());
+							Metadata metadata = ((KeyByteMetadata) k).metadata;
+							entry.cipher_field = metadata.getCipher();
+							entry.version = metadata.getVersions();
+							entry.bit_length = metadata.getBitLength();
+							if (k.getEncoded() != null && k.getEncoded().length > 0) {
+								secretKey = new SecretKeySpec(k.getEncoded(),
+										getAlgorithm(metadata.getAlgorithm()));
+							} else {
+								KeyGenerator keyGenerator = KeyGenerator
+										.getInstance(getAlgorithm(metadata.getCipher()));
+								keyGenerator.init(metadata.getBitLength());
+								byte[] keyByte = keyGenerator.generateKey().getEncoded();
+								secretKey = new SecretKeySpec(keyByte,
+										getAlgorithm(metadata.getCipher()));
 							}
-						} else {
+						} else if (k instanceof KeyMetadata) {
+							Metadata metadata = ((KeyMetadata) k).metadata;
+							entry.bit_length = metadata.getBitLength();
+							entry.cipher_field = metadata.getCipher();
+							entry.version = metadata.getVersions();
+
+							if (k.getEncoded() != null
+									&& k.getEncoded().length > 0) {
+								secretKey = new SecretKeySpec(k.getEncoded(),
+										getAlgorithm(metadata.getAlgorithm()));
+							} else {
+								KeyGenerator keyGenerator = KeyGenerator
+										.getInstance(getAlgorithm(metadata
+												.getCipher()));
+								keyGenerator.init(metadata.getBitLength());
+								byte[] keyByte = keyGenerator.generateKey()
+										.getEncoded();
+								secretKey = new SecretKeySpec(keyByte,
+										getAlgorithm(metadata.getCipher()));
+							}
+
+						}else {
 							entry.bit_length = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
 							entry.cipher_field = k.getAlgorithm();
 							if (alias.split("@").length == 2) {
@@ -797,7 +822,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 								+ ks.getType();
 						deltaEntries.put(alias, entry);
 					}
-				} catch (Exception t) {
+				} catch (Throwable t) {
 					logger.error("Unable to load keystore file ", t);
 					throw new IOException(t);
 				}
@@ -820,15 +845,23 @@ public class RangerKeyStore extends KeyStoreSpi {
 							Metadata metadata = (Metadata) f.get(keyMetadata);
 							entry.bit_length = metadata.getBitLength();
 							entry.cipher_field = metadata.getAlgorithm();
+							entry.version = metadata.getVersions();
 							Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class
 									.getDeclaredConstructor(Metadata.class);
 							constructor.setAccessible(true);
 							RangerKeyStoreProvider.KeyMetadata nk = constructor
 									.newInstance(metadata);
 							k = nk;
+						} else if (k instanceof KeyMetadata) {
+							Metadata metadata = ((KeyMetadata) k).metadata;
+							entry.bit_length = metadata.getBitLength();
+							entry.cipher_field = metadata.getCipher();
+							entry.version = metadata.getVersions();
 						} else {
 							entry.bit_length = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
 							entry.cipher_field = k.getAlgorithm();
+							entry.version = (alias.split("@").length == 2) ? (Integer
+									.parseInt(alias.split("@")[1]) + 1) : 1;
 						}
 						String keyName = alias.split("@")[0];
 						validateKeyName(keyName);
@@ -857,8 +890,6 @@ public class RangerKeyStore extends KeyStoreSpi {
 						}
 
 						entry.date = ks.getCreationDate(alias);
-						entry.version = (alias.split("@").length == 2) ? (Integer
-								.parseInt(alias.split("@")[1])) : 0;
 						entry.description = k.getFormat() + " - "
 								+ ks.getType();
 						deltaEntries.put(alias, entry);
@@ -892,9 +923,16 @@ public class RangerKeyStore extends KeyStoreSpi {
                         alias = e.nextElement();
                         if(azureKeyVaultEnabled){
                         	key = engineGetDecryptedZoneKey(alias);
-                        }else{
-                        	key = engineGetKey(alias, masterKey);
-                        }
+						} else {
+							key = engineGetKey(alias, masterKey);
+							if (key instanceof KeyMetadata) {
+								Metadata meta = ((KeyMetadata) key).metadata;
+								if (meta != null) {
+									key = new KeyMetadata(meta);
+								}
+							}
+
+						}
                         ks.setKeyEntry(alias, key, keyPass, null);
                         
                     }
