@@ -280,7 +280,7 @@ define(function(require) {
 			//to support old policy log after updating that policy.
 			this.policy.set('serviceType',undefined);
 			if(this.policy.has('conditions')){
-				this.policy.set('conditions', '');
+				this.policy.unset('conditions', { silent: true });
 			}
 			this.policy.fetchByVersion(ver, {
 				cache : false,

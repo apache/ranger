@@ -270,7 +270,7 @@ define(function(require){
 					else if(prevRole == "ROLE_KEY_ADMIN")
 						m.set('previousValue',XAEnums.UserRoles.ROLE_KEY_ADMIN.label)
                     else if(prevRole == "ROLE_KEY_ADMIN_AUDITOR")
-                        m.set('previousValue',XAEnums.UserRoles.ROLE_KEY_ADMIN_AUIDTOR.label)
+                        m.set('previousValue',XAEnums.UserRoles.ROLE_KEY_ADMIN_AUDITOR.label)
                     else if(prevRole == "ROLE_ADMIN_AUDITOR")
                         m.set('previousValue',XAEnums.UserRoles.ROLE_ADMIN_AUDITOR.label)
 				} else {

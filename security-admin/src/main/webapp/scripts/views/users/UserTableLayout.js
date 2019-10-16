@@ -99,6 +99,9 @@ define(function(require){
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
 			}
+			if(_.isUndefined(this.roleList)){
+				this.roleList = new VXRoleList();
+			}
 
 			this.bindEvents();
 		},
@@ -348,7 +351,7 @@ define(function(require){
 				gridOpts : {
 					row: tableRow,
 					header : XABackgrid,
-					emptyText : 'No Users found!'
+					emptyText : 'No users found!'
 				}
 			}));	
 
@@ -481,7 +484,7 @@ define(function(require){
 				gridOpts : {
 					row: tableRow,
 					header : XABackgrid,
-					emptyText : 'No Groups found!'
+					emptyText : 'No groups found!'
 				}
 			}));	
 
@@ -589,7 +592,7 @@ define(function(require){
                                 gridOpts : {
                                         row: tableRow,
                                         header : XABackgrid,
-                                        emptyText : 'No Groups found!'
+                                        emptyText : 'No roles found!'
                                 }
                         }));
                 },
