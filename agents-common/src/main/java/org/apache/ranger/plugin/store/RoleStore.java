@@ -48,5 +48,9 @@ public interface RoleStore {
     RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception;
 
     Long getRoleVersion(String serviceName);
+
+    boolean roleExists(Long id) throws  Exception;
+
+    boolean roleExists(String name) throws Exception;
 }
 

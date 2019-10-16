@@ -56,6 +56,8 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
@@ -138,6 +140,9 @@ public class RoleREST {
 
         RangerRole ret;
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(role, RangerValidator.Action.CREATE);
+
             String userName = role.getCreatedByUser();
             ensureAdminAccess(serviceName, userName);
             if (containsInvalidMember(role.getUsers())) {
@@ -176,6 +181,9 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(role, RangerValidator.Action.UPDATE);
+
             ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
@@ -207,6 +215,9 @@ public class RoleREST {
             LOG.debug("==> deleteRole(user=" + execUser + " name=" + roleName + ")");
         }
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(roleName, RangerRoleValidator.Action.DELETE);
+
             ensureAdminAccess(serviceName, execUser);
             roleStore.deleteRole(roleName);
         } catch(WebApplicationException excp) {
@@ -232,6 +243,9 @@ public class RoleREST {
             LOG.debug("==> deleteRole(id=" + roleId + ")");
         }
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(roleId, RangerRoleValidator.Action.DELETE);
+
             ensureAdminAccess(null, null);
             roleStore.deleteRole(roleId);
         } catch(WebApplicationException excp) {

@@ -117,6 +117,17 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
     SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
 
+    //RANGER ROLE Validations
+    ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT(4001, "Internal error: RangerRole object passed in was null"),
+    ROLE_VALIDATION_ERR_MISSING_FIELD(4002, "Internal error: missing field[{0}]"),
+    ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_NAME(4003, "Internal error: RangerRole name passed in was null/empty"),
+    ROLE_VALIDATION_ERR_MISSING_USER_OR_GROUPS_OR_ROLES(4004, "RangerRole should contain atleast one user or group or role"),
+    ROLE_VALIDATION_ERR_ROLE_NAME_CONFLICT(4005, "Another RangerRole already exists for this name: Role =[{0}]]"),
+    ROLE_VALIDATION_ERR_INVALID_ROLE_ID(4006, "No RangerRole found for id[{0}]"),
+    ROLE_VALIDATION_ERR_INVALID_ROLE_NAME(4007, "No RangerRole found for name[{0}]"),
+    ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION(4008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
+
+
     ;
 
 

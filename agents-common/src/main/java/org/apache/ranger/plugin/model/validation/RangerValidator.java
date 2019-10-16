@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -44,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerObjectFactory;
 
@@ -51,6 +53,7 @@ public abstract class RangerValidator {
 	
 	private static final Log LOG = LogFactory.getLog(RangerValidator.class);
 
+	RoleStore 	 _roleStore;
 	ServiceStore _store;
 	RangerObjectFactory _factory = new RangerObjectFactory();
 
@@ -63,6 +66,13 @@ public abstract class RangerValidator {
 			throw new IllegalArgumentException("ServiceValidator(): store is null!");
 		}
 		_store = store;
+	}
+
+	protected RangerValidator(RoleStore roleStore) {
+		if (roleStore == null) {
+			throw new IllegalArgumentException("ServiceValidator(): store is null!");
+		}
+		_roleStore = roleStore;
 	}
 
 	public void validate(Long id, Action action) throws Exception {
@@ -769,5 +779,40 @@ public abstract class RangerValidator {
 			}
 		}
 		return result;
+	}
+
+	RangerRole getRangerRole(Long id) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getRangerRole(" + id + ")");
+		}
+		RangerRole result = null;
+		try {
+			result = _roleStore.getRole(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving RangerRole from RoleStore store!", e);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getRangerRole(" + id + "): " + result);
+		}
+		return result;
+	}
+
+	boolean roleExists(Long id) {
+		try {
+			return _roleStore.roleExists(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving RangerRole from role store!", e);
+			return false;
+		}
+	}
+
+	boolean roleExists(String name) {
+		try {
+			return _roleStore.roleExists(name);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving RangerRole from role store!", e);
+			return false;
+		}
 	}
 }

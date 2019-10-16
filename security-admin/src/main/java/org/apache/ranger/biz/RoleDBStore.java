@@ -312,5 +312,17 @@ public class RoleDBStore implements RoleStore {
     public List<RangerRole> getRoles(XXService service) {
         return service == null ? ListUtils.EMPTY_LIST : getRoles(service.getId());
     }
+
+    @Override
+    public boolean roleExists(Long id) throws Exception {
+        XXRole role = daoMgr.getXXRole().findByRoleId(id);
+        return role != null;
+    }
+
+    @Override
+    public boolean roleExists(String name) throws Exception {
+        XXRole role = daoMgr.getXXRole().findByRoleName(name);
+        return role != null;
+    }
 }
 
