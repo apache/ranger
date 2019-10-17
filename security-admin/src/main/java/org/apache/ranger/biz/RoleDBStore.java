@@ -122,6 +122,10 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("role with id: " + role.getId() + " does not exist");
         }
 
+		if (!role.getName().equals(xxRole.getName())) { // ensure only if role name is changed
+			ensureRoleNameUpdateAllowed(xxRole.getName());
+		}
+
         Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
         RangerRole oldRole = gsonBuilder.fromJson(xxRole.getRoleText(), RangerRole.class);
 
@@ -145,7 +149,21 @@ public class RoleDBStore implements RoleStore {
         return role;
     }
 
-    @Override
+	private void ensureRoleNameUpdateAllowed(String roleName) throws Exception {
+		boolean roleNotInPolicy = ensureRoleNotInPolicy(roleName);
+		if (!roleNotInPolicy) {
+			throw new Exception(
+					"Rolename for '" + roleName + "' can not be updated as it is referenced in one or more policies");
+		}
+
+		boolean roleNotInOtherRole = ensureRoleNotInRole(roleName);
+		if (!roleNotInOtherRole) {
+			throw new Exception("Rolename for '" + roleName
+					+ "' can not be updated as it is referenced in one or more other roles");
+		}
+	}
+
+	@Override
     public void deleteRole(String roleName) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(roleName);
         if (xxRole == null) {
