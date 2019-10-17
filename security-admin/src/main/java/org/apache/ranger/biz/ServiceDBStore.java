@@ -2192,6 +2192,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
+	public boolean policyExists(Long id) throws Exception {
+		return daoMgr.getXXPolicy().getCountById(id) > 0;
+	}
+
+	@Override
 	public RangerPolicy getPolicy(Long id) throws Exception {
 		return policyService.read(id);
 	}

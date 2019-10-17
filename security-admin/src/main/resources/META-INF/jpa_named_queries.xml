@@ -266,6 +266,10 @@
 
 	<!-- XXPolicy -->
 
+	<named-query name="XXPolicy.countById">
+		<query>select count(obj.id) from XXPolicy obj where obj.id = :policyId</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByPolicyName">
 		<query>select obj from XXPolicy obj where obj.name = :polName order by obj.id</query>
 	</named-query>

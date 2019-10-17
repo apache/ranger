@@ -73,6 +73,8 @@ public interface ServiceStore {
 
 	void deletePolicy(RangerPolicy policy) throws Exception;
 
+	boolean policyExists(Long id) throws Exception;
+
 	RangerPolicy getPolicy(Long id) throws Exception;
 
 	List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception;

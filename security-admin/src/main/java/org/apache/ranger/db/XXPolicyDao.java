@@ -40,6 +40,13 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		super(daoManager);
 	}
 
+	public long getCountById(Long policyId) {
+		return getEntityManager()
+					.createNamedQuery("XXPolicy.countById", Long.class)
+					.setParameter("policyId", policyId)
+					.getSingleResult();
+	}
+
 	public XXPolicy findByNameAndServiceId(String polName, Long serviceId) {
 		return findByNameAndServiceIdAndZoneId(polName, serviceId, RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID);
 	}

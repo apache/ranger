@@ -263,6 +263,15 @@ public abstract class RangerValidator {
 		return result;
 	}
 
+	boolean policyExists(Long id) {
+		try {
+			return _store.policyExists(id);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving policy from service store!", e);
+			return false;
+		}
+	}
+
 	RangerPolicy getPolicy(Long id) {
 		
 		if(LOG.isDebugEnabled()) {
