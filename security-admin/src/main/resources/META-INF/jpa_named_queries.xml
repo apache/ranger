@@ -1546,6 +1546,11 @@
         <query>select obj from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
     </named-query>
 
+	<named-query name="XXRoleRefRole.findRoleRefRoleCount">
+        <query>select count(obj.roleId) from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
+    </named-query>
+
+
 	<!-- XXPolicyRefRole -->
 	<named-query name="XXPolicyRefRole.findByPolicyId">
 		<query>select obj from XXPolicyRefRole obj where obj.policyId = :policyId </query>
@@ -1574,6 +1579,9 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXPolicyRefRole.findRoleRefPolicyCount">
+        <query>select count(obj.policyId) from XXPolicyRefRole obj where obj.roleName = :roleName </query>
+    </named-query>
 
 	<!-- XXTagChangeLog -->
 	<named-query name="XXTagChangeLog.findSinceVersion">

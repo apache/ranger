@@ -152,6 +152,8 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
         }
 
+        ensureRoleDeleteAllowed(roleName);
+
         daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
 
         RangerRole role = roleService.read(xxRole.getId());
@@ -166,6 +168,8 @@ public class RoleDBStore implements RoleStore {
     public void deleteRole(Long roleId) throws Exception {
         RangerRole role = roleService.read(roleId);
 
+        ensureRoleDeleteAllowed(role.getName());
+
         daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
 
         roleRefUpdater.cleanupRefTables(role);
@@ -173,6 +177,30 @@ public class RoleDBStore implements RoleStore {
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
         bizUtil.createTrxLog(trxLogList);
     }
+
+    private void ensureRoleDeleteAllowed(String roleName) throws Exception {
+        boolean roleNotInPolicy = ensureRoleNotInPolicy(roleName);
+        if(!roleNotInPolicy) {
+            throw new Exception("Role '"+ roleName +"' can not be deleted as it is referenced in one or more policies");
+        }
+
+        boolean roleNotInOtherRole = ensureRoleNotInRole(roleName);
+        if(!roleNotInOtherRole) {
+            throw new Exception("Role '"+ roleName + "' can not be deleted as it is referenced in one or more other roles");
+        }
+    }
+
+	private boolean ensureRoleNotInPolicy(String roleName) {
+		Long roleRefPolicyCount = daoMgr.getXXPolicyRefRole().findRoleRefPolicyCount(roleName);
+
+		return roleRefPolicyCount < 1;
+	}
+
+	private boolean ensureRoleNotInRole(String roleName) {
+		Long roleRefRoleCount = daoMgr.getXXRoleRefRole().findRoleRefRoleCount(roleName);
+
+		return roleRefRoleCount < 1;
+	}
 
     @Override
     public RangerRole getRole(Long id) throws Exception {
