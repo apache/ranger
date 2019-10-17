@@ -55,6 +55,7 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
+import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.*;
@@ -124,6 +125,8 @@ public class AssetMgr extends AssetMgrBase {
 	ServiceMgr serviceMgr;
 
 	private static final Logger logger = Logger.getLogger(AssetMgr.class);
+
+	private static final String adminCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
 	public File getXResourceFile(Long id, String fileType) {
 		VXResource xResource = xResourceService.readResource(id);
@@ -661,7 +664,7 @@ public class AssetMgr extends AssetMgrBase {
 		return ret;
 	}
 
-	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName) {
+	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName, String pluginCapabilities) {
 		RangerRESTUtils restUtils = new RangerRESTUtils();
 
 		final String ipAddress = getRemoteAddress(request);
@@ -683,6 +686,7 @@ public class AssetMgr extends AssetMgrBase {
 		pluginSvcVersionInfo.setAppType(appType);
 		pluginSvcVersionInfo.setHostName(hostName);
 		pluginSvcVersionInfo.setIpAddress(ipAddress);
+		pluginSvcVersionInfo.setPluginCapabilities(StringUtils.isEmpty(pluginCapabilities) ? RangerPluginCapability.getBaseRangerCapabilities() : pluginCapabilities);
 
 		switch (entityType) {
 			case RangerPluginInfo.ENTITY_TYPE_POLICIES:
@@ -807,6 +811,8 @@ public class AssetMgr extends AssetMgrBase {
 					}
 				}
 
+				pluginInfo.setAdminCapabilities(adminCapabilities);
+
 				xObj = pluginInfoService.populateDBObject(pluginInfo);
 
 				if (logger.isDebugEnabled()) {
@@ -837,6 +843,7 @@ public class AssetMgr extends AssetMgrBase {
 					}
 					Long lastKnownPolicyVersion = pluginInfo.getPolicyActiveVersion();
 					Long lastPolicyActivationTime = pluginInfo.getPolicyActivationTime();
+					String lastPluginCapabilityVector  = pluginInfo.getPluginCapabilities();
 
 					if (lastKnownPolicyVersion != null && lastKnownPolicyVersion == -1) {
 						// First download request after plug-in's policy-refresher starts
@@ -849,6 +856,14 @@ public class AssetMgr extends AssetMgrBase {
 					}
 					if (lastPolicyActivationTime != null && lastPolicyActivationTime > 0 && (dbObj.getPolicyActivationTime() == null || !dbObj.getPolicyActivationTime().equals(lastPolicyActivationTime))) {
 						dbObj.setPolicyActivationTime(lastPolicyActivationTime);
+						needsUpdating = true;
+					}
+					if (lastPluginCapabilityVector != null && (dbObj.getPluginCapabilities() == null || !dbObj.getPluginCapabilities().equals(lastPluginCapabilityVector))) {
+						dbObj.setPluginCapabilities(lastPluginCapabilityVector);
+						needsUpdating = true;
+					}
+					if (dbObj.getAdminCapabilities() == null || !dbObj.getAdminCapabilities().equals(adminCapabilities)) {
+						dbObj.setAdminCapabilities(adminCapabilities);
 						needsUpdating = true;
 					}
 				} else if (isTagDownloadRequest(entityType)){

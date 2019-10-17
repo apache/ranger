@@ -64,6 +64,9 @@ public class RangerPluginInfo implements Serializable {
 	public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME     = "lastTagUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_TAG_VERSION       = "latestTagVersion";
 
+	public static final String RANGER_ADMIN_CAPABILITIES             = "adminCapabilities";
+	public static final String PLUGIN_INFO_CAPABILITIES              = "pluginCapabilities";
+
 	private Long    id;
 	private Date    createTime;
 	private Date    updateTime;
@@ -318,6 +321,37 @@ public class RangerPluginInfo implements Serializable {
 	public Long getRoleActiveVersion() {
 		String activeVersionString = getInfo().get(PLUGIN_INFO_POLICY_ACTIVE_VERSION);
 		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
+	}
+
+	@JsonIgnore
+	public void setPluginCapabilities(String capabilities) {
+		setCapabilities(PLUGIN_INFO_CAPABILITIES, capabilities);
+	}
+
+	@JsonIgnore
+	public String getPluginCapabilities() {
+		return getCapabilities(PLUGIN_INFO_CAPABILITIES);
+	}
+
+	@JsonIgnore
+	public void setAdminCapabilities(String capabilities) {
+		setCapabilities(RANGER_ADMIN_CAPABILITIES, capabilities);
+	}
+
+	@JsonIgnore
+	public String getAdminCapabilities() {
+		return getCapabilities(RANGER_ADMIN_CAPABILITIES);
+	}
+
+	@JsonIgnore
+	private void setCapabilities(String optionName, String capabilities) {
+		getInfo().put(optionName, capabilities == null ? null : capabilities);
+	}
+
+	@JsonIgnore
+	private String getCapabilities(String optionName) {
+		String capabilitiesString = getInfo().get(optionName);
+		return StringUtils.isNotBlank(capabilitiesString) ? capabilitiesString : null;
 	}
 
 	@Override

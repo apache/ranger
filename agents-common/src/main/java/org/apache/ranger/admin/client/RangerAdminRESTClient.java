@@ -54,6 +54,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private RangerRESTUtils  restUtils   = new RangerRESTUtils();
 	private String 		     supportsPolicyDeltas;
 	private String 		     supportsTagDeltas;
+	private final String     pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
 	public static <T> GenericType<List<T>> getGenericType(final T clazz) {
 
@@ -132,6 +133,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, supportsPolicyDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
@@ -210,6 +212,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
@@ -789,6 +792,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, supportsTagDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {

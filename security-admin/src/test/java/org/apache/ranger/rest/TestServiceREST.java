@@ -89,6 +89,7 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -240,6 +241,8 @@ public class TestServiceREST {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
+	private String capabilityVector;
+
 	public void setup() {
 		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
@@ -247,6 +250,7 @@ public class TestServiceREST {
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
 		currentUserSession.setUserAdmin(true);
+		capabilityVector = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 	}
 
 	public RangerServiceDef rangerServiceDef() {
@@ -1017,7 +1021,7 @@ public class TestServiceREST {
 
 		ServicePolicies dbServicePolicies = serviceREST
 				.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
-						pluginId, "", "", false, request);
+						pluginId, "", "", false, capabilityVector, request);
 		Assert.assertNull(dbServicePolicies);
 	}
 
@@ -1878,7 +1882,7 @@ public class TestServiceREST {
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean()))
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-		serviceREST.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, request);
+		serviceREST.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, capabilityVector, request);
 	}
 
 	@Test
@@ -1892,7 +1896,7 @@ public class TestServiceREST {
 		Mockito.when(svcStore.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(servicePolicies);
 		Mockito.when(zoneStore.getSecurityZonesForService(serviceName)).thenReturn(null);
 		ServicePolicies dbServicePolicies = serviceREST.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
-				pluginId, "", "", true, request);
+				pluginId, "", "", true, capabilityVector, request);
 		Assert.assertNotNull(dbServicePolicies);
 	}
 
@@ -1916,7 +1920,7 @@ public class TestServiceREST {
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 
-		serviceREST.getSecureServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, request);
+		serviceREST.getSecureServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, capabilityVector, request);
 	}
 
 	@Test
@@ -1942,7 +1946,7 @@ public class TestServiceREST {
 				.thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 
-		serviceREST.getSecureServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, request);
+		serviceREST.getSecureServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, "", "", false, capabilityVector, request);
 	}
 
 	@Test
@@ -1968,7 +1972,7 @@ public class TestServiceREST {
 		Mockito.when(svcStore.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(sp);
 		Mockito.when(zoneStore.getSecurityZonesForService(serviceName)).thenReturn(null);
         	ServicePolicies dbServiceSecurePolicies = serviceREST.getSecureServicePoliciesIfUpdated(serviceName,
-                		lastKnownVersion, 0L, pluginId, "", "", true, request);
+                		lastKnownVersion, 0L, pluginId, "", "", true, capabilityVector, request);
 		Assert.assertNotNull(dbServiceSecurePolicies);
 		Mockito.verify(serviceUtil).isValidService(serviceName, request);
 		Mockito.verify(xServiceDao).findByName(serviceName);

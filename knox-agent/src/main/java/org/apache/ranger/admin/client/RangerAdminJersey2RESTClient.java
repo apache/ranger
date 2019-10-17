@@ -78,6 +78,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	int	   _restClientReadTimeOutMs;
 	private int lastKnownActiveUrlIndex;
 	private List<String> configURLs;
+	private final String   pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
 	@Override
 	public void init(String serviceName, String appId, String configPropertyPrefix) {
@@ -138,6 +139,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, _supportsPolicyDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
@@ -223,6 +225,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
@@ -378,6 +381,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, _supportsTagDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		String relativeURL = null;
 		ServiceTags serviceTags = null;

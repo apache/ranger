@@ -85,6 +85,8 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_ZONE_NAME		 = "zoneName";
 	public static final String REST_PARAM_EXEC_USER      = "execUser";
 
+	public static final String REST_PARAM_CAPABILITIES   = "pluginCapabilities";
+
 	public static String hostname;
 
 	static {

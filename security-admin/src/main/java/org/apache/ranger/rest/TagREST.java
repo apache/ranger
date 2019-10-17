@@ -1108,6 +1108,7 @@ public class TagREST {
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
                                                @DefaultValue("false") @QueryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS) Boolean supportsTagDeltas,
+                                               @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
                                                @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
@@ -1141,7 +1142,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         } finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
@@ -1163,6 +1164,7 @@ public class TagREST {
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                      @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
                                                      @DefaultValue("false") @QueryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS) Boolean supportsTagDeltas,
+                                                     @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
                                                      @Context HttpServletRequest request) {
 
         if(LOG.isDebugEnabled()) {
@@ -1228,7 +1230,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         }  finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {

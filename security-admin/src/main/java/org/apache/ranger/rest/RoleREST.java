@@ -61,6 +61,7 @@ import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
@@ -701,6 +702,7 @@ public class RoleREST {
             @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
             @QueryParam("pluginId") String pluginId,
             @DefaultValue("") @QueryParam("clusterName") String clusterName,
+            @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
             @Context HttpServletRequest request) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleREST.getRangerRolesIfUpdated("
@@ -747,7 +749,7 @@ public class RoleREST {
             }
         }
 
-        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName);
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
@@ -769,6 +771,7 @@ public class RoleREST {
             @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
             @QueryParam("pluginId") String pluginId,
             @DefaultValue("") @QueryParam("clusterName") String clusterName,
+            @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
             @Context HttpServletRequest request) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleREST.getSecureRangerRolesIfUpdated("
@@ -848,7 +851,7 @@ public class RoleREST {
             }
         }
 
-        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName);
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;

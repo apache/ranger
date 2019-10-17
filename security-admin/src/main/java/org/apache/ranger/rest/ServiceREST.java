@@ -2982,6 +2982,7 @@ public class ServiceREST {
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
 			@DefaultValue("") @QueryParam("zoneName") String zoneName,
 			@DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas,
+			@DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities,
 			@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated("
@@ -3048,7 +3049,7 @@ public class ServiceREST {
 				RangerPerfTracer.log(perf);
 			}
 		}
-		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
 		if(httpCode != HttpServletResponse.SC_OK) {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
@@ -3073,6 +3074,7 @@ public class ServiceREST {
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
 			@DefaultValue("") @QueryParam("zoneName") String zoneName,
 			@DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas,
+			@DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities,
 			@Context HttpServletRequest request) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated("
@@ -3173,7 +3175,7 @@ public class ServiceREST {
 				RangerPerfTracer.log(perf);
 			}
 		}
-		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_POLICIES, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
 		if (httpCode != HttpServletResponse.SC_OK) {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
