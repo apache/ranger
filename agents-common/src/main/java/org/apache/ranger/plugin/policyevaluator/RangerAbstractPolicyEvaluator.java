@@ -37,7 +37,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	private RangerPolicy     policy;
 	private RangerServiceDef serviceDef;
-	private Integer          leafResourceLevel;
+	private RangerServiceDef.RangerResourceDef leafResourceDef;
 	private int              evalOrder;
 	protected long           usageCount;
 	protected boolean        usageCountMutable = true;
@@ -51,7 +51,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 		this.policy            = policy;
 		this.serviceDef        = serviceDef;
-		this.leafResourceLevel = ServiceDefUtil.getLeafResourceLevel(serviceDef, getPolicyResource());
+		this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
@@ -84,8 +84,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public Integer getLeafResourceLevel() {
-		return leafResourceLevel;
+	public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
+		return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
 	}
 
 	public boolean hasAllow() {

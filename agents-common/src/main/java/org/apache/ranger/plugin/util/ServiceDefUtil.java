@@ -128,6 +128,24 @@ public class ServiceDefUtil {
         return ret;
     }
 
+    public static boolean isAncestorOf(RangerServiceDef serviceDef, RangerResourceDef ancestor, RangerResourceDef descendant) {
+
+        boolean ret = false;
+
+        if (ancestor != null && descendant != null) {
+            final String ancestorName = ancestor.getName();
+
+            for (RangerResourceDef node = descendant; node != null; node = ServiceDefUtil.getResourceDef(serviceDef, node.getParent())) {
+                if (StringUtils.equalsIgnoreCase(ancestorName, node.getParent())) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
     public static boolean isEmpty(RangerPolicy.RangerPolicyResource policyResource) {
         boolean ret = true;
         if (policyResource != null) {

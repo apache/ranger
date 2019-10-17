@@ -467,41 +467,26 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		for (RangerServiceResource serviceResource : changedServiceResources) {
 
-			if (removeOldServiceResource(serviceResource, resourceMatchers, serviceResourceTrie)) {
+			final boolean removedOldServiceResource = MapUtils.isEmpty(serviceResource.getResourceElements()) || removeOldServiceResource(serviceResource, resourceMatchers, serviceResourceTrie);
+			if (removedOldServiceResource) {
 
 				if (!StringUtils.isEmpty(serviceResource.getResourceSignature())) {
 
 					RangerServiceResourceMatcher resourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies);
 
 					if (resourceMatcher != null) {
-						for (String resourceDefName : serviceResource.getResourceElements().keySet()) {
+						for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
 
-							RangerResourceTrie<RangerServiceResourceMatcher> trie = serviceResourceTrie.get(resourceDefName);
-
-							if (trie == null) {
-								List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
-								RangerServiceDef.RangerResourceDef found = null;
-								for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-									if (StringUtils.equals(resourceDef.getName(), resourceDefName)) {
-										found = resourceDef;
-										break;
-									}
-								}
-								if (found != null) {
-									trie = new RangerResourceTrie<>(found, new ArrayList<>());
-									serviceResourceTrie.put(resourceDefName, trie);
-								}
-							}
+							RangerResourceTrie<RangerServiceResourceMatcher> trie = serviceResourceTrie.get(resourceDef.getName());
 
 							if (trie != null) {
-								trie.add(serviceResource.getResourceElements().get(resourceDefName), resourceMatcher);
+								trie.add(serviceResource.getResourceElements().get(resourceDef.getName()), resourceMatcher);
 								if (LOG.isDebugEnabled()) {
 									LOG.debug("Added resource-matcher for service-resource:[" + serviceResource + "]");
 								}
 							} else {
-								LOG.error("Could not create resource-matcher for resource: [" + serviceResource + "]. Should NOT happen!!");
-								LOG.error("Setting tagVersion to -1 to ensure that in the next download all tags are downloaded");
-								isInError = true;
+								trie = new RangerResourceTrie<>(resourceDef, Collections.singletonList(resourceMatcher));
+								serviceResourceTrie.put(resourceDef.getName(), trie);
 							}
 						}
 						resourceMatchers.add(resourceMatcher);
@@ -526,6 +511,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.error("Error in processing tag-deltas. Will continue to use old tags");
 			deltas.setTagVersion(-1L);
 		} else {
+			for (Map.Entry<String, RangerResourceTrie<RangerServiceResourceMatcher>> entry : serviceResourceTrie.entrySet()) {
+				entry.getValue().wrapUpUpdate();
+			}
 			enrichedServiceTags = new EnrichedServiceTags(allServiceTags, resourceMatchers, serviceResourceTrie);
 		}
 
@@ -804,10 +792,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static Set<RangerTagForEval> getTagsForServiceResource(final ServiceTags serviceTags, final RangerServiceResource serviceResource, final RangerPolicyResourceMatcher.MatchType matchType) {
 		Set<RangerTagForEval> ret = new HashSet<>();
 
-		final Long resourceId = serviceResource.getId();
-
+		final Long resourceId                        = serviceResource.getId();
 		final Map<Long, List<Long>> resourceToTagIds = serviceTags.getResourceToTagIds();
-		final Map<Long, RangerTag> tags = serviceTags.getTags();
+		final Map<Long, RangerTag> tags              = serviceTags.getTags();
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Looking for tags for resource-id:[" + resourceId + "] in serviceTags:[" + serviceTags + "]");
+		}
 
 		if (resourceId != null && MapUtils.isNotEmpty(resourceToTagIds) && MapUtils.isNotEmpty(tags)) {
 
@@ -823,6 +814,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						ret.add(new RangerTagForEval(tag, matchType));
 					}
 				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No tags mapping found for resource:[" + resourceId + "]");
+				}
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("resourceId is null or resourceToTagTds mapping is null or tags mapping is null!");
 			}
 		}
 

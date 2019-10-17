@@ -50,7 +50,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private static final String DEFAULT_WILDCARD_CHARS = "*?";
     private static final String TRIE_BUILDER_THREAD_COUNT = "ranger.policyengine.trie.builder.thread.count";
 
-    private final String resourceName;
+    private final RangerServiceDef.RangerResourceDef resourceDef;
     private final boolean optIgnoreCase;
     private final boolean optWildcard;
     private final String wildcardChars;
@@ -99,7 +99,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             tokenReplaceSpecialChars += delimiterEscape;
         }
 
-        this.resourceName  = resourceDef.getName();
+        this.resourceDef   = resourceDef;
         this.optIgnoreCase = RangerAbstractResourceMatcher.getOptionIgnoreCase(matcherOptions);
         this.optWildcard   = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
@@ -123,7 +123,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         if (TRACE_LOG.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder();
             root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.init(name=" + resourceName + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.init(name=" + resourceDef.getName() + "):\n{" + sb.toString() + "}");
         }
 
         if(LOG.isDebugEnabled()) {
@@ -132,7 +132,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     }
 
     public String getResourceName() {
-        return resourceName;
+        return resourceDef.getName();
     }
 
     public List<T> getEvaluatorsForResource(Object resource) {
@@ -160,12 +160,18 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.add(name=" + resource + ")");
         }
 
-        if (resource.getIsExcludes()) {
-            root.addWildcardEvaluator(evaluator);
+        if (resource == null) {
+            if (evaluator.isAncestorOf(resourceDef)) {
+                root.addWildcardEvaluator(evaluator);
+            }
         } else {
-            if (CollectionUtils.isNotEmpty(resource.getValues())) {
-                for (String value : resource.getValues()) {
-                    insert(root, value, resource.getIsRecursive(), evaluator);
+            if (resource.getIsExcludes()) {
+                root.addWildcardEvaluator(evaluator);
+            } else {
+                if (CollectionUtils.isNotEmpty(resource.getValues())) {
+                    for (String value : resource.getValues()) {
+                        insert(root, value, resource.getIsRecursive(), evaluator);
+                    }
                 }
             }
         }
@@ -372,10 +378,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.copyTrie(name=" + other.resourceName + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + ")");
         }
 
-        this.resourceName = other.resourceName;
+        this.resourceDef = other.resourceDef;
         this.optIgnoreCase = other.optIgnoreCase;
         this.optWildcard = other.optWildcard;
         this.wildcardChars = other.wildcardChars;
@@ -391,7 +397,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         if (TRACE_LOG.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder();
             root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceName + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + "):\n{" + sb.toString() + "}");
         }
     }
 
@@ -410,6 +416,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         final boolean                         isMultiThreaded = builderThreadCount > 1;
         final List<ResourceTrieBuilderThread> builderThreads;
         final Map<Character, Integer>         builderThreadMap;
+        final String                          resourceName = resourceDef.getName();
         int                                   lastUsedThreadIndex = 0;
 
         if (isMultiThreaded) {
@@ -431,7 +438,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             RangerPolicyResource policyResource = policyResources != null ? policyResources.get(resourceName) : null;
 
             if (policyResource == null) {
-                if (evaluator.getLeafResourceLevel() != null && resourceDef.getLevel() != null && evaluator.getLeafResourceLevel() < resourceDef.getLevel()) {
+                if (evaluator.isAncestorOf(resourceDef)) {
                     ret.addWildcardEvaluator(evaluator);
                 }
 
@@ -763,7 +770,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         TrieData trieData = getTrieData();
 
-        sb.append("resourceName=").append(resourceName);
+        sb.append("resourceName=").append(resourceDef.getName());
         sb.append("; optIgnoreCase=").append(optIgnoreCase);
         sb.append("; optWildcard=").append(optWildcard);
         sb.append("; wildcardChars=").append(wildcardChars);

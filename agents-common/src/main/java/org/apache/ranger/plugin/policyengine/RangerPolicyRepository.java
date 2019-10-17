@@ -1118,6 +1118,14 @@ class RangerPolicyRepository {
 
             RangerResourceTrie<RangerPolicyEvaluator> trie = trieMap.get(resourceDefName);
 
+            if (trie == null) {
+                if (RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE == policyDeltaType || RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE == policyDeltaType) {
+                    LOG.warn("policyDeltaType is not for POLICY_CREATE and trie for resourceDef:[" + resourceDefName + "] was null! Should not have happened!!");
+                }
+                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, true);
+                trieMap.put(resourceDefName, trie);
+            }
+
             if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
                 addEvaluatorToTrie(newEvaluator, trie, resourceDefName);
             } else if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
@@ -1137,9 +1145,7 @@ class RangerPolicyRepository {
     private void addEvaluatorToTrie(RangerPolicyEvaluator newEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
         if (newEvaluator != null) {
             RangerPolicy.RangerPolicyResource resource = newEvaluator.getPolicyResource().get(resourceDefName);
-            if (resource != null) {
-                trie.add(resource, newEvaluator);
-            }
+            trie.add(resource, newEvaluator);
         }
     }
 
