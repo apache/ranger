@@ -1124,6 +1124,8 @@ public class TagREST {
 		}
 
         try {
+            bizUtil.failUnauthenticatedIfNotAllowed();
+
             ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, !supportsTagDeltas);
 
             if (ret == null) {

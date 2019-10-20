@@ -716,6 +716,7 @@ public class RoleREST {
         String  logMsg            = null;
 
         try {
+            bizUtil.failUnauthenticatedIfNotAllowed();
             isValid = serviceUtil.isValidService(serviceName, request);
         } catch (WebApplicationException webException) {
             httpCode = webException.getResponse().getStatus();

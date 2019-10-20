@@ -1199,6 +1199,8 @@ public class ServiceREST {
 			if (serviceUtil.isValidateHttpsAuthentication(serviceName, request)) {
 
 				try {
+					bizUtil.failUnauthenticatedIfNotAllowed();
+
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
 					}
@@ -1427,6 +1429,8 @@ public class ServiceREST {
 			if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
 				try {
+					bizUtil.failUnauthenticatedIfNotAllowed();
+
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
 					}
@@ -2999,6 +3003,8 @@ public class ServiceREST {
 		boolean isValid          = false;
 
 		try {
+			bizUtil.failUnauthenticatedIfNotAllowed();
+
 			isValid = serviceUtil.isValidateHttpsAuthentication(serviceName, request);
 		} catch (WebApplicationException webException) {
 			httpCode = webException.getResponse().getStatus();

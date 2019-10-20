@@ -35,7 +35,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
@@ -437,6 +439,18 @@ public class RangerBizUtil {
 			}
 		}
 		return matchFound;
+	}
+
+	public static void failUnauthenticatedIfNotAllowed() throws Exception {
+		if (UserGroupInformation.isSecurityEnabled()) {
+			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+			if (currentUserSession == null) {
+				boolean allowUnauthenticatedAccessInSecureEnvironment = RangerConfiguration.getInstance().getBoolean("ranger.admin.allow.unauthenticated.access", false);
+				if (!allowUnauthenticatedAccessInSecureEnvironment) {
+					throw new Exception("Unauthenticated access not allowed");
+				}
+			}
+		}
 	}
 
 	/**
