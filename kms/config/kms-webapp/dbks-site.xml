@@ -229,6 +229,11 @@
         <value>/opt/safenetConf/64/8.3.1/sunpkcs11.cfg</value>
         <description>Location of Safenet key secure library configuration file</description>
   </property>
+  <property>
+        <name>ranger.kms.keysecure.provider.type</name>
+        <value>SunPKCS11</value>
+        <description>Security Provider for key secure</description>
+  </property>
 
   <!-- Key-Secure Config END-->
    <!--Azure Key Vault START-->
