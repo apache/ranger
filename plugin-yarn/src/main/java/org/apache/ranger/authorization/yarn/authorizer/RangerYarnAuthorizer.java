@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -307,7 +308,13 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 		super.setUser(ugi.getShortUserName());
 		super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
 		super.setAccessTime(new Date());
-		super.setClientIPAddress(getRemoteIp());
+
+		String clientIPAddress = remoteIpAddress;
+		if (StringUtils.isEmpty(clientIPAddress)) {
+			clientIPAddress = getRemoteIp();
+		}
+		super.setClientIPAddress(clientIPAddress);
+
 		super.setAction(action);
 		super.setRemoteIPAddress(remoteIpAddress);
 		super.setForwardedAddresses(forwardedAddresses);
