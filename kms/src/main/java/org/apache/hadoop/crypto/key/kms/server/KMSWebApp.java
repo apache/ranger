@@ -65,6 +65,10 @@ public class KMSWebApp implements ServletContextListener {
       "generate_eek.calls.meter";
   private static final String DECRYPT_EEK_METER = METRICS_PREFIX +
       "decrypt_eek.calls.meter";
+  private static final String REENCRYPT_EEK_METER = METRICS_PREFIX +
+      "reencrypt_eek.calls.meter";
+  private static final String REENCRYPT_EEK_BATCH_METER = METRICS_PREFIX +
+        "reencrypt_eek_batch.calls.meter";
 
   private static Logger LOG;
   private static MetricRegistry metricRegistry;
@@ -77,6 +81,8 @@ public class KMSWebApp implements ServletContextListener {
   private static Meter unauthorizedCallsMeter;
   private static Meter unauthenticatedCallsMeter;
   private static Meter decryptEEKCallsMeter;
+  private static Meter reencryptEEKCallsMeter;
+  private static Meter reencryptEEKBatchCallsMeter;
   private static Meter generateEEKCallsMeter;
   private static Meter invalidCallsMeter;
   private static KMSAudit kmsAudit;
@@ -139,6 +145,10 @@ public class KMSWebApp implements ServletContextListener {
       generateEEKCallsMeter = metricRegistry.register(GENERATE_EEK_METER,
           new Meter());
       decryptEEKCallsMeter = metricRegistry.register(DECRYPT_EEK_METER,
+          new Meter());
+      reencryptEEKCallsMeter = metricRegistry.register(REENCRYPT_EEK_METER,
+          new Meter());
+      reencryptEEKBatchCallsMeter = metricRegistry.register(REENCRYPT_EEK_BATCH_METER,
           new Meter());
       adminCallsMeter = metricRegistry.register(ADMIN_CALLS_METER, new Meter());
       keyCallsMeter = metricRegistry.register(KEY_CALLS_METER, new Meter());
@@ -282,6 +292,13 @@ public class KMSWebApp implements ServletContextListener {
 
   public static Meter getDecryptEEKCallsMeter() {
     return decryptEEKCallsMeter;
+  }
+  public static Meter getReencryptEEKCallsMeter() {
+    return reencryptEEKCallsMeter;
+  }
+
+  public static Meter getReencryptEEKBatchCallsMeter() {
+    return reencryptEEKBatchCallsMeter;
   }
 
   public static Meter getUnauthorizedCallsMeter() {

@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +93,7 @@ public class KMSAudit {
 
   private static Set<KMS.KMSOp> AGGREGATE_OPS_WHITELIST = Sets.newHashSet(
     KMS.KMSOp.GET_KEY_VERSION, KMS.KMSOp.GET_CURRENT_KEY,
-    KMS.KMSOp.DECRYPT_EEK, KMS.KMSOp.GENERATE_EEK
+    KMS.KMSOp.DECRYPT_EEK, KMS.KMSOp.GENERATE_EEK, KMS.KMSOp.REENCRYPT_EEK
   );
 
   private Cache<String, AuditEvent> cache;
@@ -226,5 +227,9 @@ public class KMSAudit {
 
   public void shutdown() {
     executor.shutdownNow();
+  }
+  @VisibleForTesting
+  void evictCacheForTesting() {
+    cache.invalidateAll();
   }
 }
