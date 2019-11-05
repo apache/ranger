@@ -58,6 +58,9 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 			} catch (ClosedByInterruptException closedByInterruptException) {
 				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
 				throw new InterruptedException();
+			} catch (Exception e) {
+				LOG.error("Tag-retriever encounterd exception, exception=", e);
+				LOG.error("Returning null service tags");
 			}
 		}
 		return serviceTags;
