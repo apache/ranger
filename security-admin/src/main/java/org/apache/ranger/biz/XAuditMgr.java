@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.elasticsearch.ElasticSearchAccessAuditsService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
@@ -39,6 +40,9 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Autowired
 	SolrAccessAuditsService solrAccessAuditsService;
+
+	@Autowired
+	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
 	@Autowired
 	RangerBizUtil rangerBizUtil;
@@ -110,8 +114,11 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Override
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-		if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+		String auditDBType = rangerBizUtil.getAuditDBType();
+		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
+			return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
 		} else {
 			return super.searchXAccessAudits(searchCriteria);
 		}
@@ -119,8 +126,11 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Override
 	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-		if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+		String auditDBType = rangerBizUtil.getAuditDBType();
+		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
+			return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else {
 			return super.getXAccessAuditSearchCount(searchCriteria);
 		}

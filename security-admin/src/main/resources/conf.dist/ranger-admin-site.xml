@@ -46,6 +46,21 @@
 		<description></description>
 	</property>
 	<property>
+		<name>ranger.audit.elasticsearch.urls</name>
+		<value>127.0.0.1</value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.user</name>
+		<value></value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.password</name>
+		<value></value>
+		<description></description>
+	</property>
+	<property>
 		<name>ranger.audit.solr.urls</name>
 		<value>http://##solr_host##:6083/solr/ranger_audits</value>
 		<description></description>

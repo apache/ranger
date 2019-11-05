@@ -20,31 +20,42 @@
 	<property>
 		<name>xasecure.audit.is.enabled</name>
 		<value>true</value>
-	</property>	
+	</property>
 
-    <!-- Solr audit provider configuration -->
+	<!-- Solr audit provider configuration -->
 
 	<property>
 		<name>xasecure.audit.destination.solr</name>
 		<value>false</value>
-	</property>	
+	</property>
 
 	<property>
 		<name>xasecure.audit.destination.solr.urls</name>
 		<value>NONE</value>
-	</property>	
-	
+	</property>
+
 	<property>
 		<name>xasecure.audit.destination.solr.zookeepers</name>
 		<value></value>
-	</property>	
-	
+	</property>
+
 	<property>
 		<name>xasecure.audit.destination.solr.collection</name>
 		<value>NONE</value>
-	</property>	
-	
-	
+	</property>
+
+	<!-- ElasticSearch audit provider configuration -->
+	<property>
+		<name>xasecure.audit.destination.elasticsearch</name>
+		<value>false</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.destination.elasticsearch.urls</name>
+		<value>NONE</value>
+	</property>
+
+
 	<!-- HDFS audit provider configuration -->
 	<property>
 		<name>xasecure.audit.destination.hdfs</name>

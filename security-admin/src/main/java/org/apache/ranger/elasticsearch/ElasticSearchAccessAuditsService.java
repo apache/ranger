@@ -17,25 +17,27 @@
  * under the License.
  */
 
-package org.apache.ranger.solr;
+package org.apache.ranger.elasticsearch;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,40 +45,51 @@ import java.util.Map;
 
 @Service
 @Scope("singleton")
-public class SolrAccessAuditsService extends org.apache.ranger.AccessAuditsService {
-	private static final Logger LOGGER = Logger.getLogger(SolrAccessAuditsService.class);
+public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAuditsService {
+	private static final Logger LOGGER = Logger.getLogger(ElasticSearchAccessAuditsService.class);
 
 	@Autowired
-	SolrMgr solrMgr;
+	ElasticSearchMgr elasticSearchMgr;
 
 	@Autowired
-	SolrUtil solrUtil;
+	ElasticSearchUtil elasticSearchUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
 
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 
-		// Make call to Solr
-		SolrClient solrClient = solrMgr.getSolrClient();
+		RestHighLevelClient client = elasticSearchMgr.getClient();
 		final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
-		if (solrClient == null) {
-			LOGGER.warn("Solr client is null, so not running the query.");
+		if (client == null) {
+			LOGGER.warn("ElasticSearch client is null, so not running the query.");
 			throw restErrorUtil.createRESTException(
 					"Error connecting to search engine",
 					MessageEnums.ERROR_SYSTEM);
 		}
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
-
 		Map<String, Object> paramList = searchCriteria.getParamList();
 		updateUserExclusion(paramList);
 
-		QueryResponse response = solrUtil.searchResources(searchCriteria,
-				searchFields, sortFields, solrClient);
-		SolrDocumentList docs = response.getResults();
-		for (int i = 0; i < docs.size(); i++) {
-			SolrDocument doc = docs.get(i);
-			VXAccessAudit vXAccessAudit = populateViewBean(doc);
+		SearchResponse response;
+		try {
+			response = elasticSearchUtil.searchResources(searchCriteria, searchFields, sortFields, client, elasticSearchMgr.index);
+		} catch (IOException e) {
+			LOGGER.warn("ElasticSearch query failed.");
+			throw restErrorUtil.createRESTException(
+					"Error querying search engine",
+					MessageEnums.ERROR_SYSTEM);
+		}
+		MultiGetItemResponse[] docs;
+		try {
+			docs = elasticSearchUtil.fetch(client, elasticSearchMgr.index, response.getHits().getHits());
+		} catch (IOException e) {
+			LOGGER.warn("ElasticSearch fetch failed.");
+			throw restErrorUtil.createRESTException(
+					"Error querying search engine",
+					MessageEnums.ERROR_SYSTEM);
+		}
+		for (int i = 0; i < docs.length; i++) {
+			MultiGetItemResponse doc = docs[i];
+			VXAccessAudit vXAccessAudit = populateViewBean(doc.getResponse());
                         if (vXAccessAudit != null) {
                                 if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
                                         vXAccessAudit.setRequestData(null);
@@ -86,7 +99,7 @@ public class SolrAccessAuditsService extends org.apache.ranger.AccessAuditsServi
                                             if (vXAccessAudit.getRequestData() != null) {
                                                 vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
                                             } else {
-                                                LOGGER.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
+                                                LOGGER.warn("Error in request data of audit from elasticSearch. AuditData: "  + vXAccessAudit.toString());
                                             }
                                         } catch (UnsupportedEncodingException e) {
                                                 LOGGER.warn("Error while encoding request data");
@@ -98,18 +111,23 @@ public class SolrAccessAuditsService extends org.apache.ranger.AccessAuditsServi
 
 		VXAccessAuditList returnList = new VXAccessAuditList();
 		returnList.setPageSize(searchCriteria.getMaxRows());
-		returnList.setResultSize(docs.size());
-		returnList.setTotalCount((int) docs.getNumFound());
-		returnList.setStartIndex((int) docs.getStart());
+		returnList.setResultSize(response.getHits().getHits().length);
+		returnList.setTotalCount(response.getHits().getTotalHits());
+		returnList.setStartIndex(searchCriteria.getStartIndex());
 		returnList.setVXAccessAudits(xAccessAuditList);
 		return returnList;
 	}
+
+	public void setRestErrorUtil(RESTErrorUtil restErrorUtil) {
+		this.restErrorUtil = restErrorUtil;
+	}
+
 
 	/**
 	 * @param doc
 	 * @return
 	 */
-	private VXAccessAudit populateViewBean(SolrDocument doc) {
+	private VXAccessAudit populateViewBean(GetResponse doc) {
 		VXAccessAudit accessAudit = new VXAccessAudit();
 
 		Object value = null;
@@ -117,119 +135,125 @@ public class SolrAccessAuditsService extends org.apache.ranger.AccessAuditsServi
 			LOGGER.debug("doc=" + doc.toString());
 		}
 
-		value = doc.getFieldValue("id");
+		Map<String, Object> source = doc.getSource();
+		value = source.get("id");
 		if (value != null) {
 			// TODO: Converting ID to hashcode for now
 			accessAudit.setId((long) value.hashCode());
 		}
-		
-		value = doc.getFieldValue("cluster");
+
+		value = source.get("cluster");
 		if (value != null) {
 			accessAudit.setClusterName(value.toString());
 		}
 
-		value = doc.getFieldValue("zoneName");
+		value = source.get("zoneName");
 		if (value != null) {
 			accessAudit.setZoneName(value.toString());
 		}
 
-		value = doc.getFieldValue("agentHost");
+		value = source.get("agentHost");
 		if (value != null) {
 			accessAudit.setAgentHost(value.toString());
 		}
 
-		value = doc.getFieldValue("policyVersion");
+		value = source.get("policyVersion");
 		if (value != null) {
-			accessAudit.setPolicyVersion(solrUtil.toLong(value));
+			accessAudit.setPolicyVersion(elasticSearchUtil.toLong(value));
 		}
 
-		value = doc.getFieldValue("access");
+		value = source.get("access");
 		if (value != null) {
 			accessAudit.setAccessType(value.toString());
 		}
 
-		value = doc.getFieldValue("enforcer");
+		value = source.get("enforcer");
 		if (value != null) {
 			accessAudit.setAclEnforcer(value.toString());
 		}
-		value = doc.getFieldValue("agent");
+		value = source.get("agent");
 		if (value != null) {
 			accessAudit.setAgentId(value.toString());
 		}
-		value = doc.getFieldValue("repo");
+		value = source.get("repo");
 		if (value != null) {
 			accessAudit.setRepoName(value.toString());
 		}
-		value = doc.getFieldValue("sess");
+		value = source.get("sess");
 		if (value != null) {
 			accessAudit.setSessionId(value.toString());
 		}
-		value = doc.getFieldValue("reqUser");
+		value = source.get("reqUser");
 		if (value != null) {
 			accessAudit.setRequestUser(value.toString());
 		}
-		value = doc.getFieldValue("reqData");
+		value = source.get("reqData");
 		if (value != null) {
 			accessAudit.setRequestData(value.toString());
 		}
-		value = doc.getFieldValue("resource");
+		value = source.get("resource");
 		if (value != null) {
 			accessAudit.setResourcePath(value.toString());
 		}
-		value = doc.getFieldValue("cliIP");
+		value = source.get("cliIP");
 		if (value != null) {
 			accessAudit.setClientIP(value.toString());
 		}
-		value = doc.getFieldValue("logType");
+		value = source.get("logType");
 		//if (value != null) {
 			// TODO: Need to see what logType maps to in UI
 //			accessAudit.setAuditType(solrUtil.toInt(value));
 		//}
-		value = doc.getFieldValue("result");
+		value = source.get("result");
 		if (value != null) {
-			accessAudit.setAccessResult(solrUtil.toInt(value));
+			accessAudit.setAccessResult(elasticSearchUtil.toInt(value));
 		}
-		value = doc.getFieldValue("policy");
+		value = source.get("policy");
 		if (value != null) {
-			accessAudit.setPolicyId(solrUtil.toLong(value));
+			accessAudit.setPolicyId(elasticSearchUtil.toLong(value));
 		}
-		value = doc.getFieldValue("repoType");
+		value = source.get("repoType");
 		if (value != null) {
-			accessAudit.setRepoType(solrUtil.toInt(value));
-			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
-			if (xServiceDef != null) {
-				accessAudit.setServiceType(xServiceDef.getName());
+			accessAudit.setRepoType(elasticSearchUtil.toInt(value));
+			if(null != daoManager) {
+				XXServiceDefDao xxServiceDef = daoManager.getXXServiceDef();
+				if(xxServiceDef != null) {
+					XXServiceDef xServiceDef = xxServiceDef.getById((long) accessAudit.getRepoType());
+					if (xServiceDef != null) {
+						accessAudit.setServiceType(xServiceDef.getName());
+					}
+				}
 			}
 		}
-		value = doc.getFieldValue("resType");
+		value = source.get("resType");
 		if (value != null) {
 			accessAudit.setResourceType(value.toString());
 		}
-		value = doc.getFieldValue("reason");
+		value = source.get("reason");
 		if (value != null) {
 			accessAudit.setResultReason(value.toString());
 		}
-		value = doc.getFieldValue("action");
+		value = source.get("action");
 		if (value != null) {
 			accessAudit.setAction(value.toString());
 		}
-		value = doc.getFieldValue("evtTime");
+		value = source.get("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(solrUtil.toDate(value));
+			accessAudit.setEventTime(elasticSearchUtil.toDate(value));
 		}
-		value = doc.getFieldValue("seq_num");
+		value = source.get("seq_num");
 		if (value != null) {
-			accessAudit.setSequenceNumber(solrUtil.toLong(value));
+			accessAudit.setSequenceNumber(elasticSearchUtil.toLong(value));
 		}
-		value = doc.getFieldValue("event_count");
+		value = source.get("event_count");
 		if (value != null) {
-			accessAudit.setEventCount(solrUtil.toLong(value));
+			accessAudit.setEventCount(elasticSearchUtil.toLong(value));
 		}
-		value = doc.getFieldValue("event_dur_ms");
+		value = source.get("event_dur_ms");
 		if (value != null) {
-			accessAudit.setEventDuration(solrUtil.toLong(value));
+			accessAudit.setEventDuration(elasticSearchUtil.toLong(value));
 		}
-		value = doc.getFieldValue("tags");
+		value = source.get("tags");
 		if (value != null) {
 			accessAudit.setTags(value.toString());
 		}

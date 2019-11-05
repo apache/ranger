@@ -60,8 +60,8 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	Set<Object> keySet = System.getProperties().keySet();
 	for (Object key : keySet) {
 	    String keyStr = key.toString();
-	    propertiesMap.put(keyStr, System.getProperties()
-		    .getProperty(keyStr).trim());
+        propertiesMap.put(keyStr, System.getProperties()
+                .getProperty(keyStr).trim());
 	}
 
 	// Let's add our properties now

@@ -19,8 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
-import java.util.*;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -33,7 +32,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
-import com.google.common.collect.Lists;
+import java.util.*;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 

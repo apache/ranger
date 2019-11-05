@@ -101,7 +101,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 		try {
 			if (configFile.exists()) {
 				ClassLoader classLoader = this.getClass().getClassLoader();
-				// This classLoader is FactoryURLClassLoader in eleasticsearch
+				// This classLoader is FactoryURLClassLoader in elasticsearch
 				if (classLoader instanceof URLClassLoader) {
 					URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
 					Class<? extends URLClassLoader> urlClass = urlClassLoader.getClass();

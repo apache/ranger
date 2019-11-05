@@ -63,7 +63,7 @@
     -->
 
     <root>
-        <priority value="warn" />
+        <priority value="info" />
         <appender-ref ref="console" />
     </root>
 

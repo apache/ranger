@@ -19,7 +19,7 @@
   <id>hive-plugin</id>
   <formats>
      <format>tar.gz</format>
-	 <format>zip</format>
+     <format>zip</format>
   </formats>
   <baseDirectory>${project.name}-${project.version}-hive-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -28,35 +28,47 @@
      <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-	    <directoryMode>755</directoryMode>
-	    <fileMode>644</fileMode>
-  	    <outputDirectory>/lib</outputDirectory>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+          <outputDirectory>/lib</outputDirectory>
      </binaries>
      <includes>
-	  <include>org.apache.ranger:ranger-hive-plugin-shim</include>
-	  <include>org.apache.ranger:ranger-plugin-classloader</include>
+         <include>org.apache.ranger:ranger-hive-plugin-shim</include>
+         <include>org.apache.ranger:ranger-plugin-classloader</include>
      </includes>
     </moduleSet>
     <moduleSet>
      <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-	    <directoryMode>755</directoryMode>
-	    <fileMode>644</fileMode>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
         <dependencySets>
             <dependencySet>
                 <outputDirectory>/lib/ranger-hive-plugin-impl</outputDirectory>
                 <includes>
-					<include>org.eclipse.persistence:eclipselink</include>
+                    <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
-		    		<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-					<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-					<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-		   			<include>org.noggit:noggit:jar:${noggit.version}</include>
-		   			<include>org.apache.solr:solr-solrj</include>
-					<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-					<include>net.java.dev.jna:jna:jar:${jna.version}</include>
-					<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+                    <include>org.noggit:noggit:jar:${noggit.version}</include>
+                    <include>org.apache.solr:solr-solrj</include>
+                    <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+                    <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+                    <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+                    <include>org.elasticsearch:elasticsearch:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch:elasticsearch-core:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch:securesm:jar:1.2</include>
+                    <include>org.elasticsearch.client:elasticsearch-rest-client:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch.client:elasticsearch-rest-high-level-client:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch.plugin:parent-join-client:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch.plugin:aggs-matrix-stats-client:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch.plugin:lang-mustache-client:jar:${elasticsearch.version}</include>
+                    <include>org.elasticsearch.plugin:rank-eval-client:jar:${elasticsearch.version}</include>
+                    <include>org.apache.lucene:lucene-core:jar:7.2.1</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -64,10 +76,10 @@
         <outputDirectory>/lib/ranger-hive-plugin-impl</outputDirectory>
      </binaries>
      <includes>
-	<include>org.apache.ranger:ranger-plugins-audit</include>
-	<include>org.apache.ranger:ranger-plugins-cred</include>
-	<include>org.apache.ranger:ranger-plugins-common</include>
-	<include>org.apache.ranger:ranger-hive-plugin</include>
+    <include>org.apache.ranger:ranger-plugins-audit</include>
+    <include>org.apache.ranger:ranger-plugins-cred</include>
+    <include>org.apache.ranger:ranger-plugins-common</include>
+    <include>org.apache.ranger:ranger-hive-plugin</include>
      </includes>
     </moduleSet>
     <moduleSet>
@@ -98,11 +110,11 @@
         <unpack>false</unpack>
      </binaries>
      <includes>
-	    <include>org.apache.ranger:ranger-plugins-installer</include>
+        <include>org.apache.ranger:ranger-plugins-installer</include>
         <include>org.apache.ranger:credentialbuilder</include>
      </includes>
     </moduleSet>
-  </moduleSets> 	
+  </moduleSets>     
   <fileSets>
    <!-- conf.templates for enable -->
     <fileSet>
@@ -136,7 +148,7 @@
   <!-- enable/disable script for agent -->
   <files>
     <file>
-		<source>agents-common/scripts/enable-agent.sh</source>
+        <source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
         <destName>enable-hive-plugin.sh</destName>
         <fileMode>755</fileMode>
@@ -158,7 +170,7 @@
         <fileMode>755</fileMode>
     </file>
     <file>
-		<source>agents-common/scripts/enable-agent.sh</source>
+        <source>agents-common/scripts/enable-agent.sh</source>
         <outputDirectory>/</outputDirectory>
         <destName>disable-hive-plugin.sh</destName>
         <fileMode>755</fileMode>

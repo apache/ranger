@@ -147,7 +147,7 @@ public class HIVERangerAuthorizerTest {
 
     @org.junit.AfterClass
     public static void cleanup() throws Exception {
-        hiveServer.stop();
+        if(null != hiveServer) hiveServer.stop();
         FileUtil.fullyDelete(hdfsBaseDir);
         File metastoreDir = new File("./metastore_db/").getAbsoluteFile();
         FileUtil.fullyDelete(metastoreDir);
