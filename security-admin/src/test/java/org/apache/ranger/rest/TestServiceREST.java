@@ -301,6 +301,7 @@ public class TestServiceREST {
 		rangerService.setGuid("1427365526516_835_0");
 		rangerService.setIsEnabled(true);
 		rangerService.setName("HDFS_1");
+		rangerService.setDisplayName("HDFS_1");
 		rangerService.setPolicyUpdateTime(new Date());
 		rangerService.setType("1");
 		rangerService.setUpdatedBy("Admin");

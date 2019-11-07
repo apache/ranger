@@ -1,6 +1,7 @@
 {
   "id":10,
   "name":"nifi",
+  "displayName": "nifi",
   "implClass":"org.apache.ranger.services.nifi.RangerServiceNiFi",
   "label":"NIFI",
   "description":"NiFi",

@@ -1392,6 +1392,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return  ret;
 	}
 
+	/**
+	 * @param displayName
+	 * @return {@link RangerServiceDef} - service using display name if present in DB, <code>null</code> otherwise.
+	 */
+	@Override
+	public RangerServiceDef getServiceDefByDisplayName(String displayName) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServiceDefByDisplayName(" + displayName + ")");
+		}
+
+		RangerServiceDef ret = null;
+
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByDisplayName(displayName);
+
+		if(xServiceDef != null) {
+			ret = serviceDefService.getPopulatedViewObject(xServiceDef);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("== ServiceDBStore.getServiceDefByName(" + displayName + "): " + ret);
+		}
+
+		return  ret;
+	}
+
 	@Override
 	public List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -1844,6 +1869,25 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 			if (!bizUtil.hasAccess(xService, null)) {
 				throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, name: " + name,
+						MessageEnums.OPER_NO_PERMISSION);
+			}
+		}
+		return xService == null ? null : svcService.getPopulatedViewObject(xService);
+	}
+
+	@Override
+	public RangerService getServiceByDisplayName(String displayName) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.getServiceByName()");
+		}
+		XXService xService = daoMgr.getXXService().findByDisplayName(displayName);
+
+		if (ContextUtil.getCurrentUserSession() != null) {
+			if (xService == null) {
+				return null;
+			}
+			if (!bizUtil.hasAccess(xService, null)) {
+				throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, name: " + displayName,
 						MessageEnums.OPER_NO_PERMISSION);
 			}
 		}

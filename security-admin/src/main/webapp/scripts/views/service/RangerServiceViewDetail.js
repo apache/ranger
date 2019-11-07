@@ -44,6 +44,7 @@ define(function(require) {
                description : this.options.rangerService.get('description'),
                isEnabled   : this.options.rangerService.get('isEnabled'),
                tagService  : (this.options.rangerService.get('tagService')) ? this.options.rangerService.get('tagService') : false,
+               displayName : this.options.rangerService.get('displayName'),
            }
                 },
 

@@ -330,6 +330,10 @@
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
 	</named-query>
 
+	<named-query name="XXServiceDef.findByDisplayName">
+		<query>select obj from XXServiceDef obj where obj.displayName = :displayName</query>
+	</named-query>
+
 	<named-query name="XXServiceDef.getMaxIdOfXXServiceDef">
 		<query>select MAX(obj.id) from XXServiceDef obj</query>
 	</named-query>
@@ -462,10 +466,14 @@
 		<query>select obj from XXService obj where obj.name = :name</query>
 	</named-query>
 
+	<named-query name="XXService.findByDisplayName">
+		<query>select obj from XXService obj where obj.displayName = :displayName</query>
+	</named-query>
+
 	<named-query name="XXService.getMaxIdOfXXService">
 		<query>select MAX(obj.id) from XXService obj</query>
 	</named-query>
-	
+
 	<named-query name="XXService.findByServiceDefId">
 		<query>select obj from XXService obj where obj.type = :serviceDefId</query>
 	</named-query>

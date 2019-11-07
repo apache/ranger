@@ -51,6 +51,19 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 	}
 
+	public XXService findByDisplayName(String displayName) {
+		if (displayName == null) {
+			return null;
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXService.findByDisplayName", tClass)
+					.setParameter("displayName", displayName).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 	public Long getMaxIdOfXXService() {
 		try {
 			return (Long) getEntityManager().createNamedQuery("XXService.getMaxIdOfXXService").getSingleResult();

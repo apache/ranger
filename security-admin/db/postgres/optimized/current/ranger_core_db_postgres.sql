@@ -191,6 +191,7 @@ email VARCHAR(512) DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 user_src INT DEFAULT '0' NOT NULL,
 notes VARCHAR(4000) DEFAULT NULL NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_portal_user_UK_login_id UNIQUE(login_id),
 CONSTRAINT x_portal_user_UK_email UNIQUE(email),
@@ -323,6 +324,7 @@ GROUP_TYPE INT DEFAULT '0' NOT NULL,
 CRED_STORE_ID BIGINT DEFAULT NULL,
 GROUP_SRC INT DEFAULT 0 NOT NULL,
 IS_VISIBLE INT DEFAULT '1' NOT NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(ID),
 CONSTRAINT x_group_UK_group_name UNIQUE(group_name),
 CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY(ADDED_BY_ID) REFERENCES X_PORTAL_USER(ID),
@@ -359,6 +361,7 @@ descr VARCHAR(4000) DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 cred_store_id BIGINT DEFAULT NULL NULL,
 is_visible INT DEFAULT '1' NOT NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_user_UK_user_name UNIQUE(user_name),
 CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -521,6 +524,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
+display_name VARCHAR(1024) DEFAULT NULL NULL,
 impl_class_name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -544,6 +548,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 type BIGINT DEFAULT NULL NULL,
 name VARCHAR(255) DEFAULT NULL NULL,
+display_name VARCHAR(255) DEFAULT NULL NULL,
 policy_version BIGINT DEFAULT NULL NULL,
 policy_update_time TIMESTAMP DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -1790,6 +1795,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('044',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('045',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

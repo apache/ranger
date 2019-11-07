@@ -1,6 +1,7 @@
 {
 	"id":4,
 	"name": "yarn",
+	"displayName": "yarn",
 	"implClass": "org.apache.ranger.services.yarn.RangerServiceYarn",
 	"label": "YARN",
 	"description": "YARN",

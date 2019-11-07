@@ -54,6 +54,11 @@ define(function(require){
 
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
+				displayName : {
+					type : 'Text',
+					title : 'Display Name'
+				},
+
 				name : {
 					type		: 'Text',
 					title		: 'Service Name *',

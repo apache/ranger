@@ -69,20 +69,22 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	
 	@Autowired
 	GUIDUtil guidUtil;
-	
+
 	public RangerServiceDefServiceBase() {
 		super();
-		
+
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
-		
+
 		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
 		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
 		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_ID, "obj.id"));
 		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE, "obj.name"));
+		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName"));
 	}
-	
+
 	@Override
 	protected V populateViewBean(T xServiceDef) {
 		V serviceDef = super.populateViewBean((T) xServiceDef);
@@ -205,11 +207,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 	@Override
 	protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
-		
+
 		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
-		
+
 		xObj.setGuid(guid);
 		xObj.setName(vObj.getName());
+		xObj.setDisplayName(vObj.getDisplayName());
 		xObj.setImplclassname(vObj.getImplClass());
 		xObj.setLabel(vObj.getLabel());
 		xObj.setDescription(vObj.getDescription());
@@ -234,9 +237,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setRbKeyDescription(xObj.getRbkeydescription());
 		vObj.setIsEnabled(xObj.getIsEnabled());
+		vObj.setDisplayName(xObj.getDisplayName());
 		return vObj;
 	}
-	
+
 	public XXServiceConfigDef populateRangerServiceConfigDefToXX(RangerServiceConfigDef vObj, XXServiceConfigDef xObj,
 			XXServiceDef serviceDef, int operationContext) {
 		if(serviceDef == null) {

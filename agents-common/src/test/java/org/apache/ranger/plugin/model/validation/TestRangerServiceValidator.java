@@ -72,14 +72,15 @@ public class TestRangerServiceValidator {
 			break;
 		}
 	}
-	
+
 	@Test
 	public void testIsValidServiceNameCreationWithOutSpecialCharacters() throws Exception{
 		RangerService rangerService = new RangerService();
 		rangerService.setName("c1_yarn");
+		rangerService.setDisplayName("c1_yarn");
 		rangerService.setType("yarn");
 		rangerService.setTagService("");
-		
+
 		RangerServiceConfigDef configDef = new RangerServiceConfigDef();
 		configDef.setMandatory(true);
 		
@@ -110,9 +111,10 @@ public class TestRangerServiceValidator {
 		RangerService rangerService = new RangerService();
 		rangerService.setId(1L);
 		rangerService.setName("c1_yarn");
+		rangerService.setDisplayName("c1_yarn");
 		rangerService.setType("yarn");
 		rangerService.setTagService("");
-		
+
 		RangerServiceConfigDef configDef = new RangerServiceConfigDef();
 		configDef.setMandatory(true);
 		
@@ -387,6 +389,7 @@ public class TestRangerServiceValidator {
 		// create a service with some parameters on it
 		RangerService service = mock(RangerService.class);
 		when(service.getName()).thenReturn("aName");
+		when(service.getDisplayName()).thenReturn("aDisplayName");
 		when(service.getType()).thenReturn("aType");
 		// contains an extra parameter (param6) and one optional is missing(param4)
 		String[] configs = new String[] { "param1", "param2", "param3", "param5", "param6" };

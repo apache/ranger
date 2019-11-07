@@ -210,7 +210,7 @@ public abstract class RangerValidator {
 	}
 
 	RangerServiceDef getServiceDef(String type) {
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getServiceDef(" + type + ")");
 		}
@@ -227,8 +227,30 @@ public abstract class RangerValidator {
 		return result;
 	}
 
+	/**
+	 * @param displayName
+	 * @return {@link RangerServiceDef} - service using display name if present, <code>null</code> otherwise.
+	 */
+	RangerServiceDef getServiceDefByDisplayName(final String displayName) {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getServiceDefByDisplayName(" + displayName + ")");
+		}
+		RangerServiceDef result = null;
+		try {
+			result = _store.getServiceDefByDisplayName(displayName);
+		} catch (Exception e) {
+			LOG.debug("Encountered exception while retrieving service definition from service store!", e);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getServiceDefByDisplayName(" + displayName + "): " + result);
+		}
+		return result;
+	}
+
 	RangerService getService(Long id) {
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getService(" + id + ")");
 		}
@@ -263,6 +285,23 @@ public abstract class RangerValidator {
 		return result;
 	}
 
+	RangerService getServiceByDisplayName(final String displayName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerValidator.getService(" + displayName + ")");
+		}
+		RangerService result = null;
+		try {
+			result = _store.getServiceByDisplayName(displayName);
+		} catch (Exception e) {
+			LOG.debug("Encountred exception while retrieving service from service store!", e);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerValidator.getService(" + displayName + "): " + result);
+		}
+		return result;
+	}
+
 	boolean policyExists(Long id) {
 		try {
 			return _store.policyExists(id);
@@ -273,7 +312,7 @@ public abstract class RangerValidator {
 	}
 
 	RangerPolicy getPolicy(Long id) {
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerValidator.getPolicy(" + id + ")");
 		}

@@ -1,6 +1,7 @@
 {
 	"id":9,
 	"name":"kafka",
+	 "displayName": "kafka",
 	"implClass":"org.apache.ranger.services.kafka.RangerServiceKafka",
 	"label":"Kafka",
 	"description":"Apache Kafka",

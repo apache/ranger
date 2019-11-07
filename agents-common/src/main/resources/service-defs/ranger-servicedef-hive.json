@@ -1,6 +1,7 @@
 {
 	"id":3,
 	"name": "hive",
+	"displayName": "Hadoop SQL",
 	"implClass": "org.apache.ranger.services.hive.RangerServiceHive",
 	"label": "Hive Server2",
 	"description": "Hive Server2",

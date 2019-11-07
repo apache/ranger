@@ -62,6 +62,7 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 	String actionDelete;
 	static {
 		trxLogAttrs.put("name", new VTrxLogAttr("name", "Service Name", false));
+		trxLogAttrs.put("displayName", new VTrxLogAttr("displayName", "Service Display Name", false));
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Service Description", false));
 		trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Service Status", false));
 		trxLogAttrs.put("configs", new VTrxLogAttr("configs", "Connection Configurations", false));

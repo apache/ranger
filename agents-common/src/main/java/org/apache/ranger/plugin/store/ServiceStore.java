@@ -47,6 +47,8 @@ public interface ServiceStore {
 
 	RangerServiceDef getServiceDefByName(String name) throws Exception;
 
+	RangerServiceDef getServiceDefByDisplayName(String name) throws Exception;
+
 	List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception;
 
 	PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception;
@@ -60,6 +62,8 @@ public interface ServiceStore {
 	RangerService getService(Long id) throws Exception;
 
 	RangerService getServiceByName(String name) throws Exception;
+
+	RangerService getServiceByDisplayName(String displayName) throws Exception;
 
 	List<RangerService> getServices(SearchFilter filter) throws Exception;
 

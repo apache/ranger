@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
@@ -266,6 +267,13 @@ public class ServiceREST {
 		RangerServiceDef ret  = null;
 		RangerPerfTracer perf = null;
 
+		/**
+		 * If display name is blank (EMPTY String or NULL), use name.
+		 */
+		if (StringUtils.isBlank(serviceDef.getDisplayName())) {
+			serviceDef.setDisplayName(serviceDef.getName());
+		}
+
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createServiceDef(serviceDefName=" + serviceDef.getName() + ")");
@@ -310,6 +318,21 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateServiceDef(" + serviceDef.getName() + ")");
 			}
+
+			/**
+			 * If display name is blank (EMPTY String or NULL), use previous display name.
+			 */
+			if (StringUtils.isBlank(serviceDef.getDisplayName())) {
+				RangerServiceDef rangerServiceDef = svcStore.getServiceDef(serviceDef.getId());
+
+				// If previous display name is blank (EMPTY String or NULL), user name.
+				if (Objects.isNull(rangerServiceDef) || StringUtils.isBlank(rangerServiceDef.getDisplayName())) {
+					serviceDef.setDisplayName(serviceDef.getName());
+				} else {
+					serviceDef.setDisplayName(rangerServiceDef.getDisplayName());
+				}
+			}
+
 			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 			validator.validate(serviceDef, Action.UPDATE);
 
@@ -676,16 +699,27 @@ public class ServiceREST {
 		RangerService    ret  = null;
 		RangerPerfTracer perf = null;
 
+		/**
+		 * If display name is blank (EMPTY String or NULL), use name.
+		 */
+		if (StringUtils.isBlank(service.getDisplayName())) {
+			service.setDisplayName(service.getName());
+		}
+
 		try {
-			
+
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createService(serviceName=" + service.getName() + ")");
 			}
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.CREATE);
-			
+
 			if(!StringUtils.isEmpty(service.getName().trim())){
 				service.setName(service.getName().trim());
+			}
+
+			if(!StringUtils.isEmpty(service.getDisplayName().trim())){
+				service.setDisplayName(service.getDisplayName().trim());
 			}
 
 			UserSessionBase session = ContextUtil.getCurrentUserSession();
@@ -747,15 +781,34 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		try {
-			
+
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateService(serviceName=" + service.getName() + ")");
 			}
+
+			/**
+			 * If display name is blank (EMPTY String or NULL), use previous display name.
+			 */
+			if (StringUtils.isBlank(service.getDisplayName())) {
+				RangerService rangerService = svcStore.getService(service.getId());
+
+				// If previous display name is blank (EMPTY String or NULL), user name.
+				if (Objects.isNull(rangerService) || StringUtils.isBlank(rangerService.getDisplayName())) {
+					service.setDisplayName(service.getName());
+				} else {
+					service.setDisplayName(rangerService.getDisplayName());
+				}
+			}
+
 			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
 			validator.validate(service, Action.UPDATE);
-			
+
 			if(!StringUtils.isEmpty(service.getName().trim())){
 				service.setName(service.getName().trim());
+			}
+
+			if(!StringUtils.isEmpty(service.getDisplayName().trim())){
+				service.setDisplayName(service.getDisplayName().trim());
 			}
 
 			bizUtil.hasAdminPermissions("Services");

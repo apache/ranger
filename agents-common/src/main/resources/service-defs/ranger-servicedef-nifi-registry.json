@@ -1,6 +1,7 @@
 {
   "id":13,
   "name":"nifi-registry",
+  "displayName": "nifi-registry",
   "implClass":"org.apache.ranger.services.nifi.registry.RangerServiceNiFiRegistry",
   "label":"NIFI Registry",
   "description":"NiFi Registry",

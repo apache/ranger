@@ -50,6 +50,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
 		mObj.setStatus( vObj.getStatus());
 		mObj.setUserSource( vObj.getUserSource());
 		mObj.setNotes( vObj.getNotes());
+		mObj.setOtherAttributes(vObj.getOtherAttributes());
 		return mObj;
 	}
 
@@ -64,6 +65,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
 		vObj.setStatus( mObj.getStatus());
 		vObj.setUserSource( mObj.getUserSource());
 		vObj.setNotes( mObj.getNotes());
+		vObj.setOtherAttributes(mObj.getOtherAttributes());
 		return vObj;
 	}
 

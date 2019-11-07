@@ -84,6 +84,13 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	protected List<VXUserPermission> userPermList;
 	protected List<VXGroupPermission> groupPermissions;
 
+
+	/**
+	 * Additional store attributes.
+	 *
+	 */
+	protected String otherAttributes;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -292,6 +299,22 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		this.groupPermissions = groupPermissions;
 	}
 
+
+	/**
+	 * @return {@link String} - additional attributes.
+	 */
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	/**
+	 * This method sets additional attributes.
+	 * @param otherAttributes
+	 */
+	public void setOtherAttributes(final String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -308,6 +331,7 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		str += "userSource={" + userSource + "} ";
 		str += "notes={" + notes + "} ";
 		str += "userRoleList={" + userRoleList + "} ";
+		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "}";
 		return str;
 	}

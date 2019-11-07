@@ -1,6 +1,7 @@
 {
 	"id":2,
 	"name": "hbase",
+	"displayName": "hbase",
 	"implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
 	"label": "HBase",
 	"description": "HBase",
